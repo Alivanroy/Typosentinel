@@ -1,0 +1,16 @@
+{
+  "name": "vulnerable-app",
+  "version": "1.0.0",
+  "description": "Test application with potentially malicious dependencies",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "lodahs": "file:../",
+    "express": "^4.18.0"
+  },
+  "author": "test",
+  "license": "MIT"
+}

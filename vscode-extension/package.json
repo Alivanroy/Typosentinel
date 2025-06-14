@@ -1,0 +1,243 @@
+{
+  "name": "typosentinel-vscode",
+  "displayName": "TypoSentinel",
+  "description": "Real-time typosquatting detection for package dependencies",
+  "version": "1.0.0",
+  "publisher": "typosentinel",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Linters",
+    "Debuggers"
+  ],
+  "keywords": [
+    "security",
+    "typosquatting",
+    "package",
+    "npm",
+    "dependencies",
+    "vulnerability"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "workspaceContains:package.json",
+    "workspaceContains:requirements.txt",
+    "workspaceContains:go.mod"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "typosentinel.scanWorkspace",
+        "title": "Scan Workspace for Typosquatting",
+        "category": "TypoSentinel"
+      },
+      {
+        "command": "typosentinel.scanFile",
+        "title": "Scan Current File",
+        "category": "TypoSentinel"
+      },
+      {
+        "command": "typosentinel.openSettings",
+        "title": "Open Settings",
+        "category": "TypoSentinel"
+      },
+      {
+        "command": "typosentinel.viewReport",
+        "title": "View Security Report",
+        "category": "TypoSentinel"
+      },
+      {
+        "command": "typosentinel.scanDependencies",
+        "title": "Scan Dependencies (IDE)",
+        "category": "TypoSentinel"
+      },
+      {
+          "command": "typosentinel.clearDiagnostics",
+          "title": "Clear Diagnostics",
+          "category": "TypoSentinel"
+        },
+        {
+          "command": "typosentinel.gametheory.calculateEquilibrium",
+          "title": "Calculate Nash Equilibrium",
+          "category": "TypoSentinel Game Theory"
+        },
+        {
+          "command": "typosentinel.gametheory.assessSupplierRisk",
+          "title": "Assess Supplier Risk",
+          "category": "TypoSentinel Game Theory"
+        },
+        {
+          "command": "typosentinel.gametheory.optimizeROI",
+          "title": "Optimize ROI",
+          "category": "TypoSentinel Game Theory"
+        },
+        {
+          "command": "typosentinel.gametheory.updatePenalty",
+          "title": "Update Penalty System",
+          "category": "TypoSentinel Game Theory"
+        },
+        {
+          "command": "typosentinel.gametheory.showDashboard",
+          "title": "Show Game Theory Dashboard",
+          "category": "TypoSentinel Game Theory"
+        },
+        {
+          "command": "typosentinel.gametheory.addPlayer",
+          "title": "Add Player",
+          "category": "TypoSentinel Game Theory"
+        }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "typosentinel.scanFile",
+          "when": "resourceExtname == .json",
+          "group": "typosentinel"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "typosentinel.scanFile",
+          "when": "resourceExtname == .json",
+          "group": "typosentinel"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "TypoSentinel",
+      "properties": {
+        "typosentinel.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for TypoSentinel service",
+          "scope": "application"
+        },
+        "typosentinel.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "TypoSentinel server URL"
+        },
+        "typosentinel.enableRealTimeScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time scanning as you type"
+        },
+        "typosentinel.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically scan files when saved"
+        },
+        "typosentinel.showInlineWarnings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline warnings in the editor"
+        },
+        "typosentinel.confidenceThreshold": {
+          "type": "number",
+          "default": 0.7,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Minimum confidence threshold for displaying warnings"
+        },
+        "typosentinel.gametheory.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable game theory-based risk assessment"
+        },
+        "typosentinel.gametheory.maxIterations": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "Maximum iterations for Nash equilibrium calculation"
+        },
+        "typosentinel.gametheory.convergenceThreshold": {
+          "type": "number",
+          "default": 0.001,
+          "minimum": 0.0001,
+          "maximum": 0.1,
+          "description": "Convergence threshold for equilibrium calculation"
+        },
+        "typosentinel.gametheory.discountFactor": {
+          "type": "number",
+          "default": 0.95,
+          "minimum": 0.1,
+          "maximum": 1.0,
+          "description": "Discount factor for future payoffs"
+        },
+        "typosentinel.gametheory.updateInterval": {
+          "type": "number",
+          "default": 86400000,
+          "minimum": 3600000,
+          "maximum": 604800000,
+          "description": "Update interval in milliseconds (default: 24 hours)"
+        },
+        "typosentinel.gametheory.penaltyDecayRate": {
+          "type": "number",
+          "default": 0.1,
+          "minimum": 0.01,
+          "maximum": 1.0,
+          "description": "Penalty decay rate for progressive penalty system"
+        },
+        "typosentinel.gametheory.roiThreshold": {
+          "type": "number",
+          "default": 0.15,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Minimum ROI threshold for investment recommendations"
+        },
+        "typosentinel.gametheory.businessMetricsWeight": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Weight of business metrics in risk calculations"
+        }
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "typosentinelView",
+          "name": "TypoSentinel",
+          "when": "workspaceHasPackageJson"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "typosentinel",
+          "title": "TypoSentinel",
+          "icon": "$(shield)"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "ws": "^8.14.0"
+  }
+}

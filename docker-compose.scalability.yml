@@ -1,0 +1,535 @@
+version: '3.8'
+
+services:
+  # Primary PostgreSQL for structured data
+  postgres:
+    image: postgres:15
+    container_name: typosentinel-postgres
+    environment:
+      POSTGRES_DB: typosentinel
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-typosentinel_secure_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf
+    ports:
+      - "5432:5432"
+    command: [
+      "postgres",
+      "-c", "config_file=/etc/postgresql/postgresql.conf",
+      "-c", "shared_preload_libraries=pg_stat_statements",
+      "-c", "max_connections=200",
+      "-c", "shared_buffers=256MB",
+      "-c", "effective_cache_size=1GB",
+      "-c", "work_mem=4MB",
+      "-c", "maintenance_work_mem=64MB"
+    ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d typosentinel"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # PostgreSQL Read Replica
+  postgres-replica:
+    image: postgres:15
+    container_name: typosentinel-postgres-replica
+    environment:
+      POSTGRES_DB: typosentinel
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-typosentinel_secure_password}
+      PGUSER: admin
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    command: [
+      "postgres",
+      "-c", "hot_standby=on",
+      "-c", "max_connections=100",
+      "-c", "shared_buffers=128MB"
+    ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Redis for caching and queues
+  redis:
+    image: redis:7-alpine
+    container_name: typosentinel-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Redis Cluster Node 1
+  redis-cluster-1:
+    image: redis:7-alpine
+    container_name: typosentinel-redis-cluster-1
+    ports:
+      - "7001:7001"
+      - "17001:17001"
+    volumes:
+      - redis_cluster_1_data:/data
+    command: >
+      redis-server
+      --port 7001
+      --cluster-enabled yes
+      --cluster-config-file nodes-7001.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+    networks:
+      - typosentinel-network
+
+  # Redis Cluster Node 2
+  redis-cluster-2:
+    image: redis:7-alpine
+    container_name: typosentinel-redis-cluster-2
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    volumes:
+      - redis_cluster_2_data:/data
+    command: >
+      redis-server
+      --port 7002
+      --cluster-enabled yes
+      --cluster-config-file nodes-7002.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+    networks:
+      - typosentinel-network
+
+  # Redis Cluster Node 3
+  redis-cluster-3:
+    image: redis:7-alpine
+    container_name: typosentinel-redis-cluster-3
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    volumes:
+      - redis_cluster_3_data:/data
+    command: >
+      redis-server
+      --port 7003
+      --cluster-enabled yes
+      --cluster-config-file nodes-7003.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfsync everysec
+    networks:
+      - typosentinel-network
+
+  # MinIO for blob storage (package contents, reports)
+  minio:
+    image: minio/minio:latest
+    container_name: typosentinel-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minio_secure_password}
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # ClickHouse for analytics and time-series data
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: typosentinel-clickhouse
+    ports:
+      - "8123:8123"
+      - "9009:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - ./config/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      - ./config/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+    environment:
+      CLICKHOUSE_DB: typosentinel_analytics
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-clickhouse_secure_password}
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Elasticsearch for search and logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: typosentinel-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: typosentinel-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # RabbitMQ for message queuing
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: typosentinel-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbitmq_secure_password}
+      RABBITMQ_DEFAULT_VHOST: typosentinel
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: typosentinel-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: typosentinel-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-grafana_secure_password}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: typosentinel-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Load Balancer (HAProxy)
+  load-balancer:
+    image: haproxy:2.8-alpine
+    container_name: typosentinel-load-balancer
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # HAProxy stats
+    volumes:
+      - ./config/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./config/ssl:/etc/ssl/certs
+    depends_on:
+      - typosentinel-backend-1
+      - typosentinel-backend-2
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Typosentinel Backend Instance 1
+  typosentinel-backend-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: typosentinel-backend-1
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=typosentinel
+      - DB_USER=admin
+      - DB_PASSWORD=${DB_PASSWORD:-typosentinel_secure_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_secure_password}
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-clickhouse_secure_password}
+      - INSTANCE_ID=backend-1
+      - WORKER_COUNT=4
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Typosentinel Backend Instance 2
+  typosentinel-backend-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: typosentinel-backend-2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=typosentinel
+      - DB_USER=admin
+      - DB_PASSWORD=${DB_PASSWORD:-typosentinel_secure_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_secure_password}
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-clickhouse_secure_password}
+      - INSTANCE_ID=backend-2
+      - WORKER_COUNT=4
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Worker Pool 1
+  typosentinel-worker-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: typosentinel-worker-1
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=typosentinel
+      - DB_USER=admin
+      - DB_PASSWORD=${DB_PASSWORD:-typosentinel_secure_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_secure_password}
+      - WORKER_ID=worker-1
+      - WORKER_TYPE=scanner
+      - CONCURRENCY=8
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Worker Pool 2
+  typosentinel-worker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: typosentinel-worker-2
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=typosentinel
+      - DB_USER=admin
+      - DB_PASSWORD=${DB_PASSWORD:-typosentinel_secure_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_secure_password}
+      - WORKER_ID=worker-2
+      - WORKER_TYPE=ml_analyzer
+      - CONCURRENCY=4
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+      - ./ml/models:/app/ml/models
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # ML Service
+  typosentinel-ml:
+    build:
+      context: .
+      dockerfile: Dockerfile.ml
+    container_name: typosentinel-ml
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_secure_password}
+      - MODEL_PATH=/app/ml/models
+      - CONTINUOUS_LEARNING=true
+    ports:
+      - "8003:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./ml/models:/app/ml/models
+      - ./ml/training_data:/app/ml/training_data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  redis_data:
+    driver: local
+  redis_cluster_1_data:
+    driver: local
+  redis_cluster_2_data:
+    driver: local
+  redis_cluster_3_data:
+    driver: local
+  minio_data:
+    driver: local
+  clickhouse_data:
+    driver: local
+  clickhouse_logs:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  typosentinel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

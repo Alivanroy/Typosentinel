@@ -1,0 +1,312 @@
+{
+  "timestamp": "2025-06-14T14:55:56.993633+02:00",
+  "total_tests": 2,
+  "passed_tests": 1,
+  "failed_tests": 1,
+  "overall_accuracy": 0.5,
+  "detection_rate": 0,
+  "false_positive_rate": 0,
+  "false_negative_rate": 0,
+  "average_response_time": 0,
+  "detector_results": {
+    "anomaly": {
+      "detector_name": "anomaly",
+      "total_detections": 1,
+      "correct_detections": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1_score": 1,
+      "average_response_time": 1583,
+      "error_rate": 0,
+      "confidence_scores": [
+        0
+      ]
+    },
+    "behavioral": {
+      "detector_name": "behavioral",
+      "total_detections": 1,
+      "correct_detections": 0,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "accuracy": 0,
+      "precision": 0,
+      "recall": 0,
+      "f1_score": 0,
+      "average_response_time": 2000996459,
+      "error_rate": 0,
+      "confidence_scores": [
+        0
+      ]
+    },
+    "ml": {
+      "detector_name": "ml",
+      "total_detections": 1,
+      "correct_detections": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1_score": 1,
+      "average_response_time": 4542,
+      "error_rate": 0,
+      "confidence_scores": [
+        0
+      ]
+    },
+    "static": {
+      "detector_name": "static",
+      "total_detections": 2,
+      "correct_detections": 1,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "accuracy": 0.5,
+      "precision": 1,
+      "recall": 0.5,
+      "f1_score": 0.6666666666666666,
+      "average_response_time": 0,
+      "error_rate": 0,
+      "confidence_scores": [
+        0,
+        0
+      ]
+    },
+    "typo": {
+      "detector_name": "typo",
+      "total_detections": 2,
+      "correct_detections": 1,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "accuracy": 0.5,
+      "precision": 1,
+      "recall": 0.5,
+      "f1_score": 0.6666666666666666,
+      "average_response_time": 10062,
+      "error_rate": 0,
+      "confidence_scores": [
+        0,
+        0
+      ]
+    },
+    "yara": {
+      "detector_name": "yara",
+      "total_detections": 2,
+      "correct_detections": 1,
+      "false_positives": 0,
+      "false_negatives": 1,
+      "accuracy": 0.5,
+      "precision": 1,
+      "recall": 0.5,
+      "f1_score": 0.6666666666666666,
+      "average_response_time": 0,
+      "error_rate": 0,
+      "confidence_scores": [
+        0,
+        0
+      ]
+    }
+  },
+  "test_case_results": [
+    {
+      "test_case": {
+        "id": "malicious_lodahs",
+        "name": "Malicious lodahs package",
+        "description": "Test detection of the malicious lodahs typosquatting package",
+        "package_path": "./test_packages/lodahs",
+        "expected_threat": true,
+        "threat_type": "typosquatting",
+        "severity": "high",
+        "expected_iocs": [
+          "typosquatting",
+          "malicious_code",
+          "data_exfiltration"
+        ],
+        "metadata": null,
+        "timeout": 30000000000,
+        "required_detectors": [
+          "static",
+          "yara",
+          "typo"
+        ]
+      },
+      "passed": false,
+      "detected": false,
+      "threat_type": "unknown",
+      "confidence": 0,
+      "response_time": 58334,
+      "detector_results": {
+        "static": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "",
+          "iocs": null,
+          "response_time": 0,
+          "error": "failed to walk package directory: lstat ./test_packages/lodahs: no such file or directory",
+          "metadata": {}
+        },
+        "typo": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "typosquatting",
+          "iocs": null,
+          "response_time": 8625,
+          "metadata": {
+            "similar_packages": null,
+            "typo_confidence": 0
+          }
+        },
+        "yara": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "",
+          "iocs": null,
+          "response_time": 0,
+          "error": "lstat ./test_packages/lodahs: no such file or directory",
+          "metadata": {}
+        }
+      },
+      "iocs_found": [],
+      "additional_metadata": {}
+    },
+    {
+      "test_case": {
+        "id": "clean_lodash",
+        "name": "Clean lodash package",
+        "description": "Test that legitimate lodash package is not flagged",
+        "package_path": "./test_packages/lodash",
+        "expected_threat": false,
+        "threat_type": "none",
+        "severity": "none",
+        "expected_iocs": null,
+        "metadata": null,
+        "timeout": 30000000000,
+        "required_detectors": null
+      },
+      "passed": true,
+      "detected": false,
+      "threat_type": "unknown",
+      "confidence": 0,
+      "response_time": 2001062833,
+      "detector_results": {
+        "anomaly": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "anomaly",
+          "iocs": null,
+          "response_time": 1583,
+          "metadata": {
+            "anomalies_count": 0,
+            "anomaly_score": 0
+          }
+        },
+        "behavioral": {
+          "detected": true,
+          "confidence": 0,
+          "threat_type": "behavioral",
+          "iocs": null,
+          "response_time": 2000996459,
+          "metadata": {
+            "pattern_matches": 0,
+            "threat_level": "minimal"
+          }
+        },
+        "ml": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "unknown",
+          "iocs": null,
+          "response_time": 4542,
+          "metadata": {
+            "anomaly_score": 0,
+            "malware_score": 0
+          }
+        },
+        "static": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "",
+          "iocs": null,
+          "response_time": 0,
+          "error": "failed to walk package directory: lstat ./test_packages/lodash: no such file or directory",
+          "metadata": {}
+        },
+        "typo": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "typosquatting",
+          "iocs": null,
+          "response_time": 11500,
+          "metadata": {
+            "similar_packages": null,
+            "typo_confidence": 0
+          }
+        },
+        "yara": {
+          "detected": false,
+          "confidence": 0,
+          "threat_type": "",
+          "iocs": null,
+          "response_time": 0,
+          "error": "lstat ./test_packages/lodash: no such file or directory",
+          "metadata": {}
+        }
+      },
+      "iocs_found": [],
+      "additional_metadata": {}
+    }
+  ],
+  "performance_metrics": {
+    "total_execution_time": 2001141208,
+    "average_test_time": 1000570604,
+    "median_test_time": 0,
+    "p95_test_time": 0,
+    "p99_test_time": 0,
+    "throughput": 0.9994297214032485,
+    "memory_usage": 0,
+    "cpu_usage": 0,
+    "concurrent_tests": 0
+  },
+  "recommendations": [
+    "Overall accuracy below 99% target - review failed test cases",
+    "yara detector accuracy below 95% - requires tuning",
+    "typo detector accuracy below 95% - requires tuning",
+    "static detector accuracy below 95% - requires tuning",
+    "behavioral detector accuracy below 95% - requires tuning",
+    "behavioral detector has high false positive rate"
+  ],
+  "summary": {
+    "overall_grade": "F",
+    "effectiveness_score": 0.5,
+    "key_findings": [
+      "static detector underperforming (50.0% accuracy)",
+      "behavioral detector underperforming (0.0% accuracy)",
+      "ml detector performing excellently (100.0% accuracy)",
+      "yara detector underperforming (50.0% accuracy)",
+      "typo detector underperforming (50.0% accuracy)",
+      "anomaly detector performing excellently (100.0% accuracy)"
+    ],
+    "critical_issues": [
+      "Overall detection accuracy critically low",
+      "yara detector missing threats (1 false negatives)",
+      "typo detector missing threats (1 false negatives)",
+      "static detector missing threats (1 false negatives)"
+    ],
+    "recommendations": [
+      "Overall accuracy below 99% target - review failed test cases",
+      "yara detector accuracy below 95% - requires tuning",
+      "typo detector accuracy below 95% - requires tuning",
+      "static detector accuracy below 95% - requires tuning",
+      "behavioral detector accuracy below 95% - requires tuning",
+      "behavioral detector has high false positive rate"
+    ],
+    "next_steps": [
+      "Analyze failed test cases and improve detection rules",
+      "Retrain ML models with additional data",
+      "Implement ensemble voting for better accuracy"
+    ],
+    "compliance_status": "NON_COMPLIANT"
+  }
+}

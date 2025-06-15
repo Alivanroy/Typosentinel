@@ -45,8 +45,8 @@ services:
   # ML Service
   ml-service:
     build:
-      context: .
-      dockerfile: ml/Dockerfile
+      context: ./ml
+      dockerfile: Dockerfile
     container_name: typosentinel-ml
     environment:
       - PYTHONPATH=/app
@@ -86,9 +86,9 @@ services:
       - TYPOSENTINEL_DATABASE_SSL_MODE=disable
       
       # API configuration
-      - TYPOSENTINEL_API_HOST=0.0.0.0
-      - TYPOSENTINEL_API_PORT=8080
-      - TYPOSENTINEL_API_DEBUG_MODE=${DEBUG_MODE:-false}
+      - TYPOSENTINEL_SERVER_HOST=0.0.0.0
+      - TYPOSENTINEL_SERVER_PORT=8080
+      - TYPOSENTINEL_DEBUG=${DEBUG_MODE:-false}
       
       # ML Service configuration
       - TYPOSENTINEL_ML_SERVICE_BASE_URL=http://ml-service:8000

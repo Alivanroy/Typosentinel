@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -92,7 +93,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	mlClient := ml.NewClient(viper.GetString("ml.url"), viper.GetString("ml.api_key"))
 
 	// Create API server
-	server := api.NewServer(analyzer, db, mlClient, authService, userService, orgService)
+	server := api.NewServer(analyzer, db, mlClient, authService, userService, orgService, analyzerConfig)
 
 	// Start server
 	addr := fmt.Sprintf("%s:%d", viper.GetString("server.host"), viper.GetInt("server.port"))
@@ -151,6 +152,7 @@ func initConfig() {
 
 	// Read environment variables
 	viper.SetEnvPrefix("TYPOSENTINEL")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	// Read config file

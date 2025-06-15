@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/typosentinel/typosentinel/internal/analyzer"
 	"github.com/typosentinel/typosentinel/internal/auth"
+	"github.com/typosentinel/typosentinel/internal/config"
 	"github.com/typosentinel/typosentinel/internal/database"
 	"github.com/typosentinel/typosentinel/pkg/ml"
 	"github.com/typosentinel/typosentinel/pkg/types"
@@ -25,14 +26,16 @@ type Server struct {
 	userService *auth.UserService
 	orgService  *auth.OrganizationService
 	router      *gin.Engine
+	config      *config.Config
 }
 
 // NewServer creates a new API server
-func NewServer(analyzer *analyzer.Analyzer, db *database.Database, mlClient *ml.Client, authService *auth.AuthService, userService *auth.UserService, orgService *auth.OrganizationService) *Server {
+func NewServer(analyzer *analyzer.Analyzer, db *database.Database, mlClient *ml.Client, authService *auth.AuthService, userService *auth.UserService, orgService *auth.OrganizationService, cfg *config.Config) *Server {
 	s := &Server{
 		analyzer:    analyzer,
 		db:          db,
 		mlClient:    mlClient,
+		config:      cfg,
 		authService: authService,
 		userService: userService,
 		orgService:  orgService,
@@ -40,6 +43,11 @@ func NewServer(analyzer *analyzer.Analyzer, db *database.Database, mlClient *ml.
 
 	s.setupRoutes()
 	return s
+}
+
+// GetRouter returns the gin router
+func (s *Server) GetRouter() *gin.Engine {
+	return s.router
 }
 
 // Start starts the HTTP server
@@ -123,11 +131,6 @@ func (s *Server) setupRoutes() {
 			}
 		}
 	}
-}
-
-// GetRouter returns the gin router
-func (s *Server) GetRouter() *gin.Engine {
-	return s.router
 }
 
 // Middleware functions

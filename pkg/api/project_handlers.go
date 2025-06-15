@@ -13,7 +13,7 @@ import (
 )
 
 // GetProjects handles GET /api/projects
-func (s *APIServer) GetProjects(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetProjects(w http.ResponseWriter, r *http.Request) {
 	// Get user from context
 	user, ok := r.Context().Value("user").(*types.User)
 	if !ok {
@@ -80,7 +80,7 @@ func (s *APIServer) GetProjects(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateProject handles POST /api/projects
-func (s *APIServer) CreateProject(w http.ResponseWriter, r *http.Request) {
+func (s *Server) CreateProject(w http.ResponseWriter, r *http.Request) {
 	// Get user from context
 	user, ok := r.Context().Value("user").(*types.User)
 	if !ok {
@@ -130,7 +130,7 @@ func (s *APIServer) CreateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProject handles GET /api/projects/{id}
-func (s *APIServer) GetProject(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *APIServer) GetProject(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProject handles PUT /api/projects/{id}
-func (s *APIServer) UpdateProject(w http.ResponseWriter, r *http.Request) {
+func (s *Server) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -203,7 +203,7 @@ func (s *APIServer) UpdateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteProject handles DELETE /api/projects/{id}
-func (s *APIServer) DeleteProject(w http.ResponseWriter, r *http.Request) {
+func (s *Server) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -226,7 +226,7 @@ func (s *APIServer) DeleteProject(w http.ResponseWriter, r *http.Request) {
 }
 
 // ScanProject handles POST /api/projects/{id}/scan
-func (s *APIServer) ScanProject(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ScanProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -242,6 +242,8 @@ func (s *APIServer) ScanProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Get project from database and verify access
+	// TODO: Use user.OrganizationID to filter projects
+	_ = user // Temporary to avoid unused variable error
 	projectPath := "/projects/frontend-app" // Mock path
 
 	// Perform scan
@@ -261,7 +263,7 @@ func (s *APIServer) ScanProject(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProjectScans handles GET /api/projects/{id}/scans
-func (s *APIServer) GetProjectScans(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetProjectScans(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -325,7 +327,7 @@ func (s *APIServer) GetProjectScans(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProjectDependencyTree handles GET /api/projects/{id}/dependencies
-func (s *APIServer) GetProjectDependencyTree(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetProjectDependencyTree(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -359,7 +361,7 @@ func (s *APIServer) GetProjectDependencyTree(w http.ResponseWriter, r *http.Requ
 }
 
 // GetProjectStats handles GET /api/projects/{id}/stats
-func (s *APIServer) GetProjectStats(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetProjectStats(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -414,7 +416,7 @@ func (s *APIServer) GetProjectStats(w http.ResponseWriter, r *http.Request) {
 }
 
 // AutoScanProjects handles automatic scanning of projects
-func (s *APIServer) AutoScanProjects() {
+func (s *Server) AutoScanProjects() {
 	// TODO: Implement automatic scanning logic
 	// This would typically:
 	// 1. Get all projects with auto_scan enabled

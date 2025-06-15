@@ -83,21 +83,30 @@ func NewAPIServer(cfg *config.Config) (*APIServer, error) {
 	// Initialize analyzer
 	analyzer := analyzer.New(cfg)
 
-	// Initialize auth services (simplified for now)
-	authService := &auth.AuthService{}
-	userService := &auth.UserService{}
+	// Initialize auth services
+	authConfig := auth.Config{
+		JWTSecret:  cfg.API.Auth.JWTSecret,
+		AccessTTL:  15 * time.Minute,
+		RefreshTTL: 24 * time.Hour,
+		Issuer:     "typosentinel",
+	}
+	if authConfig.JWTSecret == "" {
+		authConfig.JWTSecret = "dev-secret-key-change-in-production"
+	}
+	authService := auth.NewAuthService(authConfig)
+	userService := auth.NewUserService(db.GetDB(), authService)
 	orgService := &auth.OrganizationService{}
 
 	// Create API handler
-	handler := NewServer(analyzer, db, mlClient, authService, userService, orgService)
+	handler := NewServer(analyzer, db, mlClient, authService, userService, orgService, cfg)
 
 	// Configure server
 	serverConfig := &ServerConfig{
 		Host:         cfg.API.Host,
 		Port:         cfg.API.Port,
-		ReadTimeout:  30 * time.Second,  // Default timeout
-		WriteTimeout: 30 * time.Second,  // Default timeout
-		IdleTimeout:  60 * time.Second,  // Default timeout
+		ReadTimeout:  30 * time.Second, // Default timeout
+		WriteTimeout: 30 * time.Second, // Default timeout
+		IdleTimeout:  60 * time.Second, // Default timeout
 		TLSCertFile:  cfg.API.TLS.CertFile,
 		TLSKeyFile:   cfg.API.TLS.KeyFile,
 		DebugMode:    cfg.Debug,
@@ -190,7 +199,7 @@ func (s *APIServer) StartWithGracefulShutdown() error {
 // Health check endpoint data
 type HealthStatus struct {
 	Status    string                 `json:"status"`
-	Timestamp time.Time             `json:"timestamp"`
+	Timestamp time.Time              `json:"timestamp"`
 	Version   string                 `json:"version"`
 	Services  map[string]interface{} `json:"services"`
 	Uptime    time.Duration          `json:"uptime"`
@@ -217,7 +226,7 @@ func (s *APIServer) GetHealthStatus() *HealthStatus {
 	if s.mlClient != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		
+
 		if _, err := s.mlClient.GetModels(ctx); err != nil {
 			services["ml_service"] = map[string]interface{}{
 				"connected": false,
@@ -290,53 +299,6 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 
 // setupRoutes configures all API routes
 func (s *APIServer) setupRoutes() {
-	// Health check
-	s.router.HandleFunc("/health", s.HealthCheck).Methods("GET")
-
-	// API routes
-	api := s.router.PathPrefix("/api").Subrouter()
-
-	// Authentication routes
-	api.HandleFunc("/auth/login", s.Login).Methods("POST")
-	api.HandleFunc("/auth/register", s.Register).Methods("POST")
-	api.HandleFunc("/auth/refresh", s.RefreshToken).Methods("POST")
-
-	// Protected routes
-	protected := api.PathPrefix("").Subrouter()
-	protected.Use(s.authMiddleware)
-
-	// Package routes
-	protected.HandleFunc("/packages", s.GetPackages).Methods("GET")
-	protected.HandleFunc("/packages/{name}", s.GetPackage).Methods("GET")
-	protected.HandleFunc("/packages/{name}/analyze", s.AnalyzePackage).Methods("POST")
-
-	// Scan routes
-	protected.HandleFunc("/scans", s.GetScans).Methods("GET")
-	protected.HandleFunc("/scans", s.CreateScan).Methods("POST")
-	protected.HandleFunc("/scans/{id}", s.GetScan).Methods("GET")
-
-	// User routes
-	protected.HandleFunc("/user/profile", s.GetProfile).Methods("GET")
-	protected.HandleFunc("/user/profile", s.UpdateProfile).Methods("PUT")
-
-	// Organization routes
-	protected.HandleFunc("/organizations/{id}", s.GetOrganization).Methods("GET")
-	protected.HandleFunc("/organizations/{id}/settings", s.UpdateOrganizationSettings).Methods("PUT")
-	protected.HandleFunc("/organizations/{id}/registries", s.GetCustomRegistries).Methods("GET")
-	protected.HandleFunc("/organizations/{id}/registries", s.CreateCustomRegistry).Methods("POST")
-	protected.HandleFunc("/organizations/{id}/registries/{registryId}", s.UpdateCustomRegistry).Methods("PUT")
-	protected.HandleFunc("/organizations/{id}/registries/{registryId}", s.DeleteCustomRegistry).Methods("DELETE")
-	protected.HandleFunc("/organizations/{id}/registries/{registryId}/test", s.TestCustomRegistry).Methods("POST")
-	protected.HandleFunc("/organizations/{id}/stats", s.GetOrganizationStats).Methods("GET")
-
-	// Project routes
-	protected.HandleFunc("/projects", s.GetProjects).Methods("GET")
-	protected.HandleFunc("/projects", s.CreateProject).Methods("POST")
-	protected.HandleFunc("/projects/{id}", s.GetProject).Methods("GET")
-	protected.HandleFunc("/projects/{id}", s.UpdateProject).Methods("PUT")
-	protected.HandleFunc("/projects/{id}", s.DeleteProject).Methods("DELETE")
-	protected.HandleFunc("/projects/{id}/scan", s.ScanProject).Methods("POST")
-	protected.HandleFunc("/projects/{id}/scans", s.GetProjectScans).Methods("GET")
-	protected.HandleFunc("/projects/{id}/dependencies", s.GetProjectDependencyTree).Methods("GET")
-	protected.HandleFunc("/projects/{id}/stats", s.GetProjectStats).Methods("GET")
+	// The handler already has all routes configured
+	// No additional setup needed here
 }

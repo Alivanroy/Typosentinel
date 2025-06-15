@@ -1,0 +1,87 @@
+# Multi-stage build for the Enhanced Typosentinel Server
+FROM golang:1.21-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata gcc musl-dev
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the enhanced server
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' \
+    -o enhanced-server ./cmd/enhanced-server/main.go
+
+# Build other utilities
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' \
+    -o scanner ./cmd/scanner/main.go
+
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' \
+    -o test-runner ./cmd/test_runner/main.go
+
+# Production stage
+FROM alpine:3.18
+
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates curl jq bash tzdata git
+
+# Create non-root user
+RUN addgroup -g 1001 -S typosentinel && \
+    adduser -u 1001 -S typosentinel -G typosentinel
+
+# Set working directory
+WORKDIR /app
+
+# Create necessary directories
+RUN mkdir -p /app/config /app/logs /app/cache /app/temp /app/data && \
+    chown -R typosentinel:typosentinel /app
+
+# Copy binaries from builder
+COPY --from=builder /app/enhanced-server /app/enhanced-server
+COPY --from=builder /app/scanner /app/scanner
+COPY --from=builder /app/test-runner /app/test-runner
+
+# Copy configuration files
+COPY --chown=typosentinel:typosentinel config/ /app/config/
+
+# Copy static assets if any
+COPY --chown=typosentinel:typosentinel web/static/ /app/static/
+
+# Copy templates if any
+COPY --chown=typosentinel:typosentinel web/templates/ /app/templates/
+
+# Copy scripts
+COPY --chown=typosentinel:typosentinel scripts/ /app/scripts/
+
+# Make binaries executable
+RUN chmod +x /app/enhanced-server /app/scanner /app/test-runner
+
+# Make scripts executable
+RUN chmod +x /app/scripts/*.sh
+
+# Switch to non-root user
+USER typosentinel
+
+# Expose ports
+EXPOSE 8080 9090 6060
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Set environment variables
+ENV GIN_MODE=release
+ENV CONFIG_FILE=/app/config/enhanced-server.yaml
+ENV LOG_LEVEL=info
+ENV GOMAXPROCS=0
+
+# Default command
+CMD ["/app/enhanced-server"]

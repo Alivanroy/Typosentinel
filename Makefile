@@ -76,6 +76,12 @@ deps: ## Install dependencies
 .PHONY: build
 build: $(BIN_DIR)/$(APP_NAME) $(BIN_DIR)/$(APP_NAME)-server ## Build binaries for current platform
 
+.PHONY: build-enhanced
+build-enhanced: $(BIN_DIR)/$(APP_NAME)-enhanced $(BIN_DIR)/$(APP_NAME)-worker $(BIN_DIR)/$(APP_NAME)-scanner ## Build enhanced server and workers
+
+.PHONY: build-all-enhanced
+build-all-enhanced: build build-enhanced ## Build all binaries including enhanced components
+
 $(BIN_DIR)/$(APP_NAME): $(GO_FILES)
 	@echo "Building $(APP_NAME) CLI..."
 	@mkdir -p $(BIN_DIR)
@@ -85,6 +91,21 @@ $(BIN_DIR)/$(APP_NAME)-server: $(GO_FILES)
 	@echo "Building $(APP_NAME) server..."
 	@mkdir -p $(BIN_DIR)
 	go build $(LDFLAGS) -o $(BIN_DIR)/$(APP_NAME)-server ./cmd/server
+
+$(BIN_DIR)/$(APP_NAME)-enhanced: $(GO_FILES)
+	@echo "Building $(APP_NAME) enhanced server..."
+	@mkdir -p $(BIN_DIR)
+	go build $(LDFLAGS) -o $(BIN_DIR)/$(APP_NAME)-enhanced ./cmd/enhanced-server
+
+$(BIN_DIR)/$(APP_NAME)-worker: $(GO_FILES)
+	@echo "Building $(APP_NAME) worker..."
+	@mkdir -p $(BIN_DIR)
+	go build $(LDFLAGS) -o $(BIN_DIR)/$(APP_NAME)-worker ./cmd/worker
+
+$(BIN_DIR)/$(APP_NAME)-scanner: $(GO_FILES)
+	@echo "Building $(APP_NAME) scanner..."
+	@mkdir -p $(BIN_DIR)
+	go build $(LDFLAGS) -o $(BIN_DIR)/$(APP_NAME)-scanner ./cmd/scanner
 
 .PHONY: build-all
 build-all: ## Build binaries for all platforms
@@ -352,6 +373,93 @@ ci: clean deps lint test build ## CI pipeline (clean, deps, lint, test, build)
 
 .PHONY: release
 release: clean deps lint test build-all package ## Full release pipeline
+
+# Enhanced Server Docker targets
+.PHONY: docker-build-enhanced
+docker-build-enhanced: ## Build enhanced server Docker images
+	@echo "Building enhanced server Docker images..."
+	docker build -f Dockerfile.enhanced -t $(DOCKER_REGISTRY)$(APP_NAME)-enhanced:$(DOCKER_TAG) .
+	docker build -f Dockerfile.enhanced -t $(DOCKER_REGISTRY)$(APP_NAME)-enhanced:latest .
+	docker build -f Dockerfile.worker -t $(DOCKER_REGISTRY)$(APP_NAME)-worker:$(DOCKER_TAG) .
+	docker build -f Dockerfile.worker -t $(DOCKER_REGISTRY)$(APP_NAME)-worker:latest .
+	@echo "Enhanced server Docker images built"
+
+.PHONY: docker-push-enhanced
+docker-push-enhanced: ## Push enhanced server Docker images
+	@echo "Pushing enhanced server Docker images..."
+	docker push $(DOCKER_REGISTRY)$(APP_NAME)-enhanced:$(DOCKER_TAG)
+	docker push $(DOCKER_REGISTRY)$(APP_NAME)-enhanced:latest
+	docker push $(DOCKER_REGISTRY)$(APP_NAME)-worker:$(DOCKER_TAG)
+	docker push $(DOCKER_REGISTRY)$(APP_NAME)-worker:latest
+	@echo "Enhanced server Docker images pushed"
+
+# Enhanced Server deployment targets
+.PHONY: dev-enhanced
+dev-enhanced: ## Start enhanced development environment
+	@echo "Starting enhanced development environment..."
+	docker-compose -f docker-compose.enhanced.yml --profile development up -d
+	@echo "Enhanced development environment started!"
+	@echo "Enhanced Server: http://localhost:8080"
+	@echo "Grafana: http://localhost:3001 (admin/admin)"
+	@echo "Prometheus: http://localhost:9091"
+	@echo "Kibana: http://localhost:5601"
+	@echo "pgAdmin: http://localhost:5050"
+	@echo "Redis Commander: http://localhost:8081"
+
+.PHONY: prod-enhanced
+prod-enhanced: ## Start enhanced production environment
+	@echo "Starting enhanced production environment..."
+	docker-compose -f docker-compose.enhanced.yml up -d
+	@echo "Enhanced production environment started!"
+	@echo "Load Balancer: http://localhost:80"
+	@echo "Enhanced Server: http://localhost:8080"
+	@echo "Monitoring: http://localhost:3001"
+
+.PHONY: stop-enhanced
+stop-enhanced: ## Stop enhanced environment
+	@echo "Stopping enhanced environment..."
+	docker-compose -f docker-compose.enhanced.yml down
+	@echo "Enhanced environment stopped"
+
+.PHONY: logs-enhanced
+logs-enhanced: ## Show enhanced environment logs
+	@echo "Showing enhanced environment logs..."
+	docker-compose -f docker-compose.enhanced.yml logs -f
+
+.PHONY: health-enhanced
+health-enhanced: ## Check enhanced server health
+	@echo "Checking enhanced server health..."
+	@curl -s http://localhost:8080/health | jq . || echo "Enhanced server not responding"
+	@curl -s http://localhost:8080/ready | jq . || echo "Enhanced server not ready"
+	@docker-compose -f docker-compose.enhanced.yml ps
+
+.PHONY: restart-enhanced
+restart-enhanced: stop-enhanced ## Restart enhanced environment
+	@sleep 5
+	@$(MAKE) dev-enhanced
+
+# Enhanced Server utilities
+.PHONY: run-enhanced
+run-enhanced: build-enhanced ## Run enhanced server locally
+	@echo "Starting enhanced server locally..."
+	./$(BIN_DIR)/$(APP_NAME)-enhanced
+
+.PHONY: run-worker
+run-worker: build-enhanced ## Run worker locally
+	@echo "Starting worker locally..."
+	./$(BIN_DIR)/$(APP_NAME)-worker
+
+.PHONY: backup-enhanced
+backup-enhanced: ## Create backup of enhanced environment
+	@echo "Creating backup..."
+	docker-compose -f docker-compose.enhanced.yml exec backup-service /app/scripts/backup.sh
+	@echo "Backup completed"
+
+.PHONY: migrate-enhanced
+migrate-enhanced: ## Run database migrations for enhanced environment
+	@echo "Running database migrations..."
+	docker-compose -f docker-compose.enhanced.yml exec enhanced-server /app/scripts/migrate.sh
+	@echo "Migrations completed"
 
 # Watch targets (requires entr or similar)
 .PHONY: watch

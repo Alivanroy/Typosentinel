@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/typosentinel/internal/analyzer"
-	"github.com/typosentinel/internal/config"
-	"github.com/typosentinel/internal/logger"
+	"github.com/typosentinel/typosentinel/internal/analyzer"
+	"github.com/typosentinel/typosentinel/internal/config"
+	"github.com/typosentinel/typosentinel/internal/logger"
 )
 
 // IDEScanRequest represents the request payload for IDE scanning

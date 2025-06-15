@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -148,6 +149,7 @@ func Load() (*Config, error) {
 
 	// Environment variables
 	v.SetEnvPrefix("TYPOSENTINEL")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
 	// Read configuration file

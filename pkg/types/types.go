@@ -370,16 +370,24 @@ type DependencyTree struct {
 
 // ScanResult represents the result of a package scan
 type ScanResult struct {
-	ID        string        `json:"id"`
-	ProjectID int           `json:"project_id,omitempty"`
-	Target    string        `json:"target"`
-	Type      string        `json:"type"`
-	Status    string        `json:"status"`
-	Packages  []*Package    `json:"packages"`
-	Summary   *ScanSummary  `json:"summary"`
-	Duration  time.Duration `json:"duration"`
-	CreatedAt time.Time     `json:"created_at"`
-	Error     string        `json:"error,omitempty"`
+	ID               string                 `json:"id"`
+	ProjectID        int                    `json:"project_id,omitempty"`
+	PackageID        string                 `json:"package_id,omitempty"`
+	OrganizationID   string                 `json:"organization_id,omitempty"`
+	Target           string                 `json:"target"`
+	Type             string                 `json:"type"`
+	ScanType         string                 `json:"scan_type,omitempty"`
+	Status           string                 `json:"status"`
+	OverallRisk      string                 `json:"overall_risk,omitempty"`
+	RiskScore        float64                `json:"risk_score,omitempty"`
+	Packages         []*Package             `json:"packages"`
+	Findings         []interface{}          `json:"findings,omitempty"`
+	Summary          *ScanSummary           `json:"summary"`
+	Duration         time.Duration          `json:"duration"`
+	ScanDurationMs   int64                  `json:"scan_duration_ms,omitempty"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	CreatedAt        time.Time              `json:"created_at"`
+	Error            string                 `json:"error,omitempty"`
 }
 
 // ProjectScan represents a project that can be scanned

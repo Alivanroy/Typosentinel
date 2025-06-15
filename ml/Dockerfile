@@ -32,12 +32,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /app/models /app/data /app/logs && \
-    chown -R appuser:appgroup /app
+# Create necessary directories and set up cache directory
+RUN mkdir -p /app/models /app/data /app/logs /home/appuser/.cache && \
+    chown -R appuser:appgroup /app /home/appuser
 
 # Switch to non-root user
 USER appuser
+
+# Set cache directory environment variable
+ENV HF_HOME=/app/models
+ENV TRANSFORMERS_CACHE=/app/models
 
 # Expose port
 EXPOSE 8000

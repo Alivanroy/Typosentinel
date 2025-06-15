@@ -1,7 +1,7 @@
 # Multi-stage build for TypoSentinel
 
 # Stage 1: Build the Go application
-FROM golang:1.21-alpine AS go-builder
+FROM golang:1.23-alpine AS go-builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -19,9 +19,9 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel-scanner cmd/scanner/main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel-server cmd/server/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel-scanner ./cmd/scanner
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel-server ./cmd/server
 
 # Stage 2: Build the Python ML service
 FROM python:3.11-slim AS python-builder

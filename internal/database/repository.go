@@ -45,12 +45,12 @@ func (r *Repository) GetPackage(name, registry string) (*types.Package, error) {
 	// Fallback to database
 	var pkg types.Package
 	err = r.db.QueryRow(`
-		SELECT id, name, registry, version, package_url, created_at
+		SELECT name, registry, version, analyzed_at
 		FROM packages
-		WHERE name = $1 AND registry = $2
-		ORDER BY created_at DESC
+		WHERE name = ? AND registry = ?
+		ORDER BY analyzed_at DESC
 		LIMIT 1
-	`, name, registry).Scan(&pkg.ID, &pkg.Name, &pkg.Registry, &pkg.Version, &pkg.PackageURL, &pkg.CreatedAt)
+	`, name, registry).Scan(&pkg.Name, &pkg.Registry, &pkg.Version, &pkg.AnalyzedAt)
 
 	if err != nil {
 		return nil, err
@@ -184,8 +184,8 @@ func (r *Repository) storeAnalyticsData(result *types.ScanResult) {
 
 	_, err := r.clickhouse.Exec(query,
 		result.ID,
-		result.PackageName,
-		result.Registry,
+		result.Target,
+		"", // Registry field - using empty string as fallback
 		result.OrganizationID,
 		result.RiskScore,
 		result.ScanType,

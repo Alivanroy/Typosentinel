@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/typosentinel/internal/events"
+	"github.com/typosentinel/typosentinel/internal/events"
 )
 
 type Hub struct {

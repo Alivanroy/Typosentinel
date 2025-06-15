@@ -11,7 +11,7 @@ import (
 )
 
 // GetOrganization handles GET /api/organizations/{id}
-func (s *APIServer) GetOrganization(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetOrganization(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -80,7 +80,7 @@ func (s *APIServer) GetOrganization(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateOrganizationSettings handles PUT /api/organizations/{id}/settings
-func (s *APIServer) UpdateOrganizationSettings(w http.ResponseWriter, r *http.Request) {
+func (s *Server) UpdateOrganizationSettings(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -114,7 +114,7 @@ func (s *APIServer) UpdateOrganizationSettings(w http.ResponseWriter, r *http.Re
 }
 
 // GetCustomRegistries handles GET /api/organizations/{id}/registries
-func (s *APIServer) GetCustomRegistries(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetCustomRegistries(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *APIServer) GetCustomRegistries(w http.ResponseWriter, r *http.Request) 
 }
 
 // CreateCustomRegistry handles POST /api/organizations/{id}/registries
-func (s *APIServer) CreateCustomRegistry(w http.ResponseWriter, r *http.Request) {
+func (s *Server) CreateCustomRegistry(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -205,7 +205,7 @@ func (s *APIServer) CreateCustomRegistry(w http.ResponseWriter, r *http.Request)
 }
 
 // UpdateCustomRegistry handles PUT /api/organizations/{id}/registries/{registryId}
-func (s *APIServer) UpdateCustomRegistry(w http.ResponseWriter, r *http.Request) {
+func (s *Server) UpdateCustomRegistry(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -253,7 +253,7 @@ func (s *APIServer) UpdateCustomRegistry(w http.ResponseWriter, r *http.Request)
 }
 
 // DeleteCustomRegistry handles DELETE /api/organizations/{id}/registries/{registryId}
-func (s *APIServer) DeleteCustomRegistry(w http.ResponseWriter, r *http.Request) {
+func (s *Server) DeleteCustomRegistry(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -287,7 +287,7 @@ func (s *APIServer) DeleteCustomRegistry(w http.ResponseWriter, r *http.Request)
 }
 
 // TestCustomRegistry handles POST /api/organizations/{id}/registries/{registryId}/test
-func (s *APIServer) TestCustomRegistry(w http.ResponseWriter, r *http.Request) {
+func (s *Server) TestCustomRegistry(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -329,7 +329,7 @@ func (s *APIServer) TestCustomRegistry(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetOrganizationStats handles GET /api/organizations/{id}/stats
-func (s *APIServer) GetOrganizationStats(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetOrganizationStats(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orgID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -387,7 +387,7 @@ func (s *APIServer) GetOrganizationStats(w http.ResponseWriter, r *http.Request)
 }
 
 // validateCustomRegistry validates a custom registry configuration
-func (s *APIServer) validateCustomRegistry(registry *types.CustomRegistry) error {
+func (s *Server) validateCustomRegistry(registry *types.CustomRegistry) error {
 	if registry.Name == "" {
 		return fmt.Errorf("registry name is required")
 	}

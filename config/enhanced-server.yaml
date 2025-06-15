@@ -1,0 +1,436 @@
+# Enhanced Typosentinel Server Configuration
+# This configuration file defines settings for all infrastructure components
+
+# Server Configuration
+server:
+  port: 8080
+  host: "0.0.0.0"
+  read_timeout: 30
+  write_timeout: 30
+  idle_timeout: 120
+  max_header_bytes: 1048576
+  environment: "development"
+  version: "2.0.0"
+
+# Database Configuration
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "typosentinel"
+  user: "typosentinel"
+  password: "password"
+  ssl_mode: "disable"
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: "1h"
+  migration_path: "./migrations"
+
+# Redis Configuration
+redis:
+  address: "localhost:6379"
+  password: ""
+  db: 0
+  pool_size: 10
+  min_idle_conns: 5
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  write_timeout: "3s"
+  pool_timeout: "4s"
+  idle_timeout: "5m"
+  idle_check_frequency: "1m"
+
+# Scanner Configuration
+scanner:
+  timeout: "5m"
+  max_file_size: 104857600  # 100MB
+  temp_dir: "/tmp/typosentinel"
+  parallel_scans: 4
+  enable_static_analysis: true
+  enable_dynamic_analysis: true
+  enable_ml_analysis: true
+  enable_behavioral_analysis: true
+
+# Queue Configuration
+queue:
+  workers: 10
+  max_retries: 3
+  retry_delay: "30s"
+  visibility_timeout: "10m"
+  message_retention: "24h"
+  dead_letter_queue: true
+  batch_size: 100
+
+# Worker Pool Configuration
+worker_pool:
+  min_workers: 5
+  max_workers: 50
+  scale_up_threshold: 0.8
+  scale_down_threshold: 0.2
+  idle_timeout: "5m"
+  task_timeout: "10m"
+  health_check_interval: "30s"
+  metrics_interval: "1m"
+  auto_scaling_enabled: true
+  scale_factor: 2
+
+# Cache Configuration
+cache:
+  cleanup_interval: "10m"
+  promotion_threshold: 5
+  
+  # L1 Cache (In-Memory)
+  l1:
+    max_size: 104857600  # 100MB
+    max_entries: 10000
+    ttl: "30m"
+    eviction_policy: "LRU"
+    
+  # L2 Cache (Redis)
+  l2:
+    ttl: "2h"
+    key_prefix: "typosentinel:cache:"
+    compression: true
+    
+  # L3 Cache (Persistent Storage)
+  l3:
+    storage_path: "./cache/l3"
+    max_file_size: 10485760  # 10MB
+    ttl: "24h"
+    compression: true
+
+# Monitoring Configuration
+monitoring:
+  health_check_interval: "30s"
+  metrics_interval: "1m"
+  retention_period: "7d"
+  enable_alerts: true
+  
+  alert_thresholds:
+    cpu_usage: 80.0
+    memory_usage: 85.0
+    disk_usage: 90.0
+    error_rate: 5.0
+    response_time: 5000  # milliseconds
+    queue_depth: 1000
+    
+  alert_channels:
+    - type: "email"
+      config:
+        smtp_host: "smtp.gmail.com"
+        smtp_port: 587
+        username: "alerts@typosentinel.com"
+        password: "password"
+        recipients:
+          - "admin@typosentinel.com"
+          - "ops@typosentinel.com"
+    - type: "slack"
+      config:
+        webhook_url: "https://hooks.slack.com/services/..."
+        channel: "#alerts"
+        username: "Typosentinel Bot"
+
+# Load Balancer Configuration
+load_balancer:
+  algorithm: "round_robin"  # round_robin, least_connections, weighted_round_robin, ip_hash
+  health_check_interval: "30s"
+  health_check_timeout: "5s"
+  max_retries: 3
+  retry_delay: "1s"
+  circuit_breaker_threshold: 5
+  circuit_breaker_timeout: "30s"
+  
+  backends:
+    - id: "scanner-1"
+      address: "localhost:8081"
+      weight: 1
+      health_check_path: "/health"
+    - id: "scanner-2"
+      address: "localhost:8082"
+      weight: 1
+      health_check_path: "/health"
+
+# Auto Scaler Configuration
+autoscaler:
+  min_instances: 2
+  max_instances: 20
+  target_cpu: 70.0
+  target_memory: 80.0
+  scale_up_cooldown: "5m"
+  scale_down_cooldown: "10m"
+  metrics_window: "5m"
+  check_interval: "1m"
+  
+  scaling_policies:
+    - metric: "cpu_usage"
+      threshold: 80.0
+      action: "scale_up"
+      adjustment: 2
+    - metric: "cpu_usage"
+      threshold: 20.0
+      action: "scale_down"
+      adjustment: 1
+    - metric: "memory_usage"
+      threshold: 85.0
+      action: "scale_up"
+      adjustment: 1
+    - metric: "queue_depth"
+      threshold: 500
+      action: "scale_up"
+      adjustment: 3
+
+# Batch Processor Configuration
+batch:
+  concurrency: 10
+  batch_size: 100
+  timeout: "30m"
+  retry_attempts: 3
+  retry_delay: "1m"
+  enable_progress_tracking: true
+  progress_update_interval: "10s"
+
+# Security Configuration
+security:
+  jwt_secret: "your-super-secret-jwt-key-change-this-in-production"
+  token_expiration: "24h"
+  refresh_expiration: "7d"
+  bcrypt_cost: 12
+  rate_limit_enabled: true
+  
+  rate_limits:
+    global:
+      requests_per_minute: 1000
+      burst: 100
+    per_user:
+      requests_per_minute: 100
+      burst: 20
+    per_ip:
+      requests_per_minute: 200
+      burst: 50
+      
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "https://app.typosentinel.com"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Origin"
+      - "Content-Type"
+      - "Authorization"
+      - "X-Requested-With"
+    allow_credentials: true
+    max_age: 86400
+
+# API Gateway Configuration
+gateway:
+  port: 8080
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "2m"
+  max_header_bytes: 1048576
+  enable_cors: true
+  enable_metrics: true
+  rate_limit_enabled: true
+  auth_required: true
+  
+  routes:
+    - path: "/api/v1/scan"
+      method: "POST"
+      type: "proxy"
+      target: "http://localhost:8081"
+      auth_level: "user"
+      rate_limit:
+        requests_per_minute: 60
+        burst: 10
+    - path: "/api/v1/health"
+      method: "GET"
+      type: "proxy"
+      target: "http://localhost:8081"
+      auth_level: "none"
+    - path: "/metrics"
+      method: "GET"
+      type: "static"
+      auth_level: "admin"
+
+# Event System Configuration
+events:
+  max_retries: 3
+  retry_delay: "5s"
+  event_ttl: "24h"
+  buffer_size: 1000
+  worker_count: 5
+  enable_history: true
+  history_size: 10000
+  
+  channels:
+    - name: "scan.events"
+      buffer_size: 500
+    - name: "threat.events"
+      buffer_size: 200
+    - name: "system.events"
+      buffer_size: 100
+
+# Logging Configuration
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json"  # json, text
+  output: "stdout"  # stdout, file
+  file_path: "./logs/typosentinel.log"
+  max_size: 100  # MB
+  max_backups: 5
+  max_age: 30  # days
+  compress: true
+  
+  # Component-specific log levels
+  components:
+    scanner: "info"
+    worker_pool: "info"
+    cache: "warn"
+    auth: "info"
+    gateway: "info"
+    monitor: "info"
+    events: "info"
+
+# Metrics Configuration
+metrics:
+  enabled: true
+  port: 9090
+  path: "/metrics"
+  namespace: "typosentinel"
+  
+  # Custom metrics
+  custom:
+    - name: "scan_duration_seconds"
+      type: "histogram"
+      help: "Time taken to complete package scans"
+      labels: ["package_type", "scan_type"]
+    - name: "threats_detected_total"
+      type: "counter"
+      help: "Total number of threats detected"
+      labels: ["severity", "type"]
+    - name: "cache_hit_ratio"
+      type: "gauge"
+      help: "Cache hit ratio percentage"
+      labels: ["level"]
+
+# Feature Flags
+features:
+  enable_ml_scanning: true
+  enable_behavioral_analysis: true
+  enable_dynamic_analysis: true
+  enable_reputation_checking: true
+  enable_provenance_verification: true
+  enable_similarity_detection: true
+  enable_typosquatting_detection: true
+  enable_malware_detection: true
+  enable_license_checking: true
+  enable_vulnerability_scanning: true
+  enable_dependency_analysis: true
+  enable_code_quality_analysis: true
+  enable_performance_monitoring: true
+  enable_real_time_alerts: true
+  enable_batch_processing: true
+  enable_api_rate_limiting: true
+  enable_audit_logging: true
+  enable_data_encryption: true
+  enable_backup_and_recovery: true
+  enable_multi_tenant_support: true
+
+# Development/Testing Configuration
+development:
+  enable_debug_endpoints: true
+  enable_profiling: true
+  profiling_port: 6060
+  mock_external_services: false
+  test_data_path: "./test-data"
+  
+# Production Configuration
+production:
+  enable_debug_endpoints: false
+  enable_profiling: false
+  strict_security: true
+  audit_all_requests: true
+  backup_interval: "6h"
+  backup_retention: "30d"
+  
+# Integration Configuration
+integrations:
+  # ML Service
+  ml_service:
+    enabled: true
+    endpoint: "http://localhost:5000"
+    timeout: "30s"
+    api_key: "ml-service-api-key"
+    
+  # External Threat Intelligence
+  threat_intel:
+    enabled: true
+    providers:
+      - name: "virustotal"
+        api_key: "vt-api-key"
+        rate_limit: 4  # requests per minute
+      - name: "malware_bazaar"
+        api_key: "mb-api-key"
+        rate_limit: 10
+        
+  # Package Registries
+  registries:
+    npm:
+      enabled: true
+      api_endpoint: "https://registry.npmjs.org"
+      rate_limit: 100
+    pypi:
+      enabled: true
+      api_endpoint: "https://pypi.org/pypi"
+      rate_limit: 100
+    maven:
+      enabled: true
+      api_endpoint: "https://search.maven.org"
+      rate_limit: 50
+      
+  # Notification Services
+  notifications:
+    email:
+      enabled: true
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: "notifications@typosentinel.com"
+      password: "email-password"
+    slack:
+      enabled: true
+      webhook_url: "https://hooks.slack.com/services/..."
+    webhook:
+      enabled: true
+      endpoints:
+        - url: "https://api.example.com/webhooks/typosentinel"
+          secret: "webhook-secret"
+          events: ["threat.detected", "scan.completed"]
+
+# Compliance and Audit
+compliance:
+  enable_audit_logging: true
+  audit_log_path: "./logs/audit.log"
+  retention_period: "7y"
+  
+  # GDPR Compliance
+  gdpr:
+    enabled: true
+    data_retention_period: "2y"
+    anonymization_enabled: true
+    
+  # SOC2 Compliance
+  soc2:
+    enabled: true
+    access_logging: true
+    change_management: true
+    
+  # ISO 27001
+  iso27001:
+    enabled: true
+    risk_assessment_interval: "6m"
+    security_review_interval: "3m"

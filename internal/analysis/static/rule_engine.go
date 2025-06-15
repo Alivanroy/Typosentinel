@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/typosentinel/internal/types"
+	"github.com/typosentinel/typosentinel/internal/types"
 )
 
 type Severity int

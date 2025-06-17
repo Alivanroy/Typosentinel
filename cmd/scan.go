@@ -11,12 +11,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/typosentinel/typosentinel/internal/config"
-	"github.com/typosentinel/typosentinel/internal/dynamic"
-	"github.com/typosentinel/typosentinel/internal/ml"
-	"github.com/typosentinel/typosentinel/internal/provenance"
-	"github.com/typosentinel/typosentinel/internal/static"
-	"github.com/typosentinel/typosentinel/pkg/types"
+	"typosentinel/internal/config"
+	"typosentinel/internal/dynamic"
+	"typosentinel/internal/ml"
+	"typosentinel/internal/provenance"
+	"typosentinel/internal/static"
+	"typosentinel/pkg/types"
 )
 
 // ScanResult represents the combined results from all analysis engines.

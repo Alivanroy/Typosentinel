@@ -1,118 +1,56 @@
 # TypoSentinel
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)](#)
+A comprehensive security tool for detecting typosquatting and malicious packages across multiple package managers.
 
-TypoSentinel is an advanced typosquatting detection system that protects organizations from malicious packages in software supply chains. It combines multiple detection algorithms with machine learning to identify suspicious packages across various package registries.
+## Features
 
-## 🚀 Features
+- **Multi-language Support**: Analyzes packages from npm, PyPI, Go modules, Rust crates, Ruby gems, PHP Composer, Java Maven, and .NET NuGet
+- **Advanced Detection**: Uses multiple analysis engines including static analysis, dynamic analysis, ML-based detection, and provenance verification
+- **Typosquatting Detection**: Identifies packages that mimic popular legitimate packages
+- **Supply Chain Security**: Comprehensive analysis of package dependencies and build processes
+- **Multiple Output Formats**: JSON, YAML, text, and table formats for integration with CI/CD pipelines
+- **Configurable Rules**: Customizable detection rules and thresholds
+- **CLI Interface**: Command-line tool for scanning packages and dependencies
 
-- **Multi-Registry Support**: NPM, PyPI, Go Modules, Cargo, RubyGems, Packagist
-- **Advanced Detection Algorithms**:
-  - Lexical similarity analysis (Levenshtein, Jaro-Winkler)
-  - Homoglyph detection
-  - Dependency confusion detection
-  - Reputation-based analysis
-- **Machine Learning Integration**: 
-  - Semantic similarity models
-  - Malicious package classification
-  - Batch analysis capabilities
-- **REST API**: Comprehensive API for integration
-- **CLI Tool**: Command-line interface for scanning
-- **Real-time Scanning**: Continuous monitoring capabilities
-- **Policy Engine**: Customizable security policies
-- **Database Storage**: PostgreSQL for persistence
+## Prerequisites
 
-## 📋 Prerequisites
+- Go 1.23 or higher
 
-- **Go**: 1.21 or higher
-- **Python**: 3.8+ (for ML components)
-- **PostgreSQL**: 12+ (for data storage)
-- **Docker**: Optional, for containerized deployment
+## Installation
 
-## 🛠️ Installation
-
-### From Source
+### Build from Source
 
 ```bash
-# Clone the repository
-git clone https://github.com/typosentinel/typosentinel.git
+git clone https://github.com/Alivanroy/Typosentinel.git
 cd typosentinel
-
-# Install Go dependencies
-go mod download
-
-# Install Python dependencies for ML components
-cd ml
-pip install -r requirements.txt
-cd ..
-
-# Build the application
-go build -o bin/typosentinel cmd/typosentinel/main.go
+go build -o typosentinel ./cmd/typosentinel
 ```
 
-### Using Docker
+### Using Go Install
 
 ```bash
-# Build the Docker image
-docker build -t typosentinel .
-
-# Run with Docker Compose
-docker-compose up -d
+go install github.com/Alivanroy/Typosentinel/cmd/typosentinel@latest
 ```
 
-## ⚙️ Configuration
+## Configuration
 
-Create a configuration file `config.yaml`:
+Create a configuration file:
 
 ```yaml
-api:
-  host: "localhost"
-  port: 8080
-  debug_mode: false
-  read_timeout_seconds: 30
-  write_timeout_seconds: 30
-  idle_timeout_seconds: 60
-
-database:
-  host: "localhost"
-  port: 5432
-  name: "typosentinel"
-  user: "postgres"
-  password: "password"
-  ssl_mode: "disable"
-  max_connections: 25
-  max_idle_connections: 5
-  connection_max_lifetime_minutes: 30
-
-ml_service:
-  base_url: "http://localhost:8000"
-  api_key: "your-ml-api-key"
-  timeout_seconds: 30
-  max_retries: 3
+# config.yaml
+logging:
+  level: "info"
+  format: "json"
 
 detection:
-  similarity_threshold: 0.8
-  homoglyph_threshold: 0.9
-  reputation_threshold: 0.7
-  max_suggestions: 10
-  enable_ml_detection: true
-  enable_reputation_check: true
+  static_analysis: true
+  dynamic_analysis: true
+  ml_analysis: true
+  provenance_analysis: true
 
-registries:
-  npm:
-    base_url: "https://registry.npmjs.org"
-    rate_limit_per_minute: 60
-    timeout_seconds: 10
-  pypi:
-    base_url: "https://pypi.org"
-    rate_limit_per_minute: 60
-    timeout_seconds: 10
-  go:
-    base_url: "https://proxy.golang.org"
-    rate_limit_per_minute: 60
-    timeout_seconds: 10
+output:
+  format: "json"  # json, yaml, text, table
+  file: ""        # optional output file
 ```
 
 ## 🚀 Quick Start
@@ -147,26 +85,65 @@ python api_server.py --host 0.0.0.0 --port 8000
 ./bin/typosentinel scan package react --registry npm --severity-threshold medium --output json
 ```
 
-## 📖 Usage
+## Usage
 
-### CLI Commands
+### CLI Tool
 
-#### Scanning
+#### Basic Package Scanning
 
 ```bash
-# Scan a specific package
-typosentinel scan package <package-name> --registry <registry>
+# Scan a single package
+./typosentinel scan --package "express" --registry npm
 
-# Scan from dependency file
-typosentinel scan file <file-path>
+# Scan multiple packages
+./typosentinel scan --packages "express,lodash,react" --registry npm
 
-# Scan with options
-typosentinel scan package lodash \
-  --registry npm \
-  --severity-threshold high \
-  --include-dev-dependencies \
-  --output json \
-  --output-file results.json
+# Scan with custom threshold
+./typosentinel scan --package "express" --registry npm --threshold 0.9
+
+# Output to file
+./typosentinel scan --package "express" --registry npm --output results.json
+```
+
+#### Dependency Analysis
+
+```bash
+# Scan project dependencies
+./typosentinel scan --project-path ./my-project
+
+# Scan specific dependency file
+./typosentinel scan --dependency-file package.json
+./typosentinel scan --dependency-file requirements.txt
+./typosentinel scan --dependency-file go.mod
+```
+
+#### Output Formats
+
+```bash
+# JSON output (default)
+./typosentinel scan --package "express" --format json
+
+# YAML output
+./typosentinel scan --package "express" --format yaml
+
+# Table output
+./typosentinel scan --package "express" --format table
+
+# Text output
+./typosentinel scan --package "express" --format text
+```
+
+#### Configuration
+
+```bash
+# Use custom config file
+./typosentinel scan --config /path/to/config.yaml --package "express"
+
+# Set log level
+./typosentinel scan --package "express" --log-level debug
+
+# Enable specific analysis engines
+./typosentinel scan --package "express" --static --dynamic --ml --provenance
 ```
 
 #### Configuration
@@ -189,143 +166,92 @@ typosentinel config validate
 typosentinel version
 ```
 
-### REST API
-
-#### Authentication
-
-All API requests require an API key in the Authorization header:
+#### Help and Documentation
 
 ```bash
-curl -H "Authorization: Bearer your-api-key" \
-     http://localhost:8080/api/v1/scan
+# Show help
+./typosentinel --help
+
+# Show help for scan command
+./typosentinel scan --help
+
+# Show version
+./typosentinel version
 ```
 
-#### Endpoints
+## Supported Package Managers
 
-##### Health Check
+- **npm** - Node.js packages
+- **PyPI** - Python packages  
+- **Go Modules** - Go packages
+- **Cargo** - Rust crates
+- **RubyGems** - Ruby gems
+- **Packagist** - PHP Composer packages
+- **Maven** - Java packages
+- **NuGet** - .NET packages
 
-```bash
-GET /health
-```
+## Example Output
 
-##### Create Scan
-
-```bash
-POST /api/v1/scan
-Content-Type: application/json
-
+### JSON Format
+```json
 {
-  "options": {
-    "target": "package.json",
-    "include_dev_dependencies": true,
-    "severity_threshold": "medium",
-    "max_depth": 3,
-    "timeout_seconds": 300
+  "scan_id": "12345",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "package": {
+    "name": "express",
+    "registry": "npm",
+    "version": "4.18.2"
+  },
+  "results": {
+    "risk_score": 0.2,
+    "severity": "low",
+    "issues": [],
+    "similar_packages": [
+      {
+        "name": "expres",
+        "similarity": 0.95,
+        "risk": "high"
+      }
+    ]
   }
 }
 ```
 
-##### Get Scan Results
-
-```bash
-GET /api/v1/scan/{scan_id}
+### Table Format
+```
+┌─────────────┬──────────┬────────────┬──────────────┐
+│ Package     │ Registry │ Risk Score │ Severity     │
+├─────────────┼──────────┼────────────┼──────────────┤
+│ express     │ npm      │ 0.2        │ low          │
+│ lodash      │ npm      │ 0.1        │ low          │
+└─────────────┴──────────┴────────────┴──────────────┘
 ```
 
-##### List Scans
-
-```bash
-GET /api/v1/scans?limit=20&offset=0
-```
-
-##### Find Similar Packages
-
-```bash
-POST /api/v1/ml/similarity
-Content-Type: application/json
-
-{
-  "package_name": "express",
-  "registry": "npm",
-  "top_k": 10,
-  "threshold": 0.7
-}
-```
-
-##### Check Malicious Package
-
-```bash
-POST /api/v1/ml/malicious
-Content-Type: application/json
-
-{
-  "package_name": "suspicious-package",
-  "registry": "npm",
-  "version": "1.0.0"
-}
-```
-
-## 🧠 Machine Learning Components
-
-TypoSentinel includes advanced ML models for enhanced detection:
-
-### Semantic Similarity Model
-
-- Uses sentence transformers for package name embeddings
-- FAISS index for efficient similarity search
-- Detects semantically similar package names
-
-### Malicious Package Classifier
-
-- Multi-modal feature extraction
-- Random Forest and Isolation Forest ensemble
-- Analyzes package metadata, dependencies, and patterns
-
-### Starting ML Service
-
-```bash
-cd ml/service
-python api_server.py --host 0.0.0.0 --port 8000 --workers 4
-```
-
-## 🗄️ Database Schema
-
-TypoSentinel uses PostgreSQL with the following main tables:
-
-- `organizations`: Organization management
-- `users`: User accounts and roles
-- `api_keys`: API key management
-- `scan_requests`: Scan job tracking
-- `scan_results`: Scan results storage
-- `threats`: Detected threats
-- `policies`: Security policies
-- `package_metadata`: Package information cache
-- `audit_logs`: Activity logging
-
-## 🔧 Development
+## Development
 
 ### Project Structure
 
 ```
 .
 ├── cmd/                    # Application entry points
-│   ├── server/            # API server
 │   └── typosentinel/      # CLI application
 ├── internal/              # Private application code
 │   ├── analyzer/          # Core scanning logic
 │   ├── config/            # Configuration management
-│   ├── database/          # Database layer
 │   ├── detector/          # Detection algorithms
-│   ├── ml/                # ML client
-│   └── registry/          # Registry connectors
+│   ├── dynamic/           # Dynamic analysis
+│   ├── ml/                # ML-based detection
+│   ├── provenance/        # Provenance analysis
+│   ├── scanner/           # Main scanner logic
+│   └── static/            # Static analysis
 ├── pkg/                   # Public packages
-│   ├── api/               # REST API handlers
-│   └── types/             # Shared types
-├── ml/                    # Machine learning components
-│   ├── models/            # ML model implementations
-│   ├── service/           # ML API service
-│   └── requirements.txt   # Python dependencies
+│   ├── npm/               # NPM registry support
+│   ├── pypi/              # PyPI registry support
+│   ├── golang/            # Go modules support
+│   └── types/             # Common types
 ├── scripts/               # Build and deployment scripts
-├── test/                  # Test files
+├── tests/                 # Test files
+├── configs/               # Configuration files
 └── docs/                  # Documentation
 ```
 
@@ -338,83 +264,34 @@ go test ./...
 # Run with coverage
 go test -cover ./...
 
-# Run Python tests
-cd ml
-python -m pytest tests/
+# Run specific package tests
+go test ./internal/detector/...
+go test ./pkg/npm/...
 ```
 
 ### Building
 
 ```bash
 # Build for current platform
-go build -o bin/typosentinel cmd/typosentinel/main.go
+go build -o typosentinel ./cmd/typosentinel
 
 # Build for multiple platforms
-GOOS=linux GOARCH=amd64 go build -o bin/typosentinel-linux-amd64 cmd/typosentinel/main.go
-GOOS=windows GOARCH=amd64 go build -o bin/typosentinel-windows-amd64.exe cmd/typosentinel/main.go
-GOOS=darwin GOARCH=amd64 go build -o bin/typosentinel-darwin-amd64 cmd/typosentinel/main.go
+GOOS=linux GOARCH=amd64 go build -o typosentinel-linux-amd64 ./cmd/typosentinel
+GOOS=windows GOARCH=amd64 go build -o typosentinel-windows-amd64.exe ./cmd/typosentinel
+GOOS=darwin GOARCH=amd64 go build -o typosentinel-darwin-amd64 ./cmd/typosentinel
 ```
 
-## 🐳 Docker Deployment
+## Docker Usage
 
-### Docker Compose
+```bash
+# Build Docker image
+docker build -t typosentinel .
 
-```yaml
-version: '3.8'
-services:
-  typosentinel-api:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - DATABASE_URL=postgres://postgres:password@db:5432/typosentinel
-      - ML_SERVICE_URL=http://ml-service:8000
-    depends_on:
-      - db
-      - ml-service
-
-  ml-service:
-    build: ./ml
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONPATH=/app
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=typosentinel
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-volumes:
-  postgres_data:
+# Run with Docker
+docker run --rm -v $(pwd):/workspace typosentinel scan --project-path /workspace
 ```
 
-## 📊 Monitoring and Logging
-
-TypoSentinel provides comprehensive monitoring capabilities:
-
-- Health check endpoints
-- Structured logging with configurable levels
-- Metrics collection (Prometheus compatible)
-- Audit logging for security events
-- Performance monitoring
-
-## 🔒 Security
-
-- API key authentication
-- Rate limiting
-- Input validation and sanitization
-- SQL injection prevention
-- Secure configuration management
-- Audit logging
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -425,42 +302,36 @@ TypoSentinel provides comprehensive monitoring capabilities:
 ### Development Guidelines
 
 - Follow Go best practices and conventions
-- Write comprehensive tests
-- Update documentation
+- Write comprehensive tests for new features
+- Update documentation as needed
 - Use meaningful commit messages
 - Ensure code passes linting and tests
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- [Levenshtein Distance Algorithm](https://en.wikipedia.org/wiki/Levenshtein_distance)
-- [Jaro-Winkler Similarity](https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance)
-- [Sentence Transformers](https://www.sbert.net/)
-- [FAISS](https://github.com/facebookresearch/faiss)
-- [Gin Web Framework](https://github.com/gin-gonic/gin)
-- [Cobra CLI](https://github.com/spf13/cobra)
+- [Cobra CLI](https://github.com/spf13/cobra) - CLI framework
+- [Viper](https://github.com/spf13/viper) - Configuration management
+- [Logrus](https://github.com/sirupsen/logrus) - Structured logging
 
-## 📞 Support
+## Support
 
 For support, please:
 
 1. Check the [documentation](docs/)
-2. Search [existing issues](https://github.com/typosentinel/typosentinel/issues)
-3. Create a [new issue](https://github.com/typosentinel/typosentinel/issues/new)
+2. Search [existing issues](https://github.com/Alivanroy/Typosentinel/issues)
+3. Create a [new issue](https://github.com/Alivanroy/Typosentinel/issues/new)
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Support for additional package registries
-- [ ] Enhanced ML models with transformer architectures
-- [ ] Real-time monitoring dashboard
+- [ ] Enhanced detection algorithms
 - [ ] Integration with CI/CD pipelines
-- [ ] Advanced policy engine with custom rules
-- [ ] Kubernetes operator for deployment
-- [ ] GraphQL API support
-- [ ] Mobile application for monitoring
+- [ ] Advanced configuration options
+- [ ] Performance optimizations
 
 ---
 

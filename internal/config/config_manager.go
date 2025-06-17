@@ -15,7 +15,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"gopkg.in/yaml.v2"
 
-	"github.com/typosentinel/typosentinel/pkg/metrics"
+	"typosentinel/pkg/metrics"
 )
 
 // ConfigSource defines where configuration comes from

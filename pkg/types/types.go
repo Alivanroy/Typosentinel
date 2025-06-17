@@ -466,6 +466,27 @@ type MLModelInfo struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// BatchJob represents a batch processing job
+type BatchJob struct {
+	ID               string     `json:"id"`
+	OrganizationID   string     `json:"organization_id"`
+	UserID           string     `json:"user_id"`
+	Name             string     `json:"name"`
+	Description      string     `json:"description,omitempty"`
+	Status           string     `json:"status"`
+	Progress         float64    `json:"progress"`
+	TotalPackages    int        `json:"total_packages"`
+	ProcessedCount   int        `json:"processed_count"`
+	SuccessCount     int        `json:"success_count"`
+	FailureCount     int        `json:"failure_count"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	CompletedAt      *time.Time `json:"completed_at,omitempty"`
+	Configuration    map[string]interface{} `json:"configuration,omitempty"`
+	Results          []AnalysisResult `json:"results,omitempty"`
+	Errors           []string   `json:"errors,omitempty"`
+}
+
 // AuditLog represents an audit log entry
 type AuditLog struct {
 	ID             string                 `json:"id"`

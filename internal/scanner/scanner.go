@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/typosentinel/typosentinel/internal/config"
-	"github.com/typosentinel/typosentinel/pkg/types"
+	"typosentinel/internal/config"
+	"typosentinel/pkg/types"
 )
 
 // Scanner handles project scanning and dependency analysis
@@ -160,36 +160,106 @@ func (s *Scanner) extractPackages(projectInfo *ProjectInfo) ([]*types.Package, e
 
 // analyzePackageThreats analyzes threats for a specific package
 func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, error) {
-	// TODO: Implement threat analysis
-	// This would typically involve:
-	// 1. Checking against known vulnerability databases
-	// 2. Analyzing package metadata for suspicious patterns
-	// 3. Using ML models for typosquatting detection
-	// 4. Checking package reputation and maintainer history
-
 	var threats []*types.Threat
 
-	// Example threat detection (placeholder)
-	if strings.Contains(pkg.Name, "test") {
-		threats = append(threats, &types.Threat{
-			ID:          fmt.Sprintf("typo-%s-%d", pkg.Name, len(threats)),
-			Package:     pkg.Name,
-			Version:     pkg.Version,
-			Registry:    pkg.Registry,
-			Type:        types.ThreatTypeTyposquatting,
-			Severity:    types.SeverityMedium,
-			Description: "Package name contains suspicious patterns",
-			Evidence: []types.Evidence{
-				{
-					Type:        "name_similarity",
-					Description: "Similar to popular package",
-					Score:       0.7,
+	// Typosquatting detection using similarity analysis
+	popularPackages := []string{
+		"numpy", "pandas", "requests", "flask", "django", "tensorflow",
+		"react", "angular", "vue", "express", "lodash", "axios",
+		"jquery", "bootstrap", "moment", "chalk", "commander",
+	}
+
+	for _, popular := range popularPackages {
+		if similarity := s.calculateSimilarity(pkg.Name, popular); similarity > 0.7 && pkg.Name != popular {
+			threats = append(threats, &types.Threat{
+				ID:          fmt.Sprintf("typo-%s-%d", pkg.Name, len(threats)),
+				Package:     pkg.Name,
+				Version:     pkg.Version,
+				Registry:    pkg.Registry,
+				Type:        types.ThreatTypeTyposquatting,
+				Severity:    types.SeverityHigh,
+				Description: fmt.Sprintf("Potential typosquatting: %s is similar to popular package %s (similarity: %.3f)", pkg.Name, popular, similarity),
+				Evidence: []types.Evidence{
+					{
+						Type:        "similarity",
+						Description: "Levenshtein distance similarity score",
+						Score:       similarity,
+					},
 				},
-			},
-		})
+			})
+		}
 	}
 
 	return threats, nil
+}
+
+// calculateSimilarity calculates similarity between two strings
+func (s *Scanner) calculateSimilarity(s1, s2 string) float64 {
+	if s1 == s2 {
+		return 1.0
+	}
+
+	// Simple Levenshtein distance-based similarity
+	dist := s.levenshteinDistance(s1, s2)
+	maxLen := s.max(len(s1), len(s2))
+	if maxLen == 0 {
+		return 1.0
+	}
+
+	return 1.0 - float64(dist)/float64(maxLen)
+}
+
+// levenshteinDistance calculates the Levenshtein distance between two strings
+func (s *Scanner) levenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+	}
+
+	for i := 0; i <= len(s1); i++ {
+		matrix[i][0] = i
+	}
+	for j := 0; j <= len(s2); j++ {
+		matrix[0][j] = j
+	}
+
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+			matrix[i][j] = s.min(
+				matrix[i-1][j]+1,
+				s.min(matrix[i][j-1]+1, matrix[i-1][j-1]+cost),
+			)
+		}
+	}
+
+	return matrix[len(s1)][len(s2)]
+}
+
+// min returns the minimum of two integers
+func (s *Scanner) min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// max returns the maximum of two integers
+func (s *Scanner) max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // calculateRiskLevel calculates the risk level based on threats

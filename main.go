@@ -1,7 +1,13 @@
 package main
 
-import "github.com/typosentinel/typosentinel/cmd"
+import (
+	"os"
+
+	"typosentinel/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

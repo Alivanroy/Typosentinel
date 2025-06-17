@@ -1,0 +1,287 @@
+# TypoSentinel Project Documentation
+
+## Overview
+
+TypoSentinel is a comprehensive CLI security tool designed to detect typosquatting and malicious packages across multiple package managers. After cleanup, the project focuses on core CLI functionality with a streamlined architecture.
+
+## Project Structure
+
+```
+TypoSentinel/
+├── .github/
+│   └── workflows/             # GitHub Actions CI/CD
+├── cmd/                       # CLI command definitions
+│   ├── cmd.go                 # Main command setup and execution
+│   ├── root.go                # Root command definition
+│   └── scan.go                # Scan command implementation
+├── internal/                  # Private application code
+│   ├── analyzer/              # Core analysis orchestration
+│   ├── config/                # Configuration management
+│   ├── detector/              # Detection algorithms and logic
+│   ├── dynamic/               # Dynamic analysis engine
+│   ├── ml/                    # Machine learning detection
+│   ├── provenance/            # Provenance verification
+│   ├── scanner/               # Main scanning logic
+│   └── static/                # Static analysis engine
+├── pkg/                       # Public packages
+│   ├── config/                # Configuration utilities
+│   ├── logger/                # Logging utilities
+│   └── types/                 # Common types and interfaces
+├── scripts/                   # Build and deployment scripts
+├── tests/                     # Test files (currently empty after cleanup)
+├── config.yaml                # Default configuration file
+├── go.mod                     # Go module definition
+├── go.sum                     # Go module checksums
+├── main.go                    # Application entry point
+├── Dockerfile                 # Docker build configuration
+├── Makefile                   # Build automation
+├── PROJECT_DOCUMENTATION.md   # Comprehensive project documentation
+└── README.md                  # Project overview and usage
+```
+
+## Core Components
+
+### CLI Application (`cmd/typosentinel/`)
+- Main entry point for the CLI tool
+- Command-line argument parsing using Cobra
+- Configuration loading and validation
+- Output formatting and file handling
+
+### Analysis Engines (`internal/`)
+
+#### Scanner (`internal/scanner/`)
+- Main orchestration logic
+- Coordinates different analysis engines
+- Manages scan lifecycle and results
+
+#### Static Analysis (`internal/static/`)
+- Package metadata analysis
+- Dependency tree examination
+- File structure analysis
+- Manifest file validation
+
+#### Dynamic Analysis (`internal/dynamic/`)
+- Runtime behavior analysis
+- Installation process monitoring
+- Network activity detection
+- File system changes tracking
+
+#### ML Analysis (`internal/ml/`)
+- Machine learning-based detection
+- Pattern recognition
+- Anomaly detection
+- Similarity analysis
+
+#### Provenance Analysis (`internal/provenance/`)
+- Supply chain verification
+- Build process validation
+- Source code authenticity
+- Signature verification
+
+#### Detector (`internal/detector/`)
+- Core detection algorithms
+- Typosquatting identification
+- Malicious pattern matching
+- Risk scoring
+
+### Package Registry Support (`pkg/`)
+
+#### NPM (`pkg/npm/`)
+- NPM registry API integration
+- Package.json parsing
+- Dependency resolution
+- Version analysis
+
+#### PyPI (`pkg/pypi/`)
+- PyPI API integration
+- Requirements.txt parsing
+- Setup.py analysis
+- Wheel file inspection
+
+#### Go Modules (`pkg/golang/`)
+- Go.mod parsing
+- Module proxy integration
+- Dependency graph analysis
+- Version constraint handling
+
+#### Common Types (`pkg/types/`)
+- Shared data structures
+- Interface definitions
+- Common utilities
+- Error types
+
+## Key Features
+
+### Multi-Registry Support
+- NPM (Node.js packages)
+- PyPI (Python packages)
+- Go Modules (Go packages)
+- Cargo (Rust crates)
+- RubyGems (Ruby gems)
+- Packagist (PHP Composer)
+- Maven (Java packages)
+- NuGet (.NET packages)
+
+### Detection Capabilities
+- Typosquatting detection using similarity algorithms
+- Malicious package identification
+- Supply chain security analysis
+- Dependency confusion detection
+- Behavioral analysis
+- Provenance verification
+
+### Output Formats
+- JSON (structured data)
+- YAML (human-readable structured)
+- Table (formatted display)
+- Text (simple output)
+
+### Configuration
+- YAML-based configuration
+- Environment variable support
+- Command-line flag overrides
+- Flexible detection thresholds
+
+## Usage Patterns
+
+### Single Package Scanning
+```bash
+./typosentinel scan --package "express" --registry npm
+```
+
+### Project Dependency Scanning
+```bash
+./typosentinel scan --project-path ./my-project
+```
+
+### Batch Processing
+```bash
+./typosentinel scan --packages "express,lodash,react" --registry npm
+```
+
+### Custom Configuration
+```bash
+./typosentinel scan --config custom-config.yaml --package "express"
+```
+
+## Build and Deployment
+
+### Local Build
+```bash
+go build -o typosentinel ./cmd/typosentinel
+```
+
+### Cross-Platform Build
+```bash
+GOOS=linux GOARCH=amd64 go build -o typosentinel-linux-amd64 ./cmd/typosentinel
+GOOS=windows GOARCH=amd64 go build -o typosentinel-windows-amd64.exe ./cmd/typosentinel
+GOOS=darwin GOARCH=amd64 go build -o typosentinel-darwin-amd64 ./cmd/typosentinel
+```
+
+### Docker Usage
+```bash
+docker build -t typosentinel .
+docker run --rm -v $(pwd):/workspace typosentinel scan --project-path /workspace
+```
+
+## Testing
+
+### Unit Tests
+```bash
+go test ./...
+```
+
+### Coverage Analysis
+```bash
+go test -cover ./...
+```
+
+### Package-Specific Tests
+```bash
+go test ./internal/detector/...
+go test ./pkg/npm/...
+```
+
+## Configuration Options
+
+### Detection Settings
+- `static_analysis`: Enable/disable static analysis
+- `dynamic_analysis`: Enable/disable dynamic analysis
+- `ml_analysis`: Enable/disable ML-based detection
+- `provenance_analysis`: Enable/disable provenance verification
+
+### Output Settings
+- `format`: Output format (json, yaml, text, table)
+- `file`: Output file path (optional)
+- `verbose`: Verbose logging
+
+### Logging Settings
+- `level`: Log level (debug, info, warn, error)
+- `format`: Log format (json, text)
+
+## Security Considerations
+
+- Input validation and sanitization
+- Secure configuration management
+- No hardcoded credentials
+- Minimal external dependencies
+- Safe file handling
+- Network request validation
+
+## Performance Characteristics
+
+- Concurrent package analysis
+- Efficient memory usage
+- Configurable timeouts
+- Rate limiting for registry APIs
+- Caching for repeated requests
+
+## Extensibility
+
+### Adding New Package Managers
+1. Implement registry interface in `pkg/`
+2. Add detection logic in `internal/detector/`
+3. Update configuration schema
+4. Add tests and documentation
+
+### Adding New Detection Algorithms
+1. Implement algorithm in `internal/detector/`
+2. Integrate with analysis engines
+3. Add configuration options
+4. Update scoring logic
+
+### Adding New Output Formats
+1. Implement formatter in CLI
+2. Update command-line options
+3. Add format validation
+4. Update documentation
+
+## Dependencies
+
+### Core Dependencies
+- `github.com/spf13/cobra`: CLI framework
+- `github.com/spf13/viper`: Configuration management
+- `github.com/sirupsen/logrus`: Structured logging
+- `gopkg.in/yaml.v3`: YAML processing
+
+### Analysis Dependencies
+- Various registry-specific HTTP clients
+- JSON/YAML parsing libraries
+- Cryptographic libraries for verification
+
+## Maintenance
+
+### Regular Tasks
+- Update dependencies
+- Review security advisories
+- Update detection rules
+- Performance optimization
+- Documentation updates
+
+### Monitoring
+- Error rate tracking
+- Performance metrics
+- Registry API health
+- Detection accuracy
+
+This documentation provides a comprehensive overview of the cleaned TypoSentinel project, focusing on its core CLI functionality and streamlined architecture.

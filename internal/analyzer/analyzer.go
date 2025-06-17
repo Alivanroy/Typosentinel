@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/typosentinel/typosentinel/internal/config"
-	"github.com/typosentinel/typosentinel/internal/detector"
-	"github.com/typosentinel/typosentinel/internal/registry"
-	"github.com/typosentinel/typosentinel/pkg/types"
+	"typosentinel/internal/config"
+	"typosentinel/internal/detector"
+	"typosentinel/internal/registry"
+	"typosentinel/pkg/types"
 )
 
 // Analyzer orchestrates the security scanning process

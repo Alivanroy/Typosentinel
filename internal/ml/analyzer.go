@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/typosentinel/typosentinel/internal/config"
-	"github.com/typosentinel/typosentinel/pkg/types"
+	"typosentinel/internal/config"
+	"typosentinel/pkg/types"
 )
 
 // MLAnalyzer performs machine learning-based analysis for typosquatting detection.
@@ -338,16 +338,96 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 
 // calculateSimilarityScore calculates similarity score with known packages.
 func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
-	// Placeholder implementation
-	// In a real implementation, this would compare against a database of known packages
-	// using various similarity algorithms (Levenshtein, Jaro-Winkler, etc.)
-	
-	// Simulate similarity calculation
-	if strings.Contains(pkg.Name, "test") || strings.Contains(pkg.Name, "demo") {
-		return 0.9 // High similarity for test packages
+	// List of popular packages to check against
+	popularPackages := []string{
+		"express", "lodash", "react", "vue", "angular", "jquery", "bootstrap",
+		"moment", "axios", "webpack", "babel", "eslint", "prettier", "typescript",
+		"node", "npm", "yarn", "gulp", "grunt", "mocha", "jest", "chai",
+		"sinon", "karma", "jasmine", "protractor", "selenium", "puppeteer",
+		"requests", "numpy", "pandas", "matplotlib", "scipy", "sklearn",
+		"tensorflow", "pytorch", "keras", "flask", "django", "fastapi",
 	}
 	
-	return 0.3 // Default low similarity
+	// Check similarity against popular packages
+	maxSimilarity := 0.0
+	for _, popular := range popularPackages {
+		similarity := a.calculateSimilarity(pkg.Name, popular)
+		if similarity > maxSimilarity {
+			maxSimilarity = similarity
+		}
+	}
+	
+	return maxSimilarity
+}
+
+// calculateSimilarity calculates the similarity between two package names using Levenshtein distance
+func (a *MLAnalyzer) calculateSimilarity(name1, name2 string) float64 {
+	distance := a.levenshteinDistance(name1, name2)
+	maxLen := a.max(len(name1), len(name2))
+	if maxLen == 0 {
+		return 1.0
+	}
+	return 1.0 - float64(distance)/float64(maxLen)
+}
+
+// levenshteinDistance calculates the Levenshtein distance between two strings
+func (a *MLAnalyzer) levenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+	
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+	}
+	
+	for i := 0; i <= len(s1); i++ {
+		matrix[i][0] = i
+	}
+	for j := 0; j <= len(s2); j++ {
+		matrix[0][j] = j
+	}
+	
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+			matrix[i][j] = a.min(
+				matrix[i-1][j]+1,      // deletion
+				matrix[i][j-1]+1,      // insertion
+				matrix[i-1][j-1]+cost, // substitution
+			)
+		}
+	}
+	
+	return matrix[len(s1)][len(s2)]
+}
+
+// min returns the minimum of three integers
+func (a *MLAnalyzer) min(a1, b, c int) int {
+	if a1 < b {
+		if a1 < c {
+			return a1
+		}
+		return c
+	}
+	if b < c {
+		return b
+	}
+	return c
+}
+
+// max returns the maximum of two integers
+func (a *MLAnalyzer) max(a1, b int) int {
+	if a1 > b {
+		return a1
+	}
+	return b
 }
 
 // findSimilarPackages finds packages similar to the analyzed one.

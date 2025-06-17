@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/typosentinel/typosentinel/pkg/types"
+	"typosentinel/pkg/types"
 )
 
 // Client provides an interface to the ML service

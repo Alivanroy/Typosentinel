@@ -6,7 +6,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/typosentinel/typosentinel/pkg/types"
+	"typosentinel/pkg/types"
 )
 
 // HomoglyphDetector detects homoglyph-based typosquatting attacks

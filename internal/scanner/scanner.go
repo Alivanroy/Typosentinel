@@ -3,7 +3,6 @@ package scanner
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -324,7 +323,7 @@ func (s *Scanner) buildSummary(packages []*types.Package) *types.ScanSummary {
 		if len(pkg.Threats) > 0 {
 			summary.ThreatsFound++
 		}
-		summary.RiskDistribution[string(pkg.RiskLevel)]++
+		summary.RiskDistribution[pkg.RiskLevel.String()]++
 	}
 
 	return summary

@@ -24,6 +24,8 @@ func init() {
 
 	// Add scan command
 	rootCmd.AddCommand(scanCmd)
+	// Add tree command
+	rootCmd.AddCommand(treeCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.

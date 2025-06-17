@@ -20,6 +20,7 @@ func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.typosentinel.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug mode")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "enable verbose logging")
 
 	// Add scan command
 	rootCmd.AddCommand(scanCmd)

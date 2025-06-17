@@ -16,6 +16,7 @@ import (
 	"typosentinel/internal/ml"
 	"typosentinel/internal/provenance"
 	"typosentinel/internal/static"
+	"typosentinel/pkg/logger"
 	"typosentinel/pkg/types"
 )
 
@@ -68,12 +69,20 @@ type Scanner struct {
 
 // NewScanner creates a new scanner instance.
 func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
+	logger.Info("Initializing scanner", map[string]interface{}{
+		"static_enabled":     cfg.StaticAnalysis != nil && cfg.StaticAnalysis.Enabled,
+		"dynamic_enabled":    cfg.DynamicAnalysis != nil && cfg.DynamicAnalysis.Enabled,
+		"ml_enabled":         cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled,
+		"provenance_enabled": cfg.ProvenanceAnalysis != nil && cfg.ProvenanceAnalysis.Enabled,
+	})
+
 	scanner := &Scanner{
 		config: cfg,
 	}
 
 	// Initialize analysis engines based on configuration
 	if cfg.StaticAnalysis != nil && cfg.StaticAnalysis.Enabled {
+		logger.Debug("Initializing static analyzer")
 		staticConfig := &static.Config{
 			Enabled: cfg.StaticAnalysis.Enabled,
 			AnalyzeInstallScripts: cfg.StaticAnalysis.ScanScripts,
@@ -86,9 +95,13 @@ func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
 		}
 		staticAnalyzer, err := static.NewStaticAnalyzer(staticConfig)
 		if err != nil {
+			logger.Error("Failed to create static analyzer", map[string]interface{}{
+				"error": err.Error(),
+			})
 			return nil, fmt.Errorf("failed to create static analyzer: %w", err)
 		}
 		scanner.staticAnalyzer = staticAnalyzer
+		logger.Info("Static analyzer initialized successfully")
 	}
 
 	if cfg.DynamicAnalysis != nil && cfg.DynamicAnalysis.Enabled {
@@ -181,7 +194,6 @@ var (
 	configFile   string
 	outputFile   string
 	outputFormat string
-	verbose      bool
 	quiet        bool
 	noColor      bool
 	timeout      string

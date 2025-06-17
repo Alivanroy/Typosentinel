@@ -801,74 +801,7 @@ type GRPCKeepalive struct {
 	MinTime string `yaml:"min_time"`
 }
 
-// LoggingConfig contains logging settings
-type LoggingConfig struct {
-	Level string `yaml:"level"` // debug, info, warn, error, fatal
-	Format string `yaml:"format"` // json, text, structured
-	Output []string `yaml:"output"` // stdout, stderr, file, syslog
-	File *LogFileConfig `yaml:"file"`
-	Syslog *SyslogConfig `yaml:"syslog"`
-	Structured *StructuredLoggingConfig `yaml:"structured"`
-	Sampling *LogSamplingConfig `yaml:"sampling"`
-	Hooks []LogHookConfig `yaml:"hooks"`
-	Fields map[string]interface{} `yaml:"fields"`
-	Redaction *LogRedactionConfig `yaml:"redaction"`
-}
 
-// LogFileConfig contains log file settings
-type LogFileConfig struct {
-	Path string `yaml:"path"`
-	MaxSize string `yaml:"max_size"`
-	MaxAge string `yaml:"max_age"`
-	MaxBackups int `yaml:"max_backups"`
-	Compress bool `yaml:"compress"`
-	LocalTime bool `yaml:"local_time"`
-}
-
-// SyslogConfig contains syslog settings
-type SyslogConfig struct {
-	Network string `yaml:"network"`
-	Address string `yaml:"address"`
-	Priority string `yaml:"priority"`
-	Tag string `yaml:"tag"`
-	Facility string `yaml:"facility"`
-}
-
-// StructuredLoggingConfig contains structured logging settings
-type StructuredLoggingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	TimestampFormat string `yaml:"timestamp_format"`
-	TimestampKey string `yaml:"timestamp_key"`
-	LevelKey string `yaml:"level_key"`
-	MessageKey string `yaml:"message_key"`
-	CallerKey string `yaml:"caller_key"`
-	StacktraceKey string `yaml:"stacktrace_key"`
-	ErrorKey string `yaml:"error_key"`
-}
-
-// LogSamplingConfig contains log sampling settings
-type LogSamplingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Initial int `yaml:"initial"`
-	Thereafter int `yaml:"thereafter"`
-	Tick string `yaml:"tick"`
-}
-
-// LogHookConfig contains log hook settings
-type LogHookConfig struct {
-	Type string `yaml:"type"`
-	Enabled bool `yaml:"enabled"`
-	Levels []string `yaml:"levels"`
-	Configuration map[string]interface{} `yaml:"configuration"`
-}
-
-// LogRedactionConfig contains log redaction settings
-type LogRedactionConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Patterns []string `yaml:"patterns"`
-	Replacement string `yaml:"replacement"`
-	Fields []string `yaml:"fields"`
-}
 
 // MonitoringConfig contains monitoring settings
 type MonitoringConfig struct {
@@ -1440,30 +1373,15 @@ func DefaultEnhancedConfig() *EnhancedConfig {
 		Logging: &LoggingConfig{
 			Level: "info",
 			Format: "text",
-			Output: []string{"stdout"},
-			File: &LogFileConfig{
-				Path: "typosentinel.log",
-				MaxSize: "100MB",
-				MaxAge: "30d",
-				MaxBackups: 10,
-				Compress: true,
-				LocalTime: true,
-			},
-			Structured: &StructuredLoggingConfig{
+			Output: "stdout",
+			Timestamp: true,
+			Caller: false,
+			Prefix: "[TYPOSENTINEL]",
+			Rotation: LogRotationConfig{
 				Enabled: false,
-				TimestampFormat: "2006-01-02T15:04:05.000Z",
-				TimestampKey: "timestamp",
-				LevelKey: "level",
-				MessageKey: "message",
-				CallerKey: "caller",
-				StacktraceKey: "stacktrace",
-				ErrorKey: "error",
-			},
-			Redaction: &LogRedactionConfig{
-				Enabled: true,
-				Patterns: []string{"password", "token", "key", "secret"},
-				Replacement: "[REDACTED]",
-				Fields: []string{"password", "token", "api_key"},
+				MaxSize: 100,
+				MaxBackups: 3,
+				MaxAge: 28,
 			},
 		},
 		Monitoring: &MonitoringConfig{
@@ -1686,7 +1604,7 @@ func (c *EnhancedConfig) SetDefaults() {
 	}
 	
 	if c.Logging == nil {
-		c.Logging = &LoggingConfig{Level: "info", Format: "text", Output: []string{"stdout"}}
+		c.Logging = &LoggingConfig{Level: "info", Format: "text", Output: "stdout"}
 	}
 	
 	if c.Monitoring == nil {

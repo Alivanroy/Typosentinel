@@ -332,6 +332,11 @@ For support, please:
 - [ ] Integration with CI/CD pipelines
 - [ ] Advanced configuration options
 - [ ] Performance optimizations
+- [ ] Integration with Large Language Models (LLMs) for advanced threat detection
+- [ ] AI-powered package analysis and risk assessment
+- [ ] Machine learning models for behavioral pattern recognition
+- [ ] Natural language processing for package description analysis
+- [ ] Automated threat intelligence gathering using AI
 
 ---
 

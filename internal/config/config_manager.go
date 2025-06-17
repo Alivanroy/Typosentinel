@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,6 +14,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"gopkg.in/yaml.v2"
 
+	"typosentinel/pkg/logger"
 	"typosentinel/pkg/metrics"
 )
 
@@ -304,14 +304,18 @@ func (cm *ConfigManager) LoadConfig() error {
 	// Load from file if specified
 	if cm.configFile != "" {
 		if err := cm.loadFromFile(); err != nil {
-			log.Printf("Failed to load config from file: %v", err)
+			logger.Error("Failed to load config from file", map[string]interface{}{
+			"error": err.Error(),
+		})
 		}
 	}
 
 	// Load from Redis
 	if cm.redis != nil {
 		if err := cm.loadFromRedis(); err != nil {
-			log.Printf("Failed to load config from Redis: %v", err)
+			logger.Error("Failed to load config from Redis", map[string]interface{}{
+			"error": err.Error(),
+		})
 		}
 	}
 
@@ -321,7 +325,9 @@ func (cm *ConfigManager) LoadConfig() error {
 	// Set default values for missing configuration
 	cm.setDefaults()
 
-	log.Printf("Configuration loaded with %d entries", len(cm.config))
+	logger.Info("Configuration loaded", map[string]interface{}{
+		"entries_count": len(cm.config),
+	})
 	return nil
 }
 
@@ -370,7 +376,10 @@ func (cm *ConfigManager) loadFromRedis() error {
 		configKey := strings.TrimPrefix(key, cm.redisKeyPrefix)
 		value, err := cm.redis.Get(cm.ctx, key).Result()
 		if err != nil {
-			log.Printf("Failed to get config value for key %s: %v", configKey, err)
+			logger.Error("Failed to get config value from Redis", map[string]interface{}{
+				"key": configKey,
+				"error": err.Error(),
+			})
 			continue
 		}
 
@@ -682,7 +691,11 @@ func (cm *ConfigManager) Set(key string, value interface{}, source ConfigSource)
 	// Update metrics
 	cm.metrics.ConfigUpdates.WithLabelValues(key, source.String()).Inc()
 
-	log.Printf("Configuration updated: %s = %v (source: %s)", key, value, source.String())
+	logger.Info("Configuration updated", map[string]interface{}{
+		"key": key,
+		"value": value,
+		"source": source.String(),
+	})
 	return nil
 }
 
@@ -719,7 +732,9 @@ func (cm *ConfigManager) Delete(key string) error {
 		go cm.deleteFromRedis(key)
 	}
 
-	log.Printf("Configuration deleted: %s", key)
+	logger.Info("Configuration deleted", map[string]interface{}{
+		"key": key,
+	})
 	return nil
 }
 
@@ -729,7 +744,9 @@ func (cm *ConfigManager) AddWatcher(watcher ConfigWatcher) {
 	defer cm.watchersMu.Unlock()
 
 	cm.watchers = append(cm.watchers, watcher)
-	log.Printf("Added config watcher for keys: %v", watcher.GetWatchedKeys())
+	logger.Info("Added config watcher", map[string]interface{}{
+		"watched_keys": watcher.GetWatchedKeys(),
+	})
 }
 
 // AddValidator adds a configuration validator
@@ -738,7 +755,9 @@ func (cm *ConfigManager) AddValidator(validator ConfigValidator) {
 	defer cm.validatorsMu.Unlock()
 
 	cm.validators = append(cm.validators, validator)
-	log.Printf("Added config validator for keys: %v", validator.GetValidatedKeys())
+	logger.Info("Added config validator", map[string]interface{}{
+		"validated_keys": validator.GetValidatedKeys(),
+	})
 }
 
 // GetChangeHistory returns the configuration change history
@@ -802,7 +821,10 @@ func (cm *ConfigManager) notifyWatchers(event ConfigChangeEvent) {
 		for _, watchedKey := range watcher.GetWatchedKeys() {
 			if watchedKey == event.Key || strings.HasPrefix(event.Key, watchedKey+".") {
 				if err := watcher.OnConfigChange(event); err != nil {
-					log.Printf("Config watcher error: %v", err)
+					logger.Error("Config watcher error", map[string]interface{}{
+					"error": err.Error(),
+					"key": event.Key,
+				})
 				}
 				break
 			}
@@ -828,12 +850,18 @@ func (cm *ConfigManager) storeInRedis(key string, value interface{}) {
 	redisKey := cm.redisKeyPrefix + key
 	data, err := json.Marshal(value)
 	if err != nil {
-		log.Printf("Failed to marshal config value for Redis: %v", err)
+		logger.Error("Failed to marshal config value for Redis", map[string]interface{}{
+			"error": err.Error(),
+			"key": key,
+		})
 		return
 	}
 
 	if err := cm.redis.Set(cm.ctx, redisKey, data, 0).Err(); err != nil {
-		log.Printf("Failed to store config in Redis: %v", err)
+		logger.Error("Failed to store config in Redis", map[string]interface{}{
+			"error": err.Error(),
+			"key": key,
+		})
 	}
 }
 
@@ -841,14 +869,17 @@ func (cm *ConfigManager) storeInRedis(key string, value interface{}) {
 func (cm *ConfigManager) deleteFromRedis(key string) {
 	redisKey := cm.redisKeyPrefix + key
 	if err := cm.redis.Del(cm.ctx, redisKey).Err(); err != nil {
-		log.Printf("Failed to delete config from Redis: %v", err)
+		logger.Error("Failed to delete config from Redis", map[string]interface{}{
+			"error": err.Error(),
+			"key": key,
+		})
 	}
 }
 
 // Shutdown gracefully shuts down the configuration manager
 func (cm *ConfigManager) Shutdown() error {
-	log.Println("Shutting down configuration manager...")
+	logger.Info("Shutting down configuration manager")
 	cm.cancel()
-	log.Println("Configuration manager shutdown complete")
+	logger.Info("Configuration manager shutdown complete")
 	return nil
 }

@@ -36,6 +36,29 @@ type Config struct {
 
 	// Policy settings
 	Policies PolicyConfig `mapstructure:"policies" yaml:"policies"`
+
+	// Logging settings
+	Logging LoggingConfig `mapstructure:"logging" yaml:"logging"`
+}
+
+// LoggingConfig represents logging configuration
+type LoggingConfig struct {
+	Level     string `yaml:"level" default:"info"`
+	Format    string `yaml:"format" default:"text"`
+	Output    string `yaml:"output" default:"stdout"`
+	Timestamp bool   `yaml:"timestamp" default:"true"`
+	Caller    bool   `yaml:"caller" default:"false"`
+	Prefix    string `yaml:"prefix" default:"[TYPOSENTINEL]"`
+	Rotation  LogRotationConfig `yaml:"rotation"`
+}
+
+// LogRotationConfig represents log rotation settings
+type LogRotationConfig struct {
+	Enabled    bool   `yaml:"enabled" default:"false"`
+	MaxSize    int    `yaml:"max_size" default:"100"`    // MB
+	MaxBackups int    `yaml:"max_backups" default:"3"`
+	MaxAge     int    `yaml:"max_age" default:"28"`      // days
+	Compress   bool   `yaml:"compress" default:"true"`
 }
 
 // APIConfig contains API server configuration

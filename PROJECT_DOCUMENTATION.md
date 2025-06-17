@@ -284,4 +284,20 @@ go test ./pkg/npm/...
 - Registry API health
 - Detection accuracy
 
+## Future Roadmap
+
+### AI and Machine Learning Integration
+- [ ] Integration with Large Language Models (LLMs) for advanced threat detection
+- [ ] AI-powered package analysis and risk assessment
+- [ ] Machine learning models for behavioral pattern recognition
+- [ ] Natural language processing for package description analysis
+- [ ] Automated threat intelligence gathering using AI
+
+### Core Enhancements
+- [ ] Support for additional package registries
+- [ ] Enhanced detection algorithms
+- [ ] Integration with CI/CD pipelines
+- [ ] Advanced configuration options
+- [ ] Performance optimizations
+
 This documentation provides a comprehensive overview of the cleaned TypoSentinel project, focusing on its core CLI functionality and streamlined architecture.

@@ -271,69 +271,104 @@ func (a *GoAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Depen
 // RustAnalyzer analyzes Rust projects
 type RustAnalyzer struct {
 	config *config.Config
+	analyzer *RustPackageAnalyzer
+}
+
+func NewRustAnalyzer(cfg *config.Config) *RustAnalyzer {
+	return &RustAnalyzer{
+		config:   cfg,
+		analyzer: NewRustPackageAnalyzer(cfg),
+	}
 }
 
 func (a *RustAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement Cargo.toml parsing
-	return nil, fmt.Errorf("Rust analyzer not implemented yet")
+	return a.analyzer.ExtractPackages(projectInfo)
 }
 
 func (a *RustAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
-	return nil, fmt.Errorf("Rust dependency analysis not implemented yet")
+	return a.analyzer.AnalyzeDependencies(projectInfo)
 }
 
 // RubyAnalyzer analyzes Ruby projects
 type RubyAnalyzer struct {
 	config *config.Config
+	analyzer *RubyPackageAnalyzer
+}
+
+func NewRubyAnalyzer(cfg *config.Config) *RubyAnalyzer {
+	return &RubyAnalyzer{
+		config:   cfg,
+		analyzer: NewRubyPackageAnalyzer(cfg),
+	}
 }
 
 func (a *RubyAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement Gemfile parsing
-	return nil, fmt.Errorf("Ruby analyzer not implemented yet")
+	return a.analyzer.ExtractPackages(projectInfo)
 }
 
 func (a *RubyAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
-	return nil, fmt.Errorf("Ruby dependency analysis not implemented yet")
+	return a.analyzer.AnalyzeDependencies(projectInfo)
 }
 
 // PHPAnalyzer analyzes PHP projects
 type PHPAnalyzer struct {
 	config *config.Config
+	analyzer *PHPPackageAnalyzer
+}
+
+func NewPHPAnalyzer(cfg *config.Config) *PHPAnalyzer {
+	return &PHPAnalyzer{
+		config:   cfg,
+		analyzer: NewPHPPackageAnalyzer(cfg),
+	}
 }
 
 func (a *PHPAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement composer.json parsing
-	return nil, fmt.Errorf("PHP analyzer not implemented yet")
+	return a.analyzer.ExtractPackages(projectInfo)
 }
 
 func (a *PHPAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
-	return nil, fmt.Errorf("PHP dependency analysis not implemented yet")
+	return a.analyzer.AnalyzeDependencies(projectInfo)
 }
 
 // JavaAnalyzer analyzes Java projects
 type JavaAnalyzer struct {
 	config *config.Config
+	analyzer *JavaPackageAnalyzer
+}
+
+func NewJavaAnalyzer(cfg *config.Config) *JavaAnalyzer {
+	return &JavaAnalyzer{
+		config:   cfg,
+		analyzer: NewJavaPackageAnalyzer(cfg),
+	}
 }
 
 func (a *JavaAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement Maven/Gradle parsing
-	return nil, fmt.Errorf("Java analyzer not implemented yet")
+	return a.analyzer.ExtractPackages(projectInfo)
 }
 
 func (a *JavaAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
-	return nil, fmt.Errorf("Java dependency analysis not implemented yet")
+	return a.analyzer.AnalyzeDependencies(projectInfo)
 }
 
 // DotNetAnalyzer analyzes .NET projects
 type DotNetAnalyzer struct {
 	config *config.Config
+	analyzer *DotNetPackageAnalyzer
+}
+
+func NewDotNetAnalyzer(cfg *config.Config) *DotNetAnalyzer {
+	return &DotNetAnalyzer{
+		config:   cfg,
+		analyzer: NewDotNetPackageAnalyzer(cfg),
+	}
 }
 
 func (a *DotNetAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement .csproj/packages.config parsing
-	return nil, fmt.Errorf(".NET analyzer not implemented yet")
+	return a.analyzer.ExtractPackages(projectInfo)
 }
 
 func (a *DotNetAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
-	return nil, fmt.Errorf(".NET dependency analysis not implemented yet")
+	return a.analyzer.AnalyzeDependencies(projectInfo)
 }

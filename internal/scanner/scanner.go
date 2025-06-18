@@ -432,11 +432,11 @@ func (s *Scanner) registerAnalyzers() {
 	s.analyzers["nodejs"] = &NodeJSAnalyzer{config: s.config}
 	s.analyzers["python"] = &PythonAnalyzer{config: s.config}
 	s.analyzers["go"] = &GoAnalyzer{config: s.config}
-	s.analyzers["rust"] = &RustAnalyzer{config: s.config}
-	s.analyzers["ruby"] = &RubyAnalyzer{config: s.config}
-	s.analyzers["php"] = &PHPAnalyzer{config: s.config}
-	s.analyzers["java"] = &JavaAnalyzer{config: s.config}
-	s.analyzers["dotnet"] = &DotNetAnalyzer{config: s.config}
+	s.analyzers["rust"] = NewRustAnalyzer(s.config)
+	s.analyzers["ruby"] = NewRubyAnalyzer(s.config)
+	s.analyzers["php"] = NewPHPAnalyzer(s.config)
+	s.analyzers["java"] = NewJavaAnalyzer(s.config)
+	s.analyzers["dotnet"] = NewDotNetAnalyzer(s.config)
 }
 
 // generateScanID generates a unique scan ID

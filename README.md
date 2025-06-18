@@ -258,7 +258,7 @@ typosentinel version
 ### Running Tests
 
 ```bash
-# Run Go tests
+# Run all tests
 go test ./...
 
 # Run with coverage
@@ -267,6 +267,67 @@ go test -cover ./...
 # Run specific package tests
 go test ./internal/detector/...
 go test ./pkg/npm/...
+go test ./internal/provenance/...
+
+# Generate coverage profile
+go test -coverprofile=coverage.out ./...
+
+# View coverage in browser
+go tool cover -html=coverage.out
+
+# Get coverage summary
+go tool cover -func=coverage.out
+```
+
+### Test Coverage
+
+Current test coverage by package:
+
+| Package | Coverage | Status |
+|---------|----------|--------|
+| `pkg/types` | 83.3% | ✅ Good |
+| `pkg/logger` | 56.9% | ⚠️ Moderate |
+| `internal/provenance` | 38.9% | ⚠️ Needs Improvement |
+| `pkg/config` | 0.0% | ❌ No Tests |
+| `pkg/metrics` | 0.0% | ❌ No Tests |
+
+**Coverage Goals:**
+- Core packages (`internal/*`): Target 80%+ coverage
+- Public packages (`pkg/*`): Target 90%+ coverage
+- CLI commands (`cmd/*`): Target 70%+ coverage
+
+**Running Coverage Reports:**
+
+```bash
+# Generate detailed HTML coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
+
+# View coverage by function
+go tool cover -func=coverage.out | grep -E "(total|TOTAL)"
+
+# Run coverage for specific packages
+go test -cover ./pkg/types
+go test -cover ./internal/provenance
+
+# Generate coverage with race detection (CI mode)
+go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+```
+
+**Continuous Integration Coverage:**
+
+The project uses automated coverage reporting in CI/CD:
+- Coverage reports are generated for every PR and push
+- Results are uploaded to [Codecov](https://codecov.io) for tracking
+- Coverage artifacts (HTML reports) are available in GitHub Actions
+- Minimum coverage thresholds are enforced to prevent regressions
+
+**Coverage Badges:**
+
+Add these badges to track coverage status:
+```markdown
+[![Go Coverage](https://codecov.io/gh/Alivanroy/Typosentinel/branch/main/graph/badge.svg?flag=go)](https://codecov.io/gh/Alivanroy/Typosentinel)
+[![Python Coverage](https://codecov.io/gh/Alivanroy/Typosentinel/branch/main/graph/badge.svg?flag=python)](https://codecov.io/gh/Alivanroy/Typosentinel)
 ```
 
 ### Building

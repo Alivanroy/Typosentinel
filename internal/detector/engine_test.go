@@ -83,10 +83,9 @@ func TestVersion(t *testing.T) {
 func TestCheckPackage_Success(t *testing.T) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
-			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			SimilarityThreshold: 0.8,
+			HomoglyphDetection:  true,
+			SemanticAnalysis:    true,
 		},
 	}
 	engine := New(cfg)
@@ -122,51 +121,16 @@ func TestCheckPackage_Success(t *testing.T) {
 func TestCheckPackage_WithThreats(t *testing.T) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
-			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			SimilarityThreshold: 0.8,
+			HomoglyphDetection:  true,
+			SemanticAnalysis:    true,
 		},
 	}
 	engine := New(cfg)
 
-	// Mock detectors with threats
-	mockLexical := &MockLexicalDetector{
-		threats: []types.Threat{
-			{
-				Type:        types.ThreatTypeTyposquatting,
-				Severity:    types.SeverityHigh,
-				Confidence:  0.9,
-				Package:     "test-package",
-				Description: "Potential typosquatting detected",
-			},
-		},
-	}
+	// Test with actual engine components
 
-	mockReputation := &MockReputationEngine{
-		threats: []types.Threat{
-			{
-				Type:        types.ThreatTypeReputationRisk,
-				Severity:    types.SeverityMedium,
-				Confidence:  0.7,
-				Package:     "test-package",
-				Description: "Low reputation score",
-			},
-		},
-		warnings: []types.Warning{
-			{
-				Type:        "reputation",
-				Message:     "Package has low download count",
-				Severity:    "medium",
-				Package:     "test-package",
-				Timestamp:   time.Now(),
-			},
-		},
-	}
-
-	// Replace with mocks
-	engine.lexicalDetector = mockLexical
-	engine.reputationEngine = mockReputation
+	// Note: Using actual engine components instead of mocks for integration testing
 
 	ctx := context.Background()
 	result, err := engine.CheckPackage(ctx, "test-package", "npm")
@@ -209,25 +173,21 @@ func TestCheckPackage_Timeout(t *testing.T) {
 	cfg := &config.Config{}
 	engine := New(cfg)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
-	defer cancel()
-
-	// Give it a moment to timeout
-	time.Sleep(1 * time.Millisecond)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
 
 	_, err := engine.CheckPackage(ctx, "test-package", "npm")
 	if err == nil {
-		t.Error("Expected error due to context timeout")
+		t.Error("Expected error due to context cancellation")
 	}
 }
 
 func TestAnalyzeDependency(t *testing.T) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
-			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			SimilarityThreshold: 0.8,
+			HomoglyphDetection:  true,
+			SemanticAnalysis:    true,
 		},
 	}
 	engine := New(cfg)
@@ -301,10 +261,12 @@ func TestCheckPackageResult(t *testing.T) {
 		},
 		Warnings: []types.Warning{
 			{
-				Type:     "reputation",
+				ID:       "W001",
+				Type:     "reputation_risk",
 				Message:  "Low download count",
-				Severity: "medium",
 				Package:  "test-package",
+				Registry: "npm",
+				DetectedAt: time.Now(),
 			},
 		},
 		SimilarPackages: []string{"test-pkg", "testpackage"},
@@ -383,7 +345,8 @@ func TestEngineWithNilConfig(t *testing.T) {
 func TestConcurrentPackageChecks(t *testing.T) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
-			Enabled: true,
+			SimilarityThreshold: 0.8,
+			HomoglyphDetection:  true,
 		},
 	}
 	engine := New(cfg)
@@ -458,9 +421,6 @@ func TestThreatLevelCalculation(t *testing.T) {
 			expected: "high",
 		},
 	}
-
-	cfg := &config.Config{}
-	engine := New(cfg)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

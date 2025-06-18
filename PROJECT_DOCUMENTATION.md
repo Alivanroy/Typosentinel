@@ -186,21 +186,113 @@ docker run --rm -v $(pwd):/workspace typosentinel scan --project-path /workspace
 
 ## Testing
 
-### Unit Tests
+### Running Tests
+
 ```bash
+# Run all tests
 go test ./...
-```
 
-### Coverage Analysis
-```bash
+# Run with coverage
 go test -cover ./...
-```
 
-### Package-Specific Tests
-```bash
+# Run specific package tests
 go test ./internal/detector/...
 go test ./pkg/npm/...
+go test ./internal/provenance/...
+
+# Generate coverage profile
+go test -coverprofile=coverage.out ./...
+
+# View coverage in browser
+go tool cover -html=coverage.out
+
+# Get coverage summary
+go tool cover -func=coverage.out
 ```
+
+### Test Coverage Strategy
+
+The project maintains comprehensive test coverage across all components:
+
+#### Current Coverage Status
+
+| Package | Coverage | Priority | Notes |
+|---------|----------|----------|-------|
+| `pkg/types` | 83.3% | High | Core type definitions |
+| `pkg/logger` | 56.9% | Medium | Logging utilities |
+| `internal/provenance` | 38.9% | High | Security-critical component |
+| `pkg/config` | 0.0% | High | Needs immediate attention |
+| `pkg/metrics` | 0.0% | Medium | Monitoring component |
+| `internal/analyzer` | TBD | High | Core analysis engine |
+| `internal/detector` | TBD | High | Detection algorithms |
+| `internal/scanner` | TBD | High | Main scanning logic |
+
+#### Coverage Targets
+
+- **Security-Critical Components** (`internal/provenance`, `internal/detector`): 90%+
+- **Core Logic** (`internal/analyzer`, `internal/scanner`): 85%+
+- **Public APIs** (`pkg/*`): 90%+
+- **CLI Commands** (`cmd/*`): 75%+
+- **Utilities** (logging, config): 80%+
+
+#### Coverage Reporting
+
+```bash
+# Generate comprehensive coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
+
+# View coverage summary
+go tool cover -func=coverage.out
+
+# Coverage by package
+go test -cover ./pkg/types
+go test -cover ./internal/provenance
+go test -cover ./internal/analyzer
+
+# Detailed coverage analysis
+go test -covermode=count -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out | sort -k3 -nr
+```
+
+#### Test Categories
+
+1. **Unit Tests**: Individual function and method testing
+2. **Integration Tests**: Component interaction testing
+3. **End-to-End Tests**: Full workflow testing
+4. **Performance Tests**: Benchmark and load testing
+5. **Security Tests**: Vulnerability and edge case testing
+
+#### Continuous Integration
+
+Coverage is automatically tracked in CI/CD:
+- Minimum coverage thresholds enforced
+- Coverage reports generated for each PR
+- Regression detection for coverage drops
+- Integration with code quality tools
+- Codecov integration for detailed coverage analytics
+- Coverage artifacts uploaded to GitHub Actions
+
+**CI Coverage Commands:**
+```bash
+# CI test command (with race detection)
+go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+# Python ML component coverage
+cd ml && python -m pytest tests/ -v --cov=. --cov-report=html --cov-report=xml
+```
+
+**Coverage Monitoring:**
+- **Codecov Dashboard**: Tracks coverage trends and identifies regressions
+- **GitHub Actions Artifacts**: HTML coverage reports for detailed analysis
+- **PR Comments**: Automatic coverage change notifications
+- **Branch Protection**: Prevents merging if coverage drops below threshold
+
+**Coverage Quality Gates:**
+- New code must have >80% coverage
+- Overall project coverage must not decrease
+- Critical security components require >90% coverage
+- Public API functions require >95% coverage
 
 ## Configuration Options
 

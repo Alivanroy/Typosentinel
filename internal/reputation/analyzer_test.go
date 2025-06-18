@@ -3,32 +3,30 @@ package reputation
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"typosentinel/internal/config"
 	"typosentinel/pkg/types"
 )
 
 func TestNewAnalyzer(t *testing.T) {
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: "http://localhost:8002",
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: "http://localhost:8002",
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -110,22 +108,20 @@ func TestAnalyzePackage_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -190,22 +186,20 @@ func TestAnalyzePackage_ServerError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  1, // Reduce retries for faster test
-			RetryDelay:  10 * time.Millisecond,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  1, // Reduce retries for faster test
+		RetryDelay:  10 * time.Millisecond,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -235,22 +229,20 @@ func TestAnalyzePackage_ContextCancellation(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -281,22 +273,20 @@ func TestAnalyzePackage_Timeout(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     50 * time.Millisecond, // Short timeout
-			MaxRetries:  1,
-			RetryDelay:  10 * time.Millisecond,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     50 * time.Millisecond, // Short timeout
+		MaxRetries:  1,
+		RetryDelay:  10 * time.Millisecond,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -344,22 +334,20 @@ func TestAnalyzePackages_Batch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -422,22 +410,20 @@ func TestCacheHit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}
@@ -515,29 +501,27 @@ func TestMultipleSources(t *testing.T) {
 	}))
 	defer server2.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "source1",
-					Endpoint: server1.URL,
-					APIKey:   "key1",
-					Weight:   0.6,
-					Enabled:  true,
-				},
-				{
-					Name:     "source2",
-					Endpoint: server2.URL,
-					APIKey:   "key2",
-					Weight:   0.4,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "source1",
+				Endpoint: server1.URL,
+				APIKey:   "key1",
+				Weight:   0.6,
+				Enabled:  true,
+			},
+			{
+				Name:     "source2",
+				Endpoint: server2.URL,
+				APIKey:   "key2",
+				Weight:   0.4,
+				Enabled:  true,
 			},
 		},
 	}
@@ -634,7 +618,7 @@ func TestSourceResult(t *testing.T) {
 		Score:     0.75,
 		Weight:    0.3,
 		Status:    "success",
-		Latency:   "120ms",
+		Latency:   120 * time.Millisecond,
 		Error:     "",
 		Metadata: map[string]interface{}{
 			"detections": 2,
@@ -665,10 +649,8 @@ func TestSourceResult(t *testing.T) {
 }
 
 func TestAnalyzerWithDisabledReputation(t *testing.T) {
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled: false, // Disabled
-		},
+	cfg := &Config{
+		Enabled: false, // Disabled
 	}
 
 	analyzer := NewAnalyzer(cfg)
@@ -707,22 +689,20 @@ func TestConcurrentReputationAnalysis(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := &config.Config{
-		Reputation: config.ReputationConfig{
-			Enabled:     true,
-			CacheSize:   1000,
-			CacheTTL:    time.Hour,
-			Timeout:     30 * time.Second,
-			MaxRetries:  3,
-			RetryDelay:  time.Second,
-			Sources: []config.ReputationSource{
-				{
-					Name:     "test-source",
-					Endpoint: server.URL,
-					APIKey:   "test-key",
-					Weight:   1.0,
-					Enabled:  true,
-				},
+	cfg := &Config{
+		Enabled:     true,
+		CacheSize:   1000,
+		CacheTTL:    time.Hour,
+		Timeout:     30 * time.Second,
+		MaxRetries:  3,
+		RetryDelay:  time.Second,
+		Sources: []Source{
+			{
+				Name:     "test-source",
+				Endpoint: server.URL,
+				APIKey:   "test-key",
+				Weight:   1.0,
+				Enabled:  true,
 			},
 		},
 	}

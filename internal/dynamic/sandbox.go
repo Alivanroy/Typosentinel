@@ -209,6 +209,21 @@ type Sandbox struct {
 	mu sync.RWMutex
 }
 
+// NewAnalyzer creates a new dynamic analyzer from a config.Config
+func NewAnalyzer(cfg interface{}) (*DynamicAnalyzer, error) {
+	// Handle different config types
+	var config *Config
+	switch c := cfg.(type) {
+	case *Config:
+		config = c
+	default:
+		// For compatibility with config.Config, extract dynamic config
+		config = DefaultConfig()
+	}
+	
+	return NewDynamicAnalyzer(config)
+}
+
 // NewDynamicAnalyzer creates a new dynamic analyzer
 func NewDynamicAnalyzer(config *Config) (*DynamicAnalyzer, error) {
 	if config == nil {

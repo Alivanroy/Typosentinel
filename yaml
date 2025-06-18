@@ -1,0 +1,323 @@
+{
+  "package": {
+    "name": "expresss",
+    "version": "latest",
+    "registry": "npm",
+    "risk_level": 0,
+    "risk_score": 0,
+    "analyzed_at": "0001-01-01T00:00:00Z"
+  },
+  "ml_analysis": {
+    "similarity_score": 0.875,
+    "malicious_score": 0,
+    "reputation_score": 0.7200000000000001,
+    "typosquatting_score": 0.406,
+    "features": {
+      "dependency_count": 0,
+      "downloads": 0,
+      "file_count": 0,
+      "has_homepage": 0,
+      "has_license": 0,
+      "has_repository": 0,
+      "keyword_count": 0,
+      "name_digit_ratio": 0,
+      "name_entropy": 2.1556390622295662,
+      "name_length": 8,
+      "name_special_char_ratio": 0,
+      "name_vowel_ratio": 0.25,
+      "size": 0,
+      "version_length": 6,
+      "version_parts": 1
+    },
+    "predictions": [
+      {
+        "model": "similarity_model",
+        "probability": 0.3,
+        "label": "benign",
+        "confidence": 0.8
+      },
+      {
+        "model": "malicious_detection_model",
+        "probability": 0.2,
+        "label": "benign",
+        "confidence": 0.7
+      },
+      {
+        "model": "reputation_model",
+        "probability": 0.7,
+        "label": "trusted",
+        "confidence": 0.6
+      }
+    ],
+    "similar_packages": [
+      {
+        "name": "similar-package-1",
+        "similarity": 0.85,
+        "distance": 2,
+        "algorithm": "levenshtein",
+        "registry": "npm",
+        "downloads": 1000000,
+        "last_updated": "2023-01-01",
+        "maintainer": "trusted-maintainer",
+        "suspicious_flag": false
+      }
+    ],
+    "anomaly_detection": {
+      "is_anomaly": false,
+      "anomaly_score": 0,
+      "anomaly_type": "none",
+      "anomaly_features": [],
+      "outlier_analysis": {
+        "is_outlier": false,
+        "outlier_score": 0,
+        "isolation_forest": 0,
+        "local_outlier": 0,
+        "one_class_svm": 0
+      },
+      "pattern_analysis": {
+        "unusual_patterns": [
+          "high_entropy_name"
+        ],
+        "pattern_score": 0,
+        "frequency_score": 0.5,
+        "sequence_score": 0.6
+      }
+    },
+    "reputation_analysis": {
+      "overall_score": 0.7200000000000001,
+      "maintainer_score": 0.8,
+      "download_score": 0.7,
+      "age_score": 0.6,
+      "community_score": 0.5,
+      "security_score": 0.9,
+      "reputation_sources": [
+        {
+          "source": "npm_registry",
+          "score": 0.8,
+          "weight": 0.4
+        },
+        {
+          "source": "github_stars",
+          "score": 0.6,
+          "weight": 0.3
+        },
+        {
+          "source": "security_advisories",
+          "score": 0.9,
+          "weight": 0.3
+        }
+      ]
+    },
+    "behavioral_analysis": {
+      "install_behavior": {
+        "suspicious_commands": [],
+        "network_requests": [],
+        "file_modifications": [],
+        "permission_changes": []
+      },
+      "runtime_behavior": {
+        "process_spawning": [],
+        "system_calls": [],
+        "resource_usage": [],
+        "environment_access": []
+      },
+      "network_behavior": {
+        "outbound_connections": [],
+        "dns_queries": [],
+        "data_exfiltration": [],
+        "c2_communication": []
+      },
+      "filesystem_behavior": {
+        "file_creation": [],
+        "file_deletion": [],
+        "file_modification": [],
+        "directory_access": []
+      }
+    },
+    "risk_assessment": {
+      "overall_risk": "low",
+      "risk_score": 0.2184,
+      "risk_factors": [],
+      "mitigations": [
+        "Verify package authenticity through official channels",
+        "Check package maintainer reputation and history",
+        "Review package dependencies and permissions",
+        "Monitor package behavior in a sandboxed environment"
+      ],
+      "confidence_level": 0.8
+    },
+    "findings": [
+      {
+        "type": "high_similarity",
+        "severity": "medium",
+        "confidence": 0.875,
+        "description": "Package name is 87.5% similar to known packages",
+        "evidence": "Similarity score: 0.875",
+        "model": "similarity_model"
+      }
+    ],
+    "recommendations": [
+      "Package appears relatively safe but monitor usage",
+      "Verify this is the intended package and not a typosquatting attempt",
+      "Always verify package signatures when available",
+      "Monitor package behavior after installation",
+      "Keep packages updated to latest versions"
+    ],
+    "metadata": {
+      "analysis_time": "2025-06-17T17:11:28.7175632+02:00",
+      "duration": "505.6µs",
+      "models_used": [
+        "similarity_model",
+        "malicious_detection_model",
+        "reputation_model"
+      ],
+      "features_used": [
+        "has_homepage",
+        "name_length",
+        "name_digit_ratio",
+        "version_length",
+        "has_license",
+        "keyword_count",
+        "name_entropy",
+        "has_repository",
+        "dependency_count",
+        "file_count",
+        "size",
+        "name_vowel_ratio",
+        "version_parts",
+        "downloads",
+        "name_special_char_ratio"
+      ],
+      "dataset_version": "1.0.0",
+      "model_version": "1.0.0",
+      "analysis_version": "1.0.0"
+    }
+  },
+  "provenance_analysis": {
+    "package_name": "expresss",
+    "package_version": "latest",
+    "registry": "npm",
+    "analysis_timestamp": "2025-06-17T17:11:28.7180688+02:00",
+    "signature_verification": {
+      "verified": false,
+      "signatures": [],
+      "certificates": [],
+      "keyless_signatures": [],
+      "verification_errors": [],
+      "trust_score": 0
+    },
+    "slsa_provenance": {
+      "present": false,
+      "level": 0,
+      "builder": null,
+      "build_type": "",
+      "invocation": null,
+      "build_config": null,
+      "materials": [],
+      "metadata": null,
+      "verified": false,
+      "trust_score": 0,
+      "compliance": null
+    },
+    "integrity_checks": null,
+    "transparency_log": {
+      "present": false,
+      "entries": [],
+      "verified": false,
+      "trust_score": 0
+    },
+    "trust_assessment": {
+      "publisher_trust": {
+        "publisher": "unknown",
+        "trusted": false,
+        "reputation": 0.5,
+        "verification_history": []
+      },
+      "signer_trust": null,
+      "builder_trust": null,
+      "overall_trust_score": 0,
+      "trust_level": "UNKNOWN",
+      "risk_factors": []
+    },
+    "overall_score": 0,
+    "trust_level": "VERY_LOW",
+    "findings": [
+      {
+        "id": "PROV_001",
+        "type": "signature_verification",
+        "severity": "HIGH",
+        "title": "Package Signature Verification Failed",
+        "description": "The package signature could not be verified",
+        "evidence": [],
+        "remediation": "Verify the package source and signature",
+        "confidence": 0.9,
+        "timestamp": "2025-06-17T17:11:28.7180688+02:00",
+        "metadata": null
+      },
+      {
+        "id": "PROV_002",
+        "type": "slsa_provenance",
+        "severity": "MEDIUM",
+        "title": "SLSA Provenance Not Available",
+        "description": "No SLSA provenance information found for this package",
+        "evidence": null,
+        "remediation": "Request SLSA provenance from the package maintainer",
+        "confidence": 0.8,
+        "timestamp": "2025-06-17T17:11:28.7180688+02:00",
+        "metadata": null
+      }
+    ],
+    "warnings": [
+      "Integrity verification failed: open expresss: The system cannot find the file specified."
+    ],
+    "recommendations": [
+      "CRITICAL: Do not use this package - insufficient provenance and integrity verification",
+      "Verify package signatures before use",
+      "Request SLSA provenance information from package maintainer",
+      "Package not found in transparency logs - verify authenticity"
+    ],
+    "processing_time": 0,
+    "verification_sources": []
+  },
+  "overall_risk": "high",
+  "risk_score": 0.604,
+  "recommendations": [
+    "⚠️  Exercise extreme caution before installation",
+    "Perform thorough security review and testing",
+    "Package appears relatively safe but monitor usage",
+    "Verify this is the intended package and not a typosquatting attempt",
+    "Always verify package signatures when available",
+    "Monitor package behavior after installation",
+    "Keep packages updated to latest versions",
+    "CRITICAL: Do not use this package - insufficient provenance and integrity verification",
+    "Verify package signatures before use",
+    "Request SLSA provenance information from package maintainer",
+    "Package not found in transparency logs - verify authenticity"
+  ],
+  "summary": {
+    "total_findings": 3,
+    "critical_findings": 0,
+    "high_findings": 1,
+    "medium_findings": 0,
+    "low_findings": 0,
+    "findings_by_category": {
+      "ml": 1,
+      "provenance": 2
+    },
+    "engines_used": [
+      "ml",
+      "provenance"
+    ],
+    "analysis_time": 207136300,
+    "status": "completed"
+  },
+  "metadata": {
+    "scan_id": "1750173088",
+    "timestamp": "2025-06-17T17:11:28.5109325+02:00",
+    "version": "1.0.0",
+    "configuration": "",
+    "environment": "development",
+    "user": "",
+    "hostname": ""
+  }
+}

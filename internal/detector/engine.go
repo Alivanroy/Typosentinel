@@ -58,6 +58,13 @@ type CheckPackageResult struct {
 
 // CheckPackage performs threat analysis on a single package
 func (e *Engine) CheckPackage(ctx context.Context, packageName, registry string) (*CheckPackageResult, error) {
+	// Check if context is already cancelled
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+	
 	logrus.Infof("Checking package %s from %s registry", packageName, registry)
 	start := time.Now()
 

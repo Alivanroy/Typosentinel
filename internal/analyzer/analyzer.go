@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -32,6 +33,7 @@ type ScanOptions struct {
 	IncludeDevDependencies bool
 	SimilarityThreshold    float64
 	ExcludePackages        []string
+	AllowEmptyProjects     bool
 }
 
 // ScanResult contains the results of a security scan
@@ -98,8 +100,20 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 		return nil, fmt.Errorf("failed to discover dependency files: %w", err)
 	}
 
+
+
 	if len(depFiles) == 0 {
-		return nil, fmt.Errorf("no dependency files found in %s", path)
+		if options.AllowEmptyProjects {
+			// No dependency files found - return empty result instead of error
+			logrus.Infof("No dependency files found in %s", path)
+			result.TotalPackages = 0
+			result.Threats = []types.Threat{}
+			result.Warnings = []types.Warning{}
+			result.Duration = time.Since(start)
+			return result, nil
+		} else {
+			return nil, fmt.Errorf("no dependency files found in %s", path)
+		}
 	}
 
 	logrus.Infof("Found %d dependency files", len(depFiles))
@@ -211,15 +225,10 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 	logrus.Debugf("Parsing dependency file: %s", filePath)
 
 	// Determine file type and registry
-	fileType, registryType := a.detectFileType(filePath)
+	fileType, _ := a.detectFileType(filePath)
+	logrus.Printf("DEBUG: Parsing file %s with type %s", filePath, fileType)
 	if fileType == "" {
 		return nil, fmt.Errorf("unsupported file type: %s", filePath)
-	}
-
-	// Get appropriate registry client
-	registryClient, exists := a.registries[registryType]
-	if !exists {
-		return nil, fmt.Errorf("no client available for registry: %s", registryType)
 	}
 
 	// Parse dependencies based on file type
@@ -228,14 +237,14 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 		return a.parseNPMDependencies(filePath, options)
 	default:
 		// For other file types, return empty for now
-		_ = registryClient // avoid unused variable error
 		return []types.Dependency{}, nil
 	}
 }
 
-// parseNPMDependencies parses dependencies from NPM-related files
+// parseNPMDependencies handles parsing of NPM-related files
 func (a *Analyzer) parseNPMDependencies(filePath string, options *ScanOptions) ([]types.Dependency, error) {
 	fileName := filepath.Base(filePath)
+	logrus.Printf("DEBUG: parseNPMDependencies called with fileName: %s", fileName)
 	
 	switch fileName {
 	case "package.json":
@@ -264,6 +273,8 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 	if err := json.Unmarshal(data, &packageData); err != nil {
 		return nil, fmt.Errorf("failed to parse package.json: %w", err)
 	}
+
+	logrus.Printf("DEBUG: Found %d dependencies and %d devDependencies", len(packageData.Dependencies), len(packageData.DevDependencies))
 
 	var dependencies []types.Dependency
 
@@ -295,19 +306,125 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 		}
 	}
 
+	logrus.Printf("DEBUG: Returning %d total dependencies", len(dependencies))
 	return dependencies, nil
 }
 
 // parsePackageLockJSON parses dependencies from package-lock.json
 func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) ([]types.Dependency, error) {
-	// For now, return empty - can be implemented later
-	return []types.Dependency{}, nil
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read package-lock.json: %w", err)
+	}
+
+	var lockData struct {
+		Packages map[string]struct {
+			Version  string `json:"version"`
+			Resolved string `json:"resolved"`
+			Dev      bool   `json:"dev"`
+		} `json:"packages"`
+	}
+
+	if err := json.Unmarshal(data, &lockData); err != nil {
+		return nil, fmt.Errorf("failed to parse package-lock.json: %w", err)
+	}
+
+	var dependencies []types.Dependency
+
+	// Parse packages (skip root package which has empty key)
+	for packagePath, packageInfo := range lockData.Packages {
+		if packagePath == "" {
+			continue // Skip root package
+		}
+
+		// Extract package name from path (e.g., "node_modules/express" -> "express")
+		name := filepath.Base(packagePath)
+		
+		// Skip dev dependencies if not requested
+		if packageInfo.Dev && !options.IncludeDevDependencies {
+			continue
+		}
+
+		dep := types.Dependency{
+			Name:        name,
+			Version:     packageInfo.Version,
+			Registry:    "npm",
+			Source:      filePath,
+			Direct:      true,
+			Development: packageInfo.Dev,
+		}
+		dependencies = append(dependencies, dep)
+	}
+
+	return dependencies, nil
 }
 
 // parseYarnLock parses dependencies from yarn.lock
 func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types.Dependency, error) {
-	// For now, return empty - can be implemented later
-	return []types.Dependency{}, nil
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read yarn.lock: %w", err)
+	}
+
+	var dependencies []types.Dependency
+	content := string(data)
+	lines := strings.Split(content, "\n")
+
+	var currentPackage string
+	var currentVersion string
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		
+		// Skip comments and empty lines
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Package declaration line (e.g., "express@^4.18.0:")
+		if strings.HasSuffix(line, ":") && !strings.HasPrefix(line, " ") {
+			// Extract package name from the line
+			packageSpec := strings.TrimSuffix(line, ":")
+			// Handle multiple package specs separated by commas
+			specs := strings.Split(packageSpec, ",")
+			if len(specs) > 0 {
+				// Take the first spec and extract package name
+				firstSpec := strings.TrimSpace(specs[0])
+				if atIndex := strings.Index(firstSpec, "@"); atIndex > 0 {
+					currentPackage = firstSpec[:atIndex]
+				} else {
+					currentPackage = firstSpec
+				}
+			}
+			continue
+		}
+
+		// Version line (e.g., '  version "4.18.2"')
+		if strings.HasPrefix(line, "version ") && currentPackage != "" {
+			versionPart := strings.TrimPrefix(line, "version ")
+			versionPart = strings.Trim(versionPart, `"`)
+			currentVersion = versionPart
+
+			// Create dependency when we have both package and version
+			if currentPackage != "" && currentVersion != "" {
+				dep := types.Dependency{
+					Name:        currentPackage,
+					Version:     currentVersion,
+					Registry:    "npm",
+					Source:      filePath,
+					Direct:      true,
+					Development: false, // yarn.lock doesn't distinguish dev deps
+				}
+				dependencies = append(dependencies, dep)
+				
+				// Reset for next package
+				currentPackage = ""
+				currentVersion = ""
+			}
+		}
+	}
+
+	return dependencies, nil
 }
 
 // detectFileType determines the file type and associated registry

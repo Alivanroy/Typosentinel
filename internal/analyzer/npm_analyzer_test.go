@@ -180,6 +180,7 @@ lodash@4.17.21:
 
 	options := &ScanOptions{
 		SimilarityThreshold: 0.8,
+		AllowEmptyProjects:  true,
 	}
 
 	result, err := analyzer.Scan(tempDir, options)
@@ -215,6 +216,7 @@ func TestNPMAnalyzer_EmptyProject(t *testing.T) {
 
 	options := &ScanOptions{
 		SimilarityThreshold: 0.8,
+		AllowEmptyProjects:  true,
 	}
 
 	result, err := analyzer.Scan(tempDir, options)

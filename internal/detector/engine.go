@@ -15,11 +15,12 @@ import (
 
 // Engine is the main detection engine that orchestrates various detection algorithms
 type Engine struct {
-	config            *config.Config
-	lexicalDetector   *LexicalDetector
-	homoglyphDetector *HomoglyphDetector
-	reputationEngine  *ReputationEngine
-	version           string
+	config                        *config.Config
+	lexicalDetector               *LexicalDetector
+	homoglyphDetector             *HomoglyphDetector
+	reputationEngine              *ReputationEngine
+	enhancedTyposquattingDetector *EnhancedTyposquattingDetector
+	version                       string
 }
 
 // Options contains options for the detection engine
@@ -31,11 +32,12 @@ type Options struct {
 // New creates a new detection engine
 func New(cfg *config.Config) *Engine {
 	return &Engine{
-		config:            cfg,
-		lexicalDetector:   NewLexicalDetector(cfg),
-		homoglyphDetector: NewHomoglyphDetector(),
-		reputationEngine:  NewReputationEngine(cfg),
-		version:           "1.0.0",
+		config:                        cfg,
+		lexicalDetector:               NewLexicalDetector(cfg),
+		homoglyphDetector:             NewHomoglyphDetector(),
+		reputationEngine:              NewReputationEngine(cfg),
+		enhancedTyposquattingDetector: NewEnhancedTyposquattingDetector(),
+		version:                       "1.0.0",
 	}
 }
 
@@ -204,6 +206,13 @@ func (e *Engine) analyzeDependency(dep types.Dependency, allPackageNames []strin
 	// 1. Lexical similarity detection (typosquatting)
 	if lexicalThreats := e.lexicalDetector.Detect(dep, allPackageNames, options.SimilarityThreshold); len(lexicalThreats) > 0 {
 		threats = append(threats, lexicalThreats...)
+	}
+
+	// 1.5. Enhanced typosquatting detection with keyboard layout analysis
+	if e.config.Detection.EnhancedTyposquatting {
+		if enhancedThreats := e.enhancedTyposquattingDetector.DetectEnhanced(dep, allPackageNames, options.SimilarityThreshold); len(enhancedThreats) > 0 {
+			threats = append(threats, enhancedThreats...)
+		}
 	}
 
 	// 2. Homoglyph detection

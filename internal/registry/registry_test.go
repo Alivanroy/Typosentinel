@@ -2,14 +2,8 @@ package registry
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
-	"time"
 
-	"typosentinel/internal/config"
 	"typosentinel/pkg/types"
 )
 
@@ -244,22 +238,22 @@ func TestRegistry_URLBuilding(t *testing.T) {
 	npmRegistry := &Registry{
 		Name:    "npm",
 		Type:    "npm",
-		BaseURL: "https://registry.npmjs.org",
+		URL: "https://registry.npmjs.org",
 		Enabled: true,
 	}
 
-	if npmRegistry.BaseURL == "" {
+	if npmRegistry.URL == "" {
 		t.Error("NPM registry base URL should not be empty")
 	}
 
 	pypiRegistry := &Registry{
 		Name:    "pypi",
 		Type:    "pypi",
-		BaseURL: "https://pypi.org",
+		URL: "https://pypi.org",
 		Enabled: true,
 	}
 
-	if pypiRegistry.BaseURL == "" {
+	if pypiRegistry.URL == "" {
 		t.Error("PyPI registry base URL should not be empty")
 	}
 }
@@ -269,13 +263,13 @@ func TestRegistry_PackageTypes(t *testing.T) {
 		{
 			Name:    "npm",
 			Type:    "npm",
-			BaseURL: "https://registry.npmjs.org",
+			URL:     "https://registry.npmjs.org",
 			Enabled: true,
 		},
 		{
 			Name:    "pypi",
 			Type:    "pypi",
-			BaseURL: "https://pypi.org",
+			URL:     "https://pypi.org",
 			Enabled: true,
 		},
 	}
@@ -284,7 +278,7 @@ func TestRegistry_PackageTypes(t *testing.T) {
 		if registry.Type == "" {
 			t.Errorf("Registry %s should have a type", registry.Name)
 		}
-		if registry.BaseURL == "" {
+		if registry.URL == "" {
 			t.Errorf("Registry %s should have a base URL", registry.Name)
 		}
 	}

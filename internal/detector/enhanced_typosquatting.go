@@ -1,0 +1,749 @@
+package detector
+
+import (
+	"fmt"
+	"math"
+	"strings"
+	"time"
+	"unicode"
+
+	"typosentinel/pkg/types"
+)
+
+// KeyboardLayout represents different keyboard layouts for proximity analysis
+type KeyboardLayout struct {
+	Name     string
+	Layout   map[rune][]rune // character -> adjacent characters
+	Rows     []string        // keyboard rows for row-based analysis
+}
+
+// CharacterSubstitution represents common character substitution patterns
+type CharacterSubstitution struct {
+	Original    rune
+	Substitutes []rune
+	Type        string // "visual", "phonetic", "keyboard"
+	Weight      float64
+}
+
+// EnhancedTyposquattingDetector implements advanced typosquatting detection
+type EnhancedTyposquattingDetector struct {
+	keyboardLayouts []KeyboardLayout
+	substitutions   []CharacterSubstitution
+	config          *EnhancedDetectionConfig
+}
+
+// EnhancedDetectionConfig contains configuration for enhanced detection
+type EnhancedDetectionConfig struct {
+	KeyboardProximityWeight float64
+	VisualSimilarityWeight  float64
+	PhoneticSimilarityWeight float64
+	MinSimilarityThreshold  float64
+	MaxEditDistance         int
+	EnableKeyboardAnalysis  bool
+	EnableVisualAnalysis    bool
+	EnablePhoneticAnalysis  bool
+}
+
+// NewEnhancedTyposquattingDetector creates a new enhanced detector
+func NewEnhancedTyposquattingDetector() *EnhancedTyposquattingDetector {
+	detector := &EnhancedTyposquattingDetector{
+		config: &EnhancedDetectionConfig{
+			KeyboardProximityWeight:  0.3,
+			VisualSimilarityWeight:   0.4,
+			PhoneticSimilarityWeight: 0.3,
+			MinSimilarityThreshold:   0.75,
+			MaxEditDistance:          3,
+			EnableKeyboardAnalysis:   true,
+			EnableVisualAnalysis:     true,
+			EnablePhoneticAnalysis:   true,
+		},
+	}
+
+	detector.initializeKeyboardLayouts()
+	detector.initializeSubstitutions()
+
+	return detector
+}
+
+// initializeKeyboardLayouts sets up common keyboard layouts
+func (etd *EnhancedTyposquattingDetector) initializeKeyboardLayouts() {
+	// QWERTY layout
+	qwerty := KeyboardLayout{
+		Name: "QWERTY",
+		Layout: map[rune][]rune{
+			'q': {'w', 'a', 's'},
+			'w': {'q', 'e', 'a', 's', 'd'},
+			'e': {'w', 'r', 's', 'd', 'f'},
+			'r': {'e', 't', 'd', 'f', 'g'},
+			't': {'r', 'y', 'f', 'g', 'h'},
+			'y': {'t', 'u', 'g', 'h', 'j'},
+			'u': {'y', 'i', 'h', 'j', 'k'},
+			'i': {'u', 'o', 'j', 'k', 'l'},
+			'o': {'i', 'p', 'k', 'l'},
+			'p': {'o', 'l'},
+			'a': {'q', 'w', 's', 'z', 'x'},
+			's': {'a', 'w', 'e', 'd', 'z', 'x', 'c'},
+			'd': {'s', 'e', 'r', 'f', 'x', 'c', 'v'},
+			'f': {'d', 'r', 't', 'g', 'c', 'v', 'b'},
+			'g': {'f', 't', 'y', 'h', 'v', 'b', 'n'},
+			'h': {'g', 'y', 'u', 'j', 'b', 'n', 'm'},
+			'j': {'h', 'u', 'i', 'k', 'n', 'm'},
+			'k': {'j', 'i', 'o', 'l', 'm'},
+			'l': {'k', 'o', 'p'},
+			'z': {'a', 's', 'x'},
+			'x': {'z', 'a', 's', 'd', 'c'},
+			'c': {'x', 's', 'd', 'f', 'v'},
+			'v': {'c', 'd', 'f', 'g', 'b'},
+			'b': {'v', 'f', 'g', 'h', 'n'},
+			'n': {'b', 'g', 'h', 'j', 'm'},
+			'm': {'n', 'h', 'j', 'k'},
+		},
+		Rows: []string{"qwertyuiop", "asdfghjkl", "zxcvbnm"},
+	}
+
+	etd.keyboardLayouts = append(etd.keyboardLayouts, qwerty)
+}
+
+// initializeSubstitutions sets up character substitution patterns
+func (etd *EnhancedTyposquattingDetector) initializeSubstitutions() {
+	etd.substitutions = []CharacterSubstitution{
+		// Visual similarity substitutions
+		{'0', []rune{'o', 'O'}, "visual", 0.9},
+		{'1', []rune{'l', 'I', 'i'}, "visual", 0.8},
+		{'5', []rune{'s', 'S'}, "visual", 0.7},
+		{'8', []rune{'b', 'B'}, "visual", 0.6},
+		{'3', []rune{'e', 'E'}, "visual", 0.7},
+		{'4', []rune{'a', 'A'}, "visual", 0.6},
+		{'7', []rune{'t', 'T'}, "visual", 0.6},
+		{'6', []rune{'g', 'G'}, "visual", 0.5},
+		{'9', []rune{'g', 'q'}, "visual", 0.5},
+		{'2', []rune{'z', 'Z'}, "visual", 0.5},
+
+		// Phonetic similarity substitutions
+		{'c', []rune{'k', 's'}, "phonetic", 0.8},
+		{'k', []rune{'c', 'q'}, "phonetic", 0.8},
+		{'s', []rune{'c', 'z'}, "phonetic", 0.7},
+		{'z', []rune{'s'}, "phonetic", 0.7},
+		// Note: 'ph' is handled as a special case in phonetic analysis
+		{'j', []rune{'g'}, "phonetic", 0.6},
+		// Note: 'ks' and 'cs' are handled as special cases in phonetic analysis
+
+		// Common keyboard mistakes
+		{'m', []rune{'n'}, "keyboard", 0.9},
+		{'n', []rune{'m'}, "keyboard", 0.9},
+		{'b', []rune{'v'}, "keyboard", 0.8},
+		{'v', []rune{'b'}, "keyboard", 0.8},
+		{'d', []rune{'f'}, "keyboard", 0.8},
+		{'f', []rune{'d'}, "keyboard", 0.8},
+	}
+}
+
+// DetectEnhanced performs enhanced typosquatting detection
+func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency, allPackages []string, threshold float64) []types.Threat {
+	var threats []types.Threat
+
+	for _, pkg := range allPackages {
+		if pkg == target.Name {
+			continue
+		}
+
+		// Calculate enhanced similarity score
+		similarity := etd.calculateEnhancedSimilarity(target.Name, pkg)
+
+		if similarity >= threshold {
+			// Analyze the type of typosquatting
+			analysis := etd.analyzeTyposquattingType(target.Name, pkg)
+			
+			severity := etd.calculateSeverityEnhanced(similarity, analysis)
+			
+			threat := types.Threat{
+				ID:              generateThreatID(),
+				Package:         target.Name,
+				Version:         target.Version,
+				Registry:        target.Registry,
+				Type:            types.ThreatTypeTyposquatting,
+				Severity:        severity,
+				Confidence:      similarity,
+				Description:     etd.generateThreatDescription(target.Name, pkg, analysis),
+				SimilarTo:       pkg,
+				Recommendation:  fmt.Sprintf("Verify that '%s' is the intended package. Consider using '%s' instead if that was the intention.", target.Name, pkg),
+				DetectedAt:      time.Now(),
+				DetectionMethod: "enhanced_typosquatting",
+				Evidence:        etd.generateEvidence(target.Name, pkg, analysis),
+			}
+			threats = append(threats, threat)
+		}
+	}
+
+	return threats
+}
+
+// calculateEnhancedSimilarity computes similarity using multiple algorithms
+func (etd *EnhancedTyposquattingDetector) calculateEnhancedSimilarity(s1, s2 string) float64 {
+	s1Lower := strings.ToLower(s1)
+	s2Lower := strings.ToLower(s2)
+
+	var scores []float64
+	var weights []float64
+
+	// Basic edit distance similarity
+	editSim := etd.editDistanceSimilarity(s1Lower, s2Lower)
+	scores = append(scores, editSim)
+	weights = append(weights, 0.3)
+
+	// Keyboard proximity similarity
+	if etd.config.EnableKeyboardAnalysis {
+		keyboardSim := etd.keyboardProximitySimilarity(s1Lower, s2Lower)
+		scores = append(scores, keyboardSim)
+		weights = append(weights, etd.config.KeyboardProximityWeight)
+	}
+
+	// Visual similarity
+	if etd.config.EnableVisualAnalysis {
+		visualSim := etd.visualSimilarity(s1Lower, s2Lower)
+		scores = append(scores, visualSim)
+		weights = append(weights, etd.config.VisualSimilarityWeight)
+	}
+
+	// Phonetic similarity
+	if etd.config.EnablePhoneticAnalysis {
+		phoneticSim := etd.phoneticSimilarity(s1Lower, s2Lower)
+		scores = append(scores, phoneticSim)
+		weights = append(weights, etd.config.PhoneticSimilarityWeight)
+	}
+
+	// Calculate weighted average
+	return etd.weightedAverage(scores, weights)
+}
+
+// keyboardProximitySimilarity analyzes keyboard layout proximity
+func (etd *EnhancedTyposquattingDetector) keyboardProximitySimilarity(s1, s2 string) float64 {
+	if len(s1) == 0 || len(s2) == 0 {
+		return 0.0
+	}
+
+	// Use QWERTY layout (first in the list)
+	if len(etd.keyboardLayouts) == 0 {
+		return 0.0
+	}
+	layout := etd.keyboardLayouts[0]
+
+	// Calculate proximity-aware edit distance
+	proximityScore := etd.proximityEditDistance(s1, s2, layout)
+	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
+	
+	if maxLen == 0 {
+		return 1.0
+	}
+
+	return 1.0 - (proximityScore / maxLen)
+}
+
+// proximityEditDistance calculates edit distance considering keyboard proximity
+func (etd *EnhancedTyposquattingDetector) proximityEditDistance(s1, s2 string, layout KeyboardLayout) float64 {
+	runes1 := []rune(s1)
+	runes2 := []rune(s2)
+	m, n := len(runes1), len(runes2)
+
+	// Create DP matrix
+	dp := make([][]float64, m+1)
+	for i := range dp {
+		dp[i] = make([]float64, n+1)
+	}
+
+	// Initialize base cases
+	for i := 0; i <= m; i++ {
+		dp[i][0] = float64(i)
+	}
+	for j := 0; j <= n; j++ {
+		dp[0][j] = float64(j)
+	}
+
+	// Fill DP matrix
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if runes1[i-1] == runes2[j-1] {
+				dp[i][j] = dp[i-1][j-1]
+			} else {
+				// Calculate proximity cost for substitution
+				proximityCost := etd.getProximityCost(runes1[i-1], runes2[j-1], layout)
+				
+				dp[i][j] = math.Min(
+					math.Min(
+						dp[i-1][j]+1.0,      // deletion
+						dp[i][j-1]+1.0),     // insertion
+					dp[i-1][j-1]+proximityCost) // substitution with proximity cost
+			}
+		}
+	}
+
+	return dp[m][n]
+}
+
+// getProximityCost returns the cost of substituting one character for another based on keyboard proximity
+func (etd *EnhancedTyposquattingDetector) getProximityCost(c1, c2 rune, layout KeyboardLayout) float64 {
+	c1Lower := unicode.ToLower(c1)
+	c2Lower := unicode.ToLower(c2)
+
+	// Check if characters are adjacent on keyboard
+	if adjacent, ok := layout.Layout[c1Lower]; ok {
+		for _, adj := range adjacent {
+			if adj == c2Lower {
+				return 0.3 // Low cost for adjacent keys
+			}
+		}
+	}
+
+	// Check if characters are in the same row
+	for _, row := range layout.Rows {
+		c1InRow := strings.ContainsRune(row, c1Lower)
+		c2InRow := strings.ContainsRune(row, c2Lower)
+		if c1InRow && c2InRow {
+			return 0.6 // Medium cost for same row
+		}
+	}
+
+	return 1.0 // Full cost for non-adjacent keys
+}
+
+// visualSimilarity analyzes visual character similarity
+func (etd *EnhancedTyposquattingDetector) visualSimilarity(s1, s2 string) float64 {
+	if len(s1) == 0 || len(s2) == 0 {
+		return 0.0
+	}
+
+	// Convert to normalized forms for visual comparison
+	norm1 := etd.normalizeForVisualComparison(s1)
+	norm2 := etd.normalizeForVisualComparison(s2)
+
+	// Calculate similarity based on visual substitutions
+	return etd.substitutionSimilarity(norm1, norm2, "visual")
+}
+
+// phoneticSimilarity analyzes phonetic similarity
+func (etd *EnhancedTyposquattingDetector) phoneticSimilarity(s1, s2 string) float64 {
+	if len(s1) == 0 || len(s2) == 0 {
+		return 0.0
+	}
+
+	// Convert to phonetic representations
+	phonetic1 := etd.toPhoneticForm(s1)
+	phonetic2 := etd.toPhoneticForm(s2)
+
+	// Calculate similarity based on phonetic substitutions
+	return etd.substitutionSimilarity(phonetic1, phonetic2, "phonetic")
+}
+
+// normalizeForVisualComparison normalizes strings for visual comparison
+func (etd *EnhancedTyposquattingDetector) normalizeForVisualComparison(s string) string {
+	result := strings.Builder{}
+	for _, r := range s {
+		// Apply visual substitutions
+		substituted := false
+		for _, sub := range etd.substitutions {
+			if sub.Type == "visual" {
+				for _, substitute := range sub.Substitutes {
+					if r == substitute {
+						result.WriteRune(sub.Original)
+						substituted = true
+						break
+					}
+				}
+				if substituted {
+					break
+				}
+			}
+		}
+		if !substituted {
+			result.WriteRune(r)
+		}
+	}
+	return result.String()
+}
+
+// toPhoneticForm converts string to phonetic representation
+func (etd *EnhancedTyposquattingDetector) toPhoneticForm(s string) string {
+	result := strings.Builder{}
+	for _, r := range s {
+		// Apply phonetic substitutions
+		substituted := false
+		for _, sub := range etd.substitutions {
+			if sub.Type == "phonetic" {
+				for _, substitute := range sub.Substitutes {
+					if r == substitute {
+						result.WriteRune(sub.Original)
+						substituted = true
+						break
+					}
+				}
+				if substituted {
+					break
+				}
+			}
+		}
+		if !substituted {
+			result.WriteRune(r)
+		}
+	}
+	return result.String()
+}
+
+// substitutionSimilarity calculates similarity considering character substitutions
+func (etd *EnhancedTyposquattingDetector) substitutionSimilarity(s1, s2, substitutionType string) float64 {
+	if s1 == s2 {
+		return 1.0
+	}
+
+	// Use edit distance with substitution weights
+	distance := etd.weightedEditDistance(s1, s2, substitutionType)
+	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
+	
+	if maxLen == 0 {
+		return 1.0
+	}
+
+	return 1.0 - (distance / maxLen)
+}
+
+// weightedEditDistance calculates edit distance with substitution weights
+func (etd *EnhancedTyposquattingDetector) weightedEditDistance(s1, s2, substitutionType string) float64 {
+	runes1 := []rune(s1)
+	runes2 := []rune(s2)
+	m, n := len(runes1), len(runes2)
+
+	dp := make([][]float64, m+1)
+	for i := range dp {
+		dp[i] = make([]float64, n+1)
+	}
+
+	for i := 0; i <= m; i++ {
+		dp[i][0] = float64(i)
+	}
+	for j := 0; j <= n; j++ {
+		dp[0][j] = float64(j)
+	}
+
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if runes1[i-1] == runes2[j-1] {
+				dp[i][j] = dp[i-1][j-1]
+			} else {
+				substitutionCost := etd.getSubstitutionCost(runes1[i-1], runes2[j-1], substitutionType)
+				dp[i][j] = math.Min(
+					math.Min(
+						dp[i-1][j]+1.0,
+						dp[i][j-1]+1.0),
+					dp[i-1][j-1]+substitutionCost)
+			}
+		}
+	}
+
+	return dp[m][n]
+}
+
+// getSubstitutionCost returns the cost of substituting characters based on type
+func (etd *EnhancedTyposquattingDetector) getSubstitutionCost(c1, c2 rune, substitutionType string) float64 {
+	for _, sub := range etd.substitutions {
+		if sub.Type == substitutionType {
+			if sub.Original == c1 {
+				for _, substitute := range sub.Substitutes {
+					if substitute == c2 {
+						return 1.0 - sub.Weight // Lower cost for known substitutions
+					}
+				}
+			}
+			if sub.Original == c2 {
+				for _, substitute := range sub.Substitutes {
+					if substitute == c1 {
+						return 1.0 - sub.Weight
+					}
+				}
+			}
+		}
+	}
+	return 1.0 // Full cost for unknown substitutions
+}
+
+// editDistanceSimilarity calculates basic edit distance similarity
+func (etd *EnhancedTyposquattingDetector) editDistanceSimilarity(s1, s2 string) float64 {
+	distance := etd.basicEditDistance(s1, s2)
+	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
+	if maxLen == 0 {
+		return 1.0
+	}
+	return 1.0 - float64(distance)/maxLen
+}
+
+// basicEditDistance calculates standard edit distance
+func (etd *EnhancedTyposquattingDetector) basicEditDistance(s1, s2 string) int {
+	m, n := len(s1), len(s2)
+	dp := make([][]int, m+1)
+	for i := range dp {
+		dp[i] = make([]int, n+1)
+	}
+
+	for i := 0; i <= m; i++ {
+		dp[i][0] = i
+	}
+	for j := 0; j <= n; j++ {
+		dp[0][j] = j
+	}
+
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if s1[i-1] == s2[j-1] {
+				dp[i][j] = dp[i-1][j-1]
+			} else {
+				dp[i][j] = 1 + minInt(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+			}
+		}
+	}
+
+	return dp[m][n]
+}
+
+// weightedAverage calculates weighted average of scores
+func (etd *EnhancedTyposquattingDetector) weightedAverage(scores, weights []float64) float64 {
+	if len(scores) != len(weights) || len(scores) == 0 {
+		return 0.0
+	}
+
+	var weightedSum, totalWeight float64
+	for i, score := range scores {
+		weightedSum += score * weights[i]
+		totalWeight += weights[i]
+	}
+
+	if totalWeight == 0 {
+		return 0.0
+	}
+
+	return weightedSum / totalWeight
+}
+
+// TyposquattingAnalysis contains detailed analysis of typosquatting type
+type TyposquattingAnalysis struct {
+	KeyboardErrors   int
+	VisualSimilarity float64
+	PhoneticSimilarity float64
+	EditDistance     int
+	Transpositions   int
+	Insertions       int
+	Deletions        int
+	Substitutions    int
+	PrimaryType      string
+}
+
+// analyzeTyposquattingType analyzes the specific type of typosquatting
+func (etd *EnhancedTyposquattingDetector) analyzeTyposquattingType(s1, s2 string) TyposquattingAnalysis {
+	analysis := TyposquattingAnalysis{}
+	
+	// Calculate basic metrics
+	analysis.EditDistance = etd.basicEditDistance(s1, s2)
+	analysis.VisualSimilarity = etd.visualSimilarity(s1, s2)
+	analysis.PhoneticSimilarity = etd.phoneticSimilarity(s1, s2)
+	
+	// Analyze edit operations
+	operations := etd.analyzeEditOperations(s1, s2)
+	analysis.Insertions = operations["insertions"]
+	analysis.Deletions = operations["deletions"]
+	analysis.Substitutions = operations["substitutions"]
+	analysis.Transpositions = operations["transpositions"]
+	
+	// Count keyboard errors
+	analysis.KeyboardErrors = etd.countKeyboardErrors(s1, s2)
+	
+	// Determine primary type
+	analysis.PrimaryType = etd.determinePrimaryType(analysis)
+	
+	return analysis
+}
+
+// analyzeEditOperations analyzes the types of edit operations needed
+func (etd *EnhancedTyposquattingDetector) analyzeEditOperations(s1, s2 string) map[string]int {
+	operations := map[string]int{
+		"insertions":    0,
+		"deletions":     0,
+		"substitutions": 0,
+		"transpositions": 0,
+	}
+	
+	// Simple analysis based on length difference and character comparison
+	lenDiff := len(s2) - len(s1)
+	if lenDiff > 0 {
+		operations["insertions"] = lenDiff
+	} else if lenDiff < 0 {
+		operations["deletions"] = -lenDiff
+	}
+	
+	// Count substitutions by comparing characters at same positions
+	minLen := minInt(len(s1), len(s2))
+	for i := 0; i < minLen; i++ {
+		if s1[i] != s2[i] {
+			operations["substitutions"]++
+		}
+	}
+	
+	// Simple transposition detection
+	if len(s1) == len(s2) && operations["substitutions"] == 2 {
+		// Check if it's a simple adjacent transposition
+		for i := 0; i < len(s1)-1; i++ {
+			if s1[i] == s2[i+1] && s1[i+1] == s2[i] {
+				operations["transpositions"] = 1
+				operations["substitutions"] -= 2
+				break
+			}
+		}
+	}
+	
+	return operations
+}
+
+// countKeyboardErrors counts potential keyboard-based errors
+func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int {
+	if len(etd.keyboardLayouts) == 0 {
+		return 0
+	}
+	
+	layout := etd.keyboardLayouts[0] // Use QWERTY
+	count := 0
+	
+	minLen := minInt(len(s1), len(s2))
+	for i := 0; i < minLen; i++ {
+		if s1[i] != s2[i] {
+			c1 := unicode.ToLower(rune(s1[i]))
+			c2 := unicode.ToLower(rune(s2[i]))
+			
+			// Check if characters are adjacent on keyboard
+			if adjacent, ok := layout.Layout[c1]; ok {
+				for _, adj := range adjacent {
+					if adj == c2 {
+						count++
+						break
+					}
+				}
+			}
+		}
+	}
+	
+	return count
+}
+
+// determinePrimaryType determines the primary type of typosquatting
+func (etd *EnhancedTyposquattingDetector) determinePrimaryType(analysis TyposquattingAnalysis) string {
+	if analysis.KeyboardErrors > 0 {
+		return "keyboard_proximity"
+	}
+	if analysis.VisualSimilarity > 0.8 {
+		return "visual_similarity"
+	}
+	if analysis.PhoneticSimilarity > 0.8 {
+		return "phonetic_similarity"
+	}
+	if analysis.Transpositions > 0 {
+		return "character_transposition"
+	}
+	if analysis.Insertions > analysis.Deletions && analysis.Insertions > analysis.Substitutions {
+		return "character_insertion"
+	}
+	if analysis.Deletions > analysis.Substitutions {
+		return "character_deletion"
+	}
+	return "character_substitution"
+}
+
+// calculateSeverityEnhanced calculates threat severity based on enhanced analysis
+func (etd *EnhancedTyposquattingDetector) calculateSeverityEnhanced(similarity float64, analysis TyposquattingAnalysis) types.Severity {
+	// Base severity on similarity score
+	baseSeverity := types.SeverityLow
+	if similarity >= 0.95 {
+		baseSeverity = types.SeverityCritical
+	} else if similarity >= 0.9 {
+		baseSeverity = types.SeverityHigh
+	} else if similarity >= 0.8 {
+		baseSeverity = types.SeverityMedium
+	}
+	
+	// Adjust based on analysis
+	if analysis.KeyboardErrors > 0 || analysis.PrimaryType == "keyboard_proximity" {
+		// Keyboard errors are more likely to be accidental typos
+		if baseSeverity == types.SeverityCritical {
+			return types.SeverityHigh
+		}
+	}
+	
+	if analysis.VisualSimilarity > 0.9 || analysis.PrimaryType == "visual_similarity" {
+		// Visual similarity attacks are particularly dangerous
+		if baseSeverity == types.SeverityMedium {
+			return types.SeverityHigh
+		}
+	}
+	
+	return baseSeverity
+}
+
+// generateThreatDescription generates a detailed threat description
+func (etd *EnhancedTyposquattingDetector) generateThreatDescription(target, similar string, analysis TyposquattingAnalysis) string {
+	baseDesc := fmt.Sprintf("Package name '%s' is very similar to '%s' (%.1f%% similarity)", target, similar, analysis.VisualSimilarity*100)
+	
+	switch analysis.PrimaryType {
+	case "keyboard_proximity":
+		return fmt.Sprintf("%s. Detected %d potential keyboard errors, suggesting possible typosquatting attack.", baseDesc, analysis.KeyboardErrors)
+	case "visual_similarity":
+		return fmt.Sprintf("%s. High visual similarity (%.1f%%) detected, indicating potential visual spoofing attack.", baseDesc, analysis.VisualSimilarity*100)
+	case "phonetic_similarity":
+		return fmt.Sprintf("%s. High phonetic similarity (%.1f%%) detected, indicating potential sound-alike attack.", baseDesc, analysis.PhoneticSimilarity*100)
+	case "character_transposition":
+		return fmt.Sprintf("%s. Character transposition detected, indicating potential typosquatting attack.", baseDesc)
+	case "character_insertion":
+		return fmt.Sprintf("%s. Character insertion detected (%d insertions), indicating potential typosquatting attack.", baseDesc, analysis.Insertions)
+	case "character_deletion":
+		return fmt.Sprintf("%s. Character deletion detected (%d deletions), indicating potential typosquatting attack.", baseDesc, analysis.Deletions)
+	default:
+		return fmt.Sprintf("%s. Character substitution detected, indicating potential typosquatting attack.", baseDesc)
+	}
+}
+
+// generateEvidence generates evidence for the threat
+func (etd *EnhancedTyposquattingDetector) generateEvidence(target, similar string, analysis TyposquattingAnalysis) []types.Evidence {
+	evidence := []types.Evidence{
+		{
+			Type:        "edit_distance",
+			Description: "Levenshtein edit distance",
+			Value:       analysis.EditDistance,
+			Score:       1.0 - float64(analysis.EditDistance)/math.Max(float64(len(target)), float64(len(similar))),
+		},
+		{
+			Type:        "visual_similarity",
+			Description: "Visual character similarity score",
+			Value:       analysis.VisualSimilarity,
+			Score:       analysis.VisualSimilarity,
+		},
+		{
+			Type:        "phonetic_similarity",
+			Description: "Phonetic similarity score",
+			Value:       analysis.PhoneticSimilarity,
+			Score:       analysis.PhoneticSimilarity,
+		},
+	}
+	
+	if analysis.KeyboardErrors > 0 {
+		evidence = append(evidence, types.Evidence{
+			Type:        "keyboard_errors",
+			Description: "Number of potential keyboard proximity errors",
+			Value:       analysis.KeyboardErrors,
+			Score:       float64(analysis.KeyboardErrors) / float64(len(target)),
+		})
+	}
+	
+	if analysis.Transpositions > 0 {
+		evidence = append(evidence, types.Evidence{
+			Type:        "transpositions",
+			Description: "Number of character transpositions",
+			Value:       analysis.Transpositions,
+			Score:       0.9, // High score for transpositions
+		})
+	}
+	
+	return evidence
+}

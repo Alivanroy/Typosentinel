@@ -592,6 +592,27 @@ func (a *DotNetAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.D
 	return a.analyzer.AnalyzeDependencies(projectInfo)
 }
 
+// PythonPackageAnalyzer analyzes Python projects
+type PythonPackageAnalyzer struct {
+	config   *config.Config
+	analyzer *PythonAnalyzer
+}
+
+func NewPythonPackageAnalyzer(cfg *config.Config) *PythonPackageAnalyzer {
+	return &PythonPackageAnalyzer{
+		config:   cfg,
+		analyzer: NewPythonAnalyzer(cfg),
+	}
+}
+
+func (a *PythonPackageAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	return a.analyzer.ExtractPackages(projectInfo)
+}
+
+func (a *PythonPackageAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
+	return a.analyzer.AnalyzeDependencies(projectInfo)
+}
+
 // GenericAnalyzer handles projects without specific manifest files
 type GenericAnalyzer struct {
 	config *config.Config

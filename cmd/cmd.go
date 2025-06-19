@@ -21,6 +21,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.typosentinel.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug mode")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "enable verbose logging")
+	rootCmd.PersistentFlags().BoolVar(&trace, "trace", false, "enable trace mode (most verbose)")
+	rootCmd.PersistentFlags().StringVar(&debugMode, "debug-mode", "", "set debug mode (basic, verbose, trace, performance, security)")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "", "set log level (trace, verbose, debug, info, warn, error, fatal)")
+	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "", "set log format (text, json)")
+	rootCmd.PersistentFlags().StringVar(&logOutput, "log-output", "", "set log output (stdout, stderr, file path)")
 
 	// Add scan command
 	rootCmd.AddCommand(scanCmd)

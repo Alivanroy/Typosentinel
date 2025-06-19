@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"typosentinel/internal/cache"
 	"typosentinel/internal/config"
 	"typosentinel/pkg/types"
 )
@@ -16,6 +17,7 @@ type Scanner struct {
 	config    *config.Config
 	detectors map[string]ProjectDetector
 	analyzers map[string]DependencyAnalyzer
+	cache     *cache.CacheIntegration
 }
 
 // ProjectDetector interface for detecting different project types
@@ -48,6 +50,14 @@ func New(cfg *config.Config) *Scanner {
 		analyzers: make(map[string]DependencyAnalyzer),
 	}
 
+	// Initialize cache if enabled
+	if cfg.Cache != nil && cfg.Cache.Enabled {
+		cacheIntegration, err := cache.NewCacheIntegration(cfg.Cache)
+		if err == nil {
+			s.cache = cacheIntegration
+		}
+	}
+
 	// Register project detectors
 	s.registerDetectors()
 	s.registerAnalyzers()
@@ -58,6 +68,19 @@ func New(cfg *config.Config) *Scanner {
 // ScanProject scans a project for dependencies and security threats
 func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	start := time.Now()
+
+	// Check cache first if enabled
+	if s.cache != nil {
+		cacheKey, err := s.generateCacheKey(projectPath)
+		if err == nil {
+			if cachedResult, found, err := s.cache.GetCachedScanResult(cacheKey); err == nil && found {
+				// Update scan duration to reflect cache hit
+				cachedResult.Duration = time.Since(start)
+				cachedResult.CacheHit = true
+				return cachedResult, nil
+			}
+		}
+	}
 
 	// Detect project type
 	projectInfo, err := s.detectProject(projectPath)
@@ -94,14 +117,29 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	summary := s.buildSummary(packages)
 
 	result := &types.ScanResult{
-		ID:       generateScanID(),
-		Target:   projectPath,
-		Type:     projectInfo.Type,
-		Status:   "completed",
-		Packages: packages,
-		Summary:  summary,
-		Duration: time.Since(start),
-		CreatedAt: time.Now(),
+		ID:           generateScanID(),
+		Target:       projectPath,
+		Type:         projectInfo.Type,
+		Status:       "completed",
+		Packages:     packages,
+		Summary:      summary,
+		ScanDuration: time.Since(start),
+		Duration:     time.Since(start),
+		CreatedAt:    time.Now(),
+		CacheHit:     false,
+	}
+
+	// Cache the result if caching is enabled
+	if s.cache != nil {
+		cacheKey, err := s.generateCacheKey(projectPath)
+		if err == nil {
+			metadata := map[string]interface{}{
+				"project_type": projectInfo.Type,
+				"package_count": len(packages),
+				"threat_count": summary.ThreatsFound,
+			}
+			_ = s.cache.CacheScanResult(cacheKey, result, metadata)
+		}
 	}
 
 	return result, nil
@@ -454,7 +492,7 @@ func (s *Scanner) registerDetectors() {
 // registerAnalyzers registers all dependency analyzers
 func (s *Scanner) registerAnalyzers() {
 	s.analyzers["nodejs"] = &NodeJSAnalyzer{config: s.config}
-	s.analyzers["python"] = &PythonAnalyzer{config: s.config}
+	s.analyzers["python"] = NewPythonPackageAnalyzer(s.config)
 	s.analyzers["go"] = &GoAnalyzer{config: s.config}
 	s.analyzers["rust"] = NewRustAnalyzer(s.config)
 	s.analyzers["ruby"] = NewRubyAnalyzer(s.config)
@@ -462,6 +500,72 @@ func (s *Scanner) registerAnalyzers() {
 	s.analyzers["java"] = NewJavaAnalyzer(s.config)
 	s.analyzers["dotnet"] = NewDotNetAnalyzer(s.config)
 	s.analyzers["generic"] = &GenericAnalyzer{config: s.config}
+}
+
+// generateCacheKey generates a cache key for the scan
+func (s *Scanner) generateCacheKey(projectPath string) (string, error) {
+	if s.cache == nil {
+		return "", fmt.Errorf("cache not initialized")
+	}
+
+	// Get enabled analyzers
+	enabledAnalyzers := make([]string, 0, len(s.analyzers))
+	for name := range s.analyzers {
+		enabledAnalyzers = append(enabledAnalyzers, name)
+	}
+
+	// Create config map for cache key generation
+	configMap := map[string]interface{}{
+		"analyzers": enabledAnalyzers,
+		"version":   "1.0.0", // Scanner version for cache invalidation
+	}
+
+	return s.cache.GenerateScanKey(projectPath, enabledAnalyzers, configMap)
+}
+
+// GetCacheStats returns cache statistics
+func (s *Scanner) GetCacheStats() cache.CacheStats {
+	if s.cache == nil {
+		return cache.CacheStats{}
+	}
+	return s.cache.GetCacheStats()
+}
+
+// ClearCache clears all cached scan results
+func (s *Scanner) ClearCache() error {
+	if s.cache == nil {
+		return nil
+	}
+	return s.cache.InvalidatePackageCache("")
+}
+
+// InvalidatePackageCache invalidates cache for a specific package
+func (s *Scanner) InvalidatePackageCache(packagePath string) error {
+	if s.cache == nil {
+		return nil
+	}
+	return s.cache.InvalidatePackageCache(packagePath)
+}
+
+// SetCacheConfig updates the cache configuration
+func (s *Scanner) SetCacheConfig(config *cache.CacheConfig) error {
+	if s.cache == nil {
+		return fmt.Errorf("cache not initialized")
+	}
+	return s.cache.SetCacheConfig(config)
+}
+
+// IsCacheEnabled returns whether caching is enabled
+func (s *Scanner) IsCacheEnabled() bool {
+	return s.cache != nil
+}
+
+// Close closes the scanner and its resources
+func (s *Scanner) Close() error {
+	if s.cache != nil {
+		return s.cache.Close()
+	}
+	return nil
 }
 
 // generateScanID generates a unique scan ID

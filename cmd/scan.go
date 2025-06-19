@@ -14,6 +14,7 @@ import (
 	"typosentinel/internal/config"
 	"typosentinel/internal/dynamic"
 	"typosentinel/internal/ml"
+	"typosentinel/internal/output"
 	"typosentinel/internal/provenance"
 	"typosentinel/internal/static"
 	"typosentinel/pkg/logger"
@@ -69,11 +70,17 @@ type Scanner struct {
 
 // NewScanner creates a new scanner instance.
 func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
-	logger.Info("Initializing scanner", map[string]interface{}{
+	logger.TraceFunction("NewScanner")
+	logger.VerboseWithContext("Initializing scanner with configuration", map[string]interface{}{
 		"static_enabled":     cfg.StaticAnalysis != nil && cfg.StaticAnalysis.Enabled,
 		"dynamic_enabled":    cfg.DynamicAnalysis != nil && cfg.DynamicAnalysis.Enabled,
 		"ml_enabled":         cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled,
 		"provenance_enabled": cfg.ProvenanceAnalysis != nil && cfg.ProvenanceAnalysis.Enabled,
+	})
+
+	logger.DebugWithContext("Scanner configuration details", map[string]interface{}{
+		"config_type": fmt.Sprintf("%T", cfg),
+		"memory_addr": fmt.Sprintf("%p", cfg),
 	})
 
 	scanner := &Scanner{
@@ -82,7 +89,11 @@ func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
 
 	// Initialize analysis engines based on configuration
 	if cfg.StaticAnalysis != nil && cfg.StaticAnalysis.Enabled {
-		logger.Debug("Initializing static analyzer")
+		logger.VerboseWithContext("Initializing static analyzer", map[string]interface{}{
+			"yara_enabled": cfg.StaticAnalysis.YaraRulesPath != "",
+			"yara_path":    cfg.StaticAnalysis.YaraRulesPath,
+			"timeout":      cfg.StaticAnalysis.Timeout,
+		})
 		staticConfig := &static.Config{
 			Enabled: cfg.StaticAnalysis.Enabled,
 			AnalyzeInstallScripts: cfg.StaticAnalysis.ScanScripts,
@@ -102,9 +113,19 @@ func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
 		}
 		scanner.staticAnalyzer = staticAnalyzer
 		logger.Info("Static analyzer initialized successfully")
+		logger.DebugWithContext("Static analyzer details", map[string]interface{}{
+			"analyzer_type": fmt.Sprintf("%T", staticAnalyzer),
+			"config":       staticConfig,
+		})
 	}
 
 	if cfg.DynamicAnalysis != nil && cfg.DynamicAnalysis.Enabled {
+		logger.VerboseWithContext("Initializing dynamic analyzer", map[string]interface{}{
+			"sandbox_type":    cfg.DynamicAnalysis.SandboxType,
+			"sandbox_image":   cfg.DynamicAnalysis.SandboxImage,
+			"timeout":         cfg.DynamicAnalysis.Timeout,
+			"max_exec_time":   cfg.DynamicAnalysis.MaxExecutionTime,
+		})
 		dynamicConfig := &dynamic.Config{
 			Enabled: cfg.DynamicAnalysis.Enabled,
 			SandboxType: cfg.DynamicAnalysis.SandboxType,
@@ -129,10 +150,25 @@ func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
 			return nil, fmt.Errorf("failed to create dynamic analyzer: %w", err)
 		}
 		scanner.dynamicAnalyzer = dynamicAnalyzer
+		logger.Info("Dynamic analyzer initialized successfully")
+		logger.DebugWithContext("Dynamic analyzer details", map[string]interface{}{
+			"analyzer_type": fmt.Sprintf("%T", dynamicAnalyzer),
+			"config":        dynamicConfig,
+		})
 	}
 
 	if cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled {
+		logger.VerboseWithContext("Initializing ML analyzer", map[string]interface{}{
+			"model_path":     cfg.MLAnalysis.ModelPath,
+			"threshold":      cfg.MLAnalysis.Threshold,
+			"feature_count":  cfg.MLAnalysis.FeatureCount,
+		})
 		scanner.mlAnalyzer = ml.NewMLAnalyzer(*cfg.MLAnalysis)
+		logger.Info("ML analyzer initialized successfully")
+		logger.DebugWithContext("ML analyzer details", map[string]interface{}{
+			"analyzer_type": fmt.Sprintf("%T", scanner.mlAnalyzer),
+			"config":        cfg.MLAnalysis,
+		})
 	}
 
 	if cfg.ProvenanceAnalysis != nil && cfg.ProvenanceAnalysis.Enabled {
@@ -181,7 +217,10 @@ Example usage:
   typosentinel scan lodash
   typosentinel scan --registry pypi requests
   typosentinel scan --local ./package.json
-  typosentinel scan --config custom-config.yaml express`,
+  typosentinel scan --config custom-config.yaml express
+  typosentinel scan --format table --no-color
+  typosentinel scan --format compact --quiet
+  typosentinel scan --config custom.yaml`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runScan,
 }
@@ -202,6 +241,7 @@ var (
 	onlyEngines  []string
 	failFast     bool
 	saveReport   bool
+	showProgress bool
 )
 
 func init() {
@@ -217,7 +257,7 @@ func init() {
 
 	// Output flags
 	scanCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file path")
-	scanCmd.Flags().StringVarP(&outputFormat, "format", "f", "json", "Output format (json, yaml, text, table)")
+	scanCmd.Flags().StringVarP(&outputFormat, "format", "f", "json", "Output format (json, yaml, text, table, compact, detailed, summary)")
 	scanCmd.Flags().BoolVarP(&verbose, "verbose", "", false, "Enable verbose output")
 	scanCmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "Suppress non-essential output")
 	scanCmd.Flags().BoolVar(&noColor, "no-color", false, "Disable colored output")
@@ -233,42 +273,96 @@ func init() {
 
 	// Report flags
 	scanCmd.Flags().BoolVar(&saveReport, "save-report", false, "Save detailed report to file")
+	scanCmd.Flags().BoolVar(&showProgress, "progress", true, "Show progress during scan")
 }
 
 func runScan(cmd *cobra.Command, args []string) error {
+	logger.TraceFunction("runScan")
 	ctx := context.Background()
+
+	logger.VerboseWithContext("Starting scan command", map[string]interface{}{
+		"args":         args,
+		"registry":     registry,
+		"version":      version,
+		"local":        local,
+		"output_format": outputFormat,
+		"timeout":      timeout,
+		"parallel":     parallel,
+	})
 
 	// Parse timeout
 	scanTimeout, err := time.ParseDuration(timeout)
 	if err != nil {
+		logger.Error("Invalid timeout format", map[string]interface{}{
+			"timeout": timeout,
+			"error":   err.Error(),
+		})
 		return fmt.Errorf("invalid timeout format: %w", err)
 	}
+
+	logger.DebugWithContext("Parsed scan timeout", map[string]interface{}{
+		"timeout_duration": scanTimeout.String(),
+		"timeout_seconds":  scanTimeout.Seconds(),
+	})
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(ctx, scanTimeout)
 	defer cancel()
 
-	// Load configuration
-	cfg, err := loadConfiguration()
+	// Load configuration using enhanced config manager
+	logger.VerboseWithContext("Loading configuration", map[string]interface{}{
+		"config_file": configFile,
+	})
+	configManager := config.NewEnhancedConfigManager()
+	cfg, err := configManager.LoadConfig(configFile)
 	if err != nil {
+		logger.Error("Failed to load configuration", map[string]interface{}{
+			"config_file": configFile,
+			"error":       err.Error(),
+		})
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
+	logger.DebugWithContext("Configuration loaded successfully", map[string]interface{}{
+		"config_type": fmt.Sprintf("%T", cfg),
+		"config_file": configFile,
+	})
+
 	// Override configuration with command line flags
+	logger.Verbose("Applying command line overrides")
 	applyCommandLineOverrides(cfg)
 
 	// Create scanner
+	logger.Verbose("Creating scanner instance")
 	scanner, err := NewScanner(cfg)
 	if err != nil {
+		logger.Error("Failed to create scanner", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return fmt.Errorf("failed to create scanner: %w", err)
 	}
 
+	logger.Debug("Scanner created successfully")
+
 	// Determine package to scan
 	packageName := args[0]
+	logger.VerboseWithContext("Resolving package", map[string]interface{}{
+		"package_name": packageName,
+		"registry":     registry,
+		"version":      version,
+	})
 	pkg, err := resolvePackage(packageName)
 	if err != nil {
+		logger.Error("Failed to resolve package", map[string]interface{}{
+			"package_name": packageName,
+			"error":        err.Error(),
+		})
 		return fmt.Errorf("failed to resolve package: %w", err)
 	}
+
+	logger.DebugWithContext("Package resolved successfully", map[string]interface{}{
+		"package": pkg,
+	})
 
 	if !quiet {
 		fmt.Printf("Scanning package: %s@%s\n", pkg.Name, pkg.Version)
@@ -277,10 +371,26 @@ func runScan(cmd *cobra.Command, args []string) error {
 	}
 
 	// Perform scan
+	logger.Info("Starting package scan", map[string]interface{}{
+		"package": pkg.Name,
+		"version": pkg.Version,
+		"registry": pkg.Registry,
+	})
 	result, err := scanner.Scan(ctx, pkg)
 	if err != nil {
+		logger.Error("Scan failed", map[string]interface{}{
+			"package": pkg.Name,
+			"error":   err.Error(),
+		})
 		return fmt.Errorf("scan failed: %w", err)
 	}
+
+	logger.Info("Scan completed successfully", map[string]interface{}{
+		"package":        pkg.Name,
+		"overall_risk":   result.OverallRisk,
+		"risk_score":     result.RiskScore,
+		"total_findings": result.Summary.TotalFindings,
+	})
 
 	// Output results
 	if err := outputResults(result); err != nil {
@@ -300,34 +410,67 @@ func runScan(cmd *cobra.Command, args []string) error {
 
 // Scan performs a comprehensive scan of the package.
 func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, error) {
+	logger.TraceFunction("Scanner.Scan")
 	startTime := time.Now()
 
+	logger.VerboseWithContext("Starting comprehensive package scan", map[string]interface{}{
+		"package":     pkg.Name,
+		"version":     pkg.Version,
+		"registry":    pkg.Registry,
+		"start_time":  startTime.Format(time.RFC3339),
+	})
+
 	// Initialize result
+	scanID := generateScanID()
 	result := &ScanResult{
 		Package: pkg,
 		Metadata: ScanMetadata{
-			ScanID:      generateScanID(),
+			ScanID:      scanID,
 			Timestamp:   startTime,
 			Version:     "1.0.0", // Should come from build info
 			Environment: s.config.Core.Environment,
 		},
 	}
 
+	logger.DebugWithContext("Scan result initialized", map[string]interface{}{
+		"scan_id":     scanID,
+		"environment": s.config.Core.Environment,
+		"result_type": fmt.Sprintf("%T", result),
+	})
+
 	// Track which engines are used
 	enginesUsed := []string{}
 
 	// Run static analysis
 	if s.staticAnalyzer != nil && shouldRunEngine("static") {
+		logger.VerboseWithContext("Starting static analysis", map[string]interface{}{
+			"package":    pkg.Name,
+			"analyzer":   fmt.Sprintf("%T", s.staticAnalyzer),
+			"fail_fast":  failFast,
+		})
 		if verbose {
 			fmt.Println("Running static analysis...")
 		}
+		staticStart := time.Now()
 		staticResult, err := s.staticAnalyzer.AnalyzePackage(ctx, pkg.Name)
+		staticDuration := time.Since(staticStart)
 		if err != nil {
+			logger.Error("Static analysis failed", map[string]interface{}{
+				"package":  pkg.Name,
+				"duration": staticDuration.String(),
+				"error":    err.Error(),
+			})
 			if failFast {
 				return nil, fmt.Errorf("static analysis failed: %w", err)
 			}
 			fmt.Printf("Warning: static analysis failed: %v\n", err)
 		} else {
+			logger.VerboseWithContext("Static analysis completed", map[string]interface{}{
+				"package":        pkg.Name,
+				"duration":       staticDuration.String(),
+				"findings_count": len(staticResult.Findings),
+				"risk_score":     staticResult.RiskScore,
+			})
 			result.StaticAnalysis = staticResult
 			enginesUsed = append(enginesUsed, "static")
 		}
@@ -335,16 +478,34 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 
 	// Run dynamic analysis
 	if s.dynamicAnalyzer != nil && shouldRunEngine("dynamic") {
+		logger.VerboseWithContext("Starting dynamic analysis", map[string]interface{}{
+			"package":   pkg.Name,
+			"analyzer":  fmt.Sprintf("%T", s.dynamicAnalyzer),
+			"fail_fast": failFast,
+		})
 		if verbose {
 			fmt.Println("Running dynamic analysis...")
 		}
+		dynamicStart := time.Now()
 		dynamicResult, err := s.dynamicAnalyzer.AnalyzePackage(ctx, pkg.Name)
+		dynamicDuration := time.Since(dynamicStart)
 		if err != nil {
+			logger.Error("Dynamic analysis failed", map[string]interface{}{
+				"package":  pkg.Name,
+				"duration": dynamicDuration.String(),
+				"error":    err.Error(),
+			})
 			if failFast {
 				return nil, fmt.Errorf("dynamic analysis failed: %w", err)
 			}
 			fmt.Printf("Warning: dynamic analysis failed: %v\n", err)
 		} else {
+			logger.VerboseWithContext("Dynamic analysis completed", map[string]interface{}{
+				"package":        pkg.Name,
+				"duration":       dynamicDuration.String(),
+				"findings_count": len(dynamicResult.Findings),
+				"risk_score":     dynamicResult.RiskScore,
+			})
 			result.DynamicAnalysis = dynamicResult
 			enginesUsed = append(enginesUsed, "dynamic")
 		}
@@ -352,9 +513,15 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 
 	// Run ML analysis
 	if s.mlAnalyzer != nil && shouldRunEngine("ml") {
+		logger.VerboseWithContext("Starting ML analysis", map[string]interface{}{
+			"package":   pkg.Name,
+			"analyzer":  fmt.Sprintf("%T", s.mlAnalyzer),
+			"fail_fast": failFast,
+		})
 		if verbose {
 			fmt.Println("Running ML analysis...")
 		}
+		mlStart := time.Now()
 		mlResult, err := s.mlAnalyzer.Analyze(ctx, pkg)
 		if err != nil {
 			if failFast {
@@ -619,6 +786,14 @@ func shouldRunEngine(engine string) bool {
 	return true
 }
 
+func convertToOutputFormat(results interface{}, cfg *config.EnhancedConfig) *output.ScanResult {
+	// Convert scanner results to output format
+	// This is a placeholder implementation
+	return &output.ScanResult{
+		Findings: []output.Finding{},
+	}
+}
+
 func outputResults(result *ScanResult) error {
 	switch outputFormat {
 	case "json":
@@ -701,7 +876,13 @@ func saveDetailedReport(result *ScanResult) error {
 	return nil
 }
 
-func handleExitCode(result *ScanResult) error {
+func handleExitCode(result interface{}, cfg *config.EnhancedConfig) error {
+	// Exit with non-zero code for high-risk packages
+	// This is a placeholder implementation
+	return nil
+}
+
+func handleExitCodeLegacy(result *ScanResult) error {
 	// Exit with non-zero code for high-risk packages
 	switch result.OverallRisk {
 	case "critical":

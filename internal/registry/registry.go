@@ -28,12 +28,14 @@ type Registry struct {
 // NPMConnector implements Connector for NPM registry
 type NPMConnector struct {
 	registry *Registry
+	client   *NPMClient
 }
 
 // NewNPMConnector creates a new NPM connector
 func NewNPMConnector(registry *Registry) *NPMConnector {
 	return &NPMConnector{
 		registry: registry,
+		client:   NewNPMClient(),
 	}
 }
 
@@ -45,17 +47,84 @@ func (n *NPMConnector) Connect(ctx context.Context) error {
 
 // GetPackageInfo retrieves package information from NPM
 func (n *NPMConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
-	// Implementation would go here
-	return &types.PackageMetadata{
-		Name:     name,
-		Version:  version,
-		Registry: "npm",
-	}, nil
+	packageInfo, err := n.client.GetPackageInfo(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get package info from NPM: %w", err)
+	}
+
+	// Get download stats
+	downloadStats, err := n.client.GetDownloadStats(ctx, name, "last-week")
+	if err != nil {
+		// Log warning but don't fail the request
+		fmt.Printf("Warning: failed to get download stats for %s: %v\n", name, err)
+	}
+
+	// Convert license to string if it's an object
+	licenseStr := ""
+	if packageInfo.License != nil {
+		switch l := packageInfo.License.(type) {
+		case string:
+			licenseStr = l
+		case map[string]interface{}:
+			if licType, ok := l["type"].(string); ok {
+				licenseStr = licType
+			}
+		}
+	}
+
+	// Convert author to string if it's an object
+	authorStr := ""
+	if packageInfo.Author != nil {
+		switch a := packageInfo.Author.(type) {
+		case string:
+			authorStr = a
+		case map[string]interface{}:
+			if name, ok := a["name"].(string); ok {
+				authorStr = name
+			}
+		}
+	}
+
+	// Extract repository URL
+	repoURL := ""
+	if packageInfo.Repository != nil {
+		if url, ok := packageInfo.Repository["url"].(string); ok {
+			repoURL = url
+		}
+	}
+
+	// Convert dependencies map to slice of names
+	dependencyNames := make([]string, 0, len(packageInfo.Dependencies))
+	for depName := range packageInfo.Dependencies {
+		dependencyNames = append(dependencyNames, depName)
+	}
+
+	metadata := &types.PackageMetadata{
+		Name:         packageInfo.Name,
+		Version:      version,
+		Description:  packageInfo.Description,
+		Author:       authorStr,
+		License:      licenseStr,
+		Homepage:     packageInfo.Homepage,
+		Repository:   repoURL,
+		Keywords:     packageInfo.Keywords,
+		Registry:     "npm",
+		Dependencies: dependencyNames,
+	}
+
+	// Add download count if available
+	if downloadStats != nil {
+		metadata.Downloads = int64(downloadStats.Downloads)
+	}
+
+	return metadata, nil
 }
 
 // SearchPackages searches for packages in NPM registry
 func (n *NPMConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
-	// Implementation would go here
+	// For now, return empty slice as NPM search API requires different endpoint
+	// This would need to be implemented with NPM search API: https://api.npmjs.org/search
+	// TODO: Implement NPM search functionality
 	return []*types.PackageMetadata{}, nil
 }
 

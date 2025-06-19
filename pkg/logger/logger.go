@@ -14,23 +14,32 @@ import (
 type LogLevel int
 
 const (
-	DEBUG LogLevel = iota
+	TRACE LogLevel = iota
+	DEBUG
+	VERBOSE
 	INFO
 	WARN
 	ERROR
+	FATAL
 )
 
 // String returns the string representation of the log level
 func (l LogLevel) String() string {
 	switch l {
+	case TRACE:
+		return "TRACE"
 	case DEBUG:
 		return "DEBUG"
+	case VERBOSE:
+		return "VERBOSE"
 	case INFO:
 		return "INFO"
 	case WARN:
 		return "WARN"
 	case ERROR:
 		return "ERROR"
+	case FATAL:
+		return "FATAL"
 	default:
 		return "UNKNOWN"
 	}
@@ -39,14 +48,20 @@ func (l LogLevel) String() string {
 // ParseLogLevel parses a string into a LogLevel
 func ParseLogLevel(level string) LogLevel {
 	switch strings.ToUpper(level) {
+	case "TRACE":
+		return TRACE
 	case "DEBUG":
 		return DEBUG
+	case "VERBOSE", "VERB":
+		return VERBOSE
 	case "INFO":
 		return INFO
 	case "WARN", "WARNING":
 		return WARN
 	case "ERROR":
 		return ERROR
+	case "FATAL":
+		return FATAL
 	default:
 		return INFO
 	}
@@ -191,6 +206,34 @@ func (l *Logger) Warn(msg string, fields ...map[string]interface{}) {
 	l.log(WARN, msg, f)
 }
 
+// Trace logs a trace message
+func (l *Logger) Trace(msg string, fields ...map[string]interface{}) {
+	var f map[string]interface{}
+	if len(fields) > 0 {
+		f = fields[0]
+	}
+	l.log(TRACE, msg, f)
+}
+
+// Verbose logs a verbose message
+func (l *Logger) Verbose(msg string, fields ...map[string]interface{}) {
+	var f map[string]interface{}
+	if len(fields) > 0 {
+		f = fields[0]
+	}
+	l.log(VERBOSE, msg, f)
+}
+
+// Fatal logs a fatal message and exits
+func (l *Logger) Fatal(msg string, fields ...map[string]interface{}) {
+	var f map[string]interface{}
+	if len(fields) > 0 {
+		f = fields[0]
+	}
+	l.log(FATAL, msg, f)
+	os.Exit(1)
+}
+
 // Infof logs a formatted info message
 func (l *Logger) Infof(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
@@ -213,6 +256,25 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 func (l *Logger) Warnf(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	l.log(WARN, msg, nil)
+}
+
+// Tracef logs a formatted trace message
+func (l *Logger) Tracef(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	l.log(TRACE, msg, nil)
+}
+
+// Verbosef logs a formatted verbose message
+func (l *Logger) Verbosef(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	l.log(VERBOSE, msg, nil)
+}
+
+// Fatalf logs a formatted fatal message and exits
+func (l *Logger) Fatalf(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	l.log(FATAL, msg, nil)
+	os.Exit(1)
 }
 
 // WithFields creates a logger with predefined fields
@@ -249,6 +311,22 @@ func (fl *FieldLogger) Warn(msg string) {
 	fl.logger.log(WARN, msg, fl.fields)
 }
 
+// Trace logs a trace message with predefined fields
+func (fl *FieldLogger) Trace(msg string) {
+	fl.logger.log(TRACE, msg, fl.fields)
+}
+
+// Verbose logs a verbose message with predefined fields
+func (fl *FieldLogger) Verbose(msg string) {
+	fl.logger.log(VERBOSE, msg, fl.fields)
+}
+
+// Fatal logs a fatal message with predefined fields and exits
+func (fl *FieldLogger) Fatal(msg string) {
+	fl.logger.log(FATAL, msg, fl.fields)
+	os.Exit(1)
+}
+
 // Infof logs a formatted info message with predefined fields
 func (fl *FieldLogger) Infof(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
@@ -271,6 +349,25 @@ func (fl *FieldLogger) Debugf(format string, v ...interface{}) {
 func (fl *FieldLogger) Warnf(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	fl.logger.log(WARN, msg, fl.fields)
+}
+
+// Tracef logs a formatted trace message with predefined fields
+func (fl *FieldLogger) Tracef(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	fl.logger.log(TRACE, msg, fl.fields)
+}
+
+// Verbosef logs a formatted verbose message with predefined fields
+func (fl *FieldLogger) Verbosef(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	fl.logger.log(VERBOSE, msg, fl.fields)
+}
+
+// Fatalf logs a formatted fatal message with predefined fields and exits
+func (fl *FieldLogger) Fatalf(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	fl.logger.log(FATAL, msg, fl.fields)
+	os.Exit(1)
 }
 
 // Global logger instance
@@ -307,6 +404,30 @@ func Debugf(format string, v ...interface{}) {
 
 func Warnf(format string, v ...interface{}) {
 	defaultLogger.Warnf(format, v...)
+}
+
+func Trace(msg string, fields ...map[string]interface{}) {
+	defaultLogger.Trace(msg, fields...)
+}
+
+func Verbose(msg string, fields ...map[string]interface{}) {
+	defaultLogger.Verbose(msg, fields...)
+}
+
+func Fatal(msg string, fields ...map[string]interface{}) {
+	defaultLogger.Fatal(msg, fields...)
+}
+
+func Tracef(format string, v ...interface{}) {
+	defaultLogger.Tracef(format, v...)
+}
+
+func Verbosef(format string, v ...interface{}) {
+	defaultLogger.Verbosef(format, v...)
+}
+
+func Fatalf(format string, v ...interface{}) {
+	defaultLogger.Fatalf(format, v...)
 }
 
 // SetGlobalLevel sets the log level for the global logger

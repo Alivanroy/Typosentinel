@@ -10,9 +10,14 @@ import (
 
 var (
 	// Global flags
-	cfgFile string
-	debug   bool
-	verbose bool
+	cfgFile    string
+	debug      bool
+	verbose    bool
+	trace      bool
+	debugMode  string
+	logLevel   string
+	logFormat  string
+	logOutput  string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -52,12 +57,28 @@ func initializeConfig(cmd *cobra.Command, args []string) error {
 	// Initialize logger with basic settings first
 	logger.InitDefault()
 
-	// Override log level based on flags
-	if debug {
+	// Set debug mode based on flags
+	if debugMode != "" {
+		logger.SetGlobalDebugModeFromString(debugMode)
+	} else if trace {
+		logger.SetGlobalDebugMode(logger.DebugModeTrace)
+		logger.SetGlobalLevel(logger.TRACE)
+	} else if debug {
+		logger.SetGlobalDebugMode(logger.DebugModeBasic)
 		logger.SetGlobalLevel(logger.DEBUG)
-		logger.Debug("Debug mode enabled")
 	} else if verbose {
-		logger.SetGlobalLevel(logger.INFO)
+		logger.SetGlobalDebugMode(logger.DebugModeVerbose)
+		logger.SetGlobalLevel(logger.VERBOSE)
+	}
+
+	// Override log level if explicitly set
+	if logLevel != "" {
+		logger.SetGlobalLevel(logger.ParseLogLevel(logLevel))
+	}
+
+	// Override log format if explicitly set
+	if logFormat != "" {
+		logger.SetGlobalFormat(logFormat)
 	}
 
 	// Load full configuration
@@ -87,11 +108,26 @@ func initializeConfig(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// Override log level again if flags are set
-		if debug {
+		// Override settings again if flags are set
+		if debugMode != "" {
+			logger.SetGlobalDebugModeFromString(debugMode)
+		} else if trace {
+			logger.SetGlobalDebugMode(logger.DebugModeTrace)
+			logger.SetGlobalLevel(logger.TRACE)
+		} else if debug {
+			logger.SetGlobalDebugMode(logger.DebugModeBasic)
 			logger.SetGlobalLevel(logger.DEBUG)
 		} else if verbose {
-			logger.SetGlobalLevel(logger.INFO)
+			logger.SetGlobalDebugMode(logger.DebugModeVerbose)
+			logger.SetGlobalLevel(logger.VERBOSE)
+		}
+
+		if logLevel != "" {
+			logger.SetGlobalLevel(logger.ParseLogLevel(logLevel))
+		}
+
+		if logFormat != "" {
+			logger.SetGlobalFormat(logFormat)
 		}
 
 		logger.Info("Configuration loaded successfully", map[string]interface{}{

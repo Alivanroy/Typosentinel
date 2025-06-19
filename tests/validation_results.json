@@ -1,0 +1,303 @@
+{
+  "go": {
+    "TotalTests": 9,
+    "PassedTests": 0,
+    "FailedTests": 9,
+    "TruePositives": 0,
+    "TrueNegatives": 0,
+    "FalsePositives": 0,
+    "FalseNegatives": 0,
+    "AverageTime": 115200,
+    "MaxTime": 519800,
+    "Accuracy": 0,
+    "Precision": 0,
+    "Recall": 0,
+    "F1Score": 0,
+    "Results": [
+      {
+        "PackageName": "",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.05,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 517000,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.03,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.04,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.15120000000000003,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.06,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 519800,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.91,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.94,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.96,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.88,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.15120000000000003,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.89,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.13440000000000002,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      }
+    ]
+  },
+  "npm": {
+    "TotalTests": 8,
+    "PassedTests": 0,
+    "FailedTests": 8,
+    "TruePositives": 0,
+    "TrueNegatives": 0,
+    "FalsePositives": 0,
+    "FalseNegatives": 0,
+    "AverageTime": 197037,
+    "MaxTime": 533700,
+    "Accuracy": 0,
+    "Precision": 0,
+    "Recall": 0,
+    "F1Score": 0,
+    "Results": [
+      {
+        "PackageName": "express",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.1,
+        "ActualRisk": "low",
+        "ActualScore": 0.27759999999999996,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "lodash",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.05,
+        "ActualRisk": "low",
+        "ActualScore": 0.2944,
+        "ProcessingTime": 524100,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "react",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.08,
+        "ActualRisk": "low",
+        "ActualScore": 0.27759999999999996,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "expresss",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.9,
+        "ActualRisk": "high",
+        "ActualScore": 0.6975999999999999,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "lodahs",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.85,
+        "ActualRisk": "low",
+        "ActualScore": 0.24106666666666668,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "crypto-utils-2023",
+        "ExpectedRisk": "MEDIUM",
+        "ExpectedScore": 0.65,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.1552470588235294,
+        "ProcessingTime": 533700,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "system-info-collector",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.88,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.18011428571428573,
+        "ProcessingTime": 518500,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "recat",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.82,
+        "ActualRisk": "low",
+        "ActualScore": 0.21359999999999998,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      }
+    ]
+  },
+  "pypi": {
+    "TotalTests": 8,
+    "PassedTests": 0,
+    "FailedTests": 8,
+    "TruePositives": 0,
+    "TrueNegatives": 0,
+    "FalsePositives": 0,
+    "FalseNegatives": 0,
+    "AverageTime": 209787,
+    "MaxTime": 579200,
+    "Accuracy": 0,
+    "Precision": 0,
+    "Recall": 0,
+    "F1Score": 0,
+    "Results": [
+      {
+        "PackageName": "requests",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.05,
+        "ActualRisk": "low",
+        "ActualScore": 0.2944,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "numpy",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.03,
+        "ActualRisk": "low",
+        "ActualScore": 0.27759999999999996,
+        "ProcessingTime": 521100,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "django",
+        "ExpectedRisk": "LOW",
+        "ExpectedScore": 0.07,
+        "ActualRisk": "low",
+        "ActualScore": 0.27759999999999996,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "reqeusts",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.92,
+        "ActualRisk": "low",
+        "ActualScore": 0.2864,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "numpyy",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.89,
+        "ActualRisk": "high",
+        "ActualScore": 0.6695999999999999,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "crypto-wallet-stealer",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.95,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.17451428571428573,
+        "ProcessingTime": 579200,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "system-monitor-pro",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.87,
+        "ActualRisk": "minimal",
+        "ActualScore": 0.16204444444444444,
+        "ProcessingTime": 578000,
+        "Passed": false,
+        "Error": null
+      },
+      {
+        "PackageName": "djnago",
+        "ExpectedRisk": "HIGH",
+        "ExpectedScore": 0.84,
+        "ActualRisk": "low",
+        "ActualScore": 0.22426666666666667,
+        "ProcessingTime": 0,
+        "Passed": false,
+        "Error": null
+      }
+    ]
+  }
+}

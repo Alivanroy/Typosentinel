@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -39,6 +40,9 @@ type Config struct {
 
 	// Logging settings
 	Logging LoggingConfig `mapstructure:"logging" yaml:"logging"`
+
+	// Cache settings
+	Cache *CacheConfig `mapstructure:"cache" yaml:"cache"`
 }
 
 // LoggingConfig represents logging configuration
@@ -112,6 +116,7 @@ type DetectionConfig struct {
 	SemanticAnalysis       bool    `mapstructure:"semantic_analysis" yaml:"semantic_analysis"`
 	ReputationScoring      bool    `mapstructure:"reputation_scoring" yaml:"reputation_scoring"`
 	DependencyConfusion    bool    `mapstructure:"dependency_confusion" yaml:"dependency_confusion"`
+	EnhancedTyposquatting  bool    `mapstructure:"enhanced_typosquatting" yaml:"enhanced_typosquatting"`
 	MaxEditDistance        int     `mapstructure:"max_edit_distance" yaml:"max_edit_distance"`
 	MinPackageNameLength   int     `mapstructure:"min_package_name_length" yaml:"min_package_name_length"`
 	ExcludeCommonPrefixes  bool    `mapstructure:"exclude_common_prefixes" yaml:"exclude_common_prefixes"`
@@ -154,6 +159,18 @@ type ScannerConfig struct {
 	IncludeTransitive  bool                        `mapstructure:"include_transitive" yaml:"include_transitive"`
 	Registries         map[string]RegistryConfig   `mapstructure:"registries" yaml:"registries"`
 	RiskThreshold      float64                     `mapstructure:"risk_threshold" yaml:"risk_threshold"`
+}
+
+// CacheConfig contains cache configuration
+type CacheConfig struct {
+	Enabled     bool          `mapstructure:"enabled" yaml:"enabled"`
+	Type        string        `mapstructure:"type" yaml:"type"` // "memory", "file", "redis"
+	TTL         time.Duration `mapstructure:"ttl" yaml:"ttl"`
+	MaxSize     int64         `mapstructure:"max_size" yaml:"max_size"`
+	CacheDir    string        `mapstructure:"cache_dir" yaml:"cache_dir"`
+	RedisURL    string        `mapstructure:"redis_url" yaml:"redis_url"`
+	Compression bool          `mapstructure:"compression" yaml:"compression"`
+	Encryption  bool          `mapstructure:"encryption" yaml:"encryption"`
 }
 
 // Load loads configuration from file and environment variables
@@ -266,6 +283,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("detection.semantic_analysis", true)
 	v.SetDefault("detection.reputation_scoring", true)
 	v.SetDefault("detection.dependency_confusion", true)
+	v.SetDefault("detection.enhanced_typosquatting", true)
 	v.SetDefault("detection.max_edit_distance", 3)
 	v.SetDefault("detection.min_package_name_length", 2)
 	v.SetDefault("detection.exclude_common_prefixes", true)

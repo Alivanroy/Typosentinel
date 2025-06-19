@@ -23,6 +23,7 @@ type Analyzer struct {
 	config     *config.Config
 	detector   *detector.Engine
 	registries map[string]registry.Connector
+	resolver   *DependencyResolver
 }
 
 // ScanOptions contains options for scanning
@@ -45,6 +46,7 @@ type ScanResult struct {
 	TotalPackages int                  `json:"total_packages"`
 	Threats      []types.Threat        `json:"threats"`
 	Warnings     []types.Warning       `json:"warnings"`
+	Resolution   *ResolutionResult     `json:"resolution,omitempty"`
 	Summary      ScanSummary           `json:"summary"`
 	Metadata     map[string]interface{} `json:"metadata"`
 }
@@ -57,26 +59,29 @@ type ScanSummary struct {
 	LowThreats      int `json:"low_threats"`
 	TotalWarnings   int `json:"total_warnings"`
 	CleanPackages   int `json:"clean_packages"`
+	ConflictCount   int `json:"conflict_count"`
 }
 
 // New creates a new analyzer instance
-func New(cfg *config.Config) *Analyzer {
-	// Initialize detector engine
-	detectorEngine := detector.New(cfg)
+func New(cfg *config.Config) (*Analyzer, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config cannot be nil")
+	}
 
-	// Initialize registry clients
-	registryClients := make(map[string]registry.Connector)
-	// TODO: Initialize registry connectors from config
-	// For now, use the default manager
-	manager := registry.NewManager()
-	_ = cfg.Registries // avoid unused variable error
-	_ = manager // avoid unused variable error
+	// Initialize detector engine
+	detectorEngine, err := detector.New(&cfg.Detector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize detector: %w", err)
+	}
+
+	// Initialize dependency resolver
+	resolver := NewDependencyResolver(&cfg.Scanner)
 
 	return &Analyzer{
-		config:     cfg,
-		detector:   detectorEngine,
-		registries: registryClients,
-	}
+		config:   cfg,
+		detector: detectorEngine,
+		resolver: resolver,
+	}, nil
 }
 
 // Scan performs a security scan of the specified path
@@ -135,6 +140,23 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 	// Filter excluded packages
 	filteredDeps := a.filterDependencies(allDependencies, options.ExcludePackages)
 
+	// Resolve dependencies and detect conflicts
+	var resolution *ResolutionResult
+	if a.resolver != nil {
+		resolution, err = a.resolver.ResolveDependencies(filteredDeps)
+		if err != nil {
+			logrus.Warnf("Dependency resolution failed: %v", err)
+		} else {
+			logrus.Debugf("Dependency resolution completed: %d conflicts, %d warnings", 
+				len(resolution.Conflicts), len(resolution.Warnings))
+			
+			// Use resolved dependencies for threat detection if available
+			if len(resolution.Resolved) > 0 {
+				filteredDeps = resolution.Resolved
+			}
+		}
+	}
+
 	// Perform threat detection
 	ctx := context.Background()
 	threats, warnings, err := a.detectThreats(ctx, filteredDeps, options)
@@ -144,8 +166,15 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 
 	result.Threats = threats
 	result.Warnings = warnings
+	result.Resolution = resolution
 	result.Duration = time.Since(start)
 	result.Summary = a.calculateSummary(threats, warnings, len(filteredDeps))
+	
+	// Update summary with resolution data if available
+	if resolution != nil {
+		result.Summary.ConflictCount = len(resolution.Conflicts)
+		result.Summary.TotalWarnings += len(resolution.Warnings)
+	}
 
 	// Add metadata
 	result.Metadata["dependency_files"] = depFiles
@@ -258,35 +287,64 @@ func (a *Analyzer) parseNPMDependencies(filePath string, options *ScanOptions) (
 	}
 }
 
-// parsePackageJSON parses dependencies from package.json
+// parsePackageJSON parses dependencies from package.json with enhanced metadata extraction
 func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]types.Dependency, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read package.json: %w", err)
 	}
 
+	// Enhanced package.json structure with more metadata
 	var packageData struct {
-		Dependencies    map[string]string `json:"dependencies"`
-		DevDependencies map[string]string `json:"devDependencies"`
+		Name                 string            `json:"name"`
+		Version              string            `json:"version"`
+		Description          string            `json:"description"`
+		Author               interface{}       `json:"author"`
+		License              string            `json:"license"`
+		Repository           interface{}       `json:"repository"`
+		Homepage             string            `json:"homepage"`
+		Keywords             []string          `json:"keywords"`
+		Dependencies         map[string]string `json:"dependencies"`
+		DevDependencies      map[string]string `json:"devDependencies"`
+		PeerDependencies     map[string]string `json:"peerDependencies"`
+		OptionalDependencies map[string]string `json:"optionalDependencies"`
+		BundledDependencies  []string          `json:"bundledDependencies"`
+		Engines              map[string]string `json:"engines"`
+		Scripts              map[string]string `json:"scripts"`
 	}
 
 	if err := json.Unmarshal(data, &packageData); err != nil {
 		return nil, fmt.Errorf("failed to parse package.json: %w", err)
 	}
 
-	logrus.Printf("DEBUG: Found %d dependencies and %d devDependencies", len(packageData.Dependencies), len(packageData.DevDependencies))
+	// Validate package.json structure
+	if packageData.Name == "" {
+		return nil, fmt.Errorf("package.json missing required 'name' field")
+	}
+
+	logrus.Debugf("Parsing package.json for %s@%s with %d dependencies and %d devDependencies", 
+		packageData.Name, packageData.Version, len(packageData.Dependencies), len(packageData.DevDependencies))
 
 	var dependencies []types.Dependency
 
-	// Parse regular dependencies
+	// Parse regular dependencies with enhanced metadata
 	for name, version := range packageData.Dependencies {
+		if name == "" || version == "" {
+			logrus.Warnf("Skipping invalid dependency: name='%s', version='%s'", name, version)
+			continue
+		}
+
 		dep := types.Dependency{
 			Name:        name,
-			Version:     version,
+			Version:     a.normalizeVersion(version),
 			Registry:    "npm",
 			Source:      filePath,
 			Direct:      true,
 			Development: false,
+			Metadata: map[string]interface{}{
+				"constraint": version,
+				"parent":     packageData.Name,
+			},
 		}
 		dependencies = append(dependencies, dep)
 	}
@@ -294,34 +352,145 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 	// Parse dev dependencies if requested
 	if options.IncludeDevDependencies {
 		for name, version := range packageData.DevDependencies {
+			if name == "" || version == "" {
+				logrus.Warnf("Skipping invalid dev dependency: name='%s', version='%s'", name, version)
+				continue
+			}
+
 			dep := types.Dependency{
 				Name:        name,
-				Version:     version,
+				Version:     a.normalizeVersion(version),
 				Registry:    "npm",
 				Source:      filePath,
 				Direct:      true,
 				Development: true,
+				Metadata: map[string]interface{}{
+					"constraint": version,
+					"parent":     packageData.Name,
+				},
 			}
 			dependencies = append(dependencies, dep)
 		}
+	}
+
+	// Parse peer dependencies
+	for name, version := range packageData.PeerDependencies {
+		if name == "" || version == "" {
+			logrus.Warnf("Skipping invalid peer dependency: name='%s', version='%s'", name, version)
+			continue
+		}
+
+		dep := types.Dependency{
+			Name:        name,
+			Version:     a.normalizeVersion(version),
+			Registry:    "npm",
+			Source:      filePath,
+			Direct:      true,
+			Development: false,
+			Metadata: map[string]interface{}{
+				"constraint": version,
+				"parent":     packageData.Name,
+				"type":       "peer",
+			},
+		}
+		dependencies = append(dependencies, dep)
+	}
+
+	// Parse optional dependencies
+	for name, version := range packageData.OptionalDependencies {
+		if name == "" || version == "" {
+			logrus.Warnf("Skipping invalid optional dependency: name='%s', version='%s'", name, version)
+			continue
+		}
+
+		dep := types.Dependency{
+			Name:        name,
+			Version:     a.normalizeVersion(version),
+			Registry:    "npm",
+			Source:      filePath,
+			Direct:      true,
+			Development: false,
+			Metadata: map[string]interface{}{
+				"constraint": version,
+				"parent":     packageData.Name,
+				"type":       "optional",
+			},
+		}
+		dependencies = append(dependencies, dep)
 	}
 
 	logrus.Printf("DEBUG: Returning %d total dependencies", len(dependencies))
 	return dependencies, nil
 }
 
-// parsePackageLockJSON parses dependencies from package-lock.json
+// normalizeVersion normalizes version constraints to extract actual version numbers
+func (a *Analyzer) normalizeVersion(constraint string) string {
+	if constraint == "" {
+		return ""
+	}
+
+	// Remove common prefixes and operators
+	constraint = strings.TrimSpace(constraint)
+	constraint = strings.TrimPrefix(constraint, "^")
+	constraint = strings.TrimPrefix(constraint, "~")
+	constraint = strings.TrimPrefix(constraint, ">=")
+	constraint = strings.TrimPrefix(constraint, "<=")
+	constraint = strings.TrimPrefix(constraint, ">")
+	constraint = strings.TrimPrefix(constraint, "<")
+	constraint = strings.TrimPrefix(constraint, "=")
+
+	// Handle version ranges (take the first version)
+	if strings.Contains(constraint, " - ") {
+		parts := strings.Split(constraint, " - ")
+		if len(parts) > 0 {
+			constraint = strings.TrimSpace(parts[0])
+		}
+	}
+
+	// Handle OR conditions (take the first version)
+	if strings.Contains(constraint, " || ") {
+		parts := strings.Split(constraint, " || ")
+		if len(parts) > 0 {
+			constraint = strings.TrimSpace(parts[0])
+			return a.normalizeVersion(constraint) // Recursive call to handle nested operators
+		}
+	}
+
+	// Handle git URLs and file paths
+	if strings.HasPrefix(constraint, "git+") || strings.HasPrefix(constraint, "file:") || strings.HasPrefix(constraint, "http") {
+		return "latest" // Default for non-semver sources
+	}
+
+	// Handle npm tags
+	if constraint == "latest" || constraint == "next" || constraint == "beta" || constraint == "alpha" {
+		return constraint
+	}
+
+	return strings.TrimSpace(constraint)
+}
+
+// parsePackageLockJSON parses dependencies from package-lock.json with enhanced metadata
 func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) ([]types.Dependency, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read package-lock.json: %w", err)
 	}
 
+	// Enhanced lock file structure
 	var lockData struct {
+		Name         string `json:"name"`
+		Version      string `json:"version"`
+		LockfileVersion int `json:"lockfileVersion"`
 		Packages map[string]struct {
-			Version  string `json:"version"`
-			Resolved string `json:"resolved"`
-			Dev      bool   `json:"dev"`
+			Version      string            `json:"version"`
+			Dev          bool              `json:"dev"`
+			Optional     bool              `json:"optional"`
+			Peer         bool              `json:"peer"`
+			Resolved     string            `json:"resolved"`
+			Integrity    string            `json:"integrity"`
+			Dependencies map[string]string `json:"dependencies"`
+			Engines      map[string]string `json:"engines"`
+			License      string            `json:"license"`
 		} `json:"packages"`
 	}
 
@@ -329,102 +498,226 @@ func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) (
 		return nil, fmt.Errorf("failed to parse package-lock.json: %w", err)
 	}
 
+	// Validate lock file structure
+	if lockData.LockfileVersion == 0 {
+		logrus.Warnf("package-lock.json missing lockfileVersion, assuming version 1")
+	}
+
+	logrus.Debugf("Parsing package-lock.json v%d for %s@%s with %d packages", 
+		lockData.LockfileVersion, lockData.Name, lockData.Version, len(lockData.Packages))
+
 	var dependencies []types.Dependency
 
-	// Parse packages (skip root package which has empty key)
 	for packagePath, packageInfo := range lockData.Packages {
+		// Skip the root package (empty path)
 		if packagePath == "" {
-			continue // Skip root package
+			continue
 		}
 
-		// Extract package name from path (e.g., "node_modules/express" -> "express")
-		name := filepath.Base(packagePath)
-		
 		// Skip dev dependencies if not requested
 		if packageInfo.Dev && !options.IncludeDevDependencies {
 			continue
 		}
 
+		// Extract package name from path (remove node_modules/ prefix)
+		packageName := strings.TrimPrefix(packagePath, "node_modules/")
+		
+		// Handle scoped packages correctly
+		if strings.Contains(packageName, "/node_modules/") {
+			// This is a nested dependency, extract the actual package name
+			parts := strings.Split(packageName, "/node_modules/")
+			if len(parts) > 1 {
+				packageName = parts[len(parts)-1]
+			}
+		}
+
+		// Validate package info
+		if packageName == "" || packageInfo.Version == "" {
+			logrus.Warnf("Skipping invalid package: path='%s', version='%s'", packagePath, packageInfo.Version)
+			continue
+		}
+
+		// Determine dependency type
+		depType := "production"
+		if packageInfo.Dev {
+			depType = "development"
+		} else if packageInfo.Peer {
+			depType = "peer"
+		} else if packageInfo.Optional {
+			depType = "optional"
+		}
+
 		dep := types.Dependency{
-			Name:        name,
+			Name:        packageName,
 			Version:     packageInfo.Version,
 			Registry:    "npm",
 			Source:      filePath,
-			Direct:      true,
+			Direct:      !strings.Contains(packagePath, "/node_modules/"),
 			Development: packageInfo.Dev,
+			Metadata: map[string]interface{}{
+				"resolved":     packageInfo.Resolved,
+				"integrity":    packageInfo.Integrity,
+				"type":         depType,
+				"path":         packagePath,
+				"license":      packageInfo.License,
+				"lockVersion": lockData.LockfileVersion,
+			},
 		}
 		dependencies = append(dependencies, dep)
 	}
 
+	logrus.Debugf("Extracted %d dependencies from package-lock.json", len(dependencies))
 	return dependencies, nil
 }
 
-// parseYarnLock parses dependencies from yarn.lock
+// parseYarnLock parses dependencies from yarn.lock with enhanced parsing
 func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types.Dependency, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read yarn.lock: %w", err)
 	}
 
-	var dependencies []types.Dependency
 	content := string(data)
 	lines := strings.Split(content, "\n")
 
-	var currentPackage string
-	var currentVersion string
+	logrus.Debugf("Parsing yarn.lock with %d lines", len(lines))
 
-	for _, line := range lines {
+	var dependencies []types.Dependency
+	packageMap := make(map[string]*types.Dependency)
+
+	var currentPackages []string
+	var currentDep *types.Dependency
+	var inPackageBlock bool
+
+	for i, line := range lines {
+		originalLine := line
 		line = strings.TrimSpace(line)
-		
-		// Skip comments and empty lines
+
+		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
-		// Package declaration line (e.g., "express@^4.18.0:")
-		if strings.HasSuffix(line, ":") && !strings.HasPrefix(line, " ") {
-			// Extract package name from the line
-			packageSpec := strings.TrimSuffix(line, ":")
-			// Handle multiple package specs separated by commas
-			specs := strings.Split(packageSpec, ",")
-			if len(specs) > 0 {
-				// Take the first spec and extract package name
-				firstSpec := strings.TrimSpace(specs[0])
-				if atIndex := strings.Index(firstSpec, "@"); atIndex > 0 {
-					currentPackage = firstSpec[:atIndex]
-				} else {
-					currentPackage = firstSpec
+		// Check for package declaration (starts without indentation and contains @)
+		if !strings.HasPrefix(originalLine, " ") && !strings.HasPrefix(originalLine, "\t") {
+			if strings.Contains(line, "@") && strings.HasSuffix(line, ":") {
+				// Parse package declaration line
+				packageDecl := strings.TrimSuffix(line, ":")
+				currentPackages = a.parseYarnPackageDeclaration(packageDecl)
+				inPackageBlock = len(currentPackages) > 0
+				
+				if inPackageBlock {
+					currentDep = &types.Dependency{
+						Registry:    "npm",
+						Source:      filePath,
+						Direct:      true,
+						Development: false, // Yarn.lock doesn't distinguish dev deps
+						Metadata:    make(map[string]interface{}),
+					}
 				}
+			} else {
+				inPackageBlock = false
 			}
 			continue
 		}
 
-		// Version line (e.g., '  version "4.18.2"')
-		if strings.HasPrefix(line, "version ") && currentPackage != "" {
-			versionPart := strings.TrimPrefix(line, "version ")
-			versionPart = strings.Trim(versionPart, `"`)
-			currentVersion = versionPart
+		// Parse properties within package block
+		if inPackageBlock && currentDep != nil {
+			if strings.HasPrefix(line, "version ") {
+				version := a.extractYarnValue(line)
+				currentDep.Version = version
+				currentDep.Metadata["version"] = version
+			} else if strings.HasPrefix(line, "resolved ") {
+				resolved := a.extractYarnValue(line)
+				currentDep.Metadata["resolved"] = resolved
+			} else if strings.HasPrefix(line, "integrity ") {
+				integrity := a.extractYarnValue(line)
+				currentDep.Metadata["integrity"] = integrity
+			} else if strings.HasPrefix(line, "dependencies:") {
+				// Start of dependencies block - we could parse these for transitive deps
+				currentDep.Metadata["hasDependencies"] = true
+			}
 
-			// Create dependency when we have both package and version
-			if currentPackage != "" && currentVersion != "" {
-				dep := types.Dependency{
-					Name:        currentPackage,
-					Version:     currentVersion,
-					Registry:    "npm",
-					Source:      filePath,
-					Direct:      true,
-					Development: false, // yarn.lock doesn't distinguish dev deps
+			// Check if we've reached the end of the package block
+			if currentDep.Version != "" && len(currentPackages) > 0 {
+				// Create dependencies for all package names in the declaration
+				for _, pkgName := range currentPackages {
+					if pkgName == "" {
+						continue
+					}
+
+					// Check if we already have this package with this version
+					key := fmt.Sprintf("%s@%s", pkgName, currentDep.Version)
+					if _, exists := packageMap[key]; !exists {
+						dep := &types.Dependency{
+							Name:        pkgName,
+							Version:     currentDep.Version,
+							Registry:    currentDep.Registry,
+							Source:      currentDep.Source,
+							Direct:      currentDep.Direct,
+							Development: currentDep.Development,
+							Metadata:    make(map[string]interface{}),
+						}
+						
+						// Copy metadata
+						for k, v := range currentDep.Metadata {
+							dep.Metadata[k] = v
+						}
+						dep.Metadata["packageDeclaration"] = strings.Join(currentPackages, ", ")
+
+						packageMap[key] = dep
+						dependencies = append(dependencies, *dep)
+					}
 				}
-				dependencies = append(dependencies, dep)
 				
 				// Reset for next package
-				currentPackage = ""
-				currentVersion = ""
+				currentPackages = nil
+				currentDep = nil
+				inPackageBlock = false
 			}
 		}
 	}
 
+	logrus.Debugf("Extracted %d unique dependencies from yarn.lock", len(dependencies))
 	return dependencies, nil
+}
+
+// parseYarnPackageDeclaration parses a yarn package declaration line
+func (a *Analyzer) parseYarnPackageDeclaration(decl string) []string {
+	var packages []string
+	
+	// Handle multiple package declarations separated by commas
+	parts := strings.Split(decl, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		part = strings.Trim(part, `"'`)
+		
+		// Extract package name (everything before the last @)
+		if strings.Contains(part, "@") {
+			// Handle scoped packages like @babel/core@^7.0.0
+			lastAtIndex := strings.LastIndex(part, "@")
+			if lastAtIndex > 0 {
+				packageName := part[:lastAtIndex]
+				if packageName != "" {
+					packages = append(packages, packageName)
+				}
+			}
+		}
+	}
+	
+	return packages
+}
+
+// extractYarnValue extracts the value from a yarn.lock property line
+func (a *Analyzer) extractYarnValue(line string) string {
+	parts := strings.SplitN(line, " ", 2)
+	if len(parts) < 2 {
+		return ""
+	}
+	
+	value := strings.TrimSpace(parts[1])
+	value = strings.Trim(value, `"'`)
+	return value
 }
 
 // detectFileType determines the file type and associated registry
@@ -488,6 +781,7 @@ func (a *Analyzer) calculateSummary(threats []types.Threat, warnings []types.War
 	summary := ScanSummary{
 		TotalWarnings: len(warnings),
 		CleanPackages: totalPackages,
+		ConflictCount: 0, // Will be updated by caller if resolution data is available
 	}
 
 	for _, threat := range threats {

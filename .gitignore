@@ -673,3 +673,12 @@ scratch/
 notes/
 todo.txt
 README.local.md
+
+# Added by Task Master AI
+logs
+dev-debug.log
+# Dependency directories
+# Environment variables
+.idea
+.vscode
+# OS specific

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
 )
 
 func TestPythonAnalyzer_ExtractPackages_RequirementsTxt(t *testing.T) {
@@ -450,20 +449,16 @@ flask<=2.2.0
 	}
 
 	// Verify results
-	if tree.Root == nil {
-		t.Fatal("Expected root node, got nil")
+	if tree == nil {
+		t.Fatal("Expected dependency tree, got nil")
 	}
 
-	if tree.Root.Name != "root" {
-		t.Errorf("Expected root name 'root', got %s", tree.Root.Name)
+	if tree.Name != "root" {
+		t.Errorf("Expected root name 'root', got %v", tree.Name)
 	}
 
-	if len(tree.Root.Dependencies) != 3 {
-		t.Errorf("Expected 3 dependencies, got %d", len(tree.Root.Dependencies))
-	}
-
-	if len(tree.Packages) != 3 {
-		t.Errorf("Expected 3 packages, got %d", len(tree.Packages))
+	if len(tree.Dependencies) != 3 {
+		t.Errorf("Expected 3 dependencies, got %d", len(tree.Dependencies))
 	}
 
 	// Verify package names
@@ -473,9 +468,9 @@ flask<=2.2.0
 		"flask":    true,
 	}
 
-	for _, dep := range tree.Root.Dependencies {
-		if !expectedNames[dep.Name] {
-			t.Errorf("Unexpected dependency: %s", dep.Name)
+	for _, dep := range tree.Dependencies {
+		if !expectedNames[dep.Name.(string)] {
+			t.Errorf("Unexpected dependency: %v", dep.Name)
 		}
 	}
 }

@@ -157,6 +157,7 @@ type ScannerConfig struct {
 	MaxDepth           int                         `mapstructure:"max_depth" yaml:"max_depth"`
 	EnableMLAnalysis   bool                        `mapstructure:"enable_ml_analysis" yaml:"enable_ml_analysis"`
 	IncludeTransitive  bool                        `mapstructure:"include_transitive" yaml:"include_transitive"`
+	EnrichMetadata     bool                        `mapstructure:"enrich_metadata" yaml:"enrich_metadata"`
 	Registries         map[string]RegistryConfig   `mapstructure:"registries" yaml:"registries"`
 	RiskThreshold      float64                     `mapstructure:"risk_threshold" yaml:"risk_threshold"`
 }

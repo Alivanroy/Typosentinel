@@ -2,25 +2,55 @@ package scanner
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"typosentinel/internal/config"
 	"typosentinel/pkg/types"
 )
 
-// RubyPackageAnalyzer analyzes Ruby projects
+// RubyPackageAnalyzer analyzes Ruby projects with enhanced Bundler integration
 type RubyPackageAnalyzer struct {
-	config *config.Config
+	*BaseAnalyzer
+	config     *config.Config
+	httpClient *http.Client
+	apiURL     string
 }
 
-// NewRubyPackageAnalyzer creates a new Ruby analyzer
+// NewRubyPackageAnalyzer creates a new Ruby analyzer with RubyGems API integration
 func NewRubyPackageAnalyzer(cfg *config.Config) *RubyPackageAnalyzer {
+	metadata := &AnalyzerMetadata{
+		Name:        "ruby",
+		Version:     "1.0.0",
+		Description: "Analyzes Ruby projects using Gemfile, Gemfile.lock, and .gemspec files with RubyGems API integration",
+		Author:      "TypoSentinel",
+		Languages:   []string{"ruby"},
+		Capabilities: []string{"dependency_extraction", "bundler_integration", "rubygems_api", "gemspec_parsing", "lock_file_parsing"},
+		Requirements: []string{"Gemfile"},
+	}
+	
+	baseAnalyzer := NewBaseAnalyzer(
+		"ruby",
+		[]string{".rb", ".gemspec"},
+		[]string{"Gemfile", "Gemfile.lock", "*.gemspec"},
+		metadata,
+		cfg,
+	)
+	
 	return &RubyPackageAnalyzer{
+		BaseAnalyzer: baseAnalyzer,
 		config: cfg,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+		apiURL: "https://rubygems.org/api/v1",
 	}
 }
 
@@ -45,6 +75,64 @@ type GemSpec struct {
 	Dependencies map[string]string `json:"dependencies"`
 }
 
+// RubyGemsAPIResponse represents the response from RubyGems API
+type RubyGemsAPIResponse struct {
+	Name            string    `json:"name"`
+	Version         string    `json:"version"`
+	Authors         string    `json:"authors"`
+	Info            string    `json:"info"`
+	Licenses        []string  `json:"licenses"`
+	Metadata        map[string]interface{} `json:"metadata"`
+	SHA             string    `json:"sha"`
+	ProjectURI      string    `json:"project_uri"`
+	GemURI          string    `json:"gem_uri"`
+	HomepageURI     string    `json:"homepage_uri"`
+	WikiURI         string    `json:"wiki_uri"`
+	DocumentationURI string   `json:"documentation_uri"`
+	MailingListURI  string    `json:"mailing_list_uri"`
+	SourceCodeURI   string    `json:"source_code_uri"`
+	BugTrackerURI   string    `json:"bug_tracker_uri"`
+	ChangelogURI    string    `json:"changelog_uri"`
+	Dependencies    struct {
+		Development []RubyGemDependency `json:"development"`
+		Runtime     []RubyGemDependency `json:"runtime"`
+	} `json:"dependencies"`
+	BuiltAt         time.Time `json:"built_at"`
+	CreatedAt       time.Time `json:"created_at"`
+	Description     string    `json:"description"`
+	Downloads       int       `json:"downloads"`
+	Number          string    `json:"number"`
+	Summary         string    `json:"summary"`
+	Platform        string    `json:"platform"`
+	RubyVersion     string    `json:"ruby_version"`
+	Prerelease      bool      `json:"prerelease"`
+	Requirements    []string  `json:"requirements"`
+}
+
+// RubyGemDependency represents a gem dependency
+type RubyGemDependency struct {
+	Name         string `json:"name"`
+	Requirements string `json:"requirements"`
+}
+
+// BundlerLockInfo represents parsed Bundler lock information
+type BundlerLockInfo struct {
+	BundlerVersion string
+	RubyVersion    string
+	Gems           map[string]*BundlerGemInfo
+	Platforms      []string
+	Sources        []string
+}
+
+// BundlerGemInfo represents gem information from Bundler
+type BundlerGemInfo struct {
+	Name         string
+	Version      string
+	Dependencies []string
+	Source       string
+	Platforms    []string
+}
+
 func (a *RubyPackageAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
 	var packages []*types.Package
 
@@ -58,15 +146,14 @@ func (a *RubyPackageAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*type
 		packages = append(packages, gemfilePackages...)
 	}
 
-	// Parse Gemfile.lock for exact versions
+	// Parse Gemfile.lock for exact versions using enhanced parser
 	gemfileLockPath := filepath.Join(projectInfo.Path, "Gemfile.lock")
+	var lockInfo *BundlerLockInfo
 	if _, err := os.Stat(gemfileLockPath); err == nil {
-		lockPackages, err := a.parseGemfileLock(gemfileLockPath)
+		lockInfo, err = a.parseBundlerLockEnhanced(gemfileLockPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse Gemfile.lock: %w", err)
 		}
-		// Merge lock file information with Gemfile packages
-		packages = a.mergeLockInfo(packages, lockPackages)
 	}
 
 	// Parse .gemspec files if present
@@ -78,6 +165,21 @@ func (a *RubyPackageAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*type
 				continue // Skip invalid gemspec files
 			}
 			packages = append(packages, gemspecPackages...)
+		}
+	}
+
+	// Enhance packages with lock file information
+	if lockInfo != nil {
+		packages = a.enhanceWithLockInfo(packages, lockInfo)
+	}
+
+	// Enhance packages with RubyGems API information (if enabled)
+	if a.config != nil && a.config.Scanner.EnrichMetadata {
+		for _, pkg := range packages {
+			if err := a.enhancePackageWithAPIInfo(pkg); err != nil {
+				// Log error but don't fail the entire analysis
+				fmt.Printf("Warning: failed to enhance package %s with API info: %v\n", pkg.Name, err)
+			}
 		}
 	}
 
@@ -278,11 +380,11 @@ func (a *RubyPackageAnalyzer) parseGemspec(filePath string) ([]*types.Package, e
 	return packages, nil
 }
 
-func (a *RubyPackageAnalyzer) mergeLockInfo(gemfilePackages []*types.Package, lockPackages map[string]*types.Package) []*types.Package {
+func (a *RubyPackageAnalyzer) enhanceWithLockInfo(gemfilePackages []*types.Package, lockInfo *BundlerLockInfo) []*types.Package {
 	// Update Gemfile packages with exact versions from lock file
 	for _, pkg := range gemfilePackages {
-		if lockPkg, exists := lockPackages[pkg.Name]; exists {
-			pkg.Version = lockPkg.Version
+		if lockGem, exists := lockInfo.Gems[pkg.Name]; exists {
+			pkg.Version = lockGem.Version
 			if pkg.Metadata == nil {
 				pkg.Metadata = &types.PackageMetadata{
 					Name:     pkg.Name,
@@ -291,8 +393,12 @@ func (a *RubyPackageAnalyzer) mergeLockInfo(gemfilePackages []*types.Package, lo
 					Metadata: make(map[string]interface{}),
 				}
 			}
-			pkg.Metadata.Metadata["exact_version"] = lockPkg.Version
-			pkg.Metadata.Metadata["dependencies"] = lockPkg.Metadata.Metadata["dependencies"]
+			pkg.Metadata.Metadata["exact_version"] = lockGem.Version
+			pkg.Metadata.Metadata["dependencies"] = lockGem.Dependencies
+			pkg.Metadata.Metadata["source"] = lockGem.Source
+			pkg.Metadata.Metadata["platforms"] = lockGem.Platforms
+			pkg.Metadata.Metadata["bundler_version"] = lockInfo.BundlerVersion
+			pkg.Metadata.Metadata["ruby_version"] = lockInfo.RubyVersion
 		}
 	}
 
@@ -302,14 +408,197 @@ func (a *RubyPackageAnalyzer) mergeLockInfo(gemfilePackages []*types.Package, lo
 		gemfilePackageNames[pkg.Name] = true
 	}
 
-	for name, lockPkg := range lockPackages {
+	for name, lockGem := range lockInfo.Gems {
 		if !gemfilePackageNames[name] {
-			lockPkg.Type = "transitive"
-			gemfilePackages = append(gemfilePackages, lockPkg)
+			transitivePkg := &types.Package{
+				Name:     name,
+				Version:  lockGem.Version,
+				Registry: "rubygems.org",
+				Type:     "transitive",
+				Metadata: &types.PackageMetadata{
+					Name:     name,
+					Version:  lockGem.Version,
+					Registry: "rubygems.org",
+					Metadata: map[string]interface{}{
+						"ecosystem":       "ruby",
+						"source":          "Gemfile.lock",
+						"dependencies":    lockGem.Dependencies,
+						"platforms":       lockGem.Platforms,
+						"bundler_version": lockInfo.BundlerVersion,
+						"ruby_version":    lockInfo.RubyVersion,
+					},
+				},
+			}
+			gemfilePackages = append(gemfilePackages, transitivePkg)
 		}
 	}
 
 	return gemfilePackages
+}
+
+// fetchGemInfo fetches gem information from RubyGems API
+func (a *RubyPackageAnalyzer) fetchGemInfo(name, version string) (*RubyGemsAPIResponse, error) {
+	url := fmt.Sprintf("%s/gems/%s.json", a.apiURL, name)
+	if version != "" && version != "*" {
+		url = fmt.Sprintf("%s/versions/%s.json", url, version)
+	}
+
+	resp, err := a.httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch gem info for %s: %w", name, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("RubyGems API returned status %d for gem %s", resp.StatusCode, name)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var gemInfo RubyGemsAPIResponse
+	if err := json.Unmarshal(body, &gemInfo); err != nil {
+		return nil, fmt.Errorf("failed to parse gem info: %w", err)
+	}
+
+	return &gemInfo, nil
+}
+
+// enhancePackageWithAPIInfo enhances package information with RubyGems API data
+func (a *RubyPackageAnalyzer) enhancePackageWithAPIInfo(pkg *types.Package) error {
+	gemInfo, err := a.fetchGemInfo(pkg.Name, pkg.Version)
+	if err != nil {
+		// Don't fail the entire analysis if API call fails
+		return nil
+	}
+
+	if pkg.Metadata == nil {
+		pkg.Metadata = &types.PackageMetadata{
+			Name:     pkg.Name,
+			Version:  pkg.Version,
+			Registry: pkg.Registry,
+			Metadata: make(map[string]interface{}),
+		}
+	}
+
+	// Enhance metadata with API information
+	pkg.Metadata.Metadata["description"] = gemInfo.Description
+	pkg.Metadata.Metadata["summary"] = gemInfo.Summary
+	pkg.Metadata.Metadata["authors"] = gemInfo.Authors
+	pkg.Metadata.Metadata["licenses"] = gemInfo.Licenses
+	pkg.Metadata.Metadata["homepage_uri"] = gemInfo.HomepageURI
+	pkg.Metadata.Metadata["source_code_uri"] = gemInfo.SourceCodeURI
+	pkg.Metadata.Metadata["bug_tracker_uri"] = gemInfo.BugTrackerURI
+	pkg.Metadata.Metadata["documentation_uri"] = gemInfo.DocumentationURI
+	pkg.Metadata.Metadata["downloads"] = gemInfo.Downloads
+	pkg.Metadata.Metadata["built_at"] = gemInfo.BuiltAt
+	pkg.Metadata.Metadata["created_at"] = gemInfo.CreatedAt
+	pkg.Metadata.Metadata["sha"] = gemInfo.SHA
+	pkg.Metadata.Metadata["platform"] = gemInfo.Platform
+	pkg.Metadata.Metadata["ruby_version"] = gemInfo.RubyVersion
+	pkg.Metadata.Metadata["prerelease"] = gemInfo.Prerelease
+	pkg.Metadata.Metadata["requirements"] = gemInfo.Requirements
+
+	// Add dependency information
+	var allDeps []string
+	for _, dep := range gemInfo.Dependencies.Runtime {
+		allDeps = append(allDeps, dep.Name)
+	}
+	for _, dep := range gemInfo.Dependencies.Development {
+		allDeps = append(allDeps, dep.Name)
+	}
+	pkg.Metadata.Metadata["api_dependencies"] = allDeps
+
+	return nil
+}
+
+// parseBundlerLockEnhanced provides enhanced parsing of Gemfile.lock with more details
+func (a *RubyPackageAnalyzer) parseBundlerLockEnhanced(filePath string) (*BundlerLockInfo, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	lockInfo := &BundlerLockInfo{
+		Gems: make(map[string]*BundlerGemInfo),
+	}
+
+	scanner := bufio.NewScanner(file)
+	currentSection := ""
+	var currentGem *BundlerGemInfo
+
+	// Regex patterns
+	gemRegex := regexp.MustCompile(`^\s{4}([a-zA-Z0-9_-]+)\s+\(([^)]+)\)`)
+	depRegex := regexp.MustCompile(`^\s{6}([a-zA-Z0-9_-]+)`)
+	bundlerVersionRegex := regexp.MustCompile(`^BUNDLED WITH\s*$`)
+	rubyVersionRegex := regexp.MustCompile(`^RUBY VERSION\s*$`)
+	platformRegex := regexp.MustCompile(`^PLATFORMS\s*$`)
+	sourceRegex := regexp.MustCompile(`^\s{2}remote:\s+(.+)$`)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Detect sections
+		if strings.Contains(line, "GEM") {
+			currentSection = "GEM"
+			continue
+		} else if strings.Contains(line, "specs:") {
+			currentSection = "specs"
+			continue
+		} else if platformRegex.MatchString(line) {
+			currentSection = "PLATFORMS"
+			continue
+		} else if strings.Contains(line, "DEPENDENCIES") {
+			currentSection = "DEPENDENCIES"
+			continue
+		} else if rubyVersionRegex.MatchString(line) {
+			currentSection = "RUBY VERSION"
+			continue
+		} else if bundlerVersionRegex.MatchString(line) {
+			currentSection = "BUNDLED WITH"
+			continue
+		}
+
+		switch currentSection {
+		case "GEM":
+			if matches := sourceRegex.FindStringSubmatch(line); len(matches) >= 2 {
+				lockInfo.Sources = append(lockInfo.Sources, matches[1])
+			}
+		case "specs":
+			if matches := gemRegex.FindStringSubmatch(line); len(matches) >= 3 {
+				name := matches[1]
+				version := matches[2]
+				currentGem = &BundlerGemInfo{
+					Name:    name,
+					Version: version,
+				}
+				lockInfo.Gems[name] = currentGem
+			} else if currentGem != nil {
+				if matches := depRegex.FindStringSubmatch(line); len(matches) >= 2 {
+					currentGem.Dependencies = append(currentGem.Dependencies, matches[1])
+				}
+			}
+		case "PLATFORMS":
+			platform := strings.TrimSpace(line)
+			if platform != "" {
+				lockInfo.Platforms = append(lockInfo.Platforms, platform)
+			}
+		case "RUBY VERSION":
+			if strings.Contains(line, "ruby") {
+				lockInfo.RubyVersion = strings.TrimSpace(line)
+			}
+		case "BUNDLED WITH":
+			version := strings.TrimSpace(line)
+			if version != "" && version != "BUNDLED WITH" {
+				lockInfo.BundlerVersion = version
+			}
+		}
+	}
+
+	return lockInfo, nil
 }
 
 func (a *RubyPackageAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {

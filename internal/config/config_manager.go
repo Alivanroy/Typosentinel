@@ -201,16 +201,7 @@ type WorkerPoolConfig struct {
 	AutoScale           bool          `yaml:"auto_scale" json:"auto_scale"`
 }
 
-// CacheConfig holds cache configuration
-type CacheConfig struct {
-	L1Config           L1CacheConfig `yaml:"l1_config" json:"l1_config"`
-	L2Config           L2CacheConfig `yaml:"l2_config" json:"l2_config"`
-	L3Config           L3CacheConfig `yaml:"l3_config" json:"l3_config"`
-	DefaultTTL         time.Duration `yaml:"default_ttl" json:"default_ttl"`
-	CleanupInterval    time.Duration `yaml:"cleanup_interval" json:"cleanup_interval"`
-	CompressionEnabled bool          `yaml:"compression_enabled" json:"compression_enabled"`
-	EncryptionEnabled  bool          `yaml:"encryption_enabled" json:"encryption_enabled"`
-}
+// Note: CacheConfig is defined in config.go
 
 // L1CacheConfig holds L1 cache configuration
 type L1CacheConfig struct {

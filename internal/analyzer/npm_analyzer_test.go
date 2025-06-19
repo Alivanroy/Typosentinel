@@ -64,8 +64,8 @@ func TestNPMAnalyzer_ParsePackageJSON(t *testing.T) {
 		t.Error("Expected analysis result, got nil")
 	}
 
-	if len(result.Dependencies) == 0 {
-		t.Error("Expected dependencies to be found")
+	if result.TotalPackages == 0 {
+		t.Error("Expected packages to be found")
 	}
 
 	// Check that package.json was processed
@@ -137,8 +137,8 @@ func TestNPMAnalyzer_ParsePackageLockJSON(t *testing.T) {
 		t.Error("Expected analysis result, got nil")
 	}
 
-	if len(result.Dependencies) == 0 {
-		t.Error("Expected dependencies to be found")
+	if result.TotalPackages == 0 {
+		t.Error("Expected packages to be found")
 	}
 }
 
@@ -192,8 +192,8 @@ lodash@4.17.21:
 		t.Error("Expected analysis result, got nil")
 	}
 
-	if len(result.Dependencies) == 0 {
-		t.Error("Expected dependencies to be found")
+	if result.TotalPackages == 0 {
+		t.Error("Expected packages to be found")
 	}
 }
 
@@ -227,8 +227,8 @@ func TestNPMAnalyzer_EmptyProject(t *testing.T) {
 		t.Error("Expected analysis result, got nil")
 	}
 
-	if len(result.Dependencies) != 0 {
-		t.Errorf("Expected no dependencies, got %d", len(result.Dependencies))
+	if result.TotalPackages != 0 {
+		t.Errorf("Expected no packages, got %d", result.TotalPackages)
 	}
 }
 
@@ -274,8 +274,8 @@ func TestNPMAnalyzer_InvalidJSON(t *testing.T) {
 		t.Logf("Got expected error for invalid JSON: %v", err)
 	}
 
-	if result != nil && len(result.Dependencies) > 0 {
-		t.Error("Expected no dependencies from invalid JSON")
+	if result != nil && result.TotalPackages > 0 {
+		t.Error("Expected no packages from invalid JSON")
 	}
 }
 
@@ -330,7 +330,7 @@ func TestNPMAnalyzer_FileDetection(t *testing.T) {
 			}
 
 			analyzer := New(cfg)
-			fileType := analyzer.detectFileType(tt.filename)
+			fileType, _ := analyzer.detectFileType(tt.filename)
 			
 			if tt.expected == "" {
 				if fileType != "" {

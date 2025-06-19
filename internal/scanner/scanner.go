@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -136,6 +137,11 @@ func (s *Scanner) detectProject(projectPath string) (*ProjectInfo, error) {
 		return nil, err
 	}
 
+	// Check if path exists
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("path does not exist: %s", projectPath)
+	}
+
 	// Try each detector
 	for _, detector := range s.detectors {
 		projectInfo, err := detector.Detect(absPath)
@@ -144,7 +150,25 @@ func (s *Scanner) detectProject(projectPath string) (*ProjectInfo, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no supported project type detected in %s", projectPath)
+	// Check if directory is empty or has no recognizable package files
+	entries, err := os.ReadDir(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory: %w", err)
+	}
+
+	// If directory is empty, return error
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("no package files found in directory: %s", projectPath)
+	}
+
+	// If no specific project type detected, return a generic project info
+	return &ProjectInfo{
+		Type:         "generic",
+		Path:         projectPath,
+		ManifestFile: "",
+		LockFile:     "",
+		Metadata:     make(map[string]string),
+	}, nil
 }
 
 // extractPackages extracts packages from the project
@@ -437,6 +461,7 @@ func (s *Scanner) registerAnalyzers() {
 	s.analyzers["php"] = NewPHPAnalyzer(s.config)
 	s.analyzers["java"] = NewJavaAnalyzer(s.config)
 	s.analyzers["dotnet"] = NewDotNetAnalyzer(s.config)
+	s.analyzers["generic"] = &GenericAnalyzer{config: s.config}
 }
 
 // generateScanID generates a unique scan ID

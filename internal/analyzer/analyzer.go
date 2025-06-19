@@ -212,7 +212,7 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 
 	// Determine file type and registry
 	fileType, registryType := a.detectFileType(filePath)
-	if fileType == "unknown" {
+	if fileType == "" {
 		return nil, fmt.Errorf("unsupported file type: %s", filePath)
 	}
 
@@ -222,10 +222,91 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 		return nil, fmt.Errorf("no client available for registry: %s", registryType)
 	}
 
-	// TODO: Parse dependencies using registry client
-	// ParseDependencyFile method needs to be added to Connector interface
-	_ = registryClient // avoid unused variable error
-	_ = options.IncludeDevDependencies // avoid unused variable error
+	// Parse dependencies based on file type
+	switch fileType {
+	case "npm":
+		return a.parseNPMDependencies(filePath, options)
+	default:
+		// For other file types, return empty for now
+		_ = registryClient // avoid unused variable error
+		return []types.Dependency{}, nil
+	}
+}
+
+// parseNPMDependencies parses dependencies from NPM-related files
+func (a *Analyzer) parseNPMDependencies(filePath string, options *ScanOptions) ([]types.Dependency, error) {
+	fileName := filepath.Base(filePath)
+	
+	switch fileName {
+	case "package.json":
+		return a.parsePackageJSON(filePath, options)
+	case "package-lock.json":
+		return a.parsePackageLockJSON(filePath, options)
+	case "yarn.lock":
+		return a.parseYarnLock(filePath, options)
+	default:
+		return []types.Dependency{}, nil
+	}
+}
+
+// parsePackageJSON parses dependencies from package.json
+func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]types.Dependency, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read package.json: %w", err)
+	}
+
+	var packageData struct {
+		Dependencies    map[string]string `json:"dependencies"`
+		DevDependencies map[string]string `json:"devDependencies"`
+	}
+
+	if err := json.Unmarshal(data, &packageData); err != nil {
+		return nil, fmt.Errorf("failed to parse package.json: %w", err)
+	}
+
+	var dependencies []types.Dependency
+
+	// Parse regular dependencies
+	for name, version := range packageData.Dependencies {
+		dep := types.Dependency{
+			Name:        name,
+			Version:     version,
+			Registry:    "npm",
+			Source:      filePath,
+			Direct:      true,
+			Development: false,
+		}
+		dependencies = append(dependencies, dep)
+	}
+
+	// Parse dev dependencies if requested
+	if options.IncludeDevDependencies {
+		for name, version := range packageData.DevDependencies {
+			dep := types.Dependency{
+				Name:        name,
+				Version:     version,
+				Registry:    "npm",
+				Source:      filePath,
+				Direct:      true,
+				Development: true,
+			}
+			dependencies = append(dependencies, dep)
+		}
+	}
+
+	return dependencies, nil
+}
+
+// parsePackageLockJSON parses dependencies from package-lock.json
+func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) ([]types.Dependency, error) {
+	// For now, return empty - can be implemented later
+	return []types.Dependency{}, nil
+}
+
+// parseYarnLock parses dependencies from yarn.lock
+func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types.Dependency, error) {
+	// For now, return empty - can be implemented later
 	return []types.Dependency{}, nil
 }
 
@@ -234,7 +315,7 @@ func (a *Analyzer) detectFileType(filePath string) (fileType, registryType strin
 	fileName := filepath.Base(filePath)
 
 	switch fileName {
-	case "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml":
+	case "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "npm-shrinkwrap.json":
 		return "npm", "npm"
 	case "requirements.txt", "requirements-dev.txt", "Pipfile", "Pipfile.lock", "pyproject.toml", "poetry.lock":
 		return "python", "pypi"
@@ -247,12 +328,15 @@ func (a *Analyzer) detectFileType(filePath string) (fileType, registryType strin
 	case "composer.json", "composer.lock":
 		return "php", "packagist"
 	default:
-		return "unknown", "unknown"
+		return "", ""
 	}
 }
 
 // filterDependencies removes excluded packages from the dependency list
 func (a *Analyzer) filterDependencies(deps []types.Dependency, excludePackages []string) []types.Dependency {
+	if deps == nil {
+		return []types.Dependency{}
+	}
 	if len(excludePackages) == 0 {
 		return deps
 	}

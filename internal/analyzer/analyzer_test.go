@@ -142,7 +142,7 @@ func TestDetectFileType(t *testing.T) {
 		{"Cargo.toml", "rust", "cargo"},
 		{"Gemfile", "ruby", "rubygems"},
 		{"composer.json", "php", "packagist"},
-		{"unknown.txt", "unknown", "unknown"},
+		{"unknown.txt", "", ""},
 	}
 
 	for _, test := range tests {

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"typosentinel/internal/config"
 	"typosentinel/pkg/types"
@@ -18,8 +19,57 @@ type NodeJSAnalyzer struct {
 }
 
 func (a *NodeJSAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	manifestPath := filepath.Join(projectInfo.Path, projectInfo.ManifestFile)
-	data, err := os.ReadFile(manifestPath)
+	var packages []*types.Package
+
+	// Parse package.json for dependency information
+	packageJSONPath := filepath.Join(projectInfo.Path, "package.json")
+	if _, err := os.Stat(packageJSONPath); err == nil {
+		jsonPackages, err := a.parsePackageJSON(packageJSONPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse package.json: %w", err)
+		}
+		packages = append(packages, jsonPackages...)
+	}
+
+	// Parse package-lock.json for exact versions and additional dependencies
+	packageLockPath := filepath.Join(projectInfo.Path, "package-lock.json")
+	if _, err := os.Stat(packageLockPath); err == nil {
+		lockPackages, err := a.parsePackageLockJSON(packageLockPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse package-lock.json: %w", err)
+		}
+		// Merge with existing packages, preferring lock file versions
+		packages = a.mergePackages(packages, lockPackages)
+	}
+
+	// Parse yarn.lock for Yarn projects
+	yarnLockPath := filepath.Join(projectInfo.Path, "yarn.lock")
+	if _, err := os.Stat(yarnLockPath); err == nil {
+		yarnPackages, err := a.parseYarnLock(yarnLockPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse yarn.lock: %w", err)
+		}
+		// Merge with existing packages, preferring lock file versions
+		packages = a.mergePackages(packages, yarnPackages)
+	}
+
+	// Parse pnpm-lock.yaml for pnpm projects
+	pnpmLockPath := filepath.Join(projectInfo.Path, "pnpm-lock.yaml")
+	if _, err := os.Stat(pnpmLockPath); err == nil {
+		pnpmPackages, err := a.parsePnpmLock(pnpmLockPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse pnpm-lock.yaml: %w", err)
+		}
+		// Merge with existing packages, preferring lock file versions
+		packages = a.mergePackages(packages, pnpmPackages)
+	}
+
+	return packages, nil
+}
+
+// parsePackageJSON parses package.json for dependency information
+func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +81,7 @@ func (a *NodeJSAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Pac
 
 	var packages []*types.Package
 
-	// Extract dependencies
+	// Extract production dependencies
 	if deps, ok := packageJSON["dependencies"].(map[string]interface{}); ok {
 		for name, version := range deps {
 			if versionStr, ok := version.(string); ok {
@@ -63,7 +113,175 @@ func (a *NodeJSAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Pac
 		}
 	}
 
+	// Extract peer dependencies
+	if peerDeps, ok := packageJSON["peerDependencies"].(map[string]interface{}); ok {
+		for name, version := range peerDeps {
+			if versionStr, ok := version.(string); ok {
+				pkg := &types.Package{
+					Name:     name,
+					Version:  versionStr,
+					Registry: "npm",
+					Type:     "peer",
+				}
+				packages = append(packages, pkg)
+			}
+		}
+	}
+
+	// Extract optional dependencies
+	if optDeps, ok := packageJSON["optionalDependencies"].(map[string]interface{}); ok {
+		for name, version := range optDeps {
+			if versionStr, ok := version.(string); ok {
+				pkg := &types.Package{
+					Name:     name,
+					Version:  versionStr,
+					Registry: "npm",
+					Type:     "optional",
+				}
+				packages = append(packages, pkg)
+			}
+		}
+	}
+
 	return packages, nil
+}
+
+// parsePackageLockJSON parses package-lock.json for exact dependency versions
+func (a *NodeJSAnalyzer) parsePackageLockJSON(filePath string) ([]*types.Package, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var lockData map[string]interface{}
+	if err := json.Unmarshal(data, &lockData); err != nil {
+		return nil, err
+	}
+
+	var packages []*types.Package
+
+	// Handle lockfileVersion 2 and 3 format
+	if packagesData, ok := lockData["packages"].(map[string]interface{}); ok {
+		for path, pkgData := range packagesData {
+			if path == "" {
+				continue // Skip root package
+			}
+			if pkgInfo, ok := pkgData.(map[string]interface{}); ok {
+				name := strings.TrimPrefix(path, "node_modules/")
+				if version, ok := pkgInfo["version"].(string); ok {
+					pkgType := "production"
+					if dev, ok := pkgInfo["dev"].(bool); ok && dev {
+						pkgType = "development"
+					}
+					if optional, ok := pkgInfo["optional"].(bool); ok && optional {
+						pkgType = "optional"
+					}
+
+					pkg := &types.Package{
+						Name:     name,
+						Version:  version,
+						Registry: "npm",
+						Type:     pkgType,
+					}
+					packages = append(packages, pkg)
+				}
+			}
+		}
+	}
+
+	// Handle lockfileVersion 1 format (legacy)
+	if dependencies, ok := lockData["dependencies"].(map[string]interface{}); ok {
+		for name, depData := range dependencies {
+			if depInfo, ok := depData.(map[string]interface{}); ok {
+				if version, ok := depInfo["version"].(string); ok {
+					pkgType := "production"
+					if dev, ok := depInfo["dev"].(bool); ok && dev {
+						pkgType = "development"
+					}
+
+					pkg := &types.Package{
+						Name:     name,
+						Version:  version,
+						Registry: "npm",
+						Type:     pkgType,
+					}
+					packages = append(packages, pkg)
+				}
+			}
+		}
+	}
+
+	return packages, nil
+}
+
+// parseYarnLock parses yarn.lock for dependency information
+func (a *NodeJSAnalyzer) parseYarnLock(filePath string) ([]*types.Package, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var packages []*types.Package
+	content := string(data)
+	lines := strings.Split(content, "\n")
+
+	// Simple yarn.lock parser - matches package@version patterns
+	packageRegex := regexp.MustCompile(`^([^@\s]+)@(.+):$`)
+	versionRegex := regexp.MustCompile(`^\s+version\s+"([^"]+)"$`)
+
+	var currentPackage string
+	for i, line := range lines {
+		if matches := packageRegex.FindStringSubmatch(line); len(matches) == 3 {
+			currentPackage = matches[1]
+			// Look for version in next few lines
+			for j := i + 1; j < len(lines) && j < i+10; j++ {
+				if versionMatches := versionRegex.FindStringSubmatch(lines[j]); len(versionMatches) == 2 {
+					pkg := &types.Package{
+						Name:     currentPackage,
+						Version:  versionMatches[1],
+						Registry: "npm",
+						Type:     "production", // yarn.lock doesn't distinguish dev deps
+					}
+					packages = append(packages, pkg)
+					break
+				}
+			}
+		}
+	}
+
+	return packages, nil
+}
+
+// parsePnpmLock parses pnpm-lock.yaml for dependency information
+func (a *NodeJSAnalyzer) parsePnpmLock(filePath string) ([]*types.Package, error) {
+	// TODO: Implement YAML parsing for pnpm-lock.yaml
+	// This requires adding a YAML parser dependency like gopkg.in/yaml.v3
+	return nil, fmt.Errorf("pnpm-lock.yaml parsing not implemented yet - requires YAML parser")
+}
+
+// mergePackages merges two package slices, preferring the second slice for conflicts
+func (a *NodeJSAnalyzer) mergePackages(existing, new []*types.Package) []*types.Package {
+	packageMap := make(map[string]*types.Package)
+
+	// Add existing packages
+	for _, pkg := range existing {
+		key := pkg.Name + "@" + pkg.Registry
+		packageMap[key] = pkg
+	}
+
+	// Add new packages, overwriting existing ones
+	for _, pkg := range new {
+		key := pkg.Name + "@" + pkg.Registry
+		packageMap[key] = pkg
+	}
+
+	// Convert back to slice
+	var result []*types.Package
+	for _, pkg := range packageMap {
+		result = append(result, pkg)
+	}
+
+	return result
 }
 
 func (a *NodeJSAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
@@ -155,7 +373,8 @@ func (a *PythonAnalyzer) parseRequirementsTxt(projectInfo *ProjectInfo) ([]*type
 
 func (a *PythonAnalyzer) parsePyprojectToml(projectInfo *ProjectInfo) ([]*types.Package, error) {
 	// TODO: Implement TOML parsing for pyproject.toml
-	return nil, fmt.Errorf("pyproject.toml parsing not implemented yet")
+	// This requires adding a TOML parser dependency like github.com/BurntSushi/toml
+	return nil, fmt.Errorf("pyproject.toml parsing not implemented yet - requires TOML parser")
 }
 
 func (a *PythonAnalyzer) parsePipfile(projectInfo *ProjectInfo) ([]*types.Package, error) {
@@ -371,4 +590,28 @@ func (a *DotNetAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Pac
 
 func (a *DotNetAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
 	return a.analyzer.AnalyzeDependencies(projectInfo)
+}
+
+// GenericAnalyzer handles projects without specific manifest files
+type GenericAnalyzer struct {
+	config *config.Config
+}
+
+func (a *GenericAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	// For generic projects without manifest files, return empty package list
+	return []*types.Package{}, nil
+}
+
+func (a *GenericAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
+	// For generic projects, return empty dependency tree
+	return &types.DependencyTree{
+		Name:         "root",
+		Version:      "1.0.0",
+		Type:         "generic",
+		Threats:      []types.Threat{},
+		Dependencies: []types.DependencyTree{},
+		Depth:        0,
+		TotalCount:   0,
+		CreatedAt:    time.Now(),
+	}, nil
 }

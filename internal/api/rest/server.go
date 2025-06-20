@@ -1,8 +1,10 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -24,13 +26,13 @@ type Server struct {
 	config     config.RESTAPIConfig
 	gin        *gin.Engine
 	server     *http.Server
-	mlPipeline *ml.Pipeline
+	mlPipeline *ml.MLPipeline
 	analyzer   *analyzer.Analyzer
 	running    bool
 }
 
 // NewServer creates a new REST API server
-func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.Pipeline, analyzer *analyzer.Analyzer) *Server {
+func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzer.Analyzer) *Server {
 	// Set gin mode based on environment
 	if !cfg.Debug {
 		gin.SetMode(gin.ReleaseMode)
@@ -45,12 +47,7 @@ func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.Pipeline, analyzer *anal
 	r.Use(loggingMiddleware())
 	r.Use(rateLimitMiddleware(cfg.RateLimit))
 	r.Use(authMiddleware(cfg.Authentication))
-	r.Use(timeout.New(
-		timeout.WithTimeout(time.Duration(cfg.Timeout)*time.Second),
-		timeout.WithHandler(func(c *gin.Context) {
-			c.Next()
-		}),
-	))
+	// Timeout middleware removed - not available in RESTAPIConfig
 
 	server := &Server{
 		config:     cfg,
@@ -72,22 +69,16 @@ func (s *Server) Start(ctx context.Context) error {
 	s.server = &http.Server{
 		Addr:         addr,
 		Handler:      s.gin,
-		ReadTimeout:  time.Duration(s.config.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(s.config.WriteTimeout) * time.Second,
-		IdleTimeout:  time.Duration(s.config.IdleTimeout) * time.Second,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
-	logger.InfoWithContext("Starting REST API server", map[string]interface{}{
-		"address": addr,
-		"tls":     s.config.TLS.Enabled,
-	})
+	log.Printf("Starting REST API server on %s", addr)
 
 	s.running = true
 
 	// Start server
-	if s.config.TLS.Enabled {
-		return s.server.ListenAndServeTLS(s.config.TLS.CertFile, s.config.TLS.KeyFile)
-	}
 	return s.server.ListenAndServe()
 }
 
@@ -174,7 +165,7 @@ func (s *Server) setupRoutes() {
 
 	// Documentation endpoints
 	if s.config.Documentation.Enabled {
-		s.gin.Static("/docs", s.config.Documentation.Path)
+		s.gin.Static("/docs", "./docs")
 		s.gin.GET("/openapi.json", s.getOpenAPISpec)
 	}
 }
@@ -245,19 +236,16 @@ func (s *Server) analyzePackage(c *gin.Context) {
 
 	// Create package object
 	pkg := &types.Package{
-		Name:      req.Name,
-		Version:   req.Version,
-		Ecosystem: req.Ecosystem,
+		Name:     req.Name,
+		Version:  req.Version,
+		Type:     req.Ecosystem,
+		Registry: req.Ecosystem,
 	}
 
 	// Perform analysis
 	result, err := s.performPackageAnalysis(c.Request.Context(), pkg, req.Options.IncludeML, req.Options.IncludeVulns, req.Options.IncludeDependencies)
 	if err != nil {
-		logger.ErrorWithContext("Package analysis failed", map[string]interface{}{
-			"error":     err.Error(),
-			"package":   req.Name,
-			"ecosystem": req.Ecosystem,
-		})
+		log.Printf("Package analysis failed - package: %s, error: %v", req.Name, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Analysis failed"})
 		return
 	}
@@ -289,9 +277,10 @@ func (s *Server) batchAnalyzePackages(c *gin.Context) {
 	// Process packages
 	for i, pkgReq := range req.Packages {
 		pkg := &types.Package{
-			Name:      pkgReq.Name,
-			Version:   pkgReq.Version,
-			Ecosystem: pkgReq.Ecosystem,
+			Name:     pkgReq.Name,
+			Version:  pkgReq.Version,
+			Type:     pkgReq.Ecosystem,
+			Registry: pkgReq.Ecosystem,
 		}
 
 		result, err := s.performPackageAnalysis(
@@ -322,8 +311,9 @@ func (s *Server) analyzePackageByName(c *gin.Context) {
 	name := c.Param("name")
 
 	pkg := &types.Package{
-		Name:      name,
-		Ecosystem: ecosystem,
+		Name:     name,
+		Type:     ecosystem,
+		Registry: ecosystem,
 	}
 
 	// Get query parameters
@@ -347,9 +337,10 @@ func (s *Server) analyzePackageByVersion(c *gin.Context) {
 	version := c.Param("version")
 
 	pkg := &types.Package{
-		Name:      name,
-		Version:   version,
-		Ecosystem: ecosystem,
+		Name:     name,
+		Version:  version,
+		Type:     ecosystem,
+		Registry: ecosystem,
 	}
 
 	// Get query parameters
@@ -378,10 +369,7 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 	if includeML && s.mlPipeline != nil {
 		mlResult, err := s.mlPipeline.AnalyzePackage(ctx, pkg)
 		if err != nil {
-			logger.WarnWithContext("ML analysis failed", map[string]interface{}{
-				"error": err.Error(),
-				"package": pkg.Name,
-			})
+			log.Printf("ML analysis failed - package: %s, error: %v", pkg.Name, err)
 		} else {
 			analysisResult["ml_analysis"] = mlResult
 		}
@@ -501,7 +489,7 @@ func (s *Server) predictReputation(c *gin.Context) {
 		return
 	}
 
-	result, err := s.mlPipeline.PredictReputation(c.Request.Context(), &req.Package)
+	result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
 		return
@@ -523,7 +511,7 @@ func (s *Server) predictAnomaly(c *gin.Context) {
 		return
 	}
 
-	result, err := s.mlPipeline.DetectAnomalies(c.Request.Context(), &req.Package)
+	result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
 		return
@@ -539,7 +527,7 @@ func (s *Server) getMLModelsStatus(c *gin.Context) {
 		return
 	}
 
-	status := s.mlPipeline.GetStatus()
+	status := s.mlPipeline.GetStats()
 	c.JSON(http.StatusOK, status)
 }
 

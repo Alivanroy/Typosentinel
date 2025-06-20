@@ -15,34 +15,7 @@ import (
 
 // NodeJSAnalyzer analyzes Node.js projects
 type NodeJSAnalyzer struct {
-	*BaseAnalyzer
 	config *config.Config
-}
-
-// NewNodeJSAnalyzer creates a new Node.js analyzer
-func NewNodeJSAnalyzer(cfg *config.Config) *NodeJSAnalyzer {
-	metadata := &AnalyzerMetadata{
-		Name:        "nodejs",
-		Version:     "1.0.0",
-		Description: "Analyzes Node.js projects using package.json, package-lock.json, and yarn.lock",
-		Author:      "TypoSentinel",
-		Languages:   []string{"javascript", "typescript", "nodejs"},
-		Capabilities: []string{"dependency_extraction", "lock_file_parsing", "npm_registry", "yarn_support"},
-		Requirements: []string{"package.json"},
-	}
-	
-	baseAnalyzer := NewBaseAnalyzer(
-		"nodejs",
-		[]string{".js", ".ts", ".jsx", ".tsx", ".mjs", ".cjs"},
-		[]string{"package.json", "package-lock.json", "yarn.lock", "npm-shrinkwrap.json"},
-		metadata,
-		cfg,
-	)
-	
-	return &NodeJSAnalyzer{
-		BaseAnalyzer: baseAnalyzer,
-		config:       cfg,
-	}
 }
 
 func (a *NodeJSAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
@@ -340,29 +313,108 @@ func (a *NodeJSAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.D
 	return root, nil
 }
 
-// Python analyzer methods are implemented in python_analyzer.go
-
-// GoAnalyzer analyzes Go projects with enhanced functionality
-type GoAnalyzer struct {
-	config   *config.Config
-	enhanced *EnhancedGoAnalyzer
+// PythonAnalyzer analyzes Python projects
+type PythonAnalyzer struct {
+	config *config.Config
 }
 
-// NewGoAnalyzer creates a new Go analyzer with enhanced capabilities
-func NewGoAnalyzer(config *config.Config) *GoAnalyzer {
-	return &GoAnalyzer{
-		config:   config,
-		enhanced: NewEnhancedGoAnalyzer(config),
+func (a *PythonAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	switch projectInfo.ManifestFile {
+	case "requirements.txt":
+		return a.parseRequirementsTxt(projectInfo)
+	case "pyproject.toml":
+		return a.parsePyprojectToml(projectInfo)
+	case "Pipfile":
+		return a.parsePipfile(projectInfo)
+	default:
+		return nil, fmt.Errorf("unsupported Python manifest file: %s", projectInfo.ManifestFile)
 	}
+}
+
+func (a *PythonAnalyzer) parseRequirementsTxt(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	filePath := filepath.Join(projectInfo.Path, projectInfo.ManifestFile)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var packages []*types.Package
+	lines := strings.Split(string(data), "\n")
+
+	// Regex to parse requirement lines
+	reqRegex := regexp.MustCompile(`^([a-zA-Z0-9_-]+)([><=!~]+)?([0-9.]+.*)?$`)
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		matches := reqRegex.FindStringSubmatch(line)
+		if len(matches) >= 2 {
+			name := matches[1]
+			version := "*"
+			if len(matches) >= 4 && matches[3] != "" {
+				version = matches[2] + matches[3]
+			}
+
+			pkg := &types.Package{
+				Name:     name,
+				Version:  version,
+				Registry: "pypi",
+				Type:     "production",
+			}
+			packages = append(packages, pkg)
+		}
+	}
+
+	return packages, nil
+}
+
+func (a *PythonAnalyzer) parsePyprojectToml(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	// TODO: Implement TOML parsing for pyproject.toml
+	// This requires adding a TOML parser dependency like github.com/BurntSushi/toml
+	return nil, fmt.Errorf("pyproject.toml parsing not implemented yet - requires TOML parser")
+}
+
+func (a *PythonAnalyzer) parsePipfile(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	// TODO: Implement Pipfile parsing
+	return nil, fmt.Errorf("Pipfile parsing not implemented yet")
+}
+
+func (a *PythonAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
+	packages, err := a.ExtractPackages(projectInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	root := &types.DependencyTree{
+		Name:         "python-project",
+		Version:      "1.0.0",
+		Type:         "root",
+		Dependencies: make([]types.DependencyTree, 0),
+	}
+
+	for _, pkg := range packages {
+		dep := types.DependencyTree{
+			Name:         pkg.Name,
+			Version:      pkg.Version,
+			Type:         pkg.Type,
+			Threats:      pkg.Threats,
+			Dependencies: make([]types.DependencyTree, 0),
+		}
+		root.Dependencies = append(root.Dependencies, dep)
+	}
+
+	return root, nil
+}
+
+// GoAnalyzer analyzes Go projects
+type GoAnalyzer struct {
+	config *config.Config
 }
 
 func (a *GoAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// Use enhanced analyzer if available, fallback to basic parsing
-	if a.enhanced != nil {
-		return a.enhanced.ExtractPackages(projectInfo)
-	}
-
-	// Fallback to basic go.mod parsing
 	modPath := filepath.Join(projectInfo.Path, "go.mod")
 	data, err := os.ReadFile(modPath)
 	if err != nil {
@@ -409,12 +461,6 @@ func (a *GoAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package
 }
 
 func (a *GoAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
-	// Use enhanced analyzer if available
-	if a.enhanced != nil {
-		return a.enhanced.AnalyzeDependencies(projectInfo)
-	}
-
-	// Fallback to basic dependency analysis
 	packages, err := a.ExtractPackages(projectInfo)
 	if err != nil {
 		return nil, err
@@ -439,22 +485,6 @@ func (a *GoAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Depen
 	}
 
 	return root, nil
-}
-
-// ValidateChecksums validates go.sum checksums using enhanced analyzer
-func (a *GoAnalyzer) ValidateChecksums(projectPath string) ([]string, error) {
-	if a.enhanced != nil {
-		return a.enhanced.ValidateChecksums(projectPath)
-	}
-	return []string{}, nil
-}
-
-// DetectVulnerableVersions detects vulnerable Go package versions
-func (a *GoAnalyzer) DetectVulnerableVersions(packages []*types.Package) ([]*types.Package, error) {
-	if a.enhanced != nil {
-		return a.enhanced.DetectVulnerableVersions(packages)
-	}
-	return packages, nil
 }
 
 // RustAnalyzer analyzes Rust projects

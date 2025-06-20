@@ -52,8 +52,10 @@ func New(cfg *config.Config) *Scanner {
 
 	// Initialize cache if enabled
 	if cfg.Cache != nil && cfg.Cache.Enabled {
-		cacheIntegration := cache.NewCacheIntegration(cfg.Cache.CacheDir, cfg.Cache.Enabled, cfg.Cache.TTL)
-		s.cache = cacheIntegration
+		cacheIntegration, err := cache.NewCacheIntegration(cfg.Cache)
+		if err == nil {
+			s.cache = cacheIntegration
+		}
 	}
 
 	// Register project detectors
@@ -71,17 +73,12 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			if _, found, err := s.cache.GetCachedScanResult(cacheKey); err == nil && found {
-			// Return a basic scan result for cached dependency tree
-			cachedResult := &types.ScanResult{
-				ID:        generateScanID(),
-				Target:    projectPath,
-				Status:    "completed",
-				Duration:  time.Since(start),
-				CreatedAt: time.Now(),
+			if cachedResult, found, err := s.cache.GetCachedScanResult(cacheKey); err == nil && found {
+				// Update scan duration to reflect cache hit
+				cachedResult.Duration = time.Since(start)
+				cachedResult.CacheHit = true
+				return cachedResult, nil
 			}
-			return cachedResult, nil
-		}
 		}
 	}
 
@@ -126,42 +123,22 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 		Status:       "completed",
 		Packages:     packages,
 		Summary:      summary,
+		ScanDuration: time.Since(start),
 		Duration:     time.Since(start),
 		CreatedAt:    time.Now(),
+		CacheHit:     false,
 	}
 
-	// Build dependency tree for caching if enabled
+	// Cache the result if caching is enabled
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			// Build a simple dependency tree from packages
-			tree := &types.DependencyTree{
-				Name:         "root",
-				Version:      "1.0.0",
-				Type:         projectInfo.Type,
-				Dependencies: make([]types.DependencyTree, 0),
-				Depth:        0,
-				TotalCount:   len(packages),
-			}
-
-			// Add packages as dependencies
-			for _, pkg := range packages {
-				node := types.DependencyTree{
-					Name:         pkg.Name,
-					Version:      pkg.Version,
-					Type:         projectInfo.Type,
-					Dependencies: make([]types.DependencyTree, 0),
-					Depth:        1,
-				}
-				tree.Dependencies = append(tree.Dependencies, node)
-			}
-
 			metadata := map[string]interface{}{
 				"project_type": projectInfo.Type,
 				"package_count": len(packages),
 				"threat_count": summary.ThreatsFound,
 			}
-			_ = s.cache.CacheScanResult(cacheKey, tree, metadata)
+			_ = s.cache.CacheScanResult(cacheKey, result, metadata)
 		}
 	}
 
@@ -209,6 +186,17 @@ func (s *Scanner) detectProject(projectPath string) (*ProjectInfo, error) {
 		if err == nil && projectInfo != nil {
 			return projectInfo, nil
 		}
+	}
+
+	// Check if directory is empty or has no recognizable package files
+	entries, err := os.ReadDir(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory: %w", err)
+	}
+
+	// If directory is empty, return error
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("no package files found in directory: %s", projectPath)
 	}
 
 	// If no specific project type detected, return a generic project info
@@ -503,11 +491,11 @@ func (s *Scanner) registerDetectors() {
 
 // registerAnalyzers registers all dependency analyzers
 func (s *Scanner) registerAnalyzers() {
-	s.analyzers["nodejs"] = NewNodeJSAnalyzer(s.config)
+	s.analyzers["nodejs"] = &NodeJSAnalyzer{config: s.config}
 	s.analyzers["python"] = NewPythonPackageAnalyzer(s.config)
-	s.analyzers["go"] = NewEnhancedGoAnalyzer(s.config)
+	s.analyzers["go"] = &GoAnalyzer{config: s.config}
 	s.analyzers["rust"] = NewRustAnalyzer(s.config)
-	s.analyzers["ruby"] = NewRubyPackageAnalyzer(s.config)
+	s.analyzers["ruby"] = NewRubyAnalyzer(s.config)
 	s.analyzers["php"] = NewPHPAnalyzer(s.config)
 	s.analyzers["java"] = NewJavaAnalyzer(s.config)
 	s.analyzers["dotnet"] = NewDotNetAnalyzer(s.config)

@@ -2,12 +2,14 @@ package rest
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 
@@ -66,11 +68,11 @@ func loggingMiddleware() gin.HandlerFunc {
 
 		// Log based on status code
 		if param.StatusCode >= 500 {
-			logger.ErrorWithContext("HTTP request", logData)
+			log.Printf("HTTP request - Method: %s, Path: %s, Status: %d, Duration: %v, IP: %s", param.Method, param.Path, param.StatusCode, param.Latency, param.ClientIP)
 		} else if param.StatusCode >= 400 {
-			logger.WarnWithContext("HTTP request", logData)
+			log.Printf("HTTP request - Method: %s, Path: %s, Status: %d, Duration: %v, IP: %s", param.Method, param.Path, param.StatusCode, param.Latency, param.ClientIP)
 		} else {
-			logger.InfoWithContext("HTTP request", logData)
+			log.Printf("HTTP request - Method: %s, Path: %s, Status: %d, Duration: %v, IP: %s", param.Method, param.Path, param.StatusCode, param.Latency, param.ClientIP)
 		}
 
 		return ""
@@ -192,12 +194,7 @@ func rateLimitMiddleware(rateLimitConfig config.RateLimitConfig) gin.HandlerFunc
 			c.Header("X-RateLimit-Remaining", "0")
 			c.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(time.Second).Unix(), 10))
 
-			logger.WarnWithContext("Rate limit exceeded", map[string]interface{}{
-				"key":        key,
-				"client_ip":  c.ClientIP(),
-				"user_agent": c.Request.UserAgent(),
-				"path":       c.Request.URL.Path,
-			})
+			log.Printf("Rate limit exceeded for key: %s, IP: %s, path: %s", key, c.ClientIP(), c.Request.URL.Path)
 
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":   "Rate limit exceeded",
@@ -217,17 +214,17 @@ func rateLimitMiddleware(rateLimitConfig config.RateLimitConfig) gin.HandlerFunc
 }
 
 // authMiddleware provides authentication functionality
-func authMiddleware(authConfig config.AuthenticationConfig) gin.HandlerFunc {
-	if !authConfig.Enabled {
-		return func(c *gin.Context) {
-			c.Next()
-		}
-	}
-
+func authMiddleware(authConfig *config.APIAuthentication) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Skip authentication for health checks and documentation
+		// Skip authentication for health checks and public endpoints
 		path := c.Request.URL.Path
-		if path == "/health" || path == "/ready" || strings.HasPrefix(path, "/docs") {
+		if path == "/health" || path == "/ready" || path == "/metrics" {
+			c.Next()
+			return
+		}
+
+		// Skip if authentication is disabled
+		if !authConfig.Enabled {
 			c.Next()
 			return
 		}
@@ -236,35 +233,41 @@ func authMiddleware(authConfig config.AuthenticationConfig) gin.HandlerFunc {
 		var userID string
 		var authMethod string
 
-		// Try different authentication methods
-		switch authConfig.Type {
-		case "api_key":
-			authenticated, userID = authenticateAPIKey(c, authConfig)
-			authMethod = "api_key"
-		case "jwt":
-			authenticated, userID = authenticateJWT(c, authConfig)
-			authMethod = "jwt"
-		case "basic":
-			authenticated, userID = authenticateBasic(c, authConfig)
-			authMethod = "basic"
-		default:
-			// Try multiple methods
-			if authenticated, userID = authenticateAPIKey(c, authConfig); authenticated {
-				authMethod = "api_key"
-			} else if authenticated, userID = authenticateJWT(c, authConfig); authenticated {
+		// Try different authentication methods based on configuration
+		if len(authConfig.Methods) > 0 {
+			// Try configured methods in order
+			for _, method := range authConfig.Methods {
+				switch method {
+				case "api_key":
+					authenticated, userID = authenticateAPIKey(c, authConfig)
+					authMethod = "api_key"
+				case "jwt":
+					authenticated, userID = authenticateJWT(c, authConfig)
+					authMethod = "jwt"
+				case "basic":
+					authenticated, userID = authenticateBasic(c, authConfig)
+					authMethod = "basic"
+				}
+				if authenticated {
+					break
+				}
+			}
+		} else {
+			// Try all methods if no specific methods are configured
+			if authenticated, userID = authenticateJWT(c, authConfig); !authenticated {
+				if authenticated, userID = authenticateAPIKey(c, authConfig); !authenticated {
+					authenticated, userID = authenticateBasic(c, authConfig)
+					authMethod = "basic"
+				} else {
+					authMethod = "api_key"
+				}
+			} else {
 				authMethod = "jwt"
-			} else if authenticated, userID = authenticateBasic(c, authConfig); authenticated {
-				authMethod = "basic"
 			}
 		}
 
 		if !authenticated {
-			logger.WarnWithContext("Authentication failed", map[string]interface{}{
-				"client_ip":  c.ClientIP(),
-				"user_agent": c.Request.UserAgent(),
-				"path":       c.Request.URL.Path,
-				"method":     c.Request.Method,
-			})
+			log.Printf("Authentication failed - IP: %s, path: %s, method: %s", c.ClientIP(), c.Request.URL.Path, c.Request.Method)
 
 			c.Header("WWW-Authenticate", `Bearer realm="TypoSentinel API"`)
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -291,7 +294,7 @@ func authMiddleware(authConfig config.AuthenticationConfig) gin.HandlerFunc {
 }
 
 // authenticateAPIKey authenticates using API key
-func authenticateAPIKey(c *gin.Context, authConfig config.AuthenticationConfig) (bool, string) {
+func authenticateAPIKey(c *gin.Context, authConfig *config.APIAuthentication) (bool, string) {
 	// Try different header names
 	apiKey := c.GetHeader("X-API-Key")
 	if apiKey == "" {
@@ -331,7 +334,7 @@ func authenticateAPIKey(c *gin.Context, authConfig config.AuthenticationConfig) 
 }
 
 // authenticateJWT authenticates using JWT token
-func authenticateJWT(c *gin.Context, authConfig config.AuthenticationConfig) (bool, string) {
+func authenticateJWT(c *gin.Context, authConfig *config.APIAuthentication) (bool, string) {
 	authHeader := c.GetHeader("Authorization")
 	if !strings.HasPrefix(authHeader, "Bearer ") {
 		return false, ""
@@ -342,17 +345,37 @@ func authenticateJWT(c *gin.Context, authConfig config.AuthenticationConfig) (bo
 		return false, ""
 	}
 
-	// Placeholder JWT validation
-	// In a real implementation, this would validate the JWT signature and claims
-	if token == "valid-jwt-token" {
-		return true, "jwt_user"
+	// Use proper JWT validator for production tokens
+	if authConfig.JWTSecret != "" {
+		validator := NewJWTValidator(authConfig.JWTSecret, "typosentinel")
+		claims, err := validator.ValidateToken(token)
+		if err != nil {
+			log.Printf("JWT validation failed: %v", err)
+			return false, ""
+		}
+		
+		// Set additional context for role-based access
+		c.Set("user_role", claims.Role)
+		c.Set("user_name", claims.Name)
+		
+		return true, claims.Subject
 	}
 
+	// Fallback to test tokens for development
+	testTokens := GetTestTokens()
+	if userID, exists := testTokens[token]; exists {
+		logger.DebugWithContext("Test JWT token validated", map[string]interface{}{
+			"user_id": userID,
+		})
+		return true, userID
+	}
+
+	log.Printf("JWT token validation failed: token length %d", len(token))
 	return false, ""
 }
 
 // authenticateBasic authenticates using basic authentication
-func authenticateBasic(c *gin.Context, authConfig config.AuthenticationConfig) (bool, string) {
+func authenticateBasic(c *gin.Context, authConfig *config.APIAuthentication) (bool, string) {
 	username, password, hasAuth := c.Request.BasicAuth()
 	if !hasAuth {
 		return false, ""
@@ -431,13 +454,7 @@ func errorHandlingMiddleware() gin.HandlerFunc {
 		// Handle any errors that occurred during request processing
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			logger.ErrorWithContext("Request error", map[string]interface{}{
-				"error":      err.Error(),
-				"path":       c.Request.URL.Path,
-				"method":     c.Request.Method,
-				"client_ip":  c.ClientIP(),
-				"user_agent": c.Request.UserAgent(),
-			})
+			log.Printf("Request error - path: %s, method: %s, error: %v", c.Request.URL.Path, c.Request.Method, err.Error())
 
 			// Return appropriate error response
 			switch err.Type {

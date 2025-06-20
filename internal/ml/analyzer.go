@@ -16,6 +16,7 @@ import (
 // MLAnalyzer performs machine learning-based analysis for typosquatting detection.
 type MLAnalyzer struct {
 	Config config.MLAnalysisConfig
+	Client *Client
 }
 
 // Config holds the configuration for the ML analyzer.
@@ -198,6 +199,15 @@ type AnalysisMetadata struct {
 func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 	return &MLAnalyzer{
 		Config: cfg,
+		Client: nil, // Client can be set separately for testing
+	}
+}
+
+// NewMLAnalyzerWithClient creates a new ML analyzer with a specific client
+func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAnalyzer {
+	return &MLAnalyzer{
+		Config: cfg,
+		Client: client,
 	}
 }
 
@@ -218,6 +228,11 @@ func DefaultConfig() config.MLAnalysisConfig {
 
 // Analyze performs ML-based analysis on a package.
 func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*AnalysisResult, error) {
+	// Check if ML analysis is enabled
+	if !a.Config.Enabled {
+		return nil, fmt.Errorf("ML analysis is disabled")
+	}
+	
 	startTime := time.Now()
 	
 	// Extract features from the package
@@ -228,7 +243,10 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	similarPackages := a.findSimilarPackages(pkg)
 	
 	// Perform malicious detection
-	maliciousScore := a.detectMaliciousPackage(pkg, features)
+	maliciousScore, err := a.detectMaliciousPackage(ctx, pkg, features)
+	if err != nil {
+		return nil, err
+	}
 	
 	// Perform reputation analysis
 	reputationAnalysis := a.analyzeReputation(pkg)
@@ -599,7 +617,16 @@ func (a *MLAnalyzer) findSimilarPackages(pkg *types.Package) []SimilarPackage {
 }
 
 // detectMaliciousPackage detects if a package is potentially malicious.
-func (a *MLAnalyzer) detectMaliciousPackage(pkg *types.Package, features map[string]float64) float64 {
+func (a *MLAnalyzer) detectMaliciousPackage(ctx context.Context, pkg *types.Package, features map[string]float64) (float64, error) {
+	// If client is available, use HTTP-based detection
+	if a.Client != nil {
+		resp, err := a.Client.CheckMaliciousPackage(ctx, pkg.Name, pkg.Registry, pkg.Version)
+		if err != nil {
+			return 0, fmt.Errorf("malicious detection failed: %w", err)
+		}
+		return resp.Score, nil
+	}
+	
 	// Enhanced heuristic-based detection for better accuracy
 	score := 0.0
 	
@@ -656,7 +683,7 @@ func (a *MLAnalyzer) detectMaliciousPackage(pkg *types.Package, features map[str
 		}
 	}
 	
-	return math.Min(score, 1.0)
+	return math.Min(score, 1.0), nil
 }
 
 // analyzeReputation analyzes the reputation of a package.

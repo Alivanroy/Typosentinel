@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -277,38 +276,29 @@ func (f *Formatter) formatText(result *ScanResult) error {
 // formatTable outputs results in table format
 func (f *Formatter) formatTable(result *ScanResult) error {
 	// Summary table
-	table := tablewriter.NewWriter(f.writer)
-	table.SetHeader([]string{"Metric", "Value"})
-	table.SetBorder(false)
-	table.SetRowSeparator("-")
-	table.SetCenterSeparator("|")
-	table.SetColumnSeparator("|")
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-
-	table.Append([]string{"Package", result.Package.Name + "@" + result.Package.Version})
-	table.Append([]string{"Overall Risk", strings.ToUpper(result.OverallRisk)})
-	table.Append([]string{"Risk Score", fmt.Sprintf("%.2f", result.RiskScore)})
-	table.Append([]string{"Total Findings", strconv.Itoa(result.Summary.TotalFindings)})
-	table.Append([]string{"Analysis Time", result.Summary.AnalysisTime.String()})
-	table.Append([]string{"Engines Used", strings.Join(result.Summary.EnginesUsed, ", ")})
-
+	table := tablewriter.NewTable(f.writer)
+	table.Header("Metric", "Value")
+	
+	summaryData := [][]any{
+		{"Package", result.Package.Name + "@" + result.Package.Version},
+		{"Overall Risk", strings.ToUpper(result.OverallRisk)},
+		{"Risk Score", fmt.Sprintf("%.2f", result.RiskScore)},
+		{"Total Findings", strconv.Itoa(result.Summary.TotalFindings)},
+		{"Analysis Time", result.Summary.AnalysisTime.String()},
+		{"Engines Used", strings.Join(result.Summary.EnginesUsed, ", ")},
+	}
+	table.Bulk(summaryData)
 	table.Render()
 
 	// Findings table
 	if len(result.Findings) > 0 {
 		fmt.Fprintln(f.writer)
-		findingsTable := tablewriter.NewWriter(f.writer)
-		findingsTable.SetHeader([]string{"ID", "Type", "Severity", "Title", "Confidence"})
-		findingsTable.SetBorder(false)
-		findingsTable.SetRowSeparator("-")
-		findingsTable.SetCenterSeparator("|")
-		findingsTable.SetColumnSeparator("|")
-		findingsTable.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-		findingsTable.SetAlignment(tablewriter.ALIGN_LEFT)
+		findingsTable := tablewriter.NewTable(f.writer)
+		findingsTable.Header("ID", "Type", "Severity", "Title", "Confidence")
 
+		findingsData := make([][]any, 0, len(result.Findings))
 		for _, finding := range result.Findings {
-			findingsTable.Append([]string{
+			findingsData = append(findingsData, []any{
 				finding.ID,
 				finding.Type,
 				finding.Severity,
@@ -316,7 +306,7 @@ func (f *Formatter) formatTable(result *ScanResult) error {
 				fmt.Sprintf("%.1f%%", finding.Confidence*100),
 			})
 		}
-
+		findingsTable.Bulk(findingsData)
 		findingsTable.Render()
 	}
 

@@ -147,7 +147,9 @@ func TestAnalyze_ServerError(t *testing.T) {
 		GPUAcceleration:     false,
 	}
 
-	analyzer := NewMLAnalyzer(cfg)
+	// Create ML client with test server URL
+	client := NewClient(server.URL, "test-api-key")
+	analyzer := NewMLAnalyzerWithClient(cfg, client)
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -184,7 +186,9 @@ func TestAnalyze_InvalidJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	analyzer := NewMLAnalyzer(cfg)
+	// Create ML client with test server URL
+	client := NewClient(server.URL, "test-api-key")
+	analyzer := NewMLAnalyzerWithClient(cfg, client)
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -222,7 +226,9 @@ func TestAnalyze_ContextCancellation(t *testing.T) {
 		GPUAcceleration:     false,
 	}
 
-	analyzer := NewMLAnalyzer(cfg)
+	// Create ML client with test server URL
+	client := NewClient(server.URL, "test-api-key")
+	analyzer := NewMLAnalyzerWithClient(cfg, client)
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -240,6 +246,14 @@ func TestAnalyze_ContextCancellation(t *testing.T) {
 }
 
 func TestAnalyze_Timeout(t *testing.T) {
+	// Create mock HTTP server that delays response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(2 * time.Second) // Delay longer than timeout
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(MaliciousResponse{Score: 0.5})
+	}))
+	defer server.Close()
+
 	cfg := config.MLAnalysisConfig{
 		Enabled:             true,
 		SimilarityThreshold: 0.8,
@@ -248,7 +262,9 @@ func TestAnalyze_Timeout(t *testing.T) {
 		ModelPath:           "test-model",
 	}
 
-	analyzer := NewMLAnalyzer(cfg)
+	// Create ML client with test server URL
+	client := NewClient(server.URL, "test-api-key")
+	analyzer := NewMLAnalyzerWithClient(cfg, client)
 
 	pkg := &types.Package{
 		Name:     "test-package",
@@ -256,7 +272,10 @@ func TestAnalyze_Timeout(t *testing.T) {
 		Registry: "npm",
 	}
 
-	ctx := context.Background()
+	// Create context with short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
 	_, err := analyzer.Analyze(ctx, pkg)
 
 	if err == nil {
@@ -524,7 +543,9 @@ func TestAnalyze_Error(t *testing.T) {
 	}))
 	defer server.Close()
 
-	analyzer := NewMLAnalyzer(cfg)
+	// Create ML client with test server URL
+	client := NewClient(server.URL, "test-api-key")
+	analyzer := NewMLAnalyzerWithClient(cfg, client)
 
 	pkg := &types.Package{
 		Name:     "test-package",

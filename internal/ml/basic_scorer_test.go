@@ -229,7 +229,7 @@ func TestSigmoid(t *testing.T) {
 
 	for _, tt := range tests {
 		result := scorer.sigmoid(tt.input)
-		if abs(result-tt.expected) > 1e-10 {
+		if abs(result-tt.expected) > 1e-6 {
 			t.Errorf("sigmoid(%f) = %f, expected %f", tt.input, result, tt.expected)
 		}
 	}

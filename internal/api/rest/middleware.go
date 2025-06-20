@@ -1,20 +1,18 @@
 package rest
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 
 	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
+	"typosentinel/internal/logger"
 )
 
 // corsMiddleware configures CORS middleware
@@ -25,7 +23,10 @@ func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
 		AllowHeaders:     corsConfig.AllowedHeaders,
 		ExposeHeaders:    corsConfig.ExposedHeaders,
 		AllowCredentials: corsConfig.AllowCredentials,
-		MaxAge:           time.Duration(corsConfig.MaxAge) * time.Second,
+		MaxAge:           time.Duration(func() int64 {
+		val, _ := strconv.ParseInt(corsConfig.MaxAge, 10, 64)
+		return val
+	}()) * time.Second,
 	}
 
 	// If no origins specified, allow all
@@ -89,11 +90,11 @@ type RateLimiter struct {
 }
 
 // NewRateLimiter creates a new rate limiter
-func NewRateLimiter(requestsPerSecond float64, burst int) *RateLimiter {
+func NewRateLimiter(requestsPerSecond int, burstSize int) *RateLimiter {
 	rl := &RateLimiter{
 		limiters: make(map[string]*rate.Limiter),
 		limit:    rate.Limit(requestsPerSecond),
-		burst:    burst,
+		burst:    burstSize,
 		cleanup:  time.Minute * 5, // Clean up old limiters every 5 minutes
 	}
 
@@ -148,7 +149,7 @@ func (rl *RateLimiter) cleanupRoutine() {
 var globalRateLimiter *RateLimiter
 
 // rateLimitMiddleware provides rate limiting functionality
-func rateLimitMiddleware(rateLimitConfig config.RateLimitConfig) gin.HandlerFunc {
+func rateLimitMiddleware(rateLimitConfig config.APIRateLimiting) gin.HandlerFunc {
 	if !rateLimitConfig.Enabled {
 		return func(c *gin.Context) {
 			c.Next()
@@ -157,42 +158,20 @@ func rateLimitMiddleware(rateLimitConfig config.RateLimitConfig) gin.HandlerFunc
 
 	// Initialize global rate limiter if not already done
 	if globalRateLimiter == nil {
-		globalRateLimiter = NewRateLimiter(
-			float64(rateLimitConfig.RequestsPerSecond),
-			rateLimitConfig.Burst,
-		)
+	globalRateLimiter = NewRateLimiter(rateLimitConfig.Global.RequestsPerSecond, rateLimitConfig.Global.BurstSize)
 	}
 
 	return func(c *gin.Context) {
 		// Determine rate limit key based on strategy
 		var key string
-		switch rateLimitConfig.Strategy {
-		case "ip":
-			key = c.ClientIP()
-		case "user":
-			// Extract user ID from authentication context
-			if userID, exists := c.Get("user_id"); exists {
-				key = fmt.Sprintf("user:%v", userID)
-			} else {
-				key = c.ClientIP() // Fallback to IP
-			}
-		case "api_key":
-			// Extract API key
-			if apiKey := c.GetHeader("X-API-Key"); apiKey != "" {
-				key = fmt.Sprintf("api_key:%s", apiKey)
-			} else {
-				key = c.ClientIP() // Fallback to IP
-			}
-		default:
-			key = c.ClientIP()
-		}
+		key = c.ClientIP()
 
 		// Check rate limit
 		if !globalRateLimiter.Allow(key) {
 			// Add rate limit headers
-			c.Header("X-RateLimit-Limit", strconv.Itoa(rateLimitConfig.RequestsPerSecond))
-			c.Header("X-RateLimit-Remaining", "0")
-			c.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(time.Second).Unix(), 10))
+			c.Header("X-RateLimit-Limit", strconv.Itoa(rateLimitConfig.Global.RequestsPerSecond))
+		c.Header("X-RateLimit-Remaining", "0")
+		c.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(time.Second).Unix(), 10))
 
 			log.Printf("Rate limit exceeded for key: %s, IP: %s, path: %s", key, c.ClientIP(), c.Request.URL.Path)
 
@@ -206,8 +185,8 @@ func rateLimitMiddleware(rateLimitConfig config.RateLimitConfig) gin.HandlerFunc
 		}
 
 		// Add rate limit headers for successful requests
-		c.Header("X-RateLimit-Limit", strconv.Itoa(rateLimitConfig.RequestsPerSecond))
-		c.Header("X-RateLimit-Remaining", strconv.Itoa(rateLimitConfig.RequestsPerSecond-1))
+		c.Header("X-RateLimit-Limit", strconv.Itoa(rateLimitConfig.Global.RequestsPerSecond))
+		c.Header("X-RateLimit-Remaining", strconv.Itoa(rateLimitConfig.Global.RequestsPerSecond-1))
 
 		c.Next()
 	}

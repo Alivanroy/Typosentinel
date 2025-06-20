@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -276,18 +275,7 @@ func TestJWTValidator_GenerateAndValidateToken(t *testing.T) {
 func TestJWTValidator_ExpiredToken(t *testing.T) {
 	validator := NewJWTValidator("test-secret-key", "typosentinel")
 
-	// Generate a token that expires immediately
-	claims := JWTClaims{
-		Subject:   "testuser",
-		Name:      "Test User",
-		Role:      "user",
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(-1 * time.Hour).Unix(), // Expired 1 hour ago
-		Issuer:    "typosentinel",
-	}
 
-	// This would require a more complex setup to test expired tokens
-	// For now, we'll test the validation logic
 	_, err := validator.ValidateToken("invalid.token.format")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid token format")

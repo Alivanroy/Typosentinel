@@ -2,17 +2,13 @@ package rest
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
-	"github.com/gin-contrib/timeout"
 
 	"typosentinel/internal/config"
 	"typosentinel/pkg/logger"
@@ -33,8 +29,8 @@ type Server struct {
 
 // NewServer creates a new REST API server
 func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzer.Analyzer) *Server {
-	// Set gin mode based on environment
-	if !cfg.Debug {
+	// Set gin mode based on API configuration
+	if !cfg.Enabled {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -43,9 +39,9 @@ func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *an
 	// Add middleware
 	r.Use(gin.Recovery())
 	r.Use(requestid.New())
-	r.Use(corsMiddleware(cfg.CORS))
+	r.Use(corsMiddleware(*cfg.CORS))
 	r.Use(loggingMiddleware())
-	r.Use(rateLimitMiddleware(cfg.RateLimit))
+	r.Use(rateLimitMiddleware(*cfg.RateLimiting))
 	r.Use(authMiddleware(cfg.Authentication))
 	// Timeout middleware removed - not available in RESTAPIConfig
 
@@ -467,7 +463,7 @@ func (s *Server) predictTyposquatting(c *gin.Context) {
 		return
 	}
 
-	result, err := s.mlPipeline.PredictTyposquatting(c.Request.Context(), &req.Package)
+	result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
 		return

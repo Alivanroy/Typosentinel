@@ -34,12 +34,31 @@ type PackageFeatures struct {
 	PackageName     string                 `json:"package_name"`
 	Registry        string                 `json:"registry"`
 	Version         string                 `json:"version,omitempty"`
+	PackageType     string                 `json:"package_type,omitempty"`
 	
 	// Name-based features
 	NameEmbedding   []float64              `json:"name_embedding"`
 	NameLength      int                    `json:"name_length"`
 	NameComplexity  float64                `json:"name_complexity"`
 	NameEntropy     float64                `json:"name_entropy"`
+	
+	// Direct access fields for compatibility
+	VersionComplexity    float64           `json:"version_complexity"`
+	DescriptionLength    int               `json:"description_length"`
+	DependencyCount      int               `json:"dependency_count"`
+	DownloadCount        int64             `json:"download_count"`
+	StarCount           int               `json:"star_count"`
+	ForkCount           int               `json:"fork_count"`
+	ContributorCount    int               `json:"contributor_count"`
+	AgeInDays           int               `json:"age_in_days"`
+	TyposquattingScore  float64           `json:"typosquatting_score"`
+	SuspiciousKeywords  int               `json:"suspicious_keywords"`
+	VersionSpoofing     float64           `json:"version_spoofing"`
+	DomainReputation    float64           `json:"domain_reputation"`
+	UpdateFrequency     float64           `json:"update_frequency"`
+	MaintainerCount     int               `json:"maintainer_count"`
+	IssueCount          int               `json:"issue_count"`
+	LicenseScore        float64           `json:"license_score"`
 	
 	// Author features
 	AuthorFeatures  AuthorFeatures         `json:"author_features"`

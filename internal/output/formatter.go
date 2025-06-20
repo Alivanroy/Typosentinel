@@ -279,8 +279,12 @@ func (f *Formatter) formatTable(result *ScanResult) error {
 	// Summary table
 	table := tablewriter.NewWriter(f.writer)
 	table.SetHeader([]string{"Metric", "Value"})
-	table.SetBorder(true)
-	table.SetRowLine(true)
+	table.SetBorder(false)
+	table.SetRowSeparator("-")
+	table.SetCenterSeparator("|")
+	table.SetColumnSeparator("|")
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
 
 	table.Append([]string{"Package", result.Package.Name + "@" + result.Package.Version})
 	table.Append([]string{"Overall Risk", strings.ToUpper(result.OverallRisk)})
@@ -296,8 +300,12 @@ func (f *Formatter) formatTable(result *ScanResult) error {
 		fmt.Fprintln(f.writer)
 		findingsTable := tablewriter.NewWriter(f.writer)
 		findingsTable.SetHeader([]string{"ID", "Type", "Severity", "Title", "Confidence"})
-		findingsTable.SetBorder(true)
-		findingsTable.SetRowLine(true)
+		findingsTable.SetBorder(false)
+		findingsTable.SetRowSeparator("-")
+		findingsTable.SetCenterSeparator("|")
+		findingsTable.SetColumnSeparator("|")
+		findingsTable.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+		findingsTable.SetAlignment(tablewriter.ALIGN_LEFT)
 
 		for _, finding := range result.Findings {
 			findingsTable.Append([]string{

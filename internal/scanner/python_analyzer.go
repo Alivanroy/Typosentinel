@@ -852,7 +852,7 @@ func (a *PythonAnalyzer) checkVulnerabilityPatterns(pkg *types.Package) []types.
 				Type:        "typosquatting",
 				Severity:    types.SeverityHigh,
 				Description: fmt.Sprintf("Package name '%s' is similar to popular package '%s'", pkg.Name, pattern),
-				Source:      "python_analyzer",
+				DetectionMethod: "python_analyzer",
 			})
 		}
 	}
@@ -870,7 +870,7 @@ func (a *PythonAnalyzer) detectSuspiciousCharacteristics(pkg *types.Package) []t
 			Type:        "suspicious_version",
 			Severity:    types.SeverityMedium,
 			Description: fmt.Sprintf("Package version '%s' follows suspicious pattern", pkg.Version),
-			Source:      "python_analyzer",
+			DetectionMethod: "python_analyzer",
 		})
 	}
 
@@ -882,7 +882,7 @@ func (a *PythonAnalyzer) detectSuspiciousCharacteristics(pkg *types.Package) []t
 					Type:        "suspicious_description",
 					Severity:    types.SeverityLow,
 					Description: "Package description contains suspicious content",
-					Source:      "python_analyzer",
+					DetectionMethod: "python_analyzer",
 				})
 			}
 		}

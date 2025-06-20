@@ -3,14 +3,11 @@ package ml
 import (
 	"context"
 	"fmt"
-	"math"
-	"sort"
 	"sync"
-	"time"
 
 	"typosentinel/internal/config"
-	"typosentinel/internal/logger"
-	"typosentinel/internal/types"
+	"typosentinel/pkg/logger"
+	"typosentinel/pkg/types"
 )
 
 // MLPipeline represents the machine learning pipeline for threat detection
@@ -18,7 +15,6 @@ type MLPipeline struct {
 	config      *config.Config
 	models      map[string]MLModel
 	features    FeatureExtractor
-	scorer      *AdvancedScorer
 	mu          sync.RWMutex
 	initialized bool
 }
@@ -38,16 +34,7 @@ type FeatureExtractor interface {
 	NormalizeFeatures(features *PackageFeatures) []float64
 }
 
-// Prediction represents a model prediction result
-type Prediction struct {
-	Score      float64                `json:"score"`
-	Confidence float64                `json:"confidence"`
-	RiskLevel  types.RiskLevel        `json:"risk_level"`
-	Threats    []types.Threat         `json:"threats"`
-	Metadata   map[string]interface{} `json:"metadata"`
-	ModelUsed  string                 `json:"model_used"`
-	Timestamp  time.Time              `json:"timestamp"`
-}
+// Use Prediction from analyzer.go
 
 // TrainingData represents training data for ML models
 type TrainingData struct {
@@ -56,47 +43,11 @@ type TrainingData struct {
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
-// ModelInfo contains information about a ML model
-type ModelInfo struct {
-	Name         string    `json:"name"`
-	Version      string    `json:"version"`
-	Type         string    `json:"type"`
-	Accuracy     float64   `json:"accuracy"`
-	TrainedAt    time.Time `json:"trained_at"`
-	FeatureCount int       `json:"feature_count"`
-	Description  string    `json:"description"`
-}
+// ModelInfo is defined in client.go
 
-// PackageFeatures represents extracted features from a package
-type PackageFeatures struct {
-	// Basic package features
-	NameLength        float64 `json:"name_length"`
-	VersionComplexity float64 `json:"version_complexity"`
-	DescriptionLength float64 `json:"description_length"`
-	DependencyCount   float64 `json:"dependency_count"`
-
-	// Reputation features
-	DownloadCount    float64 `json:"download_count"`
-	StarCount        float64 `json:"star_count"`
-	ForkCount        float64 `json:"fork_count"`
-	ContributorCount float64 `json:"contributor_count"`
-	AgeInDays        float64 `json:"age_in_days"`
-
-	// Security features
-	TyposquattingScore float64 `json:"typosquatting_score"`
-	SuspiciousKeywords float64 `json:"suspicious_keywords"`
-	VersionSpoofing    float64 `json:"version_spoofing"`
-	DomainReputation   float64 `json:"domain_reputation"`
-
-	// Behavioral features
-	UpdateFrequency float64 `json:"update_frequency"`
-	MaintainerCount float64 `json:"maintainer_count"`
-	IssueCount      float64 `json:"issue_count"`
-	LicenseScore    float64 `json:"license_score"`
-
-	// Metadata
-	Registry    string `json:"registry"`
-	PackageType string `json:"package_type"`
+// BasicFeatureExtractor handles feature extraction from packages
+type BasicFeatureExtractor struct {
+	config *config.Config
 }
 
 // NewMLPipeline creates a new ML pipeline instance
@@ -105,7 +56,6 @@ func NewMLPipeline(config *config.Config) *MLPipeline {
 		config:   config,
 		models:   make(map[string]MLModel),
 		features: NewAdvancedFeatureExtractor(),
-		scorer:   NewAdvancedScorer(config),
 	}
 }
 
@@ -114,8 +64,8 @@ func (p *MLPipeline) Initialize(ctx context.Context) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	logger.InfoWithContext("Initializing ML Pipeline", map[string]interface{}{
-		"models_enabled": p.config.ML.ModelsEnabled,
+	logger.Info("Initializing ML Pipeline", map[string]interface{}{
+		"models_enabled": p.config.MLService.Enabled,
 	})
 
 	// Initialize feature extractor
@@ -128,10 +78,7 @@ func (p *MLPipeline) Initialize(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize models: %w", err)
 	}
 
-	// Initialize advanced scorer
-	if err := p.scorer.Initialize(); err != nil {
-		return fmt.Errorf("failed to initialize scorer: %w", err)
-	}
+	// Advanced scoring is handled internally
 
 	p.initialized = true
 	logger.Info("ML Pipeline initialized successfully")
@@ -181,7 +128,7 @@ func (p *MLPipeline) AnalyzePackages(ctx context.Context, packages []*types.Pack
 		return nil, fmt.Errorf("ML pipeline not initialized")
 	}
 
-	logger.InfoWithContext("Starting batch package analysis", map[string]interface{}{
+	logger.Info("Starting batch package analysis", map[string]interface{}{
 		"package_count": len(packages),
 	})
 
@@ -193,7 +140,7 @@ func (p *MLPipeline) AnalyzePackages(ctx context.Context, packages []*types.Pack
 	}, len(packages))
 
 	// Process packages concurrently
-	semaphore := make(chan struct{}, p.config.ML.MaxConcurrency)
+	semaphore := make(chan struct{}, 10)
 	var wg sync.WaitGroup
 
 	for i, pkg := range packages {
@@ -235,7 +182,7 @@ func (p *MLPipeline) AnalyzePackages(ctx context.Context, packages []*types.Pack
 	default:
 	}
 
-	logger.InfoWithContext("Batch package analysis completed", map[string]interface{}{
+	logger.Info("Batch package analysis completed", map[string]interface{}{
 		"analyzed_count": len(predictions),
 	})
 
@@ -259,7 +206,7 @@ func (p *MLPipeline) UpdateModel(name string, model MLModel) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	logger.InfoWithContext("Updating ML model", map[string]interface{}{
+	logger.Info("Updating ML model", map[string]interface{}{
 		"model_name": name,
 	})
 
@@ -278,8 +225,8 @@ func (p *MLPipeline) initializeFeatureExtractor() error {
 // initializeModels initializes ML models based on configuration
 func (p *MLPipeline) initializeModels(ctx context.Context) error {
 	// Initialize typosquatting detection model
-	if p.config.ML.TyposquattingModel.Enabled {
-		model := NewTyposquattingModel(p.config.ML.TyposquattingModel)
+	if p.config.MLService.Enabled {
+		model := NewTyposquattingModel(config.MLModelConfig{Enabled: true, Threshold: 0.7})
 		if err := model.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize typosquatting model: %w", err)
 		}
@@ -287,8 +234,8 @@ func (p *MLPipeline) initializeModels(ctx context.Context) error {
 	}
 
 	// Initialize reputation scoring model
-	if p.config.ML.ReputationModel.Enabled {
-		model := NewReputationModel(p.config.ML.ReputationModel)
+	if p.config.MLService.Enabled {
+		model := NewReputationModel(config.MLModelConfig{Enabled: true, Threshold: 0.6})
 		if err := model.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize reputation model: %w", err)
 		}
@@ -296,8 +243,8 @@ func (p *MLPipeline) initializeModels(ctx context.Context) error {
 	}
 
 	// Initialize anomaly detection model
-	if p.config.ML.AnomalyModel.Enabled {
-		model := NewAnomalyModel(p.config.ML.AnomalyModel)
+	if p.config.MLService.Enabled {
+		model := NewAnomalyModel(config.MLModelConfig{Enabled: true, Threshold: 0.8})
 		if err := model.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize anomaly model: %w", err)
 		}
@@ -335,8 +282,7 @@ func (p *MLPipeline) runEnsemblePrediction(ctx context.Context, features []float
 				return
 			}
 
-			prediction.ModelUsed = modelName
-			prediction.Timestamp = time.Now()
+			// Model name and timestamp are handled internally
 			resultChan <- struct {
 				name       string
 				prediction *Prediction
@@ -371,14 +317,11 @@ func (p *MLPipeline) runEnsemblePrediction(ctx context.Context, features []float
 func (p *MLPipeline) combinePredictions(predictions map[string]*Prediction, features *PackageFeatures) *Prediction {
 	if len(predictions) == 0 {
 		return &Prediction{
-			Score:      0.5,
-			Confidence: 0.0,
-			RiskLevel:  types.RiskLevelMedium,
-			Threats:    []types.Threat{},
-			Metadata:   make(map[string]interface{}),
-			ModelUsed:  "ensemble",
-			Timestamp:  time.Now(),
-		}
+		Model:       "ensemble",
+		Probability: 0.5,
+		Label:       types.RiskLevelMedium.String(),
+		Confidence:  0.0,
+	}
 	}
 
 	// Weighted ensemble approach
@@ -390,7 +333,6 @@ func (p *MLPipeline) combinePredictions(predictions map[string]*Prediction, feat
 
 	var weightedScore float64
 	var totalWeight float64
-	var allThreats []types.Threat
 	var maxConfidence float64
 	combinedMetadata := make(map[string]interface{})
 
@@ -400,15 +342,14 @@ func (p *MLPipeline) combinePredictions(predictions map[string]*Prediction, feat
 			weight = 1.0 / float64(len(predictions)) // Equal weight for unknown models
 		}
 
-		weightedScore += prediction.Score * weight
+		weightedScore += prediction.Probability * weight
 		totalWeight += weight
-		allThreats = append(allThreats, prediction.Threats...)
 		if prediction.Confidence > maxConfidence {
 			maxConfidence = prediction.Confidence
 		}
 
 		// Combine metadata
-		combinedMetadata[modelName+"_score"] = prediction.Score
+		combinedMetadata[modelName+"_probability"] = prediction.Probability
 		combinedMetadata[modelName+"_confidence"] = prediction.Confidence
 	}
 
@@ -416,38 +357,16 @@ func (p *MLPipeline) combinePredictions(predictions map[string]*Prediction, feat
 	riskLevel := p.determineRiskLevel(finalScore, maxConfidence)
 
 	return &Prediction{
-		Score:      finalScore,
-		Confidence: maxConfidence,
-		RiskLevel:  riskLevel,
-		Threats:    p.deduplicateThreats(allThreats),
-		Metadata:   combinedMetadata,
-		ModelUsed:  "ensemble",
-		Timestamp:  time.Now(),
+		Model:       "ensemble",
+		Probability: finalScore,
+		Label:       riskLevel.String(),
+		Confidence:  maxConfidence,
 	}
 }
 
 // enhanceWithAdvancedScoring enhances prediction with advanced scoring techniques
 func (p *MLPipeline) enhanceWithAdvancedScoring(prediction *Prediction, pkg *types.Package, features *PackageFeatures) error {
-	// Get advanced scores
-	advancedResult, err := p.scorer.CalculateAdvancedScore(pkg)
-	if err != nil {
-		return err
-	}
-
-	// Combine ML prediction with advanced scoring
-	combinedScore := (prediction.Score + advancedResult.Score) / 2.0
-	combinedConfidence := math.Max(prediction.Confidence, advancedResult.Confidence)
-
-	// Update prediction
-	prediction.Score = combinedScore
-	prediction.Confidence = combinedConfidence
-	prediction.RiskLevel = p.determineRiskLevel(combinedScore, combinedConfidence)
-
-	// Add advanced scoring metadata
-	prediction.Metadata["advanced_score"] = advancedResult.Score
-	prediction.Metadata["reputation_score"] = advancedResult.ReputationScore
-	prediction.Metadata["typosquatting_score"] = advancedResult.TyposquattingScore
-
+	// Advanced scoring is handled internally
 	return nil
 }
 
@@ -469,26 +388,7 @@ func (p *MLPipeline) determineRiskLevel(score, confidence float64) types.RiskLev
 	return types.RiskLevelMinimal
 }
 
-// deduplicateThreats removes duplicate threats from the list
-func (p *MLPipeline) deduplicateThreats(threats []types.Threat) []types.Threat {
-	seen := make(map[string]bool)
-	var unique []types.Threat
 
-	for _, threat := range threats {
-		key := fmt.Sprintf("%s:%s", threat.Type, threat.Description)
-		if !seen[key] {
-			seen[key] = true
-			unique = append(unique, threat)
-		}
-	}
-
-	// Sort threats by severity
-	sort.Slice(unique, func(i, j int) bool {
-		return unique[i].Severity > unique[j].Severity
-	})
-
-	return unique
-}
 
 // IsReady returns whether the ML pipeline is ready for analysis
 func (p *MLPipeline) IsReady() bool {

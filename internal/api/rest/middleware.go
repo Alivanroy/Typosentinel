@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 
-	"github.com/typosentinel/typosentinel/internal/config"
-	"github.com/typosentinel/typosentinel/internal/logger"
+	"typosentinel/internal/config"
+	"typosentinel/pkg/logger"
 )
 
 // corsMiddleware configures CORS middleware

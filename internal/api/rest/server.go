@@ -1,9 +1,10 @@
 package rest
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,11 +12,11 @@ import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-contrib/timeout"
 
-	"github.com/typosentinel/typosentinel/internal/config"
-	"github.com/typosentinel/typosentinel/internal/logger"
-	"github.com/typosentinel/typosentinel/internal/ml"
-	"github.com/typosentinel/typosentinel/internal/analyzer"
-	"github.com/typosentinel/typosentinel/internal/types"
+	"typosentinel/internal/config"
+	"typosentinel/pkg/logger"
+	"typosentinel/internal/ml"
+	"typosentinel/internal/analyzer"
+	"typosentinel/pkg/types"
 )
 
 // Server represents the REST API server

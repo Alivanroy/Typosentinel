@@ -109,6 +109,15 @@ type MLServiceConfig struct {
 	} `mapstructure:"models" yaml:"models"`
 }
 
+// MLModelConfig contains ML model configuration
+type MLModelConfig struct {
+	Enabled        bool    `mapstructure:"enabled" yaml:"enabled"`
+	ModelPath      string  `mapstructure:"model_path" yaml:"model_path"`
+	Threshold      float64 `mapstructure:"threshold" yaml:"threshold"`
+	BatchSize      int     `mapstructure:"batch_size" yaml:"batch_size"`
+	MaxConcurrency int     `mapstructure:"max_concurrency" yaml:"max_concurrency"`
+}
+
 // DetectionConfig contains detection algorithm configuration
 type DetectionConfig struct {
 	SimilarityThreshold    float64 `mapstructure:"similarity_threshold" yaml:"similarity_threshold"`

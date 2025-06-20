@@ -12,6 +12,7 @@ const (
 	SeverityMedium
 	SeverityHigh
 	SeverityCritical
+	SeverityUnknown
 )
 
 // String returns the string representation of severity
@@ -24,6 +25,35 @@ func (s Severity) String() string {
 	case SeverityHigh:
 		return "high"
 	case SeverityCritical:
+		return "critical"
+	default:
+		return "unknown"
+	}
+}
+
+// RiskLevel represents the risk level of a package
+type RiskLevel int
+
+const (
+	RiskLevelMinimal RiskLevel = iota
+	RiskLevelLow
+	RiskLevelMedium
+	RiskLevelHigh
+	RiskLevelCritical
+)
+
+// String returns the string representation of risk level
+func (r RiskLevel) String() string {
+	switch r {
+	case RiskLevelMinimal:
+		return "minimal"
+	case RiskLevelLow:
+		return "low"
+	case RiskLevelMedium:
+		return "medium"
+	case RiskLevelHigh:
+		return "high"
+	case RiskLevelCritical:
 		return "critical"
 	default:
 		return "unknown"
@@ -485,6 +515,52 @@ type BatchJob struct {
 	Configuration    map[string]interface{} `json:"configuration,omitempty"`
 	Results          []AnalysisResult `json:"results,omitempty"`
 	Errors           []string   `json:"errors,omitempty"`
+}
+
+// TrustLevel represents the trust level of a package
+type TrustLevel string
+
+const (
+	TrustLevelVeryLow TrustLevel = "very_low"
+	TrustLevelLow     TrustLevel = "low"
+	TrustLevelMedium  TrustLevel = "medium"
+	TrustLevelHigh    TrustLevel = "high"
+)
+
+// ReputationScore represents the reputation score of a package
+type ReputationScore struct {
+	Score      float64    `json:"score"`
+	TrustLevel TrustLevel `json:"trust_level"`
+	Factors    []string   `json:"factors,omitempty"`
+	Timestamp  time.Time  `json:"timestamp"`
+}
+
+// Vulnerability represents a security vulnerability
+type Vulnerability struct {
+	ID               string                 `json:"id"`
+	CVE              string                 `json:"cve,omitempty"`
+	Title            string                 `json:"title"`
+	Description      string                 `json:"description"`
+	Severity         Severity               `json:"severity"`
+	CVSS             float64                `json:"cvss,omitempty"`
+	CVSSScore        float64                `json:"cvss_score,omitempty"`
+	Package          string                 `json:"package"`
+	Versions         []string               `json:"versions,omitempty"`
+	AffectedPackages []AffectedPackage      `json:"affected_packages,omitempty"`
+	References       []string               `json:"references,omitempty"`
+	PublishedAt      time.Time              `json:"published_at,omitempty"`
+	UpdatedAt        time.Time              `json:"updated_at,omitempty"`
+	Source           string                 `json:"source,omitempty"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// AffectedPackage represents a package affected by a vulnerability
+type AffectedPackage struct {
+	Name         string `json:"name"`
+	Vendor       string `json:"vendor,omitempty"`
+	Version      string `json:"version,omitempty"`
+	VersionRange string `json:"version_range,omitempty"`
+	Ecosystem    string `json:"ecosystem,omitempty"`
 }
 
 // AuditLog represents an audit log entry

@@ -132,7 +132,7 @@ func (a *EnhancedGoAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types
 					Type:        "checksum_mismatch",
 					Severity:    types.SeverityHigh,
 					Description: fmt.Sprintf("Checksum validation failed: %v", err),
-					Source:      "go_analyzer",
+					DetectionMethod: "go_analyzer",
 				})
 			}
 		} else {
@@ -568,7 +568,7 @@ func (a *EnhancedGoAnalyzer) enrichGoModuleMetadata(pkg *types.Package) error {
 				Type:        "suspicious_version",
 				Severity:    types.SeverityMedium,
 				Description: "Module version follows suspicious pattern",
-				Source:      "go_analyzer",
+				DetectionMethod: "go_analyzer",
 			})
 		}
 	}
@@ -584,7 +584,7 @@ func (a *EnhancedGoAnalyzer) analyzeGoModuleVulnerabilities(pkg *types.Package) 
 			Type:        "typosquatting",
 			Severity:    types.SeverityHigh,
 			Description: fmt.Sprintf("Module name '%s' may be a typosquatting attempt", pkg.Name),
-			Source:      "go_analyzer",
+			DetectionMethod: "go_analyzer",
 		})
 	}
 
@@ -594,7 +594,7 @@ func (a *EnhancedGoAnalyzer) analyzeGoModuleVulnerabilities(pkg *types.Package) 
 			Type:        "suspicious_module",
 			Severity:    types.SeverityMedium,
 			Description: "Module exhibits suspicious characteristics",
-			Source:      "go_analyzer",
+			DetectionMethod: "go_analyzer",
 		})
 	}
 
@@ -628,7 +628,7 @@ func (a *EnhancedGoAnalyzer) analyzeReplaceDirective(replace GoReplace, packages
 			Type:        "suspicious_replace",
 			Severity:    types.SeverityMedium,
 			Description: fmt.Sprintf("Suspicious replace directive: %s => %s", replace.OldPath, replace.NewPath),
-			Source:      "go_analyzer",
+			DetectionMethod: "go_analyzer",
 		})
 	}
 
@@ -638,7 +638,7 @@ func (a *EnhancedGoAnalyzer) analyzeReplaceDirective(replace GoReplace, packages
 			Type:        "local_replace",
 			Severity:    types.SeverityLow,
 			Description: "Module replaced with local path - verify integrity",
-			Source:      "go_analyzer",
+			DetectionMethod: "go_analyzer",
 		})
 	}
 
@@ -711,7 +711,7 @@ func (a *EnhancedGoAnalyzer) checkKnownVulnerabilities(moduleName, version strin
 					Type:        "known_vulnerability",
 					Severity:    types.SeverityHigh,
 					Description: fmt.Sprintf("Known vulnerability in %s version %s", moduleName, version),
-					Source:      "go_analyzer",
+					DetectionMethod: "go_analyzer",
 				})
 			}
 		}

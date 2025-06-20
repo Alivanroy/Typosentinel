@@ -8,13 +8,16 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"typosentinel/internal/analyzer"
 	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
+	"typosentinel/internal/detector"
+	"typosentinel/internal/ml"
+	"typosentinel/internal/registry"
+	"typosentinel/internal/scanner"
+	"typosentinel/pkg/types"
 )
 
 // BenchmarkMetrics holds performance metrics for a single benchmark
@@ -73,7 +76,10 @@ type EnvironmentInfo struct {
 // BenchmarkSmallPackage tests performance with small packages (1-10 dependencies)
 func BenchmarkSmallPackage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createSmallTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -83,8 +89,8 @@ func BenchmarkSmallPackage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		options := &analyzer.ScanOptions{
 			OutputFormat:        "json",
-			DeepAnalysis:        false,
-			SimilarityThreshold: 0.8,
+			DeepAnalysis:        true,
+			SimilarityThreshold: 0.9,
 		}
 		_, err := analyzer.Scan(testDir, options)
 		if err != nil {
@@ -96,7 +102,10 @@ func BenchmarkSmallPackage(b *testing.B) {
 // BenchmarkMediumPackage tests performance with medium packages (10-50 dependencies)
 func BenchmarkMediumPackage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createMediumTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -119,7 +128,10 @@ func BenchmarkMediumPackage(b *testing.B) {
 // BenchmarkLargePackage tests performance with large packages (50+ dependencies)
 func BenchmarkLargePackage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createLargeTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -142,7 +154,10 @@ func BenchmarkLargePackage(b *testing.B) {
 // BenchmarkConcurrentScans tests concurrent scanning performance
 func BenchmarkConcurrentScans(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -167,7 +182,10 @@ func BenchmarkConcurrentScans(b *testing.B) {
 // BenchmarkMLAnalysis tests ML analysis performance
 func BenchmarkMLAnalysis(b *testing.B) {
 	cfg := getMLEnabledConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -190,7 +208,10 @@ func BenchmarkMLAnalysis(b *testing.B) {
 // BenchmarkMemoryUsage tests memory usage patterns
 func BenchmarkMemoryUsage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createLargeTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -226,7 +247,10 @@ func BenchmarkMemoryUsage(b *testing.B) {
 // BenchmarkThroughput tests scanning throughput
 func BenchmarkThroughput(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDirs := make([]string, 10)
 	for i := range testDirs {
 		testDirs[i] = createTestPackage(b)
@@ -257,7 +281,10 @@ func BenchmarkThroughput(b *testing.B) {
 // BenchmarkStressTest performs stress testing with high concurrency
 func BenchmarkStressTest(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 

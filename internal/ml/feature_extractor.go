@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"typosentinel/internal/config"
-	"typosentinel/internal/logger"
-	"typosentinel/internal/types"
+	"typosentinel/pkg/logger"
+	"typosentinel/pkg/types"
 )
 
 // AdvancedFeatureExtractor implements sophisticated feature extraction for ML models
@@ -113,22 +113,22 @@ func (e *AdvancedFeatureExtractor) GetFeatureNames() []string {
 func (e *AdvancedFeatureExtractor) NormalizeFeatures(features *PackageFeatures) []float64 {
 	// Convert features to slice
 	rawFeatures := []float64{
-		features.NameLength,
+		float64(features.NameLength),
 		features.VersionComplexity,
-		features.DescriptionLength,
-		features.DependencyCount,
-		features.DownloadCount,
-		features.StarCount,
-		features.ForkCount,
-		features.ContributorCount,
-		features.AgeInDays,
+		float64(features.DescriptionLength),
+		float64(features.DependencyCount),
+		float64(features.DownloadCount),
+		float64(features.StarCount),
+		float64(features.ForkCount),
+		float64(features.ContributorCount),
+		float64(features.AgeInDays),
 		features.TyposquattingScore,
-		features.SuspiciousKeywords,
+		float64(features.SuspiciousKeywords),
 		features.VersionSpoofing,
 		features.DomainReputation,
 		features.UpdateFrequency,
-		features.MaintainerCount,
-		features.IssueCount,
+		float64(features.MaintainerCount),
+		float64(features.IssueCount),
 		features.LicenseScore,
 	}
 
@@ -144,7 +144,7 @@ func (e *AdvancedFeatureExtractor) NormalizeFeatures(features *PackageFeatures) 
 // extractBasicFeatures extracts basic package characteristics
 func (e *AdvancedFeatureExtractor) extractBasicFeatures(pkg *types.Package, features *PackageFeatures) {
 	// Name length (normalized)
-	features.NameLength = float64(len(pkg.Name))
+	features.NameLength = len(pkg.Name)
 
 	// Version complexity (number of dots, pre-release indicators, etc.)
 	features.VersionComplexity = e.calculateVersionComplexity(pkg.Version)
@@ -152,13 +152,13 @@ func (e *AdvancedFeatureExtractor) extractBasicFeatures(pkg *types.Package, feat
 	// Description length
 	if pkg.Metadata != nil {
 		if desc, ok := pkg.Metadata.Metadata["description"].(string); ok {
-			features.DescriptionLength = float64(len(desc))
+			features.DescriptionLength = len(desc)
 		}
 	}
 
 	// Dependency count
 	if pkg.Metadata != nil && pkg.Metadata.Dependencies != nil {
-		features.DependencyCount = float64(len(pkg.Metadata.Dependencies))
+		features.DependencyCount = len(pkg.Metadata.Dependencies)
 	}
 }
 
@@ -170,30 +170,30 @@ func (e *AdvancedFeatureExtractor) extractReputationFeatures(pkg *types.Package,
 
 	// Download count (log-scaled)
 	if downloads, ok := pkg.Metadata.Metadata["downloads"].(float64); ok {
-		features.DownloadCount = math.Log10(downloads + 1)
+		features.DownloadCount = int64(math.Log10(downloads + 1))
 	}
 
 	// Star count (log-scaled)
 	if stars, ok := pkg.Metadata.Metadata["stars"].(float64); ok {
-		features.StarCount = math.Log10(stars + 1)
+		features.StarCount = int(math.Log10(stars + 1))
 	}
 
 	// Fork count (log-scaled)
 	if forks, ok := pkg.Metadata.Metadata["forks"].(float64); ok {
-		features.ForkCount = math.Log10(forks + 1)
+		features.ForkCount = int(math.Log10(forks + 1))
 	}
 
 	// Contributor count
 	if contributors, ok := pkg.Metadata.Metadata["contributors"].(float64); ok {
-		features.ContributorCount = contributors
+		features.ContributorCount = int(contributors)
 	}
 
 	// Age in days
 	if createdAt, ok := pkg.Metadata.Metadata["created_at"].(time.Time); ok {
-		features.AgeInDays = time.Since(createdAt).Hours() / 24
+		features.AgeInDays = int(time.Since(createdAt).Hours() / 24)
 	} else if createdStr, ok := pkg.Metadata.Metadata["created_at"].(string); ok {
 		if createdTime, err := time.Parse(time.RFC3339, createdStr); err == nil {
-			features.AgeInDays = time.Since(createdTime).Hours() / 24
+			features.AgeInDays = int(time.Since(createdTime).Hours() / 24)
 		}
 	}
 }
@@ -204,7 +204,7 @@ func (e *AdvancedFeatureExtractor) extractSecurityFeatures(pkg *types.Package, f
 	features.TyposquattingScore = e.calculateTyposquattingScore(pkg.Name, pkg.Registry)
 
 	// Suspicious keywords score
-	features.SuspiciousKeywords = e.calculateSuspiciousKeywordsScore(pkg)
+	features.SuspiciousKeywords = int(e.calculateSuspiciousKeywordsScore(pkg))
 
 	// Version spoofing score
 	features.VersionSpoofing = e.calculateVersionSpoofingScore(pkg.Version)
@@ -234,15 +234,15 @@ func (e *AdvancedFeatureExtractor) extractBehavioralFeatures(pkg *types.Package,
 
 	// Maintainer count
 	if maintainers, ok := pkg.Metadata.Metadata["maintainers"].(float64); ok {
-		features.MaintainerCount = maintainers
+		features.MaintainerCount = int(maintainers)
 	}
 
 	// Issue count (normalized by age)
 	if issues, ok := pkg.Metadata.Metadata["open_issues"].(float64); ok {
 		if features.AgeInDays > 0 {
-			features.IssueCount = issues / (features.AgeInDays / 365) // Issues per year
+			features.IssueCount = int(issues / (float64(features.AgeInDays) / 365)) // Issues per year
 		} else {
-			features.IssueCount = issues
+			features.IssueCount = int(issues)
 		}
 	}
 

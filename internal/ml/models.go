@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"typosentinel/internal/config"
-	"typosentinel/internal/logger"
-	"yposentinel/internal/types"
+	"typosentinel/pkg/logger"
+	"typosentinel/pkg/types"
 )
 
 // TyposquattingModel implements typosquatting detection using ML
@@ -84,7 +84,7 @@ func NewAnomalyModel(config config.MLModelConfig) *AnomalyModel {
 
 // Initialize initializes the typosquatting model
 func (m *TyposquattingModel) Initialize(ctx context.Context) error {
-	logger.InfoWithContext("Initializing typosquatting model", map[string]interface{}{
+	logger.Info("Initializing typosquatting model", map[string]interface{}{
 		"model_name": m.modelInfo.Name,
 	})
 
@@ -153,52 +153,102 @@ func (m *TyposquattingModel) Predict(features []float64) (*Prediction, error) {
 	var threats []types.Threat
 	if normalizedScore > 0.7 {
 		threats = append(threats, types.Threat{
-			Type:        "typosquatting",
-			Severity:    types.SeverityHigh,
-			Description: fmt.Sprintf("High probability of typosquatting (score: %.2f)", normalizedScore),
-			Source:      "typosquatting_model",
+			Type:           "typosquatting",
+			Severity:       types.SeverityHigh,
+			Description:    fmt.Sprintf("High probability of typosquatting (score: %.2f)", normalizedScore),
+			DetectionMethod: "typosquatting_model",
 		})
 	} else if normalizedScore > 0.5 {
 		threats = append(threats, types.Threat{
-			Type:        "potential_typosquatting",
-			Severity:    types.SeverityMedium,
-			Description: fmt.Sprintf("Potential typosquatting detected (score: %.2f)", normalizedScore),
-			Source:      "typosquatting_model",
+			Type:           "potential_typosquatting",
+			Severity:       types.SeverityMedium,
+			Description:    fmt.Sprintf("Potential typosquatting detected (score: %.2f)", normalizedScore),
+			DetectionMethod: "typosquatting_model",
 		})
 	}
 
 	return &Prediction{
-		Score:      normalizedScore,
-		Confidence: confidence,
-		RiskLevel:  riskLevel,
-		Threats:    threats,
-		Metadata: map[string]interface{}{
-			"raw_score":             score,
-			"feature_contributions": m.calculateFeatureContributions(features),
-		},
+		Model:       "typosquatting_model",
+		Probability: normalizedScore,
+		Label:       riskLevel.String(),
+		Confidence:  confidence,
 	}, nil
 }
 
-// Train trains the typosquatting model (placeholder implementation)
+// Train trains the typosquatting model using heuristic-based learning
 func (m *TyposquattingModel) Train(data []TrainingData) error {
-	logger.InfoWithContext("Training typosquatting model", map[string]interface{}{
+	logger.Info("Training typosquatting model with heuristic approach", map[string]interface{}{
 		"training_samples": len(data),
 	})
 
-	// In a real implementation, this would update model weights
-	// For now, we'll simulate training by adjusting weights slightly
-	if len(data) > 0 {
-		// Simulate weight updates based on training data
-		for i := range m.featureWeights {
-			adjustment := (rand.Float64() - 0.5) * 0.1 // Small random adjustment
-			m.featureWeights[i] += adjustment
-			// Ensure weights stay positive
-			if m.featureWeights[i] < 0 {
-				m.featureWeights[i] = 0.01
+	if len(data) == 0 {
+		return fmt.Errorf("no training data provided")
+	}
+
+	// Heuristic-based weight adjustment based on training data patterns
+	maliciousCount := 0
+	benignCount := 0
+	featureStats := make([][]float64, len(m.featureWeights))
+	
+	for i := range featureStats {
+		featureStats[i] = make([]float64, 0)
+	}
+
+	// Analyze training data to extract patterns
+	for _, sample := range data {
+		if sample.Label > 0.5 {
+			maliciousCount++
+		} else {
+			benignCount++
+		}
+		
+		// Collect feature values for statistical analysis
+		for i, feature := range sample.Features {
+			if i < len(featureStats) {
+				featureStats[i] = append(featureStats[i], feature)
 			}
 		}
-		m.modelInfo.TrainedAt = time.Now()
 	}
+
+	// Adjust weights based on feature discrimination power
+	for i := range m.featureWeights {
+		if len(featureStats[i]) > 0 {
+			// Calculate variance to determine feature importance
+			mean := 0.0
+			for _, val := range featureStats[i] {
+				mean += val
+			}
+			mean /= float64(len(featureStats[i]))
+			
+			variance := 0.0
+			for _, val := range featureStats[i] {
+				variance += math.Pow(val-mean, 2)
+			}
+			variance /= float64(len(featureStats[i]))
+			
+			// Higher variance indicates more discriminative feature
+			discriminationPower := math.Sqrt(variance)
+			m.featureWeights[i] = 0.5 + (discriminationPower * 0.5)
+			
+			// Ensure weights are within reasonable bounds
+			if m.featureWeights[i] > 1.0 {
+				m.featureWeights[i] = 1.0
+			} else if m.featureWeights[i] < 0.1 {
+				m.featureWeights[i] = 0.1
+			}
+		}
+	}
+
+	// Update model metadata
+	m.modelInfo.TrainedAt = time.Now()
+	m.modelInfo.Accuracy = m.calculateTrainingAccuracy(data)
+	m.ready = true
+
+	logger.Info("Model training completed", map[string]interface{}{
+		"malicious_samples": maliciousCount,
+		"benign_samples":    benignCount,
+		"accuracy":          m.modelInfo.Accuracy,
+	})
 
 	return nil
 }
@@ -213,9 +263,13 @@ func (m *TyposquattingModel) IsReady() bool {
 	return m.ready
 }
 
-// calculateConfidence calculates prediction confidence
+// calculateConfidence calculates prediction confidence using multiple heuristics
 func (m *TyposquattingModel) calculateConfidence(features []float64) float64 {
-	// Calculate confidence based on feature variance and consistency
+	if len(features) == 0 {
+		return 0.0
+	}
+
+	// Calculate feature consistency (lower variance = higher confidence)
 	variance := 0.0
 	mean := 0.0
 
@@ -229,23 +283,76 @@ func (m *TyposquattingModel) calculateConfidence(features []float64) float64 {
 	}
 	variance /= float64(len(features))
 
-	// Lower variance indicates higher confidence
-	confidence := 1.0 / (1.0 + variance)
-	return math.Min(confidence, 0.95) // Cap at 95%
+	// Feature consistency score
+	consistencyScore := 1.0 / (1.0 + variance)
+
+	// Feature strength score (how many features are strongly positive)
+	strongFeatures := 0
+	for _, feature := range features {
+		if feature > 0.7 {
+			strongFeatures++
+		}
+	}
+	stengthScore := float64(strongFeatures) / float64(len(features))
+
+	// Feature coverage score (how many features are active)
+	activeFeatures := 0
+	for _, feature := range features {
+		if feature > 0.1 {
+			activeFeatures++
+		}
+	}
+	coverageScore := float64(activeFeatures) / float64(len(features))
+
+	// Combine scores with weights
+	confidence := (consistencyScore * 0.4) + (stengthScore * 0.4) + (coverageScore * 0.2)
+	
+	// Apply confidence bounds
+	if confidence > 0.95 {
+		confidence = 0.95
+	} else if confidence < 0.1 {
+		confidence = 0.1
+	}
+
+	return confidence
 }
 
-// determineRiskLevel determines risk level from score
+// determineRiskLevel determines risk level from score with enhanced thresholds
 func (m *TyposquattingModel) determineRiskLevel(score float64) types.RiskLevel {
-	if score >= 0.8 {
+	// Enhanced risk level determination with more granular thresholds
+	if score >= 0.85 {
 		return types.RiskLevelCritical
-	} else if score >= 0.6 {
+	} else if score >= 0.65 {
 		return types.RiskLevelHigh
-	} else if score >= 0.4 {
+	} else if score >= 0.45 {
 		return types.RiskLevelMedium
-	} else if score >= 0.2 {
+	} else if score >= 0.25 {
 		return types.RiskLevelLow
 	}
 	return types.RiskLevelMinimal
+}
+
+// calculateTrainingAccuracy calculates model accuracy on training data
+func (m *TyposquattingModel) calculateTrainingAccuracy(data []TrainingData) float64 {
+	if len(data) == 0 {
+		return 0.0
+	}
+
+	correctPredictions := 0
+	for _, sample := range data {
+		prediction, err := m.Predict(sample.Features)
+		if err != nil {
+			continue
+		}
+		
+		// Consider prediction correct if it matches the expected classification
+		predictedMalicious := prediction.Probability > 0.5
+		if predictedMalicious == (sample.Label > 0.5) {
+			correctPredictions++
+		}
+	}
+
+	return float64(correctPredictions) / float64(len(data))
 }
 
 // calculateFeatureContributions calculates individual feature contributions
@@ -271,7 +378,7 @@ func (m *TyposquattingModel) calculateFeatureContributions(features []float64) m
 
 // Initialize initializes the reputation model
 func (m *ReputationModel) Initialize(ctx context.Context) error {
-	logger.InfoWithContext("Initializing reputation model", map[string]interface{}{
+	logger.Info("Initializing reputation model", map[string]interface{}{
 		"model_name": m.modelInfo.Name,
 	})
 
@@ -337,28 +444,24 @@ func (m *ReputationModel) Predict(features []float64) (*Prediction, error) {
 	var threats []types.Threat
 	if threatScore > 0.7 {
 		threats = append(threats, types.Threat{
-			Type:        "low_reputation",
-			Severity:    types.SeverityMedium,
-			Description: fmt.Sprintf("Package has low reputation score (%.2f)", normalizedScore),
-			Source:      "reputation_model",
+			Type:           "low_reputation",
+			Severity:       types.SeverityMedium,
+			Description:    fmt.Sprintf("Package has low reputation score (%.2f)", normalizedScore),
+			DetectionMethod: "reputation_model",
 		})
 	}
 
 	return &Prediction{
-		Score:      threatScore,
-		Confidence: confidence,
-		RiskLevel:  riskLevel,
-		Threats:    threats,
-		Metadata: map[string]interface{}{
-			"reputation_score": normalizedScore,
-			"component_scores": featureMap,
-		},
+		Model:       "reputation_model",
+		Probability: threatScore,
+		Label:       riskLevel.String(),
+		Confidence:  confidence,
 	}, nil
 }
 
 // Train trains the reputation model
 func (m *ReputationModel) Train(data []TrainingData) error {
-	logger.InfoWithContext("Training reputation model", map[string]interface{}{
+	logger.Info("Training reputation model", map[string]interface{}{
 		"training_samples": len(data),
 	})
 
@@ -419,7 +522,7 @@ func (m *ReputationModel) determineReputationRiskLevel(threatScore float64) type
 
 // Initialize initializes the anomaly detection model
 func (m *AnomalyModel) Initialize(ctx context.Context) error {
-	logger.InfoWithContext("Initializing anomaly model", map[string]interface{}{
+	logger.Info("Initializing anomaly model", map[string]interface{}{
 		"model_name": m.modelInfo.Name,
 	})
 
@@ -500,29 +603,24 @@ func (m *AnomalyModel) Predict(features []float64) (*Prediction, error) {
 		}
 
 		threats = append(threats, types.Threat{
-			Type:        "anomalous_characteristics",
-			Severity:    severity,
-			Description: fmt.Sprintf("Package exhibits %d anomalous characteristics", anomalyCount),
-			Source:      "anomaly_model",
+			Type:           "anomalous_characteristics",
+			Severity:       severity,
+			Description:    fmt.Sprintf("Package exhibits %d anomalous characteristics", anomalyCount),
+			DetectionMethod: "anomaly_model",
 		})
 	}
 
 	return &Prediction{
-		Score:      normalizedScore,
-		Confidence: confidence,
-		RiskLevel:  riskLevel,
-		Threats:    threats,
-		Metadata: map[string]interface{}{
-			"anomaly_scores":    anomalyScores,
-			"max_anomaly_score": maxAnomalyScore,
-			"anomaly_count":     anomalyCount,
-		},
+		Model:       "anomaly_model",
+		Probability: normalizedScore,
+		Label:       riskLevel.String(),
+		Confidence:  confidence,
 	}, nil
 }
 
 // Train trains the anomaly detection model
 func (m *AnomalyModel) Train(data []TrainingData) error {
-	logger.InfoWithContext("Training anomaly model", map[string]interface{}{
+	logger.Info("Training anomaly model", map[string]interface{}{
 		"training_samples": len(data),
 	})
 

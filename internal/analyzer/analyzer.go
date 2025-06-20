@@ -69,10 +69,7 @@ func New(cfg *config.Config) (*Analyzer, error) {
 	}
 
 	// Initialize detector engine
-	detectorEngine, err := detector.New(&cfg.Detector)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize detector: %w", err)
-	}
+	detectorEngine := detector.New(cfg)
 
 	// Initialize dependency resolver
 	resolver := NewDependencyResolver(&cfg.Scanner)
@@ -341,7 +338,7 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 			Source:      filePath,
 			Direct:      true,
 			Development: false,
-			Metadata: map[string]interface{}{
+			ExtraData: map[string]interface{}{
 				"constraint": version,
 				"parent":     packageData.Name,
 			},
@@ -364,7 +361,7 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 				Source:      filePath,
 				Direct:      true,
 				Development: true,
-				Metadata: map[string]interface{}{
+				ExtraData: map[string]interface{}{
 					"constraint": version,
 					"parent":     packageData.Name,
 				},
@@ -387,7 +384,7 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 			Source:      filePath,
 			Direct:      true,
 			Development: false,
-			Metadata: map[string]interface{}{
+			ExtraData: map[string]interface{}{
 				"constraint": version,
 				"parent":     packageData.Name,
 				"type":       "peer",
@@ -410,7 +407,7 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 			Source:      filePath,
 			Direct:      true,
 			Development: false,
-			Metadata: map[string]interface{}{
+			ExtraData: map[string]interface{}{
 				"constraint": version,
 				"parent":     packageData.Name,
 				"type":       "optional",
@@ -554,7 +551,7 @@ func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) (
 			Source:      filePath,
 			Direct:      !strings.Contains(packagePath, "/node_modules/"),
 			Development: packageInfo.Dev,
-			Metadata: map[string]interface{}{
+			ExtraData: map[string]interface{}{
 				"resolved":     packageInfo.Resolved,
 				"integrity":    packageInfo.Integrity,
 				"type":         depType,
@@ -589,7 +586,7 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 	var currentDep *types.Dependency
 	var inPackageBlock bool
 
-	for i, line := range lines {
+	for _, line := range lines {
 		originalLine := line
 		line = strings.TrimSpace(line)
 
@@ -612,7 +609,7 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 						Source:      filePath,
 						Direct:      true,
 						Development: false, // Yarn.lock doesn't distinguish dev deps
-						Metadata:    make(map[string]interface{}),
+						ExtraData:    make(map[string]interface{}),
 					}
 				}
 			} else {
@@ -626,16 +623,16 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 			if strings.HasPrefix(line, "version ") {
 				version := a.extractYarnValue(line)
 				currentDep.Version = version
-				currentDep.Metadata["version"] = version
+				currentDep.ExtraData["version"] = version
 			} else if strings.HasPrefix(line, "resolved ") {
 				resolved := a.extractYarnValue(line)
-				currentDep.Metadata["resolved"] = resolved
+				currentDep.ExtraData["resolved"] = resolved
 			} else if strings.HasPrefix(line, "integrity ") {
 				integrity := a.extractYarnValue(line)
-				currentDep.Metadata["integrity"] = integrity
+				currentDep.ExtraData["integrity"] = integrity
 			} else if strings.HasPrefix(line, "dependencies:") {
 				// Start of dependencies block - we could parse these for transitive deps
-				currentDep.Metadata["hasDependencies"] = true
+				currentDep.ExtraData["hasDependencies"] = true
 			}
 
 			// Check if we've reached the end of the package block
@@ -656,14 +653,14 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 							Source:      currentDep.Source,
 							Direct:      currentDep.Direct,
 							Development: currentDep.Development,
-							Metadata:    make(map[string]interface{}),
+							ExtraData:    make(map[string]interface{}),
 						}
 						
 						// Copy metadata
-						for k, v := range currentDep.Metadata {
-							dep.Metadata[k] = v
+						for k, v := range currentDep.ExtraData {
+							dep.ExtraData[k] = v
 						}
-						dep.Metadata["packageDeclaration"] = strings.Join(currentPackages, ", ")
+						dep.ExtraData["packageDeclaration"] = strings.Join(currentPackages, ", ")
 
 						packageMap[key] = dep
 						dependencies = append(dependencies, *dep)

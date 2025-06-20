@@ -22,7 +22,10 @@ func BenchmarkBasicScan(b *testing.B) {
 		},
 	}
 
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -51,7 +54,10 @@ func BenchmarkWithMetrics(b *testing.B) {
 		},
 	}
 
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -81,7 +87,10 @@ func BenchmarkDeepAnalysis(b *testing.B) {
 		},
 	}
 
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -110,7 +119,10 @@ func BenchmarkConcurrentScans(b *testing.B) {
 		},
 	}
 
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -141,7 +153,10 @@ func BenchmarkLargeProject(b *testing.B) {
 		},
 	}
 
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createLargeTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -170,7 +185,10 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		},
 	}
 
-	analyzer := analyzer.New(cfg)
+	analyzer, err := analyzer.New(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create analyzer: %v", err)
+	}
 	testDir := createTestPackage(b)
 	defer os.RemoveAll(testDir)
 
@@ -203,7 +221,10 @@ func BenchmarkDifferentThresholds(b *testing.B) {
 				},
 			}
 
-			analyzer := analyzer.New(cfg)
+			analyzer, err := analyzer.New(cfg)
+			if err != nil {
+				b.Fatalf("Failed to create analyzer: %v", err)
+			}
 			testDir := createTestPackage(b)
 			defer os.RemoveAll(testDir)
 

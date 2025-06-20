@@ -381,36 +381,49 @@ func (a *RubyPackageAnalyzer) parseGemspec(filePath string) ([]*types.Package, e
 }
 
 func (a *RubyPackageAnalyzer) enhanceWithLockInfo(gemfilePackages []*types.Package, lockInfo *BundlerLockInfo) []*types.Package {
-	// Update Gemfile packages with exact versions from lock file
+	// Create a map for quick lookup
+	lockGems := make(map[string]*BundlerGemInfo)
+	for name, gem := range lockInfo.Gems {
+		lockGems[name] = gem
+	}
+
+	// Enhance existing packages with lock file information
 	for _, pkg := range gemfilePackages {
-		if lockGem, exists := lockInfo.Gems[pkg.Name]; exists {
+		if lockGem, exists := lockGems[pkg.Name]; exists {
+			// Update version with exact version from lock file
 			pkg.Version = lockGem.Version
+			
+			// Add lock file metadata
 			if pkg.Metadata == nil {
 				pkg.Metadata = &types.PackageMetadata{
 					Name:     pkg.Name,
-					Version:  pkg.Version,
-					Registry: pkg.Registry,
-					Metadata: make(map[string]interface{}),
+					Version:  lockGem.Version,
+					Registry: "rubygems.org",
 				}
 			}
-			pkg.Metadata.Metadata["exact_version"] = lockGem.Version
+			if pkg.Metadata.Metadata == nil {
+				pkg.Metadata.Metadata = make(map[string]interface{})
+			}
+			
+			pkg.Metadata.Metadata["bundler_source"] = lockGem.Source
 			pkg.Metadata.Metadata["dependencies"] = lockGem.Dependencies
-			pkg.Metadata.Metadata["source"] = lockGem.Source
 			pkg.Metadata.Metadata["platforms"] = lockGem.Platforms
-			pkg.Metadata.Metadata["bundler_version"] = lockInfo.BundlerVersion
+			pkg.Metadata.Metadata["locked_version"] = lockGem.Version
 			pkg.Metadata.Metadata["ruby_version"] = lockInfo.RubyVersion
+			pkg.Metadata.Metadata["bundler_version"] = lockInfo.BundlerVersion
 		}
 	}
 
-	// Add any packages from lock file that weren't in Gemfile (transitive dependencies)
-	gemfilePackageNames := make(map[string]bool)
+	// Add any gems from lock file that weren't in Gemfile (transitive dependencies)
+	packageNames := make(map[string]bool)
 	for _, pkg := range gemfilePackages {
-		gemfilePackageNames[pkg.Name] = true
+		packageNames[pkg.Name] = true
 	}
 
-	for name, lockGem := range lockInfo.Gems {
-		if !gemfilePackageNames[name] {
-			transitivePkg := &types.Package{
+	for name, lockGem := range lockGems {
+		if !packageNames[name] {
+			// This is a transitive dependency
+			pkg := &types.Package{
 				Name:     name,
 				Version:  lockGem.Version,
 				Registry: "rubygems.org",
@@ -420,16 +433,18 @@ func (a *RubyPackageAnalyzer) enhanceWithLockInfo(gemfilePackages []*types.Packa
 					Version:  lockGem.Version,
 					Registry: "rubygems.org",
 					Metadata: map[string]interface{}{
-						"ecosystem":       "ruby",
-						"source":          "Gemfile.lock",
-						"dependencies":    lockGem.Dependencies,
-						"platforms":       lockGem.Platforms,
-						"bundler_version": lockInfo.BundlerVersion,
-						"ruby_version":    lockInfo.RubyVersion,
+						"ecosystem":        "ruby",
+						"source":           "Gemfile.lock",
+						"bundler_source":   lockGem.Source,
+						"dependencies":     lockGem.Dependencies,
+						"platforms":        lockGem.Platforms,
+						"transitive":       true,
+						"ruby_version":     lockInfo.RubyVersion,
+						"bundler_version":  lockInfo.BundlerVersion,
 					},
 				},
 			}
-			gemfilePackages = append(gemfilePackages, transitivePkg)
+			gemfilePackages = append(gemfilePackages, pkg)
 		}
 	}
 
@@ -523,78 +538,106 @@ func (a *RubyPackageAnalyzer) parseBundlerLockEnhanced(filePath string) (*Bundle
 	defer file.Close()
 
 	lockInfo := &BundlerLockInfo{
-		Gems: make(map[string]*BundlerGemInfo),
+		Gems:      make(map[string]*BundlerGemInfo),
+		Sources:   make([]string, 0),
+		Platforms: make([]string, 0),
 	}
 
 	scanner := bufio.NewScanner(file)
 	currentSection := ""
-	var currentGem *BundlerGemInfo
+	currentGem := ""
+	currentSource := ""
 
-	// Regex patterns
+	// Regex patterns for parsing
 	gemRegex := regexp.MustCompile(`^\s{4}([a-zA-Z0-9_-]+)\s+\(([^)]+)\)`)
 	depRegex := regexp.MustCompile(`^\s{6}([a-zA-Z0-9_-]+)`)
-	bundlerVersionRegex := regexp.MustCompile(`^BUNDLED WITH\s*$`)
-	rubyVersionRegex := regexp.MustCompile(`^RUBY VERSION\s*$`)
-	platformRegex := regexp.MustCompile(`^PLATFORMS\s*$`)
-	sourceRegex := regexp.MustCompile(`^\s{2}remote:\s+(.+)$`)
+	sourceRegex := regexp.MustCompile(`^\s{2}remote:\s+(.+)`)
+	specsRegex := regexp.MustCompile(`^\s{2}specs:`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
 
-		// Detect sections
-		if strings.Contains(line, "GEM") {
+		// Skip empty lines and comments
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
+			continue
+		}
+
+		// Detect main sections
+		if strings.HasPrefix(line, "GEM") {
 			currentSection = "GEM"
 			continue
-		} else if strings.Contains(line, "specs:") {
-			currentSection = "specs"
-			continue
-		} else if platformRegex.MatchString(line) {
+		} else if strings.HasPrefix(line, "PLATFORMS") {
 			currentSection = "PLATFORMS"
 			continue
-		} else if strings.Contains(line, "DEPENDENCIES") {
+		} else if strings.HasPrefix(line, "DEPENDENCIES") {
 			currentSection = "DEPENDENCIES"
 			continue
-		} else if rubyVersionRegex.MatchString(line) {
+		} else if strings.HasPrefix(line, "RUBY VERSION") {
 			currentSection = "RUBY VERSION"
 			continue
-		} else if bundlerVersionRegex.MatchString(line) {
+		} else if strings.HasPrefix(line, "BUNDLED WITH") {
 			currentSection = "BUNDLED WITH"
 			continue
 		}
 
 		switch currentSection {
 		case "GEM":
+			// Parse source
 			if matches := sourceRegex.FindStringSubmatch(line); len(matches) >= 2 {
-				lockInfo.Sources = append(lockInfo.Sources, matches[1])
+				currentSource = matches[1]
+				lockInfo.Sources = append(lockInfo.Sources, currentSource)
+				continue
 			}
-		case "specs":
+
+			// Parse specs section
+			if specsRegex.MatchString(line) {
+				continue
+			}
+
+			// Parse gem entries
 			if matches := gemRegex.FindStringSubmatch(line); len(matches) >= 3 {
-				name := matches[1]
-				version := matches[2]
-				currentGem = &BundlerGemInfo{
-					Name:    name,
-					Version: version,
+				gemName := matches[1]
+				gemVersion := matches[2]
+				currentGem = gemName
+
+				lockInfo.Gems[gemName] = &BundlerGemInfo{
+					Name:         gemName,
+					Version:      gemVersion,
+					Source:       currentSource,
+					Dependencies: make([]string, 0),
+					Platforms:    make([]string, 0),
 				}
-				lockInfo.Gems[name] = currentGem
-			} else if currentGem != nil {
+				continue
+			}
+
+			// Parse dependencies
+			if currentGem != "" && len(line) > 6 && strings.HasPrefix(line, "      ") {
 				if matches := depRegex.FindStringSubmatch(line); len(matches) >= 2 {
-					currentGem.Dependencies = append(currentGem.Dependencies, matches[1])
+					depName := matches[1]
+					if gem, exists := lockInfo.Gems[currentGem]; exists {
+						gem.Dependencies = append(gem.Dependencies, depName)
+					}
 				}
 			}
+
 		case "PLATFORMS":
-			platform := strings.TrimSpace(line)
-			if platform != "" {
-				lockInfo.Platforms = append(lockInfo.Platforms, platform)
-			}
+			lockInfo.Platforms = append(lockInfo.Platforms, trimmedLine)
+
 		case "RUBY VERSION":
-			if strings.Contains(line, "ruby") {
-				lockInfo.RubyVersion = strings.TrimSpace(line)
+			if strings.Contains(trimmedLine, "ruby") {
+				// Extract ruby version
+				parts := strings.Fields(trimmedLine)
+				for i, part := range parts {
+					if part == "ruby" && i+1 < len(parts) {
+						lockInfo.RubyVersion = parts[i+1]
+						break
+					}
+				}
 			}
+
 		case "BUNDLED WITH":
-			version := strings.TrimSpace(line)
-			if version != "" && version != "BUNDLED WITH" {
-				lockInfo.BundlerVersion = version
-			}
+			lockInfo.BundlerVersion = trimmedLine
 		}
 	}
 

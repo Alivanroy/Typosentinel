@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"typosentinel/internal/config"
 	"typosentinel/pkg/types"
 )
 
 // DependencyResolver handles dependency resolution and conflict detection
 type DependencyResolver struct {
-	config *Config
+	config *config.ScannerConfig
 }
 
 // ResolutionResult contains the results of dependency resolution
@@ -46,7 +47,7 @@ type Warning struct {
 }
 
 // NewDependencyResolver creates a new dependency resolver
-func NewDependencyResolver(config *Config) *DependencyResolver {
+func NewDependencyResolver(config *config.ScannerConfig) *DependencyResolver {
 	return &DependencyResolver{
 		config: config,
 	}
@@ -127,8 +128,8 @@ func (r *DependencyResolver) analyzePackageGroup(packageName string, deps []type
 	// Collect version information
 	for _, dep := range deps {
 		constraint := ""
-		if dep.Metadata != nil {
-			if c, ok := dep.Metadata["constraint"].(string); ok {
+		if dep.ExtraData != nil {
+			if c, ok := dep.ExtraData["constraint"].(string); ok {
 				constraint = c
 			}
 		}

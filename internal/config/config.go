@@ -43,6 +43,9 @@ type Config struct {
 
 	// Cache settings
 	Cache *CacheConfig `mapstructure:"cache" yaml:"cache"`
+
+	// Plugin settings
+	Plugins *PluginConfig `mapstructure:"plugins" yaml:"plugins"`
 }
 
 // LoggingConfig represents logging configuration
@@ -314,6 +317,17 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("policies.fail_on_threats", false)
 	v.SetDefault("policies.min_threat_level", "medium")
 	v.SetDefault("policies.notifications.enabled", false)
+
+	// Plugin defaults
+	v.SetDefault("plugins.enabled", true)
+	v.SetDefault("plugins.plugin_dir", "./plugins")
+	v.SetDefault("plugins.auto_load", true)
+	v.SetDefault("plugins.load_timeout", "30s")
+	v.SetDefault("plugins.max_plugins", 50)
+	v.SetDefault("plugins.validation.require_signed", false)
+	v.SetDefault("plugins.validation.validate_metadata", true)
+	v.SetDefault("plugins.security.sandbox", false)
+	v.SetDefault("plugins.security.restrict_file_access", true)
 }
 
 func getDefaultConfig() *Config {

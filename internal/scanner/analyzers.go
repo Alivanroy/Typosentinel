@@ -318,6 +318,13 @@ type PythonAnalyzer struct {
 	config *config.Config
 }
 
+// NewPythonAnalyzer creates a new Python analyzer
+func NewPythonAnalyzer(cfg *config.Config) *PythonAnalyzer {
+	return &PythonAnalyzer{
+		config: cfg,
+	}
+}
+
 func (a *PythonAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
 	switch projectInfo.ManifestFile {
 	case "requirements.txt":
@@ -326,6 +333,8 @@ func (a *PythonAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Pac
 		return a.parsePyprojectToml(projectInfo)
 	case "Pipfile":
 		return a.parsePipfile(projectInfo)
+	case "setup.py":
+		return a.parseSetupPy(projectInfo)
 	default:
 		return nil, fmt.Errorf("unsupported Python manifest file: %s", projectInfo.ManifestFile)
 	}
@@ -377,9 +386,139 @@ func (a *PythonAnalyzer) parsePyprojectToml(projectInfo *ProjectInfo) ([]*types.
 	return nil, fmt.Errorf("pyproject.toml parsing not implemented yet - requires TOML parser")
 }
 
+func (a *PythonAnalyzer) parseSetupPy(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	// TODO: Implement setup.py parsing
+	// This requires parsing Python AST or using regex to extract install_requires
+	return nil, fmt.Errorf("setup.py parsing not implemented yet")
+}
+
 func (a *PythonAnalyzer) parsePipfile(projectInfo *ProjectInfo) ([]*types.Package, error) {
 	// TODO: Implement Pipfile parsing
 	return nil, fmt.Errorf("Pipfile parsing not implemented yet")
+}
+
+// parsePoetryProject parses pyproject.toml files for Poetry projects
+func (a *PythonAnalyzer) parsePoetryProject(projectInfo *ProjectInfo) ([]*types.Package, error) {
+	// For now, delegate to the existing pyproject.toml parser
+	return a.parsePyprojectToml(projectInfo)
+}
+
+// parseRequirementString parses a requirement string and returns package name and version
+func (a *PythonAnalyzer) parseRequirementString(requirement string) (string, string) {
+	req := strings.TrimSpace(requirement)
+	
+	// Handle editable installs
+	if strings.HasPrefix(req, "-e ") {
+		req = strings.TrimPrefix(req, "-e ")
+	}
+	
+	// Handle git URLs
+	if strings.Contains(req, "git+") && strings.Contains(req, "#egg=") {
+		parts := strings.Split(req, "#egg=")
+		if len(parts) == 2 {
+			return parts[1], "*"
+		}
+	}
+	
+	// Handle local paths
+	if strings.HasPrefix(req, "./") || strings.HasPrefix(req, "/") {
+		// Extract package name from path
+		path := strings.TrimPrefix(req, "./")
+		if strings.Contains(path, "/") {
+			parts := strings.Split(path, "/")
+			path = parts[len(parts)-1]
+		}
+		return path, "*"
+	}
+	
+	// Handle environment markers (remove them from version)
+	if strings.Contains(req, ";") {
+		parts := strings.Split(req, ";")
+		req = strings.TrimSpace(parts[0])
+	}
+	
+	// Handle extras (remove them from package name)
+	if strings.Contains(req, "[") && strings.Contains(req, "]") {
+		start := strings.Index(req, "[")
+		end := strings.Index(req, "]") + 1
+		if start < end {
+			req = req[:start] + req[end:]
+		}
+	}
+	
+	// Handle standard requirements
+	reqRegex := regexp.MustCompile(`^([a-zA-Z0-9_-]+)([><=!~]+)?([0-9.]+.*)?$`)
+	matches := reqRegex.FindStringSubmatch(req)
+	if len(matches) >= 2 {
+		name := matches[1]
+		version := "*"
+		if len(matches) >= 4 && matches[3] != "" {
+			version = matches[3]
+		}
+		return name, version
+	}
+	return requirement, "*"
+}
+
+// parseRequirementStringPreserveSpec parses a requirement string preserving version specifications
+func (a *PythonAnalyzer) parseRequirementStringPreserveSpec(requirement string) (string, string) {
+	req := strings.TrimSpace(requirement)
+	
+	// Handle editable installs
+	if strings.HasPrefix(req, "-e ") {
+		req = strings.TrimPrefix(req, "-e ")
+	}
+	
+	// Handle git URLs
+	if strings.Contains(req, "git+") && strings.Contains(req, "#egg=") {
+		parts := strings.Split(req, "#egg=")
+		if len(parts) == 2 {
+			return parts[1], "*"
+		}
+	}
+	
+	// Handle local paths
+	if strings.HasPrefix(req, "./") || strings.HasPrefix(req, "/") {
+		// Extract package name from path
+		path := strings.TrimPrefix(req, "./")
+		if strings.Contains(path, "/") {
+			parts := strings.Split(path, "/")
+			path = parts[len(parts)-1]
+		}
+		return path, "*"
+	}
+	
+	// Handle environment markers (remove them from version)
+	if strings.Contains(req, ";") {
+		parts := strings.Split(req, ";")
+		req = strings.TrimSpace(parts[0])
+	}
+	
+	// Handle extras (remove them from package name)
+	if strings.Contains(req, "[") && strings.Contains(req, "]") {
+		start := strings.Index(req, "[")
+		end := strings.Index(req, "]") + 1
+		if start < end {
+			req = req[:start] + req[end:]
+		}
+	}
+	
+	// Handle standard requirements
+	reqRegex := regexp.MustCompile(`^([a-zA-Z0-9_-]+)([><=!~]+)?([0-9.]+.*)?$`)
+	matches := reqRegex.FindStringSubmatch(req)
+	if len(matches) >= 2 {
+		name := matches[1]
+		version := "*"
+		if len(matches) >= 3 && matches[2] != "" {
+			// Preserve the full version specification including operators
+			version = matches[2]
+			if len(matches) >= 4 && matches[3] != "" {
+				version += matches[3]
+			}
+		}
+		return name, version
+	}
+	return requirement, "*"
 }
 
 func (a *PythonAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.DependencyTree, error) {
@@ -389,7 +528,7 @@ func (a *PythonAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.D
 	}
 
 	root := &types.DependencyTree{
-		Name:         "python-project",
+		Name:         "root",
 		Version:      "1.0.0",
 		Type:         "root",
 		Dependencies: make([]types.DependencyTree, 0),

@@ -14,10 +14,11 @@ import (
 
 // Scanner handles project scanning and dependency analysis
 type Scanner struct {
-	config    *config.Config
-	detectors map[string]ProjectDetector
-	analyzers map[string]DependencyAnalyzer
-	cache     *cache.CacheIntegration
+	config           *config.Config
+	detectors        map[string]ProjectDetector
+	analyzers        map[string]DependencyAnalyzer
+	cache            *cache.CacheIntegration
+	analyzerRegistry *AnalyzerRegistry
 }
 
 // ProjectDetector interface for detecting different project types
@@ -45,22 +46,24 @@ type ProjectInfo struct {
 // New creates a new scanner instance
 func New(cfg *config.Config) *Scanner {
 	s := &Scanner{
-		config:    cfg,
-		detectors: make(map[string]ProjectDetector),
-		analyzers: make(map[string]DependencyAnalyzer),
+		config:           cfg,
+		detectors:        make(map[string]ProjectDetector),
+		analyzers:        make(map[string]DependencyAnalyzer),
+		analyzerRegistry: NewAnalyzerRegistry(cfg),
 	}
 
 	// Initialize cache if enabled
 	if cfg.Cache != nil && cfg.Cache.Enabled {
-		cacheIntegration, err := cache.NewCacheIntegration(cfg.Cache)
-		if err == nil {
-			s.cache = cacheIntegration
-		}
+		cacheIntegration := cache.NewCacheIntegration(cfg.Cache.CacheDir, cfg.Cache.Enabled, cfg.Cache.TTL)
+		s.cache = cacheIntegration
 	}
 
 	// Register project detectors
 	s.registerDetectors()
 	s.registerAnalyzers()
+
+	// Initialize plugin system
+	s.initializePlugins()
 
 	return s
 }
@@ -70,6 +73,8 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	start := time.Now()
 
 	// Check cache first if enabled
+	// TODO: Fix cache integration - type mismatch between DependencyTree and ScanResult
+	/*
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
@@ -81,6 +86,7 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 			}
 		}
 	}
+	*/
 
 	// Detect project type
 	projectInfo, err := s.detectProject(projectPath)
@@ -117,19 +123,19 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	summary := s.buildSummary(packages)
 
 	result := &types.ScanResult{
-		ID:           generateScanID(),
-		Target:       projectPath,
-		Type:         projectInfo.Type,
-		Status:       "completed",
-		Packages:     packages,
-		Summary:      summary,
-		ScanDuration: time.Since(start),
-		Duration:     time.Since(start),
-		CreatedAt:    time.Now(),
-		CacheHit:     false,
+		ID:        generateScanID(),
+		Target:    projectPath,
+		Type:      projectInfo.Type,
+		Status:    "completed",
+		Packages:  packages,
+		Summary:   summary,
+		Duration:  time.Since(start),
+		CreatedAt: time.Now(),
 	}
 
 	// Cache the result if caching is enabled
+	// TODO: Fix cache integration - CacheScanResult expects *types.DependencyTree but we have *types.ScanResult
+	/*
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
@@ -141,6 +147,7 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 			_ = s.cache.CacheScanResult(cacheKey, result, metadata)
 		}
 	}
+	*/
 
 	return result, nil
 }
@@ -194,9 +201,15 @@ func (s *Scanner) detectProject(projectPath string) (*ProjectInfo, error) {
 		return nil, fmt.Errorf("failed to read directory: %w", err)
 	}
 
-	// If directory is empty, return error
+	// If directory is empty, return a generic project info
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("no package files found in directory: %s", projectPath)
+		return &ProjectInfo{
+			Type:         "generic",
+			Path:         projectPath,
+			ManifestFile: "",
+			LockFile:     "",
+			Metadata:     make(map[string]string),
+		}, nil
 	}
 
 	// If no specific project type detected, return a generic project info
@@ -566,6 +579,76 @@ func (s *Scanner) Close() error {
 		return s.cache.Close()
 	}
 	return nil
+}
+
+// initializePlugins initializes the plugin system
+func (s *Scanner) initializePlugins() {
+	if s.config.Plugins == nil || !s.config.Plugins.Enabled {
+		return
+	}
+
+	// Auto-load plugins if enabled
+	if s.config.Plugins.AutoLoad {
+		s.loadPluginsFromDirectory()
+	}
+
+	// Load specific plugins from configuration
+	for _, plugin := range s.config.Plugins.Plugins {
+		if plugin.Enabled {
+			if err := s.analyzerRegistry.LoadPlugin(plugin.Path); err != nil {
+				// Log error but continue with other plugins
+				continue
+			}
+		}
+	}
+}
+
+// loadPluginsFromDirectory loads all plugins from the configured plugin directory
+func (s *Scanner) loadPluginsFromDirectory() {
+	if s.config.Plugins.PluginDirectory == "" {
+		return
+	}
+
+	// Check if plugin directory exists
+	if _, err := os.Stat(s.config.Plugins.PluginDirectory); os.IsNotExist(err) {
+		return
+	}
+
+	// Walk through plugin directory
+	filepath.Walk(s.config.Plugins.PluginDirectory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		// Load .so files (Go plugins)
+		if filepath.Ext(path) == ".so" {
+			if err := s.analyzerRegistry.LoadPlugin(path); err != nil {
+				// Log error but continue
+			}
+		}
+
+		return nil
+	})
+}
+
+// LoadPlugin loads a plugin at runtime
+func (s *Scanner) LoadPlugin(pluginPath string) error {
+	return s.analyzerRegistry.LoadPlugin(pluginPath)
+}
+
+// UnloadPlugin unloads a plugin at runtime
+func (s *Scanner) UnloadPlugin(name string) error {
+	return s.analyzerRegistry.UnloadPlugin(name)
+}
+
+// GetLoadedPlugins returns information about loaded plugins
+func (s *Scanner) GetLoadedPlugins() map[string]*PluginAnalyzer {
+	return s.analyzerRegistry.GetPluginAnalyzers()
+}
+
+// GetAnalyzerForProject gets the appropriate analyzer for a project
+func (s *Scanner) GetAnalyzerForProject(projectInfo *ProjectInfo) (LanguageAnalyzer, error) {
+	return s.analyzerRegistry.GetAnalyzerForProject(projectInfo)
 }
 
 // generateScanID generates a unique scan ID

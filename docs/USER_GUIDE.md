@@ -7,11 +7,12 @@ A comprehensive guide to using Typosentinel for package security scanning and th
 1. [Getting Started](#getting-started)
 2. [Basic Usage](#basic-usage)
 3. [Advanced Features](#advanced-features)
-4. [Configuration Guide](#configuration-guide)
-5. [Language-Specific Guides](#language-specific-guides)
-6. [Integration Examples](#integration-examples)
-7. [Troubleshooting](#troubleshooting)
-8. [FAQ](#faq)
+4. [Performance Testing](#performance-testing)
+5. [Configuration Guide](#configuration-guide)
+6. [Language-Specific Guides](#language-specific-guides)
+7. [Integration Examples](#integration-examples)
+8. [Troubleshooting](#troubleshooting)
+9. [FAQ](#faq)
 
 ## Getting Started
 
@@ -388,6 +389,131 @@ detector:
       high: 0.85
       medium: 0.65
       low: 0.4
+```
+
+## Performance Testing
+
+### Running Benchmarks
+
+Typosentinel includes a comprehensive benchmark suite to test and optimize performance:
+
+```bash
+# Run all benchmarks
+go test -bench=. ./internal/benchmark/
+
+# Run specific benchmark categories
+go test -bench=BenchmarkSmallPackage ./internal/benchmark/
+go test -bench=BenchmarkMediumPackage ./internal/benchmark/
+go test -bench=BenchmarkLargePackage ./internal/benchmark/
+go test -bench=BenchmarkConcurrentScans ./internal/benchmark/
+go test -bench=BenchmarkMemoryUsage ./internal/benchmark/
+
+# Run benchmarks with memory profiling
+go test -bench=. -benchmem ./internal/benchmark/
+
+# Generate detailed performance profiles
+go test -bench=BenchmarkLargePackage -cpuprofile=cpu.prof ./internal/benchmark/
+go test -bench=BenchmarkMemoryUsage -memprofile=mem.prof ./internal/benchmark/
+```
+
+### Benchmark Categories
+
+#### Package Size Performance
+- **Small Packages**: < 10 files, tests basic scanning overhead
+- **Medium Packages**: 10-100 files, tests typical project scanning
+- **Large Packages**: > 100 files, tests scalability and memory usage
+
+#### Concurrency Testing
+- **Concurrent Scans**: Multi-threaded scanning performance
+- **Throughput**: Package processing rate under load
+- **Stress Testing**: System limits and error handling
+
+#### Memory Analysis
+- **Memory Usage**: Allocation patterns and garbage collection
+- **Memory Efficiency**: Memory per operation metrics
+- **Memory Leaks**: Long-running process stability
+
+#### ML Performance
+- **ML Analysis**: Machine learning detection speed
+- **Feature Extraction**: ML feature processing performance
+
+### Performance Optimization Tips
+
+#### Concurrent Processing
+```bash
+# Optimize for your system
+typosentinel scan . --max-concurrency $(nproc)
+
+# For memory-constrained environments
+typosentinel scan . --max-concurrency 4
+```
+
+#### Memory Management
+```bash
+# Monitor memory usage during scans
+typosentinel scan . --verbose --memory-profile
+
+# For large projects, use batch processing
+typosentinel scan . --batch-size 100
+```
+
+#### Caching
+```yaml
+# Enable aggressive caching for repeated scans
+analyzer:
+  cache_size: 10000
+  cache_ttl: 4h
+
+reputation:
+  cache_size: 20000
+  cache_ttl: 24h
+```
+
+### Interpreting Benchmark Results
+
+```
+BenchmarkSmallPackage-8         1000    1.2ms/op    512 B/op    8 allocs/op
+BenchmarkMediumPackage-8         100   15.3ms/op   2048 B/op   32 allocs/op
+BenchmarkLargePackage-8           10  150.5ms/op  10240 B/op  128 allocs/op
+BenchmarkConcurrentScans-8       500    3.2ms/op   1024 B/op   16 allocs/op
+BenchmarkMemoryUsage-8          1000    1.8ms/op    768 B/op   12 allocs/op
+```
+
+- **Operations/second**: Higher is better
+- **Time per operation**: Lower is better
+- **Memory per operation**: Lower is better
+- **Allocations per operation**: Lower is better
+
+### Custom Performance Testing
+
+```go
+// Create custom benchmark
+func BenchmarkCustomScenario(b *testing.B) {
+    // Setup test environment
+    testDir := createCustomTestPackage(b)
+    defer os.RemoveAll(testDir)
+    
+    cfg := getOptimizedConfig()
+    a, err := analyzer.New(cfg)
+    if err != nil {
+        b.Fatalf("Failed to create analyzer: %v", err)
+    }
+    
+    b.ResetTimer()
+    b.ReportAllocs()
+    
+    for i := 0; i < b.N; i++ {
+        options := &analyzer.ScanOptions{
+            OutputFormat:        "json",
+            DeepAnalysis:        true,
+            SimilarityThreshold: 0.8,
+        }
+        _, err := a.Scan(testDir, options)
+        if err != nil {
+            b.Fatalf("Scan failed: %v", err)
+        }
+    }
+}
 ```
 
 ## Configuration Guide

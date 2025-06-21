@@ -14,7 +14,7 @@ import (
 	"typosentinel/internal/config"
 	"typosentinel/internal/dynamic"
 	"typosentinel/internal/ml"
-	"typosentinel/internal/output"
+
 	"typosentinel/internal/provenance"
 	"typosentinel/internal/static"
 	"typosentinel/pkg/logger"
@@ -159,9 +159,9 @@ func NewScanner(cfg *config.EnhancedConfig) (*Scanner, error) {
 
 	if cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled {
 		logger.VerboseWithContext("Initializing ML analyzer", map[string]interface{}{
-			"model_path":     cfg.MLAnalysis.ModelPath,
-			"threshold":      cfg.MLAnalysis.Threshold,
-			"feature_count":  cfg.MLAnalysis.FeatureCount,
+			"model_path":           cfg.MLAnalysis.ModelPath,
+			"similarity_threshold": cfg.MLAnalysis.SimilarityThreshold,
+			"max_features":        cfg.MLAnalysis.MaxFeatures,
 		})
 		scanner.mlAnalyzer = ml.NewMLAnalyzer(*cfg.MLAnalysis)
 		logger.Info("ML analyzer initialized successfully")
@@ -309,12 +309,11 @@ func runScan(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(ctx, scanTimeout)
 	defer cancel()
 
-	// Load configuration using enhanced config manager
+	// Load configuration
 	logger.VerboseWithContext("Loading configuration", map[string]interface{}{
 		"config_file": configFile,
 	})
-	configManager := config.NewEnhancedConfigManager()
-	cfg, err := configManager.LoadConfig(configFile)
+	cfg, err := loadConfiguration()
 	if err != nil {
 		logger.Error("Failed to load configuration", map[string]interface{}{
 			"config_file": configFile,
@@ -405,7 +404,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 	}
 
 	// Exit with appropriate code based on findings
-	return handleExitCode(result)
+	return handleExitCodeLegacy(result)
 }
 
 // Scan performs a comprehensive scan of the package.
@@ -503,7 +502,7 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 			logger.VerboseWithContext("Dynamic analysis completed", map[string]interface{}{
 				"package":        pkg.Name,
 				"duration":       dynamicDuration.String(),
-				"findings_count": len(dynamicResult.Findings),
+				"findings_count": len(dynamicResult.SecurityFindings),
 				"risk_score":     dynamicResult.RiskScore,
 			})
 			result.DynamicAnalysis = dynamicResult
@@ -521,7 +520,6 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 		if verbose {
 			fmt.Println("Running ML analysis...")
 		}
-		mlStart := time.Now()
 		mlResult, err := s.mlAnalyzer.Analyze(ctx, pkg)
 		if err != nil {
 			if failFast {
@@ -531,6 +529,9 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 		} else {
 			result.MLAnalysis = mlResult
 			enginesUsed = append(enginesUsed, "ml")
+			if verbose {
+				fmt.Println("ML analysis completed")
+			}
 		}
 	}
 
@@ -786,13 +787,7 @@ func shouldRunEngine(engine string) bool {
 	return true
 }
 
-func convertToOutputFormat(results interface{}, cfg *config.EnhancedConfig) *output.ScanResult {
-	// Convert scanner results to output format
-	// This is a placeholder implementation
-	return &output.ScanResult{
-		Findings: []output.Finding{},
-	}
-}
+// Note: convertToOutputFormat function is defined in scan_helpers.go
 
 func outputResults(result *ScanResult) error {
 	switch outputFormat {
@@ -809,19 +804,13 @@ func outputResults(result *ScanResult) error {
 	}
 }
 
-func outputJSON(result *ScanResult) error {
-	encoder := json.NewEncoder(getOutputWriter())
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(result)
-}
-
-func outputYAML(result *ScanResult) error {
-	// Placeholder - would use yaml package
-	return outputJSON(result)
-}
+// Note: outputJSON and outputYAML functions are defined in plugin.go to avoid duplication
 
 func outputText(result *ScanResult) error {
-	w := getOutputWriter()
+	w, err := getOutputWriter("")
+	if err != nil {
+		return fmt.Errorf("failed to get output writer: %w", err)
+	}
 	fmt.Fprintf(w, "Package: %s@%s\n", result.Package.Name, result.Package.Version)
 	fmt.Fprintf(w, "Registry: %s\n", result.Package.Registry)
 	fmt.Fprintf(w, "Overall Risk: %s (%.2f)\n", result.OverallRisk, result.RiskScore)
@@ -844,17 +833,7 @@ func outputTable(result *ScanResult) error {
 	return outputText(result)
 }
 
-func getOutputWriter() *os.File {
-	if outputFile != "" {
-		file, err := os.Create(outputFile)
-		if err != nil {
-			fmt.Printf("Warning: failed to create output file, using stdout: %v\n", err)
-			return os.Stdout
-		}
-		return file
-	}
-	return os.Stdout
-}
+
 
 func saveDetailedReport(result *ScanResult) error {
 	reportFile := fmt.Sprintf("typosentinel-report-%s.json", result.Metadata.ScanID)
@@ -876,11 +855,7 @@ func saveDetailedReport(result *ScanResult) error {
 	return nil
 }
 
-func handleExitCode(result interface{}, cfg *config.EnhancedConfig) error {
-	// Exit with non-zero code for high-risk packages
-	// This is a placeholder implementation
-	return nil
-}
+
 
 func handleExitCodeLegacy(result *ScanResult) error {
 	// Exit with non-zero code for high-risk packages
@@ -893,9 +868,7 @@ func handleExitCodeLegacy(result *ScanResult) error {
 	return nil
 }
 
-func generateScanID() string {
-	return fmt.Sprintf("%d", time.Now().Unix())
-}
+
 
 func removeDuplicates(slice []string) []string {
 	seen := make(map[string]bool)

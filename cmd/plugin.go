@@ -191,7 +191,12 @@ func runPluginList(cmd *cobra.Command, args []string) error {
 	case "yaml":
 		return outputYAML(plugins)
 	default:
-		return outputPluginTable(plugins)
+		// Convert to []interface{} for outputPluginTable
+		var pluginInterfaces []interface{}
+		for _, plugin := range plugins {
+			pluginInterfaces = append(pluginInterfaces, plugin)
+		}
+		return outputPluginTable(pluginInterfaces)
 	}
 }
 
@@ -297,10 +302,9 @@ func runPluginInfo(cmd *cobra.Command, args []string) error {
 		if metadata != nil {
 			fmt.Printf("\nAnalyzer Metadata\n")
 			fmt.Printf("=================\n")
-			fmt.Printf("Supported Extensions: %v\n", metadata.SupportedExtensions)
-			fmt.Printf("Manifest Files:       %v\n", metadata.ManifestFiles)
-			fmt.Printf("Lock Files:           %v\n", metadata.LockFiles)
-			fmt.Printf("Registries:           %v\n", metadata.Registries)
+			fmt.Printf("Languages:     %v\n", metadata.Languages)
+			fmt.Printf("Capabilities:  %v\n", metadata.Capabilities)
+			fmt.Printf("Requirements:  %v\n", metadata.Requirements)
 		}
 	}
 

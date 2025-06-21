@@ -14,9 +14,10 @@ This document provides comprehensive documentation for the Typosentinel API, inc
 8. [ML Integration](#ml-integration)
 9. [Reputation System](#reputation-system)
 10. [Performance Optimization](#performance-optimization)
-11. [Examples](#examples)
-12. [Error Handling](#error-handling)
-13. [Best Practices](#best-practices)
+11. [Benchmarking and Testing](#benchmarking-and-testing)
+12. [Examples](#examples)
+13. [Error Handling](#error-handling)
+14. [Best Practices](#best-practices)
 
 ## Overview
 
@@ -28,6 +29,9 @@ Typosentinel is a comprehensive package security scanner that detects typosquatt
 - **Advanced Threat Detection**: ML-powered typosquatting detection
 - **Reputation Analysis**: Multi-source reputation scoring
 - **Performance Optimized**: Concurrent processing with caching
+- **Comprehensive Benchmarking**: Built-in performance testing suite
+- **Memory Efficient**: Optimized memory allocation and garbage collection
+- **Concurrent Scanning**: High-throughput parallel analysis capabilities
 - **Extensible Architecture**: Plugin-based analyzer system
 
 ## Installation
@@ -751,6 +755,80 @@ func processBatchesOptimized(packages []*types.Package, batchSize int) {
         // Force GC between batches
         runtime.GC()
     }
+}
+```
+
+## Benchmarking and Testing
+
+### Running Performance Benchmarks
+
+Typosentinel includes a comprehensive benchmark suite for performance testing and optimization:
+
+```go
+// Run all benchmarks
+go test -bench=. ./internal/benchmark/
+
+// Run specific benchmark categories
+go test -bench=BenchmarkConcurrentScans ./internal/benchmark/
+go test -bench=BenchmarkMemoryUsage ./internal/benchmark/
+go test -bench=BenchmarkThroughput ./internal/benchmark/
+
+// Run benchmarks with memory profiling
+go test -bench=. -benchmem ./internal/benchmark/
+
+// Generate CPU profile during benchmarks
+go test -bench=BenchmarkLargePackage -cpuprofile=cpu.prof ./internal/benchmark/
+```
+
+### Available Benchmark Categories
+
+#### Package Size Benchmarks
+- **BenchmarkSmallPackage**: Tests performance on small packages (< 10 files)
+- **BenchmarkMediumPackage**: Tests performance on medium packages (10-100 files)
+- **BenchmarkLargePackage**: Tests performance on large packages (> 100 files)
+
+#### Concurrency Benchmarks
+- **BenchmarkConcurrentScans2**: Tests multi-threaded scanning performance
+- **BenchmarkThroughput**: Measures package processing throughput
+
+#### Memory Benchmarks
+- **BenchmarkMemoryUsage2**: Analyzes memory allocation patterns
+- **BenchmarkStressTest**: Tests system limits and error handling
+
+#### ML Analysis Benchmarks
+- **BenchmarkMLAnalysis**: Tests machine learning detection performance
+
+### Custom Benchmark Configuration
+
+```go
+// Create custom benchmark suite
+suite := &benchmark.BenchmarkSuite{
+    Duration:       30 * time.Second,
+    Parallel:       runtime.NumCPU(),
+    Iterations:     1000,
+    WarmupDuration: 5 * time.Second,
+    Verbose:        true,
+}
+
+// Run custom benchmarks
+results := suite.RunBenchmarks()
+fmt.Printf("Benchmark Results: %+v\n", results)
+```
+
+### Performance Metrics
+
+The benchmark suite provides detailed metrics:
+
+```go
+type BenchmarkMetrics struct {
+    Duration      time.Duration `json:"duration"`
+    Operations    int           `json:"operations"`
+    OpsPerSecond  float64       `json:"ops_per_second"`
+    AvgTimePerOp  time.Duration `json:"avg_time_per_op"`
+    MemoryPerOp   uint64        `json:"memory_per_op"`
+    AllocsPerOp   uint64        `json:"allocs_per_op"`
+    ErrorRate     float64       `json:"error_rate"`
+    ThroughputMB  float64       `json:"throughput_mb"`
 }
 ```
 

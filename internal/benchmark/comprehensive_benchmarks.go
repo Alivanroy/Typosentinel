@@ -3,7 +3,6 @@ package benchmark
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,11 +12,7 @@ import (
 
 	"typosentinel/internal/analyzer"
 	"typosentinel/internal/config"
-	"typosentinel/internal/detector"
-	"typosentinel/internal/ml"
-	"typosentinel/internal/registry"
-	"typosentinel/internal/scanner"
-	"typosentinel/pkg/types"
+	"typosentinel/pkg/logger"
 )
 
 // BenchmarkMetrics holds performance metrics for a single benchmark
@@ -76,7 +71,7 @@ type EnvironmentInfo struct {
 // BenchmarkSmallPackage tests performance with small packages (1-10 dependencies)
 func BenchmarkSmallPackage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
@@ -87,12 +82,11 @@ func BenchmarkSmallPackage(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		options := &analyzer.ScanOptions{
-			OutputFormat:        "json",
-			DeepAnalysis:        true,
-			SimilarityThreshold: 0.9,
-		}
-		_, err := analyzer.Scan(testDir, options)
+		var options analyzer.ScanOptions
+		options.OutputFormat = "json"
+		options.DeepAnalysis = true
+		options.SimilarityThreshold = 0.9
+		_, err := a.Scan(testDir, &options)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
@@ -102,7 +96,7 @@ func BenchmarkSmallPackage(b *testing.B) {
 // BenchmarkMediumPackage tests performance with medium packages (10-50 dependencies)
 func BenchmarkMediumPackage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
@@ -118,7 +112,7 @@ func BenchmarkMediumPackage(b *testing.B) {
 			DeepAnalysis:        true,
 			SimilarityThreshold: 0.8,
 		}
-		_, err := analyzer.Scan(testDir, options)
+		_, err := a.Scan(testDir, options)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
@@ -128,11 +122,11 @@ func BenchmarkMediumPackage(b *testing.B) {
 // BenchmarkLargePackage tests performance with large packages (50+ dependencies)
 func BenchmarkLargePackage(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
-	testDir := createLargeTestPackage(b)
+	testDir := createLargeTestPackage2(b)
 	defer os.RemoveAll(testDir)
 
 	b.ResetTimer()
@@ -144,21 +138,21 @@ func BenchmarkLargePackage(b *testing.B) {
 			DeepAnalysis:        true,
 			SimilarityThreshold: 0.8,
 		}
-		_, err := analyzer.Scan(testDir, options)
+		_, err := a.Scan(testDir, options)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
 	}
 }
 
-// BenchmarkConcurrentScans tests concurrent scanning performance
-func BenchmarkConcurrentScans(b *testing.B) {
+// BenchmarkConcurrentScans2 tests concurrent scanning performance
+func BenchmarkConcurrentScans2(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
-	testDir := createTestPackage(b)
+	testDir := createTestPackage2(b)
 	defer os.RemoveAll(testDir)
 
 	b.ResetTimer()
@@ -171,7 +165,7 @@ func BenchmarkConcurrentScans(b *testing.B) {
 				DeepAnalysis:        false,
 				SimilarityThreshold: 0.8,
 			}
-			_, err := analyzer.Scan(testDir, options)
+			_, err := a.Scan(testDir, options)
 			if err != nil {
 				b.Fatalf("Scan failed: %v", err)
 			}
@@ -182,11 +176,11 @@ func BenchmarkConcurrentScans(b *testing.B) {
 // BenchmarkMLAnalysis tests ML analysis performance
 func BenchmarkMLAnalysis(b *testing.B) {
 	cfg := getMLEnabledConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
-	testDir := createTestPackage(b)
+	testDir := createTestPackage2(b)
 	defer os.RemoveAll(testDir)
 
 	b.ResetTimer()
@@ -198,21 +192,21 @@ func BenchmarkMLAnalysis(b *testing.B) {
 			DeepAnalysis:        true,
 			SimilarityThreshold: 0.9,
 		}
-		_, err := analyzer.Scan(testDir, options)
+		_, err := a.Scan(testDir, options)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
 	}
 }
 
-// BenchmarkMemoryUsage tests memory usage patterns
-func BenchmarkMemoryUsage(b *testing.B) {
+// BenchmarkMemoryUsage2 tests memory usage patterns
+func BenchmarkMemoryUsage2(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
-	testDir := createLargeTestPackage(b)
+	testDir := createLargeTestPackage2(b)
 	defer os.RemoveAll(testDir)
 
 	var m1, m2 runtime.MemStats
@@ -228,7 +222,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			DeepAnalysis:        true,
 			SimilarityThreshold: 0.8,
 		}
-		_, err := analyzer.Scan(testDir, options)
+		_, err := a.Scan(testDir, options)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
@@ -247,13 +241,13 @@ func BenchmarkMemoryUsage(b *testing.B) {
 // BenchmarkThroughput tests scanning throughput
 func BenchmarkThroughput(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
 	testDirs := make([]string, 10)
 	for i := range testDirs {
-		testDirs[i] = createTestPackage(b)
+		testDirs[i] = createTestPackage2(b)
 		defer os.RemoveAll(testDirs[i])
 	}
 
@@ -268,7 +262,7 @@ func BenchmarkThroughput(b *testing.B) {
 			DeepAnalysis:        false,
 			SimilarityThreshold: 0.8,
 		}
-		_, err := analyzer.Scan(testDir, options)
+		_, err := a.Scan(testDir, options)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
@@ -281,11 +275,11 @@ func BenchmarkThroughput(b *testing.B) {
 // BenchmarkStressTest performs stress testing with high concurrency
 func BenchmarkStressTest(b *testing.B) {
 	cfg := getOptimizedConfig()
-	analyzer, err := analyzer.New(cfg)
+	a, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create analyzer: %v", err)
 	}
-	testDir := createTestPackage(b)
+	testDir := createTestPackage2(b)
 	defer os.RemoveAll(testDir)
 
 	context, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -312,7 +306,7 @@ func BenchmarkStressTest(b *testing.B) {
 					DeepAnalysis:        false,
 					SimilarityThreshold: 0.8,
 				}
-				_, err := analyzer.Scan(testDir, options)
+				_, err := a.Scan(testDir, options)
 				if err != nil {
 					errorCount++
 					select {
@@ -360,7 +354,7 @@ func getMLEnabledConfig() *config.Config {
 }
 
 func createSmallTestPackage(b *testing.B) string {
-	return createTestPackage(b)
+	return createTestPackage2(b)
 }
 
 func createMediumTestPackage(b *testing.B) string {
@@ -393,7 +387,7 @@ func createMediumTestPackage(b *testing.B) string {
 	return testDir
 }
 
-func createLargeTestPackage(b *testing.B) string {
+func createLargeTestPackage2(b *testing.B) string {
 	testDir, err := os.MkdirTemp("", "typosentinel-bench-large-*")
 	if err != nil {
 		b.Fatalf("Failed to create test directory: %v", err)
@@ -463,7 +457,7 @@ func createLargeTestPackage(b *testing.B) string {
 	return testDir
 }
 
-func createTestPackage(b *testing.B) string {
+func createTestPackage2(b *testing.B) string {
 	testDir, err := os.MkdirTemp("", "typosentinel-bench-*")
 	if err != nil {
 		b.Fatalf("Failed to create test directory: %v", err)
@@ -518,9 +512,9 @@ func RunBenchmarkSuite() (*BenchmarkSuite, error) {
 		{"SmallPackage", BenchmarkSmallPackage},
 		{"MediumPackage", BenchmarkMediumPackage},
 		{"LargePackage", BenchmarkLargePackage},
-		{"ConcurrentScans", BenchmarkConcurrentScans},
+		{"ConcurrentScans", BenchmarkConcurrentScans2},
 		{"MLAnalysis", BenchmarkMLAnalysis},
-		{"MemoryUsage", BenchmarkMemoryUsage},
+		{"MemoryUsage", BenchmarkMemoryUsage2},
 		{"Throughput", BenchmarkThroughput},
 	}
 

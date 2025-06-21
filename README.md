@@ -10,6 +10,8 @@ A comprehensive security tool for detecting typosquatting and malicious packages
 - **Supply Chain Security**: Comprehensive analysis of package dependencies and build processes
 - **Multiple Output Formats**: JSON, YAML, text, and table formats for integration with CI/CD pipelines
 - **Configurable Rules**: Customizable detection rules and thresholds
+- **Performance Benchmarking**: Comprehensive benchmark suite for performance testing and optimization
+- **Concurrent Processing**: Optimized for high-throughput scanning with concurrent analysis capabilities
 - **CLI Interface**: Command-line tool for scanning packages and dependencies
 
 ## Prerequisites
@@ -31,6 +33,31 @@ go build -o typosentinel ./cmd/typosentinel
 ```bash
 go install github.com/Alivanroy/Typosentinel/cmd/typosentinel@latest
 ```
+
+## Performance Benchmarking
+
+Typosentinel includes a comprehensive benchmark suite for performance testing:
+
+```bash
+# Run all benchmarks
+go test -bench=. ./internal/benchmark/
+
+# Run specific benchmark categories
+go test -bench=BenchmarkConcurrentScans ./internal/benchmark/
+go test -bench=BenchmarkMemoryUsage ./internal/benchmark/
+
+# Run benchmarks with memory profiling
+go test -bench=. -benchmem ./internal/benchmark/
+```
+
+### Available Benchmarks
+
+- **Package Size Benchmarks**: Small, medium, and large package analysis
+- **Concurrent Scanning**: Multi-threaded performance testing
+- **Memory Usage**: Memory allocation and garbage collection analysis
+- **Throughput Testing**: High-volume package processing
+- **ML Analysis**: Machine learning detection performance
+- **Stress Testing**: System limits and error handling
 
 ## Configuration
 

@@ -49,6 +49,35 @@ TypoSentinel/
 
 ### Analysis Engines (`internal/`)
 
+#### Core Components:
+- **analyzer/**: Main analysis orchestration and configuration
+- **benchmark/**: Comprehensive performance testing suite with concurrent scanning benchmarks
+- **config/**: Configuration management and validation
+- **detector/**: Detection algorithms including typosquatting and reputation analysis
+- **ml/**: Machine learning-based threat detection
+- **scanner/**: Multi-language package scanning engines
+- **static/**: Static code analysis capabilities
+
+#### Recent Improvements:
+- Fixed analyzer variable shadowing issues in benchmark suite
+- Enhanced concurrent scanning performance testing
+- Improved memory usage profiling and optimization
+- Streamlined benchmark function naming and organization
+
+## Code Quality and Maintenance
+
+### Recent Bug Fixes
+- **Variable Shadowing Resolution**: Fixed analyzer package import shadowing in benchmark functions
+- **Function Naming Consistency**: Updated benchmark function names for better organization
+- **Type Recognition**: Resolved `analyzer.ScanOptions` type recognition issues
+- **Build System**: Ensured all packages compile successfully without errors
+
+### Performance Optimizations
+- **Concurrent Scanning**: Improved multi-threaded package analysis
+- **Memory Management**: Enhanced garbage collection and memory allocation patterns
+- **Benchmark Suite**: Comprehensive performance testing infrastructure
+
+```
 #### Scanner (`internal/scanner/`)
 - Main orchestration logic
 - Coordinates different analysis engines

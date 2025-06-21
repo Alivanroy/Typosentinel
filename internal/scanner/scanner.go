@@ -43,6 +43,29 @@ type ProjectInfo struct {
 	Metadata     map[string]string `json:"metadata,omitempty"`
 }
 
+// ScanResults contains the results of a security scan
+type ScanResults struct {
+	Results []ScanResult `json:"results"`
+}
+
+// ScanResult represents a single package scan result
+type ScanResult struct {
+	Package *types.Package `json:"package"`
+	Threats []Threat      `json:"threats"`
+}
+
+// Threat represents a security threat found in a package
+type Threat struct {
+	Type           string  `json:"type"`
+	Severity       string  `json:"severity"`
+	Score          float64 `json:"score"`
+	Description    string  `json:"description"`
+	Recommendation string  `json:"recommendation"`
+	Evidence       string  `json:"evidence"`
+	Source         string  `json:"source"`
+	Confidence     float64 `json:"confidence"`
+}
+
 // New creates a new scanner instance
 func New(cfg *config.Config) *Scanner {
 	s := &Scanner{

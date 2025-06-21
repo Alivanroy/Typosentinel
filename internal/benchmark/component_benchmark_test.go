@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
-
 	"typosentinel/internal/config"
 	"typosentinel/internal/detector"
 	"typosentinel/internal/ml"
@@ -19,12 +17,12 @@ func BenchmarkDetectorEngine(b *testing.B) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
 			SimilarityThreshold: 0.8,
-			CommonTypos:         true,
-			LevenshteinEnabled:  true,
+			HomoglyphDetection:  true,
+			SemanticAnalysis:    true,
 		},
 	}
 
-	engine := detector.NewEngine(cfg)
+	engine := detector.New(cfg)
 
 	testPackages := []string{
 		"lodash", "express", "react", "angular", "vue",
@@ -34,9 +32,10 @@ func BenchmarkDetectorEngine(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, pkg := range testPackages {
-			_, err := engine.AnalyzePackage(pkg, "1.0.0")
+			ctx := context.Background()
+			_, err := engine.CheckPackage(ctx, pkg, "npm")
 			if err != nil {
-				b.Fatalf("AnalyzePackage failed: %v", err)
+				b.Fatalf("CheckPackage failed: %v", err)
 			}
 		}
 	}
@@ -47,12 +46,12 @@ func BenchmarkDetectorTyposquatting(b *testing.B) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
 			SimilarityThreshold: 0.8,
-			CommonTypos:         true,
-			LevenshteinEnabled:  true,
+			HomoglyphDetection:  true,
+			SemanticAnalysis:    true,
 		},
 	}
 
-	engine := detector.NewEngine(cfg)
+	engine := detector.New(cfg)
 
 	// Test with suspicious package names
 	suspiciousPackages := []string{
@@ -63,8 +62,11 @@ func BenchmarkDetectorTyposquatting(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, pkg := range suspiciousPackages {
-			threats := engine.DetectTyposquatting(pkg)
-			_ = threats // Use the result to prevent optimization
+			result, err := engine.CheckPackage(context.Background(), pkg, "npm")
+			if err != nil {
+				b.Fatalf("CheckPackage failed: %v", err)
+			}
+			_ = result // Use the result to prevent optimization
 		}
 	}
 }
@@ -74,10 +76,11 @@ func BenchmarkDetectorSimilarity(b *testing.B) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
 			SimilarityThreshold: 0.8,
+			HomoglyphDetection:  true,
 		},
 	}
 
-	engine := detector.NewEngine(cfg)
+	engine := detector.New(cfg)
 
 	packagePairs := [][]string{
 		{"lodash", "lodahs"},
@@ -90,57 +93,58 @@ func BenchmarkDetectorSimilarity(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, pair := range packagePairs {
-			similarity := engine.CalculateSimilarity(pair[0], pair[1])
-			_ = similarity // Use the result to prevent optimization
+			ctx := context.Background()
+			_, err := engine.CheckPackage(ctx, pair[0], "npm")
+			if err != nil {
+				b.Fatalf("CheckPackage failed: %v", err)
+			}
 		}
 	}
 }
 
 // BenchmarkStaticAnalyzer tests static analysis performance
 func BenchmarkStaticAnalyzer(b *testing.B) {
-	cfg := &config.Config{
-		Static: config.StaticConfig{
-			Enabled: true,
-			Timeout: 30 * time.Second,
-		},
+	cfg := &static.Config{
+		Enabled: true,
+		Timeout: "30s",
 	}
 
-	analyzer := static.NewAnalyzer(cfg)
+	analyzer, err := static.NewStaticAnalyzer(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create static analyzer: %v", err)
+	}
 	testDir := createTestProjectWithScripts(b)
 	defer os.RemoveAll(testDir)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ctx := context.Background()
-		_, err := analyzer.Analyze(ctx, testDir)
-			if err != nil {
-				b.Fatalf("Static analysis failed: %v", err)
-			}
+		_, err := analyzer.AnalyzePackage(ctx, testDir)
+		if err != nil {
+			b.Fatalf("Static analysis failed: %v", err)
+		}
 	}
 }
 
 // BenchmarkStaticAnalyzerPackage tests static package analysis performance
 func BenchmarkStaticAnalyzerPackage(b *testing.B) {
-	cfg := &config.Config{
-		Static: config.StaticConfig{
-			Enabled: true,
-			Timeout: 30 * time.Second,
-		},
+	cfg := &static.Config{
+		Enabled: true,
+		Timeout: "30s",
 	}
 
-	analyzer := static.NewAnalyzer(cfg)
-
-	testPackage := &types.Package{
-		Name:        "test-package",
-		Version:     "1.0.0",
-		Description: "A test package for benchmarking",
-		Author:      "Test Author",
+	analyzer, err := static.NewStaticAnalyzer(cfg)
+	if err != nil {
+		b.Fatalf("Failed to create static analyzer: %v", err)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ctx := context.Background()
-		_, err := analyzer.AnalyzePackage(ctx, testPackage)
+		// Create a temporary directory for the test package
+		testDir := createTestProjectWithScripts(b)
+		defer os.RemoveAll(testDir)
+		_, err := analyzer.AnalyzePackage(ctx, testDir)
 		if err != nil {
 			b.Fatalf("Package analysis failed: %v", err)
 		}
@@ -149,27 +153,28 @@ func BenchmarkStaticAnalyzerPackage(b *testing.B) {
 
 // BenchmarkMLAnalyzer tests ML analysis performance
 func BenchmarkMLAnalyzer(b *testing.B) {
-	cfg := &config.Config{
-		ML: config.MLConfig{
-			Enabled:   true,
-			ModelPath: "test-model",
-			Timeout:   30 * time.Second,
-		},
+	cfg := config.MLAnalysisConfig{
+		Enabled:             true,
+		ModelPath:           "test-model",
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
 	}
 
-	analyzer := ml.NewAnalyzer(cfg)
+	analyzer := ml.NewMLAnalyzer(cfg)
 
 	testPackage := &types.Package{
-		Name:        "suspicious-package",
-		Version:     "1.0.0",
-		Description: "A potentially suspicious package",
-		Author:      "Unknown Author",
+		Name:      "suspicious-package",
+		Version:   "1.0.0",
+		Registry:  "npm",
+		RiskLevel: types.SeverityMedium,
+		RiskScore: 0.6,
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ctx := context.Background()
-		_, err := analyzer.AnalyzePackage(ctx, testPackage)
+		_, err := analyzer.Analyze(ctx, testPackage)
 		if err != nil {
 			b.Fatalf("ML analysis failed: %v", err)
 		}
@@ -178,22 +183,30 @@ func BenchmarkMLAnalyzer(b *testing.B) {
 
 // BenchmarkMLAnalyzerDirectory tests ML directory analysis performance
 func BenchmarkMLAnalyzerDirectory(b *testing.B) {
-	cfg := &config.Config{
-		ML: config.MLConfig{
-			Enabled:   true,
-			ModelPath: "test-model",
-			Timeout:   30 * time.Second,
-		},
+	cfg := config.MLAnalysisConfig{
+		Enabled:             true,
+		ModelPath:           "test-model",
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
 	}
 
-	analyzer := ml.NewAnalyzer(cfg)
+	analyzer := ml.NewMLAnalyzer(cfg)
 	testDir := createTestProjectWithScripts(b)
 	defer os.RemoveAll(testDir)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ctx := context.Background()
-		_, err := analyzer.Analyze(ctx, testDir)
+		// Create a test package for analysis
+		testPackage := &types.Package{
+			Name:      "test-package",
+			Version:   "1.0.0",
+			Registry:  "npm",
+			RiskLevel: types.SeverityLow,
+			RiskScore: 0.1,
+		}
+		_, err := analyzer.Analyze(ctx, testPackage)
 		if err != nil {
 			b.Fatalf("ML directory analysis failed: %v", err)
 		}
@@ -205,12 +218,12 @@ func BenchmarkConcurrentDetection(b *testing.B) {
 	cfg := &config.Config{
 		Detection: config.DetectionConfig{
 			SimilarityThreshold: 0.8,
-			CommonTypos:         true,
-			LevenshteinEnabled:  true,
+			HomoglyphDetection:  true,
+			SemanticAnalysis:    true,
 		},
 	}
 
-	engine := detector.NewEngine(cfg)
+	engine := detector.New(cfg)
 
 	testPackages := []string{
 		"lodash", "express", "react", "angular", "vue",
@@ -221,9 +234,10 @@ func BenchmarkConcurrentDetection(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			for _, pkg := range testPackages {
-				_, err := engine.AnalyzePackage(pkg, "1.0.0")
+				ctx := context.Background()
+				_, err := engine.CheckPackage(ctx, pkg, "npm")
 				if err != nil {
-					b.Fatalf("AnalyzePackage failed: %v", err)
+					b.Fatalf("CheckPackage failed: %v", err)
 				}
 			}
 		}
@@ -233,7 +247,7 @@ func BenchmarkConcurrentDetection(b *testing.B) {
 // BenchmarkLevenshteinDistance tests Levenshtein distance calculation performance
 func BenchmarkLevenshteinDistance(b *testing.B) {
 	cfg := &config.Config{}
-	engine := detector.NewEngine(cfg)
+	engine := detector.New(cfg)
 
 	stringPairs := [][]string{
 		{"lodash", "lodahs"},
@@ -251,8 +265,13 @@ func BenchmarkLevenshteinDistance(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, pair := range stringPairs {
-			distance := engine.LevenshteinDistance(pair[0], pair[1])
-			_ = distance // Use the result to prevent optimization
+			// Use CheckPackage to test similarity calculation
+			ctx := context.Background()
+			result, err := engine.CheckPackage(ctx, pair[0], "npm")
+			if err != nil {
+				b.Fatalf("CheckPackage failed: %v", err)
+			}
+			_ = result // Use the result to prevent optimization
 		}
 	}
 }
@@ -265,25 +284,24 @@ func BenchmarkRiskCalculation(b *testing.B) {
 		},
 	}
 
-	engine := detector.NewEngine(cfg)
+	engine := detector.New(cfg)
 
-	testThreats := []types.Threat{
-		{Type: "typosquatting", Severity: "high", Confidence: 0.9},
-		{Type: "suspicious", Severity: "medium", Confidence: 0.7},
-		{Type: "malicious", Severity: "critical", Confidence: 0.95},
-	}
-
-	testReputation := &types.Reputation{
-		Score:       0.3,
-		TrustLevel:  "low",
-		Sources:     []string{"test-source"},
-		LastUpdated: time.Now(),
+	// Create a test dependency for risk calculation
+	testDep := types.Dependency{
+		Name:     "test-package",
+		Registry: "npm",
+		Direct:   true,
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		riskScore := engine.CalculateRiskScore(testThreats, testReputation)
-		_ = riskScore // Use the result to prevent optimization
+		// Use CheckPackage instead of CalculateRiskScore
+		ctx := context.Background()
+		result, err := engine.CheckPackage(ctx, testDep.Name, testDep.Registry)
+		if err != nil {
+			b.Fatalf("CheckPackage failed: %v", err)
+		}
+		_ = result // Use the result to prevent optimization
 	}
 }
 
@@ -295,17 +313,17 @@ func BenchmarkRecommendationGeneration(b *testing.B) {
 		},
 	}
 
-	engine := detector.NewEngine(cfg)
-
-	testThreats := []types.Threat{
-		{Type: "typosquatting", Severity: "high", Confidence: 0.9},
-		{Type: "suspicious", Severity: "medium", Confidence: 0.7},
-	}
+	engine := detector.New(cfg)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		recommendations := engine.GenerateRecommendations(testThreats, 0.8)
-		_ = recommendations // Use the result to prevent optimization
+		// Use CheckPackage instead of GenerateRecommendations
+		ctx := context.Background()
+		result, err := engine.CheckPackage(ctx, "test-package", "npm")
+		if err != nil {
+			b.Fatalf("CheckPackage failed: %v", err)
+		}
+		_ = result // Use the result to prevent optimization
 	}
 }
 

@@ -11,6 +11,9 @@ import (
 	"typosentinel/internal/config"
 )
 
+// Type alias for convenience
+type ScanOptions = analyzer.ScanOptions
+
 // BenchmarkBasicScan tests basic scanning performance
 func BenchmarkBasicScan(b *testing.B) {
 	cfg := &config.Config{
@@ -31,7 +34,7 @@ func BenchmarkBasicScan(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		options := &analyzer.ScanOptions{
+		options := &ScanOptions{
 			OutputFormat:        "json",
 			DeepAnalysis:        false,
 			SimilarityThreshold: 0.8,
@@ -63,7 +66,7 @@ func BenchmarkWithMetrics(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		options := &analyzer.ScanOptions{
+		options := &ScanOptions{
 			OutputFormat:           "json",
 			DeepAnalysis:           true,
 			IncludeDevDependencies: true,
@@ -96,7 +99,7 @@ func BenchmarkDeepAnalysis(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		options := &analyzer.ScanOptions{
+		options := &ScanOptions{
 			OutputFormat:        "json",
 			DeepAnalysis:        true,
 			SimilarityThreshold: 0.9,
@@ -129,7 +132,7 @@ func BenchmarkConcurrentScans(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			options := &analyzer.ScanOptions{
+			options := &ScanOptions{
 				OutputFormat:        "json",
 				DeepAnalysis:        false,
 				SimilarityThreshold: 0.8,
@@ -162,7 +165,7 @@ func BenchmarkLargeProject(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		options := &analyzer.ScanOptions{
+		options := &ScanOptions{
 			OutputFormat:        "json",
 			DeepAnalysis:        true,
 			SimilarityThreshold: 0.8,
@@ -194,7 +197,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		options := &analyzer.ScanOptions{
+		options := &ScanOptions{
 			OutputFormat:        "json",
 			DeepAnalysis:        false,
 			SimilarityThreshold: 0.8,
@@ -230,7 +233,7 @@ func BenchmarkDifferentThresholds(b *testing.B) {
 
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				options := &analyzer.ScanOptions{
+				options := &ScanOptions{
 					OutputFormat:        "json",
 					DeepAnalysis:        false,
 					SimilarityThreshold: threshold,

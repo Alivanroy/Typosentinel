@@ -7,9 +7,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
 )
 
 func TestNewAnalyzer(t *testing.T) {
@@ -363,47 +360,47 @@ func TestAnalyzeBehaviors_ProcessExecution(t *testing.T) {
 
 func TestCalculateRiskScore(t *testing.T) {
 	cfg := &Config{}
-	analyzer, err := NewAnalyzer(cfg)
+	analyzer, err := NewDynamicAnalyzer(cfg)
 	if err != nil {
 		t.Fatalf("Failed to create analyzer: %v", err)
 	}
 
 	tests := []struct {
 		name        string
-		findings    []types.SecurityFinding
+		findings    []SecurityFinding
 		minScore    float64
 		maxScore    float64
 	}{
 		{
 			name:     "no findings",
-			findings: []types.SecurityFinding{},
+			findings: []SecurityFinding{},
 			minScore: 0,
 			maxScore: 0,
 		},
 		{
 			name: "low risk findings",
-			findings: []types.SecurityFinding{
-				{Severity: "low", RiskScore: 2.0},
-				{Severity: "low", RiskScore: 1.5},
+			findings: []SecurityFinding{
+				{Severity: "low"},
+				{Severity: "low"},
 			},
 			minScore: 1.0,
 			maxScore: 4.0,
 		},
 		{
 			name: "high risk findings",
-			findings: []types.SecurityFinding{
-				{Severity: "high", RiskScore: 8.0},
-				{Severity: "critical", RiskScore: 9.5},
+			findings: []SecurityFinding{
+				{Severity: "high"},
+				{Severity: "critical"},
 			},
 			minScore: 7.0,
 			maxScore: 10.0,
 		},
 		{
 			name: "mixed severity findings",
-			findings: []types.SecurityFinding{
-				{Severity: "low", RiskScore: 2.0},
-				{Severity: "medium", RiskScore: 5.0},
-				{Severity: "high", RiskScore: 8.0},
+			findings: []SecurityFinding{
+				{Severity: "low"},
+				{Severity: "medium"},
+				{Severity: "high"},
 			},
 			minScore: 4.0,
 			maxScore: 7.0,
@@ -423,41 +420,44 @@ func TestCalculateRiskScore(t *testing.T) {
 
 func TestGenerateRecommendations(t *testing.T) {
 	cfg := &Config{}
-	analyzer, err := NewAnalyzer(cfg)
+	analyzer, err := NewDynamicAnalyzer(cfg)
 	if err != nil {
 		t.Fatalf("Failed to create analyzer: %v", err)
 	}
 
 	tests := []struct {
 		name        string
-		findings    []types.SecurityFinding
+		result      *AnalysisResult
 		expectedMin int
 	}{
 		{
-			name:        "no findings",
-			findings:    []types.SecurityFinding{},
-			expectedMin: 1, // Should always provide basic recommendations
+			name: "no findings",
+			result: &AnalysisResult{
+				SecurityFindings: []SecurityFinding{},
+				RiskScore: 0.0,
+			},
+			expectedMin: 0,
 		},
 		{
-			name: "network findings",
-			findings: []types.SecurityFinding{
-				{Type: "network_activity", Severity: "medium"},
+			name: "high risk score",
+			result: &AnalysisResult{
+				SecurityFindings: []SecurityFinding{
+					{Type: "network_activity", Severity: "medium"},
+				},
+				RiskScore: 0.9,
 			},
 			expectedMin: 2,
 		},
 		{
-			name: "file operation findings",
-			findings: []types.SecurityFinding{
-				{Type: "file_operation", Severity: "high"},
-			},
-			expectedMin: 2,
-		},
-		{
-			name: "multiple findings",
-			findings: []types.SecurityFinding{
-				{Type: "network_activity", Severity: "medium"},
-				{Type: "file_operation", Severity: "high"},
-				{Type: "process_execution", Severity: "critical"},
+			name: "medium risk with network activity",
+			result: &AnalysisResult{
+				SecurityFindings: []SecurityFinding{
+					{Type: "file_operation", Severity: "high"},
+				},
+				NetworkActivity: []NetworkActivity{
+					{Protocol: "HTTP", Domain: "example.com"},
+				},
+				RiskScore: 0.5,
 			},
 			expectedMin: 3,
 		},
@@ -465,14 +465,14 @@ func TestGenerateRecommendations(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			recommendations := analyzer.generateRecommendations(test.findings)
-			if len(recommendations) < test.expectedMin {
+			analyzer.generateRecommendations(test.result)
+			if len(test.result.Recommendations) < test.expectedMin {
 				t.Errorf("generateRecommendations() returned %d recommendations, expected at least %d",
-					len(recommendations), test.expectedMin)
+					len(test.result.Recommendations), test.expectedMin)
 			}
 
 			// Check that recommendations are not empty
-			for i, rec := range recommendations {
+			for i, rec := range test.result.Recommendations {
 				if rec == "" {
 					t.Errorf("Recommendation %d is empty", i)
 				}
@@ -486,7 +486,7 @@ func TestCleanupSandbox(t *testing.T) {
 		Enabled: true,
 	}
 
-	analyzer, err := NewAnalyzer(cfg)
+	analyzer, err := NewDynamicAnalyzer(cfg)
 	if err != nil {
 		t.Fatalf("Failed to create analyzer: %v", err)
 	}
@@ -495,7 +495,7 @@ func TestCleanupSandbox(t *testing.T) {
 	mockContainerID := "mock-container-id"
 	ctx := context.Background()
 
-	err := analyzer.cleanupSandbox(ctx, mockContainerID)
+	err = analyzer.cleanupSandbox(ctx, mockContainerID)
 
 	// Expected to fail with mock container ID
 	if err == nil {

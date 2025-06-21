@@ -1,0 +1,23 @@
+{
+  "name": "test-npm-project",
+  "version": "1.0.0",
+  "description": "Test project for TypoSentinel multi-language analysis",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "lodash": "^4.17.21",
+    "expresss": "^1.0.0",
+    "lodahs": "^1.0.0",
+    "recat": "^18.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  },
+  "keywords": ["test", "security", "analysis"],
+  "author": "Test Author",
+  "license": "MIT"
+}

@@ -1,0 +1,105 @@
+# Full Detection Configuration - Enables all detection engines
+# This configuration disables optimizations to test all detection methods
+
+core:
+  environment: "development"
+  log_level: "debug"
+  debug: true
+  verbose: true
+  max_workers: 4
+  timeout: "60s"
+
+# Disable performance optimizations to enable full detection
+performance:
+  enable_optimized_scanner: false
+  
+  worker_pool:
+    size: 2
+    queue_size: 4
+    
+  connection_pool:
+    max_connections: 20
+    max_idle_connections: 5
+    idle_timeout: "30s"
+    connection_timeout: "10s"
+
+# Enable all detection engines
+detection:
+  enabled: true
+  
+  # Typosquatting detection
+  typosquatting:
+    enabled: true
+    algorithms:
+      - "levenshtein"
+      - "jaro_winkler"
+      - "keyboard_layout"
+      - "phonetic"
+    threshold: 0.7
+    
+  # Homoglyph detection
+  homoglyph:
+    enabled: true
+    strict_mode: true
+    
+  # Enhanced typosquatting
+  enhanced_typosquatting:
+    enabled: true
+    edit_distance_threshold: 3
+    visual_similarity: true
+    phonetic_similarity: true
+    
+  # Reputation analysis
+  reputation:
+    enabled: true
+    check_malware: true
+    check_popularity: true
+    
+  # Dependency confusion
+  dependency_confusion:
+    enabled: true
+    
+  # ML analysis
+  ml_analysis:
+    enabled: true
+    models:
+      - "typosquatting"
+      - "malicious"
+      - "reputation"
+
+# Scanner configuration
+scanner:
+  enabled: true
+  parallel_scans: false  # Disable parallel for detailed analysis
+  detailed_analysis: true
+  include_metadata: true
+  
+# Registry configurations
+registries:
+  npm:
+    enabled: true
+    base_url: "https://registry.npmjs.org"
+    timeout: "30s"
+    
+  pypi:
+    enabled: true
+    base_url: "https://pypi.org"
+    timeout: "30s"
+
+# Output configuration
+output:
+  format: "json"
+  include_details: true
+  include_recommendations: true
+  
+# Caching (minimal for testing)
+cache:
+  enabled: false
+  
+# Logging
+logging:
+  level: "debug"
+  format: "structured"
+  output: "stdout"
+  include_caller: true
+  include_timestamp: true

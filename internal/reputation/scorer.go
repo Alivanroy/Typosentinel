@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // ReputationScorer provides package reputation scoring

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/pkg/logger"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // PyPIClient handles interactions with the PyPI registry

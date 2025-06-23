@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Engine is the main detection engine that orchestrates various detection algorithms

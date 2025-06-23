@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/analyzer"
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 // Type alias for convenience
@@ -17,10 +17,8 @@ type ScanOptions = analyzer.ScanOptions
 // BenchmarkBasicScan tests basic scanning performance
 func BenchmarkBasicScan(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
 		},
 	}
@@ -49,10 +47,8 @@ func BenchmarkBasicScan(b *testing.B) {
 // BenchmarkWithMetrics tests scanning with metrics enabled
 func BenchmarkWithMetrics(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: true,
 		},
 	}
@@ -82,10 +78,8 @@ func BenchmarkWithMetrics(b *testing.B) {
 // BenchmarkDeepAnalysis tests deep analysis performance
 func BenchmarkDeepAnalysis(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.9,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: true,
 		},
 	}
@@ -114,10 +108,8 @@ func BenchmarkDeepAnalysis(b *testing.B) {
 // BenchmarkConcurrentScans tests concurrent scanning performance
 func BenchmarkConcurrentScans(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
 		},
 	}
@@ -148,13 +140,9 @@ func BenchmarkConcurrentScans(b *testing.B) {
 // BenchmarkLargeProject tests performance with larger projects
 func BenchmarkLargeProject(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
-			IncludeDevDeps: true,
-		},
-	}
+			Detection: &config.DetectionConfig{},
+			Scanner: &config.ScannerConfig{},
+		}
 
 	analyzer, err := analyzer.New(cfg)
 	if err != nil {
@@ -180,13 +168,9 @@ func BenchmarkLargeProject(b *testing.B) {
 // BenchmarkMemoryUsage tests memory usage during scanning
 func BenchmarkMemoryUsage(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
-			IncludeDevDeps: true,
-		},
-	}
+			Detection: &config.DetectionConfig{},
+			Scanner: &config.ScannerConfig{},
+		}
 
 	analyzer, err := analyzer.New(cfg)
 	if err != nil {
@@ -216,12 +200,8 @@ func BenchmarkDifferentThresholds(b *testing.B) {
 	for _, threshold := range thresholds {
 		b.Run(fmt.Sprintf("threshold_%.1f", threshold), func(b *testing.B) {
 			cfg := &config.Config{
-				Detection: config.DetectionConfig{
-					SimilarityThreshold: threshold,
-				},
-				Scanner: config.ScannerConfig{
-					IncludeDevDeps: false,
-				},
+				Detection: &config.DetectionConfig{},
+				Scanner: &config.ScannerConfig{},
 			}
 
 			analyzer, err := analyzer.New(cfg)

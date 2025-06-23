@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // ReputationEngine analyzes package reputation using multiple data sources

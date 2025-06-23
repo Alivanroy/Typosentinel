@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/cmd"
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/cmd"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // IntegrationTestSuite contains all integration tests
 type IntegrationTestSuite struct {
-	config       *config.EnhancedConfig
+	config       *config.Config
 	scanner      *Scanner
 	testPackages []TestPackageSpec
 	tempDir      string
@@ -68,47 +68,23 @@ func SetupIntegrationTestSuite(t *testing.T) *IntegrationTestSuite {
 	}
 
 	// Load test configuration
-	cfg := &config.EnhancedConfig{
+	cfg := &config.Config{
 		Core: &config.CoreConfig{
+			Version:     "1.0.0",
 			Environment: "test",
-			DataDir:     tempDir,
+			Debug:       false,
+			Verbose:     false,
 		},
-		StaticAnalysis: &config.StaticAnalysisConfig{
-			Enabled:      true,
-			ScanScripts:  true,
-			ScanManifests: true,
-			Timeout:      "30s",
+		Logging: &config.LoggingConfig{
+			Level:  "info",
+			Format: "json",
+			Output: "stdout",
 		},
-		DynamicAnalysis: &config.DynamicAnalysisConfig{
-			Enabled:                  false, // Disable for faster tests
-			SandboxType:             "docker",
-			Timeout:                 "60s",
-			ExecuteInstallScripts:   false,
-			MonitorNetworkActivity:  true,
-			MonitorFileActivity:     true,
-			MonitorProcessActivity:  true,
-			MaxExecutionTime:        "30s",
+		Performance: &config.PerformanceConfig{
+			MaxConcurrency: 10,
+			WorkerPoolSize: 5,
 		},
-		MLAnalysis: &config.MLAnalysisConfig{
-			Enabled:              true,
-			SimilarityThreshold:  0.8,
-			MaliciousThreshold:   0.7,
-			ReputationThreshold:  0.6,
-			ModelPath:           "./models/test_model.pkl",
-			BatchSize:           32,
-			MaxFeatures:         1000,
-			CacheEmbeddings:     true,
-			ParallelProcessing:  true,
-			GPUAcceleration:     false,
-		},
-		ProvenanceAnalysis: &config.ProvenanceAnalysisConfig{
-			Enabled:          false, // Disable for faster tests
-			SigstoreEnabled:  false,
-			SLSAEnabled:      false,
-			VerifySignatures: false,
-			VerifyProvenance: false,
-			VerifyIntegrity:  false,
-		},
+		// Note: Complex analysis configurations have been simplified in the unified Config
 	}
 
 	// Create scanner

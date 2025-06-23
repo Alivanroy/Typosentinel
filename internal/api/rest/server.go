@@ -10,11 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/requestid"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
-	"typosentinel/internal/ml"
-	"typosentinel/internal/analyzer"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Server represents the REST API server

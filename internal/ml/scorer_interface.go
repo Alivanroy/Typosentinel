@@ -2,7 +2,7 @@ package ml
 
 import (
 	"context"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Scorer defines the interface for ML-based package scoring

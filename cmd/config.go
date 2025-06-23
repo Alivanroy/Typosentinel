@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 // configCmd represents the config command
@@ -120,7 +120,7 @@ Built-in templates:
   - production: Production environment
   - security-focused: Maximum security
 
-Custom templates are stored in ~/.config/typosentinel/templates/`,
+Custom templates are stored in ~/.config/github.com/Alivanroy/Typosentinel/templates/`,
 	RunE: runConfigTemplateList,
 }
 

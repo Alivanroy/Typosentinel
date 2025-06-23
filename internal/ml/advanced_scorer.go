@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // AdvancedScorer implements sophisticated ML-based scoring using ensemble methods

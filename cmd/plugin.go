@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"typosentinel/internal/config"
-	"typosentinel/internal/scanner"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
 )
 
 // pluginCmd represents the plugin command
@@ -99,10 +99,7 @@ func init() {
 }
 
 func runPluginList(cmd *cobra.Command, args []string) error {
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create plugin manager
 	registry := scanner.NewAnalyzerRegistry(cfg)
@@ -203,10 +200,7 @@ func runPluginList(cmd *cobra.Command, args []string) error {
 func runPluginLoad(cmd *cobra.Command, args []string) error {
 	pluginPath := args[0]
 
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create plugin manager
 	registry := scanner.NewAnalyzerRegistry(cfg)
@@ -240,10 +234,7 @@ func runPluginLoad(cmd *cobra.Command, args []string) error {
 func runPluginUnload(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
 
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create plugin manager
 	registry := scanner.NewAnalyzerRegistry(cfg)
@@ -266,10 +257,7 @@ func runPluginUnload(cmd *cobra.Command, args []string) error {
 func runPluginInfo(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
 
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create plugin manager
 	registry := scanner.NewAnalyzerRegistry(cfg)
@@ -322,10 +310,7 @@ func runPluginInfo(cmd *cobra.Command, args []string) error {
 func runPluginValidate(cmd *cobra.Command, args []string) error {
 	pluginPath := args[0]
 
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create plugin manager
 	registry := scanner.NewAnalyzerRegistry(cfg)
@@ -343,10 +328,7 @@ func runPluginValidate(cmd *cobra.Command, args []string) error {
 func runPluginReload(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
 
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create plugin manager
 	registry := scanner.NewAnalyzerRegistry(cfg)

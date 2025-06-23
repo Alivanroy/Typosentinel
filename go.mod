@@ -1,4 +1,4 @@
-module typosentinel
+module github.com/Alivanroy/Typosentinel
 
 go 1.23.0
 

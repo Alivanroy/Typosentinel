@@ -253,11 +253,19 @@ func (dl *DebugLogger) TraceFunction(funcName string) func() {
 }
 
 // Global debug logger instance
-var globalDebugLogger = NewDebugLogger(defaultLogger, DefaultDebugConfig())
+var globalDebugLogger *DebugLogger
+
+// getOrCreateGlobalDebugLogger returns the global debug logger, creating it if necessary
+func getOrCreateGlobalDebugLogger() *DebugLogger {
+	if globalDebugLogger == nil {
+		globalDebugLogger = NewDebugLogger(defaultLogger, DefaultDebugConfig())
+	}
+	return globalDebugLogger
+}
 
 // SetGlobalDebugMode sets the debug mode for the global debug logger
 func SetGlobalDebugMode(mode DebugMode) {
-	globalDebugLogger.SetDebugMode(mode)
+	getOrCreateGlobalDebugLogger().SetDebugMode(mode)
 }
 
 // SetGlobalDebugModeFromString sets the debug mode from string
@@ -267,37 +275,37 @@ func SetGlobalDebugModeFromString(mode string) {
 
 // GetGlobalDebugLogger returns the global debug logger
 func GetGlobalDebugLogger() *DebugLogger {
-	return globalDebugLogger
+	return getOrCreateGlobalDebugLogger()
 }
 
 // Global debug functions
 func DebugWithContext(msg string, extraFields ...map[string]interface{}) {
-	globalDebugLogger.DebugWithContext(msg, extraFields...)
+	getOrCreateGlobalDebugLogger().DebugWithContext(msg, extraFields...)
 }
 
 func VerboseWithContext(msg string, extraFields ...map[string]interface{}) {
-	globalDebugLogger.VerboseWithContext(msg, extraFields...)
+	getOrCreateGlobalDebugLogger().VerboseWithContext(msg, extraFields...)
 }
 
 func TraceWithContext(msg string, extraFields ...map[string]interface{}) {
-	globalDebugLogger.TraceWithContext(msg, extraFields...)
+	getOrCreateGlobalDebugLogger().TraceWithContext(msg, extraFields...)
 }
 
 func TraceFunction(funcName string) func() {
-	return globalDebugLogger.TraceFunction(funcName)
+	return getOrCreateGlobalDebugLogger().TraceFunction(funcName)
 }
 
 // IsDebugEnabled checks if debug logging is enabled
 func IsDebugEnabled() bool {
-	return globalDebugLogger.IsEnabled(DEBUG)
+	return getOrCreateGlobalDebugLogger().IsEnabled(DEBUG)
 }
 
 // IsVerboseEnabled checks if verbose logging is enabled
 func IsVerboseEnabled() bool {
-	return globalDebugLogger.IsEnabled(VERBOSE)
+	return getOrCreateGlobalDebugLogger().IsEnabled(VERBOSE)
 }
 
 // IsTraceEnabled checks if trace logging is enabled
 func IsTraceEnabled() bool {
-	return globalDebugLogger.IsEnabled(TRACE)
+	return getOrCreateGlobalDebugLogger().IsEnabled(TRACE)
 }

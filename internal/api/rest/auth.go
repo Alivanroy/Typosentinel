@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
 // JWTClaims represents the claims in a JWT token

@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"typosentinel/internal/benchmark"
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/internal/benchmark"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
 // benchmarkCmd represents the benchmark command
@@ -70,7 +70,7 @@ func init() {
 	benchmarkCmd.Flags().IntVarP(&benchmarkParallel, "parallel", "p", runtime.NumCPU(), "Number of parallel workers")
 	benchmarkCmd.Flags().StringVar(&benchmarkCompare, "compare", "", "Compare results with baseline file")
 	benchmarkCmd.Flags().BoolVarP(&benchmarkQuiet, "quiet", "q", false, "Quiet mode - minimal output")
-	benchmarkCmd.Flags().BoolVarP(&benchmarkVerbose, "verbose", "v", false, "Verbose output with detailed metrics")
+
 	benchmarkCmd.Flags().StringVar(&benchmarkMemProfile, "memprofile", "", "Write memory profile to file")
 	benchmarkCmd.Flags().StringVar(&benchmarkCPUProfile, "cpuprofile", "", "Write CPU profile to file")
 	benchmarkCmd.Flags().StringVarP(&benchmarkConfig, "config", "c", "", "Configuration file for benchmarks")

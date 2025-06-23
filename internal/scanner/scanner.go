@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"typosentinel/internal/cache"
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/cache"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Scanner handles project scanning and dependency analysis
@@ -67,7 +67,11 @@ type Threat struct {
 }
 
 // New creates a new scanner instance
-func New(cfg *config.Config) *Scanner {
+func New(cfg *config.Config) (*Scanner, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config cannot be nil")
+	}
+
 	s := &Scanner{
 		config:           cfg,
 		detectors:        make(map[string]ProjectDetector),
@@ -88,7 +92,7 @@ func New(cfg *config.Config) *Scanner {
 	// Initialize plugin system
 	s.initializePlugins()
 
-	return s
+	return s, nil
 }
 
 // ScanProject scans a project for dependencies and security threats

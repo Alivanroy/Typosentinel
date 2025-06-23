@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected function naming consistency in benchmark suite
 - Resolved build compilation errors in `internal/benchmark` package
 - Updated benchmark function references from old names to new standardized names
+- **Major**: Fixed all import paths throughout the codebase from `typosentinel/` to `github.com/Alivanroy/Typosentinel/`
+- Resolved build failures caused by incorrect module import paths
+- Updated all Go files to use the correct GitHub repository import paths
 
 ### Changed
 - Renamed benchmark functions for better organization:

@@ -3,7 +3,7 @@ package registry
 import (
 	"context"
 	"fmt"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Connector interface for connecting to package registries

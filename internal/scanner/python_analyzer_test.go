@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestPythonAnalyzer_ExtractPackages_RequirementsTxt(t *testing.T) {

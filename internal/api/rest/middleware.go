@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
 // corsMiddleware configures CORS middleware

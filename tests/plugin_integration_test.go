@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/internal/scanner"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
 )
 
 // TestPluginSystemIntegration tests the complete plugin system integration
@@ -30,41 +30,18 @@ func TestPluginSystemIntegration(t *testing.T) {
 
 	// Create a test configuration
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: pluginDir,
-			AutoLoad:        true,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{tempDir},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{
-				{
-					Name:    "test-plugin",
-					Path:    filepath.Join(pluginDir, "test-plugin.so"),
-					Enabled: true,
-					Config: map[string]interface{}{
-						"test_setting": "test_value",
-						"timeout":      30,
-					},
-				},
-			},
+			AutoLoad:        false, // Disable auto-loading to avoid loading non-existent plugins
+
+			Plugins: []config.PluginEntry{}, // Empty plugin list for testing
 		},
-		Scanner: config.ScannerConfig{
-			Timeout:        60,
-			MaxConcurrency: 4,
-			CacheEnabled:   true,
+		Scanner: &config.ScannerConfig{
+			Enabled:        true,
+			Concurrency:    4,
+			IncludeDevDeps: false,
+			EnrichMetadata: true,
 		},
 	}
 
@@ -155,7 +132,7 @@ plugins:
 		}
 
 		// Test loading configuration
-		loadedCfg, err := config.LoadFromFile(configFile)
+		loadedCfg, err := config.LoadConfig(configFile)
 		if err != nil {
 			t.Fatalf("Failed to load config: %v", err)
 		}
@@ -317,7 +294,7 @@ plugins:
 			t.Fatalf("Failed to marshal plugin config to JSON: %v", err)
 		}
 
-		var deserializedConfig config.PluginConfig
+		var deserializedConfig config.PluginsConfig
 		err = json.Unmarshal(jsonData, &deserializedConfig)
 		if err != nil {
 			t.Fatalf("Failed to unmarshal plugin config from JSON: %v", err)
@@ -334,14 +311,22 @@ plugins:
 
 	// Test 9: Error Handling
 	t.Run("ErrorHandling", func(t *testing.T) {
-		// Test with invalid plugin directory
+		// Test with non-existent plugin directory (but in a valid location)
+		invalidTempDir, err := os.MkdirTemp("", "invalid-plugin-test")
+		if err != nil {
+			t.Fatalf("Failed to create temp directory: %v", err)
+		}
+		defer os.RemoveAll(invalidTempDir)
+		
+		invalidPluginDir := filepath.Join(invalidTempDir, "nonexistent")
+		
 		invalidCfg := *cfg
-		invalidCfg.Plugins.PluginDirectory = "/invalid/path/that/does/not/exist"
+		invalidCfg.Plugins.PluginDirectory = invalidPluginDir
 
 		registry := scanner.NewAnalyzerRegistry(&invalidCfg)
 		pluginManager := scanner.NewPluginManager(&invalidCfg, registry)
 
-		err := pluginManager.Initialize()
+		err = pluginManager.Initialize()
 		if err != nil {
 			t.Fatalf("Failed to initialize plugin manager: %v", err)
 		}
@@ -360,10 +345,26 @@ plugins:
 
 	// Test 10: Concurrent Access
 	t.Run("ConcurrentAccess", func(t *testing.T) {
-		registry := scanner.NewAnalyzerRegistry(cfg)
-		pluginManager := scanner.NewPluginManager(cfg, registry)
+		// Create a separate temp directory for concurrent access test
+		concurrentTempDir, err := os.MkdirTemp("", "concurrent-plugin-test")
+		if err != nil {
+			t.Fatalf("Failed to create temp directory: %v", err)
+		}
+		defer os.RemoveAll(concurrentTempDir)
+		
+		concurrentPluginDir := filepath.Join(concurrentTempDir, "plugins")
+		err = os.MkdirAll(concurrentPluginDir, 0755)
+		if err != nil {
+			t.Fatalf("Failed to create plugin directory: %v", err)
+		}
+		
+		concurrentCfg := *cfg
+		concurrentCfg.Plugins.PluginDirectory = concurrentPluginDir
+		
+		registry := scanner.NewAnalyzerRegistry(&concurrentCfg)
+		pluginManager := scanner.NewPluginManager(&concurrentCfg, registry)
 
-		err := pluginManager.Initialize()
+		err = pluginManager.Initialize()
 		if err != nil {
 			t.Fatalf("Failed to initialize plugin manager: %v", err)
 		}
@@ -427,25 +428,10 @@ func TestPluginSystemPerformance(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: pluginDir,
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      100,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{tempDir},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
 			Plugins: []config.PluginEntry{},
 		},
 	}

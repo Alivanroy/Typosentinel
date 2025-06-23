@@ -14,15 +14,15 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/cmd"
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/cmd"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // BenchmarkSuite contains performance benchmark tests
 type BenchmarkSuite struct {
 	scanner     *cmd.Scanner
-	config      *config.EnhancedConfig
+	config      *config.Config
 	tempDir     string
 	testPackages []BenchmarkPackage
 }
@@ -76,35 +76,23 @@ func SetupBenchmarkSuite(b *testing.B) *BenchmarkSuite {
 	}
 
 	// Create optimized configuration for benchmarking
-	cfg := &config.EnhancedConfig{
+	cfg := &config.Config{
 		Core: &config.CoreConfig{
+			Version:     "1.0.0",
 			Environment: "benchmark",
-			DataDir:     tempDir,
+			Debug:       false,
+			Verbose:     false,
 		},
-		StaticAnalysis: &config.StaticAnalysisConfig{
-			Enabled:       true,
-			ScanScripts:   true,
-			ScanManifests: true,
-			Timeout:       "30s",
+		Logging: &config.LoggingConfig{
+			Level:  "info",
+			Format: "json",
+			Output: "stdout",
 		},
-		DynamicAnalysis: &config.DynamicAnalysisConfig{
-			Enabled: false, // Disable for faster benchmarks
+		Performance: &config.PerformanceConfig{
+			MaxConcurrency: 10,
+			WorkerPoolSize: 5,
 		},
-		MLAnalysis: &config.MLAnalysisConfig{
-			Enabled:              true,
-			SimilarityThreshold:  0.8,
-			MaliciousThreshold:   0.7,
-			ReputationThreshold:  0.6,
-			ModelPath:           "./models/test_model.pkl",
-			BatchSize:           32,
-			MaxFeatures:         1000,
-			CacheEmbeddings:     true,
-			ParallelProcessing:  true,
-			GPUAcceleration:     false,
-		},
-		ProvenanceAnalysis: &config.ProvenanceAnalysisConfig{
-			Enabled: false, // Disable for faster benchmarks
-		},
+		// Note: Complex analysis configurations have been simplified in the unified Config
 	}
 
 	// Create scanner

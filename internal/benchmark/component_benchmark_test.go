@@ -5,21 +5,17 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"typosentinel/internal/config"
-	"typosentinel/internal/detector"
-	"typosentinel/internal/ml"
-	"typosentinel/internal/static"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/detector"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/internal/static"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // BenchmarkDetectorEngine tests the performance of the detector engine
 func BenchmarkDetectorEngine(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := detector.New(cfg)
@@ -44,11 +40,7 @@ func BenchmarkDetectorEngine(b *testing.B) {
 // BenchmarkDetectorTyposquatting tests typosquatting detection performance
 func BenchmarkDetectorTyposquatting(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := detector.New(cfg)
@@ -74,10 +66,7 @@ func BenchmarkDetectorTyposquatting(b *testing.B) {
 // BenchmarkDetectorSimilarity tests similarity calculation performance
 func BenchmarkDetectorSimilarity(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := detector.New(cfg)
@@ -216,11 +205,7 @@ func BenchmarkMLAnalyzerDirectory(b *testing.B) {
 // BenchmarkConcurrentDetection tests concurrent detection performance
 func BenchmarkConcurrentDetection(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := detector.New(cfg)
@@ -279,9 +264,7 @@ func BenchmarkLevenshteinDistance(b *testing.B) {
 // BenchmarkRiskCalculation tests risk score calculation performance
 func BenchmarkRiskCalculation(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := detector.New(cfg)
@@ -308,9 +291,7 @@ func BenchmarkRiskCalculation(b *testing.B) {
 // BenchmarkRecommendationGeneration tests recommendation generation performance
 func BenchmarkRecommendationGeneration(b *testing.B) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := detector.New(cfg)

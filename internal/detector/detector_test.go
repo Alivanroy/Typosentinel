@@ -4,17 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewEngine(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := New(cfg)
@@ -32,11 +28,7 @@ func TestNewEngine(t *testing.T) {
 
 func TestDetectTyposquatting_ExactMatch(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
 
@@ -51,11 +43,7 @@ func TestDetectTyposquatting_ExactMatch(t *testing.T) {
 
 func TestDetectTyposquatting_HighSimilarity(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
 
@@ -79,11 +67,7 @@ func TestDetectTyposquatting_HighSimilarity(t *testing.T) {
 
 func TestDetectTyposquatting_LowSimilarity(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
 
@@ -99,11 +83,7 @@ func TestDetectTyposquatting_LowSimilarity(t *testing.T) {
 
 func TestDetectTyposquatting_CommonTypos(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
 
@@ -203,11 +183,7 @@ func TestLevenshteinDistance(t *testing.T) {
 
 func TestCheckPackage_SuspiciousPackage(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := New(cfg)
@@ -242,9 +218,7 @@ func TestCheckPackage_SuspiciousPackage(t *testing.T) {
 
 func TestCheckPackage_CleanPackage(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
 	engine := New(cfg)
@@ -285,9 +259,7 @@ func TestEngineVersion(t *testing.T) {
 
 func TestAnalyze(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	engine := New(cfg)
 

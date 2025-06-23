@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
 )
 
 // TestMLAnalysisValidation runs comprehensive validation tests against all datasets

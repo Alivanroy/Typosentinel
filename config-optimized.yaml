@@ -1,0 +1,257 @@
+# Typosentinel Optimized Configuration
+# This configuration includes performance optimizations for faster scanning
+
+core:
+  environment: "production"
+  log_level: "info"
+  debug: false
+  max_workers: 10
+  timeout: "30s"
+
+# Performance Optimization Settings
+performance:
+  # Enable optimized scanning engine
+  enable_optimized_scanner: true
+  
+  # Worker pool configuration
+  worker_pool:
+    size: 8  # Number of concurrent workers
+    queue_size: 16  # Job queue buffer size
+    
+  # Connection pool settings
+  connection_pool:
+    max_connections: 100
+    max_idle_connections: 10
+    idle_timeout: "90s"
+    connection_timeout: "10s"
+    
+  # Request optimization
+  requests:
+    retry_attempts: 3
+    retry_delay: "1s"
+    enable_compression: true
+    enable_keep_alive: true
+    user_agent: "Typosentinel/1.0-optimized"
+
+# Enhanced Caching Configuration
+cache:
+  enabled: true
+  type: "multi-level"  # memory, file, redis, multi-level
+  
+  # Memory cache (L1)
+  memory:
+    ttl: "30m"
+    max_size: "100MB"
+    
+  # File system cache (L2)
+  file_system:
+    enabled: true
+    ttl: "24h"
+    max_size: "1GB"
+    cache_dir: "/tmp/typosentinel-cache"
+    
+  # Redis cache (L3) - optional
+  redis:
+    enabled: false
+    host: "localhost"
+    port: 6379
+    password: ""
+    db: 0
+    ttl: "7d"
+
+# Scanner Configuration
+scanner:
+  # Timeout for individual package scans
+  package_timeout: "2s"
+  
+  # Batch scanning settings
+  batch:
+    size: 50  # Number of packages per batch
+    timeout: "30s"
+    parallel_batches: 2
+    
+  # Registry settings
+  registries:
+    npm:
+      enabled: true
+      base_url: "https://registry.npmjs.org"
+      timeout: "5s"
+    pypi:
+      enabled: true
+      base_url: "https://pypi.org/pypi"
+      timeout: "5s"
+    go:
+      enabled: true
+      base_url: "https://proxy.golang.org"
+      timeout: "5s"
+    crates:
+      enabled: true
+      base_url: "https://crates.io/api/v1"
+      timeout: "5s"
+    maven:
+      enabled: true
+      base_url: "https://search.maven.org"
+      timeout: "5s"
+
+# API Server Configuration
+api:
+  enabled: true
+  host: "localhost"
+  port: 8080
+  
+  # Server timeouts
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "60s"
+  
+  # CORS settings
+  cors:
+    enabled: true
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:8080"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+      - "X-API-Key"
+      
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 100
+    burst: 20
+    
+  # Authentication
+  auth:
+    enabled: false
+    api_key: ""
+    jwt_secret: ""
+
+# Analysis Engine Configuration
+static_analysis:
+  enabled: true
+  timeout: "10s"
+  yara_rules_path: ""
+  scan_scripts: true
+  scan_manifests: true
+  
+dynamic_analysis:
+  enabled: false  # Disabled by default for performance
+  timeout: "30s"
+  sandbox_enabled: false
+  
+ml_analysis:
+  enabled: true
+  timeout: "5s"
+  model_path: ""
+  feature_extraction:
+    enabled: true
+    timeout: "2s"
+    
+provenance_analysis:
+  enabled: true
+  timeout: "5s"
+  verify_signatures: true
+  check_integrity: true
+
+# Local Scanning Configuration
+local_scanning:
+  enabled: true
+  
+  # Supported project types
+  project_types:
+    nodejs:
+      enabled: true
+      manifest_files:
+        - "package.json"
+        - "package-lock.json"
+        - "yarn.lock"
+    python:
+      enabled: true
+      manifest_files:
+        - "requirements.txt"
+        - "setup.py"
+        - "pyproject.toml"
+        - "Pipfile"
+        - "Pipfile.lock"
+    go:
+      enabled: true
+      manifest_files:
+        - "go.mod"
+        - "go.sum"
+    rust:
+      enabled: true
+      manifest_files:
+        - "Cargo.toml"
+        - "Cargo.lock"
+    java:
+      enabled: true
+      manifest_files:
+        - "pom.xml"
+        - "build.gradle"
+        - "build.gradle.kts"
+        
+  # Scanning behavior
+  max_depth: 3  # Maximum directory depth to scan
+  ignore_patterns:
+    - "node_modules"
+    - ".git"
+    - "__pycache__"
+    - "target"
+    - "build"
+    - "dist"
+
+# Monitoring and Observability
+monitoring:
+  enabled: true
+  
+  # Metrics
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+    
+  # Health checks
+  health:
+    enabled: true
+    port: 8081
+    path: "/health"
+    
+  # Logging
+  logging:
+    level: "info"
+    format: "json"
+    output: "stdout"
+    
+# Output Configuration
+output:
+  format: "json"  # json, yaml, text, table
+  file: ""
+  pretty: true
+  
+# Security Settings
+security:
+  # Threat database
+  threat_db:
+    enabled: true
+    update_interval: "24h"
+    sources:
+      - "https://api.typosentinel.com/threats"
+      
+  # Vulnerability scanning
+  vulnerability_scan:
+    enabled: true
+    timeout: "10s"
+    
+  # Reputation checking
+  reputation:
+    enabled: true
+    timeout: "5s"
+    sources:
+      - "virustotal"
+      - "malware_bazaar"

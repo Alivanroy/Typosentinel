@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"typosentinel/internal/cache"
-	"typosentinel/internal/database"
+	"github.com/Alivanroy/Typosentinel/internal/cache"
+	"github.com/Alivanroy/Typosentinel/internal/database"
 )
 
 // CacheManager provides comprehensive caching strategies

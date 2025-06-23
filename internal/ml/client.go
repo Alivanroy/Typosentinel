@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Client provides an interface to the ML service
@@ -21,16 +20,16 @@ type Client struct {
 
 // ModelInfo contains information about an ML model
 type ModelInfo struct {
-	Name         string    `json:"name"`
-	Version      string    `json:"version"`
-	Description  string    `json:"description"`
-	Type         string    `json:"type"`
-	TrainedAt    time.Time `json:"trained_at"`
-	Accuracy     float64   `json:"accuracy"`
-	Precision    float64   `json:"precision"`
-	Recall       float64   `json:"recall"`
-	F1Score      float64   `json:"f1_score"`
-	FeatureCount int       `json:"feature_count"`
+	Name         string                 `json:"name"`
+	Version      string                 `json:"version"`
+	Description  string                 `json:"description"`
+	Type         string                 `json:"type"`
+	TrainedAt    time.Time              `json:"trained_at"`
+	Accuracy     float64                `json:"accuracy"`
+	Precision    float64                `json:"precision"`
+	Recall       float64                `json:"recall"`
+	F1Score      float64                `json:"f1_score"`
+	FeatureCount int                    `json:"feature_count"`
 	Metadata     map[string]interface{} `json:"metadata"`
 }
 
@@ -93,11 +92,11 @@ type PackageToAnalyze struct {
 
 // AnalysisOptions represents options for analysis
 type AnalysisOptions struct {
-	CheckSimilarity bool    `json:"check_similarity"`
-	CheckMalicious  bool    `json:"check_malicious"`
+	CheckSimilarity     bool    `json:"check_similarity"`
+	CheckMalicious      bool    `json:"check_malicious"`
 	SimilarityThreshold float64 `json:"similarity_threshold"`
 	MaliciousThreshold  float64 `json:"malicious_threshold"`
-	TopK           int     `json:"top_k"`
+	TopK                int     `json:"top_k"`
 }
 
 // BatchAnalysisResponse represents a batch analysis response
@@ -108,11 +107,11 @@ type BatchAnalysisResponse struct {
 
 // PackageAnalysisResult represents the analysis result for a single package
 type PackageAnalysisResult struct {
-	Package        PackageToAnalyze      `json:"package"`
-	Similarities   []SimilarityResult    `json:"similarities,omitempty"`
-	MaliciousCheck *MaliciousResponse    `json:"malicious_check,omitempty"`
-	Threats        []types.Threat        `json:"threats,omitempty"`
-	Errors         []string              `json:"errors,omitempty"`
+	Package        PackageToAnalyze   `json:"package"`
+	Similarities   []SimilarityResult `json:"similarities,omitempty"`
+	MaliciousCheck *MaliciousResponse `json:"malicious_check,omitempty"`
+	Threats        []types.Threat     `json:"threats,omitempty"`
+	Errors         []string           `json:"errors,omitempty"`
 }
 
 // NewClient creates a new ML client

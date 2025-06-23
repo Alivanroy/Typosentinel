@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 
 	_ "github.com/mattn/go-sqlite3"
 )

@@ -5,19 +5,18 @@ import (
 	"path/filepath"
 	"testing"
 
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 func TestNew(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	// Test that analyzer is properly initialized
 	if analyzer == nil {
@@ -33,19 +32,18 @@ func TestNew(t *testing.T) {
 
 func TestScan_Success(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	// Create a temporary test directory with a package.json
 	testDir := t.TempDir()
 	packageJSON := `{"name": "test-package", "version": "1.0.0", "dependencies": {"lodash": "^4.17.21"}}`
-	err := os.WriteFile(filepath.Join(testDir, "package.json"), []byte(packageJSON), 0644)
+	err = os.WriteFile(filepath.Join(testDir, "package.json"), []byte(packageJSON), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create test package.json: %v", err)
 	}
@@ -73,12 +71,13 @@ func TestScan_Success(t *testing.T) {
 
 func TestScan_NoPackageFiles(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	// Create an empty test directory
 	testDir := t.TempDir()
@@ -87,7 +86,7 @@ func TestScan_NoPackageFiles(t *testing.T) {
 		SimilarityThreshold: 0.8,
 	}
 
-	_, err := analyzer.Scan(testDir, options)
+	_, err = analyzer.Scan(testDir, options)
 
 	if err == nil {
 		t.Error("Expected error for directory with no package files")
@@ -96,18 +95,19 @@ func TestScan_NoPackageFiles(t *testing.T) {
 
 func TestScan_SpecificFile(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	// Create a temporary test directory with a package.json
 	testDir := t.TempDir()
 	packageFile := filepath.Join(testDir, "package.json")
 	packageJSON := `{"name": "test-package", "version": "1.0.0"}`
-	err := os.WriteFile(packageFile, []byte(packageJSON), 0644)
+	err = os.WriteFile(packageFile, []byte(packageJSON), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create test package.json: %v", err)
 	}
@@ -129,7 +129,10 @@ func TestScan_SpecificFile(t *testing.T) {
 
 func TestDetectFileType(t *testing.T) {
 	cfg := &config.Config{}
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	tests := []struct {
 		filePath     string
@@ -158,7 +161,10 @@ func TestDetectFileType(t *testing.T) {
 
 func TestFilterDependencies(t *testing.T) {
 	cfg := &config.Config{}
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	// This test would require importing types.Dependency
 	// For now, just test that the method exists and doesn't panic

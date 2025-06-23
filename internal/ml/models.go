@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // TyposquattingModel implements typosquatting detection using ML

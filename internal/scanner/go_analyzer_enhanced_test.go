@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 func TestEnhancedGoAnalyzer_ParseGoMod(t *testing.T) {

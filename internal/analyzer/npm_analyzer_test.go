@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 func TestNPMAnalyzer_ParsePackageJSON(t *testing.T) {
@@ -38,16 +38,16 @@ func TestNPMAnalyzer_ParsePackageJSON(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: true,
-			MaxDepth:       5,
 		},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	options := &ScanOptions{
 		SimilarityThreshold:    0.8,
@@ -112,16 +112,16 @@ func TestNPMAnalyzer_ParsePackageLockJSON(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
-			MaxDepth:       3,
 		},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	options := &ScanOptions{
 		SimilarityThreshold: 0.8,
@@ -171,12 +171,13 @@ lodash@4.17.21:
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	options := &ScanOptions{
 		SimilarityThreshold: 0.8,
@@ -207,12 +208,13 @@ func TestNPMAnalyzer_EmptyProject(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	options := &ScanOptions{
 		SimilarityThreshold: 0.8,
@@ -258,12 +260,13 @@ func TestNPMAnalyzer_InvalidJSON(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 
-	analyzer := New(cfg)
+	analyzer, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer: %v", err)
+	}
 
 	options := &ScanOptions{
 		SimilarityThreshold: 0.8,
@@ -326,12 +329,13 @@ func TestNPMAnalyzer_FileDetection(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{
-				Detection: config.DetectionConfig{
-					SimilarityThreshold: 0.8,
-				},
+				Detection: &config.DetectionConfig{},
 			}
 
-			analyzer := New(cfg)
+			analyzer, err := New(cfg)
+			if err != nil {
+				t.Fatalf("Failed to create analyzer: %v", err)
+			}
 			fileType, _ := analyzer.detectFileType(tt.filename)
 			
 			if tt.expected == "" {

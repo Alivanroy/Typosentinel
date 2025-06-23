@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"typosentinel/internal/config"
-	"typosentinel/internal/detector"
-	"typosentinel/internal/registry"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/detector"
+	"github.com/Alivanroy/Typosentinel/internal/registry"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Analyzer orchestrates the security scanning process
@@ -72,7 +72,7 @@ func New(cfg *config.Config) (*Analyzer, error) {
 	detectorEngine := detector.New(cfg)
 
 	// Initialize dependency resolver
-	resolver := NewDependencyResolver(&cfg.Scanner)
+	resolver := NewDependencyResolver(cfg.Scanner)
 
 	return &Analyzer{
 		config:   cfg,

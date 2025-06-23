@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewBasicMLScorer(t *testing.T) {

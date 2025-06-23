@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"typosentinel/internal/database"
+	"github.com/Alivanroy/Typosentinel/internal/database"
 )
 
 // DatabaseOptimizer provides advanced database optimization features

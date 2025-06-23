@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"typosentinel/internal/database"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/database"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // PerformanceOptimizer provides comprehensive performance optimization

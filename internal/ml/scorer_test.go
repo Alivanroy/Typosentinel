@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
-
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestBasicMLScorerInterface(t *testing.T) {
@@ -153,27 +152,27 @@ func TestBasicMLScorerUpdateModel(t *testing.T) {
 	// Test valid model update
 	updateData := map[string]interface{}{
 		"feature_weights": map[string]float64{
-			"download_count": -0.5,
+			"download_count":        -0.5,
 			"maintainer_reputation": -0.8,
 		},
 		"bias": 0.1,
 		"thresholds": map[string]float64{
-			"malicious": 0.8,
-			"suspicious": 0.5,
+			"malicious":      0.8,
+			"suspicious":     0.5,
 			"min_confidence": 0.4,
 		},
 		"model_info": map[string]interface{}{
-			"name": "Updated Basic ML Scorer",
-			"version": "1.1.0",
-			"description": "Updated model",
-			"type": "logistic_regression",
+			"name":          "Updated Basic ML Scorer",
+			"version":       "1.1.0",
+			"description":   "Updated model",
+			"type":          "logistic_regression",
 			"training_time": time.Now().Format(time.RFC3339),
 			"feature_count": 15,
 			"metrics": map[string]float64{
-				"accuracy": 0.92,
+				"accuracy":  0.92,
 				"precision": 0.89,
-				"recall": 0.87,
-				"f1_score": 0.88,
+				"recall":    0.87,
+				"f1_score":  0.88,
 			},
 		},
 	}

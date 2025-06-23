@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 func TestNew(t *testing.T) {
@@ -19,7 +19,10 @@ func TestNew(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
 	if scanner == nil {
 		t.Error("Expected scanner to be created, got nil")
@@ -55,7 +58,10 @@ func TestScanProject_Success(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+		if err != nil {
+			t.Fatalf("Failed to create scanner: %v", err)
+		}
 
 	result, err := scanner.ScanProject(tempDir)
 	if err != nil {
@@ -84,7 +90,10 @@ func TestScanProject_EmptyDirectory(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
 	result, err := scanner.ScanProject(tempDir)
 	if err != nil {
@@ -130,9 +139,12 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+		if err != nil {
+			t.Fatalf("Failed to create scanner: %v", err)
+		}
 
-	result, err := scanner.ScanProject(tempDir)
+		result, err := scanner.ScanProject(tempDir)
 	if err != nil {
 		t.Fatalf("Expected successful scan, got error: %v", err)
 	}
@@ -153,9 +165,12 @@ func TestScanProject_InvalidPath(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
-	_, err := scanner.ScanProject("/nonexistent/path")
+	_, err = scanner.ScanProject("/nonexistent/path")
 	if err == nil {
 		t.Error("Expected error for invalid path, got nil")
 	}
@@ -191,9 +206,12 @@ func TestScanProject_NestedDirectories(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+		if err != nil {
+			t.Fatalf("Failed to create scanner: %v", err)
+		}
 
-	result, err := scanner.ScanProject(tempDir)
+		result, err := scanner.ScanProject(tempDir)
 	if err != nil {
 		t.Fatalf("Expected successful scan, got error: %v", err)
 	}
@@ -242,7 +260,10 @@ func TestScanProject_LargeProject(t *testing.T) {
 		},
 	}
 
-	scanner := New(cfg)
+	scanner, err := New(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
 	result, err := scanner.ScanProject(tempDir)
 	if err != nil {

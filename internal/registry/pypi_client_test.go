@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewPyPIClient(t *testing.T) {
@@ -227,31 +227,34 @@ func TestEnrichPackage_Success(t *testing.T) {
 	}
 
 	// Verify enrichment
-	if pkg.Description != "Python HTTP for Humans." {
-		t.Errorf("Expected description 'Python HTTP for Humans.', got %s", pkg.Description)
+	if pkg.Metadata == nil {
+		t.Fatal("Expected metadata to be set")
 	}
-	if pkg.Author != "Kenneth Reitz" {
-		t.Errorf("Expected author 'Kenneth Reitz', got %s", pkg.Author)
+	if pkg.Metadata.Description != "Python HTTP for Humans." {
+		t.Errorf("Expected description 'Python HTTP for Humans.', got %s", pkg.Metadata.Description)
 	}
-	if pkg.License != "Apache 2.0" {
-		t.Errorf("Expected license 'Apache 2.0', got %s", pkg.License)
+	if pkg.Metadata.Author != "Kenneth Reitz" {
+		t.Errorf("Expected author 'Kenneth Reitz', got %s", pkg.Metadata.Author)
 	}
-	if pkg.Homepage != "https://requests.readthedocs.io" {
-		t.Errorf("Expected homepage 'https://requests.readthedocs.io', got %s", pkg.Homepage)
+	if pkg.Metadata.License != "Apache 2.0" {
+		t.Errorf("Expected license 'Apache 2.0', got %s", pkg.Metadata.License)
+	}
+	if pkg.Metadata.Homepage != "https://requests.readthedocs.io" {
+		t.Errorf("Expected homepage 'https://requests.readthedocs.io', got %s", pkg.Metadata.Homepage)
 	}
 
 	// Verify metadata
 	if pkg.Metadata == nil {
 		t.Fatal("Expected metadata to be set")
 	}
-	if pkg.Metadata["author_email"] != "me@kennethreitz.org" {
-		t.Errorf("Expected author_email 'me@kennethreitz.org', got %v", pkg.Metadata["author_email"])
+	if pkg.Metadata.Metadata["author_email"] != "me@kennethreitz.org" {
+		t.Errorf("Expected author_email 'me@kennethreitz.org', got %v", pkg.Metadata.Metadata["author_email"])
 	}
-	if pkg.Metadata["keywords"] != "http,requests" {
-		t.Errorf("Expected keywords 'http,requests', got %v", pkg.Metadata["keywords"])
+	if pkg.Metadata.Metadata["keywords"] != "http,requests" {
+		t.Errorf("Expected keywords 'http,requests', got %v", pkg.Metadata.Metadata["keywords"])
 	}
-	if pkg.Metadata["available_versions"] != 2 {
-		t.Errorf("Expected 2 available versions, got %v", pkg.Metadata["available_versions"])
+	if pkg.Metadata.Metadata["available_versions"] != 2 {
+		t.Errorf("Expected 2 available versions, got %v", pkg.Metadata.Metadata["available_versions"])
 	}
 }
 
@@ -310,8 +313,12 @@ func TestEnrichPackage_WithWildcardVersion(t *testing.T) {
 	}
 
 	// Verify enrichment
-	if pkg.Description != "Fundamental package for array computing" {
-		t.Errorf("Expected description 'Fundamental package for array computing', got %s", pkg.Description)
+	if pkg.Metadata == nil || pkg.Metadata.Description != "Fundamental package for array computing" {
+		var desc string
+		if pkg.Metadata != nil {
+			desc = pkg.Metadata.Description
+		}
+		t.Errorf("Expected description 'Fundamental package for array computing', got %s", desc)
 	}
 }
 

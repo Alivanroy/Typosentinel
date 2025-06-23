@@ -179,24 +179,24 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "valid config",
 			config: &Config{
-				API: APIConfig{
+				API: &APIConfig{
 					Host: "localhost",
 					Port: 8080,
 				},
-				Database: DatabaseConfig{
+				Database: &DatabaseConfig{
 					Host: "localhost",
 					Port: 5432,
 					Name: "typosentinel",
 					User: "postgres",
 				},
-				Detection: DetectionConfig{
+				Detection: &DetectionConfig{
 					Enabled: true,
 					Thresholds: ThresholdConfig{
 						Similarity: 0.8,
 						Confidence: 0.7,
 					},
 				},
-				Logging: LoggingConfig{
+				Logging: &LoggingConfig{
 					Level:  "info",
 					Format: "text",
 					Output: "stdout",
@@ -207,7 +207,7 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid API port",
 			config: &Config{
-				API: APIConfig{
+				API: &APIConfig{
 					Host: "localhost",
 					Port: -1, // Invalid port
 				},
@@ -217,7 +217,7 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid similarity threshold",
 			config: &Config{
-				Detection: DetectionConfig{
+				Detection: &DetectionConfig{
 					Thresholds: ThresholdConfig{
 						Similarity: 1.5, // Invalid threshold > 1
 					},
@@ -228,7 +228,7 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid confidence threshold",
 			config: &Config{
-				Detection: DetectionConfig{
+				Detection: &DetectionConfig{
 					Thresholds: ThresholdConfig{
 						Confidence: -0.1, // Invalid threshold < 0
 					},
@@ -296,7 +296,7 @@ func TestDatabaseConfig(t *testing.T) {
 	dbConfig.Redis.Host = "localhost"
 	dbConfig.Redis.Port = 6379
 	dbConfig.Redis.Password = "redis-password"
-	dbConfig.Redis.DB = 0
+	dbConfig.Redis.Database = 0
 
 	if dbConfig.Host != "localhost" {
 		t.Errorf("Expected host localhost, got %s", dbConfig.Host)
@@ -414,7 +414,7 @@ func TestRegistryConfig(t *testing.T) {
 		Enabled:  true,
 		BaseURL:  "https://registry.npmjs.org",
 		APIKey:   "npm-api-key",
-		Timeout:  10 * time.Second,
+		Timeout: "10s",
 		RateLimit: RateLimitConfig{
 			Enabled: true,
 			RPS:     100,
@@ -430,7 +430,7 @@ func TestRegistryConfig(t *testing.T) {
 		t.Errorf("Expected base URL https://registry.npmjs.org, got %s", registryConfig.BaseURL)
 	}
 
-	if registryConfig.Timeout != 10*time.Second {
+	if registryConfig.Timeout != "10s" {
 		t.Errorf("Expected timeout 10s, got %v", registryConfig.Timeout)
 	}
 
@@ -450,20 +450,17 @@ func TestPolicyConfig(t *testing.T) {
 			{
 				Name:        "block-high-risk",
 				Enabled:     true,
-				Severity:    "high",
-				Action:      "block",
+
 				Description: "Block packages with high risk",
 			},
 			{
 				Name:        "warn-medium-risk",
 				Enabled:     true,
-				Severity:    "medium",
-				Action:      "warn",
+
 				Description: "Warn about packages with medium risk",
 			},
 		},
-		Allowlist: []string{"trusted-package-1", "trusted-package-2"},
-		Blocklist: []string{"malicious-package-1", "malicious-package-2"},
+
 	}
 
 	if !policyConfig.Enabled {
@@ -478,13 +475,6 @@ func TestPolicyConfig(t *testing.T) {
 		t.Errorf("Expected rule name block-high-risk, got %s", policyConfig.Rules[0].Name)
 	}
 
-	if len(policyConfig.Allowlist) != 2 {
-		t.Errorf("Expected 2 allowlist entries, got %d", len(policyConfig.Allowlist))
-	}
-
-	if len(policyConfig.Blocklist) != 2 {
-		t.Errorf("Expected 2 blocklist entries, got %d", len(policyConfig.Blocklist))
-	}
 }
 
 func TestViperIntegration(t *testing.T) {
@@ -523,11 +513,11 @@ func TestConfigSerialization(t *testing.T) {
 	cfg := &Config{
 		Verbose: true,
 		Debug:   false,
-		API: APIConfig{
+		API: &APIConfig{
 			Host: "localhost",
 			Port: 8080,
 		},
-		Logging: LoggingConfig{
+		Logging: &LoggingConfig{
 			Level:  "info",
 			Format: "text",
 		},

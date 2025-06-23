@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // PHPPackageAnalyzer analyzes PHP projects

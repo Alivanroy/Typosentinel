@@ -7,7 +7,7 @@ import (
 	"time"
 	"unicode"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // KeyboardLayout represents different keyboard layouts for proximity analysis

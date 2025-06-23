@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
 var (
@@ -44,7 +46,7 @@ Example usage:
   typosentinel monitor --config monitoring.yaml
   typosentinel database update`,
 	Version: "1.0.0",
-	PersistentPreRunE: initializeConfig,
+	// PersistentPreRunE: initializeConfig, // Temporarily disabled
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -56,6 +58,11 @@ Example usage:
 func initializeConfig(cmd *cobra.Command, args []string) error {
 	// Initialize logger with basic settings first
 	logger.InitDefault()
+
+	// Add safety check for logger initialization
+	if logger.GetGlobalLogger() == nil {
+		return fmt.Errorf("failed to initialize global logger")
+	}
 
 	// Set debug mode based on flags
 	if debugMode != "" {
@@ -81,13 +88,20 @@ func initializeConfig(cmd *cobra.Command, args []string) error {
 		logger.SetGlobalFormat(logFormat)
 	}
 
-	// Load full configuration
+	// Load full configuration with proper error handling
 	var cfg config.Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		logger.Warn("Failed to unmarshal configuration, using defaults", map[string]interface{}{
-			"error": err.Error(),
-		})
+	// Ensure viper is properly initialized before unmarshaling
+	if viper.ConfigFileUsed() == "" {
+		// No config file found, use defaults
+		logger.Debug("No configuration file found, using defaults")
 	} else {
+		if err := viper.Unmarshal(&cfg); err != nil {
+			logger.Warn("Failed to unmarshal configuration, using defaults", map[string]interface{}{
+				"error": err.Error(),
+			})
+			return nil // Continue with defaults instead of failing
+		}
+		
 		// Initialize logger with loaded configuration
 		if cfg.Logging.Level != "" {
 			loggerConfig := logger.LoggerConfig{
@@ -103,8 +117,8 @@ func initializeConfig(cmd *cobra.Command, args []string) error {
 			}
 			if err := logger.InitFromConfig(loggerConfig); err != nil {
 				logger.Warn("Failed to initialize logger from config", map[string]interface{}{
-				"error": err.Error(),
-			})
+					"error": err.Error(),
+				})
 			}
 		}
 

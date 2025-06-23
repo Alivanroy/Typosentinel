@@ -123,17 +123,22 @@ setup_test_database() {
 setup_python_deps() {
     log_info "Installing Python test dependencies..."
     
-    cd ml
-    
-    # Install main dependencies
-    python3 -m pip install -r requirements.txt --quiet
-    
-    # Install test dependencies
-    python3 -m pip install pytest pytest-cov pytest-asyncio httpx --quiet
-    
-    cd ..
-    
-    log_success "Python dependencies installed"
+    # Check if ml directory exists and has requirements.txt
+    if [ -d "ml" ] && [ -f "ml/requirements.txt" ]; then
+        cd ml
+        
+        # Install main dependencies
+        python3 -m pip install -r requirements.txt --quiet
+        
+        # Install test dependencies
+        python3 -m pip install pytest pytest-cov pytest-asyncio httpx --quiet
+        
+        cd ..
+        
+        log_success "Python dependencies installed"
+    else
+        log_info "No Python ML dependencies found - ML components are implemented in Go"
+    fi
 }
 
 # Run Go unit tests
@@ -184,14 +189,19 @@ run_go_integration_tests() {
 run_python_unit_tests() {
     log_info "Running Python unit tests..."
     
-    cd ml
-    
-    # Run pytest with coverage
-    python3 -m pytest tests/ -v --cov=. --cov-report=html:../coverage/python-unit --cov-report=term --cov-report=xml:../coverage/python-unit.xml | tee ../test-results/python-unit.log
-    
-    cd ..
-    
-    log_success "Python unit tests completed"
+    # Check if ml directory exists and has Python tests
+    if [ -d "ml" ] && [ -d "ml/tests" ]; then
+        cd ml
+        
+        # Run pytest with coverage
+        python3 -m pytest tests/ -v --cov=. --cov-report=html:../coverage/python-unit --cov-report=term --cov-report=xml:../coverage/python-unit.xml | tee ../test-results/python-unit.log
+        
+        cd ..
+        
+        log_success "Python unit tests completed"
+    else
+        log_info "No Python unit tests found - ML components are implemented in Go"
+    fi
 }
 
 # Run API tests
@@ -223,20 +233,29 @@ run_api_tests() {
 run_ml_service_tests() {
     log_info "Running ML service tests..."
     
-    cd ml
-    
-    # Start ML service in background
-    python3 service/api_server.py --host localhost --port 8001 &
-    local ml_pid=$!
-    
-    # Wait for service to start
-    sleep 10
-    
-    # Run ML service tests
-    python3 -m pytest tests/test_api_server.py -v | tee ../test-results/ml-service.log
-    
-    # Stop ML service
-    kill $ml_pid 2>/dev/null || true
+    # Check if ml directory exists and has service
+    if [ -d "ml" ] && [ -f "ml/service/api_server.py" ]; then
+        cd ml
+        
+        # Start ML service in background
+        python3 service/api_server.py --host localhost --port 8001 &
+        local ml_pid=$!
+        
+        # Wait for service to start
+        sleep 10
+        
+        # Run ML service tests
+        python3 -m pytest tests/test_api_server.py -v | tee ../test-results/ml-service.log
+        
+        # Stop ML service
+        kill $ml_pid 2>/dev/null || true
+        
+        cd ..
+        
+        log_success "ML service tests completed"
+    else
+        log_info "No ML service found - ML components are implemented in Go"
+    fi
     
     cd ..
     
@@ -291,19 +310,23 @@ run_linting() {
     fi
     
     # Python linting
-    cd ml
-    if command -v flake8 &> /dev/null; then
-        flake8 . | tee ../test-results/python-lint.log
+    if [ -d "ml" ]; then
+        cd ml
+        if command -v flake8 &> /dev/null; then
+            flake8 . | tee ../test-results/python-lint.log
+        else
+            log_warning "flake8 not found - install with: pip install flake8"
+        fi
+        
+        if command -v black &> /dev/null; then
+            black --check . | tee ../test-results/python-format.log
+        else
+            log_warning "black not found - install with: pip install black"
+        fi
+        cd ..
     else
-        log_warning "flake8 not found - install with: pip install flake8"
+        log_info "No Python code found for linting - ML components are implemented in Go"
     fi
-    
-    if command -v black &> /dev/null; then
-        black --check . | tee ../test-results/python-format.log
-    else
-        log_warning "black not found - install with: pip install black"
-    fi
-    cd ..
     
     log_success "Linting completed"
 }

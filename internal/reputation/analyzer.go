@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Config represents the reputation analyzer configuration

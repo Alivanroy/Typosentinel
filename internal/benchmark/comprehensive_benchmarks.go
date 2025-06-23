@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/analyzer"
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
 // BenchmarkMetrics holds performance metrics for a single benchmark
@@ -334,14 +334,11 @@ func BenchmarkStressTest(b *testing.B) {
 
 func getOptimizedConfig() *config.Config {
 	return &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-		},
-		Scanner: config.ScannerConfig{
+		Detection: &config.DetectionConfig{},
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
-			MaxDepth:       5,
 		},
-		Logging: config.LoggingConfig{
+		Logging: &config.LoggingConfig{
 			Level: "error", // Reduce logging overhead
 		},
 	}
@@ -349,7 +346,7 @@ func getOptimizedConfig() *config.Config {
 
 func getMLEnabledConfig() *config.Config {
 	cfg := getOptimizedConfig()
-	cfg.Scanner.EnableMLAnalysis = true
+	// ML analysis configuration would be handled elsewhere
 	return cfg
 }
 

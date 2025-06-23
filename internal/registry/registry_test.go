@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewManager(t *testing.T) {

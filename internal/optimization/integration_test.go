@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/database"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/database"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestOptimizationManagerBasic(t *testing.T) {

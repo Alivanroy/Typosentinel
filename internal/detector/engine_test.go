@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // MockLexicalDetector for testing
@@ -82,11 +82,7 @@ func TestVersion(t *testing.T) {
 
 func TestCheckPackage_Success(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	engine := New(cfg)
 
@@ -120,11 +116,7 @@ func TestCheckPackage_Success(t *testing.T) {
 
 func TestCheckPackage_WithThreats(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	engine := New(cfg)
 
@@ -184,11 +176,7 @@ func TestCheckPackage_Timeout(t *testing.T) {
 
 func TestAnalyzeDependency(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-			SemanticAnalysis:    true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	engine := New(cfg)
 
@@ -344,10 +332,7 @@ func TestEngineWithNilConfig(t *testing.T) {
 
 func TestConcurrentPackageChecks(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
-			HomoglyphDetection:  true,
-		},
+		Detection: &config.DetectionConfig{},
 	}
 	engine := New(cfg)
 

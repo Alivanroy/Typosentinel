@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/internal/output"
-	"typosentinel/internal/scanner"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/output"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
 )
 
 // convertToOutputFormat converts scanner results to the new output format
@@ -202,7 +202,7 @@ func getEnabledAnalyzers(cfg *config.Config) []string {
 
 	// Note: Static and dynamic analysis flags not available in current ScannerConfig
 	// Using available ML analysis flag
-	if cfg.Scanner.EnableMLAnalysis {
+	if cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled {
 		analyzers = append(analyzers, "ml")
 	}
 

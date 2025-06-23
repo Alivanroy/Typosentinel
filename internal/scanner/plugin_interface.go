@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"sync"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // LanguageAnalyzer defines the interface that all language analyzers must implement

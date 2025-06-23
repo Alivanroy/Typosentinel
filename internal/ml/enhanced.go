@@ -236,8 +236,8 @@ func NewEnhancedMLEngine(client *Client, config *MLConfig) *EnhancedMLEngine {
 func DefaultMLConfig() *MLConfig {
 	return &MLConfig{
 		EmbeddingModel:      "sentence-transformers/all-MiniLM-L6-v2",
-		MaliciousModel:      "typosentinel/malicious-detector-v1",
-		ReputationModel:     "typosentinel/reputation-scorer-v1",
+		MaliciousModel:      "github.com/Alivanroy/Typosentinel/malicious-detector-v1",
+		ReputationModel:     "github.com/Alivanroy/Typosentinel/reputation-scorer-v1",
 		SimilarityThreshold: 0.8,
 		MaliciousThreshold:  0.7,
 		ReputationThreshold: 0.5,

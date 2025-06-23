@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
-
-	"typosentinel/internal/config"
-	"typosentinel/pkg/logger"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // MLPipeline represents the machine learning pipeline for threat detection
@@ -317,11 +316,11 @@ func (p *MLPipeline) runEnsemblePrediction(ctx context.Context, features []float
 func (p *MLPipeline) combinePredictions(predictions map[string]*Prediction, features *PackageFeatures) *Prediction {
 	if len(predictions) == 0 {
 		return &Prediction{
-		Model:       "ensemble",
-		Probability: 0.5,
-		Label:       types.RiskLevelMedium.String(),
-		Confidence:  0.0,
-	}
+			Model:       "ensemble",
+			Probability: 0.5,
+			Label:       types.RiskLevelMedium.String(),
+			Confidence:  0.0,
+		}
 	}
 
 	// Weighted ensemble approach
@@ -388,8 +387,6 @@ func (p *MLPipeline) determineRiskLevel(score, confidence float64) types.RiskLev
 	return types.RiskLevelMinimal
 }
 
-
-
 // IsReady returns whether the ML pipeline is ready for analysis
 func (p *MLPipeline) IsReady() bool {
 	p.mu.RLock()
@@ -403,16 +400,26 @@ func (p *MLPipeline) GetStats() map[string]interface{} {
 	defer p.mu.RUnlock()
 
 	stats := map[string]interface{}{
-		"initialized":  p.initialized,
-		"model_count":  len(p.models),
-		"ready_models": 0,
+		"initialized":   p.initialized,
+		"models_count":  len(p.models),
+		"feature_count": len(p.features.GetFeatureNames()),
 	}
 
-	for _, model := range p.models {
-		if model.IsReady() {
-			stats["ready_models"] = stats["ready_models"].(int) + 1
+	// Add model-specific stats
+	modelStats := make(map[string]interface{})
+	for name, model := range p.models {
+		modelStats[name] = map[string]interface{}{
+			"ready": model.IsReady(),
 		}
 	}
+	stats["models"] = modelStats
 
 	return stats
+}
+
+// GetModels returns the models for training purposes
+func (p *MLPipeline) GetModels() map[string]MLModel {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.models
 }

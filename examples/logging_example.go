@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
 func main() {

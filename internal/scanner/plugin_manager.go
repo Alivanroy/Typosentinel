@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 // PluginManager manages the plugin lifecycle and provides advanced plugin management

@@ -27,10 +27,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "", "set log format (text, json)")
 	rootCmd.PersistentFlags().StringVar(&logOutput, "log-output", "", "set log output (stdout, stderr, file path)")
 
-	// Add scan command
-	rootCmd.AddCommand(scanCmd)
-	// Add tree command
-	rootCmd.AddCommand(treeCmd)
+	// Commands are added in their respective init() functions
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -54,8 +51,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		if debug {
-			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-		}
+		// Config file loaded successfully
+		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }

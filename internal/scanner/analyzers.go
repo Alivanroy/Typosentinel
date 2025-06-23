@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // NodeJSAnalyzer analyzes Node.js projects

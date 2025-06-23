@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewAnalyzer(t *testing.T) {

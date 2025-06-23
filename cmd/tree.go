@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"typosentinel/internal/config"
-	"typosentinel/internal/scanner"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // treeCmd represents the tree command
@@ -78,14 +78,13 @@ func runTree(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load configuration
-	cfg, err := config.Load()
-	if err != nil {
-		fmt.Printf("Warning: failed to load config, using defaults: %v\n", err)
-		cfg = &config.Config{} // Use empty config with defaults
-	}
+	cfg := config.NewDefaultConfig()
 
 	// Create scanner
-	scanner := scanner.New(cfg)
+	scanner, err := scanner.New(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create scanner: %w", err)
+	}
 
 	if !treeQuiet {
 		fmt.Printf("Analyzing project: %s\n", absPath)

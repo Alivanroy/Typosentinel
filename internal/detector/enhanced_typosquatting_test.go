@@ -3,7 +3,7 @@ package detector
 import (
 	"strings"
 	"testing"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewEnhancedTyposquattingDetector(t *testing.T) {

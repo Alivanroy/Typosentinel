@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"typosentinel/internal/config"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // RubyPackageAnalyzer analyzes Ruby projects with enhanced Bundler integration

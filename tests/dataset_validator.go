@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"typosentinel/internal/ml"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // TestPackage represents a test package with expected results

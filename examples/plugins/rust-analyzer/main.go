@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"typosentinel/internal/scanner"
-	"typosentinel/pkg/types"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // NewAnalyzer is the plugin entry point required by TypoSentinel

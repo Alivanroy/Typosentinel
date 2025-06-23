@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"typosentinel/cmd"
+	"github.com/Alivanroy/Typosentinel/cmd"
 )
 
 func main() {

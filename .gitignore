@@ -48,6 +48,36 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+
+# Project-specific temporary directories and artifacts
+/temp/
+/artifacts/
+/reports/
+
+# Build artifacts
+/typosentinel
+
+# Temporary test files
+test-*
+!test-config.yaml
+
+# Generated reports
+*-report-*.json
+*_test_results_*/
+performance_test_*.txt
+security_test_*.txt
+
+# IDE and Editor specific files
+.cursor/
+.roo/
+.roomodes
+.taskmaster/
+.windsurfrules
+.fleet/
+.idea/
+*.swp
+*.swo
+*~
 *.lcov
 
 # nyc test coverage

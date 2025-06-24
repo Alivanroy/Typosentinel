@@ -716,10 +716,12 @@ func (pa *ProvenanceAnalyzer) fetchSLSAProvenance(ctx context.Context, packageNa
 
 func (pa *ProvenanceAnalyzer) parseSLSAProvenance(data map[string]interface{}, provenance *SLSAProvenance) error {
 	// Parse SLSA provenance data
-	if builderID, ok := data["builder"].(map[string]interface{})["id"].(string); ok {
-		provenance.Builder = &SLSABuilder{
-			ID: builderID,
-			Trusted: pa.isBuilderTrusted(builderID),
+	if builderData, ok := data["builder"].(map[string]interface{}); ok {
+		if builderID, ok := builderData["id"].(string); ok {
+			provenance.Builder = &SLSABuilder{
+				ID: builderID,
+				Trusted: pa.isBuilderTrusted(builderID),
+			}
 		}
 	}
 	
@@ -742,6 +744,16 @@ func (pa *ProvenanceAnalyzer) isBuilderTrusted(builderID string) bool {
 }
 
 func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *SLSACompliance {
+	// Handle nil provenance
+	if provenance == nil {
+		return &SLSACompliance{
+			Level: 0,
+			Requirements: make(map[string]bool),
+			Violations: []string{"No provenance data available"},
+			Score: 0.0,
+		}
+	}
+
 	// Assess SLSA compliance level
 	compliance := &SLSACompliance{
 		Level: 0,
@@ -749,7 +761,7 @@ func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *
 		Violations: []string{},
 		Score: 0.0,
 	}
-	
+
 	// Check SLSA Level 1 requirements
 	if provenance.Builder != nil && provenance.Builder.ID != "" {
 		compliance.Requirements["build_service"] = true
@@ -969,7 +981,7 @@ func (pa *ProvenanceAnalyzer) calculateOverallAssessment(result *AnalysisResult)
 
 // Placeholder trust score calculation functions
 func (pa *ProvenanceAnalyzer) calculateSignatureTrustScore(verification *SignatureVerification) float64 {
-	if !verification.Verified {
+	if verification == nil || !verification.Verified {
 		return 0.0
 	}
 	
@@ -995,7 +1007,7 @@ func (pa *ProvenanceAnalyzer) calculateSignatureTrustScore(verification *Signatu
 }
 
 func (pa *ProvenanceAnalyzer) calculateSLSATrustScore(provenance *SLSAProvenance) float64 {
-	if !provenance.Present {
+	if provenance == nil || !provenance.Present {
 		return 0.0
 	}
 	
@@ -1017,6 +1029,9 @@ func (pa *ProvenanceAnalyzer) calculateSLSATrustScore(provenance *SLSAProvenance
 }
 
 func (pa *ProvenanceAnalyzer) calculateIntegrityTrustScore(checks *IntegrityChecks) float64 {
+	if checks == nil {
+		return 0.0
+	}
 	score := 0.0
 	
 	if checks.HashVerification != nil && checks.HashVerification.Verified {
@@ -1035,7 +1050,7 @@ func (pa *ProvenanceAnalyzer) calculateIntegrityTrustScore(checks *IntegrityChec
 }
 
 func (pa *ProvenanceAnalyzer) calculateTransparencyLogTrustScore(verification *TransparencyLogVerification) float64 {
-	if !verification.Present {
+	if verification == nil || !verification.Present {
 		return 0.0
 	}
 	

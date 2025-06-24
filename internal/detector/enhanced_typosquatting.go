@@ -608,18 +608,40 @@ func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int
 	layout := etd.keyboardLayouts[0] // Use QWERTY
 	count := 0
 	
-	minLen := minInt(len(s1), len(s2))
-	for i := 0; i < minLen; i++ {
-		if s1[i] != s2[i] {
-			c1 := unicode.ToLower(rune(s1[i]))
-			c2 := unicode.ToLower(rune(s2[i]))
-			
-			// Check if characters are adjacent on keyboard
-			if adjacent, ok := layout.Layout[c1]; ok {
-				for _, adj := range adjacent {
-					if adj == c2 {
-						count++
-						break
+	// For strings of same length, check position-by-position
+	if len(s1) == len(s2) {
+		for i := 0; i < len(s1); i++ {
+			if s1[i] != s2[i] {
+				c1 := unicode.ToLower(rune(s1[i]))
+				c2 := unicode.ToLower(rune(s2[i]))
+				
+				// Check if characters are adjacent on keyboard
+				if adjacent, ok := layout.Layout[c1]; ok {
+					for _, adj := range adjacent {
+						if adj == c2 {
+							count++
+							break
+						}
+					}
+				}
+			}
+		}
+	} else {
+		// For different length strings, use a more sophisticated approach
+		// This is a simplified version - could be enhanced with proper alignment
+		minLen := minInt(len(s1), len(s2))
+		for i := 0; i < minLen; i++ {
+			if s1[i] != s2[i] {
+				c1 := unicode.ToLower(rune(s1[i]))
+				c2 := unicode.ToLower(rune(s2[i]))
+				
+				// Check if characters are adjacent on keyboard
+				if adjacent, ok := layout.Layout[c1]; ok {
+					for _, adj := range adjacent {
+						if adj == c2 {
+							count++
+							break
+						}
 					}
 				}
 			}
@@ -631,23 +653,29 @@ func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int
 
 // determinePrimaryType determines the primary type of typosquatting
 func (etd *EnhancedTyposquattingDetector) determinePrimaryType(analysis TyposquattingAnalysis) string {
+	// Check for keyboard proximity errors first (most specific)
 	if analysis.KeyboardErrors > 0 {
 		return "keyboard_proximity"
 	}
-	if analysis.VisualSimilarity > 0.8 {
-		return "visual_similarity"
-	}
-	if analysis.PhoneticSimilarity > 0.8 {
-		return "phonetic_similarity"
-	}
+	// Check for specific character operations
 	if analysis.Transpositions > 0 {
 		return "character_transposition"
 	}
 	if analysis.Insertions > analysis.Deletions && analysis.Insertions > analysis.Substitutions {
 		return "character_insertion"
 	}
-	if analysis.Deletions > analysis.Substitutions {
+	if analysis.Deletions > analysis.Insertions && analysis.Deletions > analysis.Substitutions {
 		return "character_deletion"
+	}
+	if analysis.Substitutions > 0 {
+		return "character_substitution"
+	}
+	// Check for high similarity patterns
+	if analysis.VisualSimilarity > 0.8 {
+		return "visual_similarity"
+	}
+	if analysis.PhoneticSimilarity > 0.8 {
+		return "phonetic_similarity"
 	}
 	return "character_substitution"
 }

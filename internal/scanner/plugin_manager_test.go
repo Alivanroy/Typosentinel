@@ -11,26 +11,11 @@ import (
 
 func TestPluginManager_Initialize(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -59,25 +44,10 @@ func TestPluginManager_Initialize(t *testing.T) {
 
 func TestPluginManager_LoadPlugin(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
 			Plugins: []config.PluginEntry{}, // Empty plugins list to avoid loading during init
 		},
 	}
@@ -107,26 +77,11 @@ func TestPluginManager_LoadPlugin(t *testing.T) {
 
 func TestPluginManager_UnloadPlugin(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -149,26 +104,11 @@ func TestPluginManager_UnloadPlugin(t *testing.T) {
 
 func TestPluginManager_ReloadPlugin(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -191,26 +131,11 @@ func TestPluginManager_ReloadPlugin(t *testing.T) {
 
 func TestPluginManager_EnableDisablePlugin(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -239,26 +164,11 @@ func TestPluginManager_EnableDisablePlugin(t *testing.T) {
 
 func TestPluginManager_GetLoadedPlugins(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -301,26 +211,11 @@ func TestPluginManager_ListAvailablePlugins(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: tempDir,
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{tempDir},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -355,26 +250,11 @@ func TestPluginManager_ListAvailablePlugins(t *testing.T) {
 
 func TestPluginManager_GetPluginInfo(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -400,26 +280,11 @@ func TestPluginManager_GetPluginInfo(t *testing.T) {
 
 func TestPluginManager_ValidatePlugin(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -442,26 +307,11 @@ func TestPluginManager_ValidatePlugin(t *testing.T) {
 
 func TestPluginWatcher(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        true,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 
@@ -489,26 +339,11 @@ func TestPluginWatcher(t *testing.T) {
 
 func TestPluginManager_Shutdown(t *testing.T) {
 	cfg := &config.Config{
-		Plugins: &config.PluginConfig{
+		Plugins: &config.PluginsConfig{
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			LoadTimeout:     30,
-			MaxPlugins:      10,
-			Validation: config.PluginValidationConfig{
-				Enabled:           true,
-				CheckSignature:    false,
-				RequiredMetadata:  []string{"name", "version"},
-				AllowedExtensions: []string{".so"},
-			},
-			Security: config.PluginSecurityConfig{
-				Sandboxed:        false,
-				AllowedPaths:     []string{"/tmp"},
-				RestrictedAPIs:   []string{},
-				MaxMemoryUsage:   "100MB",
-				MaxExecutionTime: 30,
-			},
-			Plugins: []config.PluginEntry{},
+			Plugins:         []config.PluginEntry{},
 		},
 	}
 

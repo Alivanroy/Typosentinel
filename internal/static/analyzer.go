@@ -689,6 +689,20 @@ func (sa *StaticAnalyzer) analyzePackageJSON(file *os.File, analysis *ManifestAn
 		for name, script := range scripts {
 			if scriptStr, ok := script.(string); ok {
 				analysis.Scripts[name] = scriptStr
+				
+				// Check for suspicious commands in scripts
+				for _, cmd := range sa.config.SuspiciousCommands {
+					if strings.Contains(strings.ToLower(scriptStr), strings.ToLower(cmd)) {
+						analysis.SuspiciousFields = append(analysis.SuspiciousFields, SuspiciousField{
+							Field:      fmt.Sprintf("scripts.%s", name),
+							Value:      scriptStr,
+							Reason:     fmt.Sprintf("Contains suspicious command: %s", cmd),
+							RiskLevel:  "HIGH",
+							Confidence: 0.8,
+						})
+						break // Only add one suspicious field per script
+					}
+				}
 			}
 		}
 	}

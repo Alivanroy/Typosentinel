@@ -45,7 +45,7 @@ pytest-cov==4.0.0
 
 	// Create analyzer
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: true,
 		},
 	}
@@ -137,7 +137,7 @@ python_version = "3.9"
 
 	// Create analyzer
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: true,
 		},
 	}
@@ -248,7 +248,7 @@ build-backend = "poetry.core.masonry.api"
 
 	// Create analyzer
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: true,
 		},
 	}
@@ -380,7 +380,7 @@ setup(
 
 	// Create analyzer
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
 		},
 	}
@@ -460,7 +460,7 @@ flask<=2.2.0
 
 	// Create analyzer
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
 		},
 	}
@@ -509,7 +509,7 @@ flask<=2.2.0
 func TestPythonAnalyzer_UnsupportedManifest(t *testing.T) {
 	// Create analyzer
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
 		},
 	}

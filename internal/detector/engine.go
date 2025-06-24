@@ -31,6 +31,18 @@ type Options struct {
 
 // New creates a new detection engine
 func New(cfg *config.Config) *Engine {
+	// Provide default config if nil
+	if cfg == nil {
+		cfg = &config.Config{
+			Detection: &config.DetectionConfig{
+				MinPackageNameLength:   2,
+				EnhancedTyposquatting:  true,
+				HomoglyphDetection:     true,
+				DependencyConfusion:    true,
+				ReputationScoring:      true,
+			},
+		}
+	}
 	return &Engine{
 		config:                        cfg,
 		lexicalDetector:               NewLexicalDetector(cfg),
@@ -147,6 +159,14 @@ func (e *Engine) getPopularPackagesForRegistry(registry string) []string {
 		return []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment"}
 	case "pypi":
 		return []string{"numpy", "pandas", "requests", "flask", "django", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow"}
+	case "rubygems":
+		return []string{"rails", "bundler", "rake", "rspec", "nokogiri"}
+	case "crates.io":
+		return []string{"serde", "tokio", "clap", "rand", "regex"}
+	case "maven":
+		return []string{"junit", "spring-boot", "jackson-core", "slf4j-api", "commons-lang3"}
+	case "nuget":
+		return []string{"Newtonsoft.Json", "Microsoft.Extensions.Logging", "AutoMapper", "EntityFramework", "NUnit"}
 	default:
 		return []string{}
 	}
@@ -195,8 +215,9 @@ func (e *Engine) Analyze(ctx context.Context, deps []types.Dependency, options *
 
 // analyzeDependency analyzes a single dependency for threats
 func (e *Engine) analyzeDependency(dep types.Dependency, allPackageNames []string, options *Options) ([]types.Threat, []types.Warning) {
-	var threats []types.Threat
-	var warnings []types.Warning
+	// Initialize slices to ensure they're never nil
+	threats := make([]types.Threat, 0)
+	warnings := make([]types.Warning, 0)
 
 	// Skip analysis for very short package names (likely legitimate)
 	if len(dep.Name) < e.config.Detection.MinPackageNameLength {

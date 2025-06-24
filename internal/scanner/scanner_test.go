@@ -10,12 +10,15 @@ import (
 
 func TestNew(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
+			Enabled:        true,
 			IncludeDevDeps: true,
-			MaxDepth:       5,
 		},
 	}
 
@@ -49,12 +52,15 @@ func TestScanProject_Success(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
+			Enabled:        true,
 			IncludeDevDeps: true,
-			MaxDepth:       5,
 		},
 	}
 
@@ -85,8 +91,11 @@ func TestScanProject_EmptyDirectory(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
 	}
 
@@ -130,12 +139,15 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
+			Enabled:        true,
 			IncludeDevDeps: true,
-			MaxDepth:       5,
 		},
 	}
 
@@ -160,8 +172,11 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 
 func TestScanProject_InvalidPath(t *testing.T) {
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
 	}
 
@@ -198,11 +213,14 @@ func TestScanProject_NestedDirectories(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
-		Scanner: config.ScannerConfig{
-			MaxDepth: 3,
+		Scanner: &config.ScannerConfig{
+			Enabled: true,
 		},
 	}
 
@@ -251,12 +269,15 @@ func TestScanProject_LargeProject(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: config.DetectionConfig{
-			SimilarityThreshold: 0.8,
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Thresholds: config.ThresholdConfig{
+				Similarity: 0.8,
+			},
 		},
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
+			Enabled:        true,
 			IncludeDevDeps: true,
-			MaxDepth:       5,
 		},
 	}
 

@@ -129,7 +129,7 @@ dependencies = ["ruff", "black"]`,
 
 			// Create analyzer with metadata enrichment disabled for testing
 			cfg := &config.Config{
-				Scanner: config.ScannerConfig{
+				Scanner: &config.ScannerConfig{
 					EnrichMetadata: false,
 				},
 			}
@@ -199,7 +199,7 @@ django~=4.0.0
 
 	// Test with metadata enrichment enabled
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			EnrichMetadata: true,
 		},
 	}
@@ -257,7 +257,7 @@ func TestPythonAnalyzer_ComplexRequirementsParsing(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			EnrichMetadata: false,
 		},
 	}
@@ -296,7 +296,7 @@ pytest==6.2.4
 	}
 
 	cfg := &config.Config{
-		Scanner: config.ScannerConfig{
+		Scanner: &config.ScannerConfig{
 			EnrichMetadata: false,
 		},
 	}

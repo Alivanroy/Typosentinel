@@ -199,6 +199,143 @@ func TestLogger_LogLevelFiltering(t *testing.T) {
 	assert.Contains(t, output, "error message")
 }
 
+func TestLogger_FormattedMethods(t *testing.T) {
+	var buf bytes.Buffer
+	config := &Config{
+		Level:     TRACE,
+		Format:    "text",
+		Output:    &buf,
+		Timestamp: false,
+		Caller:    false,
+		Prefix:    "[TEST]",
+	}
+
+	logger := NewWithConfig(config)
+
+	// Test formatted logging methods
+	logger.Infof("User %s logged in with ID %d", "john", 123)
+	logger.Errorf("Error code: %d, message: %s", 500, "server error")
+	logger.Debugf("Debug info: %v", map[string]int{"count": 42})
+	logger.Warnf("Warning: %s", "low disk space")
+	logger.Tracef("Trace: %s", "function entry")
+	logger.Verbosef("Verbose: %s", "detailed info")
+
+	output := buf.String()
+
+	assert.Contains(t, output, "User john logged in with ID 123")
+	assert.Contains(t, output, "Error code: 500, message: server error")
+	assert.Contains(t, output, "Debug info: map[count:42]")
+	assert.Contains(t, output, "Warning: low disk space")
+	assert.Contains(t, output, "Trace: function entry")
+	assert.Contains(t, output, "Verbose: detailed info")
+}
+
+func TestLogger_WithFieldsLogger(t *testing.T) {
+	var buf bytes.Buffer
+	config := &Config{
+		Level:     TRACE,
+		Format:    "text",
+		Output:    &buf,
+		Timestamp: false,
+		Caller:    false,
+		Prefix:    "[TEST]",
+	}
+
+	logger := NewWithConfig(config)
+
+	// Test WithFields method
+	fields := map[string]interface{}{
+		"user_id": 123,
+		"action":  "login",
+	}
+
+	fieldLogger := logger.WithFields(fields)
+
+	// Test all FieldLogger methods
+	fieldLogger.Info("User action")
+	fieldLogger.Error("Action failed")
+	fieldLogger.Debug("Debug message")
+	fieldLogger.Warn("Warning message")
+	fieldLogger.Trace("Trace message")
+	fieldLogger.Verbose("Verbose message")
+
+	// Test formatted FieldLogger methods
+	fieldLogger.Infof("User %s performed action", "john")
+	fieldLogger.Errorf("Error: %s", "authentication failed")
+	fieldLogger.Debugf("Debug: %d attempts", 3)
+	fieldLogger.Warnf("Warning: %s", "rate limit exceeded")
+	fieldLogger.Tracef("Trace: %s", "method called")
+	fieldLogger.Verbosef("Verbose: %s", "detailed trace")
+
+	output := buf.String()
+
+	assert.Contains(t, output, "User action")
+	assert.Contains(t, output, "Action failed")
+	assert.Contains(t, output, "Debug message")
+	assert.Contains(t, output, "Warning message")
+	assert.Contains(t, output, "Trace message")
+	assert.Contains(t, output, "Verbose message")
+	assert.Contains(t, output, "User john performed action")
+	assert.Contains(t, output, "Error: authentication failed")
+	assert.Contains(t, output, "Debug: 3 attempts")
+	assert.Contains(t, output, "Warning: rate limit exceeded")
+	assert.Contains(t, output, "Trace: method called")
+	assert.Contains(t, output, "Verbose: detailed trace")
+	assert.Contains(t, output, "user_id=123")
+	assert.Contains(t, output, "action=login")
+}
+
+func TestGlobalLoggerFunctionsNew(t *testing.T) {
+	var buf bytes.Buffer
+	originalLogger := GetGlobalLogger()
+	defer func() {
+		SetGlobalLevel(originalLogger.config.Level)
+		SetGlobalFormat(originalLogger.config.Format)
+	}()
+
+	// Set up a test global logger
+	config := &Config{
+		Level:     DEBUG,
+		Format:    "text",
+		Output:    &buf,
+		Timestamp: false,
+		Caller:    false,
+		Prefix:    "[GLOBAL]",
+	}
+	testLogger := NewWithConfig(config)
+
+	// Replace the global logger temporarily
+	SetGlobalLevel(testLogger.config.Level)
+	SetGlobalFormat(testLogger.config.Format)
+
+	// Test that global functions work
+	logger := GetGlobalLogger()
+	assert.NotNil(t, logger)
+	assert.Equal(t, DEBUG, logger.config.Level)
+}
+
+func TestGlobalLoggerSettingsNew(t *testing.T) {
+	originalLogger := GetGlobalLogger()
+	originalLevel := originalLogger.config.Level
+	originalFormat := originalLogger.config.Format
+	defer func() {
+		SetGlobalLevel(originalLevel)
+		SetGlobalFormat(originalFormat)
+	}()
+
+	// Test SetGlobalLevel
+	SetGlobalLevel(ERROR)
+	assert.Equal(t, ERROR, GetGlobalLogger().config.Level)
+
+	// Test SetGlobalFormat
+	SetGlobalFormat("json")
+	assert.Equal(t, "json", GetGlobalLogger().config.Format)
+
+	// Test GetGlobalLogger
+	logger := GetGlobalLogger()
+	assert.NotNil(t, logger)
+}
+
 func TestLogger_JSONFormat(t *testing.T) {
 	var buf bytes.Buffer
 	config := &Config{

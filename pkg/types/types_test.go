@@ -16,11 +16,34 @@ func TestSeverity(t *testing.T) {
 		{SeverityMedium, "medium"},
 		{SeverityHigh, "high"},
 		{SeverityCritical, "critical"},
+		{SeverityUnknown, "unknown"},
+		{Severity(999), "unknown"}, // Test default case
 	}
 	
 	for _, tc := range testCases {
 		if tc.severity.String() != tc.expected {
 			t.Errorf("Expected severity %v to be '%s', got '%s'", tc.severity, tc.expected, tc.severity.String())
+		}
+	}
+}
+
+func TestRiskLevel(t *testing.T) {
+	// Test RiskLevel enum and string conversion
+	testCases := []struct {
+		riskLevel RiskLevel
+		expected  string
+	}{
+		{RiskLevelMinimal, "minimal"},
+		{RiskLevelLow, "low"},
+		{RiskLevelMedium, "medium"},
+		{RiskLevelHigh, "high"},
+		{RiskLevelCritical, "critical"},
+		{RiskLevel(999), "unknown"}, // Test default case
+	}
+	
+	for _, tc := range testCases {
+		if tc.riskLevel.String() != tc.expected {
+			t.Errorf("Expected risk level %v to be '%s', got '%s'", tc.riskLevel, tc.expected, tc.riskLevel.String())
 		}
 	}
 }

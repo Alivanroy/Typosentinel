@@ -402,7 +402,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 		// Convert optimized result to standard ScanResult format
 		result = &ScanResult{
 			Package: optimizedPkg,
-			OverallRisk: string(optimizedPkg.RiskLevel),
+			OverallRisk: optimizedPkg.RiskLevel.String(),
 			RiskScore: optimizedPkg.RiskScore,
 			Summary: ScanSummary{
 				TotalFindings: 1,

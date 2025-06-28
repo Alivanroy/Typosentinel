@@ -61,21 +61,36 @@ func runServe(cmd *cobra.Command, args []string) error {
 	})
 
 	// Load configuration
-	cfg, err := config.LoadConfig(configFile)
+	cfg, err := config.LoadConfig(cfgFile)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Set API configuration defaults
-	if cfg.API.Host == "" {
-		cfg.API.Host = serveHost
-	}
-	if cfg.API.Port == 0 {
-		cfg.API.Port = servePort
+	// Initialize API config if nil
+	if cfg.API == nil {
+		cfg.API = &config.APIConfig{
+			Host: serveHost,
+			Port: servePort,
+		}
+	} else {
+		// Set API configuration defaults
+		if cfg.API.Host == "" {
+			cfg.API.Host = serveHost
+		}
+		if cfg.API.Port == 0 {
+			cfg.API.Port = servePort
+		}
 	}
 
 	// Initialize ML pipeline
 	mlPipeline := ml.NewMLPipeline(cfg)
+	ctx := context.Background()
+	if err := mlPipeline.Initialize(ctx); err != nil {
+		logger.Error("Failed to initialize ML pipeline", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// Continue without ML pipeline for now
+	}
 
 	// Initialize analyzer
 	analyzer, err := analyzer.New(cfg)
@@ -85,12 +100,19 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	// Initialize REST API server
 	// Create a default REST API config since regular Config doesn't have Integrations
-	restConfig := config.RESTAPIConfig{
-		Enabled: true,
-		Host: cfg.API.Host,
-		Port: cfg.API.Port,
+	restConfig := &config.RESTAPIConfig{
+		Enabled:  true,
+		Host:     serveHost,
+		Port:     servePort,
+		BasePath: "/api",
+		Versioning: &config.APIVersioning{
+			Enabled:           true,
+			Strategy:          "path",
+			DefaultVersion:    "1",
+			SupportedVersions: []string{"1"},
+		},
 		CORS: &config.CORSConfig{
-			Enabled: true,
+			Enabled:        true,
 			AllowedOrigins: []string{"*"},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowedHeaders: []string{"*"},
@@ -105,7 +127,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 			Enabled: false,
 		},
 	}
-	server := rest.NewServer(restConfig, mlPipeline, analyzer)
+	server := rest.NewServer(*restConfig, mlPipeline, analyzer)
 
 	// Setup graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())

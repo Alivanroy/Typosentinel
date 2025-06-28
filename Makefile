@@ -98,6 +98,21 @@ clean-all: clean
 	rm -rf temp/ artifacts/ reports/
 	rm -f *-report-*.json
 	rm -rf *_test_results_*/
+	rm -rf test-results/ coverage/ logs/
+	rm -f *.log *.out *.html *.tmp
+	rm -rf .coverage .coverage.*
+	rm -f coverage.xml
+
+# Production clean - removes all development artifacts
+.PHONY: clean-production
+clean-production: clean-all
+	@echo "Cleaning for production deployment..."
+	@echo "Removing development and test artifacts..."
+	rm -rf tests/datasets/
+	rm -f tests/validation_results.json
+	rm -rf examples/
+	rm -f .env.example
+	@echo "Production clean complete"
 	rm -f performance_test_*.txt security_test_*.txt
 
 # Install the binary
@@ -164,15 +179,26 @@ docs:
 	@echo "Generating documentation..."
 	go doc -all > docs/API_REFERENCE.md
 
+# Production ready build - runs all checks and builds optimized binary
+.PHONY: production
+production: clean-all test lint security build
+	@echo "Production build complete!"
+	@echo "Binary: $(BINARY_NAME)"
+	@echo "Ready for deployment"
+
 # Help
 .PHONY: help
 help:
 	@echo "Available targets:"
-	@echo "  build        - Build the binary"
-	@echo "  build-all    - Build for multiple platforms"
-	@echo "  test         - Run tests"
-	@echo "  test-coverage- Run tests with coverage"
-	@echo "  benchmark    - Run benchmarks"
+	@echo "  build           - Build the binary"
+	@echo "  build-all       - Build for multiple platforms"
+	@echo "  test            - Run tests"
+	@echo "  test-coverage   - Run tests with coverage"
+	@echo "  benchmark       - Run benchmarks"
+	@echo "  production      - Production ready build with all checks"
+	@echo "  clean           - Clean build artifacts"
+	@echo "  clean-all       - Clean all temporary files"
+	@echo "  clean-production- Clean for production deployment"
 	@echo "  perf-test    - Run performance tests"
 	@echo "  lint         - Run linters"
 	@echo "  fmt          - Format code"

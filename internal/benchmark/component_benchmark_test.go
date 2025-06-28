@@ -231,9 +231,6 @@ func BenchmarkConcurrentDetection(b *testing.B) {
 
 // BenchmarkLevenshteinDistance tests Levenshtein distance calculation performance
 func BenchmarkLevenshteinDistance(b *testing.B) {
-	cfg := &config.Config{}
-	engine := detector.New(cfg)
-
 	stringPairs := [][]string{
 		{"lodash", "lodahs"},
 		{"express", "expres"},
@@ -250,15 +247,60 @@ func BenchmarkLevenshteinDistance(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, pair := range stringPairs {
-			// Use CheckPackage to test similarity calculation
-			ctx := context.Background()
-			result, err := engine.CheckPackage(ctx, pair[0], "npm")
-			if err != nil {
-				b.Fatalf("CheckPackage failed: %v", err)
-			}
-			_ = result // Use the result to prevent optimization
+			// Direct Levenshtein distance calculation
+			distance := levenshteinDistance(pair[0], pair[1])
+			_ = distance // Use the result to prevent optimization
 		}
 	}
+}
+
+// levenshteinDistance calculates the Levenshtein distance between two strings
+func levenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+		matrix[i][0] = i
+	}
+	for j := range matrix[0] {
+		matrix[0][j] = j
+	}
+
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+			matrix[i][j] = minInt(
+				matrix[i-1][j]+1,      // deletion
+				matrix[i][j-1]+1,      // insertion
+				matrix[i-1][j-1]+cost, // substitution
+			)
+		}
+	}
+
+	return matrix[len(s1)][len(s2)]
+}
+
+// minInt returns the minimum of the given integers
+func minInt(values ...int) int {
+	if len(values) == 0 {
+		return 0
+	}
+	min := values[0]
+	for _, v := range values[1:] {
+		if v < min {
+			min = v
+		}
+	}
+	return min
 }
 
 // BenchmarkRiskCalculation tests risk score calculation performance

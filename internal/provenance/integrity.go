@@ -351,6 +351,18 @@ func NewProvenanceAnalyzer(config *Config) (*ProvenanceAnalyzer, error) {
 		config = DefaultConfig()
 	}
 	
+	// Validate and set default timeout if empty
+	if config.Timeout == "" {
+		config.Timeout = "30s"
+	}
+	
+	// Validate timeout format
+	if config.Timeout != "" {
+		if _, err := time.ParseDuration(config.Timeout); err != nil {
+			return nil, fmt.Errorf("invalid timeout format: %w", err)
+		}
+	}
+	
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -902,6 +914,49 @@ func (pa *ProvenanceAnalyzer) assessTrust(result *AnalysisResult) *TrustAssessme
 		RiskFactors: []string{},
 	}
 	
+	// Calculate overall trust score
+	score := 0.0
+	weightSum := 0.0
+	
+	// Weight signature verification
+	if result.SignatureVerification != nil {
+		score += result.SignatureVerification.TrustScore * 0.3
+		weightSum += 0.3
+	}
+	
+	// Weight SLSA provenance
+	if result.SLSAProvenance != nil {
+		score += result.SLSAProvenance.TrustScore * 0.3
+		weightSum += 0.3
+	}
+	
+	// Weight integrity checks
+	if result.IntegrityChecks != nil {
+		score += result.IntegrityChecks.TrustScore * 0.2
+		weightSum += 0.2
+	}
+	
+	// Weight transparency log
+	if result.TransparencyLog != nil {
+		score += result.TransparencyLog.TrustScore * 0.2
+		weightSum += 0.2
+	}
+	
+	if weightSum > 0 {
+		assessment.OverallTrustScore = score / weightSum
+	}
+	
+	// Determine trust level
+	if assessment.OverallTrustScore > 0.8 {
+		assessment.TrustLevel = "HIGH"
+	} else if assessment.OverallTrustScore > 0.6 {
+		assessment.TrustLevel = "MEDIUM"
+	} else if assessment.OverallTrustScore > 0.4 {
+		assessment.TrustLevel = "LOW"
+	} else {
+		assessment.TrustLevel = "VERY_LOW"
+	}
+	
 	// Assess publisher trust
 	if result.SignatureVerification != nil {
 		assessment.PublisherTrust = &PublisherTrust{
@@ -1127,6 +1182,12 @@ func (pa *ProvenanceAnalyzer) generateRecommendations(result *AnalysisResult) {
 
 // ExportResults exports analysis results to JSON
 func (pa *ProvenanceAnalyzer) ExportResults(result *AnalysisResult, outputPath string) error {
+	// Validate file format based on extension
+	ext := filepath.Ext(outputPath)
+	if ext != ".json" && ext != ".yaml" && ext != ".yml" {
+		return fmt.Errorf("unsupported file format: %s (supported: .json, .yaml, .yml)", ext)
+	}
+	
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal results: %w", err)

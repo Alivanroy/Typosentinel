@@ -198,7 +198,8 @@ func authMiddleware(authConfig *config.APIAuthentication) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Skip authentication for health checks and public endpoints
 		path := c.Request.URL.Path
-		if path == "/health" || path == "/ready" || path == "/metrics" {
+		if path == "/health" || path == "/ready" || path == "/metrics" || 
+		   strings.HasSuffix(path, "/system/status") {
 			c.Next()
 			return
 		}

@@ -1,4 +1,4 @@
-package main
+package tests
 
 import (
 	"encoding/json"
@@ -271,13 +271,7 @@ func logBatchMetrics(t *testing.T, metrics BatchMetrics) {
 	t.Logf("Batch Performance Metrics:\n%s", string(jsonData))
 }
 
-// min returns the minimum of two integers
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
+
 
 // BenchmarkSinglePackageScan benchmarks single package scanning
 func BenchmarkSinglePackageScan(b *testing.B) {

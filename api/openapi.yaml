@@ -1,0 +1,1215 @@
+openapi: 3.0.0
+info:
+  title: TypoSentinel API
+  version: 1.0.0
+  description: |
+    REST API for TypoSentinel package security analysis.
+    
+    TypoSentinel is a comprehensive security analysis tool that detects typosquatting,
+    malicious packages, and other security threats in package ecosystems.
+  contact:
+    name: TypoSentinel Team
+    url: https://github.com/typosentinel/typosentinel
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8081
+    description: Development server
+  - url: https://api.typosentinel.com
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the service is healthy and running
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  /ready:
+    get:
+      summary: Readiness check
+      description: Check if the service is ready to accept requests
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                  ml_ready:
+                    type: boolean
+                  analyzer_ready:
+                    type: boolean
+                  timestamp:
+                    type: string
+                    format: date-time
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /test:
+    get:
+      summary: Test endpoint
+      description: Simple test endpoint to verify API connectivity
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Test successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: test endpoint working
+
+  /v1/analyze:
+    post:
+      summary: Analyze package
+      description: Analyze a single package for security threats
+      tags:
+        - Package Analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzePackageRequest'
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/batch-analyze:
+    post:
+      summary: Batch analyze packages
+      description: Analyze multiple packages for security threats
+      tags:
+        - Package Analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchAnalyzeRequest'
+      responses:
+        '200':
+          description: Batch analysis completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisResult'
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      threats_found:
+                        type: integer
+                      high_risk:
+                        type: integer
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/package/{ecosystem}/{name}:
+    get:
+      summary: Analyze package by name
+      description: Analyze a package by ecosystem and name
+      tags:
+        - Package Analysis
+      parameters:
+        - name: ecosystem
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [npm, pypi, maven, nuget, rubygems, cargo, go]
+          description: Package ecosystem
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Package name
+        - name: version
+          in: query
+          schema:
+            type: string
+          description: Package version (optional)
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '404':
+          description: Package not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/ml/predict/typosquatting:
+    post:
+      summary: Predict typosquatting
+      description: Use ML model to predict if a package is a typosquatting attempt
+      tags:
+        - ML Prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MLPredictionRequest'
+      responses:
+        '200':
+          description: Prediction completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MLPredictionResult'
+
+  /v1/ml/predict/reputation:
+    post:
+      summary: Predict package reputation
+      description: Use ML model to predict package reputation score
+      tags:
+        - ML Prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MLPredictionRequest'
+      responses:
+        '200':
+          description: Prediction completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MLPredictionResult'
+
+  /v1/ml/predict/anomaly:
+    post:
+      summary: Predict anomalies
+      description: Use ML model to detect anomalies in package behavior
+      tags:
+        - ML Prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MLPredictionRequest'
+      responses:
+        '200':
+          description: Prediction completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MLPredictionResult'
+
+  /v1/ml/models/status:
+    get:
+      summary: Get ML models status
+      description: Get the status of all ML models
+      tags:
+        - ML Prediction
+      responses:
+        '200':
+          description: Models status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MLModelStatus'
+
+  /v1/ml/models/train:
+    post:
+      summary: Train ML models
+      description: Trigger training of ML models
+      tags:
+        - ML Prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model_type:
+                  type: string
+                  enum: [typosquatting, reputation, anomaly, all]
+                force_retrain:
+                  type: boolean
+                  default: false
+      responses:
+        '202':
+          description: Training started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  job_id:
+                    type: string
+
+  /v1/vulnerabilities/scan:
+    post:
+      summary: Scan for vulnerabilities
+      description: Scan packages for known vulnerabilities
+      tags:
+        - Vulnerability Scanning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityScanRequest'
+      responses:
+        '200':
+          description: Vulnerability scan completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityScanResult'
+
+  /v1/vulnerabilities/scan/{ecosystem}/{name}:
+    post:
+      summary: Scan package vulnerabilities
+      description: Scan a specific package for vulnerabilities
+      tags:
+        - Vulnerability Scanning
+      parameters:
+        - name: ecosystem
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [npm, pypi, maven, nuget, rubygems, cargo, go]
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                options:
+                  $ref: '#/components/schemas/ScanOptions'
+      responses:
+        '200':
+          description: Vulnerability scan completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityScanResult'
+
+  /v1/vulnerabilities/batch-scan:
+    post:
+      summary: Batch scan vulnerabilities
+      description: Scan multiple packages for vulnerabilities
+      tags:
+        - Vulnerability Scanning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                packages:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PackageIdentifier'
+                options:
+                  $ref: '#/components/schemas/ScanOptions'
+      responses:
+        '200':
+          description: Batch vulnerability scan completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VulnerabilityScanResult'
+
+  /v1/vulnerabilities/scan/{id}/status:
+    get:
+      summary: Get vulnerability scan status
+      description: Get the status of a vulnerability scan job
+      tags:
+        - Vulnerability Scanning
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Scan job ID
+      responses:
+        '200':
+          description: Scan status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+
+  /v1/vulnerabilities/database/status:
+    get:
+      summary: Get vulnerability database status
+      description: Get the status of the vulnerability database
+      tags:
+        - Vulnerability Scanning
+      responses:
+        '200':
+          description: Database status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  last_updated:
+                    type: string
+                    format: date-time
+                  total_vulnerabilities:
+                    type: integer
+                  sources:
+                    type: array
+                    items:
+                      type: string
+
+  /v1/system/status:
+    get:
+      summary: Get system status
+      description: Get overall system status and health metrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: System status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+
+  /v1/system/metrics:
+    get:
+      summary: Get system metrics
+      description: Get detailed system performance metrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: System metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMetrics'
+
+  /v1/system/cache/clear:
+    post:
+      summary: Clear system cache
+      description: Clear all system caches
+      tags:
+        - System
+      responses:
+        '200':
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Cache cleared successfully
+
+  /v1/config:
+    get:
+      summary: Get configuration
+      description: Get current system configuration
+      tags:
+        - Configuration
+      responses:
+        '200':
+          description: Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+    put:
+      summary: Update configuration
+      description: Update system configuration
+      tags:
+        - Configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Configuration updated successfully
+
+  /v1/config/validate:
+    post:
+      summary: Validate configuration
+      description: Validate a configuration without applying it
+      tags:
+        - Configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '200':
+          description: Configuration is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+  /v1/analysis/history:
+    get:
+      summary: Get analysis history
+      description: Get historical analysis results
+      tags:
+        - Analysis Results
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: ecosystem
+          in: query
+          schema:
+            type: string
+        - name: package
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analysis history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisResult'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /v1/analysis/statistics:
+    get:
+      summary: Get analysis statistics
+      description: Get statistical summary of analysis results
+      tags:
+        - Analysis Results
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month, year]
+            default: week
+      responses:
+        '200':
+          description: Analysis statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisStatistics'
+
+  /v1/analysis/export:
+    get:
+      summary: Export analysis results
+      description: Export analysis results in various formats
+      tags:
+        - Analysis Results
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, pdf]
+            default: json
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Export completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+
+  /v1/docs/openapi:
+    get:
+      summary: Get OpenAPI specification
+      description: Get the OpenAPI specification for this API
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: OpenAPI specification
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /v1/docs:
+    get:
+      summary: Get Swagger UI
+      description: Get the interactive Swagger UI documentation
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: Swagger UI HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    AnalyzePackageRequest:
+      type: object
+      required:
+        - ecosystem
+        - name
+      properties:
+        ecosystem:
+          type: string
+          enum: [npm, pypi, maven, nuget, rubygems, cargo, go]
+          description: Package ecosystem
+        name:
+          type: string
+          description: Package name
+        version:
+          type: string
+          description: Package version (optional)
+        options:
+          type: object
+          properties:
+            include_ml:
+              type: boolean
+              default: true
+            include_vulnerabilities:
+              type: boolean
+              default: true
+            include_dependencies:
+              type: boolean
+              default: false
+
+    BatchAnalyzeRequest:
+      type: object
+      required:
+        - packages
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyzePackageRequest'
+        options:
+          type: object
+          properties:
+            parallel:
+              type: boolean
+              default: true
+            include_ml:
+              type: boolean
+              default: true
+            include_vulnerabilities:
+              type: boolean
+              default: true
+            include_dependencies:
+              type: boolean
+              default: false
+
+    AnalysisResult:
+      type: object
+      properties:
+        id:
+          type: string
+        package:
+          $ref: '#/components/schemas/PackageInfo'
+        threats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Threat'
+        risk_level:
+          $ref: '#/components/schemas/Severity'
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+
+    PackageInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        registry:
+          type: string
+        description:
+          type: string
+        author:
+          type: string
+        maintainers:
+          type: array
+          items:
+            type: string
+        homepage:
+          type: string
+        repository:
+          type: string
+        license:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        downloads:
+          type: integer
+          format: int64
+        published_at:
+          type: string
+          format: date-time
+        last_updated:
+          type: string
+          format: date-time
+        dependencies:
+          type: array
+          items:
+            type: string
+        has_install_script:
+          type: boolean
+        file_count:
+          type: integer
+        size:
+          type: integer
+          format: int64
+
+    Threat:
+      type: object
+      properties:
+        id:
+          type: string
+        package:
+          type: string
+        version:
+          type: string
+        registry:
+          type: string
+        type:
+          $ref: '#/components/schemas/ThreatType'
+        severity:
+          $ref: '#/components/schemas/Severity'
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        description:
+          type: string
+        similar_to:
+          type: string
+        recommendation:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+        cves:
+          type: array
+          items:
+            type: string
+        references:
+          type: array
+          items:
+            type: string
+        detected_at:
+          type: string
+          format: date-time
+        detection_method:
+          type: string
+
+    Evidence:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: object
+        score:
+          type: number
+          format: float
+
+    ThreatType:
+      type: string
+      enum:
+        - typosquatting
+        - dependency_confusion
+        - malicious_package
+        - homoglyph
+        - reputation_risk
+        - semantic_similarity
+        - supply_chain_risk
+        - unknown_package
+        - low_reputation
+        - malicious
+        - vulnerable
+        - suspicious
+        - community_flag
+
+    Severity:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - critical
+        - unknown
+
+    MLPredictionRequest:
+      type: object
+      required:
+        - package
+      properties:
+        package:
+          $ref: '#/components/schemas/PackageIdentifier'
+        features:
+          type: object
+          additionalProperties: true
+        model_version:
+          type: string
+
+    MLPredictionResult:
+      type: object
+      properties:
+        prediction:
+          type: number
+          format: float
+        confidence:
+          type: number
+          format: float
+        model_version:
+          type: string
+        features_used:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    MLModelStatus:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+          enum: [training, ready, error, updating]
+        accuracy:
+          type: number
+          format: float
+        last_trained:
+          type: string
+          format: date-time
+        training_samples:
+          type: integer
+
+    PackageIdentifier:
+      type: object
+      required:
+        - ecosystem
+        - name
+      properties:
+        ecosystem:
+          type: string
+          enum: [npm, pypi, maven, nuget, rubygems, cargo, go]
+        name:
+          type: string
+        version:
+          type: string
+
+    VulnerabilityScanRequest:
+      type: object
+      required:
+        - packages
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageIdentifier'
+        options:
+          $ref: '#/components/schemas/ScanOptions'
+
+    VulnerabilityScanResult:
+      type: object
+      properties:
+        package:
+          $ref: '#/components/schemas/PackageIdentifier'
+        vulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vulnerability'
+        scan_id:
+          type: string
+        scanned_at:
+          type: string
+          format: date-time
+
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: string
+        cve_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          $ref: '#/components/schemas/Severity'
+        cvss_score:
+          type: number
+          format: float
+        affected_versions:
+          type: array
+          items:
+            type: string
+        fixed_versions:
+          type: array
+          items:
+            type: string
+        published_at:
+          type: string
+          format: date-time
+        references:
+          type: array
+          items:
+            type: string
+
+    ScanOptions:
+      type: object
+      properties:
+        include_dev_dependencies:
+          type: boolean
+          default: false
+        deep_analysis:
+          type: boolean
+          default: false
+        timeout:
+          type: integer
+          description: Timeout in seconds
+          default: 300
+
+    ScanStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        error_message:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VulnerabilityScanResult'
+
+    SystemStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        version:
+          type: string
+        components:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [healthy, unhealthy]
+            ml_pipeline:
+              type: string
+              enum: [healthy, unhealthy]
+            vulnerability_db:
+              type: string
+              enum: [healthy, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+
+    SystemMetrics:
+      type: object
+      properties:
+        cpu_usage:
+          type: number
+          format: float
+        memory_usage:
+          type: number
+          format: float
+        disk_usage:
+          type: number
+          format: float
+        requests_per_minute:
+          type: number
+          format: float
+        average_response_time:
+          type: number
+          format: float
+        active_connections:
+          type: integer
+        cache_hit_rate:
+          type: number
+          format: float
+        timestamp:
+          type: string
+          format: date-time
+
+    Configuration:
+      type: object
+      properties:
+        server:
+          type: object
+          properties:
+            host:
+              type: string
+            port:
+              type: integer
+            timeout:
+              type: integer
+        database:
+          type: object
+          properties:
+            url:
+              type: string
+            max_connections:
+              type: integer
+        ml:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            model_path:
+              type: string
+        vulnerability_db:
+          type: object
+          properties:
+            update_interval:
+              type: integer
+            sources:
+              type: array
+              items:
+                type: string
+
+    AnalysisStatistics:
+      type: object
+      properties:
+        period:
+          type: string
+        total_analyses:
+          type: integer
+        threats_detected:
+          type: integer
+        threat_breakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        risk_level_breakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        top_ecosystems:
+          type: array
+          items:
+            type: object
+            properties:
+              ecosystem:
+                type: string
+              count:
+                type: integer
+        average_analysis_time:
+          type: number
+          format: float
+
+tags:
+  - name: Health
+    description: Health and readiness checks
+  - name: Package Analysis
+    description: Package security analysis endpoints
+  - name: ML Prediction
+    description: Machine learning prediction endpoints
+  - name: Vulnerability Scanning
+    description: Vulnerability scanning endpoints
+  - name: System
+    description: System status and metrics
+  - name: Configuration
+    description: Configuration management
+  - name: Analysis Results
+    description: Analysis results and statistics
+  - name: Documentation
+    description: API documentation endpoints

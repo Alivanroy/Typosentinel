@@ -20,8 +20,6 @@ COPY . .
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel-scanner ./cmd/scanner
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel-server ./cmd/server
 
 # Stage 2: Build the Python ML service
 FROM python:3.11-slim AS python-builder
@@ -57,7 +55,7 @@ RUN addgroup -g 1001 -S appgroup && \
 WORKDIR /app
 
 # Copy Go binaries from builder
-COPY --from=go-builder /app/typosentinel /app/typosentinel-scanner /app/typosentinel-server ./
+COPY --from=go-builder /app/typosentinel ./
 
 # Copy Python environment and ML code
 COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
@@ -83,4 +81,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 # Default command (can be overridden)
-CMD ["./typosentinel-server"]
+CMD ["./typosentinel", "serve"]

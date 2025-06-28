@@ -213,7 +213,12 @@ func (e *Engine) Analyze(ctx context.Context, deps []types.Dependency, options *
 	return allThreats, allWarnings, nil
 }
 
-// analyzeDependency analyzes a single dependency for threats
+// AnalyzeDependency analyzes a single dependency for threats
+func (e *Engine) AnalyzeDependency(dep types.Dependency, allPackageNames []string, options *Options) ([]types.Threat, []types.Warning) {
+	return e.analyzeDependency(dep, allPackageNames, options)
+}
+
+// analyzeDependency analyzes a single dependency for threats (internal method)
 func (e *Engine) analyzeDependency(dep types.Dependency, allPackageNames []string, options *Options) ([]types.Threat, []types.Warning) {
 	// Initialize slices to ensure they're never nil
 	threats := make([]types.Threat, 0)

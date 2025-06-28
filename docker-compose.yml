@@ -1,0 +1,73 @@
+services:
+  typosentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=info
+      - CONFIG_PATH=/app/config/config.yaml
+      - GOMAXPROCS=4
+      - GOGC=100
+    command: ["./typosentinel", "serve", "--host", "0.0.0.0", "--port", "8080", "--config", "/app/config/config.yaml", "--log-level", "info"]
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./models:/app/models
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Optional: Redis for caching (if needed)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+  # Optional: PostgreSQL for persistent storage (if needed)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=typosentinel
+      - POSTGRES_PASSWORD=typosentinel_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typosentinel"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+
+volumes:
+  redis-data:
+  postgres-data:
+
+networks:
+  typosentinel-network:
+    driver: bridge

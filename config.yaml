@@ -1,175 +1,53 @@
-# Enhanced Typosentinel Configuration
-# This configuration enables all advanced detection features for maximum effectiveness
+api:
+  host: "0.0.0.0"
+  port: 8080
+  debug_mode: false
+  read_timeout_seconds: 30
+  write_timeout_seconds: 30
+  idle_timeout_seconds: 60
 
-# Core Configuration
-core:
-  log_level: "info"
-  max_workers: 10
-  timeout: "30m"
-  cache_enabled: true
-  cache_ttl: "24h"
+database:
+  host: "postgres"
+  port: 5432
+  name: "typosentinel"
+  user: "typosentinel"
+  password: "typosentinel_password"
+  ssl_mode: "disable"
+  max_connections: 25
+  max_idle_connections: 5
+  connection_max_lifetime_minutes: 30
 
-# Logging configuration
-logging:
-  level: "info"              # debug, info, warn, error
-  format: "text"             # text or json
-  output: "stdout"           # stdout, stderr, or file path
-  timestamp: true            # include timestamps
-  caller: false              # include caller information
-  prefix: "[TYPOSENTINEL]"   # log prefix
-  rotation:
-    enabled: false           # enable log rotation
-    max_size: 100           # maximum size in MB
-    max_backups: 3          # number of backup files
-    max_age: 28             # maximum age in days
-    compress: true          # compress rotated files
-
-# Static Analysis Configuration (Enhanced for Better Detection)
-static_analysis:
+ml_service:
   enabled: true
-  yara_rules_path: "./rules/enhanced_malware_detection.yara"
-  max_file_size: 10485760  # 10MB
-  scan_archives: true
-  deep_scan: true
-  sensitivity: "high"
-  timeout: "30s"
-  parallel_scanning: true
-  typo_detection:
-    enabled: true
-    threshold: 0.85
-    levenshtein_distance: 2
-    popular_packages_only: false
-  signature_updates:
-    auto_update: true
-    update_interval: "24h"
+  endpoint: "http://localhost:8000"
+  api_key: "ml-service-key-123"
+  timeout: 30s
+  max_retries: 3
+  batch_size: 100
 
-# Dynamic Analysis Configuration
-dynamic_analysis:
-  enabled: true
-  sandbox_type: "docker"
-  sandbox_image: "ubuntu:20.04"
-  sandbox_timeout: "5m"
-  memory_limit: 512
-  network_isolation: true
-  file_system_monitoring: true
-
-# Machine Learning Configuration (Latest Fine-tuning Results)
-ml_analysis:
-  enabled: true
-  model_path: "./ml/models/"
+detection:
   similarity_threshold: 0.8
-  malware_threshold: 0.729
-  anomaly_threshold: 0.6
-  typo_threshold: 0.85
-  reputation_threshold: 0.5
-  confidence_threshold: 0.75
-  feature_extraction: true
-  ensemble_weights:
-    similarity: 0.216
-    malware: 0.294
-    anomaly: 0.196
-    typo: 0.196
-    reputation: 0.098
+  homoglyph_threshold: 0.9
+  reputation_threshold: 0.7
+  max_suggestions: 10
+  enable_ml_detection: true
+  enable_reputation_check: true
 
-# Behavioral Analysis Configuration (Tuned for Better Performance)
-behavioral_analysis:
-  enabled: true
-  monitor_network: true
-  monitor_filesystem: true
-  monitor_processes: true
-  anomaly_threshold: 0.65
-  sensitivity: "high"
-  false_positive_reduction: true
-  timeout: "10s"
+registries:
+  npm:
+    base_url: "https://registry.npmjs.org"
+    rate_limit_per_minute: 60
+    timeout_seconds: 10
+  pypi:
+    base_url: "https://pypi.org"
+    rate_limit_per_minute: 60
+    timeout_seconds: 10
+  go:
+    base_url: "https://proxy.golang.org"
+    rate_limit_per_minute: 60
+    timeout_seconds: 10
 
-# Provenance Analysis Configuration
-provenance_analysis:
-  enabled: true
-  verify_signatures: true
-  check_supply_chain: true
-  trust_threshold: 0.9
-
-# Typo Detection Configuration
-typo_detection:
-  enabled: true
-  edit_distance_threshold: 2
-  phonetic_similarity: true
-  visual_similarity: true
-  popular_packages_only: false
-
-# Malware Detection Configuration
-malware_detection:
-  enabled: true
-  signature_scanning: true
-  heuristic_analysis: true
-  cloud_reputation: true
-
-# Sandbox Analysis Configuration
-sandbox_analysis:
-  enabled: true
-  execution_timeout: "3m"
-  resource_limits:
-    cpu_percent: 50
-    memory_mb: 256
-    disk_mb: 100
-
-# Cloud Scanning Configuration
-cloud_scanning:
-  enabled: true
-  providers:
-    - "virustotal"
-    - "hybrid_analysis"
-  api_timeout: "30s"
-
-# Real-time Protection Configuration
-real_time_protection:
-  enabled: true
-  monitor_installs: true
-  block_suspicious: true
-  quarantine_enabled: true
-
-# Vulnerability Scanning Configuration
-vulnerability_scanning:
-  enabled: true
-  databases:
-    - "nvd"
-    - "snyk"
-    - "github_advisory"
-  severity_threshold: "medium"
-
-# Reporting Configuration
-reporting:
-  enabled: true
+logging:
+  level: "info"
   format: "json"
-  include_details: true
-  export_metrics: true
-
-# Performance Configuration
-performance:
-  max_concurrent_scans: 5
-  scan_timeout: "10m"
-  memory_limit: "1GB"
-  cpu_limit: 80
-
-# Security Configuration
-security:
-  api_key_required: false
-  rate_limiting: true
-  audit_logging:
-    enabled: true
-    level: "info"
-    format: "json"
-    output: "./logs/audit.log"
-    rotation_enabled: true
-    max_size: "100MB"
-    max_age: "30d"
-    max_backups: 5
-    compression_enabled: true
-  secure_communication: true
-
-# Output Configuration
-output:
-  directory: "./test_results"
-  filename_template: "scan_report_{timestamp}"
-  compress_results: false
-  retention_days: 30
+  output: "stdout"

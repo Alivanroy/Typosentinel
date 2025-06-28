@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/requestid"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
@@ -39,10 +41,23 @@ func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *an
 	// Add middleware
 	r.Use(gin.Recovery())
 	r.Use(requestid.New())
-	r.Use(corsMiddleware(*cfg.CORS))
+	
+	// Add CORS middleware if configured
+	if cfg.CORS != nil {
+		r.Use(corsMiddleware(*cfg.CORS))
+	}
+	
 	r.Use(loggingMiddleware())
-	r.Use(rateLimitMiddleware(*cfg.RateLimiting))
-	r.Use(authMiddleware(cfg.Authentication))
+	
+	// Add rate limiting middleware if configured
+	if cfg.RateLimiting != nil {
+		r.Use(rateLimitMiddleware(*cfg.RateLimiting))
+	}
+	
+	// Add auth middleware if configured
+	if cfg.Authentication != nil {
+		r.Use(authMiddleware(cfg.Authentication))
+	}
 	// Timeout middleware removed - not available in RESTAPIConfig
 
 	server := &Server{
@@ -104,65 +119,59 @@ func (s *Server) setupRoutes() {
 	s.gin.GET("/health", s.healthCheck)
 	s.gin.GET("/ready", s.readinessCheck)
 
+	// Simple test route
+	s.gin.GET("/test", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "test endpoint working"})
+	})
+
+	// Documentation endpoints (root level)
+	s.gin.GET(s.config.BasePath+"/docs", s.getSwaggerUI)
+	s.gin.GET(s.config.BasePath+"/docs/", s.getSwaggerUI)
+	s.gin.GET(s.config.BasePath+"/docs/openapi", s.getOpenAPISpec)
+
 	// API versioning
-	v1 := s.gin.Group(s.config.BasePath + "/v1")
-	{
-		// Package analysis endpoints
-		packages := v1.Group("/packages")
+	if s.config.Versioning != nil {
+		v1 := s.gin.Group(s.config.BasePath + "/v1")
 		{
-			packages.POST("/analyze", s.analyzePackage)
-			packages.POST("/batch-analyze", s.batchAnalyzePackages)
-			packages.GET("/analyze/:ecosystem/:name", s.analyzePackageByName)
-			packages.GET("/analyze/:ecosystem/:name/:version", s.analyzePackageByVersion)
-		}
+			// Package analysis endpoints
+			v1.POST("/analyze", s.analyzePackage)
+			v1.POST("/batch-analyze", s.batchAnalyzePackages)
+			v1.GET("/package/:ecosystem/:name", s.analyzePackageByName)
 
-		// Vulnerability endpoints
-		vulns := v1.Group("/vulnerabilities")
-		{
-			vulns.GET("/scan/:ecosystem/:name", s.scanVulnerabilities)
-			vulns.POST("/scan", s.scanPackageVulnerabilities)
-			vulns.GET("/database/status", s.getVulnerabilityDatabaseStatus)
-		}
+			// ML prediction endpoints
+			v1.POST("/ml/predict/typosquatting", s.predictTyposquatting)
+			v1.POST("/ml/predict/reputation", s.predictReputation)
+			v1.POST("/ml/predict/anomaly", s.predictAnomaly)
+			v1.GET("/ml/models/status", s.getMLModelsStatus)
+			v1.POST("/ml/models/train", s.trainMLModels)
 
-		// ML prediction endpoints
-		ml := v1.Group("/ml")
-		{
-			ml.POST("/predict/typosquatting", s.predictTyposquatting)
-			ml.POST("/predict/reputation", s.predictReputation)
-			ml.POST("/predict/anomaly", s.predictAnomaly)
-			ml.GET("/models/status", s.getMLModelsStatus)
-			ml.POST("/models/train", s.trainMLModels)
-		}
+			// Vulnerability scanning endpoints
+			v1.POST("/vulnerabilities/scan", s.scanVulnerabilities)
+			v1.POST("/vulnerabilities/scan/:ecosystem/:name", s.scanPackageVulnerabilities)
+			v1.POST("/vulnerabilities/batch-scan", s.batchScanVulnerabilities)
+			v1.GET("/vulnerabilities/scan/:id/status", s.getVulnerabilityScanStatus)
+			v1.GET("/vulnerabilities/database/status", s.getVulnerabilityDatabaseStatus)
 
-		// Analysis results endpoints
-		results := v1.Group("/results")
-		{
-			results.GET("/history", s.getAnalysisHistory)
-			results.GET("/statistics", s.getAnalysisStatistics)
-			results.GET("/export", s.exportResults)
-		}
+			// System endpoints
+			v1.GET("/system/status", s.getSystemStatus)
+			v1.GET("/system/metrics", s.getSystemMetrics)
+			v1.POST("/system/cache/clear", s.clearCache)
 
-		// Configuration endpoints
-		config := v1.Group("/config")
-		{
-			config.GET("/", s.getConfiguration)
-			config.PUT("/", s.updateConfiguration)
-			config.GET("/validate", s.validateConfiguration)
-		}
+			// Configuration endpoints
+			v1.GET("/config", s.getConfiguration)
+			v1.PUT("/config", s.updateConfiguration)
+			v1.POST("/config/validate", s.validateConfiguration)
 
-		// System endpoints
-		system := v1.Group("/system")
-		{
-			system.GET("/status", s.getSystemStatus)
-			system.GET("/metrics", s.getSystemMetrics)
-			system.POST("/cache/clear", s.clearCache)
-		}
-	}
+			// Analysis results endpoints
+			v1.GET("/analysis/history", s.getAnalysisHistory)
+			v1.GET("/analysis/statistics", s.getAnalysisStatistics)
+			v1.GET("/analysis/export", s.exportResults)
 
-	// Documentation endpoints
-	if s.config.Documentation.Enabled {
-		s.gin.Static("/docs", "./docs")
-		s.gin.GET("/openapi.json", s.getOpenAPISpec)
+			// Documentation endpoints
+			v1.GET("/docs/openapi", s.getOpenAPISpec)
+			v1.GET("/docs", s.getSwaggerUI)
+			v1.GET("/docs/", s.getSwaggerUI)
+		}
 	}
 }
 
@@ -359,6 +368,37 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 	analysisResult := map[string]interface{}{
 		"package": pkg,
 		"timestamp": time.Now().UTC(),
+		"analyzed_at": time.Now().UTC(),
+	}
+
+	// Perform threat detection using the analyzer
+	if s.analyzer != nil {
+		// Create dependency for analysis
+		dep := types.Dependency{
+			Name:     pkg.Name,
+			Version:  pkg.Version,
+			Registry: pkg.Registry,
+		}
+
+		// Get popular packages for comparison
+		popularPackages := s.getPopularPackagesForRegistry(pkg.Registry)
+		
+		// Perform threat analysis
+		threats, warnings := s.analyzer.AnalyzeDependency(dep, popularPackages)
+		
+		// Calculate risk level based on threats
+		riskLevel, riskScore := s.calculateRiskLevel(threats)
+		
+		analysisResult["threats"] = threats
+		analysisResult["warnings"] = warnings
+		analysisResult["risk_level"] = riskLevel
+		analysisResult["risk_score"] = riskScore
+	} else {
+		// Fallback when analyzer is not available
+		analysisResult["threats"] = []types.Threat{}
+		analysisResult["warnings"] = []types.Warning{}
+		analysisResult["risk_level"] = 0
+		analysisResult["risk_score"] = 0
 	}
 
 	// Add ML predictions if requested
@@ -432,6 +472,75 @@ func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// BatchVulnerabilityScanRequest represents a batch vulnerability scan request
+type BatchVulnerabilityScanRequest struct {
+	Packages []AnalyzePackageRequest `json:"packages" binding:"required"`
+}
+
+// batchScanVulnerabilities handles batch vulnerability scanning
+func (s *Server) batchScanVulnerabilities(c *gin.Context) {
+	var req BatchVulnerabilityScanRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(req.Packages) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No packages specified"})
+		return
+	}
+
+	if len(req.Packages) > 50 { // Limit batch size for vulnerability scans
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Too many packages (max 50)"})
+		return
+	}
+
+	results := make([]interface{}, len(req.Packages))
+
+	for i, pkgReq := range req.Packages {
+		result := gin.H{
+			"package": gin.H{
+				"ecosystem": pkgReq.Ecosystem,
+				"name":      pkgReq.Name,
+				"version":   pkgReq.Version,
+			},
+			"vulnerabilities": []types.Vulnerability{},
+			"scan_time":      time.Now().UTC(),
+		}
+		results[i] = result
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"results": results,
+		"total":   len(req.Packages),
+		"scan_id": fmt.Sprintf("batch_%d", time.Now().Unix()),
+	})
+}
+
+// getVulnerabilityScanStatus returns the status of a vulnerability scan
+func (s *Server) getVulnerabilityScanStatus(c *gin.Context) {
+	scanID := c.Param("scan_id")
+
+	if scanID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Scan ID is required"})
+		return
+	}
+
+	// Placeholder implementation - in a real system, this would check scan status from a database
+	c.JSON(http.StatusOK, gin.H{
+		"scan_id": scanID,
+		"status":  "completed",
+		"progress": 100,
+		"started_at": time.Now().Add(-5 * time.Minute).UTC(),
+		"completed_at": time.Now().Add(-1 * time.Minute).UTC(),
+		"results": gin.H{
+			"total_packages": 1,
+			"vulnerabilities_found": 0,
+			"scan_duration": "4m30s",
+		},
+	})
+}
+
 // getVulnerabilityDatabaseStatus returns vulnerability database status
 func (s *Server) getVulnerabilityDatabaseStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
@@ -440,6 +549,80 @@ func (s *Server) getVulnerabilityDatabaseStatus(c *gin.Context) {
 		"entries":     150000,
 		"sources":     []string{"NVD", "OSV", "GitHub Advisory"},
 	})
+}
+
+// getPopularPackagesForRegistry returns popular packages for a given registry
+func (s *Server) getPopularPackagesForRegistry(registry string) []string {
+	switch registry {
+	case "npm":
+		return []string{
+			"react", "lodash", "express", "angular", "vue", "jquery", "bootstrap",
+			"moment", "axios", "webpack", "babel", "eslint", "typescript", "chalk",
+			"commander", "debug", "fs-extra", "glob", "rimraf", "mkdirp", "semver",
+			"yargs", "inquirer", "ora", "colors", "request", "cheerio", "socket.io",
+			"next", "gatsby", "nuxt", "create-react-app", "nodemon", "pm2",
+		}
+	case "pypi":
+		return []string{
+			"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch",
+			"scikit-learn", "matplotlib", "seaborn", "beautifulsoup4", "selenium",
+			"pillow", "opencv-python", "sqlalchemy", "psycopg2", "pymongo", "redis",
+			"celery", "gunicorn", "uwsgi", "fastapi", "pydantic", "click", "pytest",
+			"setuptools", "wheel", "pip", "virtualenv", "pipenv", "poetry",
+		}
+	case "go":
+		return []string{
+			"gin-gonic/gin", "gorilla/mux", "sirupsen/logrus", "stretchr/testify",
+			"golang/protobuf", "grpc/grpc-go", "uber-go/zap", "spf13/cobra",
+			"spf13/viper", "go-sql-driver/mysql", "lib/pq", "go-redis/redis",
+			"golang/mock", "DATA-DOG/go-sqlmock", "jinzhu/gorm", "echo/echo",
+		}
+	case "rubygems":
+		return []string{
+			"rails", "bundler", "rake", "rspec", "nokogiri", "activerecord", "sinatra",
+			"devise", "puma", "sidekiq", "redis", "pg", "mysql2", "sqlite3", "json",
+			"httparty", "faraday", "capybara", "factory_bot", "faker", "rubocop",
+		}
+	default:
+		return []string{}
+	}
+}
+
+// calculateRiskLevel calculates risk level and score based on threats
+func (s *Server) calculateRiskLevel(threats []types.Threat) (int, float64) {
+	if len(threats) == 0 {
+		return 0, 0.0
+	}
+
+	var totalScore float64
+	maxSeverity := 0
+
+	for _, threat := range threats {
+		// Convert severity to numeric value
+		severityScore := 0
+		switch threat.Severity {
+		case types.SeverityLow:
+			severityScore = 1
+		case types.SeverityMedium:
+			severityScore = 2
+		case types.SeverityHigh:
+			severityScore = 3
+		case types.SeverityCritical:
+			severityScore = 4
+		}
+
+		if severityScore > maxSeverity {
+			maxSeverity = severityScore
+		}
+
+		// Weight by confidence
+		totalScore += float64(severityScore) * threat.Confidence
+	}
+
+	// Normalize score
+	riskScore := totalScore / float64(len(threats))
+
+	return maxSeverity, riskScore
 }
 
 // ML prediction endpoints
@@ -650,6 +833,26 @@ func (s *Server) exportResults(c *gin.Context) {
 
 // getOpenAPISpec returns OpenAPI specification
 func (s *Server) getOpenAPISpec(c *gin.Context) {
+	// Try to read the OpenAPI spec from file
+	specPath := "api/openapi.yaml"
+	if data, err := os.ReadFile(specPath); err == nil {
+		// Parse YAML and convert to JSON
+		var spec interface{}
+		if err := yaml.Unmarshal(data, &spec); err == nil {
+			// Update server URL dynamically
+			if specMap, ok := spec.(map[string]interface{}); ok {
+				if servers, ok := specMap["servers"].([]interface{}); ok && len(servers) > 0 {
+					if server, ok := servers[0].(map[string]interface{}); ok {
+						server["url"] = fmt.Sprintf("http://%s:%d%s", s.config.Host, s.config.Port, s.config.BasePath)
+					}
+				}
+			}
+			c.JSON(http.StatusOK, spec)
+			return
+		}
+	}
+
+	// Fallback to basic spec if file reading fails
 	spec := gin.H{
 		"openapi": "3.0.0",
 		"info": gin.H{
@@ -676,4 +879,31 @@ func (s *Server) getOpenAPISpec(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, spec)
+}
+
+// getSwaggerUI serves the Swagger UI HTML page
+func (s *Server) getSwaggerUI(c *gin.Context) {
+	// Try to read the Swagger UI HTML file
+	htmlPath := "api/swagger-ui.html"
+	if data, err := os.ReadFile(htmlPath); err == nil {
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		c.String(http.StatusOK, string(data))
+		return
+	}
+
+	// Fallback to basic HTML if file reading fails
+	fallbackHTML := `<!DOCTYPE html>
+<html>
+<head>
+    <title>TypoSentinel API Documentation</title>
+</head>
+<body>
+    <h1>TypoSentinel API Documentation</h1>
+    <p>OpenAPI specification is available at: <a href="/api/v1/docs/openapi">/api/v1/docs/openapi</a></p>
+    <p>For interactive documentation, please ensure the swagger-ui.html file is available.</p>
+</body>
+</html>`
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, fallbackHTML)
 }

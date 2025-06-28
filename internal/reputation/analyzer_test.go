@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -543,12 +544,12 @@ func TestMultipleSources(t *testing.T) {
 
 	// Weighted average: (0.9 * 0.6) + (0.7 * 0.4) = 0.54 + 0.28 = 0.82
 	expectedScore := 0.82
-	if result.Score != expectedScore {
+	if math.Abs(result.Score-expectedScore) > 0.0001 {
 		t.Errorf("Expected weighted score %f, got %f", expectedScore, result.Score)
 	}
 
 	if len(result.Sources) != 2 {
-		t.Errorf("Expected 2 source results, got %d", len(result.Sources))
+		t.Errorf("Expected 2 source results, got %d. Sources: %+v", len(result.Sources), result.Sources)
 	}
 }
 

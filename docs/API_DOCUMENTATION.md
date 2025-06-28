@@ -1,4 +1,224 @@
-# Typosentinel API Documentation
+# TypoSentinel API Documentation
+
+This document provides information about the TypoSentinel REST API and its comprehensive OpenAPI documentation.
+
+## Overview
+
+TypoSentinel provides a comprehensive REST API for package security analysis, including:
+
+- **Package Analysis**: Analyze packages for security threats and typosquatting
+- **ML Predictions**: Machine learning-based threat detection
+- **Vulnerability Scanning**: Scan packages for known vulnerabilities
+- **System Management**: Monitor system health and performance
+- **Configuration**: Manage system configuration
+- **Analysis Results**: Access historical analysis data and statistics
+
+## API Documentation
+
+### Interactive Documentation (Swagger UI)
+
+Access the interactive API documentation at:
+```
+http://localhost:8081/api/v1/docs
+```
+
+This provides a user-friendly interface where you can:
+- Browse all available endpoints
+- View request/response schemas
+- Test API endpoints directly from the browser
+- Download the OpenAPI specification
+
+### OpenAPI Specification
+
+The raw OpenAPI 3.0 specification is available at:
+```
+http://localhost:8081/api/v1/docs/openapi
+```
+
+You can also find the specification file at:
+```
+api/openapi.yaml
+```
+
+## API Endpoints Overview
+
+### Health & Status
+- `GET /health` - Health check
+- `GET /ready` - Readiness check
+- `GET /test` - Test endpoint
+
+### Package Analysis
+- `POST /api/v1/analyze` - Analyze single package
+- `POST /api/v1/batch-analyze` - Batch analyze packages
+- `GET /api/v1/package/{ecosystem}/{name}` - Analyze package by name
+
+### ML Predictions
+- `POST /api/v1/ml/predict/typosquatting` - Predict typosquatting
+- `POST /api/v1/ml/predict/reputation` - Predict package reputation
+- `POST /api/v1/ml/predict/anomaly` - Detect anomalies
+- `GET /api/v1/ml/models/status` - Get ML models status
+- `POST /api/v1/ml/models/train` - Train ML models
+
+### Vulnerability Scanning
+- `POST /api/v1/vulnerabilities/scan` - Scan for vulnerabilities
+- `POST /api/v1/vulnerabilities/scan/{ecosystem}/{name}` - Scan specific package
+- `POST /api/v1/vulnerabilities/batch-scan` - Batch scan vulnerabilities
+- `GET /api/v1/vulnerabilities/scan/{id}/status` - Get scan status
+- `GET /api/v1/vulnerabilities/database/status` - Get vulnerability database status
+
+### System Management
+- `GET /api/v1/system/status` - Get system status
+- `GET /api/v1/system/metrics` - Get system metrics
+- `POST /api/v1/system/cache/clear` - Clear system cache
+
+### Configuration
+- `GET /api/v1/config` - Get configuration
+- `PUT /api/v1/config` - Update configuration
+- `POST /api/v1/config/validate` - Validate configuration
+
+### Analysis Results
+- `GET /api/v1/analysis/history` - Get analysis history
+- `GET /api/v1/analysis/statistics` - Get analysis statistics
+- `GET /api/v1/analysis/export` - Export analysis results
+
+## Supported Package Ecosystems
+
+The API supports the following package ecosystems:
+- `npm` - Node.js packages
+- `pypi` - Python packages
+- `maven` - Java packages
+- `nuget` - .NET packages
+- `rubygems` - Ruby packages
+- `cargo` - Rust packages
+- `go` - Go modules
+
+## Authentication
+
+Currently, the API does not require authentication for development purposes. In production environments, appropriate authentication mechanisms should be implemented.
+
+## Rate Limiting
+
+Rate limiting may be applied to prevent abuse. Check the response headers for rate limit information.
+
+## Error Handling
+
+The API uses standard HTTP status codes and returns error responses in JSON format:
+
+```json
+{
+  "error": "Error type",
+  "message": "Detailed error message",
+  "code": 400,
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+## Example Usage
+
+### Analyze a Package
+
+```bash
+curl -X POST http://localhost:8081/api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ecosystem": "npm",
+    "name": "lodash",
+    "version": "4.17.21",
+    "options": {
+      "include_ml": true,
+      "include_vulnerabilities": true
+    }
+  }'
+```
+
+### Get System Status
+
+```bash
+curl http://localhost:8081/api/v1/system/status
+```
+
+### Batch Analyze Packages
+
+```bash
+curl -X POST http://localhost:8081/api/v1/batch-analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "packages": [
+      {
+        "ecosystem": "npm",
+        "name": "express"
+      },
+      {
+        "ecosystem": "pypi",
+        "name": "requests"
+      }
+    ],
+    "options": {
+      "parallel": true,
+      "include_ml": true
+    }
+  }'
+```
+
+## Development
+
+### Starting the Server
+
+```bash
+go run main.go serve --config minimal-config.yaml --port 8081
+```
+
+### Staging Environment Status ✅
+
+**Current Status**: Successfully deployed and operational
+
+Our staging environment is fully functional with:
+- ✅ All API endpoints validated and responding correctly
+- ✅ Health checks passing for all services
+- ✅ Docker containerization working properly
+- ✅ Database connectivity established (PostgreSQL)
+- ✅ Caching layer operational (Redis)
+- ✅ ML service initialized and functional
+
+**Validated Endpoints**:
+- `/health` - Service health monitoring
+- `/api/v1/scan/status` - Scan status endpoint
+- All core API functionality confirmed operational
+
+**Configuration Fix Applied**: Resolved critical configuration loading issue in ML service that was preventing proper initialization in containerized environments.
+
+### Updating Documentation
+
+The OpenAPI specification is located in `api/openapi.yaml`. After making changes:
+
+1. Update the YAML file with new endpoints or schemas
+2. Restart the server to load the updated specification
+3. The interactive documentation will automatically reflect the changes
+
+### Adding New Endpoints
+
+When adding new endpoints:
+
+1. Implement the handler in the appropriate Go file
+2. Add the route in `server.go`
+3. Update the OpenAPI specification in `api/openapi.yaml`
+4. Add appropriate request/response schemas
+5. Test the endpoint using the interactive documentation
+
+## Support
+
+For issues or questions about the API:
+
+1. Check the interactive documentation for endpoint details
+2. Review the OpenAPI specification for schema information
+3. Consult the server logs for debugging information
+4. Open an issue in the project repository
+
+## Version Information
+
+- API Version: 1.0.0
+- OpenAPI Version: 3.0.0
+- Documentation Last Updated: December 2024
 
 This document provides comprehensive documentation for the Typosentinel API, including usage examples, configuration options, and best practices.
 

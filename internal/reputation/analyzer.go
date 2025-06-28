@@ -2,6 +2,8 @@ package reputation
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -97,16 +99,121 @@ func NewAnalyzer(cfg *Config) *Analyzer {
 
 // AnalyzePackage analyzes the reputation of a package
 func (a *Analyzer) AnalyzePackage(ctx context.Context, pkg *types.Package) (*ReputationResponse, error) {
-	// Basic implementation - in a real system, this would query reputation sources
+	// Check if analyzer is enabled
+	if !a.config.Enabled {
+		return nil, fmt.Errorf("reputation analyzer is disabled")
+	}
+
+	// Check cache first
+	cacheKey := pkg.Registry + "/" + pkg.Name + "@" + pkg.Version
+	if cached, exists := a.cache[cacheKey]; exists {
+		return cached, nil
+	}
+
+	// If no sources configured, return basic response
+	if len(a.sources) == 0 {
+		return &ReputationResponse{
+			PackageName: pkg.Name,
+			Registry:    pkg.Registry,
+			Score:       0.8,
+			Risk:        "low",
+			Metrics: ReputationMetrics{
+				DownloadCount:   100000,
+				AgeInDays:       365,
+				MaintainerCount: 2,
+			},
+			Flags:    []ReputationFlag{},
+			Sources:  []SourceResult{},
+			Metadata: make(map[string]interface{}),
+		}, nil
+	}
+
+	var lastErr error
+	var sourceResults []SourceResult
+	totalScore := 0.0
+	totalWeight := 0.0
+
+	var baseResult *ReputationResponse
+
+	// Query all enabled sources
+	for _, source := range a.sources {
+		if !source.Enabled {
+			continue
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "GET", source.Endpoint, nil)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		if source.APIKey != "" {
+			req.Header.Set("Authorization", "Bearer "+source.APIKey)
+		}
+
+		resp, err := a.client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("HTTP %d from source %s", resp.StatusCode, source.Name)
+			continue
+		}
+
+		var result ReputationResponse
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			lastErr = err
+			continue
+		}
+
+		// Add source result
+		sourceResults = append(sourceResults, SourceResult{
+			Name:   source.Name,
+			Score:  result.Score,
+			Weight: source.Weight,
+			Status: "success",
+		})
+
+		// Calculate weighted score
+		totalScore += result.Score * source.Weight
+		totalWeight += source.Weight
+
+		// Use the first successful result as base
+		if baseResult == nil {
+			baseResult = &result
+		}
+	}
+
+	// If we have successful results, combine them
+	if len(sourceResults) > 0 && baseResult != nil {
+		// Update the base result with combined data
+		baseResult.Sources = sourceResults
+		if totalWeight > 0 {
+			baseResult.Score = totalScore / totalWeight
+		}
+		// Cache the result
+		a.cache[cacheKey] = baseResult
+		return baseResult, nil
+	}
+
+	// If no sources worked, return error
+	if lastErr != nil {
+		return nil, lastErr
+	}
+
+	// Fallback if no sources worked but no error
 	return &ReputationResponse{
 		PackageName: pkg.Name,
 		Registry:    pkg.Registry,
-		Score:       0.8,
-		Risk:        "low",
+		Score:       0.5,
+		Risk:        "unknown",
 		Metrics: ReputationMetrics{
-			DownloadCount:   100000,
-			AgeInDays:       365,
-			MaintainerCount: 2,
+			DownloadCount:   0,
+			AgeInDays:       0,
+			MaintainerCount: 0,
 		},
 		Flags:    []ReputationFlag{},
 		Sources:  []SourceResult{},

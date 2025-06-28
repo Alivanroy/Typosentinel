@@ -405,6 +405,7 @@ func (tr *ThreatRecord) ConvertToThreat() *types.Threat {
 		Package:         tr.PackageName,
 		Type:            types.ThreatType(tr.ThreatType),
 		Severity:        parseSeverity(tr.Severity),
+		Confidence:      tr.Confidence,
 		Description:     tr.Description,
 		DetectedAt:      tr.CreatedAt,
 		DetectionMethod: tr.Source,

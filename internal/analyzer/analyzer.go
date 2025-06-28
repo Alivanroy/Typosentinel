@@ -798,6 +798,21 @@ func (a *Analyzer) calculateSummary(threats []types.Threat, warnings []types.War
 	return summary
 }
 
+// AnalyzeDependency analyzes a single dependency for threats
+func (a *Analyzer) AnalyzeDependency(dep types.Dependency, popularPackages []string) ([]types.Threat, []types.Warning) {
+	if a.detector == nil {
+		return []types.Threat{}, []types.Warning{}
+	}
+
+	// Use detector engine to analyze the dependency
+	options := &detector.Options{
+		SimilarityThreshold: 0.8, // Default threshold
+		DeepAnalysis:        true,
+	}
+
+	return a.detector.AnalyzeDependency(dep, popularPackages, options)
+}
+
 // generateScanID generates a unique scan identifier
 func generateScanID() string {
 	return fmt.Sprintf("scan_%d", time.Now().UnixNano())

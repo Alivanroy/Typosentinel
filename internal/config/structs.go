@@ -1223,12 +1223,15 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var config Config
-	if err := yaml.Unmarshal(data, &config); err != nil {
+	// Start with default configuration
+	config := NewDefaultConfig()
+	
+	// Unmarshal the file data into the default config to override defaults
+	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 // SaveConfig saves the configuration to a file

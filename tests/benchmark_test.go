@@ -52,7 +52,7 @@ type BenchmarkResult struct {
 }
 
 // PerformanceMetrics contains aggregated performance metrics
-type PerformanceMetrics struct {
+type BenchmarkPerformanceMetrics struct {
 	TotalTests      int
 	SuccessfulTests int
 	FailedTests     int
@@ -500,9 +500,9 @@ func (suite *BenchmarkSuite) runPerformanceTest(ctx context.Context, benchPkg Be
 }
 
 // calculatePerformanceMetrics calculates aggregated performance metrics
-func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResult) PerformanceMetrics {
+func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResult) BenchmarkPerformanceMetrics {
 	if len(results) == 0 {
-		return PerformanceMetrics{}
+		return BenchmarkPerformanceMetrics{}
 	}
 
 	successfulResults := make([]BenchmarkResult, 0, len(results))
@@ -520,10 +520,10 @@ func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResu
 	}
 
 	if len(times) == 0 {
-		return PerformanceMetrics{
-			TotalTests:  len(results),
-			FailedTests: len(results),
-		}
+		return BenchmarkPerformanceMetrics{
+		TotalTests:  len(results),
+		FailedTests: len(results),
+	}
 	}
 
 	// Sort times for percentile calculations
@@ -550,7 +550,7 @@ func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResu
 	// Calculate throughput (packages per second)
 	throughput := float64(len(times)) / totalTime.Seconds()
 
-	return PerformanceMetrics{
+	return BenchmarkPerformanceMetrics{
 		TotalTests:      len(results),
 		SuccessfulTests: successCount,
 		FailedTests:     len(results) - successCount,
@@ -567,7 +567,7 @@ func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResu
 }
 
 // generatePerformanceReport generates a comprehensive performance report
-func (suite *BenchmarkSuite) generatePerformanceReport(t *testing.T, metrics PerformanceMetrics, results []BenchmarkResult) {
+func (suite *BenchmarkSuite) generatePerformanceReport(t *testing.T, metrics BenchmarkPerformanceMetrics, results []BenchmarkResult) {
 	t.Logf("\n=== Performance Test Report ===")
 	t.Logf("Total Tests: %d", metrics.TotalTests)
 	t.Logf("Successful: %d (%.1f%%)", metrics.SuccessfulTests, float64(metrics.SuccessfulTests)/float64(metrics.TotalTests)*100)
@@ -632,7 +632,7 @@ func (suite *BenchmarkSuite) generatePerformanceReport(t *testing.T, metrics Per
 }
 
 // savePerformanceReport saves the performance report to a file
-func (suite *BenchmarkSuite) savePerformanceReport(metrics PerformanceMetrics, results []BenchmarkResult, filePath string) error {
+func (suite *BenchmarkSuite) savePerformanceReport(metrics BenchmarkPerformanceMetrics, results []BenchmarkResult, filePath string) error {
 	report := map[string]interface{}{
 		"timestamp": time.Now(),
 		"metrics":   metrics,

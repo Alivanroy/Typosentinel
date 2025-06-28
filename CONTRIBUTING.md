@@ -12,6 +12,8 @@ We welcome contributions to TypoSentinel! This document provides guidelines for 
 - [Testing](#testing)
 - [Pull Request Process](#pull-request-process)
 - [Issue Reporting](#issue-reporting)
+- [Documentation](#documentation)
+- [Additional Resources](#additional-resources)
 
 ## Code of Conduct
 
@@ -214,11 +216,54 @@ Closes #123
 
 If you discover a security vulnerability, please follow our [Security Policy](SECURITY.md) and report it privately.
 
+## Documentation
+
+When contributing, please ensure documentation is updated appropriately:
+
+- **API Changes**: Update [API Documentation](docs/API_DOCUMENTATION.md)
+- **User-facing Changes**: Update [User Guide](docs/USER_GUIDE.md)
+- **Configuration Changes**: Update configuration examples
+- **New Features**: Add to [Project Documentation](PROJECT_DOCUMENTATION.md)
+- **Security Changes**: Review [Security Policy](SECURITY.md)
+
+### Generating API Reference
+
+To generate the API reference documentation:
+
+```bash
+make docs
+```
+
+This will create `docs/API_REFERENCE.md` with the latest API documentation.
+
+## Additional Resources
+
+### Project Documentation
+
+- [README.md](README.md) - Project overview and quick start
+- [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
+- [API Documentation](docs/API_DOCUMENTATION.md) - REST API reference
+- [Debug Logging Guide](docs/DEBUG_LOGGING.md) - Debugging and logging
+- [Plugin Development Guide](docs/plugin_development_guide.md) - Creating plugins
+- [Strategic Implementation Plan](docs/strategic_implementation_plan.md) - Project roadmap
+- [Production Deployment Guide](PRODUCTION_DEPLOYMENT.md) - Deployment instructions
+- [Pre-deployment Checklist](PRE_DEPLOYMENT_CHECKLIST.md) - Deployment validation
+- [Project Structure](PROJECT_STRUCTURE.md) - Codebase organization
+- [Security Policy](SECURITY.md) - Security guidelines and reporting
+- [Code of Conduct](CODE_OF_CONDUCT.md) - Community guidelines
+- [Changelog](CHANGELOG.md) - Version history and changes
+
+### Development Resources
+
+- [Optimization Guide](internal/optimization/README.md) - Performance optimization
+- [Logger Documentation](pkg/logger/README.md) - Logging utilities
+- [Plugin Examples](examples/plugins/) - Plugin development examples
+
 ## Questions?
 
 If you have questions about contributing, please:
 
-1. Check the existing documentation
+1. Check the existing documentation listed above
 2. Search existing issues
 3. Open a new issue with the "question" label
 4. Join our community discussions

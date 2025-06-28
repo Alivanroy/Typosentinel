@@ -246,6 +246,7 @@ This will create `docs/API_REFERENCE.md` with the latest API documentation.
 - [Debug Logging Guide](docs/DEBUG_LOGGING.md) - Debugging and logging
 - [Plugin Development Guide](docs/plugin_development_guide.md) - Creating plugins
 - [Strategic Implementation Plan](docs/strategic_implementation_plan.md) - Project roadmap
+- [Roadmap](ROADMAP.md) - Development roadmap and future plans
 - [Production Deployment Guide](PRODUCTION_DEPLOYMENT.md) - Deployment instructions
 - [Pre-deployment Checklist](PRE_DEPLOYMENT_CHECKLIST.md) - Deployment validation
 - [Project Structure](PROJECT_STRUCTURE.md) - Codebase organization

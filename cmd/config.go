@@ -314,8 +314,8 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// For display, we need a placeholder config
-	cfg := &config.Config{}
+	// Get configuration for display
+	configEntries := configManager.GetAllConfig()
 
 	// Get config info
 	configInfo := getConfigInfo(configManager, configFile)
@@ -323,6 +323,7 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	// Display configuration
 	fmt.Printf("Configuration File: %s\n", configInfo["config_file"])
 	fmt.Printf("Environment Prefix: %s\n", configInfo["env_prefix"])
+	fmt.Printf("Configuration Entries: %d\n", len(configEntries))
 	fmt.Println()
 
 	// Show environment variables if requested
@@ -340,9 +341,9 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	// Output configuration based on format
 	switch configFormat {
 	case "json":
-		return outputConfigAsJSON(cfg)
+		return outputConfigAsJSON(configEntries)
 	case "yaml":
-		return outputConfigAsYAML(cfg)
+		return outputConfigAsYAML(configEntries)
 	default:
 		return fmt.Errorf("unsupported format: %s", configFormat)
 	}
@@ -400,10 +401,16 @@ func runConfigTemplateSave(cmd *cobra.Command, args []string) error {
 	configManager := config.NewConfigManager(options, nil)
 
 	// Load configuration
-	cfg := configManager.LoadConfig()
+	err := configManager.LoadConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	// Get configuration entries
+	configEntries := configManager.GetAllConfig()
 
 	// Create template
-	template := createTemplate(templateName, configDescription, cfg)
+	template := createTemplate(templateName, configDescription, configEntries)
 
 	// Ensure templates directory exists
 	templatesDir := getCustomTemplatesDir()
@@ -413,8 +420,7 @@ func runConfigTemplateSave(cmd *cobra.Command, args []string) error {
 
 	// Save template
 	templateFile := filepath.Join(templatesDir, templateName+".yaml")
-	err = saveTemplate(template, templateFile)
-	if err != nil {
+	if err := saveTemplate(template, templateFile); err != nil {
 		return fmt.Errorf("failed to save template: %w", err)
 	}
 
@@ -479,8 +485,14 @@ func runConfigTemplateShow(cmd *cobra.Command, args []string) error {
 
 // Helper functions
 
-func outputConfigAsJSON(cfg *config.Config) error {
-	data, err := json.MarshalIndent(cfg, "", "  ")
+func outputConfigAsJSON(configEntries map[string]*config.ConfigEntry) error {
+	// Convert config entries to a simple map for JSON output
+	configMap := make(map[string]interface{})
+	for key, entry := range configEntries {
+		configMap[key] = entry.Value
+	}
+	
+	data, err := json.MarshalIndent(configMap, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config as JSON: %w", err)
 	}
@@ -488,8 +500,14 @@ func outputConfigAsJSON(cfg *config.Config) error {
 	return nil
 }
 
-func outputConfigAsYAML(cfg *config.Config) error {
-	data, err := yaml.Marshal(cfg)
+func outputConfigAsYAML(configEntries map[string]*config.ConfigEntry) error {
+	// Convert config entries to a simple map for YAML output
+	configMap := make(map[string]interface{})
+	for key, entry := range configEntries {
+		configMap[key] = entry.Value
+	}
+	
+	data, err := yaml.Marshal(configMap)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config as YAML: %w", err)
 	}
@@ -543,38 +561,48 @@ func validateConfiguration(configManager *config.ConfigManager) (struct {
 		Valid:    true,
 	}
 	
-	// Get the configuration
-	cfg := configManager.GetConfig()
-	if cfg == nil {
-		result.Errors = append(result.Errors, "Configuration is nil")
-		result.Valid = false
-		return result, nil
+	// Get all configuration entries
+	configEntries := configManager.GetAllConfig()
+	if len(configEntries) == 0 {
+		result.Warnings = append(result.Warnings, "No configuration entries found")
 	}
 	
-	// Validate required fields
-	if cfg.Scanner.MaxConcurrency <= 0 {
-		result.Errors = append(result.Errors, "Scanner max concurrency must be greater than 0")
-		result.Valid = false
+	// Validate scanner configuration
+	if maxConcurrency, exists := configEntries["scanner.max_concurrency"]; exists {
+		if val, ok := maxConcurrency.Value.(int); ok && val <= 0 {
+			result.Errors = append(result.Errors, "Scanner max concurrency must be greater than 0")
+			result.Valid = false
+		}
+	} else {
+		result.Warnings = append(result.Warnings, "Scanner max concurrency not configured")
 	}
 	
-	if cfg.Scanner.Timeout <= 0 {
+	if timeout, exists := configEntries["scanner.timeout"]; !exists || timeout.Value == nil {
 		result.Warnings = append(result.Warnings, "Scanner timeout is not set, using default")
 	}
 	
 	// Validate ML configuration
-	if cfg.ML.Enabled && cfg.ML.ModelPath == "" {
-		result.Errors = append(result.Errors, "ML is enabled but model path is not specified")
-		result.Valid = false
+	if mlEnabled, exists := configEntries["ml.enabled"]; exists {
+		if enabled, ok := mlEnabled.Value.(bool); ok && enabled {
+			if modelPath, pathExists := configEntries["ml.model_path"]; !pathExists || modelPath.Value == "" {
+				result.Errors = append(result.Errors, "ML is enabled but model path is not specified")
+				result.Valid = false
+			}
+		}
 	}
 	
 	// Validate API configuration
-	if cfg.API.Enabled {
-		if cfg.API.Port <= 0 || cfg.API.Port > 65535 {
-			result.Errors = append(result.Errors, "API port must be between 1 and 65535")
-			result.Valid = false
-		}
-		if cfg.API.Host == "" {
-			result.Warnings = append(result.Warnings, "API host is not set, using default")
+	if apiEnabled, exists := configEntries["api.enabled"]; exists {
+		if enabled, ok := apiEnabled.Value.(bool); ok && enabled {
+			if apiPort, portExists := configEntries["api.port"]; portExists {
+				if port, ok := apiPort.Value.(int); ok && (port <= 0 || port > 65535) {
+					result.Errors = append(result.Errors, "API port must be between 1 and 65535")
+					result.Valid = false
+				}
+			}
+			if apiHost, hostExists := configEntries["api.host"]; !hostExists || apiHost.Value == "" {
+				result.Warnings = append(result.Warnings, "API host is not set, using default")
+			}
 		}
 	}
 	
@@ -609,11 +637,17 @@ func getConfigInfo(configManager *config.ConfigManager, configFile string) map[s
 }
 
 // createTemplate creates a template structure
-func createTemplate(name, description string, cfg interface{}) map[string]interface{} {
+func createTemplate(name, description string, configEntries map[string]*config.ConfigEntry) map[string]interface{} {
+	// Convert config entries to a simple map
+	configMap := make(map[string]interface{})
+	for key, entry := range configEntries {
+		configMap[key] = entry.Value
+	}
+	
 	return map[string]interface{}{
 		"name":        name,
 		"description": description,
-		"config":      cfg,
+		"config":      configMap,
 		"created":     fmt.Sprintf("%d", os.Getpid()), // Simple timestamp placeholder
 	}
 }

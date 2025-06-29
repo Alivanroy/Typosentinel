@@ -20,6 +20,7 @@ type CacheManager struct {
 	cacheAnalyzer *CacheAnalyzer // Cache performance analysis
 	config        *CacheConfig
 	metrics       *CacheMetrics
+	cancel        context.CancelFunc // Context cancel function
 	mu            sync.RWMutex
 }
 
@@ -271,6 +272,7 @@ func NewCacheManager(config *CacheConfig, db *database.ThreatDB) *CacheManager {
 		l2Cache: l2,
 		l3Cache: l3,
 		config:  config,
+		cancel:  cancel,
 		metrics: &CacheMetrics{
 			L1Metrics: &LayerMetrics{},
 			L2Metrics: &LayerMetrics{},
@@ -829,6 +831,9 @@ func (cm *CacheManager) GetPerformanceLog() []*CacheOperation {
 
 // Shutdown gracefully shuts down the cache manager
 func (cm *CacheManager) Shutdown() error {
+	if cm.cancel != nil {
+		cm.cancel()
+	}
 	if cm.cacheWarmer != nil {
 		cm.cacheWarmer.cancel()
 	}

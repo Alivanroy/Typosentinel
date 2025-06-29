@@ -1,0 +1,115 @@
+name: Security Vulnerability Report
+description: Report a security vulnerability (for non-critical issues only)
+title: "[Security]: "
+labels: ["security", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **IMPORTANT SECURITY NOTICE** ⚠️
+        
+        **For critical security vulnerabilities, please DO NOT use this public issue tracker.**
+        
+        Instead, please report critical vulnerabilities privately by:
+        - Emailing our security team (see SECURITY.md)
+        - Using GitHub's private vulnerability reporting feature
+        
+        This template is only for **non-critical security improvements** or **general security discussions**.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe do you consider this security issue?
+      options:
+        - Low - Security improvement suggestion
+        - Medium - Potential security concern
+        - High - Should be reported privately (do not use this template)
+        - Critical - Must be reported privately (do not use this template)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Security Category
+      description: What type of security issue is this?
+      options:
+        - Input validation
+        - Authentication/Authorization
+        - Data exposure
+        - Dependency vulnerability
+        - Configuration security
+        - Code quality/security best practices
+        - Documentation security guidance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the security concern or improvement suggestion.
+      placeholder: Please provide a clear description of the security issue or improvement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could be the potential impact if this issue is not addressed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce (if applicable)
+      description: If this is a demonstrable issue, provide steps to reproduce it.
+      placeholder: |
+        1. Configure TypoSentinel with...
+        2. Run command...
+        3. Observe behavior...
+    validations:
+      required: false
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Mitigation
+      description: Do you have suggestions for how to address this security concern?
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Relevant environment information (OS, TypoSentinel version, deployment context).
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      description: Please confirm the following
+      options:
+        - label: This is NOT a critical security vulnerability that could lead to immediate harm
+          required: true
+        - label: I understand that critical vulnerabilities should be reported privately
+          required: true
+        - label: I have read the project's Security Policy
+          required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/Alivanroy/Typosentinel/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

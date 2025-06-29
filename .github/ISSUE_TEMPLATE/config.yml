@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security Vulnerability (Private)
+    url: https://github.com/Alivanroy/Typosentinel/security/advisories/new
+    about: Report critical security vulnerabilities privately
+  - name: 💬 Community Discussions
+    url: https://github.com/Alivanroy/Typosentinel/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📚 Documentation
+    url: https://github.com/Alivanroy/Typosentinel/tree/main/docs
+    about: Browse the project documentation
+  - name: 📖 User Guide
+    url: https://github.com/Alivanroy/Typosentinel/blob/main/docs/USER_GUIDE.md
+    about: Comprehensive guide for using TypoSentinel
+  - name: 🚀 API Documentation
+    url: https://github.com/Alivanroy/Typosentinel/blob/main/docs/API_DOCUMENTATION.md
+    about: REST API reference and examples

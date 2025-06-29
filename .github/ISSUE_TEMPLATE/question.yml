@@ -1,0 +1,149 @@
+name: Question or Support
+description: Ask a question or get help with TypoSentinel
+title: "[Question]: "
+labels: ["question", "support"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reaching out! Please provide as much detail as possible to help us assist you effectively.
+        
+        Before submitting, please check:
+        - [Documentation](https://github.com/Alivanroy/Typosentinel/tree/main/docs)
+        - [User Guide](https://github.com/Alivanroy/Typosentinel/blob/main/docs/USER_GUIDE.md)
+        - [FAQ section in README](https://github.com/Alivanroy/Typosentinel/blob/main/README.md)
+        - [Existing issues](https://github.com/Alivanroy/Typosentinel/issues)
+
+  - type: dropdown
+    id: question-type
+    attributes:
+      label: Question Type
+      description: What type of question or support do you need?
+      options:
+        - Installation and setup
+        - Configuration help
+        - Usage guidance
+        - Integration with other tools
+        - Performance optimization
+        - Best practices
+        - Troubleshooting
+        - API usage
+        - Plugin development
+        - Contributing guidance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: Please describe your question or what you need help with.
+      placeholder: I'm trying to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and Background
+      description: Provide context about what you're trying to achieve and any relevant background information.
+      placeholder: |
+        - What are you trying to accomplish?
+        - What have you tried so far?
+        - What specific challenges are you facing?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: TypoSentinel Version
+      description: What version of TypoSentinel are you using?
+      placeholder: e.g., v1.2.3 or latest
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: What environment are you working in?
+      options:
+        - Local development
+        - CI/CD pipeline
+        - Production deployment
+        - Docker container
+        - Cloud platform
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration (if relevant)
+      description: Share your configuration file or relevant settings (remove any sensitive information).
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands or Code (if relevant)
+      description: Share the commands you're running or code you're working with.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Current Output or Behavior
+      description: What output or behavior are you currently seeing?
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Outcome
+      description: What outcome or behavior are you expecting?
+    validations:
+      required: false
+
+  - type: textarea
+    id: research
+    attributes:
+      label: Research Done
+      description: What documentation, issues, or resources have you already checked?
+      placeholder: |
+        - Checked the User Guide
+        - Searched existing issues
+        - Reviewed API documentation
+        - etc.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: urgency
+    attributes:
+      label: Urgency
+      description: How urgent is this question?
+      options:
+        - label: This is blocking my work
+        - label: This would help improve my workflow
+        - label: This is for learning/exploration
+        - label: No specific timeline
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/Alivanroy/Typosentinel/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

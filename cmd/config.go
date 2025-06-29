@@ -213,9 +213,11 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 	}
 	_ = config.NewConfigManager(options, nil)
 
-	// Generate configuration file (placeholder implementation)
-	// TODO: Implement configuration file generation
-	fmt.Printf("Configuration file generation not yet implemented\n")
+	// Generate configuration file
+	err := generateConfigFile(filename, configTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to generate configuration file: %w", err)
+	}
 
 	fmt.Printf("Configuration file '%s' created successfully using '%s' template.\n", filename, configTemplate)
 	fmt.Printf("\nNext steps:\n")
@@ -246,16 +248,10 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Validate configuration (placeholder implementation)
-	// TODO: Implement proper configuration validation
-	result := struct {
-		Warnings []string
-		Errors   []string
-		Valid    bool
-	}{
-		Warnings: []string{},
-		Errors:   []string{},
-		Valid:    true,
+	// Validate configuration
+	result, err := validateConfiguration(configManager)
+	if err != nil {
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	// Display results
@@ -321,16 +317,8 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	// For display, we need a placeholder config
 	cfg := &config.Config{}
 
-	// Get config info (placeholder implementation)
-	// TODO: Implement proper config info retrieval
-	configInfo := map[string]interface{}{
-		"config_file":     "config.yaml",
-		"env_prefix":      "TYPOSENTINEL",
-		"env_variables":   []string{},
-		"source":          "file",
-		"version":         "1.0",
-		"loaded":          true,
-	}
+	// Get config info
+	configInfo := getConfigInfo(configManager, configFile)
 
 	// Display configuration
 	fmt.Printf("Configuration File: %s\n", configInfo["config_file"])
@@ -414,14 +402,8 @@ func runConfigTemplateSave(cmd *cobra.Command, args []string) error {
 	// Load configuration
 	cfg := configManager.LoadConfig()
 
-	// Create template (placeholder implementation)
-	// TODO: Implement template creation
-	template := map[string]interface{}{
-		"name":        templateName,
-		"description": configDescription,
-		"config":      cfg,
-	}
-	_ = template // use template to avoid unused variable error
+	// Create template
+	template := createTemplate(templateName, configDescription, cfg)
 
 	// Ensure templates directory exists
 	templatesDir := getCustomTemplatesDir()
@@ -429,10 +411,12 @@ func runConfigTemplateSave(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create templates directory: %w", err)
 	}
 
-	// Save template (placeholder implementation)
-	// TODO: Implement template saving
+	// Save template
 	templateFile := filepath.Join(templatesDir, templateName+".yaml")
-	fmt.Printf("Template saving not yet implemented for file: %s\n", templateFile)
+	err = saveTemplate(template, templateFile)
+	if err != nil {
+		return fmt.Errorf("failed to save template: %w", err)
+	}
 
 	fmt.Printf("Template '%s' saved successfully to %s\n", templateName, templateFile)
 	return nil
@@ -459,9 +443,11 @@ func runConfigTemplateShow(cmd *cobra.Command, args []string) error {
 		tempFile := filepath.Join(os.TempDir(), "temp_template.yaml")
 		defer os.Remove(tempFile)
 
-		// TODO: Implement template generation
-		fmt.Printf("Template generation not yet implemented for: %s\n", templateName)
-		return nil
+		// Generate template
+		err := generateTemplateFile(templateName, tempFile)
+		if err != nil {
+			return fmt.Errorf("failed to generate template: %w", err)
+		}
 
 		content, err := os.ReadFile(tempFile)
 		if err != nil {
@@ -477,9 +463,15 @@ func runConfigTemplateShow(cmd *cobra.Command, args []string) error {
 		_ = config.NewConfigManager(options, nil)
 		templateFile := filepath.Join(getCustomTemplatesDir(), templateName+".yaml")
 
-		// TODO: Implement template loading
-		fmt.Printf("Template loading not yet implemented for: %s\n", templateFile)
-		return nil
+		// Load custom template
+		content, err := loadCustomTemplate(templateFile)
+		if err != nil {
+			return fmt.Errorf("failed to load custom template: %w", err)
+		}
+
+		fmt.Printf("Custom Template: %s\n", templateName)
+		fmt.Println(strings.Repeat("=", 50))
+		fmt.Print(string(content))
 	}
 
 	return nil
@@ -511,4 +503,353 @@ func getCustomTemplatesDir() string {
 		return "./templates"
 	}
 	return filepath.Join(homeDir, ".config", "typosentinel", "templates")
+}
+
+// generateConfigFile creates a configuration file from a template
+func generateConfigFile(filename, templateName string) error {
+	var configContent string
+	
+	switch templateName {
+	case "default":
+		configContent = getDefaultConfigTemplate()
+	case "minimal":
+		configContent = getMinimalConfigTemplate()
+	case "development":
+		configContent = getDevelopmentConfigTemplate()
+	case "production":
+		configContent = getProductionConfigTemplate()
+	case "security-focused":
+		configContent = getSecurityFocusedConfigTemplate()
+	default:
+		return fmt.Errorf("unknown template: %s", templateName)
+	}
+	
+	return os.WriteFile(filename, []byte(configContent), 0644)
+}
+
+// validateConfiguration performs comprehensive configuration validation
+func validateConfiguration(configManager *config.ConfigManager) (struct {
+	Warnings []string
+	Errors   []string
+	Valid    bool
+}, error) {
+	result := struct {
+		Warnings []string
+		Errors   []string
+		Valid    bool
+	}{
+		Warnings: []string{},
+		Errors:   []string{},
+		Valid:    true,
+	}
+	
+	// Get the configuration
+	cfg := configManager.GetConfig()
+	if cfg == nil {
+		result.Errors = append(result.Errors, "Configuration is nil")
+		result.Valid = false
+		return result, nil
+	}
+	
+	// Validate required fields
+	if cfg.Scanner.MaxConcurrency <= 0 {
+		result.Errors = append(result.Errors, "Scanner max concurrency must be greater than 0")
+		result.Valid = false
+	}
+	
+	if cfg.Scanner.Timeout <= 0 {
+		result.Warnings = append(result.Warnings, "Scanner timeout is not set, using default")
+	}
+	
+	// Validate ML configuration
+	if cfg.ML.Enabled && cfg.ML.ModelPath == "" {
+		result.Errors = append(result.Errors, "ML is enabled but model path is not specified")
+		result.Valid = false
+	}
+	
+	// Validate API configuration
+	if cfg.API.Enabled {
+		if cfg.API.Port <= 0 || cfg.API.Port > 65535 {
+			result.Errors = append(result.Errors, "API port must be between 1 and 65535")
+			result.Valid = false
+		}
+		if cfg.API.Host == "" {
+			result.Warnings = append(result.Warnings, "API host is not set, using default")
+		}
+	}
+	
+	return result, nil
+}
+
+// getConfigInfo retrieves configuration information
+func getConfigInfo(configManager *config.ConfigManager, configFile string) map[string]interface{} {
+	info := map[string]interface{}{
+		"config_file":   configFile,
+		"env_prefix":    "TYPOSENTINEL",
+		"env_variables": []string{},
+		"source":        "file",
+		"version":       "1.0",
+		"loaded":        true,
+	}
+	
+	if configFile == "" {
+		info["config_file"] = "config.yaml"
+	}
+	
+	// Collect environment variables
+	envVars := []string{}
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, "TYPOSENTINEL_") {
+			envVars = append(envVars, env)
+		}
+	}
+	info["env_variables"] = envVars
+	
+	return info
+}
+
+// createTemplate creates a template structure
+func createTemplate(name, description string, cfg interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"name":        name,
+		"description": description,
+		"config":      cfg,
+		"created":     fmt.Sprintf("%d", os.Getpid()), // Simple timestamp placeholder
+	}
+}
+
+// saveTemplate saves a template to file
+func saveTemplate(template map[string]interface{}, filename string) error {
+	data, err := yaml.Marshal(template)
+	if err != nil {
+		return fmt.Errorf("failed to marshal template: %w", err)
+	}
+	return os.WriteFile(filename, data, 0644)
+}
+
+// generateTemplateFile generates a built-in template file
+func generateTemplateFile(templateName, filename string) error {
+	return generateConfigFile(filename, templateName)
+}
+
+// loadCustomTemplate loads a custom template from file
+func loadCustomTemplate(filename string) ([]byte, error) {
+	return os.ReadFile(filename)
+}
+
+// Configuration templates
+
+func getDefaultConfigTemplate() string {
+	return `# TypoSentinel Default Configuration
+version: "1.0"
+
+scanner:
+  max_concurrency: 10
+  timeout: 30s
+  cache_enabled: true
+  cache_ttl: 1h
+
+detection:
+  typosquatting:
+    enabled: true
+    threshold: 0.8
+  homoglyph:
+    enabled: true
+  reputation:
+    enabled: true
+
+ml:
+  enabled: false
+  model_path: ""
+  threshold: 0.7
+
+api:
+  enabled: false
+  host: "localhost"
+  port: 8080
+  cors_enabled: true
+
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+
+output:
+  format: "table"
+  file: ""
+  verbose: false
+`
+}
+
+func getMinimalConfigTemplate() string {
+	return `# TypoSentinel Minimal Configuration
+version: "1.0"
+
+scanner:
+  max_concurrency: 5
+  timeout: 15s
+
+detection:
+  typosquatting:
+    enabled: true
+
+logging:
+  level: "warn"
+
+output:
+  format: "json"
+`
+}
+
+func getDevelopmentConfigTemplate() string {
+	return `# TypoSentinel Development Configuration
+version: "1.0"
+
+scanner:
+  max_concurrency: 5
+  timeout: 60s
+  cache_enabled: false
+
+detection:
+  typosquatting:
+    enabled: true
+    threshold: 0.7
+  homoglyph:
+    enabled: true
+  reputation:
+    enabled: true
+
+ml:
+  enabled: true
+  model_path: "./models/typo_detector.pkl"
+  threshold: 0.6
+
+api:
+  enabled: true
+  host: "localhost"
+  port: 8080
+  cors_enabled: true
+
+logging:
+  level: "debug"
+  format: "text"
+  output: "stdout"
+
+output:
+  format: "table"
+  verbose: true
+`
+}
+
+func getProductionConfigTemplate() string {
+	return `# TypoSentinel Production Configuration
+version: "1.0"
+
+scanner:
+  max_concurrency: 20
+  timeout: 30s
+  cache_enabled: true
+  cache_ttl: 24h
+
+detection:
+  typosquatting:
+    enabled: true
+    threshold: 0.9
+  homoglyph:
+    enabled: true
+  reputation:
+    enabled: true
+
+ml:
+  enabled: true
+  model_path: "/opt/typosentinel/models/production.pkl"
+  threshold: 0.8
+
+api:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+  cors_enabled: false
+  rate_limit:
+    enabled: true
+    requests_per_minute: 100
+
+logging:
+  level: "info"
+  format: "json"
+  output: "/var/log/typosentinel/app.log"
+
+output:
+  format: "json"
+  file: "/var/log/typosentinel/results.json"
+
+security:
+  tls_enabled: true
+  cert_file: "/etc/ssl/certs/typosentinel.crt"
+  key_file: "/etc/ssl/private/typosentinel.key"
+`
+}
+
+func getSecurityFocusedConfigTemplate() string {
+	return `# TypoSentinel Security-Focused Configuration
+version: "1.0"
+
+scanner:
+  max_concurrency: 15
+  timeout: 45s
+  cache_enabled: true
+  cache_ttl: 6h
+
+detection:
+  typosquatting:
+    enabled: true
+    threshold: 0.95
+    strict_mode: true
+  homoglyph:
+    enabled: true
+    unicode_normalization: true
+  reputation:
+    enabled: true
+    strict_scoring: true
+  behavioral:
+    enabled: true
+    sandbox_timeout: 120s
+
+ml:
+  enabled: true
+  model_path: "/opt/typosentinel/models/security.pkl"
+  threshold: 0.9
+  ensemble_enabled: true
+
+api:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8443
+  cors_enabled: false
+  authentication:
+    enabled: true
+    method: "jwt"
+  rate_limit:
+    enabled: true
+    requests_per_minute: 50
+
+logging:
+  level: "info"
+  format: "json"
+  output: "/var/log/typosentinel/security.log"
+  audit_enabled: true
+
+output:
+  format: "json"
+  file: "/var/log/typosentinel/security-results.json"
+  include_metadata: true
+
+security:
+  tls_enabled: true
+  tls_min_version: "1.3"
+  cert_file: "/etc/ssl/certs/typosentinel.crt"
+  key_file: "/etc/ssl/private/typosentinel.key"
+  hsts_enabled: true
+  content_security_policy: true
+`
 }

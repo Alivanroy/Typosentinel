@@ -1,0 +1,190 @@
+name: Community Contribution Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+env:
+  GO_VERSION: '1.21'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  community-validation:
+    name: Community PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.fork == true
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install tools
+        run: |
+          # Go tools
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          
+          # Python tools
+          pip install black flake8 isort pip-audit
+
+      - name: Validate PR metadata
+        run: |
+          echo "🔍 Validating PR metadata..."
+          
+          # Check PR title format
+          if [[ ! "${{ github.event.pull_request.title }}" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: ]]; then
+            echo "❌ PR title should follow conventional commits format"
+            echo "Current: ${{ github.event.pull_request.title }}"
+            exit 1
+          fi
+          
+          # Check PR description length
+          if [ ${#"${{ github.event.pull_request.body }}"} -lt 20 ]; then
+            echo "❌ PR description should be at least 20 characters"
+            exit 1
+          fi
+
+      - name: Check changed files
+        run: |
+          echo "🔍 Analyzing changed files..."
+          
+          # Get list of changed files
+          git diff --name-only origin/main...HEAD > changed_files.txt
+          
+          # Check for sensitive file changes
+          if grep -E "\.(key|pem|p12|pfx|p8|der)$" changed_files.txt; then
+            echo "❌ Sensitive files detected in PR"
+            exit 1
+          fi
+          
+          # Check for large files
+          while IFS= read -r file; do
+            if [ -f "$file" ] && [ $(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0) -gt 1048576 ]; then
+              echo "❌ Large file detected: $file (>1MB)"
+              exit 1
+            fi
+          done < changed_files.txt
+
+      - name: Security scan on changes
+        run: |
+          echo "🔍 Running security scan on changes..."
+          
+          # Build current version
+          go build -o typosentinel ./cmd/typosentinel
+          
+          # Run self-scan if dependencies changed
+          if grep -E "(go\.mod|go\.sum|requirements\.txt|package\.json)" changed_files.txt; then
+            echo "Dependencies changed, running security scan..."
+            ./typosentinel scan --fail-on-threats
+          fi
+
+      - name: Code quality checks
+        run: |
+          echo "🔍 Running code quality checks..."
+          
+          # Go code quality
+          if find . -name "*.go" -newer changed_files.txt -type f | head -1 | grep -q .; then
+            echo "Go files changed, running quality checks..."
+            gofmt -d $(find . -name "*.go" -not -path "./vendor/*")
+            go vet ./...
+            golangci-lint run
+            gosec ./...
+            govulncheck ./...
+          fi
+          
+          # Python code quality (if ml changes)
+          if find ml -name "*.py" -newer changed_files.txt -type f 2>/dev/null | head -1 | grep -q .; then
+            echo "Python files changed, running quality checks..."
+            cd ml
+            black --check .
+            flake8 .
+            isort --check-only .
+          fi
+
+      - name: Test coverage check
+        run: |
+          echo "🔍 Checking test coverage..."
+          
+          # Run tests with coverage
+          go test -coverprofile=coverage.out ./...
+          
+          # Check coverage threshold
+          coverage=$(go tool cover -func=coverage.out | tail -1 | awk '{print $3}' | sed 's/%//')
+          if (( $(echo "$coverage < 80" | bc -l) )); then
+            echo "❌ Test coverage below threshold: ${coverage}% (minimum: 80%)"
+            exit 1
+          fi
+          
+          echo "✅ Test coverage: ${coverage}%"
+
+      - name: Community contributor welcome
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `
+            👋 Welcome to TypoSentinel! Thank you for your contribution.
+            
+            Your PR will be reviewed by our maintainers. Here's what happens next:
+            
+            1. ✅ Automated checks are running
+            2. 🔍 Code review by maintainers
+            3. ✅ Final approval and merge
+            
+            Please ensure:
+            - [ ] Tests pass and coverage is maintained
+            - [ ] Code follows our style guidelines
+            - [ ] Commit messages follow conventional format
+            - [ ] Documentation is updated if needed
+            
+            Questions? Check our [Contributing Guide](https://github.com/Alivanroy/Typosentinel/blob/main/CONTRIBUTING.md) or ask in the comments!
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
+
+      - name: Auto-label PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const labels = [];
+            
+            // Add labels based on PR title
+            if (title.startsWith('feat')) labels.push('enhancement');
+            if (title.startsWith('fix')) labels.push('bug');
+            if (title.startsWith('docs')) labels.push('documentation');
+            if (title.startsWith('security')) labels.push('security');
+            
+            // Add community label for external contributors
+            if (context.payload.pull_request.head.repo.fork) {
+              labels.push('community');
+            }
+            
+            if (labels.length > 0) {
+              github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: labels
+              });
+            }

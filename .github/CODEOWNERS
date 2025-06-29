@@ -1,0 +1,27 @@
+# Global code owners
+* @alivanroy @core-team
+
+# Security-critical components require security team review
+/internal/detector/ @alivanroy @security-team
+/internal/provenance/ @alivanroy @security-team
+/pkg/security/ @alivanroy @security-team
+SECURITY.md @alivanroy @security-team
+
+# ML components require ML team review
+/ml/ @alivanroy @ml-team
+/internal/ml/ @alivanroy @ml-team
+
+# Infrastructure and deployment
+/.github/ @alivanroy @devops-team
+/scripts/ @alivanroy @devops-team
+docker-compose.yml @alivanroy @devops-team
+Dockerfile* @alivanroy @devops-team
+
+# Documentation
+/docs/ @alivanroy @docs-team
+README.md @alivanroy @docs-team
+CONTRIBUTING.md @alivanroy @docs-team
+
+# API definitions
+/api/ @alivanroy @api-team
+/internal/api/ @alivanroy @api-team

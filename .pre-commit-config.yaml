@@ -1,0 +1,119 @@
+# .pre-commit-config.yaml
+repos:
+  # Go hooks
+  - repo: local
+    hooks:
+      - id: go-fmt
+        name: Go Format
+        entry: gofmt
+        language: system
+        args: [-w, -s]
+        files: \.go$
+        
+      - id: go-vet
+        name: Go Vet
+        entry: go
+        language: system
+        args: [vet, ./...]
+        files: \.go$
+        pass_filenames: false
+        
+      - id: go-mod-tidy
+        name: Go Mod Tidy
+        entry: go
+        language: system
+        args: [mod, tidy]
+        files: go\.(mod|sum)$
+        pass_filenames: false
+        
+      - id: golangci-lint
+        name: GolangCI Lint
+        entry: golangci-lint
+        language: system
+        args: [run, --fix]
+        files: \.go$
+        pass_filenames: false
+
+  # Security checks
+  - repo: local
+    hooks:
+      - id: govulncheck
+        name: Go Vulnerability Check
+        entry: govulncheck
+        language: system
+        args: [./...]
+        files: \.go$
+        pass_filenames: false
+        
+      - id: gosec
+        name: Go Security Check
+        entry: gosec
+        language: system
+        args: [-quiet, ./...]
+        files: \.go$
+        pass_filenames: false
+
+  # Python hooks for ML components
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        files: ^ml/.*\.py$
+        
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        files: ^ml/.*\.py$
+        
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        files: ^ml/.*\.py$
+
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  # Docker hooks
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # Custom TypoSentinel security checks
+  - repo: local
+    hooks:
+      - id: typosentinel-self-scan
+        name: TypoSentinel Self Scan
+        entry: ./scripts/pre-commit-security-scan.sh
+        language: script
+        files: (go\.mod|go\.sum|package\.json|requirements\.txt)$
+        pass_filenames: false
+        
+      - id: dependency-audit
+        name: Dependency Security Audit
+        entry: ./scripts/dependency-audit.sh
+        language: script
+        files: (go\.mod|go\.sum|package\.json|requirements\.txt)$
+        pass_filenames: false
+        
+      - id: commit-message-check
+        name: Conventional Commit Check
+        entry: ./scripts/check-commit-message.sh
+        language: script
+        stages: [commit-msg]

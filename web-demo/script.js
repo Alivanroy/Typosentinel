@@ -25,30 +25,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             });
         }
     });
-    
-    // CLI Demo Event Listeners
-    if (cliInput) {
-        cliInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const command = this.value.trim();
-                if (command) {
-                    executeCommand(command);
-                    this.value = '';
-                }
-            }
-        });
-    }
-    
-    exampleCommands.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const command = this.dataset.cmd;
-            if (cliInput) {
-                cliInput.value = command;
-                executeCommand(command);
-                cliInput.value = '';
-            }
-        });
-    });
+});
     
     // CLI Command Execution
     function executeCommand(command) {
@@ -299,7 +276,6 @@ Examples:
             addCliLine(`Error: ${error.message}`, 'error');
         }
     }
-});
 
 // Navbar background on scroll
 window.addEventListener('scroll', () => {
@@ -322,6 +298,32 @@ const scanResults = document.getElementById('scanResults');
 const cliInput = document.getElementById('cliInput');
 const cliOutput = document.getElementById('cliOutput');
 const exampleCommands = document.querySelectorAll('.example-cmd');
+
+// CLI Demo Event Listeners
+if (cliInput) {
+    cliInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const command = this.value.trim();
+            if (command) {
+                executeCommand(command);
+                this.value = '';
+            }
+        }
+    });
+}
+
+if (exampleCommands) {
+    exampleCommands.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const command = this.dataset.cmd;
+            if (cliInput) {
+                cliInput.value = command;
+                executeCommand(command);
+                cliInput.value = '';
+            }
+        });
+    });
+}
 
 // API base URL
 const API_BASE = window.location.origin + '/api';

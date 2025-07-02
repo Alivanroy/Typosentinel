@@ -2,7 +2,10 @@ package registry
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
@@ -122,10 +125,65 @@ func (n *NPMConnector) GetPackageInfo(ctx context.Context, name, version string)
 
 // SearchPackages searches for packages in NPM registry
 func (n *NPMConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
-	// For now, return empty slice as NPM search API requires different endpoint
-	// This would need to be implemented with NPM search API: https://api.npmjs.org/search
-	// TODO: Implement NPM search functionality
-	return []*types.PackageMetadata{}, nil
+	// Implement NPM search using the NPM search API
+	if query == "" {
+		return []*types.PackageMetadata{}, nil
+	}
+	
+	// Use NPM search API endpoint
+	searchURL := fmt.Sprintf("https://registry.npmjs.org/-/v1/search?text=%s&size=20", url.QueryEscape(query))
+	
+	resp, err := http.Get(searchURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search NPM registry: %w", err)
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("NPM search API returned status %d", resp.StatusCode)
+	}
+	
+	var searchResult struct {
+		Objects []struct {
+			Package struct {
+				Name        string `json:"name"`
+				Version     string `json:"version"`
+				Description string `json:"description"`
+				Author      struct {
+					Name string `json:"name"`
+				} `json:"author"`
+				Maintainers []struct {
+					Name string `json:"name"`
+				} `json:"maintainers"`
+			} `json:"package"`
+		} `json:"objects"`
+	}
+	
+	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
+		return nil, fmt.Errorf("failed to decode search response: %w", err)
+	}
+	
+	var packages []*types.PackageMetadata
+	for _, obj := range searchResult.Objects {
+		pkg := &types.PackageMetadata{
+			Name:        obj.Package.Name,
+			Version:     obj.Package.Version,
+			Description: obj.Package.Description,
+			Registry:    "npm",
+		}
+		
+		if obj.Package.Author.Name != "" {
+			pkg.Author = obj.Package.Author.Name
+		}
+		
+		for _, maintainer := range obj.Package.Maintainers {
+			pkg.Maintainers = append(pkg.Maintainers, maintainer.Name)
+		}
+		
+		packages = append(packages, pkg)
+	}
+	
+	return packages, nil
 }
 
 // GetRegistryType returns the registry type

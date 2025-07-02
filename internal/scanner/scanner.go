@@ -100,20 +100,20 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	start := time.Now()
 
 	// Check cache first if enabled
-	// TODO: Fix cache integration - type mismatch between DependencyTree and ScanResult
-	/*
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			if cachedResult, found, err := s.cache.GetCachedScanResult(cacheKey); err == nil && found {
+			if cachedResult, found, err := s.cache.GetCachedAnalysisResult(cacheKey); err == nil && found {
 				// Update scan duration to reflect cache hit
 				cachedResult.Duration = time.Since(start)
-				cachedResult.CacheHit = true
+				if cachedResult.Metadata == nil {
+					cachedResult.Metadata = make(map[string]interface{})
+				}
+				cachedResult.Metadata["cache_hit"] = true
 				return cachedResult, nil
 			}
 		}
 	}
-	*/
 
 	// Detect project type
 	projectInfo, err := s.detectProject(projectPath)
@@ -161,8 +161,6 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	}
 
 	// Cache the result if caching is enabled
-	// TODO: Fix cache integration - CacheScanResult expects *types.DependencyTree but we have *types.ScanResult
-	/*
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
@@ -171,10 +169,9 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 				"package_count": len(packages),
 				"threat_count": summary.ThreatsFound,
 			}
-			_ = s.cache.CacheScanResult(cacheKey, result, metadata)
+			_ = s.cache.CacheAnalysisResult(cacheKey, result, metadata)
 		}
 	}
-	*/
 
 	return result, nil
 }

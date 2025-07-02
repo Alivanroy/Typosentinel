@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func main() {
@@ -50,9 +52,9 @@ func main() {
 			for j := 0; j < requestsPerUser; j++ {
 				pkg := testPackages[j%len(testPackages)]
 				ctx := context.Background()
-
+				
 				_, err := engine.CheckPackage(ctx, pkg, "npm")
-
+				
 				mu.Lock()
 				if err != nil {
 					errorCount++

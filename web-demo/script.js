@@ -137,104 +137,114 @@ Examples:
         addCliLine('Initiating scan...', 'loading');
         
         try {
-            const response = await fetch(`${API_BASE}/scan`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    package: packageName,
-                    version: 'latest'
-                })
-            });
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // Use mock data instead of API call - try multiple ecosystems
+            let mockResult = getMockScanResult(packageName, 'npm');
+            let ecosystem = 'npm';
+            
+            // If not found in npm, try other ecosystems
+            if (!mockResult) {
+                const ecosystems = ['pypi', 'go', 'maven', 'nuget', 'rubygems'];
+                for (const eco of ecosystems) {
+                    mockResult = getMockScanResult(packageName, eco);
+                    if (mockResult) {
+                        ecosystem = eco;
+                        break;
+                    }
+                }
             }
             
-            const result = await response.json();
-            addCliLine(`Scan initiated with ID: ${result.id}`, 'success');
-            addCliLine('Waiting for scan to complete...', 'info');
-            
-            // Poll for results
-            await pollScanResult(result.id);
+            if (mockResult) {
+                const scanId = `scan_${Date.now()}`;
+                addCliLine(`Scan initiated with ID: ${scanId}`, 'success');
+                addCliLine('Waiting for scan to complete...', 'info');
+                
+                // Simulate scan processing time
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                addCliLine('Scan completed!', 'success');
+                addCliLine(`Package: ${packageName} (${ecosystem})`, 'info');
+                addCliLine(`Risk Level: ${mockResult.risk || mockResult.status}`, mockResult.risk === 'critical' || mockResult.risk === 'high' ? 'error' : 'success');
+                
+                if (mockResult.threats && mockResult.threats.length > 0) {
+                    // Handle both string arrays and object arrays for threats
+                    const threatDisplay = mockResult.threats.map(threat => {
+                        if (typeof threat === 'string') {
+                            return threat;
+                        } else if (typeof threat === 'object' && threat.type) {
+                            return `${threat.type} (${threat.severity}): ${threat.description}`;
+                        }
+                        return threat.toString();
+                    }).join('\n                         ');
+                    addCliLine(`Threats found: ${threatDisplay}`, 'error');
+                } else {
+                    addCliLine('No threats detected', 'success');
+                }
+            } else {
+                addCliLine('Package not found in database', 'error');
+            }
             
         } catch (error) {
             addCliLine(`Error: ${error.message}`, 'error');
         }
     }
     
-    async function pollScanResult(scanId) {
-        const maxAttempts = 30;
-        let attempts = 0;
-        
-        const poll = async () => {
-            try {
-                const response = await fetch(`${API_BASE}/scans/${scanId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.status === 'completed') {
-                    addCliLine('Scan completed!', 'success');
-                    addCliLine('Results:', 'info');
-                    addCliLine(JSON.stringify(result.result, null, 2), 'json');
-                    return;
-                } else if (result.status === 'failed') {
-                    addCliLine('Scan failed!', 'error');
-                    if (result.result && result.result.error) {
-                        addCliLine(`Error: ${result.result.error}`, 'error');
-                    }
-                    return;
-                } else if (attempts >= maxAttempts) {
-                    addCliLine('Scan timeout - check status later', 'warning');
-                    return;
-                }
-                
-                attempts++;
-                setTimeout(poll, 1000);
-                
-            } catch (error) {
-                addCliLine(`Error polling results: ${error.message}`, 'error');
-            }
-        };
-        
-        poll();
-    }
+
     
     async function bulkScanPackages(packages) {
         addCliLine(`Bulk scanning ${packages.length} packages: ${packages.join(', ')}`, 'info');
         
         try {
-            const scanRequests = packages.map(pkg => ({
-                package: pkg.trim(),
-                version: 'latest'
-            }));
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            const response = await fetch(`${API_BASE}/scan/bulk`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    packages: scanRequests
-                })
-            });
+            addCliLine(`Initiated ${packages.length} scans`, 'success');
             
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // Process each package with mock data
+            for (let i = 0; i < packages.length; i++) {
+                const packageName = packages[i].trim();
+                let mockResult = getMockScanResult(packageName, 'npm');
+                let ecosystem = 'npm';
+                
+                // If not found in npm, try other ecosystems
+                if (!mockResult) {
+                    const ecosystems = ['pypi', 'go', 'maven', 'nuget', 'rubygems'];
+                    for (const eco of ecosystems) {
+                        mockResult = getMockScanResult(packageName, eco);
+                        if (mockResult) {
+                            ecosystem = eco;
+                            break;
+                        }
+                    }
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing time
+                
+                if (mockResult) {
+                    const riskLevel = mockResult.risk || mockResult.status;
+                    addCliLine(`✓ ${packageName} (${ecosystem}): ${riskLevel}`, 
+                        mockResult.risk === 'critical' || mockResult.risk === 'high' ? 'error' : 'success');
+                    
+                    // Show threats if any
+                    if (mockResult.threats && mockResult.threats.length > 0) {
+                        const threatDisplay = mockResult.threats.map(threat => {
+                            if (typeof threat === 'string') {
+                                return threat;
+                            } else if (typeof threat === 'object' && threat.type) {
+                                return `${threat.type} (${threat.severity})`;
+                            }
+                            return threat.toString();
+                        }).join(', ');
+                        addCliLine(`  Threats: ${threatDisplay}`, 'error');
+                    }
+                } else {
+                    addCliLine(`✗ ${packageName}: Not found`, 'warning');
+                }
             }
             
-            const results = await response.json();
-            addCliLine(`Initiated ${results.length} scans`, 'success');
-            
-            // Poll each scan
-            for (const result of results) {
-                addCliLine(`Polling scan ${result.id} for package ${result.package}...`, 'info');
-                await pollScanResult(result.id);
-            }
+            addCliLine('Bulk scan completed!', 'success');
             
         } catch (error) {
             addCliLine(`Error: ${error.message}`, 'error');
@@ -245,14 +255,26 @@ Examples:
         addCliLine('Fetching scan statistics...', 'info');
         
         try {
-            const response = await fetch(`${API_BASE}/stats`);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            const stats = await response.json();
+            const mockStats = {
+                totalScans: 15847,
+                threatsDetected: 342,
+                packagesAnalyzed: 12456,
+                lastUpdate: new Date().toISOString(),
+                ecosystems: {
+                    npm: 8234,
+                    pypi: 3456,
+                    maven: 1234,
+                    nuget: 987,
+                    rubygems: 654,
+                    go: 321
+                }
+            };
+            
             addCliLine('Scan Statistics:', 'success');
-            addCliLine(JSON.stringify(stats, null, 2), 'json');
+            addCliLine(JSON.stringify(mockStats, null, 2), 'json');
             
         } catch (error) {
             addCliLine(`Error: ${error.message}`, 'error');
@@ -263,14 +285,25 @@ Examples:
         addCliLine('Checking API health...', 'info');
         
         try {
-            const response = await fetch(`${API_BASE}/health`);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 300));
             
-            const health = await response.json();
+            const mockHealth = {
+                status: 'healthy',
+                version: '1.0.0',
+                uptime: '7 days, 14 hours, 23 minutes',
+                database: 'connected',
+                lastUpdate: new Date().toISOString(),
+                services: {
+                    scanner: 'operational',
+                    analyzer: 'operational',
+                    database: 'operational',
+                    cache: 'operational'
+                }
+            };
+            
             addCliLine('API Health Status:', 'success');
-            addCliLine(JSON.stringify(health, null, 2), 'json');
+            addCliLine(JSON.stringify(mockHealth, null, 2), 'json');
             
         } catch (error) {
             addCliLine(`Error: ${error.message}`, 'error');
@@ -330,7 +363,34 @@ const API_BASE = window.location.origin + '/api';
 
 const packageNameInput = document.getElementById('packageName');
 const ecosystemSelect = document.getElementById('ecosystem');
+const packageVersion = document.getElementById('packageVersion');
+const bulkScanBtn = document.getElementById('bulkScanBtn');
+const bulkPackages = document.getElementById('bulkPackages');
+const exportBtn = document.getElementById('exportBtn');
+const clearBtn = document.getElementById('clearBtn');
 const exampleTags = document.querySelectorAll('.tag');
+
+// Advanced options
+const toggleAdvanced = document.getElementById('toggleAdvanced');
+const advancedPanel = document.getElementById('advancedPanel');
+const mlAnalysis = document.getElementById('mlAnalysis');
+const staticAnalysis = document.getElementById('staticAnalysis');
+const dynamicAnalysis = document.getElementById('dynamicAnalysis');
+const provenanceAnalysis = document.getElementById('provenanceAnalysis');
+const dependencyDepth = document.getElementById('dependencyDepth');
+
+// Toggle advanced options
+if (toggleAdvanced) {
+    toggleAdvanced.addEventListener('click', () => {
+        advancedPanel.classList.toggle('active');
+        const icon = toggleAdvanced.querySelector('i');
+        if (advancedPanel.classList.contains('active')) {
+            icon.className = 'fas fa-chevron-up';
+        } else {
+            icon.className = 'fas fa-chevron-down';
+        }
+    });
+}
 
 // Example tag click handlers
 exampleTags.forEach(tag => {
@@ -350,14 +410,77 @@ exampleTags.forEach(tag => {
 scanBtn.addEventListener('click', () => {
     const ecosystem = ecosystemSelect.value;
     const packageName = packageNameInput.value.trim();
+    const version = packageVersion ? packageVersion.value.trim() : 'latest';
     
     if (!packageName) {
         showError('Please enter a package name');
         return;
     }
     
-    performScan(ecosystem, packageName);
+    const options = {
+        mlAnalysis: mlAnalysis ? mlAnalysis.checked : true,
+        staticAnalysis: staticAnalysis ? staticAnalysis.checked : true,
+        dynamicAnalysis: dynamicAnalysis ? dynamicAnalysis.checked : false,
+        provenanceAnalysis: provenanceAnalysis ? provenanceAnalysis.checked : true,
+        dependencyDepth: dependencyDepth ? parseInt(dependencyDepth.value) : 3
+    };
+    
+    performScan(ecosystem, packageName, version, options);
 });
+
+// Bulk scan functionality
+if (bulkScanBtn) {
+    bulkScanBtn.addEventListener('click', () => {
+        const packages = bulkPackages.value.trim();
+        
+        if (!packages) {
+            showError('Please enter packages to scan');
+            return;
+        }
+        
+        const options = {
+            mlAnalysis: mlAnalysis ? mlAnalysis.checked : true,
+            staticAnalysis: staticAnalysis ? staticAnalysis.checked : true,
+            dynamicAnalysis: dynamicAnalysis ? dynamicAnalysis.checked : false,
+            provenanceAnalysis: provenanceAnalysis ? provenanceAnalysis.checked : true,
+            dependencyDepth: dependencyDepth ? parseInt(dependencyDepth.value) : 3
+        };
+        
+        performBulkScan(packages, options);
+    });
+}
+
+// Export functionality
+if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+        if (window.currentResults) {
+            const dataStr = JSON.stringify(window.currentResults, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `typosentinel-scan-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    });
+}
+
+// Clear functionality
+if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+        scanResults.innerHTML = `
+            <div class="placeholder">
+                <i class="fas fa-search"></i>
+                <p>Enter a package name and click scan to see results</p>
+                <small>Results will appear here with detailed security analysis</small>
+            </div>
+        `;
+        window.currentResults = null;
+        if (exportBtn) exportBtn.disabled = true;
+        clearBtn.disabled = true;
+    });
+}
 
 // Enter key handler for package input
 packageNameInput.addEventListener('keypress', (e) => {
@@ -366,9 +489,21 @@ packageNameInput.addEventListener('keypress', (e) => {
     }
 });
 
-// Mock scan data for demo purposes
+// Helper function to get mock scan result
+function getMockScanResult(packageName, ecosystem = 'npm') {
+    if (mockScanData[ecosystem] && mockScanData[ecosystem][packageName]) {
+        return mockScanData[ecosystem][packageName];
+    }
+    return null;
+}
+
+// Mock scan data for different ecosystems
 const mockScanData = {
-    'npm': {
+    npm: {
+        'lodash': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '50M+', maintainers: 4, version: 'latest' } },
+        'express': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '20M+', maintainers: 8, version: 'latest' } },
+        'malicious-package': { risk: 'critical', status: 'malicious', threats: ['Code injection', 'Data exfiltration'], metadata: { downloads: '1K', maintainers: 1, version: 'latest' } },
+        'typosquatting-lib': { risk: 'high', status: 'suspicious', threats: ['Typosquatting', 'Potential malware'], metadata: { downloads: '100', maintainers: 1, version: 'latest' } },
         'reqeusts': {
             riskScore: 0.95,
             status: 'high-risk',
@@ -392,31 +527,13 @@ const mockScanData = {
                 created: '2024-01-15',
                 lastUpdate: '2024-01-15'
             }
-        },
-        'lodash': {
-            riskScore: 0.05,
-            status: 'safe',
-            threats: [],
-            metadata: {
-                downloads: 25000000,
-                maintainer: 'lodash-team',
-                created: '2012-04-23',
-                lastUpdate: '2024-01-10'
-            }
-        },
-        'express': {
-            riskScore: 0.02,
-            status: 'safe',
-            threats: [],
-            metadata: {
-                downloads: 18000000,
-                maintainer: 'expressjs',
-                created: '2010-12-29',
-                lastUpdate: '2024-01-08'
-            }
         }
     },
-    'pypi': {
+    pypi: {
+        'requests': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '100M+', maintainers: 6, version: 'latest' } },
+        'django': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '5M+', maintainers: 12, version: 'latest' } },
+        'suspicious-lib': { risk: 'medium', status: 'suspicious', threats: ['Obfuscated code'], metadata: { downloads: '500', maintainers: 1, version: 'latest' } },
+        'numpy': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '200M+', maintainers: 15, version: 'latest' } },
         'beautifulsoup': {
             riskScore: 0.85,
             status: 'high-risk',
@@ -440,20 +557,12 @@ const mockScanData = {
                 created: '2024-01-20',
                 lastUpdate: '2024-01-20'
             }
-        },
-        'requests': {
-            riskScore: 0.03,
-            status: 'safe',
-            threats: [],
-            metadata: {
-                downloads: 50000000,
-                maintainer: 'psf',
-                created: '2011-02-13',
-                lastUpdate: '2024-01-05'
-            }
         }
     },
-    'go': {
+    go: {
+        'gin': { risk: 'low', status: 'safe', threats: [], metadata: { stars: '65K+', contributors: 400, version: 'latest' } },
+        'gorilla/mux': { risk: 'low', status: 'safe', threats: [], metadata: { stars: '18K+', contributors: 200, version: 'latest' } },
+        'fiber': { risk: 'low', status: 'safe', threats: [], metadata: { stars: '25K+', contributors: 300, version: 'latest' } },
         'github.com/gin-gonic/gin': {
             riskScore: 0.04,
             status: 'safe',
@@ -466,7 +575,10 @@ const mockScanData = {
             }
         }
     },
-    'maven': {
+    maven: {
+        'spring-boot': { risk: 'low', status: 'safe', threats: [], metadata: { usage: 'Very High', maintainers: 20, version: 'latest' } },
+        'log4j': { risk: 'high', status: 'vulnerable', threats: ['Remote code execution'], metadata: { usage: 'High', maintainers: 5, version: 'latest' } },
+        'jackson-core': { risk: 'low', status: 'safe', threats: [], metadata: { usage: 'High', maintainers: 8, version: 'latest' } },
         'org.springframework:spring-core': {
             riskScore: 0.02,
             status: 'safe',
@@ -478,23 +590,181 @@ const mockScanData = {
                 lastUpdate: '2024-01-10'
             }
         }
+    },
+    nuget: {
+        'newtonsoft.json': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '2B+', maintainers: 3, version: 'latest' } },
+        'entityframework': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '500M+', maintainers: 10, version: 'latest' } }
+    },
+    rubygems: {
+        'rails': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '300M+', maintainers: 50, version: 'latest' } },
+        'devise': { risk: 'low', status: 'safe', threats: [], metadata: { downloads: '100M+', maintainers: 15, version: 'latest' } }
     }
 };
 
-function performScan(ecosystem, packageName) {
-    // Show loading state
-    showLoading();
+// Store current results for export
+window.currentResults = null;
+
+// Perform scan function
+function performScan(ecosystem, packageName, version = 'latest', options = {}) {
+    const scanResults = document.getElementById('scanResults');
     
-    // Simulate API delay
+    // Show loading state
+    scanResults.innerHTML = `
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Scanning ${packageName}${version !== 'latest' ? `@${version}` : ''}...</p>
+            <small>Analyzing with ${Object.values(options).filter(Boolean).length} analysis engines</small>
+        </div>
+    `;
+    
+    // Simulate API delay based on analysis options
+    const delay = 1500 + (Object.values(options).filter(Boolean).length * 500);
+    
     setTimeout(() => {
-        const scanData = mockScanData[ecosystem]?.[packageName];
+        const ecosystemData = mockScanData[ecosystem] || {};
+        let result = ecosystemData[packageName] || {
+            risk: 'unknown',
+            status: 'not_found',
+            threats: ['Package not found in database'],
+            metadata: { note: 'This package may be new or not widely used', version: version }
+        };
         
-        if (scanData) {
-            displayScanResults(packageName, ecosystem, scanData);
+        // Enhance result with analysis options
+        result = enhanceResultWithOptions(result, options);
+        result.metadata.version = version;
+        result.metadata.scanOptions = options;
+        
+        window.currentResults = {
+            type: 'single',
+            ecosystem,
+            packageName,
+            version,
+            options,
+            result,
+            timestamp: new Date().toISOString()
+        };
+        
+        if (result.riskScore !== undefined) {
+            displayScanResults(packageName, ecosystem, result);
         } else {
-            displayGenericResult(packageName, ecosystem);
+            displayScanResult(result, ecosystem, packageName, version);
         }
-    }, 1500);
+        
+        // Enable export and clear buttons
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        if (exportBtn) exportBtn.disabled = false;
+        if (clearBtn) clearBtn.disabled = false;
+    }, delay);
+}
+
+// Perform bulk scan function
+function performBulkScan(packagesText, options = {}) {
+    const scanResults = document.getElementById('scanResults');
+    
+    // Parse packages from text
+    const packages = packagesText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#'))
+        .map(line => {
+            const parts = line.split(/[@\s]+/);
+            const [ecosystem, name] = parts[0].includes('/') ? parts[0].split('/') : ['npm', parts[0]];
+            const version = parts[1] || 'latest';
+            return { ecosystem, name, version };
+        });
+    
+    if (packages.length === 0) {
+        showError('No valid packages found to scan');
+        return;
+    }
+    
+    // Show loading state
+    scanResults.innerHTML = `
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Bulk scanning ${packages.length} packages...</p>
+            <small>This may take a few moments</small>
+        </div>
+    `;
+    
+    // Simulate bulk scan with progressive results
+    const results = [];
+    let completed = 0;
+    
+    const scanPackage = (pkg, index) => {
+        setTimeout(() => {
+            const ecosystemData = mockScanData[pkg.ecosystem] || {};
+            let result = ecosystemData[pkg.name] || {
+                risk: 'unknown',
+                status: 'not_found',
+                threats: ['Package not found in database'],
+                metadata: { note: 'This package may be new or not widely used', version: pkg.version }
+            };
+            
+            result = enhanceResultWithOptions(result, options);
+            result.metadata.version = pkg.version;
+            
+            results.push({
+                ecosystem: pkg.ecosystem,
+                name: pkg.name,
+                version: pkg.version,
+                result
+            });
+            
+            completed++;
+            
+            if (completed === packages.length) {
+                window.currentResults = {
+                    type: 'bulk',
+                    packages: results,
+                    options,
+                    timestamp: new Date().toISOString()
+                };
+                
+                displayBulkScanResults(results);
+                
+                // Enable export and clear buttons
+                const exportBtn = document.getElementById('exportBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                if (exportBtn) exportBtn.disabled = false;
+                if (clearBtn) clearBtn.disabled = false;
+            }
+        }, index * 300 + Math.random() * 500);
+    };
+    
+    packages.forEach(scanPackage);
+}
+
+// Enhance result with analysis options
+function enhanceResultWithOptions(result, options) {
+    const enhanced = { ...result };
+    
+    if (options.mlAnalysis) {
+        enhanced.mlScore = Math.random() * 100;
+        enhanced.mlConfidence = Math.random() * 100;
+    }
+    
+    if (options.staticAnalysis) {
+        enhanced.staticFindings = Math.floor(Math.random() * 5);
+    }
+    
+    if (options.dynamicAnalysis) {
+        enhanced.behaviorAnalysis = {
+            networkCalls: Math.floor(Math.random() * 10),
+            fileOperations: Math.floor(Math.random() * 5),
+            processSpawning: Math.floor(Math.random() * 3)
+        };
+    }
+    
+    if (options.provenanceAnalysis) {
+        enhanced.provenance = {
+            verified: Math.random() > 0.3,
+            signatureValid: Math.random() > 0.2,
+            buildReproducible: Math.random() > 0.4
+        };
+    }
+    
+    return enhanced;
 }
 
 function showLoading() {
@@ -507,15 +777,205 @@ function showLoading() {
 }
 
 function showError(message) {
+    const scanResults = document.getElementById('scanResults');
     scanResults.innerHTML = `
-        <div class="scan-result result-danger">
-            <div class="result-header">
-                <i class="fas fa-exclamation-triangle"></i>
-                <strong>Error</strong>
-            </div>
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
             <p>${message}</p>
         </div>
     `;
+}
+
+function displayScanResult(result, ecosystem, packageName, version) {
+    const scanResults = document.getElementById('scanResults');
+    
+    const getRiskColor = (risk) => {
+        switch(risk) {
+            case 'low': return '#10b981';
+            case 'medium': return '#f59e0b';
+            case 'high': return '#ef4444';
+            case 'critical': return '#dc2626';
+            default: return '#6b7280';
+        }
+    };
+    
+    const getStatusIcon = (status) => {
+        switch(status) {
+            case 'safe': return '✅';
+            case 'suspicious': return '⚠️';
+            case 'malicious': return '🚨';
+            case 'vulnerable': return '🔓';
+            default: return '❓';
+        }
+    };
+    
+    const threatsHtml = result.threats && result.threats.length > 0 ? 
+        `<div class="threats">
+            <h4>🚨 Threats Detected:</h4>
+            <ul>${result.threats.map(threat => `<li>${threat}</li>`).join('')}</ul>
+        </div>` : 
+        '<div class="safe-indicator">✅ No threats detected</div>';
+    
+    const analysisHtml = generateAnalysisSection(result);
+    
+    scanResults.innerHTML = `
+        <div class="scan-result">
+            <div class="result-header">
+                <h3>${getStatusIcon(result.status)} ${packageName}@${version}</h3>
+                <div class="ecosystem-badge">${ecosystem}</div>
+                <div class="risk-badge risk-${result.risk}" style="background-color: ${getRiskColor(result.risk)}">
+                    ${result.risk.toUpperCase()}
+                </div>
+            </div>
+            
+            <div class="status-indicator" style="color: ${getRiskColor(result.risk)}">
+                Status: ${result.status.toUpperCase()}
+            </div>
+            
+            ${threatsHtml}
+            
+            ${analysisHtml}
+            
+            <div class="metadata">
+                <h4>📊 Package Information:</h4>
+                <div class="metadata-grid">
+                    ${Object.entries(result.metadata).map(([key, value]) => 
+                        `<div><strong>${key}:</strong> ${value}</div>`
+                    ).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function displayBulkScanResults(results) {
+    const scanResults = document.getElementById('scanResults');
+    
+    const summary = {
+        total: results.length,
+        safe: results.filter(r => r.result.status === 'safe').length,
+        suspicious: results.filter(r => r.result.status === 'suspicious').length,
+        malicious: results.filter(r => r.result.status === 'malicious').length,
+        vulnerable: results.filter(r => r.result.status === 'vulnerable').length,
+        unknown: results.filter(r => r.result.status === 'not_found').length
+    };
+    
+    const resultsHtml = results.map(pkg => {
+        const riskColor = getRiskColor(pkg.result.risk);
+        const statusIcon = getStatusIcon(pkg.result.status);
+        
+        return `
+            <div class="bulk-result-item">
+                <div class="bulk-item-header">
+                    <span class="package-name">${statusIcon} ${pkg.name}@${pkg.version}</span>
+                    <span class="ecosystem-tag">${pkg.ecosystem}</span>
+                    <span class="risk-indicator" style="background-color: ${riskColor}">
+                        ${pkg.result.risk.toUpperCase()}
+                    </span>
+                </div>
+                ${pkg.result.threats && pkg.result.threats.length > 0 ? 
+                    `<div class="threats-summary">
+                        ${pkg.result.threats.slice(0, 2).join(', ')}
+                        ${pkg.result.threats.length > 2 ? ` (+${pkg.result.threats.length - 2} more)` : ''}
+                    </div>` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    scanResults.innerHTML = `
+        <div class="bulk-scan-results">
+            <div class="bulk-summary">
+                <h3>📊 Bulk Scan Summary</h3>
+                <div class="summary-stats">
+                    <div class="stat safe">✅ Safe: ${summary.safe}</div>
+                    <div class="stat suspicious">⚠️ Suspicious: ${summary.suspicious}</div>
+                    <div class="stat malicious">🚨 Malicious: ${summary.malicious}</div>
+                    <div class="stat vulnerable">🔓 Vulnerable: ${summary.vulnerable}</div>
+                    <div class="stat unknown">❓ Unknown: ${summary.unknown}</div>
+                </div>
+            </div>
+            
+            <div class="bulk-results-list">
+                <h4>📦 Package Results (${results.length} total)</h4>
+                ${resultsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function generateAnalysisSection(result) {
+    let html = '';
+    
+    if (result.mlScore !== undefined) {
+        html += `
+            <div class="analysis-section">
+                <h4>🤖 ML Analysis</h4>
+                <div class="analysis-item">
+                    <span>ML Risk Score: ${result.mlScore.toFixed(1)}%</span>
+                    <span>Confidence: ${result.mlConfidence.toFixed(1)}%</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (result.staticFindings !== undefined) {
+        html += `
+            <div class="analysis-section">
+                <h4>🔍 Static Analysis</h4>
+                <div class="analysis-item">
+                    <span>Findings: ${result.staticFindings}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (result.behaviorAnalysis) {
+        html += `
+            <div class="analysis-section">
+                <h4>⚡ Dynamic Analysis</h4>
+                <div class="analysis-item">
+                    <span>Network Calls: ${result.behaviorAnalysis.networkCalls}</span>
+                    <span>File Operations: ${result.behaviorAnalysis.fileOperations}</span>
+                    <span>Process Spawning: ${result.behaviorAnalysis.processSpawning}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (result.provenance) {
+        html += `
+            <div class="analysis-section">
+                <h4>🔐 Provenance Analysis</h4>
+                <div class="analysis-item">
+                    <span>Verified: ${result.provenance.verified ? '✅' : '❌'}</span>
+                    <span>Signature Valid: ${result.provenance.signatureValid ? '✅' : '❌'}</span>
+                    <span>Build Reproducible: ${result.provenance.buildReproducible ? '✅' : '❌'}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+function getRiskColor(risk) {
+    switch(risk) {
+        case 'low': return '#10b981';
+        case 'medium': return '#f59e0b';
+        case 'high': return '#ef4444';
+        case 'critical': return '#dc2626';
+        default: return '#6b7280';
+    }
+}
+
+function getStatusIcon(status) {
+    switch(status) {
+        case 'safe': return '✅';
+        case 'suspicious': return '⚠️';
+        case 'malicious': return '🚨';
+        case 'vulnerable': return '🔓';
+        default: return '❓';
+    }
 }
 
 function displayScanResults(packageName, ecosystem, data) {

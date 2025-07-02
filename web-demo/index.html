@@ -135,31 +135,103 @@
             <h2>Interactive Demo</h2>
             <div class="demo-container">
                 <div class="demo-input">
-                    <h3>Test Package Scanner</h3>
+                    <h3>Advanced Package Scanner</h3>
                     <div class="input-group">
                         <select id="ecosystem" class="form-select">
                             <option value="npm">npm</option>
                             <option value="pypi">PyPI</option>
                             <option value="go">Go Modules</option>
                             <option value="maven">Maven</option>
+                            <option value="nuget">NuGet</option>
+                            <option value="rubygems">RubyGems</option>
                         </select>
                         <input type="text" id="packageName" placeholder="Enter package name" class="form-input">
-                        <button id="scanBtn" class="btn btn-primary">Scan Package</button>
+                        <input type="text" id="packageVersion" placeholder="Version (optional)" class="form-input version-input">
+                        <button id="scanBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            <span>Scan Package</span>
+                        </button>
                     </div>
+                    
+                    <!-- Advanced Options -->
+                    <div class="advanced-options">
+                        <button class="toggle-advanced" id="toggleAdvanced">
+                            <i class="fas fa-cog"></i> Advanced Options
+                        </button>
+                        <div class="advanced-panel" id="advancedPanel">
+                            <div class="option-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableML" checked>
+                                    <span class="checkmark"></span>
+                                    ML Analysis
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableStatic" checked>
+                                    <span class="checkmark"></span>
+                                    Static Analysis
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableDynamic">
+                                    <span class="checkmark"></span>
+                                    Dynamic Analysis
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableProvenance" checked>
+                                    <span class="checkmark"></span>
+                                    Provenance Check
+                                </label>
+                            </div>
+                            <div class="option-group">
+                                <label for="scanDepth">Dependency Depth:</label>
+                                <select id="scanDepth" class="form-select-small">
+                                    <option value="1">Direct only</option>
+                                    <option value="2" selected>2 levels</option>
+                                    <option value="3">3 levels</option>
+                                    <option value="-1">All levels</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="demo-examples">
                         <p>Try these examples:</p>
                         <div class="example-tags">
-                            <span class="tag" data-ecosystem="npm" data-package="reqeusts">reqeusts (npm)</span>
-                            <span class="tag" data-ecosystem="pypi" data-package="beautifulsoup">beautifulsoup (PyPI)</span>
-                            <span class="tag" data-ecosystem="npm" data-package="lodash">lodash (npm)</span>
+                            <span class="tag safe" data-ecosystem="npm" data-package="lodash">lodash (safe)</span>
+                            <span class="tag suspicious" data-ecosystem="npm" data-package="reqeusts">reqeusts (typo)</span>
+                            <span class="tag malicious" data-ecosystem="pypi" data-package="beautifulsoup">beautifulsoup (malicious)</span>
+                            <span class="tag safe" data-ecosystem="pypi" data-package="requests">requests (safe)</span>
+                            <span class="tag suspicious" data-ecosystem="npm" data-package="crypto-js-fake">crypto-js-fake (fake)</span>
                         </div>
                     </div>
+                    
+                    <!-- Bulk Scan Section -->
+                    <div class="bulk-scan-section">
+                        <h4>Bulk Package Scan</h4>
+                        <textarea id="bulkPackages" placeholder="Enter package names (one per line or comma-separated)&#10;Example:&#10;lodash&#10;express&#10;react" class="bulk-input"></textarea>
+                        <button id="bulkScanBtn" class="btn btn-secondary">
+                            <i class="fas fa-layer-group"></i>
+                            Bulk Scan
+                        </button>
+                    </div>
                 </div>
+                
                 <div class="demo-results">
+                    <div class="results-header">
+                        <h4>Scan Results</h4>
+                        <div class="results-controls">
+                            <button id="exportResults" class="btn btn-outline-small" disabled>
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button id="clearResults" class="btn btn-outline-small" disabled>
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
                     <div id="scanResults" class="results-container">
                         <div class="placeholder">
                             <i class="fas fa-search"></i>
                             <p>Enter a package name to start scanning</p>
+                            <small>Advanced ML-powered security analysis</small>
                         </div>
                     </div>
                 </div>
@@ -357,6 +429,6 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=1751406200"></script>
 </body>
 </html>

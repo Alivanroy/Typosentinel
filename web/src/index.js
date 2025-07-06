@@ -40,13 +40,13 @@ class ErrorBoundary extends React.Component {
             <h1>🚨 Something went wrong</h1>
             <p>We're sorry, but something unexpected happened.</p>
             
-            {process.env.NODE_ENV === 'development' && (
+            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <details className="error-details">
                 <summary>Error Details (Development Only)</summary>
                 <pre className="error-stack">
                   {this.state.error && this.state.error.toString()}
                   <br />
-                  {this.state.errorInfo.componentStack}
+                  {this.state.errorInfo && this.state.errorInfo.componentStack}
                 </pre>
               </details>
             )}

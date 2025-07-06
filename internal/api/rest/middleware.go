@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -298,18 +301,33 @@ func authenticateAPIKey(c *gin.Context, authConfig *config.APIAuthentication) (b
 		return false, ""
 	}
 
-	// Validate API key (placeholder implementation)
-	// In a real implementation, this would check against a database or key store
-	validKeys := map[string]string{
-		"test-api-key-123":     "user1",
-		"demo-key-456":        "demo_user",
-		"admin-key-789":       "admin",
-		"development-key-000": "dev_user",
+	// Validate API key against environment or key store
+	// Check if API key exists in environment variables or key store
+	if os.Getenv("TYPOSENTINEL_DISABLE_AUTH") == "true" {
+		// Development mode - allow any non-empty key
+		return true, "dev_user"
 	}
 
-	if userID, exists := validKeys[apiKey]; exists {
-		return true, userID
+	// In production, validate against configured key store
+	keyStore := os.Getenv("TYPOSENTINEL_KEY_STORE")
+	if keyStore == "" {
+		return false, ""
 	}
+
+	// Hash the API key for comparison
+	hasher := sha256.New()
+	hasher.Write([]byte(apiKey))
+	hashedKey := hex.EncodeToString(hasher.Sum(nil))
+
+	// Check against stored hashed keys (this would be a database lookup in production)
+	validKeyHashes := strings.Split(os.Getenv("TYPOSENTINEL_VALID_KEY_HASHES"), ",")
+	for _, validHash := range validKeyHashes {
+		if hashedKey == strings.TrimSpace(validHash) {
+			return true, "authenticated_user"
+		}
+	}
+
+	return false, ""
 
 	return false, ""
 }

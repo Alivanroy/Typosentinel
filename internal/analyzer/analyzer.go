@@ -876,6 +876,87 @@ func (r *ScanResult) OutputConsole(w io.Writer) error {
 
 // OutputHTML outputs scan results in HTML format
 func (r *ScanResult) OutputHTML(w io.Writer) error {
-	// TODO: Implement HTML output format
-	return fmt.Errorf("HTML output format not yet implemented")
+	html := `<!DOCTYPE html>
+<html>
+<head>
+	<title>Typosentinel Scan Results</title>
+	<style>
+		body { font-family: Arial, sans-serif; margin: 20px; }
+		.header { background: #f4f4f4; padding: 15px; border-radius: 5px; }
+		.summary { margin: 20px 0; }
+		.threat { background: #ffe6e6; padding: 10px; margin: 10px 0; border-left: 4px solid #ff4444; }
+		.safe { background: #e6ffe6; padding: 10px; margin: 10px 0; border-left: 4px solid #44ff44; }
+		.package { margin: 15px 0; padding: 10px; border: 1px solid #ddd; }
+		.metadata { color: #666; font-size: 0.9em; }
+	</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Typosentinel Security Scan Report</h1>
+		<p>Generated: %s</p>
+		<p>Duration: %v</p>
+	</div>
+	
+	<div class="summary">
+		<h2>Summary</h2>
+		<p>Packages Scanned: %d</p>
+		<p>Threats Found: %d</p>
+		<p>Risk Level: %s</p>
+	</div>
+	
+	<div class="packages">
+		<h2>Package Details</h2>
+`
+
+	// Write header with summary information
+	_, err := fmt.Fprintf(w, html, 
+		time.Now().Format("2006-01-02 15:04:05"),
+		r.Duration,
+		r.TotalPackages,
+		r.Summary.CriticalThreats + r.Summary.HighThreats + r.Summary.MediumThreats + r.Summary.LowThreats,
+		"Medium")
+	if err != nil {
+		return err
+	}
+
+	// Write threat details
+	for _, threat := range r.Threats {
+		className := "threat"
+		
+		_, err := fmt.Fprintf(w, `		<div class="package %s">
+			<h3>%s</h3>
+			<div class="metadata">Severity: %s</div>
+`,
+			className, threat.Type, threat.Severity)
+		if err != nil {
+			return err
+		}
+		
+		_, err = fmt.Fprintf(w, "\t\t\t<h4>Threat Details:</h4>\n\t\t\t<ul>\n")
+		if err != nil {
+			return err
+		}
+		
+		_, err = fmt.Fprintf(w, "\t\t\t\t<li><strong>%s</strong> (%s): %s</li>\n", 
+			threat.Type, threat.Severity, threat.Description)
+		if err != nil {
+			return err
+		}
+		
+		_, err = fmt.Fprintf(w, "\t\t\t</ul>\n")
+		if err != nil {
+			return err
+		}
+		
+		_, err = fmt.Fprintf(w, "\t\t</div>\n")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Close HTML
+	_, err = fmt.Fprintf(w, `	</div>
+</body>
+</html>`)
+	return err
 }

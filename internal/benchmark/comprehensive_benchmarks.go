@@ -334,13 +334,17 @@ func BenchmarkStressTest(b *testing.B) {
 
 func getOptimizedConfig() *config.Config {
 	return &config.Config{
-		Detection: &config.DetectionConfig{},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:   true,
+			Threshold: 0.8,
+			MaxDistance: 2,
+			CheckSimilarNames: true,
+			CheckHomoglyphs: true,
+		},
 		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,
 		},
-		Logging: &config.LoggingConfig{
-			Level: "error", // Reduce logging overhead
-		},
+		// Note: Logging config would need to be added to config struct
 	}
 }
 

@@ -17,7 +17,9 @@ export const store = configureStore({
         ignoredActions: ['persist/PERSIST'],
       },
     }),
+  devTools: process.env.NODE_ENV !== 'production',
 });
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+// TypeScript types would be defined here if using TypeScript
+// export type RootState = ReturnType<typeof store.getState>;
+// export type AppDispatch = typeof store.dispatch;

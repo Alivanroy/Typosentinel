@@ -73,19 +73,20 @@ type MLScore struct {
 // NewBasicMLScorer creates a new basic ML scorer with default configuration
 func NewBasicMLScorer() *BasicMLScorer {
 	config := &BasicScorerConfig{
-		MaliciousThreshold:   0.7,
-		SuspiciousThreshold:  0.4,
+		MaliciousThreshold:   0.55,  // Lowered from 0.7 based on real-world results
+		SuspiciousThreshold:  0.35,  // Lowered from 0.4
 		MinConfidence:        0.3,
 		NormalizationEnabled: true,
 		FeatureWeights: map[string]float64{
+			// Rich metadata features (when available)
 			"download_count":           -0.3,  // More downloads = less suspicious
 			"maintainer_reputation":    -0.4,  // Better reputation = less suspicious
 			"package_age":              -0.2,  // Older packages = less suspicious
 			"version_count":            -0.1,  // More versions = less suspicious
 			"description_length":       -0.1,  // Longer description = less suspicious
 			"dependency_count":         0.05,  // More dependencies = slightly more suspicious
-			"typosquatting_similarity": 0.8,   // High similarity = very suspicious
-			"name_entropy":             0.3,   // Random names = suspicious
+			"typosquatting_similarity": 0.9,   // High similarity = very suspicious (increased)
+			"name_entropy":             0.4,   // Random names = suspicious (increased)
 			"update_frequency":         -0.1,  // Regular updates = less suspicious
 			"license_present":          -0.2,  // License present = less suspicious
 			"readme_present":           -0.15, // README present = less suspicious
@@ -99,12 +100,12 @@ func NewBasicMLScorer() *BasicMLScorer {
 	scorer := &BasicMLScorer{
 		config:       config,
 		weights:      config.FeatureWeights,
-		bias:         0.5, // Default bias
+		bias:         -0.2, // Adjusted bias to lower baseline scores
 		featureStats: make(map[string]FeatureStats),
 		modelInfo: &ModelInfo{
 			Name:         "BasicMLScorer",
-			Version:      "1.0.0",
-			Description:  "Basic logistic regression scorer",
+			Version:      "1.1.0",
+			Description:  "Basic ML scorer with enhanced typosquatting detection",
 			Type:         "logistic_regression",
 			TrainedAt:    time.Now(),
 			Accuracy:     0.85,
@@ -342,6 +343,11 @@ func (bms *BasicMLScorer) Score(ctx context.Context, pkg *types.Package, feature
 
 	// Convert features to BasicPackageFeatures
 	basicFeatures := bms.convertFeatures(features)
+	
+	// Enhanced typosquatting detection
+	if basicFeatures.TyposquattingSimilarity == 0 {
+		basicFeatures.TyposquattingSimilarity = bms.calculateTyposquattingSimilarity(pkg.Name, pkg.Registry)
+	}
 
 	// Calculate ML score using existing method
 	mlScore := bms.ScorePackage(basicFeatures)
@@ -362,6 +368,7 @@ func (bms *BasicMLScorer) Score(ctx context.Context, pkg *types.Package, feature
 			"package_version":      pkg.Version,
 			"scorer_type":          "basic_ml",
 			"contributing_factors": mlScore.ContributingFactors,
+			"typosquatting_score":  basicFeatures.TyposquattingSimilarity,
 		},
 	}
 
@@ -428,9 +435,11 @@ func (bms *BasicMLScorer) GetThresholds() ScoringThresholds {
 }
 
 // convertFeatures converts generic features map to BasicPackageFeatures
+// This method handles both the rich metadata features and basic name-based features
 func (bms *BasicMLScorer) convertFeatures(features map[string]interface{}) BasicPackageFeatures {
 	basicFeatures := BasicPackageFeatures{}
 
+	// Handle rich metadata features (preferred)
 	if val, ok := features["download_count"]; ok {
 		if f, ok := val.(float64); ok {
 			basicFeatures.DownloadCount = f
@@ -507,6 +516,58 @@ func (bms *BasicMLScorer) convertFeatures(features map[string]interface{}) Basic
 		}
 	}
 
+	// Handle basic name-based features from MLAnalyzer if rich features are not available
+	// Map MLAnalyzer features to BasicPackageFeatures
+	if basicFeatures.NameEntropy == 0 {
+		if val, ok := features["name_entropy"]; ok {
+			if f, ok := val.(float64); ok {
+				basicFeatures.NameEntropy = f
+			}
+		}
+	}
+	
+	// Use name_length as a proxy for description_length if not available
+	if basicFeatures.DescriptionLength == 0 {
+		if val, ok := features["name_length"]; ok {
+			if f, ok := val.(float64); ok {
+				// Scale name length to approximate description length
+				basicFeatures.DescriptionLength = f * 10 // Rough approximation
+			}
+		}
+	}
+	
+	// Use version-based features
+	if val, ok := features["version_length"]; ok {
+		if f, ok := val.(float64); ok {
+			// Use version length as a proxy for version count
+			basicFeatures.VersionCount = f / 2 // Rough approximation
+		}
+	}
+	
+	if val, ok := features["version_parts"]; ok {
+		if f, ok := val.(float64); ok {
+			// More version parts might indicate more mature package
+			basicFeatures.VersionCount = math.Max(basicFeatures.VersionCount, f)
+		}
+	}
+	
+	// Set reasonable defaults for missing features to avoid all-zero feature vectors
+	if basicFeatures.MaintainerReputation == 0 {
+		basicFeatures.MaintainerReputation = 0.5 // Neutral reputation
+	}
+	if basicFeatures.MaintainerCount == 0 {
+		basicFeatures.MaintainerCount = 1.0 // Assume at least one maintainer
+	}
+	if basicFeatures.LicensePresent == 0 {
+		basicFeatures.LicensePresent = 0.7 // Most packages have licenses
+	}
+	if basicFeatures.ReadmePresent == 0 {
+		basicFeatures.ReadmePresent = 0.8 // Most packages have READMEs
+	}
+	if basicFeatures.RepositoryPresent == 0 {
+		basicFeatures.RepositoryPresent = 0.6 // Many packages have repositories
+	}
+	
 	return basicFeatures
 }
 
@@ -635,4 +696,130 @@ func (bms *BasicMLScorer) UpdateFeatureStats(features []BasicPackageFeatures) {
 			Max:    max,
 		}
 	}
+}
+
+// calculateTyposquattingSimilarity calculates similarity to popular packages
+func (bms *BasicMLScorer) calculateTyposquattingSimilarity(packageName, registry string) float64 {
+	// Popular packages by registry
+	popularPackages := map[string][]string{
+		"npm": {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular", "jquery", "moment", "chalk", "commander", "debug", "request", "fs-extra", "glob", "yargs", "inquirer"},
+		"pypi": {"requests", "numpy", "pandas", "flask", "django", "tensorflow", "scikit-learn", "matplotlib", "scipy", "pillow", "beautifulsoup4", "selenium", "pytest", "click", "jinja2", "sqlalchemy", "boto3", "pyyaml", "redis", "celery"},
+		"rubygems": {"rails", "bundler", "rake", "rspec", "nokogiri", "activesupport", "thor", "json", "minitest", "puma", "sass", "devise", "capistrano", "sidekiq", "unicorn", "sinatra", "activerecord", "actionpack", "actionview", "activejob"},
+		"packagist": {"symfony", "laravel", "doctrine", "guzzle", "monolog", "phpunit", "twig", "composer", "psr", "carbon", "intervention", "swiftmailer", "predis", "faker", "league", "illuminate", "nesbot", "vlucas", "ramsey", "psr-7"},
+	}
+
+	packages, exists := popularPackages[registry]
+	if !exists {
+		return 0.0
+	}
+
+	maxSimilarity := 0.0
+	for _, popular := range packages {
+		similarity := bms.calculateStringSimilarity(packageName, popular)
+		if similarity > maxSimilarity {
+			maxSimilarity = similarity
+		}
+	}
+
+	return maxSimilarity
+}
+
+// calculateStringSimilarity calculates similarity between two strings using multiple methods
+func (bms *BasicMLScorer) calculateStringSimilarity(s1, s2 string) float64 {
+	if s1 == s2 {
+		return 1.0
+	}
+
+	// Levenshtein distance similarity
+	levenSim := bms.levenshteinSimilarity(s1, s2)
+	
+	// Character frequency similarity
+	freqSim := bms.characterFrequencySimilarity(s1, s2)
+	
+	// Weighted combination
+	return 0.7*levenSim + 0.3*freqSim
+}
+
+// levenshteinSimilarity calculates similarity based on Levenshtein distance
+func (bms *BasicMLScorer) levenshteinSimilarity(s1, s2 string) float64 {
+	if len(s1) == 0 && len(s2) == 0 {
+		return 1.0
+	}
+	if len(s1) == 0 || len(s2) == 0 {
+		return 0.0
+	}
+
+	distance := bms.levenshteinDistance(s1, s2)
+	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
+	return 1.0 - float64(distance)/maxLen
+}
+
+// levenshteinDistance calculates the Levenshtein distance between two strings
+func (bms *BasicMLScorer) levenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+		matrix[i][0] = i
+	}
+	for j := 0; j <= len(s2); j++ {
+		matrix[0][j] = j
+	}
+
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+			matrix[i][j] = int(math.Min(math.Min(float64(matrix[i-1][j]+1), float64(matrix[i][j-1]+1)), float64(matrix[i-1][j-1]+cost)))
+		}
+	}
+
+	return matrix[len(s1)][len(s2)]
+}
+
+// characterFrequencySimilarity calculates similarity based on character frequency
+func (bms *BasicMLScorer) characterFrequencySimilarity(s1, s2 string) float64 {
+	freq1 := make(map[rune]int)
+	freq2 := make(map[rune]int)
+
+	for _, char := range s1 {
+		freq1[char]++
+	}
+	for _, char := range s2 {
+		freq2[char]++
+	}
+
+	allChars := make(map[rune]bool)
+	for char := range freq1 {
+		allChars[char] = true
+	}
+	for char := range freq2 {
+		allChars[char] = true
+	}
+
+	dotProduct := 0.0
+	norm1 := 0.0
+	norm2 := 0.0
+
+	for char := range allChars {
+		f1 := float64(freq1[char])
+		f2 := float64(freq2[char])
+		dotProduct += f1 * f2
+		norm1 += f1 * f1
+		norm2 += f2 * f2
+	}
+
+	if norm1 == 0 || norm2 == 0 {
+		return 0.0
+	}
+
+	return dotProduct / (math.Sqrt(norm1) * math.Sqrt(norm2))
 }

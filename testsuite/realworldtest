@@ -1,0 +1,633 @@
+# Real-World Test Suite for Typosentinel
+
+This comprehensive test suite validates Typosentinel's effectiveness against real-world threats and scenarios.
+
+## Test Configuration Files
+
+### 1. Test Configuration (`test_config.yaml`)
+
+```yaml
+# Real-world testing configuration for Typosentinel
+version: "1.0"
+
+testing:
+  timeout: 60s
+  max_retries: 3
+  parallel_tests: 5
+  
+scanner:
+  max_concurrency: 10
+  timeout: 30s
+  cache_enabled: false  # Disable cache for testing
+
+detection:
+  typosquatting:
+    enabled: true
+    threshold: 0.8
+  homoglyph:
+    enabled: true
+  reputation:
+    enabled: true
+    min_age_days: 30
+  ml:
+    enabled: true
+    threshold: 0.7
+
+reporting:
+  fail_on_high: true
+  fail_on_medium: false
+  generate_detailed_report: true
+
+logging:
+  level: "debug"
+  format: "json"
+  output: "test_results.log"
+
+# Test-specific configurations
+test_data:
+  known_threats_url: "https://raw.githubusercontent.com/typosquatter-db/threats/main/threats.json"
+  legitimate_packages_url: "https://raw.githubusercontent.com/popular-packages/list/main/packages.json"
+  test_projects_dir: "./test_projects"
+  
+performance:
+  target_packages_per_second: 5
+  max_memory_usage_mb: 512
+  max_analysis_time_seconds: 10
+```
+
+### 2. Test Runner Script (`run_realworld_tests.sh`)
+
+```bash
+#!/bin/bash
+
+# Real-World Test Runner for Typosentinel
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}🚀 Starting Typosentinel Real-World Test Suite${NC}"
+
+# Configuration
+TEST_DIR="./realworld_tests"
+RESULTS_DIR="./test_results"
+BINARY="./typosentinel"
+CONFIG_FILE="test_config.yaml"
+
+# Create directories
+mkdir -p "$TEST_DIR" "$RESULTS_DIR"
+
+# Function to log with timestamp
+log() {
+    echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Function to run a test category
+run_test_category() {
+    local category=$1
+    local description=$2
+    
+    log "${BLUE}📋 Running $description${NC}"
+    
+    if go test -v -run="Test$category" ./realworld_tests/ > "$RESULTS_DIR/${category,,}_results.txt" 2>&1; then
+        log "${GREEN}✅ $description passed${NC}"
+        return 0
+    else
+        log "${RED}❌ $description failed${NC}"
+        return 1
+    fi
+}
+
+# Function to test CLI functionality
+test_cli_functionality() {
+    log "${BLUE}🔧 Testing CLI functionality${NC}"
+    
+    # Test basic help
+    if ! $BINARY --help > /dev/null 2>&1; then
+        log "${RED}❌ CLI help command failed${NC}"
+        return 1
+    fi
+    
+    # Test version
+    if ! $BINARY --version > /dev/null 2>&1; then
+        log "${RED}❌ CLI version command failed${NC}"
+        return 1
+    fi
+    
+    # Test config validation
+    if ! $BINARY --config "$CONFIG_FILE" --validate-config > /dev/null 2>&1; then
+        log "${RED}❌ Config validation failed${NC}"
+        return 1
+    fi
+    
+    log "${GREEN}✅ CLI functionality tests passed${NC}"
+    return 0
+}
+
+# Function to test against known malicious packages
+test_known_threats() {
+    log "${BLUE}🎯 Testing known threat detection${NC}"
+    
+    # Test against known typosquatting packages
+    local threats=(
+        "npm:lodahs"
+        "npm:recat" 
+        "pypi:reqeusts"
+        "pypi:pilwo"
+        "npm:expresss"
+    )
+    
+    local failed=0
+    for threat in "${threats[@]}"; do
+        IFS=':' read -r registry package <<< "$threat"
+        
+        log "Testing threat: $package ($registry)"
+        
+        # Run scan with high sensitivity
+        if $BINARY scan --registry "$registry" --package "$package" --config "$CONFIG_FILE" --output json > "$RESULTS_DIR/threat_${registry}_${package}.json" 2>&1; then
+            # Check if threat was detected (should have high risk score)
+            risk_level=$(jq -r '.risk_level' "$RESULTS_DIR/threat_${registry}_${package}.json" 2>/dev/null || echo "unknown")
+            
+            if [[ "$risk_level" == "HIGH" || "$risk_level" == "CRITICAL" ]]; then
+                log "${GREEN}✅ Threat $package detected correctly${NC}"
+            else
+                log "${YELLOW}⚠️  Threat $package not detected as high risk (level: $risk_level)${NC}"
+                ((failed++))
+            fi
+        else
+            log "${YELLOW}⚠️  Could not scan $package (may not exist)${NC}"
+        fi
+    done
+    
+    if [ $failed -eq 0 ]; then
+        log "${GREEN}✅ Known threat detection tests passed${NC}"
+        return 0
+    else
+        log "${RED}❌ $failed threat detection tests failed${NC}"
+        return 1
+    fi
+}
+
+# Function to test legitimate packages (false positive check)
+test_legitimate_packages() {
+    log "${BLUE}✨ Testing legitimate packages (false positive check)${NC}"
+    
+    local packages=(
+        "npm:lodash"
+        "npm:react"
+        "npm:express"
+        "pypi:requests"
+        "pypi:numpy"
+        "pypi:django"
+    )
+    
+    local false_positives=0
+    for pkg in "${packages[@]}"; do
+        IFS=':' read -r registry package <<< "$pkg"
+        
+        log "Testing legitimate package: $package ($registry)"
+        
+        if $BINARY scan --registry "$registry" --package "$package" --config "$CONFIG_FILE" --output json > "$RESULTS_DIR/legit_${registry}_${package}.json" 2>&1; then
+            risk_level=$(jq -r '.risk_level' "$RESULTS_DIR/legit_${registry}_${package}.json" 2>/dev/null || echo "unknown")
+            
+            if [[ "$risk_level" == "HIGH" || "$risk_level" == "CRITICAL" ]]; then
+                log "${RED}❌ False positive: $package flagged as high risk${NC}"
+                ((false_positives++))
+            else
+                log "${GREEN}✅ Legitimate package $package correctly identified${NC}"
+            fi
+        else
+            log "${RED}❌ Could not scan legitimate package $package${NC}"
+            ((false_positives++))
+        fi
+    done
+    
+    local false_positive_rate=$(echo "scale=2; $false_positives * 100 / ${#packages[@]}" | bc -l)
+    log "False positive rate: ${false_positive_rate}%"
+    
+    if (( false_positives <= 1 )); then
+        log "${GREEN}✅ False positive rate acceptable${NC}"
+        return 0
+    else
+        log "${RED}❌ Too many false positives: $false_positives${NC}"
+        return 1
+    fi
+}
+
+# Function to test project scanning
+test_project_scanning() {
+    log "${BLUE}📁 Testing project dependency scanning${NC}"
+    
+    # Create test projects
+    local test_project_dir="$TEST_DIR/sample_projects"
+    mkdir -p "$test_project_dir"
+    
+    # NPM project with mixed dependencies
+    cat > "$test_project_dir/package.json" << 'EOF'
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "react": "^18.0.0",
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
+  }
+}
+EOF
+    
+    # Python project
+    cat > "$test_project_dir/requirements.txt" << 'EOF'
+requests==2.28.1
+numpy==1.24.0
+flask==2.2.0
+pytest==7.2.0
+EOF
+    
+    # Test NPM project scanning
+    if $BINARY scan --project-path "$test_project_dir" --config "$CONFIG_FILE" --output json > "$RESULTS_DIR/project_npm_scan.json" 2>&1; then
+        packages_found=$(jq '.packages | length' "$RESULTS_DIR/project_npm_scan.json" 2>/dev/null || echo "0")
+        log "NPM project scan found $packages_found packages"
+        
+        if [ "$packages_found" -gt 0 ]; then
+            log "${GREEN}✅ NPM project scanning works${NC}"
+        else
+            log "${RED}❌ NPM project scanning found no packages${NC}"
+            return 1
+        fi
+    else
+        log "${RED}❌ NPM project scanning failed${NC}"
+        return 1
+    fi
+    
+    log "${GREEN}✅ Project scanning tests passed${NC}"
+    return 0
+}
+
+# Function to test performance
+test_performance() {
+    log "${BLUE}⚡ Testing performance${NC}"
+    
+    # Create a batch of packages to test
+    local packages=(
+        "npm:lodash"
+        "npm:react" 
+        "npm:express"
+        "npm:axios"
+        "npm:moment"
+        "pypi:requests"
+        "pypi:numpy"
+        "pypi:flask"
+        "pypi:django"
+        "pypi:pytest"
+    )
+    
+    # Create package list file
+    local package_list="$TEST_DIR/performance_packages.txt"
+    printf '%s\n' "${packages[@]}" > "$package_list"
+    
+    log "Testing batch scanning performance with ${#packages[@]} packages"
+    
+    # Measure time
+    local start_time=$(date +%s)
+    
+    if $BINARY scan --batch --input-file "$package_list" --config "$CONFIG_FILE" --output json > "$RESULTS_DIR/performance_test.json" 2>&1; then
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        local packages_per_second=$(echo "scale=2; ${#packages[@]} / $duration" | bc -l)
+        
+        log "Performance results:"
+        log "  - Packages: ${#packages[@]}"
+        log "  - Duration: ${duration}s"
+        log "  - Rate: ${packages_per_second} packages/second"
+        
+        # Check if performance meets requirements
+        if (( $(echo "$packages_per_second >= 1.0" | bc -l) )); then
+            log "${GREEN}✅ Performance test passed${NC}"
+            return 0
+        else
+            log "${RED}❌ Performance below threshold${NC}"
+            return 1
+        fi
+    else
+        log "${RED}❌ Performance test failed${NC}"
+        return 1
+    fi
+}
+
+# Function to test CI/CD integration
+test_ci_integration() {
+    log "${BLUE}🔄 Testing CI/CD integration${NC}"
+    
+    # Test different exit code scenarios
+    local test_cases=(
+        "npm:lodash:0"      # Should pass (legitimate package)
+        "npm:lodahs:1"      # Should fail (typosquatting)
+    )
+    
+    for test_case in "${test_cases[@]}"; do
+        IFS=':' read -r registry package expected_exit <<< "$test_case"
+        
+        log "Testing CI integration: $package (expected exit: $expected_exit)"
+        
+        # Configure for CI mode (fail on high risk)
+        local ci_config="$TEST_DIR/ci_config.yaml"
+        cp "$CONFIG_FILE" "$ci_config"
+        
+        # Run scan and capture exit code
+        set +e
+        $BINARY scan --registry "$registry" --package "$package" --config "$ci_config" --ci-mode > "$RESULTS_DIR/ci_${registry}_${package}.txt" 2>&1
+        local actual_exit=$?
+        set -e
+        
+        if [ "$actual_exit" -eq "$expected_exit" ]; then
+            log "${GREEN}✅ CI test passed for $package${NC}"
+        else
+            log "${RED}❌ CI test failed for $package (expected: $expected_exit, got: $actual_exit)${NC}"
+            return 1
+        fi
+    done
+    
+    log "${GREEN}✅ CI/CD integration tests passed${NC}"
+    return 0
+}
+
+# Function to generate comprehensive report
+generate_report() {
+    log "${BLUE}📊 Generating comprehensive test report${NC}"
+    
+    local report_file="$RESULTS_DIR/comprehensive_report.md"
+    
+    cat > "$report_file" << EOF
+# Typosentinel Real-World Test Report
+
+**Generated:** $(date)
+**Version:** $($BINARY --version 2>/dev/null || echo "unknown")
+
+## Test Summary
+
+EOF
+    
+    # Count results
+    local total_tests=0
+    local passed_tests=0
+    
+    for result_file in "$RESULTS_DIR"/*.txt; do
+        if [ -f "$result_file" ]; then
+            ((total_tests++))
+            if grep -q "PASS\|✅\|passed" "$result_file"; then
+                ((passed_tests++))
+            fi
+        fi
+    done
+    
+    local pass_rate=$(echo "scale=1; $passed_tests * 100 / $total_tests" | bc -l 2>/dev/null || echo "0")
+    
+    cat >> "$report_file" << EOF
+- **Total Tests:** $total_tests
+- **Passed:** $passed_tests
+- **Failed:** $((total_tests - passed_tests))
+- **Pass Rate:** ${pass_rate}%
+
+## Detailed Results
+
+EOF
+    
+    # Add detailed results
+    for category in "threat" "legit" "project" "performance" "ci"; do
+        echo "### ${category^} Tests" >> "$report_file"
+        echo "" >> "$report_file"
+        
+        for result_file in "$RESULTS_DIR"/${category}*.txt; do
+            if [ -f "$result_file" ]; then
+                echo "#### $(basename "$result_file" .txt)" >> "$report_file"
+                echo '```' >> "$report_file"
+                tail -n 20 "$result_file" >> "$report_file"
+                echo '```' >> "$report_file"
+                echo "" >> "$report_file"
+            fi
+        done
+    done
+    
+    log "📄 Report generated: $report_file"
+    log "${GREEN}✅ Report generation completed${NC}"
+}
+
+# Main execution
+main() {
+    local failed_tests=0
+    
+    # Check prerequisites
+    if [ ! -f "$BINARY" ]; then
+        log "${RED}❌ Typosentinel binary not found: $BINARY${NC}"
+        log "Please build the binary first: make build"
+        exit 1
+    fi
+    
+    if [ ! -f "$CONFIG_FILE" ]; then
+        log "${YELLOW}⚠️  Test config not found, using default config${NC}"
+        CONFIG_FILE="config.yaml"
+    fi
+    
+    # Run test categories
+    test_cli_functionality || ((failed_tests++))
+    test_known_threats || ((failed_tests++))
+    test_legitimate_packages || ((failed_tests++))
+    test_project_scanning || ((failed_tests++))
+    test_performance || ((failed_tests++))
+    test_ci_integration || ((failed_tests++))
+    
+    # Generate report
+    generate_report
+    
+    # Final summary
+    log "${BLUE}📋 Test Suite Summary${NC}"
+    if [ $failed_tests -eq 0 ]; then
+        log "${GREEN}🎉 All test categories passed!${NC}"
+        log "✅ Typosentinel is ready for production deployment"
+        exit 0
+    else
+        log "${RED}❌ $failed_tests test categories failed${NC}"
+        log "🔧 Please review the results and fix issues before deployment"
+        exit 1
+    fi
+}
+
+# Run main function
+main "$@"
+```
+
+### 3. Docker Test Environment (`docker-compose.test.yml`)
+
+```yaml
+version: '3.8'
+
+services:
+  typosentinel-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TYPOSENTINEL_CONFIG=/app/test_config.yaml
+      - TYPOSENTINEL_LOG_LEVEL=debug
+    volumes:
+      - ./test_config.yaml:/app/test_config.yaml
+      - ./test_results:/app/test_results
+    command: ["./typosentinel", "test", "--config", "/app/test_config.yaml"]
+    
+  test-registry:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./test_data/mock_registry:/usr/share/nginx/html
+    
+  test-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: typosentinel_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test123
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./test_data/test_vulnerabilities.sql:/docker-entrypoint-initdb.d/init.sql
+```
+
+### 4. GitHub Actions Workflow (`.github/workflows/realworld-tests.yml`)
+
+```yaml
+name: Real-World Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  realworld-tests:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        go-version: [1.21, 1.22]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc jq
+        
+    - name: Build Typosentinel
+      run: make build
+      
+    - name: Run Real-World Tests
+      run: |
+        chmod +x ./run_realworld_tests.sh
+        ./run_realworld_tests.sh
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-go-${{ matrix.go-version }}
+        path: test_results/
+        
+    - name: Publish Test Report
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Real-World Tests (Go ${{ matrix.go-version }})
+        path: test_results/*.xml
+        reporter: java-junit
+```
+
+## Usage Instructions
+
+### 1. Preparation
+
+```bash
+# Clone and build Typosentinel
+git clone https://github.com/Alivanroy/Typosentinel.git
+cd Typosentinel
+make build
+
+# Create test configuration
+cp config.yaml test_config.yaml
+# Edit test_config.yaml as needed
+```
+
+### 2. Run Individual Test Categories
+
+```bash
+# Test against known threats
+go test -v -run=TestKnownThreats ./realworld_tests/
+
+# Test for false positives
+go test -v -run=TestLegitimatePackages ./realworld_tests/
+
+# Test performance
+go test -v -run=TestPerformanceUnderLoad ./realworld_tests/
+
+# Test project scanning
+go test -v -run=TestRealWorldProjectScanning ./realworld_tests/
+```
+
+### 3. Run Complete Test Suite
+
+```bash
+# Make the runner executable
+chmod +x run_realworld_tests.sh
+
+# Run all tests
+./run_realworld_tests.sh
+
+# View results
+cat test_results/comprehensive_report.md
+```
+
+### 4. Docker Testing
+
+```bash
+# Run tests in Docker environment
+docker-compose -f docker-compose.test.yml up --build
+
+# View logs
+docker-compose -f docker-compose.test.yml logs typosentinel-test
+```
+
+## Expected Test Outcomes
+
+### Success Criteria
+
+1. **Threat Detection:** >90% of known threats detected
+2. **False Positive Rate:** <10% for legitimate packages
+3. **Performance:** >5 packages/second analysis rate
+4. **Project Scanning:** Successfully parses common dependency files
+5. **CI Integration:** Proper exit codes for different scenarios
+
+### Key Metrics
+
+- **Detection Accuracy:** Percentage of threats correctly identified
+- **False Positive Rate:** Percentage of legitimate packages incorrectly flagged
+- **Processing Speed:** Packages analyzed per second
+- **Memory Usage:** Peak memory consumption during tests
+- **Response Time:** Time to analyze individual packages

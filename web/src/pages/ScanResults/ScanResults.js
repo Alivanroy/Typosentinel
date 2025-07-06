@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchScans, deleteScan } from '../../store/slices/scanSlice';
+import { getScanResults, deleteScan } from '../../store/slices/scanSlice';
 import './ScanResults.css';
 
 const ScanResults = () => {
   const dispatch = useDispatch();
-  const { scans, loading, error } = useSelector(state => state.scans);
+  const { scanResults, loading, error } = useSelector(state => state.scan);
+  const scans = scanResults?.data || [];
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    dispatch(fetchScans());
+    dispatch(getScanResults({ page: 1, limit: 20, filters: {} }));
   }, [dispatch]);
+
 
   const handleDeleteScan = (scanId) => {
     if (window.confirm('Are you sure you want to delete this scan?')) {
@@ -103,7 +105,7 @@ const ScanResults = () => {
           <p>{error}</p>
           <button 
             className="retry-btn"
-            onClick={() => dispatch(fetchScans())}
+            onClick={() => dispatch(getScanResults({ page: 1, limit: 20, filters: {} }))}
           >
             Retry
           </button>

@@ -5,15 +5,18 @@ go 1.23.0
 toolchain go1.24.4
 
 require (
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/requestid v1.0.5
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/olekukonko/tablewriter v1.0.7
+	github.com/package-url/packageurl-go v0.1.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1

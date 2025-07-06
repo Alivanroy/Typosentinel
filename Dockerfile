@@ -1,10 +1,10 @@
-# Multi-stage build for TypoSentinel
+# Multi-stage build for TypoSentinel Production Demo
 
 # Stage 1: Build the Go application
 FROM golang:1.23-alpine AS go-builder
 
 # Install build dependencies
-RUN apk add --no-cache git ca-certificates tzdata
+RUN apk add --no-cache git ca-certificates tzdata curl
 
 # Set working directory
 WORKDIR /app
@@ -18,67 +18,49 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o typosentinel .
+# Build the application with optimizations for production
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags='-w -s -extldflags "-static"' \
+    -a -installsuffix cgo \
+    -o typosentinel .
 
-# Stage 2: Build the Python ML service
-FROM python:3.11-slim AS python-builder
-
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy Python requirements
-COPY ml/requirements.txt ./
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy ML source code
-COPY ml/ ./ml/
-
-# Stage 3: Final runtime image
+# Stage 2: Final runtime image
 FROM alpine:latest
 
 # Install runtime dependencies
-RUN apk --no-cache add ca-certificates tzdata python3 py3-pip
+RUN apk --no-cache add \
+    ca-certificates \
+    tzdata \
+    curl \
+    && update-ca-certificates
 
-# Create app user
+# Create app user for security
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
 # Set working directory
 WORKDIR /app
 
-# Copy Go binaries from builder
+# Copy Go binary from builder
 COPY --from=go-builder /app/typosentinel ./
 
-# Copy Python environment and ML code
-COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=python-builder /app/ml ./ml
-
 # Copy configuration files
+COPY config.yaml ./
 COPY config/ ./config/
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/logs /app/models
-
-# Set ownership
-RUN chown -R appuser:appgroup /app
+RUN mkdir -p /app/data /app/logs && \
+    chown -R appuser:appgroup /app
 
 # Switch to non-root user
 USER appuser
 
-# Expose ports
-EXPOSE 8080 8000
+# Expose port
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:8080/api/health || exit 1
 
-# Default command (can be overridden)
-CMD ["./typosentinel", "serve"]
+# Default command
+CMD ["./typosentinel", "serve", "--config", "config.yaml", "--port", "8080"]

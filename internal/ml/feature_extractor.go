@@ -463,7 +463,7 @@ func (e *AdvancedFeatureExtractor) calculateStringSimilarity(s1, s2 string) floa
 	// Find matches
 	for i := 0; i < len1; i++ {
 		start := max(0, i-matchWindow)
-		end := min(i+matchWindow+1, len2)
+		end := minInt(i+matchWindow+1, len2)
 
 		for j := start; j < end; j++ {
 			if s2Matches[j] || s1[i] != s2[j] {
@@ -612,7 +612,7 @@ func max(a, b int) int {
 	return b
 }
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}

@@ -18,12 +18,24 @@ database:
   connection_max_lifetime_minutes: 30
 
 ml_service:
-  enabled: true
+  enabled: false
   endpoint: "http://localhost:8000"
   api_key: "ml-service-key-123"
   timeout: 30s
   max_retries: 3
   batch_size: 100
+
+ml_analysis:
+  enabled: true
+  model_path: "./models"
+  similarity_threshold: 0.8
+  malicious_threshold: 0.7
+  reputation_threshold: 0.6
+  batch_size: 100
+  max_features: 1000
+  cache_embeddings: true
+  parallel_processing: true
+  gpu_acceleration: false
 
 detection:
   similarity_threshold: 0.8
@@ -34,18 +46,30 @@ detection:
   enable_reputation_check: true
 
 registries:
-  npm:
+  - enabled: true
+    name: "npm"
     base_url: "https://registry.npmjs.org"
-    rate_limit_per_minute: 60
-    timeout_seconds: 10
-  pypi:
+    timeout: "10s"
+    rate_limit:
+      enabled: true
+      rps: 1
+      burst: 5
+  - enabled: true
+    name: "pypi"
     base_url: "https://pypi.org"
-    rate_limit_per_minute: 60
-    timeout_seconds: 10
-  go:
+    timeout: "10s"
+    rate_limit:
+      enabled: true
+      rps: 1
+      burst: 5
+  - enabled: true
+    name: "go"
     base_url: "https://proxy.golang.org"
-    rate_limit_per_minute: 60
-    timeout_seconds: 10
+    timeout: "10s"
+    rate_limit:
+      enabled: true
+      rps: 1
+      burst: 5
 
 logging:
   level: "info"

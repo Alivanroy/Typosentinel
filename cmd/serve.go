@@ -66,21 +66,10 @@ func runServe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Initialize API config if nil
-	if cfg.API == nil {
-		cfg.API = &config.APIConfig{
-			Host: serveHost,
-			Port: servePort,
-		}
-	} else {
-		// Set API configuration defaults
-		if cfg.API.Host == "" {
-			cfg.API.Host = serveHost
-		}
-		if cfg.API.Port == 0 {
-			cfg.API.Port = servePort
-		}
-	}
+	// Note: API config would need to be added to Config struct
+	// Using command line flags for now
+	apiHost := serveHost
+	apiPort := servePort
 
 	// Initialize ML pipeline
 	mlPipeline := ml.NewMLPipeline(cfg)
@@ -102,8 +91,8 @@ func runServe(cmd *cobra.Command, args []string) error {
 	// Create a default REST API config since regular Config doesn't have Integrations
 	restConfig := &config.RESTAPIConfig{
 		Enabled:  true,
-		Host:     serveHost,
-		Port:     servePort,
+		Host:     apiHost,
+		Port:     apiPort,
 		BasePath: "/api",
 		Versioning: &config.APIVersioning{
 			Enabled:           true,
@@ -148,7 +137,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}()
 
 	logger.Info("API server started successfully", map[string]interface{}{
-		"address": fmt.Sprintf("http://%s:%d", serveHost, servePort),
+		"address": fmt.Sprintf("http://%s:%d", apiHost, apiPort),
 	})
 
 	// Wait for shutdown signal

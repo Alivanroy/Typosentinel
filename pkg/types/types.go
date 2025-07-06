@@ -77,6 +77,9 @@ const (
 	ThreatTypeVulnerable          ThreatType = "vulnerable"
 	ThreatTypeSuspicious          ThreatType = "suspicious"
 	ThreatTypeCommunityFlag       ThreatType = "community_flag"
+	ThreatTypeZeroDay             ThreatType = "zero_day"
+	ThreatTypeSupplyChain         ThreatType = "supply_chain"
+	ThreatTypeEnterprisePolicy    ThreatType = "enterprise_policy"
 )
 
 // Dependency represents a package dependency
@@ -417,7 +420,46 @@ type ScanResult struct {
 	ScanDurationMs   int64                  `json:"scan_duration_ms,omitempty"`
 	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 	CreatedAt        time.Time              `json:"created_at"`
-	Error            string                 `json:"error,omitempty"`
+	Error       string                 `json:"error,omitempty"`
+}
+
+// VulnerabilityCredit represents credit for vulnerability discovery/reporting
+type VulnerabilityCredit struct {
+	Name    string   `json:"name"`
+	Contact []string `json:"contact,omitempty"`
+	Type    string   `json:"type,omitempty"` // finder, reporter, analyst, coordinator, remediation_developer, remediation_reviewer, remediation_verifier, tool, sponsor, other
+}
+
+// VersionRange represents a range of affected versions
+type VersionRange struct {
+	Type   string         `json:"type"`   // ECOSYSTEM, SEMVER, GIT
+	Repo   string         `json:"repo,omitempty"`
+	Events []VersionEvent `json:"events"`
+}
+
+// VersionEvent represents a version event (introduced, fixed, etc.)
+type VersionEvent struct {
+	Introduced   string `json:"introduced,omitempty"`
+	Fixed        string `json:"fixed,omitempty"`
+	LastAffected string `json:"last_affected,omitempty"`
+	Limit        string `json:"limit,omitempty"`
+}
+
+// VulnerabilityDatabase interface for vulnerability database implementations
+type VulnerabilityDatabase interface {
+	CheckVulnerabilities(pkg *Package) ([]*Vulnerability, error)
+	GetVulnerabilityByID(id string) (*Vulnerability, error)
+	SearchVulnerabilities(query string) ([]*Vulnerability, error)
+}
+
+// VulnerabilityDatabaseConfig represents configuration for vulnerability databases
+type VulnerabilityDatabaseConfig struct {
+	Type     string                 `json:"type"`     // osv, github, nvd
+	Enabled  bool                   `json:"enabled"`
+	APIKey   string                 `json:"api_key,omitempty"`
+	BaseURL  string                 `json:"base_url,omitempty"`
+	Timeout  time.Duration          `json:"timeout,omitempty"`
+	Options  map[string]interface{} `json:"options,omitempty"`
 }
 
 // ProjectScan represents a project that can be scanned
@@ -542,25 +584,37 @@ type Vulnerability struct {
 	Title            string                 `json:"title"`
 	Description      string                 `json:"description"`
 	Severity         Severity               `json:"severity"`
-	CVSS             float64                `json:"cvss,omitempty"`
+	CVSS             string                 `json:"cvss,omitempty"`        // CVSS vector string or score
 	CVSSScore        float64                `json:"cvss_score,omitempty"`
 	Package          string                 `json:"package"`
 	Versions         []string               `json:"versions,omitempty"`
 	AffectedPackages []AffectedPackage      `json:"affected_packages,omitempty"`
 	References       []string               `json:"references,omitempty"`
+	Aliases          []string               `json:"aliases,omitempty"`     // Alternative IDs (CVE, GHSA, etc.)
+	Published        string                 `json:"published,omitempty"`   // Published date as string
+	Modified         string                 `json:"modified,omitempty"`    // Modified date as string
 	PublishedAt      time.Time              `json:"published_at,omitempty"`
 	UpdatedAt        time.Time              `json:"updated_at,omitempty"`
-	Source           string                 `json:"source,omitempty"`
+	Withdrawn        string                 `json:"withdrawn,omitempty"`   // Withdrawn date if applicable
+	Source           string                 `json:"source,omitempty"`      // Source database (OSV, GitHub, NVD)
+	DatabaseSpecific map[string]interface{} `json:"database_specific,omitempty"` // Database-specific fields
+	EcosystemSpecific map[string]interface{} `json:"ecosystem_specific,omitempty"` // Ecosystem-specific fields
+	Credits          []VulnerabilityCredit  `json:"credits,omitempty"`     // Credits for discovery/reporting
 	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AffectedPackage represents a package affected by a vulnerability
 type AffectedPackage struct {
-	Name         string `json:"name"`
-	Vendor       string `json:"vendor,omitempty"`
-	Version      string `json:"version,omitempty"`
-	VersionRange string `json:"version_range,omitempty"`
-	Ecosystem    string `json:"ecosystem,omitempty"`
+	Name         string   `json:"name"`
+	Vendor       string   `json:"vendor,omitempty"`
+	Version      string   `json:"version,omitempty"`
+	Versions     []string `json:"versions,omitempty"`     // Multiple affected versions
+	VersionRange string   `json:"version_range,omitempty"`
+	Ecosystem    string   `json:"ecosystem,omitempty"`
+	PURL         string   `json:"purl,omitempty"`         // Package URL
+	Ranges       []VersionRange `json:"ranges,omitempty"`  // Version ranges with events
+	DatabaseSpecific map[string]interface{} `json:"database_specific,omitempty"`
+	EcosystemSpecific map[string]interface{} `json:"ecosystem_specific,omitempty"`
 }
 
 // AuditLog represents an audit log entry

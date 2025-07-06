@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  typosentinel-backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - CONFIG_PATH=/app/config.yaml
+    volumes:
+      - ../config.yaml:/app/config.yaml:ro
+      - typosentinel_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  typosentinel-web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile.prod
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - REACT_APP_API_URL=http://your-domain.com:8080/api
+    depends_on:
+      - typosentinel-backend
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ../web/build:/usr/share/nginx/html:ro
+    depends_on:
+      - typosentinel-backend
+    restart: unless-stopped
+
+volumes:
+  typosentinel_data:
+
+networks:
+  default:
+    driver: bridge

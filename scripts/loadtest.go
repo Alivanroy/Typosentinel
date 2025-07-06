@@ -3,24 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func main() {
 	// Load test configuration
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			MinPackageNameLength:  2,
-			EnhancedTyposquatting: true,
-			HomoglyphDetection:    true,
-			DependencyConfusion:   true,
-			ReputationScoring:     true,
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:   true,
+			Threshold: 0.8,
+			MaxDistance: 2,
+			CheckSimilarNames: true,
+			CheckHomoglyphs: true,
 		},
 	}
 

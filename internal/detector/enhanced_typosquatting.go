@@ -107,9 +107,9 @@ func (etd *EnhancedTyposquattingDetector) initializeKeyboardLayouts() {
 // initializeSubstitutions sets up character substitution patterns
 func (etd *EnhancedTyposquattingDetector) initializeSubstitutions() {
 	etd.substitutions = []CharacterSubstitution{
-		// Visual similarity substitutions
-		{'0', []rune{'o', 'O'}, "visual", 0.9},
-		{'1', []rune{'l', 'I', 'i'}, "visual", 0.8},
+		// Enhanced visual similarity substitutions
+		{'0', []rune{'o', 'O', 'Q'}, "visual", 0.9},
+		{'1', []rune{'l', 'I', 'i', '|'}, "visual", 0.8},
 		{'5', []rune{'s', 'S'}, "visual", 0.7},
 		{'8', []rune{'b', 'B'}, "visual", 0.6},
 		{'3', []rune{'e', 'E'}, "visual", 0.7},
@@ -118,23 +118,51 @@ func (etd *EnhancedTyposquattingDetector) initializeSubstitutions() {
 		{'6', []rune{'g', 'G'}, "visual", 0.5},
 		{'9', []rune{'g', 'q'}, "visual", 0.5},
 		{'2', []rune{'z', 'Z'}, "visual", 0.5},
+		// Additional visual confusables
+		{'o', []rune{'0', 'Q'}, "visual", 0.9},
+		{'l', []rune{'1', 'I', 'i', '|'}, "visual", 0.8},
+		{'u', []rune{'v'}, "visual", 0.7},
+		{'r', []rune{'n'}, "visual", 0.6},
+		{'w', []rune{'v'}, "visual", 0.7}, // Note: 'vv' pattern handled separately
 
-		// Phonetic similarity substitutions
-		{'c', []rune{'k', 's'}, "phonetic", 0.8},
-		{'k', []rune{'c', 'q'}, "phonetic", 0.8},
-		{'s', []rune{'c', 'z'}, "phonetic", 0.7},
+		// Enhanced phonetic similarity substitutions
+		{'c', []rune{'k', 's', 'q'}, "phonetic", 0.8},
+		{'k', []rune{'c', 'q'}, "phonetic", 0.8}, // Note: 'ck' pattern handled separately
+		{'s', []rune{'c', 'z', 'x'}, "phonetic", 0.7},
 		{'z', []rune{'s'}, "phonetic", 0.7},
-		// Note: 'ph' is handled as a special case in phonetic analysis
-		{'j', []rune{'g'}, "phonetic", 0.6},
-		// Note: 'ks' and 'cs' are handled as special cases in phonetic analysis
+		{'f', []rune{'v'}, "phonetic", 0.8}, // Note: 'ph' pattern handled separately
+		{'j', []rune{'g', 'y'}, "phonetic", 0.6},
+		{'x', []rune{'s'}, "phonetic", 0.7}, // Note: 'ks', 'cs' patterns handled separately
+		{'w', []rune{'u'}, "phonetic", 0.6},
+		{'y', []rune{'i'}, "phonetic", 0.6},
 
-		// Common keyboard mistakes
+		// Enhanced keyboard mistakes
 		{'m', []rune{'n'}, "keyboard", 0.9},
 		{'n', []rune{'m'}, "keyboard", 0.9},
 		{'b', []rune{'v'}, "keyboard", 0.8},
 		{'v', []rune{'b'}, "keyboard", 0.8},
 		{'d', []rune{'f'}, "keyboard", 0.8},
 		{'f', []rune{'d'}, "keyboard", 0.8},
+		{'g', []rune{'h'}, "keyboard", 0.8},
+		{'h', []rune{'g'}, "keyboard", 0.8},
+		{'j', []rune{'k'}, "keyboard", 0.8},
+		{'k', []rune{'j'}, "keyboard", 0.8},
+		{'l', []rune{';'}, "keyboard", 0.7},
+		{'p', []rune{'o'}, "keyboard", 0.8},
+		{'o', []rune{'p'}, "keyboard", 0.8},
+		{'q', []rune{'w'}, "keyboard", 0.8},
+		{'w', []rune{'q', 'e'}, "keyboard", 0.8},
+		{'e', []rune{'w', 'r'}, "keyboard", 0.8},
+		{'r', []rune{'e', 't'}, "keyboard", 0.8},
+		{'t', []rune{'r', 'y'}, "keyboard", 0.8},
+		{'y', []rune{'t', 'u'}, "keyboard", 0.8},
+		{'u', []rune{'y', 'i'}, "keyboard", 0.8},
+		{'i', []rune{'u', 'o'}, "keyboard", 0.8},
+		{'a', []rune{'s'}, "keyboard", 0.8},
+		{'s', []rune{'a', 'd'}, "keyboard", 0.8},
+		{'z', []rune{'x'}, "keyboard", 0.8},
+		{'x', []rune{'z', 'c'}, "keyboard", 0.8},
+		{'c', []rune{'x', 'v'}, "keyboard", 0.8},
 	}
 }
 
@@ -147,6 +175,11 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 			continue
 		}
 
+		// Skip if packages are too different in length (optimization)
+		if etd.shouldSkipLengthCheck(target.Name, pkg) {
+			continue
+		}
+
 		// Calculate enhanced similarity score
 		similarity := etd.calculateEnhancedSimilarity(target.Name, pkg)
 
@@ -154,7 +187,15 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 			// Analyze the type of typosquatting
 			analysis := etd.analyzeTyposquattingType(target.Name, pkg)
 			
+			// Check for advanced attack patterns
+			advancedPatterns := etd.detectAdvancedPatterns(target.Name, pkg)
+			
 			severity := etd.calculateSeverityEnhanced(similarity, analysis)
+			
+			// Adjust severity based on advanced patterns
+			if len(advancedPatterns) > 0 {
+				severity = etd.escalateSeverity(severity)
+			}
 			
 			threat := types.Threat{
 				ID:              generateThreatID(),
@@ -166,7 +207,7 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 				Confidence:      similarity,
 				Description:     etd.generateThreatDescription(target.Name, pkg, analysis),
 				SimilarTo:       pkg,
-				Recommendation:  fmt.Sprintf("Verify that '%s' is the intended package. Consider using '%s' instead if that was the intention.", target.Name, pkg),
+				Recommendation:  etd.generateRecommendation(target.Name, pkg, advancedPatterns),
 				DetectedAt:      time.Now(),
 				DetectionMethod: "enhanced_typosquatting",
 				Evidence:        etd.generateEvidence(target.Name, pkg, analysis),
@@ -462,6 +503,209 @@ func (etd *EnhancedTyposquattingDetector) getSubstitutionCost(c1, c2 rune, subst
 		}
 	}
 	return 1.0 // Full cost for unknown substitutions
+}
+
+// shouldSkipLengthCheck determines if packages are too different in length to be typosquats
+func (etd *EnhancedTyposquattingDetector) shouldSkipLengthCheck(s1, s2 string) bool {
+	len1, len2 := len(s1), len(s2)
+	maxLen := math.Max(float64(len1), float64(len2))
+	minLen := math.Min(float64(len1), float64(len2))
+	
+	// Skip if length difference is more than 50% of the longer string
+	return (maxLen-minLen)/maxLen > 0.5
+}
+
+// detectAdvancedPatterns detects sophisticated typosquatting patterns
+func (etd *EnhancedTyposquattingDetector) detectAdvancedPatterns(target, candidate string) []string {
+	var patterns []string
+	
+	// Check for homograph attacks (Unicode confusables)
+	if etd.hasHomographs(target, candidate) {
+		patterns = append(patterns, "homograph_attack")
+	}
+	
+	// Check for subdomain/namespace confusion
+	if etd.hasNamespaceConfusion(target, candidate) {
+		patterns = append(patterns, "namespace_confusion")
+	}
+	
+	// Check for brand impersonation patterns
+	if etd.hasBrandImpersonation(target, candidate) {
+		patterns = append(patterns, "brand_impersonation")
+	}
+	
+	// Check for character insertion/deletion patterns
+	if etd.hasInsertionDeletionPattern(target, candidate) {
+		patterns = append(patterns, "insertion_deletion")
+	}
+	
+	return patterns
+}
+
+// hasHomographs checks for Unicode homograph attacks
+func (etd *EnhancedTyposquattingDetector) hasHomographs(target, candidate string) bool {
+	// Common homograph pairs
+	homographs := map[rune][]rune{
+		'a': {'а', 'α'}, // Latin a, Cyrillic a, Greek alpha
+		'e': {'е', 'ε'}, // Latin e, Cyrillic e, Greek epsilon
+		'o': {'о', 'ο'}, // Latin o, Cyrillic o, Greek omicron
+		'p': {'р', 'ρ'}, // Latin p, Cyrillic p, Greek rho
+		'c': {'с', 'ϲ'}, // Latin c, Cyrillic c, Greek lunate sigma
+		'x': {'х', 'χ'}, // Latin x, Cyrillic x, Greek chi
+		'y': {'у', 'γ'}, // Latin y, Cyrillic y, Greek gamma
+	}
+	
+	targetRunes := []rune(target)
+	candidateRunes := []rune(candidate)
+	
+	if len(targetRunes) != len(candidateRunes) {
+		return false
+	}
+	
+	for i, tr := range targetRunes {
+		cr := candidateRunes[i]
+		if tr != cr {
+			// Check if it's a known homograph
+			if homographList, exists := homographs[tr]; exists {
+				found := false
+				for _, h := range homographList {
+					if cr == h {
+						found = true
+						break
+					}
+				}
+				if !found {
+					return false
+				}
+			} else {
+				return false
+			}
+		}
+	}
+	
+	return true
+}
+
+// hasNamespaceConfusion checks for namespace/scope confusion
+func (etd *EnhancedTyposquattingDetector) hasNamespaceConfusion(target, candidate string) bool {
+	// Check for @scope/ prefix confusion
+	if strings.HasPrefix(target, "@") && !strings.HasPrefix(candidate, "@") {
+		// Remove scope from target and compare
+		parts := strings.Split(target, "/")
+		if len(parts) == 2 {
+			return parts[1] == candidate
+		}
+	}
+	
+	if strings.HasPrefix(candidate, "@") && !strings.HasPrefix(target, "@") {
+		// Remove scope from candidate and compare
+		parts := strings.Split(candidate, "/")
+		if len(parts) == 2 {
+			return parts[1] == target
+		}
+	}
+	
+	return false
+}
+
+// hasBrandImpersonation checks for brand impersonation patterns
+func (etd *EnhancedTyposquattingDetector) hasBrandImpersonation(target, candidate string) bool {
+	// Common brand impersonation patterns
+	patterns := []string{
+		"official", "org", "js", "node", "npm", "lib", "core", "main", "base",
+		"framework", "sdk", "api", "client", "server", "dev", "prod",
+	}
+	
+	for _, pattern := range patterns {
+		// Check if candidate adds suspicious suffixes/prefixes
+		if strings.HasPrefix(candidate, target+"-"+pattern) ||
+			strings.HasPrefix(candidate, target+"_"+pattern) ||
+			strings.HasSuffix(candidate, pattern+"-"+target) ||
+			strings.HasSuffix(candidate, pattern+"_"+target) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// hasInsertionDeletionPattern checks for character insertion/deletion patterns
+func (etd *EnhancedTyposquattingDetector) hasInsertionDeletionPattern(target, candidate string) bool {
+	// Check for single character insertion
+	if len(candidate) == len(target)+1 {
+		return etd.isSingleCharacterInsertion(target, candidate)
+	}
+	
+	// Check for single character deletion
+	if len(target) == len(candidate)+1 {
+		return etd.isSingleCharacterInsertion(candidate, target)
+	}
+	
+	return false
+}
+
+// isSingleCharacterInsertion checks if candidate is target with one character inserted
+func (etd *EnhancedTyposquattingDetector) isSingleCharacterInsertion(shorter, longer string) bool {
+	i, j := 0, 0
+	differences := 0
+	
+	for i < len(shorter) && j < len(longer) {
+		if shorter[i] == longer[j] {
+			i++
+			j++
+		} else {
+			differences++
+			if differences > 1 {
+				return false
+			}
+			j++ // Skip the inserted character
+		}
+	}
+	
+	return differences <= 1
+}
+
+// escalateSeverity increases severity based on advanced patterns
+func (etd *EnhancedTyposquattingDetector) escalateSeverity(current types.Severity) types.Severity {
+	switch current {
+	case types.SeverityLow:
+		return types.SeverityMedium
+	case types.SeverityMedium:
+		return types.SeverityHigh
+	case types.SeverityHigh:
+		return types.SeverityCritical
+	default:
+		return current
+	}
+}
+
+// generateRecommendation creates enhanced recommendations based on detected patterns
+func (etd *EnhancedTyposquattingDetector) generateRecommendation(target, candidate string, patterns []string) string {
+	baseRec := fmt.Sprintf("Verify that '%s' is the intended package. Consider using '%s' instead if that was the intention.", target, candidate)
+	
+	if len(patterns) == 0 {
+		return baseRec
+	}
+	
+	additionalWarnings := []string{}
+	for _, pattern := range patterns {
+		switch pattern {
+		case "homograph_attack":
+			additionalWarnings = append(additionalWarnings, "WARNING: Potential Unicode homograph attack detected")
+		case "namespace_confusion":
+			additionalWarnings = append(additionalWarnings, "WARNING: Namespace/scope confusion detected")
+		case "brand_impersonation":
+			additionalWarnings = append(additionalWarnings, "WARNING: Potential brand impersonation detected")
+		case "insertion_deletion":
+			additionalWarnings = append(additionalWarnings, "WARNING: Character insertion/deletion pattern detected")
+		}
+	}
+	
+	if len(additionalWarnings) > 0 {
+		return baseRec + " " + strings.Join(additionalWarnings, ". ") + "."
+	}
+	
+	return baseRec
 }
 
 // editDistanceSimilarity calculates basic edit distance similarity

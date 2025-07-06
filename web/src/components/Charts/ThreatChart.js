@@ -23,9 +23,10 @@ const ThreatChart = ({ data = [], loading = false, timeRange = '7d', height = 30
     
     const points = severityTypes.map(severity => {
       return chartData.map((item, index) => {
-        const x = (index / (chartData.length - 1)) * 100;
-        const y = 100 - ((item[severity] || 0) / maxVal) * 100;
-        return { x, y, value: item[severity] || 0 };
+        // Handle single data point case to avoid division by zero
+        const x = chartData.length === 1 ? 50 : (index / (chartData.length - 1)) * 100;
+        const y = maxVal === 0 ? 100 : 100 - ((item[severity] || 0) / maxVal) * 100;
+        return { x: isNaN(x) ? 0 : x, y: isNaN(y) ? 100 : y, value: item[severity] || 0 };
       });
     });
 
@@ -177,11 +178,13 @@ const ThreatChart = ({ data = [], loading = false, timeRange = '7d', height = 30
       <div className="chart-labels">
         {labels.map((label, index) => {
           const shouldShow = labels.length <= 7 || index % Math.ceil(labels.length / 7) === 0;
+          // Handle single label case to avoid division by zero
+          const leftPosition = labels.length === 1 ? 50 : (index / (labels.length - 1)) * 100;
           return shouldShow ? (
             <div
               key={index}
               className="chart-label"
-              style={{ left: `${(index / (labels.length - 1)) * 100}%` }}
+              style={{ left: `${leftPosition}%` }}
             >
               {label}
             </div>

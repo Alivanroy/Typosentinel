@@ -82,7 +82,15 @@ func TestVersion(t *testing.T) {
 
 func TestCheckPackage_Success(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Typosquatting: config.TyposquattingConfig{
+				Enabled:             true,
+				SimilarityThreshold: 0.8,
+				MinLength:           3,
+				MaxDistance:         3,
+			},
+		},
 	}
 	engine := New(cfg)
 
@@ -117,9 +125,12 @@ func TestCheckPackage_Success(t *testing.T) {
 func TestCheckPackage_WithThreats(t *testing.T) {
 	cfg := &config.Config{
 		Detection: &config.DetectionConfig{
-			MinPackageNameLength: 2,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
+			Enabled: true,
+			Typosquatting: config.TyposquattingConfig{
+				Enabled:             true,
+				SimilarityThreshold: 0.8,
+				MinLength:           2,
+				MaxDistance:         3,
 			},
 		},
 	}
@@ -185,7 +196,13 @@ func TestCheckPackage_Timeout(t *testing.T) {
 func TestAnalyzeDependency(t *testing.T) {
 	cfg := &config.Config{
 		Detection: &config.DetectionConfig{
-			MinPackageNameLength: 2,
+			Enabled: true,
+			Typosquatting: config.TyposquattingConfig{
+				Enabled:             true,
+				SimilarityThreshold: 0.8,
+				MinLength:           2,
+				MaxDistance:         3,
+			},
 		},
 	}
 	engine := New(cfg)
@@ -342,7 +359,15 @@ func TestEngineWithNilConfig(t *testing.T) {
 
 func TestConcurrentPackageChecks(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Detection: &config.DetectionConfig{
+			Enabled: true,
+			Typosquatting: config.TyposquattingConfig{
+				Enabled:             true,
+				SimilarityThreshold: 0.8,
+				MinLength:           3,
+				MaxDistance:         3,
+			},
+		},
 	}
 	engine := New(cfg)
 

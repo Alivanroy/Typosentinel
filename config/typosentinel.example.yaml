@@ -1,0 +1,632 @@
+# Typosentinel Enhanced Configuration Example
+# This file demonstrates the complete configuration options for Typosentinel
+# Copy this file to typosentinel.yaml and customize as needed
+
+# Core application settings
+core:
+  version: "2.0.0"
+  environment: "production"  # development, staging, production
+  debug: false
+  verbose: false
+  data_dir: "./data"
+  cache_dir: "./cache"
+  temp_dir: "/tmp/typosentinel"
+  config_dir: "./config"
+
+# Detection engine configuration
+detection:
+  enabled: true
+  parallel_scans: 8
+  timeout_seconds: 300
+  max_package_size_mb: 500
+  skip_patterns:
+    - "*.test"
+    - "*-dev"
+    - "*-debug"
+  whitelist_packages:
+    - "lodash"
+    - "react"
+    - "express"
+    - "axios"
+
+  # Typosquatting detection settings
+  typosquatting:
+    enabled: true
+    similarity_threshold: 0.85
+    min_length: 3
+    max_distance: 2
+    algorithms:
+      - "levenshtein"
+      - "jaro_winkler"
+      - "damerau_levenshtein"
+    popular_packages:
+      - "lodash"
+      - "react"
+      - "vue"
+      - "angular"
+      - "express"
+      - "axios"
+      - "moment"
+      - "underscore"
+    custom_dictionary:
+      - "mycompany-utils"
+      - "internal-lib"
+
+  # Dependency confusion detection settings
+  dependency_confusion:
+    enabled: true
+    check_private_repos: true
+    private_registries:
+      - "https://npm.mycompany.com"
+      - "https://registry.internal.com"
+    namespace_patterns:
+      - "@mycompany/*"
+      - "@internal/*"
+    scope_indicators:
+      - "@"
+      - "_"
+      - "-internal"
+    confusion_threshold: 0.75
+    version_analysis: true
+    download_analysis: true
+
+  # Supply chain detection settings
+  supply_chain:
+    enabled: true
+    maintainer_analysis: true
+    version_pattern_analysis: true
+    integrity_checks: true
+    anomaly_detection: true
+    trusted_maintainers:
+      - "facebook"
+      - "google"
+      - "microsoft"
+      - "nodejs"
+    suspicious_patterns:
+      - ".*bitcoin.*"
+      - ".*crypto.*mining.*"
+      - ".*password.*stealer.*"
+    min_maintainer_age_days: 90
+    min_package_age_days: 30
+    reputation_threshold: 0.7
+
+# Machine Learning configuration
+ml:
+  enabled: true
+  model_path: "./models"
+  training_data: "./data/training"
+  update_interval_hours: 24
+  min_training_size: 5000
+  validation_split: 0.2
+
+  # Adaptive thresholds configuration
+  adaptive_thresholds:
+    enabled: true
+    adaptation_frequency_hours: 12
+    min_samples_for_adapt: 500
+    max_threshold_change: 0.05
+    stability_period_hours: 48
+
+    # Performance targets
+    performance_targets:
+      target_precision: 0.95
+      target_recall: 0.92
+      target_f1_score: 0.93
+      max_false_positive_rate: 0.03
+
+    # Ecosystem-specific settings
+    ecosystems:
+      npm:
+        enabled: true
+        typosquatting_threshold: 0.85
+        dependency_confusion_threshold: 0.80
+        supply_chain_threshold: 0.75
+        model_version: "v2.1.0"
+        last_updated: "2024-01-15T10:30:00Z"
+      
+      pypi:
+        enabled: true
+        typosquatting_threshold: 0.88
+        dependency_confusion_threshold: 0.82
+        supply_chain_threshold: 0.78
+        model_version: "v2.0.5"
+        last_updated: "2024-01-14T15:45:00Z"
+
+  # Feature engineering settings
+  feature_engineering:
+    string_features:
+      - "package_name"
+      - "description"
+      - "keywords"
+    numerical_features:
+      - "download_count"
+      - "version_count"
+      - "maintainer_count"
+    categorical_features:
+      - "license"
+      - "ecosystem"
+      - "scope"
+    custom_features:
+      - "name_entropy"
+      - "version_pattern"
+      - "maintainer_reputation"
+    normalization: "standard"
+    dimensionality: 128
+
+# Plugin system configuration
+plugins:
+  enabled: true
+  plugin_dir: "./plugins"
+  auto_load: true
+  timeout_seconds: 120
+  max_plugins: 20
+
+  # CI/CD platform integrations
+  cicd:
+    github_actions:
+      enabled: true
+      settings:
+        fail_on_critical: true
+        fail_on_high: false
+        create_issues: true
+        comment_on_pr: true
+        set_status_check: true
+        summary_in_step: true
+      priority: 1
+      timeout_seconds: 60
+
+    gitlab_ci:
+      enabled: true
+      settings:
+        fail_on_critical: true
+        fail_on_high: false
+        create_security_report: true
+        annotate_mr: true
+        set_pipeline_status: true
+      priority: 2
+      timeout_seconds: 60
+
+    jenkins:
+      enabled: false
+      settings:
+        fail_on_critical: true
+        create_test_results: true
+        archive_reports: true
+        send_notifications: false
+      priority: 3
+      timeout_seconds: 90
+
+    azure_devops:
+      enabled: false
+      settings:
+        fail_on_critical: true
+        create_work_items: false
+        comment_on_pr: true
+        publish_test_results: true
+      priority: 4
+      timeout_seconds: 60
+
+    circleci:
+      enabled: false
+      settings:
+        fail_on_critical: true
+        store_artifacts: true
+        send_slack_notifications: false
+      priority: 5
+      timeout_seconds: 60
+
+  # Webhook configurations
+  webhooks:
+    - name: "security_alerts"
+      url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+      secret: "your-webhook-secret"
+      timeout_seconds: 30
+      retry_attempts: 3
+      filter_severity:
+        - "critical"
+        - "high"
+      fail_on_critical: false
+      fail_on_high: false
+
+    - name: "audit_log"
+      url: "https://api.mycompany.com/security/audit"
+      method: "POST"
+      headers:
+        Authorization: "Bearer YOUR_API_TOKEN"
+        Content-Type: "application/json"
+      timeout_seconds: 15
+      retry_attempts: 2
+      filter_severity: []  # All severities
+      fail_on_critical: false
+      fail_on_high: false
+
+# Threat Intelligence configuration
+threat_intelligence:
+  enabled: true
+
+  # Database settings
+  database:
+    type: "sqlite"  # sqlite, postgres, mysql
+    path: "./data/threats.db"
+    max_connections: 25
+    timeout_seconds: 30
+    encryption: true
+    backup:
+      enabled: true
+      interval_hours: 6
+      retention_days: 30
+      path: "./backups"
+      compress: true
+
+  # Threat feeds
+  feeds:
+    - name: "npm_security_advisories"
+      type: "npm_advisory"
+      url: "https://registry.npmjs.org/-/npm/v1/security/advisories"
+      update_interval_minutes: 60
+      enabled: true
+      priority: 1
+      format: "json"
+      timeout_seconds: 30
+      retry_attempts: 3
+
+    - name: "pypi_security_db"
+      type: "pypi_advisory"
+      url: "https://osv.dev/list?ecosystem=PyPI"
+      update_interval_minutes: 120
+      enabled: true
+      priority: 2
+      format: "json"
+      timeout_seconds: 45
+      retry_attempts: 2
+
+    - name: "custom_threat_feed"
+      type: "custom"
+      url: "https://threat-intel.mycompany.com/api/v1/packages"
+      api_key: "YOUR_API_KEY"
+      update_interval_minutes: 30
+      enabled: true
+      priority: 3
+      format: "json"
+      headers:
+        Authorization: "Bearer YOUR_TOKEN"
+      timeout_seconds: 20
+      retry_attempts: 3
+
+  # Correlation settings
+  correlation:
+    enabled: true
+    similarity_threshold: 0.85
+    cache_size: 5000
+    cache_ttl_minutes: 120
+    max_concurrent: 10
+    timeout_seconds: 30
+
+  # Alerting configuration
+  alerting:
+    enabled: true
+    
+    # Alert channels
+    channels:
+      email:
+        type: "email"
+        enabled: true
+        settings:
+          smtp_host: "smtp.gmail.com"
+          smtp_port: 587
+          username: "alerts@mycompany.com"
+          password: "your-email-password"
+          from: "Typosentinel <alerts@mycompany.com>"
+          to:
+            - "security@mycompany.com"
+            - "devops@mycompany.com"
+        filters:
+          - "critical"
+          - "high"
+        priority: 1
+
+      slack:
+        type: "slack"
+        enabled: true
+        settings:
+          webhook_url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+          channel: "#security-alerts"
+          username: "Typosentinel"
+          icon_emoji: ":warning:"
+        filters:
+          - "critical"
+        priority: 2
+
+      webhook:
+        type: "webhook"
+        enabled: true
+        settings:
+          url: "https://api.mycompany.com/alerts"
+          method: "POST"
+          headers:
+            Authorization: "Bearer YOUR_TOKEN"
+        filters: []
+        priority: 3
+
+    # Throttling settings
+    throttling:
+      enabled: true
+      max_per_minute: 5
+      max_per_hour: 50
+      max_per_day: 500
+      burst_limit: 3
+      cooldown_period_minutes: 10
+
+    # Alert filters
+    filters:
+      - name: "exclude_test_packages"
+        type: "package_name"
+        condition: "contains"
+        values:
+          - "test"
+          - "mock"
+          - "fixture"
+        action: "exclude"
+
+      - name: "high_priority_packages"
+        type: "package_name"
+        condition: "matches"
+        values:
+          - "@mycompany/*"
+        action: "escalate"
+
+    # Escalation rules
+    escalation:
+      enabled: true
+      timeout_minutes: 30
+      max_levels: 3
+      rules:
+        - level: 1
+          delay_minutes: 0
+          channels:
+            - "slack"
+          condition: "severity >= high"
+        
+        - level: 2
+          delay_minutes: 15
+          channels:
+            - "email"
+          condition: "severity == critical"
+        
+        - level: 3
+          delay_minutes: 30
+          channels:
+            - "webhook"
+          condition: "severity == critical AND unresolved"
+
+  # Real-time updates
+  real_time_updates:
+    enabled: true
+    buffer_size: 10000
+    batch_size: 500
+    flush_interval_seconds: 30
+    max_retries: 5
+
+    # Update channels
+    channels:
+      - name: "webhook_updates"
+        type: "webhook"
+        enabled: true
+        settings:
+          url: "https://api.threat-intel.com/updates"
+          headers:
+            Authorization: "Bearer YOUR_TOKEN"
+        priority: 1
+
+      - name: "polling_updates"
+        type: "polling"
+        enabled: true
+        settings:
+          interval_seconds: 300
+          endpoints:
+            - "https://api.security-feed.com/latest"
+        priority: 2
+
+    # Update processors
+    processors:
+      webhook:
+        enabled: true
+        workers: 5
+        queue_size: 1000
+        timeout_seconds: 30
+        settings:
+          verify_signature: true
+          secret_key: "your-webhook-secret"
+
+      polling:
+        enabled: true
+        workers: 3
+        queue_size: 500
+        timeout_seconds: 60
+        settings:
+          user_agent: "Typosentinel/2.0.0"
+
+    # Error handling
+    error_handling:
+      strategy: "retry_with_backoff"
+      max_retries: 3
+      retry_delay_seconds: 5
+      dead_letter_queue: true
+      log_errors: true
+      alert_on_error: true
+
+  # Data retention
+  retention:
+    threat_data_days: 365
+    scan_results_days: 90
+    logs_days: 30
+    metrics_days: 90
+    backups_days: 180
+    cleanup_interval_hours: 24
+
+# Logging configuration
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json"  # json, text
+  output:
+    - "stdout"
+    - "file"
+  structured: true
+  fields:
+    service: "typosentinel"
+    version: "2.0.0"
+    environment: "production"
+
+  # File logging
+  file:
+    path: "./logs/typosentinel.log"
+    max_size_mb: 100
+    max_age_days: 30
+    max_backups: 10
+    compress: true
+
+  # Syslog (optional)
+  syslog:
+    network: "udp"
+    address: "localhost:514"
+    priority: "info"
+    tag: "typosentinel"
+
+  # Log sampling (for high-volume environments)
+  sampling:
+    enabled: false
+    rate: 100  # Sample 1 in 100 log messages
+    burst: 10
+    threshold: 1000
+
+# Performance configuration
+performance:
+  max_concurrency: 20
+  worker_pool_size: 10
+  queue_size: 5000
+  timeout: "10m"
+  memory_limit_mb: 2048
+  cpu_limit_percent: 80.0
+
+  # Caching
+  caching:
+    enabled: true
+    max_size_mb: 256
+    ttl_minutes: 60
+    cleanup_interval_minutes: 15
+    persistent: true
+    path: "./cache/persistent"
+
+  # Profiling (for development/debugging)
+  profiling:
+    enabled: false
+    cpu: true
+    memory: true
+    goroutine: false
+    block: false
+    mutex: false
+    output_dir: "./profiles"
+    duration_seconds: 60
+
+  # Metrics
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+    namespace: "typosentinel"
+    labels:
+      environment: "production"
+      version: "2.0.0"
+    collectors:
+      - "runtime"
+      - "process"
+      - "go"
+      - "custom"
+    exporters:
+      - type: "prometheus"
+        enabled: true
+        settings:
+          endpoint: "http://prometheus:9090/api/v1/write"
+      - type: "statsd"
+        enabled: false
+        settings:
+          address: "localhost:8125"
+
+# Security configuration
+security:
+  # Encryption
+  encryption:
+    enabled: true
+    algorithm: "AES-256-GCM"
+    key_size: 256
+    key_path: "./keys/encryption.key"
+    rotation: true
+    rotation_interval_days: 90
+
+  # Authentication (for API access)
+  authentication:
+    enabled: false
+    type: "jwt"  # jwt, api_key, oauth2
+    settings:
+      secret_key: "your-jwt-secret"
+      issuer: "typosentinel"
+      audience: "api-users"
+    token_ttl_minutes: 60
+
+  # Authorization
+  authorization:
+    enabled: false
+    type: "rbac"  # rbac, abac
+    roles:
+      admin:
+        - "scan:read"
+        - "scan:write"
+        - "config:read"
+        - "config:write"
+        - "threats:read"
+        - "threats:write"
+      operator:
+        - "scan:read"
+        - "scan:write"
+        - "threats:read"
+      viewer:
+        - "scan:read"
+        - "threats:read"
+    policies: {}
+
+  # Audit logging
+  audit:
+    enabled: true
+    events:
+      - "scan_started"
+      - "scan_completed"
+      - "threat_detected"
+      - "config_changed"
+      - "user_login"
+      - "api_access"
+    output:
+      - "file"
+      - "syslog"
+    retention_days: 365
+    format: "json"
+
+  # Rate limiting
+  rate_limit:
+    enabled: false
+    requests_per_minute: 100
+    requests_per_hour: 5000
+    burst_limit: 20
+    whitelist:
+      - "127.0.0.1"
+      - "::1"
+
+  # Secrets management
+  secrets:
+    provider: "file"  # file, vault, aws_secrets, azure_keyvault
+    settings:
+      path: "./secrets"
+    rotation: false
+    rotation_interval_days: 90

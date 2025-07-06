@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   getDashboardMetrics,
   getRecentActivity,
   getThreatTrends,
   setSelectedTimeRange,
 } from '../../store/slices/dashboardSlice';
+import { startScan } from '../../store/slices/scanSlice';
 import MetricCard from '../../components/MetricCard/MetricCard';
 import ThreatChart from '../../components/Charts/ThreatChart';
 import ActivityFeed from '../../components/ActivityFeed/ActivityFeed';
+import Terminal from '../../components/Terminal/Terminal';
+import ScanModal from '../../components/ScanModal/ScanModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     metrics,
     recentActivity,
@@ -24,6 +29,8 @@ const Dashboard = () => {
   } = useSelector(state => state.dashboard);
 
   const [refreshTimer, setRefreshTimer] = useState(null);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [scanModalOpen, setScanModalOpen] = useState(false);
 
   useEffect(() => {
     // Initial data fetch
@@ -56,6 +63,47 @@ const Dashboard = () => {
 
   const handleRefresh = () => {
     fetchDashboardData();
+  };
+
+  const handleStartScan = () => {
+    setScanModalOpen(true);
+  };
+
+  const handleOpenTerminal = () => {
+    setTerminalOpen(true);
+  };
+
+  const handleGenerateReport = () => {
+    // Navigate to reports page
+    navigate('/reports');
+  };
+
+  const handleConfigureSettings = () => {
+    // Navigate to settings page
+    navigate('/settings');
+  };
+
+  const handleExportData = () => {
+    // Create and download a sample report
+    const reportData = {
+      timestamp: new Date().toISOString(),
+      metrics: metrics,
+      threatTrends: threatTrends,
+      recentActivity: recentActivity.slice(0, 10)
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+      type: 'application/json'
+    });
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `typosentinel-report-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const timeRangeOptions = [
@@ -235,24 +283,47 @@ const Dashboard = () => {
       <div className="quick-actions">
         <h3>Quick Actions</h3>
         <div className="action-buttons">
-          <button className="action-btn primary">
+          <button className="action-btn primary" onClick={handleStartScan}>
             <span className="action-icon">🔍</span>
             <span>Start New Scan</span>
           </button>
-          <button className="action-btn secondary">
+          <button className="action-btn secondary" onClick={handleOpenTerminal}>
+            <span className="action-icon">💻</span>
+            <span>Open Terminal</span>
+          </button>
+          <button className="action-btn secondary" onClick={handleGenerateReport}>
             <span className="action-icon">📊</span>
             <span>Generate Report</span>
           </button>
-          <button className="action-btn secondary">
+          <button className="action-btn secondary" onClick={handleConfigureSettings}>
             <span className="action-icon">⚙️</span>
             <span>Configure Settings</span>
           </button>
-          <button className="action-btn secondary">
+          <button className="action-btn secondary" onClick={handleExportData}>
             <span className="action-icon">📥</span>
             <span>Export Data</span>
           </button>
         </div>
       </div>
+
+      {/* Scan Modal */}
+      {scanModalOpen && (
+        <ScanModal
+          isOpen={scanModalOpen}
+          onClose={() => setScanModalOpen(false)}
+          onStartScan={(config) => {
+            dispatch(startScan(config));
+            setScanModalOpen(false);
+            navigate('/scan-results');
+          }}
+        />
+      )}
+
+      {/* Terminal */}
+      <Terminal
+        isOpen={terminalOpen}
+        onClose={() => setTerminalOpen(false)}
+      />
     </div>
   );
 };

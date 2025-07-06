@@ -102,25 +102,8 @@ func initializeConfig(cmd *cobra.Command, args []string) error {
 			return nil // Continue with defaults instead of failing
 		}
 		
-		// Initialize logger with loaded configuration
-		if cfg.Logging.Level != "" {
-			loggerConfig := logger.LoggerConfig{
-				Level:    cfg.Logging.Level,
-				Format:   cfg.Logging.Format,
-				Output:   cfg.Logging.Output,
-				Rotation: logger.RotationConfig{
-					Enabled:    cfg.Logging.Rotation.Enabled,
-					MaxSize:    cfg.Logging.Rotation.MaxSize,
-					MaxBackups: cfg.Logging.Rotation.MaxBackups,
-					MaxAge:     cfg.Logging.Rotation.MaxAge,
-				},
-			}
-			if err := logger.InitFromConfig(loggerConfig); err != nil {
-				logger.Warn("Failed to initialize logger from config", map[string]interface{}{
-					"error": err.Error(),
-				})
-			}
-		}
+		// Note: Logging configuration would need to be added to config struct
+		// For now, use default logger settings
 
 		// Override settings again if flags are set
 		if debugMode != "" {

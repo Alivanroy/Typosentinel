@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAuthenticated } from '../../store/slices/authSlice';
 import './Login.css';
 
 const Login = () => {
@@ -12,8 +14,10 @@ const Login = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated } = useSelector(state => state.auth);
   
   // Get the intended destination or default to dashboard
   const from = location.state?.from?.pathname || '/dashboard';
@@ -21,10 +25,11 @@ const Login = () => {
   useEffect(() => {
     // Check if user is already logged in
     const token = localStorage.getItem('typosentinel-token');
-    if (token) {
+    if (token || isAuthenticated) {
+      dispatch(setAuthenticated(true));
       navigate(from, { replace: true });
     }
-  }, [navigate, from]);
+  }, [navigate, from, isAuthenticated, dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -92,6 +97,9 @@ const Login = () => {
         if (formData.rememberMe) {
           localStorage.setItem('typosentinel-remember', 'true');
         }
+        
+        // Update Redux auth state
+        dispatch(setAuthenticated(true));
         
         // Redirect to intended destination
         navigate(from, { replace: true });

@@ -53,6 +53,11 @@ const Layout = ({ children }) => {
       icon: '📈',
     },
     {
+      path: '/documentation',
+      label: 'Documentation',
+      icon: '📚',
+    },
+    {
       path: '/settings',
       label: 'Settings',
       icon: '⚙️',

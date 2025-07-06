@@ -14,11 +14,8 @@ import (
 // Config represents the enhanced configuration for TypoSentinel
 type Config struct {
 	// Core configuration
-	Core *CoreConfig `yaml:"core"`
 	Verbose bool `yaml:"verbose"`
 	Debug bool `yaml:"debug"`
-	API *APIConfig `yaml:"api"`
-	Database *DatabaseConfig `yaml:"database"`
 	
 	// Analysis engines
 	StaticAnalysis *StaticAnalysisConfig `yaml:"static_analysis"`
@@ -31,48 +28,33 @@ type Config struct {
 	Detection *DetectionConfig `yaml:"detection"`
 	Registries []RegistryConfig `yaml:"registries"`
 	Scanner *ScannerConfig `yaml:"scanner"`
-	Plugins *PluginsConfig `yaml:"plugins"`
 	TypoDetection *TypoDetectionConfig `yaml:"typo_detection"`
 	MalwareDetection *MalwareDetectionConfig `yaml:"malware_detection"`
 	VulnerabilityScanning *VulnerabilityScanningConfig `yaml:"vulnerability_scanning"`
+	
+	// Threat Intelligence
+	ThreatIntelligence *ThreatIntelligenceConfig `yaml:"threat_intelligence"`
 	
 	// Reporting and output
 	Reporting *ReportingConfig `yaml:"reporting"`
 	Output    *OutputConfig    `yaml:"output"`
 	Cache     *CacheConfig     `yaml:"cache"`
 	
-	// Performance and caching
-	Performance *PerformanceConfig `yaml:"performance"`
-	Caching *CachingConfig `yaml:"caching"`
-	
 	// Security and privacy
-	Security *SecurityConfig `yaml:"security"`
 	Privacy *PrivacyConfig `yaml:"privacy"`
 	Policies *PolicyConfig `yaml:"policies"`
 	
 	// Integration and APIs
 	Integrations *IntegrationsConfig `yaml:"integrations"`
 	
+	// Plugin configuration
+	Plugins *PluginsConfig `yaml:"plugins"`
+	
 	// Logging and monitoring
-	Logging *LoggingConfig `yaml:"logging"`
 	Monitoring *MonitoringConfig `yaml:"monitoring"`
 }
 
-// CoreConfig contains core application settings
-type CoreConfig struct {
-	Version string `yaml:"version"`
-	Environment string `yaml:"environment"` // development, staging, production
-	Debug bool `yaml:"debug"`
-	Verbose bool `yaml:"verbose"`
-	Quiet bool `yaml:"quiet"`
-	ConfigPath string `yaml:"config_path"`
-	DataDir string `yaml:"data_dir"`
-	TempDir string `yaml:"temp_dir"`
-	MaxConcurrency int `yaml:"max_concurrency"`
-	Timeout time.Duration `yaml:"timeout"`
-	RetryAttempts int `yaml:"retry_attempts"`
-	RetryDelay string `yaml:"retry_delay"`
-}
+
 
 // StaticAnalysisConfig contains static analysis settings
 type StaticAnalysisConfig struct {
@@ -201,17 +183,7 @@ type ProvenanceAnalysisConfig struct {
 	Verbose bool `yaml:"verbose"`
 }
 
-// DetectionConfig contains threat detection settings
-type DetectionConfig struct {
-	Enabled                 bool    `yaml:"enabled"`
-	MinPackageNameLength   int     `yaml:"min_package_name_length"`
-	EnhancedTyposquatting  bool    `yaml:"enhanced_typosquatting"`
-	HomoglyphDetection     bool    `yaml:"homoglyph_detection"`
-	DependencyConfusion    bool    `yaml:"dependency_confusion"`
-	ReputationScoring      bool    `yaml:"reputation_scoring"`
-	Thresholds             ThresholdConfig `yaml:"thresholds"`
-	Algorithms             AlgorithmConfig `yaml:"algorithms"`
-}
+
 
 // ThresholdConfig contains detection threshold settings
 type ThresholdConfig struct {
@@ -227,6 +199,8 @@ type AlgorithmConfig struct {
 	ML        bool `yaml:"ml"`
 }
 
+
+
 // RegistryConfig contains registry configuration settings
 type RegistryConfig struct {
 	Enabled   bool            `yaml:"enabled"`
@@ -238,12 +212,7 @@ type RegistryConfig struct {
 	Private   PrivateConfig   `yaml:"private"`
 }
 
-// RateLimitConfig contains rate limiting settings
-type RateLimitConfig struct {
-	Enabled bool `yaml:"enabled"`
-	RPS     int  `yaml:"rps"`
-	Burst   int  `yaml:"burst"`
-}
+
 
 // PrivateConfig contains private registry settings
 type PrivateConfig struct {
@@ -378,112 +347,7 @@ type OutputConfig struct {
 	MaxLines int `yaml:"max_lines"`
 }
 
-// PerformanceConfig contains performance settings
-type PerformanceConfig struct {
-	MaxConcurrency int `yaml:"max_concurrency"`
-	WorkerPoolSize int `yaml:"worker_pool_size"`
-	QueueSize int `yaml:"queue_size"`
-	BatchSize int `yaml:"batch_size"`
-	MemoryLimit string `yaml:"memory_limit"`
-	CPULimit string `yaml:"cpu_limit"`
-	IOLimit string `yaml:"io_limit"`
-	NetworkLimit string `yaml:"network_limit"`
-	Timeouts *TimeoutConfig `yaml:"timeouts"`
-	RateLimiting *RateLimitingConfig `yaml:"rate_limiting"`
-	CircuitBreaker *CircuitBreakerConfig `yaml:"circuit_breaker"`
-	LoadBalancing *LoadBalancingConfig `yaml:"load_balancing"`
-}
 
-// TimeoutConfig contains timeout settings
-type TimeoutConfig struct {
-	Global string `yaml:"global"`
-	Connection string `yaml:"connection"`
-	Read string `yaml:"read"`
-	Write string `yaml:"write"`
-	Idle string `yaml:"idle"`
-	KeepAlive string `yaml:"keep_alive"`
-	Shutdown string `yaml:"shutdown"`
-}
-
-// RateLimitingConfig contains rate limiting settings
-type RateLimitingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	RequestsPerSecond int `yaml:"requests_per_second"`
-	BurstSize int `yaml:"burst_size"`
-	WindowSize string `yaml:"window_size"`
-	BackoffStrategy string `yaml:"backoff_strategy"` // linear, exponential, fixed
-	MaxRetries int `yaml:"max_retries"`
-	RetryDelay string `yaml:"retry_delay"`
-}
-
-// CircuitBreakerConfig contains circuit breaker settings
-type CircuitBreakerConfig struct {
-	Enabled bool `yaml:"enabled"`
-	FailureThreshold int `yaml:"failure_threshold"`
-	SuccessThreshold int `yaml:"success_threshold"`
-	Timeout string `yaml:"timeout"`
-	MaxRequests int `yaml:"max_requests"`
-	Interval string `yaml:"interval"`
-	OnStateChange string `yaml:"on_state_change"`
-}
-
-// LoadBalancingConfig contains load balancing settings
-type LoadBalancingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Strategy string `yaml:"strategy"` // round_robin, least_connections, weighted
-	HealthCheck *HealthCheckConfig `yaml:"health_check"`
-	Failover *FailoverConfig `yaml:"failover"`
-}
-
-// HealthCheckConfig contains health check settings
-type HealthCheckConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Interval string `yaml:"interval"`
-	Timeout string `yaml:"timeout"`
-	Path string `yaml:"path"`
-	Method string `yaml:"method"`
-	ExpectedStatus int `yaml:"expected_status"`
-	Retries int `yaml:"retries"`
-}
-
-// FailoverConfig contains failover settings
-type FailoverConfig struct {
-	Enabled bool `yaml:"enabled"`
-	MaxFailures int `yaml:"max_failures"`
-	RecoveryTime string `yaml:"recovery_time"`
-	BackupEndpoints []string `yaml:"backup_endpoints"`
-}
-
-// CachingConfig contains caching settings
-type CachingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Backend string `yaml:"backend"` // memory, redis, file, hybrid
-	ConnectionString string `yaml:"connection_string"`
-	TTL string `yaml:"ttl"`
-	MaxSize string `yaml:"max_size"`
-	MaxEntries int `yaml:"max_entries"`
-	EvictionPolicy string `yaml:"eviction_policy"` // lru, lfu, fifo, random
-	CompressionEnabled bool `yaml:"compression_enabled"`
-	EncryptionEnabled bool `yaml:"encryption_enabled"`
-	PersistenceEnabled bool `yaml:"persistence_enabled"`
-	PersistenceInterval string `yaml:"persistence_interval"`
-	ClusteringEnabled bool `yaml:"clustering_enabled"`
-	ReplicationFactor int `yaml:"replication_factor"`
-	ConsistencyLevel string `yaml:"consistency_level"`
-}
-
-// SecurityConfig contains security settings
-type SecurityConfig struct {
-	EncryptionEnabled bool `yaml:"encryption_enabled"`
-	EncryptionAlgorithm string `yaml:"encryption_algorithm"`
-	KeyManagement *KeyManagementConfig `yaml:"key_management"`
-	Authentication *AuthenticationConfig `yaml:"authentication"`
-	Authorization *AuthorizationConfig `yaml:"authorization"`
-	AuditLogging *AuditLoggingConfig `yaml:"audit_logging"`
-	SecureTransport *SecureTransportConfig `yaml:"secure_transport"`
-	InputValidation *InputValidationConfig `yaml:"input_validation"`
-	OutputSanitization *OutputSanitizationConfig `yaml:"output_sanitization"`
-}
 
 // KeyManagementConfig contains key management settings
 type KeyManagementConfig struct {
@@ -905,62 +769,10 @@ type GRPCKeepalive struct {
 // MonitoringConfig contains monitoring settings
 type MonitoringConfig struct {
 	Enabled bool `yaml:"enabled"`
-	Metrics *MetricsConfig `yaml:"metrics"`
-	Tracing *TracingConfig `yaml:"tracing"`
-	Profiling *ProfilingConfig `yaml:"profiling"`
 	HealthChecks *HealthChecksConfig `yaml:"health_checks"`
-	Alerting *AlertingConfig `yaml:"alerting"`
 }
 
-// MetricsConfig contains metrics settings
-type MetricsConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Provider string `yaml:"provider"` // prometheus, statsd, datadog
-	Endpoint string `yaml:"endpoint"`
-	Interval string `yaml:"interval"`
-	Namespace string `yaml:"namespace"`
-	Labels map[string]string `yaml:"labels"`
-	CustomMetrics []CustomMetric `yaml:"custom_metrics"`
-	HistogramBuckets []float64 `yaml:"histogram_buckets"`
-}
 
-// CustomMetric contains custom metric settings
-type CustomMetric struct {
-	Name string `yaml:"name"`
-	Type string `yaml:"type"` // counter, gauge, histogram, summary
-	Description string `yaml:"description"`
-	Labels []string `yaml:"labels"`
-	Buckets []float64 `yaml:"buckets,omitempty"`
-	Objectives map[float64]float64 `yaml:"objectives,omitempty"`
-}
-
-// TracingConfig contains tracing settings
-type TracingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Provider string `yaml:"provider"` // jaeger, zipkin, datadog
-	Endpoint string `yaml:"endpoint"`
-	SamplingRate float64 `yaml:"sampling_rate"`
-	ServiceName string `yaml:"service_name"`
-	ServiceVersion string `yaml:"service_version"`
-	Environment string `yaml:"environment"`
-	Tags map[string]string `yaml:"tags"`
-	BatchTimeout string `yaml:"batch_timeout"`
-	MaxPacketSize int `yaml:"max_packet_size"`
-}
-
-// ProfilingConfig contains profiling settings
-type ProfilingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	CPUProfiling bool `yaml:"cpu_profiling"`
-	MemoryProfiling bool `yaml:"memory_profiling"`
-	GoroutineProfiling bool `yaml:"goroutine_profiling"`
-	BlockProfiling bool `yaml:"block_profiling"`
-	MutexProfiling bool `yaml:"mutex_profiling"`
-	ProfilePath string `yaml:"profile_path"`
-	ProfileDuration string `yaml:"profile_duration"`
-	ProfileInterval string `yaml:"profile_interval"`
-	HTTPEndpoint string `yaml:"http_endpoint"`
-}
 
 // HealthChecksConfig contains health check settings
 type HealthChecksConfig struct {
@@ -983,14 +795,7 @@ type HealthCheck struct {
 	Configuration map[string]interface{} `yaml:"configuration"`
 }
 
-// AlertingConfig contains alerting settings
-type AlertingConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Providers []AlertProvider `yaml:"providers"`
-	Rules []AlertRule `yaml:"rules"`
-	Silencing *AlertSilencing `yaml:"silencing"`
-	Escalation *AlertEscalation `yaml:"escalation"`
-}
+
 
 // AlertProvider contains alert provider settings
 type AlertProvider struct {
@@ -1042,60 +847,7 @@ type EscalationLevel struct {
 	Conditions []string `yaml:"conditions"`
 }
 
-// LoggingConfig contains logging settings
-type LoggingConfig struct {
-	Level      string         `yaml:"level" json:"level"`
-	Format     string         `yaml:"format" json:"format"`
-	Output     string         `yaml:"output" json:"output"`
-	Structured bool           `yaml:"structured" json:"structured"`
-	Timestamp  bool           `yaml:"timestamp" json:"timestamp"`
-	Caller     bool           `yaml:"caller" json:"caller"`
-	Prefix     string         `yaml:"prefix" json:"prefix"`
-	Rotation   RotationConfig `yaml:"rotation" json:"rotation"`
-}
 
-// RotationConfig contains log rotation settings
-type RotationConfig struct {
-	Enabled    bool `yaml:"enabled" json:"enabled"`
-	MaxSize    int  `yaml:"max_size" json:"max_size"`
-	MaxAge     int  `yaml:"max_age" json:"max_age"`
-	MaxBackups int  `yaml:"max_backups" json:"max_backups"`
-	Compress   bool `yaml:"compress" json:"compress"`
-}
-
-// APIConfig contains API server settings
-type APIConfig struct {
-	Host    string    `yaml:"host" json:"host"`
-	Port    int       `yaml:"port" json:"port"`
-	BaseURL string    `yaml:"base_url" json:"base_url"`
-	APIKey  string    `yaml:"api_key" json:"api_key"`
-	TLS     TLSConfig `yaml:"tls" json:"tls"`
-	Auth    AuthConfig `yaml:"auth" json:"auth"`
-}
-
-// TLSConfig contains TLS settings
-type TLSConfig struct {
-	Enabled  bool   `yaml:"enabled" json:"enabled"`
-	CertFile string `yaml:"cert_file" json:"cert_file"`
-	KeyFile  string `yaml:"key_file" json:"key_file"`
-}
-
-// AuthConfig contains authentication settings
-type AuthConfig struct {
-	Enabled   bool   `yaml:"enabled" json:"enabled"`
-	JWTSecret string `yaml:"jwt_secret" json:"jwt_secret"`
-}
-
-// DatabaseConfig contains database settings
-type DatabaseConfig struct {
-	Host     string      `yaml:"host" json:"host"`
-	Port     int         `yaml:"port" json:"port"`
-	Name     string      `yaml:"name" json:"name"`
-	User     string      `yaml:"user" json:"user"`
-	Password string      `yaml:"password" json:"password"`
-	SSLMode  string      `yaml:"ssl_mode" json:"ssl_mode"`
-	Redis    RedisConfig `yaml:"redis" json:"redis"`
-}
 
 // RedisConfig is defined in config_manager.go
 
@@ -1103,23 +855,6 @@ type DatabaseConfig struct {
 func ValidateConfig(cfg *Config) error {
 	if cfg == nil {
 		return fmt.Errorf("config cannot be nil")
-	}
-
-	// Validate API config
-	if cfg.API != nil {
-		if cfg.API.Port <= 0 || cfg.API.Port > 65535 {
-			return fmt.Errorf("invalid API port: %d", cfg.API.Port)
-		}
-	}
-
-	// Validate Detection config
-	if cfg.Detection != nil {
-		if cfg.Detection.Thresholds.Similarity < 0 || cfg.Detection.Thresholds.Similarity > 1 {
-			return fmt.Errorf("invalid similarity threshold: %f", cfg.Detection.Thresholds.Similarity)
-		}
-		if cfg.Detection.Thresholds.Confidence < 0 || cfg.Detection.Thresholds.Confidence > 1 {
-			return fmt.Errorf("invalid confidence threshold: %f", cfg.Detection.Thresholds.Confidence)
-		}
 	}
 
 	return nil
@@ -1141,23 +876,6 @@ type ScannerConfig struct {
 	Concurrency    int  `yaml:"concurrency" json:"concurrency"`
 	IncludeDevDeps bool `yaml:"include_dev_deps" json:"include_dev_deps"`
 	EnrichMetadata bool `yaml:"enrich_metadata" json:"enrich_metadata"`
-}
-
-// PluginsConfig contains plugin settings
-type PluginsConfig struct {
-	Enabled         bool          `yaml:"enabled" json:"enabled"`
-	Path            string        `yaml:"path" json:"path"`
-	PluginDirectory string        `yaml:"plugin_directory" json:"plugin_directory"`
-	AutoLoad        bool          `yaml:"auto_load" json:"auto_load"`
-	Plugins         []PluginEntry `yaml:"plugins" json:"plugins"`
-}
-
-// PluginEntry represents a plugin configuration entry
-type PluginEntry struct {
-	Name    string                 `yaml:"name" json:"name"`
-	Path    string                 `yaml:"path" json:"path"`
-	Enabled bool                   `yaml:"enabled" json:"enabled"`
-	Config  map[string]interface{} `yaml:"config" json:"config"`
 }
 
 // CacheConfig contains cache settings
@@ -1253,69 +971,64 @@ func NewDefaultConfig() *Config {
 	return &Config{
 		Verbose: false,
 		Debug:   false,
-		API: &APIConfig{
-			Host: "localhost",
-			Port: 8080,
-		},
-		Database: &DatabaseConfig{
-			Host:    "localhost",
-			Port:    5432,
-			Name:    "typosentinel",
-			User:    "postgres",
-			SSLMode: "disable",
-		},
-		Core: &CoreConfig{
-			Version: "1.0.0",
-			Environment: "development",
-			Debug: false,
-			Verbose: false,
-			MaxConcurrency: 10,
-			Timeout: 30 * time.Second,
-			RetryAttempts: 3,
-			RetryDelay: "1s",
-		},
-		Logging: &LoggingConfig{
-			Level: "info",
-			Format: "json",
-			Output: "stdout",
-			Structured: true,
-		},
-		Performance: &PerformanceConfig{
-			MaxConcurrency: 10,
-			WorkerPoolSize: 5,
-			QueueSize: 100,
-			BatchSize: 10,
-		},
 		Detection: &DetectionConfig{
-			Enabled:               true,
-			MinPackageNameLength: 3,
-			EnhancedTyposquatting: true,
-			HomoglyphDetection:   true,
-			DependencyConfusion:  true,
-			ReputationScoring:    true,
-			Thresholds: ThresholdConfig{
-				Similarity: 0.8,
-				Confidence: 0.7,
-				Reputation: 0.6,
+			Enabled:       true,
+			ParallelScans: 4,
+			Timeout:       300,
+			MaxPackageSize: 100,
+			SkipPatterns:  []string{},
+			WhitelistPackages: []string{},
+			Typosquatting: TyposquattingConfig{
+				Enabled:             true,
+				SimilarityThreshold: 0.8,
+				MinLength:           3,
+				MaxDistance:         3,
+				Algorithms:          []string{"levenshtein", "jaro_winkler"},
+				PopularPackages:     []string{},
+				CustomDictionary:    []string{},
 			},
-			Algorithms: AlgorithmConfig{
-				Lexical:   true,
-				Homoglyph: true,
-				ML:        true,
+			DependencyConfusion: DependencyConfusionConfig{
+				Enabled:              true,
+				CheckPrivateRepos:    true,
+				PrivateRegistries:    []string{},
+				NamespacePatterns:    []string{},
+				ScopeIndicators:      []string{"@", "/"},
+				ConfusionThreshold:   0.7,
+				VersionAnalysis:      true,
+				DownloadAnalysis:     true,
 			},
+			SupplyChain: SupplyChainConfig{
+				Enabled:                true,
+				MaintainerAnalysis:     true,
+				VersionPatternAnalysis: true,
+				IntegrityChecks:        true,
+				AnomalyDetection:       true,
+				TrustedMaintainers:     []string{},
+				SuspiciousPatterns:     []string{},
+				MinMaintainerAge:       30,
+				MinPackageAge:          7,
+				ReputationThreshold:    0.6,
+			},
+		},
+		MLAnalysis: &MLAnalysisConfig{
+			Enabled:             false,
+			ModelPath:           "./models",
+			EmbeddingModel:      "sentence-transformers/all-MiniLM-L6-v2",
+			EmbeddingDimensions: 384,
+			SimilarityThreshold: 0.8,
+			MaliciousThreshold:  0.7,
+			ReputationThreshold: 0.6,
+			BatchSize:           10,
+			MaxFeatures:         1000,
+			CacheEmbeddings:     true,
+			ParallelProcessing:  true,
+			GPUAcceleration:     false,
 		},
 		Scanner: &ScannerConfig{
 			Enabled:        true,
 			Concurrency:    4,
 			IncludeDevDeps: false,
 			EnrichMetadata: true,
-		},
-		Plugins: &PluginsConfig{
-			Enabled:         false,
-			Path:            "./plugins",
-			PluginDirectory: "./plugins",
-			AutoLoad:        false,
-			Plugins:         []PluginEntry{},
 		},
 		Cache: &CacheConfig{
 			Enabled:  true,

@@ -148,10 +148,14 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 	}
 
 	// Initialize ML analyzer
+	mlServiceEnabled := cfg.MLService != nil && cfg.MLService.Enabled
+	mlAnalysisEnabled := cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled
 	logger.VerboseWithContext("Initializing ML analyzer", map[string]interface{}{
-		"enabled": cfg.MLService != nil && cfg.MLService.Enabled,
+		"ml_service_enabled": mlServiceEnabled,
+		"ml_analysis_enabled": mlAnalysisEnabled,
 	})
-	if cfg.MLService != nil && cfg.MLService.Enabled {
+	
+	if mlServiceEnabled {
 		// Create ML analysis config from MLService config
 		mlConfig := config.MLAnalysisConfig{
 			Enabled: true,
@@ -167,13 +171,22 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 		}
 		mlAnalyzer := ml.NewMLAnalyzer(mlConfig)
 		scanner.mlAnalyzer = mlAnalyzer
-		logger.Info("ML analyzer initialized successfully")
+		logger.Info("ML analyzer initialized successfully (via MLService config)")
 		logger.DebugWithContext("ML analyzer details", map[string]interface{}{
 			"analyzer_type": fmt.Sprintf("%T", mlAnalyzer),
 			"config": mlConfig,
 		})
+	} else if mlAnalysisEnabled {
+		// Use internal ML analysis config directly
+		mlAnalyzer := ml.NewMLAnalyzer(*cfg.MLAnalysis)
+		scanner.mlAnalyzer = mlAnalyzer
+		logger.Info("ML analyzer initialized successfully (via MLAnalysis config)")
+		logger.DebugWithContext("ML analyzer details", map[string]interface{}{
+			"analyzer_type": fmt.Sprintf("%T", mlAnalyzer),
+			"config": *cfg.MLAnalysis,
+		})
 	} else {
-		logger.VerboseWithContext("ML analyzer disabled - MLService not configured or disabled", map[string]interface{}{})
+		logger.VerboseWithContext("ML analyzer disabled - neither MLService nor MLAnalysis configured", map[string]interface{}{})
 	}
 
 	// Provenance analysis is disabled in the simplified configuration
@@ -461,13 +474,13 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 			ScanID:      scanID,
 			Timestamp:   startTime,
 			Version:     "1.0.0", // Should come from build info
-			Environment: s.config.Core.Environment,
+			Environment: "production", // Default environment
 		},
 	}
 
 	logger.DebugWithContext("Scan result initialized", map[string]interface{}{
 		"scan_id":     scanID,
-		"environment": s.config.Core.Environment,
+		"environment": "production",
 		"result_type": fmt.Sprintf("%T", result),
 	})
 
@@ -590,6 +603,10 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 	result.OverallRisk, result.RiskScore = s.calculateOverallRisk(result)
 	result.Recommendations = s.generateRecommendations(result)
 
+	// Update the package with calculated risk score and level
+	pkg.RiskScore = result.RiskScore
+	pkg.RiskLevel = s.convertRiskLevelToSeverity(result.OverallRisk)
+
 	// Generate summary
 	result.Summary = s.generateSummary(result, enginesUsed, time.Since(startTime))
 
@@ -615,7 +632,7 @@ func (s *Scanner) calculateOverallRisk(result *ScanResult) (string, float64) {
 
 	// Weight ML analysis results
 	if result.MLAnalysis != nil {
-		totalScore += result.MLAnalysis.TyposquattingScore * 0.3
+		totalScore += result.MLAnalysis.RiskAssessment.RiskScore * 0.3
 		weights += 0.3
 	}
 
@@ -750,6 +767,24 @@ func (s *Scanner) generateSummary(result *ScanResult, enginesUsed []string, anal
 	return summary
 }
 
+// convertRiskLevelToSeverity converts risk level string to Severity type
+func (s *Scanner) convertRiskLevelToSeverity(riskLevel string) types.Severity {
+	switch riskLevel {
+	case "critical":
+		return types.SeverityCritical
+	case "high":
+		return types.SeverityHigh
+	case "medium":
+		return types.SeverityMedium
+	case "low":
+		return types.SeverityLow
+	case "minimal":
+		return types.SeverityLow
+	default:
+		return types.SeverityLow
+	}
+}
+
 // Helper functions
 
 func loadConfiguration() (*config.Config, error) {
@@ -762,9 +797,7 @@ func loadConfiguration() (*config.Config, error) {
 func applyCommandLineOverrides(cfg *config.Config) {
 	if verbose {
 		cfg.Verbose = true
-		if cfg.Logging != nil {
-			cfg.Logging.Level = "debug"
-		}
+		// Note: Logging config would need to be added to Config struct
 	}
 	if quiet {
 		// Set quiet mode - this would need to be added to Config if needed

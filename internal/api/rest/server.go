@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -172,6 +173,24 @@ func (s *Server) setupRoutes() {
 			v1.GET("/docs/openapi", s.getOpenAPISpec)
 			v1.GET("/docs", s.getSwaggerUI)
 			v1.GET("/docs/", s.getSwaggerUI)
+		}
+
+		// Dashboard endpoints (non-versioned for frontend compatibility)
+		dashboard := s.gin.Group(s.config.BasePath + "/dashboard")
+		{
+			dashboard.GET("/metrics", s.getDashboardMetrics)
+			dashboard.GET("/activity", s.getDashboardActivity)
+			dashboard.GET("/health", s.getDashboardHealth)
+			dashboard.GET("/trends", s.getDashboardTrends)
+		}
+
+		// Scan management endpoints (non-versioned for frontend compatibility)
+		scan := s.gin.Group(s.config.BasePath + "/scan")
+		{
+			scan.POST("/start", s.startScan)
+			scan.GET("/results", s.getScanResults)
+			scan.GET("/:id", s.getScanById)
+			scan.DELETE("/:id", s.deleteScan)
 		}
 	}
 }
@@ -800,6 +819,357 @@ func (s *Server) updateConfiguration(c *gin.Context) {
 	// Placeholder for configuration update
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Configuration updated successfully",
+	})
+}
+
+// Dashboard endpoint handlers
+func (s *Server) getDashboardMetrics(c *gin.Context) {
+	timeRange := c.Query("timeRange")
+	if timeRange == "" {
+		timeRange = "7d"
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"totalScans":        1250,
+		"threatsDetected":   47,
+		"criticalThreats":   8,
+		"packagesScanned":   15420,
+		"scanSuccessRate":   98.5,
+		"averageScanTime":   2.3,
+		"timeRange":         timeRange,
+		"lastUpdated":       time.Now().UTC(),
+	})
+}
+
+func (s *Server) getDashboardActivity(c *gin.Context) {
+	limit := c.Query("limit")
+	if limit == "" {
+		limit = "10"
+	}
+
+	activity := []gin.H{
+		{
+			"id":          1,
+			"type":        "scan_completed",
+			"package":     "express",
+			"ecosystem":   "npm",
+			"status":      "clean",
+			"timestamp":   time.Now().Add(-5 * time.Minute).UTC(),
+			"duration":    "2.1s",
+		},
+		{
+			"id":          2,
+			"type":        "threat_detected",
+			"package":     "reqeust",
+			"ecosystem":   "npm",
+			"status":      "suspicious",
+			"timestamp":   time.Now().Add(-15 * time.Minute).UTC(),
+			"severity":    "medium",
+			"threat_type": "typosquatting",
+		},
+		{
+			"id":          3,
+			"type":        "vulnerability_found",
+			"package":     "lodash",
+			"ecosystem":   "npm",
+			"status":      "vulnerable",
+			"timestamp":   time.Now().Add(-30 * time.Minute).UTC(),
+			"severity":    "high",
+			"cve":         "CVE-2021-23337",
+		},
+		{
+			"id":          4,
+			"type":        "scan_completed",
+			"package":     "react",
+			"ecosystem":   "npm",
+			"status":      "clean",
+			"timestamp":   time.Now().Add(-45 * time.Minute).UTC(),
+			"duration":    "1.8s",
+		},
+		{
+			"id":          5,
+			"type":        "batch_scan_completed",
+			"packages":    25,
+			"ecosystem":   "pypi",
+			"status":      "completed",
+			"timestamp":   time.Now().Add(-1 * time.Hour).UTC(),
+			"duration":    "45.2s",
+			"threats":     3,
+		},
+	}
+
+	c.JSON(http.StatusOK, activity)
+}
+
+func (s *Server) getDashboardHealth(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":            "healthy",
+		"uptime":            "5d 12h 30m",
+		"memoryUsage":       67.5,
+		"cpuUsage":          23.8,
+		"diskUsage":         45.2,
+		"activeConnections": 12,
+		"lastUpdated":       time.Now().UTC(),
+		"services": gin.H{
+			"database":    "healthy",
+			"ml_pipeline": "healthy",
+			"analyzer":    "healthy",
+			"cache":       "healthy",
+		},
+	})
+}
+
+func (s *Server) getDashboardTrends(c *gin.Context) {
+	timeRange := c.Query("timeRange")
+	if timeRange == "" {
+		timeRange = "7d"
+	}
+
+	// Generate data based on time range
+	var dailyData []gin.H
+	now := time.Now()
+	
+	switch timeRange {
+	case "1d":
+		// Generate hourly data for last 24 hours
+		for i := 23; i >= 0; i-- {
+			date := now.Add(-time.Duration(i) * time.Hour)
+			dailyData = append(dailyData, gin.H{
+				"date":     date.Format("2006-01-02T15:04:05Z"),
+				"critical": rand.Intn(3),
+				"high":     rand.Intn(5),
+				"medium":   rand.Intn(8),
+				"low":      rand.Intn(12),
+			})
+		}
+	case "7d":
+		// Generate daily data for last 7 days
+		for i := 6; i >= 0; i-- {
+			date := now.AddDate(0, 0, -i)
+			dailyData = append(dailyData, gin.H{
+				"date":     date.Format("2006-01-02T15:04:05Z"),
+				"critical": rand.Intn(5),
+				"high":     rand.Intn(10),
+				"medium":   rand.Intn(15),
+				"low":      rand.Intn(20),
+			})
+		}
+	case "30d":
+		// Generate daily data for last 30 days
+		for i := 29; i >= 0; i-- {
+			date := now.AddDate(0, 0, -i)
+			dailyData = append(dailyData, gin.H{
+				"date":     date.Format("2006-01-02T15:04:05Z"),
+				"critical": rand.Intn(8),
+				"high":     rand.Intn(15),
+				"medium":   rand.Intn(25),
+				"low":      rand.Intn(35),
+			})
+		}
+	case "90d":
+		// Generate daily data for last 90 days
+		for i := 89; i >= 0; i-- {
+			date := now.AddDate(0, 0, -i)
+			dailyData = append(dailyData, gin.H{
+				"date":     date.Format("2006-01-02T15:04:05Z"),
+				"critical": rand.Intn(10),
+				"high":     rand.Intn(20),
+				"medium":   rand.Intn(30),
+				"low":      rand.Intn(40),
+			})
+		}
+	default:
+		// Default to 7 days
+		for i := 6; i >= 0; i-- {
+			date := now.AddDate(0, 0, -i)
+			dailyData = append(dailyData, gin.H{
+				"date":     date.Format("2006-01-02T15:04:05Z"),
+				"critical": rand.Intn(5),
+				"high":     rand.Intn(10),
+				"medium":   rand.Intn(15),
+				"low":      rand.Intn(20),
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"daily": dailyData,
+		"weekly": []gin.H{
+			{"week": "Week 1", "scans": 1230, "threats": 30},
+			{"week": "Week 2", "scans": 1456, "threats": 25},
+			{"week": "Week 3", "scans": 1189, "threats": 35},
+			{"week": "Week 4", "scans": 1367, "threats": 28},
+		},
+		"monthly": []gin.H{
+			{"month": "December", "scans": 5242, "threats": 118},
+			{"month": "January", "scans": 4876, "threats": 95},
+		},
+		"severityDistribution": []gin.H{
+			{"severity": "critical", "count": 8, "percentage": 17.0},
+			{"severity": "high", "count": 15, "percentage": 31.9},
+			{"severity": "medium", "count": 18, "percentage": 38.3},
+			{"severity": "low", "count": 6, "percentage": 12.8},
+		},
+		"typeDistribution": []gin.H{
+			{"type": "typosquatting", "count": 23, "percentage": 48.9},
+			{"type": "vulnerability", "count": 15, "percentage": 31.9},
+			{"type": "malware", "count": 6, "percentage": 12.8},
+			{"type": "suspicious", "count": 3, "percentage": 6.4},
+		},
+		"timeRange": timeRange,
+		"lastUpdated": time.Now().UTC(),
+	})
+}
+
+// Scan management endpoint handlers
+func (s *Server) startScan(c *gin.Context) {
+	var req gin.H
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Generate a scan ID
+	scanID := fmt.Sprintf("scan_%d", time.Now().Unix())
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":        scanID,
+		"status":    "started",
+		"target":    req["target"],
+		"type":      req["type"],
+		"createdAt": time.Now().UTC(),
+		"message":   "Scan started successfully",
+	})
+}
+
+func (s *Server) getScanResults(c *gin.Context) {
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "20")
+
+	// Mock scan results data
+	scanResults := []gin.H{
+		{
+			"id":           "scan_1736276900",
+			"target":       "package.json",
+			"type":         "dependency",
+			"status":       "completed",
+			"overallRisk":  "medium",
+			"riskScore":    6.5,
+			"threatsFound": 3,
+			"duration":     "45s",
+			"createdAt":    time.Now().Add(-2 * time.Hour).UTC(),
+			"summary": gin.H{
+				"totalPackages":   25,
+				"scannedPackages": 25,
+				"cleanPackages":   22,
+				"criticalThreats": 0,
+				"highThreats":     1,
+				"mediumThreats":   2,
+				"lowThreats":      0,
+			},
+		},
+		{
+			"id":           "scan_1736276800",
+			"target":       "requirements.txt",
+			"type":         "dependency",
+			"status":       "completed",
+			"overallRisk":  "low",
+			"riskScore":    2.1,
+			"threatsFound": 0,
+			"duration":     "32s",
+			"createdAt":    time.Now().Add(-4 * time.Hour).UTC(),
+			"summary": gin.H{
+				"totalPackages":   18,
+				"scannedPackages": 18,
+				"cleanPackages":   18,
+				"criticalThreats": 0,
+				"highThreats":     0,
+				"mediumThreats":   0,
+				"lowThreats":      0,
+			},
+		},
+		{
+			"id":           "scan_1736276700",
+			"target":       "go.mod",
+			"type":         "dependency",
+			"status":       "failed",
+			"overallRisk":  "unknown",
+			"riskScore":    0,
+			"threatsFound": 0,
+			"duration":     "5s",
+			"createdAt":    time.Now().Add(-6 * time.Hour).UTC(),
+			"error":        "Failed to parse dependency file",
+		},
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": scanResults,
+		"pagination": gin.H{
+			"page":       page,
+			"limit":      limit,
+			"total":      len(scanResults),
+			"totalPages": 1,
+		},
+	})
+}
+
+func (s *Server) getScanById(c *gin.Context) {
+	scanID := c.Param("id")
+
+	// Mock detailed scan result
+	scanResult := gin.H{
+		"id":          scanID,
+		"target":      "package.json",
+		"type":        "dependency",
+		"status":      "completed",
+		"overallRisk": "medium",
+		"riskScore":   6.5,
+		"duration":    "45s",
+		"createdAt":   time.Now().Add(-2 * time.Hour).UTC(),
+		"packages": []gin.H{
+			{
+				"name":      "express",
+				"version":   "4.18.2",
+				"ecosystem": "npm",
+				"status":    "clean",
+				"riskScore": 1.2,
+			},
+			{
+				"name":      "lodash",
+				"version":   "4.17.20",
+				"ecosystem": "npm",
+				"status":    "vulnerable",
+				"riskScore": 7.8,
+				"threats": []gin.H{
+					{
+						"type":        "vulnerability",
+						"severity":    "high",
+						"description": "Prototype pollution vulnerability",
+						"cve":         "CVE-2021-23337",
+					},
+				},
+			},
+		},
+		"summary": gin.H{
+			"totalPackages":   25,
+			"scannedPackages": 25,
+			"cleanPackages":   22,
+			"criticalThreats": 0,
+			"highThreats":     1,
+			"mediumThreats":   2,
+			"lowThreats":      0,
+		},
+	}
+
+	c.JSON(http.StatusOK, scanResult)
+}
+
+func (s *Server) deleteScan(c *gin.Context) {
+	scanID := c.Param("id")
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Scan %s deleted successfully", scanID),
+		"id":      scanID,
 	})
 }
 

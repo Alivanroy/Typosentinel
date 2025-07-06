@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/Alivanroy/Typosentinel/internal/cache"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
@@ -19,6 +21,7 @@ type Scanner struct {
 	analyzers        map[string]DependencyAnalyzer
 	cache            *cache.CacheIntegration
 	analyzerRegistry *AnalyzerRegistry
+	mlDetector       *ml.EnhancedMLDetector
 }
 
 // ProjectDetector interface for detecting different project types
@@ -84,6 +87,20 @@ func New(cfg *config.Config) (*Scanner, error) {
 		cacheIntegration := cache.NewCacheIntegration(cfg.Cache.CacheDir, cfg.Cache.Enabled, cfg.Cache.TTL)
 		s.cache = cacheIntegration
 	}
+
+	// Initialize enhanced ML detector
+	mlConfig := ml.DefaultEnhancedMLConfig()
+	if cfg.MLAnalysis != nil {
+		// Override with user configuration if available
+		mlConfig.MalwareThreshold = cfg.MLAnalysis.MaliciousThreshold
+		mlConfig.SimilarityThreshold = cfg.MLAnalysis.SimilarityThreshold
+		mlConfig.ReputationThreshold = cfg.MLAnalysis.ReputationThreshold
+	}
+	mlDetector, err := ml.NewEnhancedMLDetector(mlConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize ML detector: %w", err)
+	}
+	s.mlDetector = mlDetector
 
 	// Register project detectors
 	s.registerDetectors()
@@ -256,92 +273,365 @@ func (s *Scanner) extractPackages(projectInfo *ProjectInfo) ([]*types.Package, e
 	return analyzer.ExtractPackages(projectInfo)
 }
 
-// analyzePackageThreats analyzes threats for a specific package
+// analyzePackageThreats analyzes threats for a specific package using enhanced ML detection
 func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, error) {
 	var threats []*types.Threat
 
-	// Typosquatting detection using similarity analysis
-	popularPackages := []string{
-		"numpy", "pandas", "requests", "flask", "django", "tensorflow",
-		"react", "angular", "vue", "express", "lodash", "axios",
-		"jquery", "bootstrap", "moment", "chalk", "commander",
+	// Convert package to enhanced ML features
+	features := s.convertToMLFeatures(pkg)
+
+	// Run enhanced ML analysis
+	ctx := context.Background()
+	mlResult, err := s.mlDetector.AnalyzePackage(ctx, features)
+	if err != nil {
+		return nil, fmt.Errorf("ML analysis failed: %w", err)
 	}
 
-	for _, popular := range popularPackages {
-		if similarity := s.calculateSimilarity(pkg.Name, popular); similarity > 0.7 && pkg.Name != popular {
-			threats = append(threats, &types.Threat{
-				ID:          fmt.Sprintf("typo-%s-%d", pkg.Name, len(threats)),
-				Package:     pkg.Name,
-				Version:     pkg.Version,
-				Registry:    pkg.Registry,
-				Type:        types.ThreatTypeTyposquatting,
-				Severity:    types.SeverityHigh,
-				Description: fmt.Sprintf("Potential typosquatting: %s is similar to popular package %s (similarity: %.3f)", pkg.Name, popular, similarity),
-				Evidence: []types.Evidence{
-					{
-						Type:        "similarity",
-						Description: "Levenshtein distance similarity score",
-						Score:       similarity,
-					},
-				},
-			})
-		}
-	}
+	// Convert ML results to threats
+	threats = append(threats, s.convertMLResultsToThreats(pkg, mlResult)...)
 
 	return threats, nil
 }
 
-// calculateSimilarity calculates similarity between two strings
-func (s *Scanner) calculateSimilarity(s1, s2 string) float64 {
-	if s1 == s2 {
-		return 1.0
+// convertToMLFeatures converts a package to enhanced ML features
+func (s *Scanner) convertToMLFeatures(pkg *types.Package) *ml.EnhancedPackageFeatures {
+
+
+	var description, author, homepage, repository, license string
+	var downloads int64
+	var maintainers, keywords []string
+	var creationDate, lastUpdated time.Time
+
+	if pkg.Metadata != nil {
+		description = pkg.Metadata.Description
+		author = pkg.Metadata.Author
+		homepage = pkg.Metadata.Homepage
+		repository = pkg.Metadata.Repository
+		license = pkg.Metadata.License
+		downloads = pkg.Metadata.Downloads
+		maintainers = pkg.Metadata.Maintainers
+		keywords = pkg.Metadata.Keywords
+		creationDate = pkg.Metadata.CreatedAt
+		lastUpdated = pkg.Metadata.UpdatedAt
 	}
 
-	// Simple Levenshtein distance-based similarity
-	dist := s.levenshteinDistance(s1, s2)
-	maxLen := s.max(len(s1), len(s2))
-	if maxLen == 0 {
-		return 1.0
+	features := &ml.EnhancedPackageFeatures{
+		Name:         pkg.Name,
+		Version:      pkg.Version,
+		Registry:     pkg.Registry,
+		Description:  description,
+		Author:       author,
+		Homepage:     homepage,
+		Repository:   repository,
+		License:      license,
+		Downloads:    downloads,
+		CreationDate: creationDate,
+		LastUpdated:  lastUpdated,
+		Maintainers:  maintainers,
+		Dependencies: s.convertDependencies(pkg.Dependencies),
+		Keywords:     keywords,
+		// Use empty/default values for file-based analysis since Package struct doesn't have Files field
+		FileStructure: ml.FileStructure{
+			TotalFiles:      0,
+			JavaScriptFiles: 0,
+			TypeScriptFiles: 0,
+			BinaryFiles:     0,
+			ConfigFiles:     0,
+			SuspiciousFiles: []string{},
+		},
+		CodeMetrics: ml.CodeMetrics{
+			LinesOfCode:      0,
+			ObfuscationScore: 0.0,
+			CyclomaticComplexity: 0.0,
+		},
+		SecurityMetrics: ml.SecurityMetrics{
+			VulnerabilityCount: 0, // Package struct doesn't have Vulnerabilities field
+			ObfuscatedCode:     false,
+			NetworkCalls:       0,
+			FileSystemAccess:   0,
+			ProcessExecution:   0,
+		},
+		BehavioralMetrics: ml.BehavioralMetrics{
+			InstallationBehavior: ml.EnhancedInstallBehavior{
+				NetworkActivity:   false,
+				FileModifications: 0,
+			},
+			RuntimeBehavior: ml.EnhancedRuntimeBehavior{
+				AntiAnalysisTechniques: false,
+			},
+			NetworkBehavior: ml.EnhancedNetworkBehavior{
+				DataExfiltration: false,
+			},
+		},
 	}
 
-	return 1.0 - float64(dist)/float64(maxLen)
+	return features
 }
 
-// levenshteinDistance calculates the Levenshtein distance between two strings
-func (s *Scanner) levenshteinDistance(s1, s2 string) int {
-	if len(s1) == 0 {
-		return len(s2)
-	}
-	if len(s2) == 0 {
-		return len(s1)
+// convertMLResultsToThreats converts ML detection results to threat objects
+func (s *Scanner) convertMLResultsToThreats(pkg *types.Package, result *ml.MLDetectionResult) []*types.Threat {
+	var threats []*types.Threat
+
+	// Malware detection threat
+	if result.IsMalicious {
+		threats = append(threats, &types.Threat{
+			ID:          fmt.Sprintf("malware-%s", pkg.Name),
+			Package:     pkg.Name,
+			Version:     pkg.Version,
+			Registry:    pkg.Registry,
+			Type:        types.ThreatTypeMalicious,
+			Severity:    s.convertRiskLevelToSeverity(result.ThreatLevel),
+			Description: fmt.Sprintf("Malware detected with confidence %.2f: %s", result.MalwareClassification.Confidence, result.MalwareClassification.ClassificationReason),
+			Evidence: []types.Evidence{
+				{
+					Type:        "ml_classification",
+					Description: "Enhanced ML malware classification",
+					Score:       result.MalwareClassification.Confidence,
+				},
+			},
+		})
 	}
 
-	matrix := make([][]int, len(s1)+1)
-	for i := range matrix {
-		matrix[i] = make([]int, len(s2)+1)
+	// Typosquatting detection threat
+	if result.IsTyposquatting {
+		threats = append(threats, &types.Threat{
+			ID:          fmt.Sprintf("typo-%s", pkg.Name),
+			Package:     pkg.Name,
+			Version:     pkg.Version,
+			Registry:    pkg.Registry,
+			Type:        types.ThreatTypeTyposquatting,
+			Severity:    s.convertRiskLevelToSeverity(result.ThreatLevel),
+			Description: fmt.Sprintf("Typosquatting detected targeting '%s' with confidence %.2f", result.TypoDetection.TargetPackage, result.TypoDetection.Confidence),
+			Evidence: []types.Evidence{
+				{
+					Type:        "enhanced_similarity",
+					Description: "Multi-algorithm similarity analysis",
+					Score:       result.TypoDetection.Confidence,
+				},
+			},
+		})
 	}
 
-	for i := 0; i <= len(s1); i++ {
-		matrix[i][0] = i
-	}
-	for j := 0; j <= len(s2); j++ {
-		matrix[0][j] = j
+	// Anomaly detection threat
+	if result.IsAnomalous {
+		threats = append(threats, &types.Threat{
+			ID:          fmt.Sprintf("anomaly-%s", pkg.Name),
+			Package:     pkg.Name,
+			Version:     pkg.Version,
+			Registry:    pkg.Registry,
+			Type:        types.ThreatTypeSuspicious,
+			Severity:    types.SeverityMedium,
+			Description: fmt.Sprintf("Anomalous behavior detected with score %.2f", result.AnomalyDetection.AnomalyScore),
+			Evidence: []types.Evidence{
+				{
+					Type:        "behavioral_anomaly",
+					Description: "Enhanced behavioral anomaly detection",
+					Score:       result.AnomalyDetection.AnomalyScore,
+				},
+			},
+		})
 	}
 
-	for i := 1; i <= len(s1); i++ {
-		for j := 1; j <= len(s2); j++ {
-			cost := 0
-			if s1[i-1] != s2[j-1] {
-				cost = 1
-			}
-			matrix[i][j] = s.min(
-				matrix[i-1][j]+1,
-				s.min(matrix[i][j-1]+1, matrix[i-1][j-1]+cost),
-			)
+	// Reputation-based threat
+	// Use a default threshold since GetConfig method is not available
+	if result.ReputationAnalysis.ReputationScore < 0.5 {
+		threats = append(threats, &types.Threat{
+			ID:          fmt.Sprintf("reputation-%s", pkg.Name),
+			Package:     pkg.Name,
+			Version:     pkg.Version,
+			Registry:    pkg.Registry,
+			Type:        types.ThreatTypeSuspicious,
+			Severity:    types.SeverityLow,
+			Description: fmt.Sprintf("Low reputation score: %.2f", result.ReputationAnalysis.ReputationScore),
+			Evidence: []types.Evidence{
+				{
+					Type:        "reputation_analysis",
+					Description: "Enhanced reputation analysis",
+					Score:       result.ReputationAnalysis.ReputationScore,
+				},
+			},
+		})
+	}
+
+	return threats
+}
+
+// Helper methods for ML feature conversion
+
+// convertRiskLevelToSeverity converts ML risk level to threat severity
+func (s *Scanner) convertRiskLevelToSeverity(riskLevel string) types.Severity {
+	switch riskLevel {
+	case "critical":
+		return types.SeverityCritical
+	case "high":
+		return types.SeverityHigh
+	case "medium":
+		return types.SeverityMedium
+	case "low":
+		return types.SeverityLow
+	default:
+		return types.SeverityLow
+	}
+}
+
+// convertMaintainers converts package maintainers to ML format
+func (s *Scanner) convertMaintainers(maintainers []string) []string {
+	// ML package expects []string for maintainers, so return as-is
+	return maintainers
+}
+
+// convertDependencies converts package dependencies to ML format
+func (s *Scanner) convertDependencies(deps []types.Dependency) []ml.Dependency {
+	mlDeps := make([]ml.Dependency, len(deps))
+	for i, dep := range deps {
+		mlDeps[i] = ml.Dependency{
+			Name:       dep.Name,
+			Version:    dep.Version,
+			Suspicious: false, // Default value since Suspicious field is not available
 		}
 	}
+	return mlDeps
+}
 
-	return matrix[len(s1)][len(s2)]
+// countFilesByExtension counts files with specific extension
+func (s *Scanner) countFilesByExtension(files []string, ext string) int {
+	count := 0
+	for _, file := range files {
+		if filepath.Ext(file) == ext {
+			count++
+		}
+	}
+	return count
+}
+
+// countBinaryFiles counts binary files
+func (s *Scanner) countBinaryFiles(files []string) int {
+	binaryExts := []string{".exe", ".dll", ".so", ".dylib", ".bin"}
+	count := 0
+	for _, file := range files {
+		ext := filepath.Ext(file)
+		for _, binExt := range binaryExts {
+			if ext == binExt {
+				count++
+				break
+			}
+		}
+	}
+	return count
+}
+
+// countConfigFiles counts configuration files
+func (s *Scanner) countConfigFiles(files []string) int {
+	configFiles := []string{"config", ".env", ".ini", ".conf", ".cfg"}
+	count := 0
+	for _, file := range files {
+		base := filepath.Base(file)
+		for _, configFile := range configFiles {
+			if base == configFile || filepath.Ext(base) == configFile {
+				count++
+				break
+			}
+		}
+	}
+	return count
+}
+
+// findSuspiciousFiles finds suspicious files
+func (s *Scanner) findSuspiciousFiles(files []string) []string {
+	suspiciousPatterns := []string{"install", "setup", "update", "download", "exec"}
+	var suspicious []string
+	for _, file := range files {
+		base := filepath.Base(file)
+		for _, pattern := range suspiciousPatterns {
+			if len(base) >= len(pattern) {
+				for i := 0; i <= len(base)-len(pattern); i++ {
+					if base[i:i+len(pattern)] == pattern {
+						suspicious = append(suspicious, file)
+						break
+					}
+				}
+			}
+		}
+	}
+	return suspicious
+}
+
+// calculateLinesOfCode calculates total lines of code
+func (s *Scanner) calculateLinesOfCode(files []string) int {
+	// Simplified calculation - in real implementation, would read files
+	return len(files) * 50 // Estimate 50 lines per file
+}
+
+// calculateComplexityScore calculates code complexity score
+func (s *Scanner) calculateComplexityScore(files []string) float64 {
+	// Simplified calculation - in real implementation, would analyze code
+	return 0.5 // Default medium complexity
+}
+
+// calculateObfuscationScore calculates code obfuscation score
+func (s *Scanner) calculateObfuscationScore(files []string) float64 {
+	// Simplified calculation - in real implementation, would analyze code patterns
+	return 0.1 // Default low obfuscation
+}
+
+// hasObfuscatedCode checks if package has obfuscated code
+func (s *Scanner) hasObfuscatedCode(files []string) bool {
+	// Simplified check - in real implementation, would analyze code patterns
+	return false
+}
+
+// countNetworkCalls counts network-related calls in code
+func (s *Scanner) countNetworkCalls(files []string) int {
+	// Simplified calculation - in real implementation, would analyze code
+	return 0
+}
+
+// countFileSystemAccess counts file system access calls
+func (s *Scanner) countFileSystemAccess(files []string) int {
+	// Simplified calculation - in real implementation, would analyze code
+	return 0
+}
+
+// countProcessExecution counts process execution calls
+func (s *Scanner) countProcessExecution(files []string) int {
+	// Simplified calculation - in real implementation, would analyze code
+	return 0
+}
+
+// hasInstallNetworkActivity checks for network activity during installation
+func (s *Scanner) hasInstallNetworkActivity(pkg *types.Package) bool {
+	// Simplified check - in real implementation, would analyze install scripts
+	return false
+}
+
+// hasInstallFileModification checks for file modification during installation
+func (s *Scanner) hasInstallFileModification(pkg *types.Package) bool {
+	// Simplified check - in real implementation, would analyze install scripts
+	return false
+}
+
+// hasAntiAnalysisTechniques checks for anti-analysis techniques
+func (s *Scanner) hasAntiAnalysisTechniques(files []string) bool {
+	// Simplified check - in real implementation, would analyze code patterns
+	return false
+}
+
+// hasDataCollection checks for data collection behavior
+func (s *Scanner) hasDataCollection(files []string) bool {
+	// Simplified check - in real implementation, would analyze code patterns
+	return false
+}
+
+// hasDataExfiltration checks for data exfiltration behavior
+func (s *Scanner) hasDataExfiltration(files []string) bool {
+	// Simplified check - in real implementation, would analyze code patterns
+	return false
+}
+
+// hasSuspiciousConnections checks for suspicious network connections
+func (s *Scanner) hasSuspiciousConnections(files []string) bool {
+	// Simplified check - in real implementation, would analyze network patterns
+	return false
 }
 
 // min returns the minimum of two integers

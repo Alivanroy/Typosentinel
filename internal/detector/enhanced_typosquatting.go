@@ -821,7 +821,7 @@ func (etd *EnhancedTyposquattingDetector) analyzeEditOperations(s1, s2 string) m
 	}
 	
 	// Count substitutions by comparing characters at same positions
-	minLen := minInt(len(s1), len(s2))
+	minLen := min(len(s1), len(s2))
 	for i := 0; i < minLen; i++ {
 		if s1[i] != s2[i] {
 			operations["substitutions"]++
@@ -873,7 +873,7 @@ func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int
 	} else {
 		// For different length strings, use a more sophisticated approach
 		// This is a simplified version - could be enhanced with proper alignment
-		minLen := minInt(len(s1), len(s2))
+		minLen := min(len(s1), len(s2))
 		for i := 0; i < minLen; i++ {
 			if s1[i] != s2[i] {
 				c1 := unicode.ToLower(rune(s1[i]))

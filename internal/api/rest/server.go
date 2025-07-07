@@ -132,7 +132,7 @@ func (s *Server) setupRoutes() {
 	s.gin.GET(s.config.BasePath+"/docs/openapi", s.getOpenAPISpec)
 
 	// API versioning
-	if s.config.Versioning != nil {
+	if s.config.Versioning.Enabled {
 		v1 := s.gin.Group(s.config.BasePath + "/v1")
 		{
 			// Package analysis endpoints

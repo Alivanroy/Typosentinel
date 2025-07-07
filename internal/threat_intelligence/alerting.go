@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
@@ -83,7 +84,7 @@ type AlertingStats struct {
 
 // AlertThrottler manages alert throttling
 type AlertThrottler struct {
-	config      ThrottlingConfig
+	config      config.ThrottlingConfig
 	alertCounts map[string][]time.Time
 	mu          sync.RWMutex
 }
@@ -117,7 +118,8 @@ func (as *AlertingSystem) Initialize(ctx context.Context) error {
 
 	// Initialize alert channels
 	for _, channelConfig := range as.config.Channels {
-		if !channelConfig.Enabled {
+		// Check if channel is enabled via config map
+		if enabled, ok := channelConfig.Config["enabled"]; ok && enabled != "true" {
 			continue
 		}
 
@@ -130,7 +132,13 @@ func (as *AlertingSystem) Initialize(ctx context.Context) error {
 			continue
 		}
 
-		if err := handler.Initialize(ctx, channelConfig.Settings); err != nil {
+		// Convert config map to interface{} map for initialization
+		settings := make(map[string]interface{})
+		for k, v := range channelConfig.Config {
+			settings[k] = v
+		}
+
+		if err := handler.Initialize(ctx, settings); err != nil {
 			as.logger.Warn("Failed to initialize channel", map[string]interface{}{
 				"type":  channelConfig.Type,
 				"error": err,
@@ -461,7 +469,7 @@ func (as *AlertingSystem) updateStats(statType, channel string) {
 // Alert Throttler
 
 // NewAlertThrottler creates a new alert throttler
-func NewAlertThrottler(config ThrottlingConfig) *AlertThrottler {
+func NewAlertThrottler(config config.ThrottlingConfig) *AlertThrottler {
 	return &AlertThrottler{
 		config:      config,
 		alertCounts: make(map[string][]time.Time),
@@ -481,7 +489,7 @@ func (at *AlertThrottler) ShouldThrottle(alert *ThreatAlert) bool {
 	key := fmt.Sprintf("%s:%s:%s", alert.Severity, alert.ThreatType, alert.PackageName)
 
 	now := time.Now()
-	windowStart := now.Add(-at.config.Window)
+	windowStart := now.Add(-time.Minute)
 
 	// Clean old entries
 	var recentAlerts []time.Time
@@ -494,7 +502,7 @@ func (at *AlertThrottler) ShouldThrottle(alert *ThreatAlert) bool {
 	at.alertCounts[key] = recentAlerts
 
 	// Check if we've exceeded the limit
-	if len(recentAlerts) >= at.config.MaxAlerts {
+	if len(recentAlerts) >= at.config.MaxPerMinute {
 		return true
 	}
 
@@ -505,7 +513,7 @@ func (at *AlertThrottler) ShouldThrottle(alert *ThreatAlert) bool {
 }
 
 // UpdateConfig updates the throttling configuration
-func (at *AlertThrottler) UpdateConfig(config ThrottlingConfig) {
+func (at *AlertThrottler) UpdateConfig(config config.ThrottlingConfig) {
 	at.mu.Lock()
 	defer at.mu.Unlock()
 

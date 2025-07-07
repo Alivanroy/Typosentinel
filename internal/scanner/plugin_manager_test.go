@@ -15,7 +15,7 @@ func TestPluginManager_Initialize(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -48,7 +48,7 @@ func TestPluginManager_LoadPlugin(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins: []config.PluginEntry{}, // Empty plugins list to avoid loading during init
+			Plugins: map[string]config.PluginConfig{}, // Empty plugins list to avoid loading during init
 		},
 	}
 
@@ -81,7 +81,7 @@ func TestPluginManager_UnloadPlugin(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -108,7 +108,7 @@ func TestPluginManager_ReloadPlugin(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -135,7 +135,7 @@ func TestPluginManager_EnableDisablePlugin(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -168,7 +168,7 @@ func TestPluginManager_GetLoadedPlugins(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -215,7 +215,7 @@ func TestPluginManager_ListAvailablePlugins(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: tempDir,
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -254,7 +254,7 @@ func TestPluginManager_GetPluginInfo(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -284,7 +284,7 @@ func TestPluginManager_ValidatePlugin(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -311,7 +311,7 @@ func TestPluginWatcher(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        true,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 
@@ -343,7 +343,7 @@ func TestPluginManager_Shutdown(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins:         []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 

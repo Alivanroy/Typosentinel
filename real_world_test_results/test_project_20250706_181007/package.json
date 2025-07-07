@@ -1,0 +1,11 @@
+{
+  "name": "security-test-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "express": "^4.18.0",
+    "crossenv": "^1.0.0",
+    "momnet": "^2.29.0",
+    "react": "^18.0.0"
+  }
+}

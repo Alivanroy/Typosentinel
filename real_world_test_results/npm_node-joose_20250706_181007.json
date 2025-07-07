@@ -1,0 +1,31 @@
+Error: unknown flag: --package
+Usage:
+  typosentinel scan [package-name] [flags]
+
+Flags:
+  -c, --config string          Configuration file path
+      --fail-fast              Stop on first critical finding
+  -f, --format string          Output format (json, yaml, text, table, compact, detailed, summary) (default "json")
+  -h, --help                   help for scan
+  -l, --local string           Scan local package file or directory
+      --no-color               Disable colored output
+      --only-engines strings   Only run specified analysis engines
+  -o, --output string          Output file path
+  -p, --parallel int           Number of parallel scans (default 1)
+      --pkg-version string     Package version to scan (default "latest")
+      --progress               Show progress during scan (default true)
+  -q, --quiet                  Suppress non-essential output
+  -r, --registry string        Package registry (npm, pypi, go, etc.) (default "npm")
+      --save-report            Save detailed report to file
+      --skip-engines strings   Analysis engines to skip
+  -t, --timeout string         Scan timeout duration (default "5m")
+
+Global Flags:
+      --debug               enable debug mode
+      --debug-mode string   set debug mode (basic, verbose, trace, performance, security)
+      --log-format string   set log format (text, json)
+      --log-level string    set log level (trace, verbose, debug, info, warn, error, fatal)
+      --log-output string   set log output (stdout, stderr, file path)
+      --trace               enable trace mode (most verbose)
+      --verbose             enable verbose logging
+

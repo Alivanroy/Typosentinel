@@ -94,7 +94,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 		Host:     apiHost,
 		Port:     apiPort,
 		BasePath: "/api",
-		Versioning: &config.APIVersioning{
+		Versioning: config.APIVersioning{
 			Enabled:           true,
 			Strategy:          "path",
 			DefaultVersion:    "1",
@@ -112,7 +112,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 		Authentication: &config.APIAuthentication{
 			Enabled: false,
 		},
-		Documentation: &config.APIDocumentation{
+		Documentation: config.APIDocumentation{
 			Enabled: false,
 		},
 	}

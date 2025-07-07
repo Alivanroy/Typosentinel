@@ -153,19 +153,29 @@ func (c *PyPIClient) EnrichPackage(pkg *types.Package) error {
 	if pkg.Metadata == nil {
 		pkg.Metadata = &types.PackageMetadata{}
 	}
+	if pkg.Metadata.Metadata == nil {
+		pkg.Metadata.Metadata = make(map[string]interface{})
+	}
 
 	pkg.Metadata.Description = packageInfo.Info.Summary
 	pkg.Metadata.Author = packageInfo.Info.Author
 	pkg.Metadata.Homepage = packageInfo.Info.HomePage
 	pkg.Metadata.License = packageInfo.Info.License
 	
-	// Convert keywords string to slice
+	// Add author email to metadata map
+	pkg.Metadata.Metadata["author_email"] = packageInfo.Info.AuthorEmail
+	pkg.Metadata.Metadata["maintainer"] = packageInfo.Info.Maintainer
+	pkg.Metadata.Metadata["classifiers"] = packageInfo.Info.Classifiers
+	pkg.Metadata.Metadata["project_urls"] = packageInfo.Info.ProjectURLs
+	
+	// Convert keywords string to slice and add to metadata map
 	if packageInfo.Info.Keywords != "" {
 		keywords := strings.Split(strings.TrimSpace(packageInfo.Info.Keywords), ",")
 		for i, keyword := range keywords {
 			keywords[i] = strings.TrimSpace(keyword)
 		}
 		pkg.Metadata.Keywords = keywords
+		pkg.Metadata.Metadata["keywords"] = packageInfo.Info.Keywords
 	}
 
 	// Add release information
@@ -185,21 +195,11 @@ func (c *PyPIClient) EnrichPackage(pkg *types.Package) error {
 
 		if latestVersion != "" {
 			pkg.Metadata.LastUpdated = &latestTime
-			if pkg.Metadata.Metadata == nil {
-				pkg.Metadata.Metadata = make(map[string]interface{})
-			}
 			pkg.Metadata.Metadata["latest_version"] = latestVersion
-			pkg.Metadata.Metadata["author_email"] = packageInfo.Info.AuthorEmail
-			pkg.Metadata.Metadata["maintainer"] = packageInfo.Info.Maintainer
-			pkg.Metadata.Metadata["classifiers"] = packageInfo.Info.Classifiers
-			pkg.Metadata.Metadata["project_urls"] = packageInfo.Info.ProjectURLs
 		}
 	}
 
 	// Add available versions count
-	if pkg.Metadata.Metadata == nil {
-		pkg.Metadata.Metadata = make(map[string]interface{})
-	}
 	pkg.Metadata.Metadata["available_versions"] = len(packageInfo.Releases)
 
 	logger.DebugWithContext("Package enriched successfully", map[string]interface{}{

@@ -10,14 +10,12 @@ import (
 
 func TestNew(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
-			Enabled:        true,
+			MaxConcurrency: 5,
 			IncludeDevDeps: true,
 		},
 	}
@@ -52,14 +50,11 @@ func TestScanProject_Success(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
-			Enabled:        true,
 			IncludeDevDeps: true,
 		},
 	}
@@ -91,11 +86,9 @@ func TestScanProject_EmptyDirectory(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
 	}
 
@@ -139,14 +132,11 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
-			Enabled:        true,
 			IncludeDevDeps: true,
 		},
 	}
@@ -172,11 +162,9 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 
 func TestScanProject_InvalidPath(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
 	}
 
@@ -213,15 +201,11 @@ func TestScanProject_NestedDirectories(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
-		Scanner: &config.ScannerConfig{
-			Enabled: true,
-		},
+		Scanner: &config.ScannerConfig{},
 	}
 
 	scanner, err := New(cfg)
@@ -269,14 +253,11 @@ func TestScanProject_LargeProject(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
+		TypoDetection: &config.TypoDetectionConfig{
 			Enabled: true,
-			Thresholds: config.ThresholdConfig{
-				Similarity: 0.8,
-			},
+			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
-			Enabled:        true,
 			IncludeDevDeps: true,
 		},
 	}

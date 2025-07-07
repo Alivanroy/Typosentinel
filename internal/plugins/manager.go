@@ -101,14 +101,7 @@ type PluginStatus struct {
 	HealthCheck bool      `json:"health_check"`
 }
 
-// PluginConfig represents plugin configuration
-type PluginConfig struct {
-	Enabled  bool                   `json:"enabled"`
-	Platform string                 `json:"platform"`
-	Settings map[string]interface{} `json:"settings"`
-	Timeout  time.Duration          `json:"timeout"`
-	Retries  int                    `json:"retries"`
-}
+
 
 // NewPluginManager creates a new plugin manager
 func NewPluginManager(config *config.Config, logger Logger) *PluginManager {
@@ -410,13 +403,13 @@ func (pm *PluginManager) loadPluginFromFile(ctx context.Context, configPath stri
 func (pm *PluginManager) loadConfiguredPlugins(ctx context.Context) error {
 	// Load plugins from configuration
 	if pm.config.Plugins != nil && pm.config.Plugins.CICD != nil {
-		for name, pluginConfig := range pm.config.Plugins.CICD {
+		for _, pluginConfig := range pm.config.Plugins.CICD {
 			if !pluginConfig.Enabled {
 				continue
 			}
 
-			if err := pm.LoadPlugin(ctx, name, name, pluginConfig.Settings); err != nil {
-				pm.logger.Warn("Failed to load configured plugin", map[string]interface{}{"name": name, "error": err})
+			if err := pm.LoadPlugin(ctx, pluginConfig.Name, pluginConfig.Name, pluginConfig.Settings); err != nil {
+				pm.logger.Warn("Failed to load configured plugin", map[string]interface{}{"name": pluginConfig.Name, "error": err})
 				continue
 			}
 		}

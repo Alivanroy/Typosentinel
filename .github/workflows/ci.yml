@@ -5,11 +5,14 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  release:
-    types: [ published ]
+  schedule:
+    # Run nightly builds at 2 AM UTC
+    - cron: '0 2 * * *'
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.23'
+  GOLANGCI_LINT_VERSION: 'v1.55.2'
+  COVERAGE_THRESHOLD: 80
   PYTHON_VERSION: '3.11'
   DOCKER_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}

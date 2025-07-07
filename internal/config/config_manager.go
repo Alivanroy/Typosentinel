@@ -148,31 +148,18 @@ type ApplicationConfig struct {
 	Logging LoggingConfig `yaml:"logging" json:"logging"`
 }
 
-// ServerConfig holds server configuration
-type ServerConfig struct {
-	Host         string        `yaml:"host" json:"host"`
-	Port         int           `yaml:"port" json:"port"`
-	ReadTimeout  time.Duration `yaml:"read_timeout" json:"read_timeout"`
-	WriteTimeout time.Duration `yaml:"write_timeout" json:"write_timeout"`
-	IdleTimeout  time.Duration `yaml:"idle_timeout" json:"idle_timeout"`
-	TLSEnabled   bool          `yaml:"tls_enabled" json:"tls_enabled"`
-	TLSCertFile  string        `yaml:"tls_cert_file" json:"tls_cert_file"`
-	TLSKeyFile   string        `yaml:"tls_key_file" json:"tls_key_file"`
-}
+// ServerConfig, DatabaseConfig, and RedisConfig are defined in config.go
 
-// DatabaseConfig is defined in config.go
 
-// RedisConfig holds Redis configuration
-type RedisConfig struct {
-	Host         string        `yaml:"host" json:"host"`
-	Port         int           `yaml:"port" json:"port"`
-	Password     string        `yaml:"password" json:"password"`
-	Database     int           `yaml:"database" json:"database"`
-	PoolSize     int           `yaml:"pool_size" json:"pool_size"`
-	MinIdleConns int           `yaml:"min_idle_conns" json:"min_idle_conns"`
-	DialTimeout  time.Duration `yaml:"dial_timeout" json:"dial_timeout"`
-	ReadTimeout  time.Duration `yaml:"read_timeout" json:"read_timeout"`
-	WriteTimeout time.Duration `yaml:"write_timeout" json:"write_timeout"`
+
+// MonitoringConfig holds monitoring configuration
+type MonitoringConfig struct {
+	Enabled    bool          `yaml:"enabled" json:"enabled"`
+	Interval   time.Duration `yaml:"interval" json:"interval"`
+	Endpoint   string        `yaml:"endpoint" json:"endpoint"`
+	Timeout    time.Duration `yaml:"timeout" json:"timeout"`
+	Retries    int           `yaml:"retries" json:"retries"`
+	Metrics    []string      `yaml:"metrics" json:"metrics"`
 }
 
 // ScannerConfig is defined in config.go

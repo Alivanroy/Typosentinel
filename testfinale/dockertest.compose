@@ -1,0 +1,167 @@
+# Docker Compose configuration for Typosentinel test environment
+version: '3.8'
+
+services:
+  # Main Typosentinel service
+  typosentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: typosentinel-test
+    environment:
+      - TYPOSENTINEL_LOG_LEVEL=debug
+      - TYPOSENTINEL_CONFIG=/app/config/test_config.yaml
+      - TYPOSENTINEL_CACHE_ENABLED=true
+      - TYPOSENTINEL_ML_ENABLED=true
+    volumes:
+      - ./config:/app/config
+      - ./test_results:/app/test_results
+      - ./test_data:/app/test_data
+    ports:
+      - "8080:8080"
+    command: ["serve", "--config", "/app/config/test_config.yaml"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - typosentinel-net
+
+  # Test runner service
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: typosentinel-test-runner
+    depends_on:
+      typosentinel:
+        condition: service_healthy
+    environment:
+      - TYPOSENTINEL_API_URL=http://typosentinel:8080
+      - TEST_SUITE=comprehensive
+    volumes:
+      - ./tests:/app/tests
+      - ./test_results:/app/test_results
+      - ./test_data:/app/test_data
+    command: ["/app/tests/run_all_tests.sh"]
+    networks:
+      - typosentinel-net
+
+  # Mock NPM registry for testing
+  mock-npm-registry:
+    image: verdaccio/verdaccio:5
+    container_name: mock-npm-registry
+    environment:
+      - VERDACCIO_PUBLIC_URL=http://mock-npm-registry:4873
+    ports:
+      - "4873:4873"
+    volumes:
+      - ./test_data/npm_packages:/verdaccio/storage
+      - ./config/verdaccio.yaml:/verdaccio/conf/config.yaml
+    networks:
+      - typosentinel-net
+
+  # Mock PyPI registry for testing
+  mock-pypi-registry:
+    image: pypiserver/pypiserver:latest
+    container_name: mock-pypi-registry
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./test_data/pypi_packages:/data/packages
+    command: ["-p", "8080", "-a", ".", "/data/packages"]
+    networks:
+      - typosentinel-net
+
+  # PostgreSQL for test database
+  test-db:
+    image: postgres:15-alpine
+    container_name: typosentinel-test-db
+    environment:
+      - POSTGRES_DB=typosentinel_test
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./test_data/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - test-db-data:/var/lib/postgresql/data
+    networks:
+      - typosentinel-net
+
+  # Redis for caching during tests
+  test-cache:
+    image: redis:7-alpine
+    container_name: typosentinel-test-cache
+    ports:
+      - "6380:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - test-cache-data:/data
+    networks:
+      - typosentinel-net
+
+  # Performance monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: typosentinel-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - typosentinel-net
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: typosentinel-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - typosentinel-net
+
+  # Test report generator
+  report-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.report
+    container_name: typosentinel-report-generator
+    depends_on:
+      - test-runner
+    volumes:
+      - ./test_results:/app/test_results
+      - ./reports:/app/reports
+    command: ["python", "/app/generate_report.py"]
+    networks:
+      - typosentinel-net
+
+networks:
+  typosentinel-net:
+    driver: bridge
+
+volumes:
+  test-db-data:
+  test-cache-data:
+  prometheus-data:
+  grafana-data:
+
+# Usage:
+# docker-compose -f docker-compose.test.yml up --build
+# docker-compose -f docker-compose.test.yml run test-runner
+# docker-compose -f docker-compose.test.yml down -v

@@ -90,10 +90,16 @@ func (pm *PluginManager) LoadAllPlugins() error {
 	}
 
 	// Load specific plugins from configuration
-	for _, pluginEntry := range pm.config.Plugins.Plugins {
-		if pluginEntry.Enabled {
+	for _, pluginConfig := range pm.config.Plugins.Plugins {
+		if pluginConfig.Enabled {
+			pluginEntry := config.PluginEntry{
+				Name:    pluginConfig.Name,
+				Path:    pluginConfig.Path,
+				Enabled: pluginConfig.Enabled,
+				Config:  pluginConfig.Settings,
+			}
 			if err := pm.loadPlugin(pluginEntry); err != nil {
-				errors = append(errors, fmt.Errorf("failed to load plugin %s: %w", pluginEntry.Name, err))
+				errors = append(errors, fmt.Errorf("failed to load plugin %s: %w", pluginConfig.Name, err))
 			}
 		}
 	}

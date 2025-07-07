@@ -1,6 +1,8 @@
-# .pre-commit-config.yaml
+# Enhanced .pre-commit-config.yaml for Typosentinel
+# Comprehensive code quality and security checks
+
 repos:
-  # Go hooks
+  # Go formatting and basic checks
   - repo: local
     hooks:
       - id: go-fmt
@@ -8,6 +10,13 @@ repos:
         entry: gofmt
         language: system
         args: [-w, -s]
+        files: \.go$
+        
+      - id: go-imports
+        name: Go Imports
+        entry: goimports
+        language: system
+        args: [-w, -local, github.com/Alivanroy/Typosentinel]
         files: \.go$
         
       - id: go-vet
@@ -26,11 +35,35 @@ repos:
         files: go\.(mod|sum)$
         pass_filenames: false
         
+      - id: go-mod-verify
+        name: Go Mod Verify
+        entry: go
+        language: system
+        args: [mod, verify]
+        files: go\.(mod|sum)$
+        pass_filenames: false
+        
       - id: golangci-lint
         name: GolangCI Lint
         entry: golangci-lint
         language: system
-        args: [run, --fix]
+        args: [run, --fix, --timeout=5m]
+        files: \.go$
+        pass_filenames: false
+        
+      - id: go-test
+        name: Go Test
+        entry: go
+        language: system
+        args: [test, -short, ./...]
+        files: \.go$
+        pass_filenames: false
+        
+      - id: go-build
+        name: Go Build
+        entry: go
+        language: system
+        args: [build, -v, ./...]
         files: \.go$
         pass_filenames: false
 

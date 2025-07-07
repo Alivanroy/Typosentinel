@@ -70,8 +70,8 @@ type Scanner struct {
 func NewScanner(cfg *config.Config) (*Scanner, error) {
 	logger.TraceFunction("NewScanner")
 	logger.VerboseWithContext("Initializing scanner with configuration", map[string]interface{}{
-		"debug":   cfg.Debug,
-		"verbose": cfg.Verbose,
+		"debug":   cfg.App.Debug,
+		"verbose": cfg.App.Verbose,
 	})
 
 	logger.DebugWithContext("Scanner configuration details", map[string]interface{}{
@@ -96,7 +96,7 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 		YaraRulesPath: "",
 		MaxFileSize: 10485760, // 10MB default
 		Timeout: "30s",
-		Verbose: cfg.Verbose,
+		Verbose: cfg.App.Verbose,
 	}
 	staticAnalyzer, err := static.NewStaticAnalyzer(staticConfig)
 	if err != nil {
@@ -132,7 +132,7 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 			MaxDiskUsage: 1073741824,   // 1GB default
 			MaxNetworkConnections: 100,
 			MonitoringInterval: "1s",
-			Verbose: cfg.Verbose,
+			Verbose: cfg.App.Verbose,
 			LogLevel: "info",
 		}
 		dynamicAnalyzer, err := dynamic.NewDynamicAnalyzer(dynamicConfig)
@@ -796,7 +796,7 @@ func loadConfiguration() (*config.Config, error) {
 
 func applyCommandLineOverrides(cfg *config.Config) {
 	if verbose {
-		cfg.Verbose = true
+		cfg.App.Verbose = true
 		// Note: Logging config would need to be added to Config struct
 	}
 	if quiet {

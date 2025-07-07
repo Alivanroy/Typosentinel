@@ -27,10 +27,7 @@ func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
 		AllowHeaders:     corsConfig.AllowedHeaders,
 		ExposeHeaders:    corsConfig.ExposedHeaders,
 		AllowCredentials: corsConfig.AllowCredentials,
-		MaxAge:           time.Duration(func() int64 {
-		val, _ := strconv.ParseInt(corsConfig.MaxAge, 10, 64)
-		return val
-	}()) * time.Second,
+		MaxAge:           time.Duration(corsConfig.MaxAge) * time.Second,
 	}
 
 	// If no origins specified, allow all

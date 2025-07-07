@@ -111,27 +111,14 @@ type ThreatMatch struct {
 
 // AlertConfig represents alerting configuration
 type AlertConfig struct {
-	Enabled         bool              `json:"enabled"`
-	SeverityLevels  []string          `json:"severity_levels"`
-	Channels        []AlertChannel    `json:"channels"`
-	Throttling      ThrottlingConfig  `json:"throttling"`
-	Filters         []AlertFilter     `json:"filters"`
+	Enabled         bool                     `json:"enabled"`
+	SeverityLevels  []string                 `json:"severity_levels"`
+	Channels        []config.AlertChannel    `json:"channels"`
+	Throttling      config.ThrottlingConfig  `json:"throttling"`
+	Filters         []AlertFilter            `json:"filters"`
 }
 
-// AlertChannel represents an alerting channel
-type AlertChannel struct {
-	Type     string                 `json:"type"` // "email", "slack", "webhook", "github"
-	Enabled  bool                   `json:"enabled"`
-	Settings map[string]interface{} `json:"settings"`
-}
 
-// ThrottlingConfig represents alert throttling configuration
-type ThrottlingConfig struct {
-	Enabled      bool          `json:"enabled"`
-	Window       time.Duration `json:"window"`
-	MaxAlerts    int           `json:"max_alerts"`
-	CooldownTime time.Duration `json:"cooldown_time"`
-}
 
 // AlertFilter represents an alert filter
 type AlertFilter struct {
@@ -150,13 +137,8 @@ func NewThreatIntelligenceManager(config *config.Config, logger *logger.Logger) 
 		alertingConfig = AlertConfig{
 			Enabled: config.ThreatIntelligence.Alerting.Enabled,
 			SeverityLevels: []string{"critical", "high", "medium", "low"},
-			Channels: []AlertChannel{},
-			Throttling: ThrottlingConfig{
-					Enabled: config.ThreatIntelligence.Alerting.Throttling.Enabled,
-					Window: time.Duration(config.ThreatIntelligence.Alerting.Throttling.CooldownPeriod) * time.Minute,
-					MaxAlerts: config.ThreatIntelligence.Alerting.Throttling.MaxPerMinute,
-					CooldownTime: time.Duration(config.ThreatIntelligence.Alerting.Throttling.CooldownPeriod) * time.Minute,
-				},
+			Channels: config.ThreatIntelligence.Alerting.Channels,
+			Throttling: config.ThreatIntelligence.Alerting.Throttling,
 			Filters: []AlertFilter{},
 		}
 	}

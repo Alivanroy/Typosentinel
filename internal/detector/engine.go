@@ -588,7 +588,7 @@ func (ld *LexicalDetector) levenshteinDistance(s1, s2 string) int {
 			if s1[i-1] != s2[j-1] {
 				cost = 1
 			}
-			matrix[i][j] = minInt(
+			matrix[i][j] = minIntVariadic(
 				matrix[i-1][j]+1,      // deletion
 				matrix[i][j-1]+1,      // insertion
 				matrix[i-1][j-1]+cost, // substitution
@@ -743,8 +743,8 @@ func generateWarningID() string {
 	return fmt.Sprintf("warning_%d", time.Now().UnixNano())
 }
 
-// minInt returns the minimum of multiple integers
-func minInt(values ...int) int {
+// minIntVariadic returns the minimum of multiple integers
+func minIntVariadic(values ...int) int {
 	if len(values) == 0 {
 		return 0
 	}

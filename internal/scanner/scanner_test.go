@@ -11,7 +11,7 @@ import (
 func TestNew(t *testing.T) {
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
@@ -51,7 +51,7 @@ func TestScanProject_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
@@ -60,9 +60,9 @@ func TestScanProject_Success(t *testing.T) {
 	}
 
 	scanner, err := New(cfg)
-		if err != nil {
-			t.Fatalf("Failed to create scanner: %v", err)
-		}
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
 	result, err := scanner.ScanProject(tempDir)
 	if err != nil {
@@ -87,7 +87,7 @@ func TestScanProject_EmptyDirectory(t *testing.T) {
 
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 	}
@@ -133,7 +133,7 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{
@@ -142,11 +142,11 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 	}
 
 	scanner, err := New(cfg)
-		if err != nil {
-			t.Fatalf("Failed to create scanner: %v", err)
-		}
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
-		result, err := scanner.ScanProject(tempDir)
+	result, err := scanner.ScanProject(tempDir)
 	if err != nil {
 		t.Fatalf("Expected successful scan, got error: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestScanProject_MultipleFiles(t *testing.T) {
 func TestScanProject_InvalidPath(t *testing.T) {
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 	}
@@ -202,18 +202,18 @@ func TestScanProject_NestedDirectories(t *testing.T) {
 
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{},
 	}
 
 	scanner, err := New(cfg)
-		if err != nil {
-			t.Fatalf("Failed to create scanner: %v", err)
-		}
+	if err != nil {
+		t.Fatalf("Failed to create scanner: %v", err)
+	}
 
-		result, err := scanner.ScanProject(tempDir)
+	result, err := scanner.ScanProject(tempDir)
 	if err != nil {
 		t.Fatalf("Expected successful scan, got error: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestScanProject_LargeProject(t *testing.T) {
 
 	cfg := &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled: true,
+			Enabled:   true,
 			Threshold: 0.8,
 		},
 		Scanner: &config.ScannerConfig{

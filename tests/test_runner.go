@@ -15,12 +15,12 @@ import (
 
 // TestRunner orchestrates comprehensive testing of the TypoSentinel system
 type TestRunner struct {
-	config        *TestRunnerConfig
-	tempDir       string
-	reportDir     string
-	results       *TestResults
-	startTime     time.Time
-	mu            sync.RWMutex
+	config    *TestRunnerConfig
+	tempDir   string
+	reportDir string
+	results   *TestResults
+	startTime time.Time
+	mu        sync.RWMutex
 }
 
 // TestRunnerConfig contains configuration for the test runner
@@ -42,33 +42,33 @@ type TestRunnerConfig struct {
 
 // TestResults contains aggregated test results
 type TestResults struct {
-	Overall           TestSuiteResult            `json:"overall"`
-	DatasetValidation TestSuiteResult            `json:"dataset_validation"`
-	Integration       TestSuiteResult            `json:"integration"`
-	E2E               TestSuiteResult            `json:"e2e"`
-	Benchmarks        TestSuiteResult            `json:"benchmarks"`
-	Performance       TestSuiteResult            `json:"performance"`
-	SystemInfo        SystemInfo                 `json:"system_info"`
-	Timestamp         time.Time                  `json:"timestamp"`
-	Duration          time.Duration              `json:"duration"`
-	ReportPaths       map[string]string          `json:"report_paths"`
-	Errors            []string                   `json:"errors"`
-	Warnings          []string                   `json:"warnings"`
-	DetailedResults   map[string]interface{}     `json:"detailed_results"`
+	Overall           TestSuiteResult        `json:"overall"`
+	DatasetValidation TestSuiteResult        `json:"dataset_validation"`
+	Integration       TestSuiteResult        `json:"integration"`
+	E2E               TestSuiteResult        `json:"e2e"`
+	Benchmarks        TestSuiteResult        `json:"benchmarks"`
+	Performance       TestSuiteResult        `json:"performance"`
+	SystemInfo        SystemInfo             `json:"system_info"`
+	Timestamp         time.Time              `json:"timestamp"`
+	Duration          time.Duration          `json:"duration"`
+	ReportPaths       map[string]string      `json:"report_paths"`
+	Errors            []string               `json:"errors"`
+	Warnings          []string               `json:"warnings"`
+	DetailedResults   map[string]interface{} `json:"detailed_results"`
 }
 
 // TestSuiteResult contains results for a specific test suite
 type TestSuiteResult struct {
-	Name         string        `json:"name"`
-	Passed       int           `json:"passed"`
-	Failed       int           `json:"failed"`
-	Skipped      int           `json:"skipped"`
-	Total        int           `json:"total"`
-	Duration     time.Duration `json:"duration"`
-	SuccessRate  float64       `json:"success_rate"`
-	Errors       []string      `json:"errors"`
-	Warnings     []string      `json:"warnings"`
-	Metrics      interface{}   `json:"metrics,omitempty"`
+	Name        string        `json:"name"`
+	Passed      int           `json:"passed"`
+	Failed      int           `json:"failed"`
+	Skipped     int           `json:"skipped"`
+	Total       int           `json:"total"`
+	Duration    time.Duration `json:"duration"`
+	SuccessRate float64       `json:"success_rate"`
+	Errors      []string      `json:"errors"`
+	Warnings    []string      `json:"warnings"`
+	Metrics     interface{}   `json:"metrics,omitempty"`
 }
 
 // SystemInfo contains system information
@@ -572,10 +572,10 @@ func (tr *TestRunner) generateHTMLReport(filePath string) error {
 	suiteHTML := ""
 	suites := map[string]TestSuiteResult{
 		"Dataset Validation": tr.results.DatasetValidation,
-		"Integration Tests":   tr.results.Integration,
-		"End-to-End Tests":    tr.results.E2E,
-		"Performance Tests":   tr.results.Performance,
-		"Benchmarks":          tr.results.Benchmarks,
+		"Integration Tests":  tr.results.Integration,
+		"End-to-End Tests":   tr.results.E2E,
+		"Performance Tests":  tr.results.Performance,
+		"Benchmarks":         tr.results.Benchmarks,
 	}
 
 	for name, suite := range suites {
@@ -640,10 +640,10 @@ func (tr *TestRunner) generateSummaryReport(filePath string) error {
 
 	suites := map[string]TestSuiteResult{
 		"Dataset Validation": tr.results.DatasetValidation,
-		"Integration Tests":   tr.results.Integration,
-		"End-to-End Tests":    tr.results.E2E,
-		"Performance Tests":   tr.results.Performance,
-		"Benchmarks":          tr.results.Benchmarks,
+		"Integration Tests":  tr.results.Integration,
+		"End-to-End Tests":   tr.results.E2E,
+		"Performance Tests":  tr.results.Performance,
+		"Benchmarks":         tr.results.Benchmarks,
 	}
 
 	for name, suite := range suites {

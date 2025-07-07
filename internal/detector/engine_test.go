@@ -29,7 +29,7 @@ func (m *MockHomoglyphDetector) DetectHomoglyphs(packageName string, popularPack
 
 // MockReputationEngine for testing
 type MockReputationEngine struct {
-	threats []types.Threat
+	threats  []types.Threat
 	warnings []types.Warning
 }
 
@@ -82,14 +82,10 @@ func TestVersion(t *testing.T) {
 
 func TestCheckPackage_Success(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	engine := New(cfg)
@@ -124,14 +120,10 @@ func TestCheckPackage_Success(t *testing.T) {
 
 func TestCheckPackage_WithThreats(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           2,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	engine := New(cfg)
@@ -195,14 +187,10 @@ func TestCheckPackage_Timeout(t *testing.T) {
 
 func TestAnalyzeDependency(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           2,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	engine := New(cfg)
@@ -276,11 +264,11 @@ func TestCheckPackageResult(t *testing.T) {
 		},
 		Warnings: []types.Warning{
 			{
-				ID:       "W001",
-				Type:     "reputation_risk",
-				Message:  "Low download count",
-				Package:  "test-package",
-				Registry: "npm",
+				ID:         "W001",
+				Type:       "reputation_risk",
+				Message:    "Low download count",
+				Package:    "test-package",
+				Registry:   "npm",
 				DetectedAt: time.Now(),
 			},
 		},
@@ -359,14 +347,10 @@ func TestEngineWithNilConfig(t *testing.T) {
 
 func TestConcurrentPackageChecks(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	engine := New(cfg)

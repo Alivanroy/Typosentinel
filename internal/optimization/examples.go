@@ -164,10 +164,10 @@ func ExampleAdvancedOptimization() {
 				PredictiveMode:  false,
 			},
 			Analysis: &AnalysisConfig{
-				Enabled:           true,
-				AnalysisInterval:  5 * time.Minute,
-				RetentionPeriod:   24 * time.Hour,
-				Recommendations:   true,
+				Enabled:          true,
+				AnalysisInterval: 5 * time.Minute,
+				RetentionPeriod:  24 * time.Hour,
+				Recommendations:  true,
 			},
 		},
 		Concurrency: &ConcurrencyConfig{

@@ -21,30 +21,30 @@ type JenkinsPlugin struct {
 
 // JenkinsSettings contains Jenkins specific configuration
 type JenkinsSettings struct {
-	JenkinsURL      string            `json:"jenkins_url"`
-	JobName         string            `json:"job_name"`
-	BuildNumber     string            `json:"build_number"`
-	Workspace       string            `json:"workspace"`
-	CredentialsID   string            `json:"credentials_id"`
-	FailOnCritical  bool              `json:"fail_on_critical"`
-	FailOnHigh      bool              `json:"fail_on_high"`
-	PublishResults  bool              `json:"publish_results"`
-	ArchiveReports  bool              `json:"archive_reports"`
-	NotifyEmail     bool              `json:"notify_email"`
-	EmailRecipients []string          `json:"email_recipients"`
+	JenkinsURL       string            `json:"jenkins_url"`
+	JobName          string            `json:"job_name"`
+	BuildNumber      string            `json:"build_number"`
+	Workspace        string            `json:"workspace"`
+	CredentialsID    string            `json:"credentials_id"`
+	FailOnCritical   bool              `json:"fail_on_critical"`
+	FailOnHigh       bool              `json:"fail_on_high"`
+	PublishResults   bool              `json:"publish_results"`
+	ArchiveReports   bool              `json:"archive_reports"`
+	NotifyEmail      bool              `json:"notify_email"`
+	EmailRecipients  []string          `json:"email_recipients"`
 	CustomProperties map[string]string `json:"custom_properties"`
 }
 
 // JenkinsOutput represents the output structure for Jenkins
 type JenkinsOutput struct {
-	BuildResult     string                 `json:"build_result"`
-	ExitCode        int                    `json:"exit_code"`
-	Properties      map[string]string      `json:"properties"`
-	Artifacts       []JenkinsArtifact      `json:"artifacts"`
-	TestResults     JenkinsTestResults     `json:"test_results"`
-	PublishedReports []JenkinsReport       `json:"published_reports"`
-	Notifications   []JenkinsNotification  `json:"notifications"`
-	Metrics         map[string]interface{} `json:"metrics"`
+	BuildResult      string                 `json:"build_result"`
+	ExitCode         int                    `json:"exit_code"`
+	Properties       map[string]string      `json:"properties"`
+	Artifacts        []JenkinsArtifact      `json:"artifacts"`
+	TestResults      JenkinsTestResults     `json:"test_results"`
+	PublishedReports []JenkinsReport        `json:"published_reports"`
+	Notifications    []JenkinsNotification  `json:"notifications"`
+	Metrics          map[string]interface{} `json:"metrics"`
 }
 
 // JenkinsArtifact represents a Jenkins build artifact
@@ -215,22 +215,22 @@ func (p *JenkinsPlugin) Execute(ctx context.Context, result *types.ScanResult) (
 	}
 
 	output.Metrics = map[string]interface{}{
-		"scan_duration_ms":    time.Since(start).Milliseconds(),
-		"threats_detected":    totalThreats,
-		"risk_score":          0.0, // Risk calculation moved to individual packages
-		"overall_risk":        "unknown", // Risk calculation moved to individual packages
-		"package_name":        packageName,
-		"package_version":     packageVersion,
-		"scan_timestamp":      time.Now().Unix(),
-		"build_number":        p.settings.BuildNumber,
-		"job_name":            p.settings.JobName,
+		"scan_duration_ms": time.Since(start).Milliseconds(),
+		"threats_detected": totalThreats,
+		"risk_score":       0.0,       // Risk calculation moved to individual packages
+		"overall_risk":     "unknown", // Risk calculation moved to individual packages
+		"package_name":     packageName,
+		"package_version":  packageVersion,
+		"scan_timestamp":   time.Now().Unix(),
+		"build_number":     p.settings.BuildNumber,
+		"job_name":         p.settings.JobName,
 	}
 
 	return &PluginResult{
-		Success:   output.BuildResult == "SUCCESS",
-		Message:   p.generateSummaryMessage(result),
-		Data:      map[string]interface{}{"jenkins_output": output},
-		Actions:   actions,
+		Success: output.BuildResult == "SUCCESS",
+		Message: p.generateSummaryMessage(result),
+		Data:    map[string]interface{}{"jenkins_output": output},
+		Actions: actions,
 		Metadata: map[string]interface{}{
 			"platform":     "jenkins",
 			"jenkins_url":  p.settings.JenkinsURL,
@@ -258,7 +258,7 @@ func (p *JenkinsPlugin) setBuildProperties(output *JenkinsOutput, result *types.
 		packageVersion = "unknown"
 	}
 
-	output.Properties["TYPOSENTINEL_RISK_SCORE"] = "0.0" // Risk calculation moved to individual packages
+	output.Properties["TYPOSENTINEL_RISK_SCORE"] = "0.0"       // Risk calculation moved to individual packages
 	output.Properties["TYPOSENTINEL_OVERALL_RISK"] = "unknown" // Risk calculation moved to individual packages
 	output.Properties["TYPOSENTINEL_THREATS_COUNT"] = fmt.Sprintf("%d", totalThreats)
 	output.Properties["TYPOSENTINEL_PACKAGE_NAME"] = packageName
@@ -464,11 +464,11 @@ func (p *JenkinsPlugin) handleNotifications(output *JenkinsOutput, result *types
 	hasCriticalOrHigh := false
 	for _, pkg := range result.Packages {
 		for _, threat := range pkg.Threats {
-				if threat.Severity == types.SeverityCritical || threat.Severity == types.SeverityHigh {
-					hasCriticalOrHigh = true
-					break
-				}
+			if threat.Severity == types.SeverityCritical || threat.Severity == types.SeverityHigh {
+				hasCriticalOrHigh = true
+				break
 			}
+		}
 		if hasCriticalOrHigh {
 			break
 		}

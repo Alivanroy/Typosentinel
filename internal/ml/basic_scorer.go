@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"math"
 	"strings"
 	"time"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // BasicMLScorer implements a simple machine learning scoring algorithm
@@ -73,8 +73,8 @@ type MLScore struct {
 // NewBasicMLScorer creates a new basic ML scorer with default configuration
 func NewBasicMLScorer() *BasicMLScorer {
 	config := &BasicScorerConfig{
-		MaliciousThreshold:   0.55,  // Lowered from 0.7 based on real-world results
-		SuspiciousThreshold:  0.35,  // Lowered from 0.4
+		MaliciousThreshold:   0.55, // Lowered from 0.7 based on real-world results
+		SuspiciousThreshold:  0.35, // Lowered from 0.4
 		MinConfidence:        0.3,
 		NormalizationEnabled: true,
 		FeatureWeights: map[string]float64{
@@ -343,7 +343,7 @@ func (bms *BasicMLScorer) Score(ctx context.Context, pkg *types.Package, feature
 
 	// Convert features to BasicPackageFeatures
 	basicFeatures := bms.convertFeatures(features)
-	
+
 	// Enhanced typosquatting detection
 	if basicFeatures.TyposquattingSimilarity == 0 {
 		basicFeatures.TyposquattingSimilarity = bms.calculateTyposquattingSimilarity(pkg.Name, pkg.Registry)
@@ -525,7 +525,7 @@ func (bms *BasicMLScorer) convertFeatures(features map[string]interface{}) Basic
 			}
 		}
 	}
-	
+
 	// Use name_length as a proxy for description_length if not available
 	if basicFeatures.DescriptionLength == 0 {
 		if val, ok := features["name_length"]; ok {
@@ -535,7 +535,7 @@ func (bms *BasicMLScorer) convertFeatures(features map[string]interface{}) Basic
 			}
 		}
 	}
-	
+
 	// Use version-based features
 	if val, ok := features["version_length"]; ok {
 		if f, ok := val.(float64); ok {
@@ -543,14 +543,14 @@ func (bms *BasicMLScorer) convertFeatures(features map[string]interface{}) Basic
 			basicFeatures.VersionCount = f / 2 // Rough approximation
 		}
 	}
-	
+
 	if val, ok := features["version_parts"]; ok {
 		if f, ok := val.(float64); ok {
 			// More version parts might indicate more mature package
 			basicFeatures.VersionCount = math.Max(basicFeatures.VersionCount, f)
 		}
 	}
-	
+
 	// Set reasonable defaults for missing features to avoid all-zero feature vectors
 	if basicFeatures.MaintainerReputation == 0 {
 		basicFeatures.MaintainerReputation = 0.5 // Neutral reputation
@@ -567,7 +567,7 @@ func (bms *BasicMLScorer) convertFeatures(features map[string]interface{}) Basic
 	if basicFeatures.RepositoryPresent == 0 {
 		basicFeatures.RepositoryPresent = 0.6 // Many packages have repositories
 	}
-	
+
 	return basicFeatures
 }
 
@@ -702,9 +702,9 @@ func (bms *BasicMLScorer) UpdateFeatureStats(features []BasicPackageFeatures) {
 func (bms *BasicMLScorer) calculateTyposquattingSimilarity(packageName, registry string) float64 {
 	// Popular packages by registry
 	popularPackages := map[string][]string{
-		"npm": {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular", "jquery", "moment", "chalk", "commander", "debug", "request", "fs-extra", "glob", "yargs", "inquirer"},
-		"pypi": {"requests", "numpy", "pandas", "flask", "django", "tensorflow", "scikit-learn", "matplotlib", "scipy", "pillow", "beautifulsoup4", "selenium", "pytest", "click", "jinja2", "sqlalchemy", "boto3", "pyyaml", "redis", "celery"},
-		"rubygems": {"rails", "bundler", "rake", "rspec", "nokogiri", "activesupport", "thor", "json", "minitest", "puma", "sass", "devise", "capistrano", "sidekiq", "unicorn", "sinatra", "activerecord", "actionpack", "actionview", "activejob"},
+		"npm":       {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular", "jquery", "moment", "chalk", "commander", "debug", "request", "fs-extra", "glob", "yargs", "inquirer"},
+		"pypi":      {"requests", "numpy", "pandas", "flask", "django", "tensorflow", "scikit-learn", "matplotlib", "scipy", "pillow", "beautifulsoup4", "selenium", "pytest", "click", "jinja2", "sqlalchemy", "boto3", "pyyaml", "redis", "celery"},
+		"rubygems":  {"rails", "bundler", "rake", "rspec", "nokogiri", "activesupport", "thor", "json", "minitest", "puma", "sass", "devise", "capistrano", "sidekiq", "unicorn", "sinatra", "activerecord", "actionpack", "actionview", "activejob"},
 		"packagist": {"symfony", "laravel", "doctrine", "guzzle", "monolog", "phpunit", "twig", "composer", "psr", "carbon", "intervention", "swiftmailer", "predis", "faker", "league", "illuminate", "nesbot", "vlucas", "ramsey", "psr-7"},
 	}
 
@@ -732,10 +732,10 @@ func (bms *BasicMLScorer) calculateStringSimilarity(s1, s2 string) float64 {
 
 	// Levenshtein distance similarity
 	levenSim := bms.levenshteinSimilarity(s1, s2)
-	
+
 	// Character frequency similarity
 	freqSim := bms.characterFrequencySimilarity(s1, s2)
-	
+
 	// Weighted combination
 	return 0.7*levenSim + 0.3*freqSim
 }

@@ -48,7 +48,7 @@ func TestPluginManager_LoadPlugin(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: "/tmp/test-plugins",
 			AutoLoad:        false,
-			Plugins: map[string]config.PluginConfig{}, // Empty plugins list to avoid loading during init
+			Plugins:         map[string]config.PluginConfig{}, // Empty plugins list to avoid loading during init
 		},
 	}
 

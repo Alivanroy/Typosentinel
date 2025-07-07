@@ -9,195 +9,195 @@ import (
 
 // EnhancedMLEngine provides advanced ML capabilities
 type EnhancedMLEngine struct {
-	client      *Client
+	client       *Client
 	featureStore *FeatureStore
-	config      *MLConfig
+	config       *MLConfig
 }
 
 // MLConfig contains ML engine configuration
 type MLConfig struct {
-	EmbeddingModel        string  `yaml:"embedding_model"`
-	MaliciousModel        string  `yaml:"malicious_model"`
-	ReputationModel       string  `yaml:"reputation_model"`
-	SimilarityThreshold   float64 `yaml:"similarity_threshold"`
-	MaliciousThreshold    float64 `yaml:"malicious_threshold"`
-	ReputationThreshold   float64 `yaml:"reputation_threshold"`
-	FeatureStoreEnabled   bool    `yaml:"feature_store_enabled"`
-	FeatureStoreTTL       string  `yaml:"feature_store_ttl"`
-	BatchSize             int     `yaml:"batch_size"`
-	MaxRetries            int     `yaml:"max_retries"`
-	Timeout               string  `yaml:"timeout"`
+	EmbeddingModel      string  `yaml:"embedding_model"`
+	MaliciousModel      string  `yaml:"malicious_model"`
+	ReputationModel     string  `yaml:"reputation_model"`
+	SimilarityThreshold float64 `yaml:"similarity_threshold"`
+	MaliciousThreshold  float64 `yaml:"malicious_threshold"`
+	ReputationThreshold float64 `yaml:"reputation_threshold"`
+	FeatureStoreEnabled bool    `yaml:"feature_store_enabled"`
+	FeatureStoreTTL     string  `yaml:"feature_store_ttl"`
+	BatchSize           int     `yaml:"batch_size"`
+	MaxRetries          int     `yaml:"max_retries"`
+	Timeout             string  `yaml:"timeout"`
 }
 
 // PackageFeatures represents comprehensive package features
 type PackageFeatures struct {
-	PackageName     string                 `json:"package_name"`
-	Registry        string                 `json:"registry"`
-	Version         string                 `json:"version,omitempty"`
-	PackageType     string                 `json:"package_type,omitempty"`
-	
+	PackageName string `json:"package_name"`
+	Registry    string `json:"registry"`
+	Version     string `json:"version,omitempty"`
+	PackageType string `json:"package_type,omitempty"`
+
 	// Name-based features
-	NameEmbedding   []float64              `json:"name_embedding"`
-	NameLength      int                    `json:"name_length"`
-	NameComplexity  float64                `json:"name_complexity"`
-	NameEntropy     float64                `json:"name_entropy"`
-	
+	NameEmbedding  []float64 `json:"name_embedding"`
+	NameLength     int       `json:"name_length"`
+	NameComplexity float64   `json:"name_complexity"`
+	NameEntropy    float64   `json:"name_entropy"`
+
 	// Direct access fields for compatibility
-	VersionComplexity    float64           `json:"version_complexity"`
-	DescriptionLength    int               `json:"description_length"`
-	DependencyCount      int               `json:"dependency_count"`
-	DownloadCount        int64             `json:"download_count"`
-	StarCount           int               `json:"star_count"`
-	ForkCount           int               `json:"fork_count"`
-	ContributorCount    int               `json:"contributor_count"`
-	AgeInDays           int               `json:"age_in_days"`
-	TyposquattingScore  float64           `json:"typosquatting_score"`
-	SuspiciousKeywords  int               `json:"suspicious_keywords"`
-	VersionSpoofing     float64           `json:"version_spoofing"`
-	DomainReputation    float64           `json:"domain_reputation"`
-	UpdateFrequency     float64           `json:"update_frequency"`
-	MaintainerCount     int               `json:"maintainer_count"`
-	IssueCount          int               `json:"issue_count"`
-	LicenseScore        float64           `json:"license_score"`
-	
+	VersionComplexity  float64 `json:"version_complexity"`
+	DescriptionLength  int     `json:"description_length"`
+	DependencyCount    int     `json:"dependency_count"`
+	DownloadCount      int64   `json:"download_count"`
+	StarCount          int     `json:"star_count"`
+	ForkCount          int     `json:"fork_count"`
+	ContributorCount   int     `json:"contributor_count"`
+	AgeInDays          int     `json:"age_in_days"`
+	TyposquattingScore float64 `json:"typosquatting_score"`
+	SuspiciousKeywords int     `json:"suspicious_keywords"`
+	VersionSpoofing    float64 `json:"version_spoofing"`
+	DomainReputation   float64 `json:"domain_reputation"`
+	UpdateFrequency    float64 `json:"update_frequency"`
+	MaintainerCount    int     `json:"maintainer_count"`
+	IssueCount         int     `json:"issue_count"`
+	LicenseScore       float64 `json:"license_score"`
+
 	// Author features
-	AuthorFeatures  AuthorFeatures         `json:"author_features"`
-	
+	AuthorFeatures AuthorFeatures `json:"author_features"`
+
 	// Package metadata features
-	MetadataFeatures MetadataFeatures      `json:"metadata_features"`
-	
+	MetadataFeatures MetadataFeatures `json:"metadata_features"`
+
 	// Repository features
-	RepositoryFeatures RepositoryFeatures  `json:"repository_features"`
-	
+	RepositoryFeatures RepositoryFeatures `json:"repository_features"`
+
 	// Download and popularity features
-	PopularityFeatures PopularityFeatures  `json:"popularity_features"`
-	
+	PopularityFeatures PopularityFeatures `json:"popularity_features"`
+
 	// Security features
-	SecurityFeatures SecurityFeatures      `json:"security_features"`
-	
+	SecurityFeatures SecurityFeatures `json:"security_features"`
+
 	// Computed scores
-	MaliciousScore   float64               `json:"malicious_score"`
-	ReputationScore  float64               `json:"reputation_score"`
-	OverallRisk      float64               `json:"overall_risk"`
-	
+	MaliciousScore  float64 `json:"malicious_score"`
+	ReputationScore float64 `json:"reputation_score"`
+	OverallRisk     float64 `json:"overall_risk"`
+
 	// Metadata
-	Timestamp        time.Time             `json:"timestamp"`
-	ModelVersions    map[string]string     `json:"model_versions"`
-	FeatureVersion   string                `json:"feature_version"`
+	Timestamp      time.Time         `json:"timestamp"`
+	ModelVersions  map[string]string `json:"model_versions"`
+	FeatureVersion string            `json:"feature_version"`
 }
 
 // AuthorFeatures contains author-related features
 type AuthorFeatures struct {
-	AuthorName          string    `json:"author_name"`
-	AuthorEmail         string    `json:"author_email"`
-	AccountAge          int       `json:"account_age_days"`
-	PublishedPackages   int       `json:"published_packages"`
-	TotalDownloads      int64     `json:"total_downloads"`
-	AverageRating       float64   `json:"average_rating"`
-	VerifiedAccount     bool      `json:"verified_account"`
-	HasGitHubProfile    bool      `json:"has_github_profile"`
-	GitHubFollowers     int       `json:"github_followers"`
-	GitHubRepos         int       `json:"github_repos"`
-	LastActivity        time.Time `json:"last_activity"`
-	SuspiciousPatterns  []string  `json:"suspicious_patterns"`
+	AuthorName         string    `json:"author_name"`
+	AuthorEmail        string    `json:"author_email"`
+	AccountAge         int       `json:"account_age_days"`
+	PublishedPackages  int       `json:"published_packages"`
+	TotalDownloads     int64     `json:"total_downloads"`
+	AverageRating      float64   `json:"average_rating"`
+	VerifiedAccount    bool      `json:"verified_account"`
+	HasGitHubProfile   bool      `json:"has_github_profile"`
+	GitHubFollowers    int       `json:"github_followers"`
+	GitHubRepos        int       `json:"github_repos"`
+	LastActivity       time.Time `json:"last_activity"`
+	SuspiciousPatterns []string  `json:"suspicious_patterns"`
 }
 
 // MetadataFeatures contains package metadata features
 type MetadataFeatures struct {
-	HasDescription      bool      `json:"has_description"`
-	DescriptionLength   int       `json:"description_length"`
-	DescriptionQuality  float64   `json:"description_quality"`
-	HasHomepage         bool      `json:"has_homepage"`
-	HasRepository       bool      `json:"has_repository"`
-	HasLicense          bool      `json:"has_license"`
-	LicenseType         string    `json:"license_type"`
-	HasKeywords         bool      `json:"has_keywords"`
-	KeywordCount        int       `json:"keyword_count"`
-	VersionCount        int       `json:"version_count"`
-	LatestVersion       string    `json:"latest_version"`
-	VersionPattern      string    `json:"version_pattern"`
-	UnusualVersionJump  bool      `json:"unusual_version_jump"`
-	PublicationRecency  int       `json:"publication_recency_days"`
+	HasDescription     bool    `json:"has_description"`
+	DescriptionLength  int     `json:"description_length"`
+	DescriptionQuality float64 `json:"description_quality"`
+	HasHomepage        bool    `json:"has_homepage"`
+	HasRepository      bool    `json:"has_repository"`
+	HasLicense         bool    `json:"has_license"`
+	LicenseType        string  `json:"license_type"`
+	HasKeywords        bool    `json:"has_keywords"`
+	KeywordCount       int     `json:"keyword_count"`
+	VersionCount       int     `json:"version_count"`
+	LatestVersion      string  `json:"latest_version"`
+	VersionPattern     string  `json:"version_pattern"`
+	UnusualVersionJump bool    `json:"unusual_version_jump"`
+	PublicationRecency int     `json:"publication_recency_days"`
 }
 
 // RepositoryFeatures contains repository-related features
 type RepositoryFeatures struct {
-	HasRepository       bool      `json:"has_repository"`
-	RepositoryURL       string    `json:"repository_url"`
-	RepositoryType      string    `json:"repository_type"`
-	StarCount           int       `json:"star_count"`
-	ForkCount           int       `json:"fork_count"`
-	IssueCount          int       `json:"issue_count"`
-	CommitCount         int       `json:"commit_count"`
-	ContributorCount    int       `json:"contributor_count"`
-	LastCommit          time.Time `json:"last_commit"`
-	HasReadme           bool      `json:"has_readme"`
-	ReadmeLength        int       `json:"readme_length"`
-	HasTests            bool      `json:"has_tests"`
-	TestCoverage        float64   `json:"test_coverage"`
-	HasCI               bool      `json:"has_ci"`
+	HasRepository        bool               `json:"has_repository"`
+	RepositoryURL        string             `json:"repository_url"`
+	RepositoryType       string             `json:"repository_type"`
+	StarCount            int                `json:"star_count"`
+	ForkCount            int                `json:"fork_count"`
+	IssueCount           int                `json:"issue_count"`
+	CommitCount          int                `json:"commit_count"`
+	ContributorCount     int                `json:"contributor_count"`
+	LastCommit           time.Time          `json:"last_commit"`
+	HasReadme            bool               `json:"has_readme"`
+	ReadmeLength         int                `json:"readme_length"`
+	HasTests             bool               `json:"has_tests"`
+	TestCoverage         float64            `json:"test_coverage"`
+	HasCI                bool               `json:"has_ci"`
 	LanguageDistribution map[string]float64 `json:"language_distribution"`
-	SuspiciousFiles     []string  `json:"suspicious_files"`
+	SuspiciousFiles      []string           `json:"suspicious_files"`
 }
 
 // PopularityFeatures contains popularity and download features
 type PopularityFeatures struct {
-	TotalDownloads      int64     `json:"total_downloads"`
-	WeeklyDownloads     int64     `json:"weekly_downloads"`
-	MonthlyDownloads    int64     `json:"monthly_downloads"`
-	DownloadTrend       string    `json:"download_trend"`
-	DownloadVelocity    float64   `json:"download_velocity"`
-	PopularityRank      int       `json:"popularity_rank"`
-	DependentPackages   int       `json:"dependent_packages"`
-	DependencyRank      int       `json:"dependency_rank"`
-	CommunityScore      float64   `json:"community_score"`
-	MaintenanceScore    float64   `json:"maintenance_score"`
+	TotalDownloads    int64   `json:"total_downloads"`
+	WeeklyDownloads   int64   `json:"weekly_downloads"`
+	MonthlyDownloads  int64   `json:"monthly_downloads"`
+	DownloadTrend     string  `json:"download_trend"`
+	DownloadVelocity  float64 `json:"download_velocity"`
+	PopularityRank    int     `json:"popularity_rank"`
+	DependentPackages int     `json:"dependent_packages"`
+	DependencyRank    int     `json:"dependency_rank"`
+	CommunityScore    float64 `json:"community_score"`
+	MaintenanceScore  float64 `json:"maintenance_score"`
 }
 
 // SecurityFeatures contains security-related features
 type SecurityFeatures struct {
-	KnownVulnerabilities int       `json:"known_vulnerabilities"`
-	SecurityScore        float64   `json:"security_score"`
-	HasSecurityPolicy    bool      `json:"has_security_policy"`
-	SignedReleases       bool      `json:"signed_releases"`
-	SigstoreVerified     bool      `json:"sigstore_verified"`
-	SLSALevel            int       `json:"slsa_level"`
-	HasSBOM              bool      `json:"has_sbom"`
-	SupplyChainRisk      float64   `json:"supply_chain_risk"`
-	MalwareIndicators    []string  `json:"malware_indicators"`
-	SuspiciousScripts    []string  `json:"suspicious_scripts"`
+	KnownVulnerabilities int      `json:"known_vulnerabilities"`
+	SecurityScore        float64  `json:"security_score"`
+	HasSecurityPolicy    bool     `json:"has_security_policy"`
+	SignedReleases       bool     `json:"signed_releases"`
+	SigstoreVerified     bool     `json:"sigstore_verified"`
+	SLSALevel            int      `json:"slsa_level"`
+	HasSBOM              bool     `json:"has_sbom"`
+	SupplyChainRisk      float64  `json:"supply_chain_risk"`
+	MalwareIndicators    []string `json:"malware_indicators"`
+	SuspiciousScripts    []string `json:"suspicious_scripts"`
 }
 
 // MLAnalysisResult represents comprehensive ML analysis results
 type MLAnalysisResult struct {
-	PackageName         string                 `json:"package_name"`
-	Registry            string                 `json:"registry"`
-	AnalysisTimestamp   time.Time              `json:"analysis_timestamp"`
-	
+	PackageName       string    `json:"package_name"`
+	Registry          string    `json:"registry"`
+	AnalysisTimestamp time.Time `json:"analysis_timestamp"`
+
 	// Feature analysis
-	Features            PackageFeatures        `json:"features"`
-	
+	Features PackageFeatures `json:"features"`
+
 	// Similarity analysis
-	SimilarPackages     []SimilarPackage       `json:"similar_packages"`
-	TyposquattingRisk   float64                `json:"typosquatting_risk"`
-	
+	SimilarPackages   []SimilarPackage `json:"similar_packages"`
+	TyposquattingRisk float64          `json:"typosquatting_risk"`
+
 	// Malicious detection
-	MaliciousScore      float64                `json:"malicious_score"`
-	MaliciousIndicators []MaliciousIndicator   `json:"malicious_indicators"`
-	
+	MaliciousScore      float64              `json:"malicious_score"`
+	MaliciousIndicators []MaliciousIndicator `json:"malicious_indicators"`
+
 	// Reputation scoring
-	ReputationScore     float64                `json:"reputation_score"`
-	ReputationFactors   []ReputationFactor     `json:"reputation_factors"`
-	
+	ReputationScore   float64            `json:"reputation_score"`
+	ReputationFactors []ReputationFactor `json:"reputation_factors"`
+
 	// Overall assessment
-	RiskLevel           string                 `json:"risk_level"`
-	Confidence          float64                `json:"confidence"`
-	Recommendation      string                 `json:"recommendation"`
-	Warnings            []string               `json:"warnings"`
-	
+	RiskLevel      string   `json:"risk_level"`
+	Confidence     float64  `json:"confidence"`
+	Recommendation string   `json:"recommendation"`
+	Warnings       []string `json:"warnings"`
+
 	// Model information
-	ModelVersions       map[string]string      `json:"model_versions"`
-	ProcessingTime      time.Duration          `json:"processing_time"`
+	ModelVersions  map[string]string `json:"model_versions"`
+	ProcessingTime time.Duration     `json:"processing_time"`
 }
 
 // Note: SimilarPackage struct is defined in analyzer.go
@@ -224,7 +224,7 @@ func NewEnhancedMLEngine(client *Client, config *MLConfig) *EnhancedMLEngine {
 	if config == nil {
 		config = DefaultMLConfig()
 	}
-	
+
 	return &EnhancedMLEngine{
 		client:       client,
 		featureStore: NewFeatureStore(config),
@@ -252,44 +252,44 @@ func DefaultMLConfig() *MLConfig {
 // AnalyzePackage performs comprehensive ML analysis of a package
 func (e *EnhancedMLEngine) AnalyzePackage(ctx context.Context, packageName, registry string) (*MLAnalysisResult, error) {
 	startTime := time.Now()
-	
+
 	// Check feature store cache first
 	if e.config.FeatureStoreEnabled {
 		if cached := e.featureStore.GetFeatures(packageName, registry); cached != nil {
 			return e.buildResultFromFeatures(cached, startTime), nil
 		}
 	}
-	
+
 	// Extract features
 	features, err := e.extractFeatures(ctx, packageName, registry)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract features: %w", err)
 	}
-	
+
 	// Perform embedding-based analysis
 	if err := e.performEmbeddingAnalysis(ctx, features); err != nil {
 		return nil, fmt.Errorf("failed to perform embedding analysis: %w", err)
 	}
-	
+
 	// Perform malicious detection
 	if err := e.performMaliciousDetection(ctx, features); err != nil {
 		return nil, fmt.Errorf("failed to perform malicious detection: %w", err)
 	}
-	
+
 	// Perform reputation scoring
 	if err := e.performReputationScoring(ctx, features); err != nil {
 		return nil, fmt.Errorf("failed to perform reputation scoring: %w", err)
 	}
-	
+
 	// Store features in cache
 	if e.config.FeatureStoreEnabled {
 		e.featureStore.StoreFeatures(features)
 	}
-	
+
 	// Build final result
 	result := e.buildResultFromFeatures(features, startTime)
 	result.ProcessingTime = time.Since(startTime)
-	
+
 	return result, nil
 }
 
@@ -302,32 +302,32 @@ func (e *EnhancedMLEngine) extractFeatures(ctx context.Context, packageName, reg
 		ModelVersions:  make(map[string]string),
 		FeatureVersion: "1.0",
 	}
-	
+
 	// Extract name-based features
 	e.extractNameFeatures(features)
-	
+
 	// Extract metadata features (would integrate with registry APIs)
 	e.extractMetadataFeatures(ctx, features)
-	
+
 	// Extract author features
 	e.extractAuthorFeatures(ctx, features)
-	
+
 	// Extract repository features
 	e.extractRepositoryFeatures(ctx, features)
-	
+
 	// Extract popularity features
 	e.extractPopularityFeatures(ctx, features)
-	
+
 	// Extract security features
 	e.extractSecurityFeatures(ctx, features)
-	
+
 	return features, nil
 }
 
 // extractNameFeatures extracts features from package name
 func (e *EnhancedMLEngine) extractNameFeatures(features *PackageFeatures) {
 	name := features.PackageName
-	
+
 	// Basic name features
 	features.NameLength = len(name)
 	features.NameComplexity = e.calculateNameComplexity(name)
@@ -337,14 +337,14 @@ func (e *EnhancedMLEngine) extractNameFeatures(features *PackageFeatures) {
 // calculateNameComplexity calculates complexity score for package name
 func (e *EnhancedMLEngine) calculateNameComplexity(name string) float64 {
 	complexity := 0.0
-	
+
 	// Character diversity
 	uniqueChars := make(map[rune]bool)
 	for _, r := range name {
 		uniqueChars[r] = true
 	}
 	complexity += float64(len(uniqueChars)) / float64(len(name))
-	
+
 	// Special characters
 	specialCount := 0
 	for _, r := range name {
@@ -353,7 +353,7 @@ func (e *EnhancedMLEngine) calculateNameComplexity(name string) float64 {
 		}
 	}
 	complexity += float64(specialCount) / float64(len(name))
-	
+
 	// Case changes
 	caseChanges := 0
 	for i := 1; i < len(name); i++ {
@@ -363,7 +363,7 @@ func (e *EnhancedMLEngine) calculateNameComplexity(name string) float64 {
 		}
 	}
 	complexity += float64(caseChanges) / float64(len(name))
-	
+
 	return math.Min(complexity, 1.0)
 }
 
@@ -372,13 +372,13 @@ func (e *EnhancedMLEngine) calculateNameEntropy(name string) float64 {
 	if len(name) == 0 {
 		return 0
 	}
-	
+
 	// Count character frequencies
 	freq := make(map[rune]int)
 	for _, r := range name {
 		freq[r]++
 	}
-	
+
 	// Calculate entropy
 	entropy := 0.0
 	length := float64(len(name))
@@ -388,7 +388,7 @@ func (e *EnhancedMLEngine) calculateNameEntropy(name string) float64 {
 			entropy -= p * math.Log2(p)
 		}
 	}
-	
+
 	return entropy
 }
 
@@ -481,7 +481,7 @@ func (e *EnhancedMLEngine) performEmbeddingAnalysis(ctx context.Context, feature
 	if err != nil {
 		return fmt.Errorf("failed to generate embedding: %w", err)
 	}
-	
+
 	features.NameEmbedding = embedding
 	return nil
 }
@@ -507,7 +507,7 @@ func (e *EnhancedMLEngine) performMaliciousDetection(ctx context.Context, featur
 // calculateMaliciousScore calculates malicious score based on features
 func (e *EnhancedMLEngine) calculateMaliciousScore(features *PackageFeatures) float64 {
 	score := 0.0
-	
+
 	// Name-based indicators
 	if features.NameComplexity > 0.8 {
 		score += 0.2
@@ -515,7 +515,7 @@ func (e *EnhancedMLEngine) calculateMaliciousScore(features *PackageFeatures) fl
 	if features.NameEntropy < 2.0 {
 		score += 0.1
 	}
-	
+
 	// Author-based indicators
 	if features.AuthorFeatures.AccountAge < 30 {
 		score += 0.3
@@ -523,7 +523,7 @@ func (e *EnhancedMLEngine) calculateMaliciousScore(features *PackageFeatures) fl
 	if features.AuthorFeatures.PublishedPackages < 2 {
 		score += 0.2
 	}
-	
+
 	// Repository indicators
 	if !features.RepositoryFeatures.HasRepository {
 		score += 0.4
@@ -531,7 +531,7 @@ func (e *EnhancedMLEngine) calculateMaliciousScore(features *PackageFeatures) fl
 	if features.RepositoryFeatures.StarCount < 5 {
 		score += 0.1
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -545,7 +545,7 @@ func (e *EnhancedMLEngine) performReputationScoring(ctx context.Context, feature
 // calculateReputationScore calculates reputation score
 func (e *EnhancedMLEngine) calculateReputationScore(features *PackageFeatures) float64 {
 	score := 0.0
-	
+
 	// Author reputation
 	if features.AuthorFeatures.VerifiedAccount {
 		score += 0.2
@@ -556,7 +556,7 @@ func (e *EnhancedMLEngine) calculateReputationScore(features *PackageFeatures) f
 	if features.AuthorFeatures.PublishedPackages > 5 {
 		score += 0.1
 	}
-	
+
 	// Package quality
 	if features.MetadataFeatures.HasLicense {
 		score += 0.1
@@ -564,7 +564,7 @@ func (e *EnhancedMLEngine) calculateReputationScore(features *PackageFeatures) f
 	if features.MetadataFeatures.HasRepository {
 		score += 0.1
 	}
-	
+
 	// Repository quality
 	if features.RepositoryFeatures.HasTests {
 		score += 0.1
@@ -575,7 +575,7 @@ func (e *EnhancedMLEngine) calculateReputationScore(features *PackageFeatures) f
 	if features.RepositoryFeatures.HasCI {
 		score += 0.1
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -590,17 +590,17 @@ func (e *EnhancedMLEngine) buildResultFromFeatures(features *PackageFeatures, st
 		ReputationScore:   features.ReputationScore,
 		ModelVersions:     features.ModelVersions,
 	}
-	
+
 	// Calculate overall risk
 	result.RiskLevel = e.calculateRiskLevel(features)
 	result.Confidence = e.calculateConfidence(features)
 	result.Recommendation = e.generateRecommendation(features)
 	result.Warnings = e.generateWarnings(features)
-	
+
 	// Find similar packages (placeholder)
 	result.SimilarPackages = e.findSimilarPackages(features)
 	result.TyposquattingRisk = e.calculateTyposquattingRisk(features)
-	
+
 	return result
 }
 
@@ -619,7 +619,7 @@ func (e *EnhancedMLEngine) calculateRiskLevel(features *PackageFeatures) string 
 // calculateConfidence calculates confidence in the analysis
 func (e *EnhancedMLEngine) calculateConfidence(features *PackageFeatures) float64 {
 	confidence := 0.5 // Base confidence
-	
+
 	// Increase confidence based on available data
 	if features.AuthorFeatures.AccountAge > 0 {
 		confidence += 0.1
@@ -630,7 +630,7 @@ func (e *EnhancedMLEngine) calculateConfidence(features *PackageFeatures) float6
 	if features.PopularityFeatures.TotalDownloads > 1000 {
 		confidence += 0.2
 	}
-	
+
 	return math.Min(confidence, 1.0)
 }
 
@@ -649,7 +649,7 @@ func (e *EnhancedMLEngine) generateRecommendation(features *PackageFeatures) str
 // generateWarnings generates warnings based on analysis
 func (e *EnhancedMLEngine) generateWarnings(features *PackageFeatures) []string {
 	var warnings []string
-	
+
 	if features.AuthorFeatures.AccountAge < 30 {
 		warnings = append(warnings, "New author account (less than 30 days old)")
 	}
@@ -662,7 +662,7 @@ func (e *EnhancedMLEngine) generateWarnings(features *PackageFeatures) []string 
 	if !features.MetadataFeatures.HasLicense {
 		warnings = append(warnings, "No license specified")
 	}
-	
+
 	return warnings
 }
 

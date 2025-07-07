@@ -51,13 +51,13 @@ func ParseDebugMode(mode string) DebugMode {
 
 // DebugConfig contains debug-specific configuration
 type DebugConfig struct {
-	Mode           DebugMode
-	ShowCaller     bool
-	ShowTimestamp  bool
-	ShowGoroutine  bool
-	ShowMemStats   bool
-	IncludeStack   bool
-	MaxStackDepth  int
+	Mode          DebugMode
+	ShowCaller    bool
+	ShowTimestamp bool
+	ShowGoroutine bool
+	ShowMemStats  bool
+	IncludeStack  bool
+	MaxStackDepth int
 }
 
 // DefaultDebugConfig returns a default debug configuration
@@ -93,7 +93,7 @@ func NewDebugLogger(logger *Logger, config *DebugConfig) *DebugLogger {
 // SetDebugMode sets the debug mode
 func (dl *DebugLogger) SetDebugMode(mode DebugMode) {
 	dl.config.Mode = mode
-	
+
 	// Adjust logger level based on debug mode
 	switch mode {
 	case DebugModeOff:
@@ -126,7 +126,7 @@ func (dl *DebugLogger) IsEnabled(level LogLevel) bool {
 // getCallerInfo returns caller information
 func (dl *DebugLogger) getCallerInfo(skip int) map[string]interface{} {
 	fields := make(map[string]interface{})
-	
+
 	if dl.config.ShowCaller {
 		if pc, file, line, ok := runtime.Caller(skip + 2); ok {
 			funcName := runtime.FuncForPC(pc).Name()
@@ -144,15 +144,15 @@ func (dl *DebugLogger) getCallerInfo(skip int) map[string]interface{} {
 			fields["function"] = funcName
 		}
 	}
-	
+
 	if dl.config.ShowGoroutine {
 		fields["goroutine"] = runtime.NumGoroutine()
 	}
-	
+
 	if dl.config.ShowTimestamp {
 		fields["timestamp"] = time.Now().Format(time.RFC3339Nano)
 	}
-	
+
 	return fields
 }
 
@@ -161,11 +161,11 @@ func (dl *DebugLogger) getStackTrace() string {
 	if !dl.config.IncludeStack {
 		return ""
 	}
-	
+
 	buf := make([]byte, 4096)
 	n := runtime.Stack(buf, false)
 	stack := string(buf[:n])
-	
+
 	// Limit stack depth if configured
 	if dl.config.MaxStackDepth > 0 {
 		lines := strings.Split(stack, "\n")
@@ -174,7 +174,7 @@ func (dl *DebugLogger) getStackTrace() string {
 			stack = strings.Join(lines, "\n") + "\n... (truncated)"
 		}
 	}
-	
+
 	return stack
 }
 
@@ -183,18 +183,18 @@ func (dl *DebugLogger) DebugWithContext(msg string, extraFields ...map[string]in
 	if !dl.IsEnabled(DEBUG) {
 		return
 	}
-	
+
 	fields := dl.getCallerInfo(1)
 	if len(extraFields) > 0 {
 		for k, v := range extraFields[0] {
 			fields[k] = v
 		}
 	}
-	
+
 	if stack := dl.getStackTrace(); stack != "" {
 		fields["stack"] = stack
 	}
-	
+
 	dl.logger.Debug(msg, fields)
 }
 
@@ -203,14 +203,14 @@ func (dl *DebugLogger) VerboseWithContext(msg string, extraFields ...map[string]
 	if !dl.IsEnabled(VERBOSE) {
 		return
 	}
-	
+
 	fields := dl.getCallerInfo(1)
 	if len(extraFields) > 0 {
 		for k, v := range extraFields[0] {
 			fields[k] = v
 		}
 	}
-	
+
 	dl.logger.Verbose(msg, fields)
 }
 
@@ -219,18 +219,18 @@ func (dl *DebugLogger) TraceWithContext(msg string, extraFields ...map[string]in
 	if !dl.IsEnabled(TRACE) {
 		return
 	}
-	
+
 	fields := dl.getCallerInfo(1)
 	if len(extraFields) > 0 {
 		for k, v := range extraFields[0] {
 			fields[k] = v
 		}
 	}
-	
+
 	if stack := dl.getStackTrace(); stack != "" {
 		fields["stack"] = stack
 	}
-	
+
 	dl.logger.Trace(msg, fields)
 }
 
@@ -239,13 +239,13 @@ func (dl *DebugLogger) TraceFunction(funcName string) func() {
 	if !dl.IsEnabled(TRACE) {
 		return func() {}
 	}
-	
+
 	start := time.Now()
 	fields := dl.getCallerInfo(1)
 	fields["function"] = funcName
-	
+
 	dl.logger.Trace(fmt.Sprintf("Entering function: %s", funcName), fields)
-	
+
 	return func() {
 		fields["duration"] = time.Since(start).String()
 		dl.logger.Trace(fmt.Sprintf("Exiting function: %s", funcName), fields)

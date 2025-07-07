@@ -15,13 +15,13 @@ import (
 
 // ThreatCorrelator correlates packages with threat intelligence data
 type ThreatCorrelator struct {
-	db               *ThreatDatabase
-	logger           *logger.Logger
-	mu               sync.RWMutex
-	cache            map[string]*CachedCorrelation
-	cacheExpiry      time.Duration
-	matchingRules    []MatchingRule
-	severityWeights  map[string]float64
+	db                  *ThreatDatabase
+	logger              *logger.Logger
+	mu                  sync.RWMutex
+	cache               map[string]*CachedCorrelation
+	cacheExpiry         time.Duration
+	matchingRules       []MatchingRule
+	severityWeights     map[string]float64
 	confidenceThreshold float64
 }
 
@@ -33,13 +33,13 @@ type CachedCorrelation struct {
 
 // MatchingRule represents a rule for matching packages to threats
 type MatchingRule struct {
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"` // "exact", "pattern", "similarity", "custom"
-	Pattern     string                 `json:"pattern,omitempty"`
-	Weight      float64                `json:"weight"`
-	Enabled     bool                   `json:"enabled"`
-	Config      map[string]interface{} `json:"config,omitempty"`
-	Matcher     MatcherFunc            `json:"-"`
+	Name    string                 `json:"name"`
+	Type    string                 `json:"type"` // "exact", "pattern", "similarity", "custom"
+	Pattern string                 `json:"pattern,omitempty"`
+	Weight  float64                `json:"weight"`
+	Enabled bool                   `json:"enabled"`
+	Config  map[string]interface{} `json:"config,omitempty"`
+	Matcher MatcherFunc            `json:"-"`
 }
 
 // MatcherFunc is a function that matches a package against a threat
@@ -47,12 +47,12 @@ type MatcherFunc func(pkg *types.Package, threat *ThreatIntelligence, config map
 
 // CorrelationConfig represents correlation configuration
 type CorrelationConfig struct {
-	CacheExpiry         time.Duration          `json:"cache_expiry"`
-	ConfidenceThreshold float64                `json:"confidence_threshold"`
-	SeverityWeights     map[string]float64     `json:"severity_weights"`
-	MatchingRules       []MatchingRule         `json:"matching_rules"`
-	MaxMatches          int                    `json:"max_matches"`
-	ParallelProcessing  bool                   `json:"parallel_processing"`
+	CacheExpiry         time.Duration      `json:"cache_expiry"`
+	ConfidenceThreshold float64            `json:"confidence_threshold"`
+	SeverityWeights     map[string]float64 `json:"severity_weights"`
+	MatchingRules       []MatchingRule     `json:"matching_rules"`
+	MaxMatches          int                `json:"max_matches"`
+	ParallelProcessing  bool               `json:"parallel_processing"`
 }
 
 // NewThreatCorrelator creates a new threat correlator
@@ -323,9 +323,9 @@ func (tc *ThreatCorrelator) correlateWithThreats(ctx context.Context, pkg *types
 			match, err := tc.applyMatchingRule(pkg, &threat, &rule)
 			if err != nil {
 				tc.logger.Warn("Failed to apply matching rule", map[string]interface{}{
-				"rule":  rule.Name,
-				"error": err,
-			})
+					"rule":  rule.Name,
+					"error": err,
+				})
 				continue
 			}
 

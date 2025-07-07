@@ -12,11 +12,11 @@ import (
 
 // OptimizedRegistryClient provides high-performance registry operations
 type OptimizedRegistryClient struct {
-	client     *http.Client
-	cache      *sync.Map
-	connPool   *ConnectionPool
-	config     *ClientConfig
-	mu         sync.RWMutex
+	client   *http.Client
+	cache    *sync.Map
+	connPool *ConnectionPool
+	config   *ClientConfig
+	mu       sync.RWMutex
 }
 
 // ClientConfig holds configuration for the registry client
@@ -315,9 +315,9 @@ func (c *OptimizedRegistryClient) GetCacheStats() map[string]interface{} {
 	})
 
 	return map[string]interface{}{
-		"cache_entries": count,
+		"cache_entries":   count,
 		"max_connections": c.config.MaxConnections,
-		"timeout": c.config.Timeout.String(),
+		"timeout":         c.config.Timeout.String(),
 	}
 }
 

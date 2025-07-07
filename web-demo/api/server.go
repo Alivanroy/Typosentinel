@@ -45,11 +45,11 @@ type HealthResponse struct {
 
 // StatsResponse represents scan statistics
 type StatsResponse struct {
-	TotalScans     int64   `json:"total_scans"`
-	SuccessfulScans int64  `json:"successful_scans"`
-	FailedScans    int64   `json:"failed_scans"`
-	AverageTime    float64 `json:"average_time_seconds"`
-	LastScan       *time.Time `json:"last_scan,omitempty"`
+	TotalScans      int64      `json:"total_scans"`
+	SuccessfulScans int64      `json:"successful_scans"`
+	FailedScans     int64      `json:"failed_scans"`
+	AverageTime     float64    `json:"average_time_seconds"`
+	LastScan        *time.Time `json:"last_scan,omitempty"`
 }
 
 var (
@@ -325,8 +325,8 @@ func performMockScan(scan *ScanResponse, req ScanRequest) {
 
 	// Mock scan result
 	mockResult := map[string]interface{}{
-		"package": req.Package,
-		"version": req.Version,
+		"package":    req.Package,
+		"version":    req.Version,
 		"risk_level": "medium",
 		"risk_score": 0.6,
 		"findings": []map[string]interface{}{

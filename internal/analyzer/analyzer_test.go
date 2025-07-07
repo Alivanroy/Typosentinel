@@ -10,7 +10,9 @@ import (
 
 func TestNew(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)
@@ -32,7 +34,9 @@ func TestNew(t *testing.T) {
 
 func TestScan_Success(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)
@@ -71,7 +75,9 @@ func TestScan_Success(t *testing.T) {
 
 func TestScan_NoPackageFiles(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)
@@ -95,7 +101,9 @@ func TestScan_NoPackageFiles(t *testing.T) {
 
 func TestScan_SpecificFile(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)

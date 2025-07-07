@@ -3,9 +3,9 @@ package ml
 import (
 	"context"
 	"encoding/json"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"testing"
 	"time"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestBasicMLScorerInterface(t *testing.T) {

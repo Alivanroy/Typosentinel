@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/requestid"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Alivanroy/Typosentinel/internal/config"
-	"github.com/Alivanroy/Typosentinel/pkg/logger"
-	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
@@ -43,19 +43,19 @@ func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *an
 	// Add middleware
 	r.Use(gin.Recovery())
 	r.Use(requestid.New())
-	
+
 	// Add CORS middleware if configured
 	if cfg.CORS != nil {
 		r.Use(corsMiddleware(*cfg.CORS))
 	}
-	
+
 	r.Use(loggingMiddleware())
-	
+
 	// Add rate limiting middleware if configured
 	if cfg.RateLimiting != nil {
 		r.Use(rateLimitMiddleware(*cfg.RateLimiting))
 	}
-	
+
 	// Add auth middleware if configured
 	if cfg.Authentication != nil {
 		r.Use(authMiddleware(cfg.Authentication))
@@ -234,8 +234,8 @@ type AnalyzePackageRequest struct {
 	Name      string `json:"name" binding:"required"`
 	Version   string `json:"version,omitempty"`
 	Options   struct {
-		IncludeML          bool `json:"include_ml,omitempty"`
-		IncludeVulns       bool `json:"include_vulnerabilities,omitempty"`
+		IncludeML           bool `json:"include_ml,omitempty"`
+		IncludeVulns        bool `json:"include_vulnerabilities,omitempty"`
 		IncludeDependencies bool `json:"include_dependencies,omitempty"`
 	} `json:"options,omitempty"`
 }
@@ -244,9 +244,9 @@ type AnalyzePackageRequest struct {
 type BatchAnalyzeRequest struct {
 	Packages []AnalyzePackageRequest `json:"packages" binding:"required"`
 	Options  struct {
-		Parallel           bool `json:"parallel,omitempty"`
-		IncludeML          bool `json:"include_ml,omitempty"`
-		IncludeVulns       bool `json:"include_vulnerabilities,omitempty"`
+		Parallel            bool `json:"parallel,omitempty"`
+		IncludeML           bool `json:"include_ml,omitempty"`
+		IncludeVulns        bool `json:"include_vulnerabilities,omitempty"`
 		IncludeDependencies bool `json:"include_dependencies,omitempty"`
 	} `json:"options,omitempty"`
 }
@@ -386,8 +386,8 @@ func (s *Server) analyzePackageByVersion(c *gin.Context) {
 func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package, includeML, includeVulns, includeDeps bool) (interface{}, error) {
 	// Basic package analysis
 	analysisResult := map[string]interface{}{
-		"package": pkg,
-		"timestamp": time.Now().UTC(),
+		"package":     pkg,
+		"timestamp":   time.Now().UTC(),
 		"analyzed_at": time.Now().UTC(),
 	}
 
@@ -402,13 +402,13 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 
 		// Get popular packages for comparison
 		popularPackages := s.getPopularPackagesForRegistry(pkg.Registry)
-		
+
 		// Perform threat analysis
 		threats, warnings := s.analyzer.AnalyzeDependency(dep, popularPackages)
-		
+
 		// Calculate risk level based on threats
 		riskLevel, riskScore := s.calculateRiskLevel(threats)
-		
+
 		analysisResult["threats"] = threats
 		analysisResult["warnings"] = warnings
 		analysisResult["risk_level"] = riskLevel
@@ -435,7 +435,7 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 	if includeVulns {
 		// Perform basic vulnerability scanning
 		vulns := []types.Vulnerability{}
-		
+
 		// Check for known vulnerable patterns in package name
 		vulnerablePatterns := []string{"malicious", "backdoor", "trojan"}
 		for _, pattern := range vulnerablePatterns {
@@ -448,7 +448,7 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 				})
 			}
 		}
-		
+
 		analysisResult["vulnerabilities"] = vulns
 	}
 
@@ -456,7 +456,7 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 	if includeDeps {
 		// Perform basic dependency analysis
 		deps := []types.Package{}
-		
+
 		// For demonstration, add some common dependencies based on package type
 		if strings.Contains(pkg.Name, "js") || strings.Contains(pkg.Name, "node") {
 			deps = append(deps, types.Package{
@@ -465,7 +465,7 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 				Registry: "npm",
 			})
 		}
-		
+
 		analysisResult["dependencies"] = deps
 	}
 
@@ -488,7 +488,7 @@ func (s *Server) scanVulnerabilities(c *gin.Context) {
 			"version":   version,
 		},
 		"vulnerabilities": []types.Vulnerability{},
-		"scan_time":      time.Now().UTC(),
+		"scan_time":       time.Now().UTC(),
 	}
 
 	c.JSON(http.StatusOK, result)
@@ -510,7 +510,7 @@ func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
 			"version":   req.Version,
 		},
 		"vulnerabilities": []types.Vulnerability{},
-		"scan_time":      time.Now().UTC(),
+		"scan_time":       time.Now().UTC(),
 	}
 
 	c.JSON(http.StatusOK, result)
@@ -549,7 +549,7 @@ func (s *Server) batchScanVulnerabilities(c *gin.Context) {
 				"version":   pkgReq.Version,
 			},
 			"vulnerabilities": []types.Vulnerability{},
-			"scan_time":      time.Now().UTC(),
+			"scan_time":       time.Now().UTC(),
 		}
 		results[i] = result
 	}
@@ -572,15 +572,15 @@ func (s *Server) getVulnerabilityScanStatus(c *gin.Context) {
 
 	// Placeholder implementation - in a real system, this would check scan status from a database
 	c.JSON(http.StatusOK, gin.H{
-		"scan_id": scanID,
-		"status":  "completed",
-		"progress": 100,
-		"started_at": time.Now().Add(-5 * time.Minute).UTC(),
+		"scan_id":      scanID,
+		"status":       "completed",
+		"progress":     100,
+		"started_at":   time.Now().Add(-5 * time.Minute).UTC(),
 		"completed_at": time.Now().Add(-1 * time.Minute).UTC(),
 		"results": gin.H{
-			"total_packages": 1,
+			"total_packages":        1,
 			"vulnerabilities_found": 0,
-			"scan_duration": "4m30s",
+			"scan_duration":         "4m30s",
 		},
 	})
 }
@@ -674,7 +674,7 @@ func (s *Server) calculateRiskLevel(threats []types.Threat) (int, float64) {
 // MLPredictionRequest represents an ML prediction request
 type MLPredictionRequest struct {
 	Package  types.Package `json:"package" binding:"required"`
-	Features []float64    `json:"features,omitempty"`
+	Features []float64     `json:"features,omitempty"`
 }
 
 // predictTyposquatting handles typosquatting prediction
@@ -830,14 +830,14 @@ func (s *Server) getDashboardMetrics(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"totalScans":        1250,
-		"threatsDetected":   47,
-		"criticalThreats":   8,
-		"packagesScanned":   15420,
-		"scanSuccessRate":   98.5,
-		"averageScanTime":   2.3,
-		"timeRange":         timeRange,
-		"lastUpdated":       time.Now().UTC(),
+		"totalScans":      1250,
+		"threatsDetected": 47,
+		"criticalThreats": 8,
+		"packagesScanned": 15420,
+		"scanSuccessRate": 98.5,
+		"averageScanTime": 2.3,
+		"timeRange":       timeRange,
+		"lastUpdated":     time.Now().UTC(),
 	})
 }
 
@@ -849,13 +849,13 @@ func (s *Server) getDashboardActivity(c *gin.Context) {
 
 	activity := []gin.H{
 		{
-			"id":          1,
-			"type":        "scan_completed",
-			"package":     "express",
-			"ecosystem":   "npm",
-			"status":      "clean",
-			"timestamp":   time.Now().Add(-5 * time.Minute).UTC(),
-			"duration":    "2.1s",
+			"id":        1,
+			"type":      "scan_completed",
+			"package":   "express",
+			"ecosystem": "npm",
+			"status":    "clean",
+			"timestamp": time.Now().Add(-5 * time.Minute).UTC(),
+			"duration":  "2.1s",
 		},
 		{
 			"id":          2,
@@ -868,33 +868,33 @@ func (s *Server) getDashboardActivity(c *gin.Context) {
 			"threat_type": "typosquatting",
 		},
 		{
-			"id":          3,
-			"type":        "vulnerability_found",
-			"package":     "lodash",
-			"ecosystem":   "npm",
-			"status":      "vulnerable",
-			"timestamp":   time.Now().Add(-30 * time.Minute).UTC(),
-			"severity":    "high",
-			"cve":         "CVE-2021-23337",
+			"id":        3,
+			"type":      "vulnerability_found",
+			"package":   "lodash",
+			"ecosystem": "npm",
+			"status":    "vulnerable",
+			"timestamp": time.Now().Add(-30 * time.Minute).UTC(),
+			"severity":  "high",
+			"cve":       "CVE-2021-23337",
 		},
 		{
-			"id":          4,
-			"type":        "scan_completed",
-			"package":     "react",
-			"ecosystem":   "npm",
-			"status":      "clean",
-			"timestamp":   time.Now().Add(-45 * time.Minute).UTC(),
-			"duration":    "1.8s",
+			"id":        4,
+			"type":      "scan_completed",
+			"package":   "react",
+			"ecosystem": "npm",
+			"status":    "clean",
+			"timestamp": time.Now().Add(-45 * time.Minute).UTC(),
+			"duration":  "1.8s",
 		},
 		{
-			"id":          5,
-			"type":        "batch_scan_completed",
-			"packages":    25,
-			"ecosystem":   "pypi",
-			"status":      "completed",
-			"timestamp":   time.Now().Add(-1 * time.Hour).UTC(),
-			"duration":    "45.2s",
-			"threats":     3,
+			"id":        5,
+			"type":      "batch_scan_completed",
+			"packages":  25,
+			"ecosystem": "pypi",
+			"status":    "completed",
+			"timestamp": time.Now().Add(-1 * time.Hour).UTC(),
+			"duration":  "45.2s",
+			"threats":   3,
 		},
 	}
 
@@ -928,7 +928,7 @@ func (s *Server) getDashboardTrends(c *gin.Context) {
 	// Generate data based on time range
 	var dailyData []gin.H
 	now := time.Now()
-	
+
 	switch timeRange {
 	case "1d":
 		// Generate hourly data for last 24 hours
@@ -1016,7 +1016,7 @@ func (s *Server) getDashboardTrends(c *gin.Context) {
 			{"type": "malware", "count": 6, "percentage": 12.8},
 			{"type": "suspicious", "count": 3, "percentage": 6.4},
 		},
-		"timeRange": timeRange,
+		"timeRange":   timeRange,
 		"lastUpdated": time.Now().UTC(),
 	})
 }
@@ -1203,7 +1203,7 @@ func (s *Server) getAnalysisStatistics(c *gin.Context) {
 		"threats_detected":    50,
 		"vulnerabilities":     25,
 		"typosquatting_cases": 15,
-		"last_24h":           100,
+		"last_24h":            100,
 	})
 }
 
@@ -1218,7 +1218,7 @@ func (s *Server) exportResults(c *gin.Context) {
 		c.String(http.StatusOK, "package,ecosystem,threats,timestamp\n")
 	case "json":
 		c.JSON(http.StatusOK, gin.H{
-			"results": []interface{}{},
+			"results":     []interface{}{},
 			"exported_at": time.Now().UTC(),
 		})
 	default:

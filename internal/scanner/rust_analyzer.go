@@ -25,9 +25,9 @@ func NewRustPackageAnalyzer(cfg *config.Config) *RustPackageAnalyzer {
 
 // CargoToml represents the structure of Cargo.toml
 type CargoToml struct {
-	Package      CargoPackage            `toml:"package"`
-	Dependencies map[string]interface{} `toml:"dependencies"`
-	DevDependencies map[string]interface{} `toml:"dev-dependencies"`
+	Package           CargoPackage           `toml:"package"`
+	Dependencies      map[string]interface{} `toml:"dependencies"`
+	DevDependencies   map[string]interface{} `toml:"dev-dependencies"`
 	BuildDependencies map[string]interface{} `toml:"build-dependencies"`
 }
 

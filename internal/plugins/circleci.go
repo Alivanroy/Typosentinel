@@ -21,31 +21,31 @@ type CircleCIPlugin struct {
 
 // CircleCISettings contains CircleCI specific configuration
 type CircleCISettings struct {
-	ProjectSlug     string            `json:"project_slug"`
-	WorkflowID      string            `json:"workflow_id"`
-	JobNumber       string            `json:"job_number"`
-	BuildNumber     string            `json:"build_number"`
-	APIToken        string            `json:"api_token"`
-	FailOnCritical  bool              `json:"fail_on_critical"`
-	FailOnHigh      bool              `json:"fail_on_high"`
-	StoreArtifacts  bool              `json:"store_artifacts"`
-	StoreTestResults bool             `json:"store_test_results"`
-	NotifySlack     bool              `json:"notify_slack"`
-	SlackWebhook    string            `json:"slack_webhook"`
-	CustomEnvVars   map[string]string `json:"custom_env_vars"`
+	ProjectSlug      string            `json:"project_slug"`
+	WorkflowID       string            `json:"workflow_id"`
+	JobNumber        string            `json:"job_number"`
+	BuildNumber      string            `json:"build_number"`
+	APIToken         string            `json:"api_token"`
+	FailOnCritical   bool              `json:"fail_on_critical"`
+	FailOnHigh       bool              `json:"fail_on_high"`
+	StoreArtifacts   bool              `json:"store_artifacts"`
+	StoreTestResults bool              `json:"store_test_results"`
+	NotifySlack      bool              `json:"notify_slack"`
+	SlackWebhook     string            `json:"slack_webhook"`
+	CustomEnvVars    map[string]string `json:"custom_env_vars"`
 }
 
 // CircleCIOutput represents the output structure for CircleCI
 type CircleCIOutput struct {
-	JobStatus       string                   `json:"job_status"`
-	ExitCode        int                      `json:"exit_code"`
-	EnvironmentVars map[string]string        `json:"environment_vars"`
-	Artifacts       []CircleCIArtifact       `json:"artifacts"`
-	TestResults     CircleCITestResults      `json:"test_results"`
-	Steps           []CircleCIStep           `json:"steps"`
-	Notifications   []CircleCINotification   `json:"notifications"`
-	Metrics         map[string]interface{}   `json:"metrics"`
-	Insights        CircleCIInsights         `json:"insights"`
+	JobStatus       string                 `json:"job_status"`
+	ExitCode        int                    `json:"exit_code"`
+	EnvironmentVars map[string]string      `json:"environment_vars"`
+	Artifacts       []CircleCIArtifact     `json:"artifacts"`
+	TestResults     CircleCITestResults    `json:"test_results"`
+	Steps           []CircleCIStep         `json:"steps"`
+	Notifications   []CircleCINotification `json:"notifications"`
+	Metrics         map[string]interface{} `json:"metrics"`
+	Insights        CircleCIInsights       `json:"insights"`
 }
 
 // CircleCIArtifact represents a CircleCI artifact
@@ -58,35 +58,35 @@ type CircleCIArtifact struct {
 
 // CircleCITestResults represents CircleCI test results
 type CircleCITestResults struct {
-	Path         string              `json:"path"`
-	Format       string              `json:"format"`
-	TotalTests   int                 `json:"total_tests"`
-	PassedTests  int                 `json:"passed_tests"`
-	FailedTests  int                 `json:"failed_tests"`
-	SkippedTests int                 `json:"skipped_tests"`
-	TestCases    []CircleCITestCase  `json:"test_cases"`
+	Path         string             `json:"path"`
+	Format       string             `json:"format"`
+	TotalTests   int                `json:"total_tests"`
+	PassedTests  int                `json:"passed_tests"`
+	FailedTests  int                `json:"failed_tests"`
+	SkippedTests int                `json:"skipped_tests"`
+	TestCases    []CircleCITestCase `json:"test_cases"`
 }
 
 // CircleCITestCase represents a test case
 type CircleCITestCase struct {
-	Classname   string  `json:"classname"`
-	Name        string  `json:"name"`
-	Time        float64 `json:"time"`
-	Failure     string  `json:"failure,omitempty"`
-	Error       string  `json:"error,omitempty"`
-	SystemOut   string  `json:"system-out,omitempty"`
-	SystemErr   string  `json:"system-err,omitempty"`
+	Classname string  `json:"classname"`
+	Name      string  `json:"name"`
+	Time      float64 `json:"time"`
+	Failure   string  `json:"failure,omitempty"`
+	Error     string  `json:"error,omitempty"`
+	SystemOut string  `json:"system-out,omitempty"`
+	SystemErr string  `json:"system-err,omitempty"`
 }
 
 // CircleCIStep represents a CircleCI step
 type CircleCIStep struct {
-	Name        string                 `json:"name"`
-	Command     string                 `json:"command"`
-	ExitCode    int                    `json:"exit_code"`
-	Duration    int64                  `json:"duration_ms"`
-	Output      string                 `json:"output"`
-	Status      string                 `json:"status"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	Name     string                 `json:"name"`
+	Command  string                 `json:"command"`
+	ExitCode int                    `json:"exit_code"`
+	Duration int64                  `json:"duration_ms"`
+	Output   string                 `json:"output"`
+	Status   string                 `json:"status"`
+	Metadata map[string]interface{} `json:"metadata"`
 }
 
 // CircleCINotification represents a notification
@@ -257,25 +257,25 @@ func (p *CircleCIPlugin) Execute(ctx context.Context, result *types.ScanResult) 
 
 	// Create metrics
 	output.Metrics = map[string]interface{}{
-		"scan_duration_ms":    time.Since(start).Milliseconds(),
-		"threats_detected":    totalThreats,
-		"risk_score":          0.0, // Risk calculation moved to individual packages
-		"overall_risk":        "unknown", // Risk calculation moved to individual packages
-		"package_name":        packageName,
-		"package_version":     packageVersion,
-		"scan_timestamp":      time.Now().Unix(),
-		"workflow_id":         p.settings.WorkflowID,
-		"job_number":          p.settings.JobNumber,
+		"scan_duration_ms": time.Since(start).Milliseconds(),
+		"threats_detected": totalThreats,
+		"risk_score":       0.0,       // Risk calculation moved to individual packages
+		"overall_risk":     "unknown", // Risk calculation moved to individual packages
+		"package_name":     packageName,
+		"package_version":  packageVersion,
+		"scan_timestamp":   time.Now().Unix(),
+		"workflow_id":      p.settings.WorkflowID,
+		"job_number":       p.settings.JobNumber,
 	}
 
 	// Complete the scan step
 	p.completeStep(output, "typosentinel-scan", start, output.JobStatus)
 
 	return &PluginResult{
-		Success:   output.JobStatus == "success" || output.JobStatus == "success_with_warnings",
-		Message:   p.generateSummaryMessage(result),
-		Data:      map[string]interface{}{"circleci_output": output},
-		Actions:   actions,
+		Success: output.JobStatus == "success" || output.JobStatus == "success_with_warnings",
+		Message: p.generateSummaryMessage(result),
+		Data:    map[string]interface{}{"circleci_output": output},
+		Actions: actions,
 		Metadata: map[string]interface{}{
 			"platform":     "circleci",
 			"project_slug": p.settings.ProjectSlug,
@@ -335,7 +335,7 @@ func (p *CircleCIPlugin) setEnvironmentVars(output *CircleCIOutput, result *type
 		totalThreats += len(pkg.Threats)
 	}
 
-	output.EnvironmentVars["TYPOSENTINEL_RISK_SCORE"] = "0.0" // Risk calculation moved to individual packages
+	output.EnvironmentVars["TYPOSENTINEL_RISK_SCORE"] = "0.0"       // Risk calculation moved to individual packages
 	output.EnvironmentVars["TYPOSENTINEL_OVERALL_RISK"] = "unknown" // Risk calculation moved to individual packages
 	output.EnvironmentVars["TYPOSENTINEL_THREATS_COUNT"] = fmt.Sprintf("%d", totalThreats)
 	output.EnvironmentVars["TYPOSENTINEL_PACKAGE_NAME"] = packageName

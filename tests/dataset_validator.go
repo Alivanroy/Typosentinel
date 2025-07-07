@@ -15,13 +15,13 @@ import (
 
 // TestPackage represents a test package with expected results
 type TestPackage struct {
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Description  string                 `json:"description"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	ExpectedRisk string                 `json:"expected_risk"`
-	ExpectedScore float64               `json:"expected_score"`
-	RiskFactors  []string               `json:"risk_factors,omitempty"`
+	Name          string                 `json:"name"`
+	Version       string                 `json:"version"`
+	Description   string                 `json:"description"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	ExpectedRisk  string                 `json:"expected_risk"`
+	ExpectedScore float64                `json:"expected_score"`
+	RiskFactors   []string               `json:"risk_factors,omitempty"`
 }
 
 // TestConfig represents the test configuration
@@ -64,26 +64,26 @@ type TestResult struct {
 
 // ValidationResults represents overall validation results
 type ValidationResults struct {
-	TotalTests       int
-	PassedTests      int
-	FailedTests      int
-	TruePositives    int
-	TrueNegatives    int
-	FalsePositives   int
-	FalseNegatives   int
-	AverageTime      time.Duration
-	MaxTime          time.Duration
-	Accuracy         float64
-	Precision        float64
-	Recall           float64
-	F1Score          float64
-	Results          []TestResult
+	TotalTests     int
+	PassedTests    int
+	FailedTests    int
+	TruePositives  int
+	TrueNegatives  int
+	FalsePositives int
+	FalseNegatives int
+	AverageTime    time.Duration
+	MaxTime        time.Duration
+	Accuracy       float64
+	Precision      float64
+	Recall         float64
+	F1Score        float64
+	Results        []TestResult
 }
 
 // DatasetValidator validates ML analysis against test datasets
 type DatasetValidator struct {
-	analyzer   *ml.MLAnalyzer
-	config     *TestConfig
+	analyzer    *ml.MLAnalyzer
+	config      *TestConfig
 	datasetsDir string
 }
 
@@ -129,8 +129,8 @@ func (dv *DatasetValidator) ValidatePackage(pkg TestPackage) TestResult {
 
 	// Convert test package to types.Package
 	testPkg := &types.Package{
-		Name:     pkg.Name,
-		Version:  pkg.Version,
+		Name:    pkg.Name,
+		Version: pkg.Version,
 		Metadata: &types.PackageMetadata{
 			Name:        pkg.Name,
 			Version:     pkg.Version,
@@ -292,7 +292,7 @@ func (dv *DatasetValidator) PrintResults(results map[string]*ValidationResults) 
 			fmt.Printf("\nFailed Tests:\n")
 			for _, testResult := range result.Results {
 				if !testResult.Passed {
-					fmt.Printf("  %s: Expected %s/%.2f, Got %s/%.2f", 
+					fmt.Printf("  %s: Expected %s/%.2f, Got %s/%.2f",
 						testResult.PackageName,
 						testResult.ExpectedRisk, testResult.ExpectedScore,
 						testResult.ActualRisk, testResult.ActualScore)
@@ -310,14 +310,14 @@ func (dv *DatasetValidator) PrintResults(results map[string]*ValidationResults) 
 	benchmarks := dv.config.TestDatasets.PerformanceBenchmarks.AccuracyTargets
 	for pm, result := range results {
 		fmt.Printf("\n%s:\n", pm)
-		fmt.Printf("  Precision: %.3f (target: %.3f) %s\n", 
-			result.Precision, benchmarks.Precision, 
+		fmt.Printf("  Precision: %.3f (target: %.3f) %s\n",
+			result.Precision, benchmarks.Precision,
 			getStatus(result.Precision >= benchmarks.Precision))
-		fmt.Printf("  Recall: %.3f (target: %.3f) %s\n", 
-			result.Recall, benchmarks.Recall, 
+		fmt.Printf("  Recall: %.3f (target: %.3f) %s\n",
+			result.Recall, benchmarks.Recall,
 			getStatus(result.Recall >= benchmarks.Recall))
-		fmt.Printf("  F1 Score: %.3f (target: %.3f) %s\n", 
-			result.F1Score, benchmarks.F1Score, 
+		fmt.Printf("  F1 Score: %.3f (target: %.3f) %s\n",
+			result.F1Score, benchmarks.F1Score,
 			getStatus(result.F1Score >= benchmarks.F1Score))
 	}
 }

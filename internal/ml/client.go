@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"net/http"
 	"time"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Client provides an interface to the ML service

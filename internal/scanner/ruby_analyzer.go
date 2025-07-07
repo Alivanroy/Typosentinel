@@ -27,15 +27,15 @@ type RubyPackageAnalyzer struct {
 // NewRubyPackageAnalyzer creates a new Ruby analyzer with RubyGems API integration
 func NewRubyPackageAnalyzer(cfg *config.Config) *RubyPackageAnalyzer {
 	metadata := &AnalyzerMetadata{
-		Name:        "ruby",
-		Version:     "1.0.0",
-		Description: "Analyzes Ruby projects using Gemfile, Gemfile.lock, and .gemspec files with RubyGems API integration",
-		Author:      "TypoSentinel",
-		Languages:   []string{"ruby"},
+		Name:         "ruby",
+		Version:      "1.0.0",
+		Description:  "Analyzes Ruby projects using Gemfile, Gemfile.lock, and .gemspec files with RubyGems API integration",
+		Author:       "TypoSentinel",
+		Languages:    []string{"ruby"},
 		Capabilities: []string{"dependency_extraction", "bundler_integration", "rubygems_api", "gemspec_parsing", "lock_file_parsing"},
 		Requirements: []string{"Gemfile"},
 	}
-	
+
 	baseAnalyzer := NewBaseAnalyzer(
 		"ruby",
 		[]string{".rb", ".gemspec"},
@@ -43,10 +43,10 @@ func NewRubyPackageAnalyzer(cfg *config.Config) *RubyPackageAnalyzer {
 		metadata,
 		cfg,
 	)
-	
+
 	return &RubyPackageAnalyzer{
 		BaseAnalyzer: baseAnalyzer,
-		config: cfg,
+		config:       cfg,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -77,36 +77,36 @@ type GemSpec struct {
 
 // RubyGemsAPIResponse represents the response from RubyGems API
 type RubyGemsAPIResponse struct {
-	Name            string    `json:"name"`
-	Version         string    `json:"version"`
-	Authors         string    `json:"authors"`
-	Info            string    `json:"info"`
-	Licenses        []string  `json:"licenses"`
-	Metadata        map[string]interface{} `json:"metadata"`
-	SHA             string    `json:"sha"`
-	ProjectURI      string    `json:"project_uri"`
-	GemURI          string    `json:"gem_uri"`
-	HomepageURI     string    `json:"homepage_uri"`
-	WikiURI         string    `json:"wiki_uri"`
-	DocumentationURI string   `json:"documentation_uri"`
-	MailingListURI  string    `json:"mailing_list_uri"`
-	SourceCodeURI   string    `json:"source_code_uri"`
-	BugTrackerURI   string    `json:"bug_tracker_uri"`
-	ChangelogURI    string    `json:"changelog_uri"`
-	Dependencies    struct {
+	Name             string                 `json:"name"`
+	Version          string                 `json:"version"`
+	Authors          string                 `json:"authors"`
+	Info             string                 `json:"info"`
+	Licenses         []string               `json:"licenses"`
+	Metadata         map[string]interface{} `json:"metadata"`
+	SHA              string                 `json:"sha"`
+	ProjectURI       string                 `json:"project_uri"`
+	GemURI           string                 `json:"gem_uri"`
+	HomepageURI      string                 `json:"homepage_uri"`
+	WikiURI          string                 `json:"wiki_uri"`
+	DocumentationURI string                 `json:"documentation_uri"`
+	MailingListURI   string                 `json:"mailing_list_uri"`
+	SourceCodeURI    string                 `json:"source_code_uri"`
+	BugTrackerURI    string                 `json:"bug_tracker_uri"`
+	ChangelogURI     string                 `json:"changelog_uri"`
+	Dependencies     struct {
 		Development []RubyGemDependency `json:"development"`
 		Runtime     []RubyGemDependency `json:"runtime"`
 	} `json:"dependencies"`
-	BuiltAt         time.Time `json:"built_at"`
-	CreatedAt       time.Time `json:"created_at"`
-	Description     string    `json:"description"`
-	Downloads       int       `json:"downloads"`
-	Number          string    `json:"number"`
-	Summary         string    `json:"summary"`
-	Platform        string    `json:"platform"`
-	RubyVersion     string    `json:"ruby_version"`
-	Prerelease      bool      `json:"prerelease"`
-	Requirements    []string  `json:"requirements"`
+	BuiltAt      time.Time `json:"built_at"`
+	CreatedAt    time.Time `json:"created_at"`
+	Description  string    `json:"description"`
+	Downloads    int       `json:"downloads"`
+	Number       string    `json:"number"`
+	Summary      string    `json:"summary"`
+	Platform     string    `json:"platform"`
+	RubyVersion  string    `json:"ruby_version"`
+	Prerelease   bool      `json:"prerelease"`
+	Requirements []string  `json:"requirements"`
 }
 
 // RubyGemDependency represents a gem dependency
@@ -323,8 +323,8 @@ func (a *RubyPackageAnalyzer) parseGemfileLock(filePath string) (map[string]*typ
 			if matches := depRegex.FindStringSubmatch(line); len(matches) >= 2 {
 				depName := matches[1]
 				if deps, ok := currentGem.Metadata.Metadata["dependencies"].([]string); ok {
-				currentGem.Metadata.Metadata["dependencies"] = append(deps, depName)
-			}
+					currentGem.Metadata.Metadata["dependencies"] = append(deps, depName)
+				}
 			}
 		}
 	}
@@ -392,7 +392,7 @@ func (a *RubyPackageAnalyzer) enhanceWithLockInfo(gemfilePackages []*types.Packa
 		if lockGem, exists := lockGems[pkg.Name]; exists {
 			// Update version with exact version from lock file
 			pkg.Version = lockGem.Version
-			
+
 			// Add lock file metadata
 			if pkg.Metadata == nil {
 				pkg.Metadata = &types.PackageMetadata{
@@ -404,7 +404,7 @@ func (a *RubyPackageAnalyzer) enhanceWithLockInfo(gemfilePackages []*types.Packa
 			if pkg.Metadata.Metadata == nil {
 				pkg.Metadata.Metadata = make(map[string]interface{})
 			}
-			
+
 			pkg.Metadata.Metadata["bundler_source"] = lockGem.Source
 			pkg.Metadata.Metadata["dependencies"] = lockGem.Dependencies
 			pkg.Metadata.Metadata["platforms"] = lockGem.Platforms
@@ -433,14 +433,14 @@ func (a *RubyPackageAnalyzer) enhanceWithLockInfo(gemfilePackages []*types.Packa
 					Version:  lockGem.Version,
 					Registry: "rubygems.org",
 					Metadata: map[string]interface{}{
-						"ecosystem":        "ruby",
-						"source":           "Gemfile.lock",
-						"bundler_source":   lockGem.Source,
-						"dependencies":     lockGem.Dependencies,
-						"platforms":        lockGem.Platforms,
-						"transitive":       true,
-						"ruby_version":     lockInfo.RubyVersion,
-						"bundler_version":  lockInfo.BundlerVersion,
+						"ecosystem":       "ruby",
+						"source":          "Gemfile.lock",
+						"bundler_source":  lockGem.Source,
+						"dependencies":    lockGem.Dependencies,
+						"platforms":       lockGem.Platforms,
+						"transitive":      true,
+						"ruby_version":    lockInfo.RubyVersion,
+						"bundler_version": lockInfo.BundlerVersion,
 					},
 				},
 			}

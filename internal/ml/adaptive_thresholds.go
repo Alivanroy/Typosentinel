@@ -26,52 +26,52 @@ type AdaptiveThresholdManager struct {
 
 // EcosystemModel represents an ML model specific to a package ecosystem
 type EcosystemModel struct {
-	Ecosystem        string                 `json:"ecosystem"`
-	ModelVersion     string                 `json:"model_version"`
-	ModelPath        string                 `json:"model_path"`
-	FeatureWeights   map[string]float64     `json:"feature_weights"`
-	TrainingMetrics  TrainingMetrics        `json:"training_metrics"`
-	LastTrained      time.Time              `json:"last_trained"`
-	IsActive         bool                   `json:"is_active"`
-	Metadata         map[string]interface{} `json:"metadata"`
+	Ecosystem       string                 `json:"ecosystem"`
+	ModelVersion    string                 `json:"model_version"`
+	ModelPath       string                 `json:"model_path"`
+	FeatureWeights  map[string]float64     `json:"feature_weights"`
+	TrainingMetrics TrainingMetrics        `json:"training_metrics"`
+	LastTrained     time.Time              `json:"last_trained"`
+	IsActive        bool                   `json:"is_active"`
+	Metadata        map[string]interface{} `json:"metadata"`
 }
 
 // ThresholdSet represents adaptive thresholds for different threat types
 type ThresholdSet struct {
-	Ecosystem              string    `json:"ecosystem"`
-	TyposquattingThreshold float64   `json:"typosquatting_threshold"`
-	ConfusionThreshold     float64   `json:"confusion_threshold"`
-	SupplyChainThreshold   float64   `json:"supply_chain_threshold"`
-	MalwareThreshold       float64   `json:"malware_threshold"`
-	ConfidenceLevel        float64   `json:"confidence_level"`
-	LastUpdated            time.Time `json:"last_updated"`
+	Ecosystem              string            `json:"ecosystem"`
+	TyposquattingThreshold float64           `json:"typosquatting_threshold"`
+	ConfusionThreshold     float64           `json:"confusion_threshold"`
+	SupplyChainThreshold   float64           `json:"supply_chain_threshold"`
+	MalwareThreshold       float64           `json:"malware_threshold"`
+	ConfidenceLevel        float64           `json:"confidence_level"`
+	LastUpdated            time.Time         `json:"last_updated"`
 	AdaptationHistory      []ThresholdChange `json:"adaptation_history"`
 }
 
 // PerformanceStats tracks model performance metrics
 type PerformanceStats struct {
-	Ecosystem        string    `json:"ecosystem"`
-	TruePositives    int       `json:"true_positives"`
-	FalsePositives   int       `json:"false_positives"`
-	TrueNegatives    int       `json:"true_negatives"`
-	FalseNegatives   int       `json:"false_negatives"`
-	Precision        float64   `json:"precision"`
-	Recall           float64   `json:"recall"`
-	F1Score          float64   `json:"f1_score"`
-	Accuracy         float64   `json:"accuracy"`
-	LastCalculated   time.Time `json:"last_calculated"`
+	Ecosystem      string    `json:"ecosystem"`
+	TruePositives  int       `json:"true_positives"`
+	FalsePositives int       `json:"false_positives"`
+	TrueNegatives  int       `json:"true_negatives"`
+	FalseNegatives int       `json:"false_negatives"`
+	Precision      float64   `json:"precision"`
+	Recall         float64   `json:"recall"`
+	F1Score        float64   `json:"f1_score"`
+	Accuracy       float64   `json:"accuracy"`
+	LastCalculated time.Time `json:"last_calculated"`
 }
 
 // TrainingMetrics represents model training performance
 type TrainingMetrics struct {
-	Accuracy         float64   `json:"accuracy"`
-	Precision        float64   `json:"precision"`
-	Recall           float64   `json:"recall"`
-	F1Score          float64   `json:"f1_score"`
-	TrainingLoss     float64   `json:"training_loss"`
-	ValidationLoss   float64   `json:"validation_loss"`
-	TrainingTime     time.Duration `json:"training_time"`
-	DatasetSize      int       `json:"dataset_size"`
+	Accuracy       float64       `json:"accuracy"`
+	Precision      float64       `json:"precision"`
+	Recall         float64       `json:"recall"`
+	F1Score        float64       `json:"f1_score"`
+	TrainingLoss   float64       `json:"training_loss"`
+	ValidationLoss float64       `json:"validation_loss"`
+	TrainingTime   time.Duration `json:"training_time"`
+	DatasetSize    int           `json:"dataset_size"`
 }
 
 // ThresholdChange represents a threshold adaptation event
@@ -86,15 +86,15 @@ type ThresholdChange struct {
 
 // AdaptiveResult represents the result of adaptive threshold analysis
 type AdaptiveResult struct {
-	Ecosystem           string                 `json:"ecosystem"`
-	OriginalScore       float64                `json:"original_score"`
-	AdjustedScore       float64                `json:"adjusted_score"`
-	ThresholdUsed       float64                `json:"threshold_used"`
-	ModelVersion        string                 `json:"model_version"`
-	ConfidenceLevel     float64                `json:"confidence_level"`
+	Ecosystem            string                 `json:"ecosystem"`
+	OriginalScore        float64                `json:"original_score"`
+	AdjustedScore        float64                `json:"adjusted_score"`
+	ThresholdUsed        float64                `json:"threshold_used"`
+	ModelVersion         string                 `json:"model_version"`
+	ConfidenceLevel      float64                `json:"confidence_level"`
 	FeatureContributions map[string]float64     `json:"feature_contributions"`
-	AdaptationApplied   bool                   `json:"adaptation_applied"`
-	Details             map[string]interface{} `json:"details"`
+	AdaptationApplied    bool                   `json:"adaptation_applied"`
+	Details              map[string]interface{} `json:"details"`
 }
 
 // NewAdaptiveThresholdManager creates a new adaptive threshold manager
@@ -182,7 +182,7 @@ func (atm *AdaptiveThresholdManager) AnalyzeWithAdaptiveThresholds(ctx context.C
 	model := atm.getEcosystemModel(ecosystem)
 	if model != nil {
 		result.ModelVersion = model.ModelVersion
-		
+
 		// Apply ecosystem-specific adjustments
 		adjustedScore, err := atm.applyEcosystemAdjustments(pkg, originalScore, model)
 		if err != nil {
@@ -283,11 +283,11 @@ func (atm *AdaptiveThresholdManager) loadEcosystemModels() error {
 		ModelVersion: "1.0.0",
 		ModelPath:    "models/npm_model.pkl",
 		FeatureWeights: map[string]float64{
-			"name_similarity":     0.3,
-			"download_count":      0.2,
+			"name_similarity":       0.3,
+			"download_count":        0.2,
 			"maintainer_reputation": 0.25,
-			"version_pattern":     0.15,
-			"dependency_risk":     0.1,
+			"version_pattern":       0.15,
+			"dependency_risk":       0.1,
 		},
 		IsActive:    true,
 		LastTrained: time.Now().AddDate(0, -1, 0), // 1 month ago
@@ -316,9 +316,9 @@ func (atm *AdaptiveThresholdManager) loadEcosystemModels() error {
 		ModelPath:    "models/go_model.pkl",
 		FeatureWeights: map[string]float64{
 			"module_path_similarity": 0.4,
-			"repository_analysis":   0.3,
-			"version_semantics":     0.2,
-			"import_patterns":       0.1,
+			"repository_analysis":    0.3,
+			"version_semantics":      0.2,
+			"import_patterns":        0.1,
 		},
 		IsActive:    true,
 		LastTrained: time.Now().AddDate(0, -1, 0),
@@ -330,8 +330,8 @@ func (atm *AdaptiveThresholdManager) loadEcosystemModels() error {
 		ModelVersion: "1.0.0",
 		ModelPath:    "models/generic_model.pkl",
 		FeatureWeights: map[string]float64{
-			"name_similarity": 0.5,
-			"metadata_analysis": 0.3,
+			"name_similarity":     0.5,
+			"metadata_analysis":   0.3,
 			"behavioral_patterns": 0.2,
 		},
 		IsActive:    true,
@@ -505,10 +505,10 @@ func (atm *AdaptiveThresholdManager) calculateFeatureContributions(pkg *types.Pa
 
 func (atm *AdaptiveThresholdManager) getDefaultThreshold(threatType string) float64 {
 	defaultThresholds := map[string]float64{
-		"typosquatting":       0.7,
+		"typosquatting":        0.7,
 		"dependency_confusion": 0.7,
-		"supply_chain":        0.7,
-		"malware":             0.8,
+		"supply_chain":         0.7,
+		"malware":              0.8,
 	}
 
 	if threshold, exists := defaultThresholds[threatType]; exists {
@@ -575,7 +575,7 @@ func (atm *AdaptiveThresholdManager) adaptThresholdForType(ecosystem, threatType
 		// Apply the new threshold
 		if newThreshold != oldThreshold {
 			atm.setThreshold(thresholdSet, threatType, newThreshold)
-			
+
 			// Record the change
 			change := ThresholdChange{
 				ThreatType:      threatType,

@@ -37,19 +37,19 @@ type PluginManager struct {
 type Plugin interface {
 	// GetInfo returns plugin metadata
 	GetInfo() PluginInfo
-	
+
 	// Initialize sets up the plugin
 	Initialize(ctx context.Context, config map[string]interface{}) error
-	
+
 	// Execute runs the plugin with scan results
 	Execute(ctx context.Context, results *types.ScanResult) (*PluginResult, error)
-	
+
 	// Validate checks if the plugin can run in the current environment
 	Validate(ctx context.Context) error
-	
+
 	// Cleanup performs plugin cleanup
 	Cleanup(ctx context.Context) error
-	
+
 	// GetStatus returns current plugin status
 	GetStatus() PluginStatus
 }
@@ -59,26 +59,26 @@ type PluginFactory func(config map[string]interface{}) (Plugin, error)
 
 // PluginInfo contains plugin metadata
 type PluginInfo struct {
-	Name         string            `json:"name"`
-	Version      string            `json:"version"`
-	Description  string            `json:"description"`
-	Author       string            `json:"author"`
-	Platform     string            `json:"platform"` // github-actions, gitlab-ci, jenkins, etc.
-	Capabilities []string          `json:"capabilities"`
-	Requirements map[string]string `json:"requirements"`
+	Name         string                 `json:"name"`
+	Version      string                 `json:"version"`
+	Description  string                 `json:"description"`
+	Author       string                 `json:"author"`
+	Platform     string                 `json:"platform"` // github-actions, gitlab-ci, jenkins, etc.
+	Capabilities []string               `json:"capabilities"`
+	Requirements map[string]string      `json:"requirements"`
 	ConfigSchema map[string]interface{} `json:"config_schema"`
 }
 
 // PluginResult represents the result of plugin execution
 type PluginResult struct {
-	Success     bool                   `json:"success"`
-	Message     string                 `json:"message"`
-	Actions     []PluginAction         `json:"actions"`
-	Metrics     map[string]interface{} `json:"metrics"`
-	Duration    time.Duration          `json:"duration"`
-	Data        map[string]interface{} `json:"data,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	Error       error                  `json:"error,omitempty"`
+	Success  bool                   `json:"success"`
+	Message  string                 `json:"message"`
+	Actions  []PluginAction         `json:"actions"`
+	Metrics  map[string]interface{} `json:"metrics"`
+	Duration time.Duration          `json:"duration"`
+	Data     map[string]interface{} `json:"data,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Error    error                  `json:"error,omitempty"`
 }
 
 // PluginAction represents an action taken by the plugin
@@ -100,8 +100,6 @@ type PluginStatus struct {
 	LastError   string    `json:"last_error,omitempty"`
 	HealthCheck bool      `json:"health_check"`
 }
-
-
 
 // NewPluginManager creates a new plugin manager
 func NewPluginManager(config *config.Config, logger Logger) *PluginManager {
@@ -206,7 +204,7 @@ func (pm *PluginManager) ExecutePlugins(ctx context.Context, results *types.Scan
 		wg.Add(1)
 		go func(pluginName string, p Plugin) {
 			defer wg.Done()
-			
+
 			start := time.Now()
 			result, err := p.Execute(ctx, results)
 			if err != nil {
@@ -221,7 +219,7 @@ func (pm *PluginManager) ExecutePlugins(ctx context.Context, results *types.Scan
 				result.Duration = time.Since(start)
 				pm.logger.Debug("Plugin executed successfully", map[string]interface{}{"plugin": pluginName, "duration": result.Duration})
 			}
-			
+
 			resultsChan <- *result
 		}(name, plugin)
 	}

@@ -12,20 +12,20 @@ import (
 
 // Config holds all configuration for the Typosentinel application
 type Config struct {
-	Environment string        `json:"environment"`
-	Version     string        `json:"version"`
-	LogLevel    string        `json:"log_level"`
-	Server      ServerConfig  `json:"server"`
-	Database    DatabaseConfig `json:"database"`
-	Redis       RedisConfig   `json:"redis"`
-	Queue       QueueConfig   `json:"queue"`
-	Batch       BatchConfig   `json:"batch"`
-	ML          MLConfig      `json:"ml"`
-	Security    SecurityConfig `json:"security"`
+	Environment string           `json:"environment"`
+	Version     string           `json:"version"`
+	LogLevel    string           `json:"log_level"`
+	Server      ServerConfig     `json:"server"`
+	Database    DatabaseConfig   `json:"database"`
+	Redis       RedisConfig      `json:"redis"`
+	Queue       QueueConfig      `json:"queue"`
+	Batch       BatchConfig      `json:"batch"`
+	ML          MLConfig         `json:"ml"`
+	Security    SecurityConfig   `json:"security"`
 	Monitoring  MonitoringConfig `json:"monitoring"`
-	Storage     StorageConfig `json:"storage"`
-	WebSocket   WebSocketConfig `json:"websocket"`
-	RateLimit   RateLimitConfig `json:"rate_limit"`
+	Storage     StorageConfig    `json:"storage"`
+	WebSocket   WebSocketConfig  `json:"websocket"`
+	RateLimit   RateLimitConfig  `json:"rate_limit"`
 }
 
 // ServerConfig holds HTTP server configuration
@@ -62,16 +62,16 @@ type DatabaseConfig struct {
 
 // PostgreSQLConfig holds PostgreSQL configuration
 type PostgreSQLConfig struct {
-	Host            string        `json:"host"`
-	Port            int           `json:"port"`
-	Database        string        `json:"database"`
-	Username        string        `json:"username"`
-	Password        string        `json:"password"`
-	SSLMode         string        `json:"ssl_mode"`
-	MaxOpenConns    int           `json:"max_open_conns"`
-	MaxIdleConns    int           `json:"max_idle_conns"`
-	ConnMaxLifetime time.Duration `json:"conn_max_lifetime"`
-	ConnMaxIdleTime time.Duration `json:"conn_max_idle_time"`
+	Host            string          `json:"host"`
+	Port            int             `json:"port"`
+	Database        string          `json:"database"`
+	Username        string          `json:"username"`
+	Password        string          `json:"password"`
+	SSLMode         string          `json:"ssl_mode"`
+	MaxOpenConns    int             `json:"max_open_conns"`
+	MaxIdleConns    int             `json:"max_idle_conns"`
+	ConnMaxLifetime time.Duration   `json:"conn_max_lifetime"`
+	ConnMaxIdleTime time.Duration   `json:"conn_max_idle_time"`
 	Replicas        []ReplicaConfig `json:"replicas"`
 }
 
@@ -105,17 +105,17 @@ type MigrationsConfig struct {
 
 // RedisConfig holds Redis configuration
 type RedisConfig struct {
-	Address     string        `json:"address"`
-	Password    string        `json:"password"`
-	DB          int           `json:"db"`
-	PoolSize    int           `json:"pool_size"`
-	MinIdleConns int          `json:"min_idle_conns"`
-	DialTimeout time.Duration `json:"dial_timeout"`
-	ReadTimeout time.Duration `json:"read_timeout"`
-	WriteTimeout time.Duration `json:"write_timeout"`
-	IdleTimeout time.Duration `json:"idle_timeout"`
-	Cluster     RedisClusterConfig `json:"cluster"`
-	Sentinel    RedisSentinelConfig `json:"sentinel"`
+	Address      string              `json:"address"`
+	Password     string              `json:"password"`
+	DB           int                 `json:"db"`
+	PoolSize     int                 `json:"pool_size"`
+	MinIdleConns int                 `json:"min_idle_conns"`
+	DialTimeout  time.Duration       `json:"dial_timeout"`
+	ReadTimeout  time.Duration       `json:"read_timeout"`
+	WriteTimeout time.Duration       `json:"write_timeout"`
+	IdleTimeout  time.Duration       `json:"idle_timeout"`
+	Cluster      RedisClusterConfig  `json:"cluster"`
+	Sentinel     RedisSentinelConfig `json:"sentinel"`
 }
 
 // RedisClusterConfig holds Redis cluster configuration
@@ -126,50 +126,50 @@ type RedisClusterConfig struct {
 
 // RedisSentinelConfig holds Redis Sentinel configuration
 type RedisSentinelConfig struct {
-	Enabled     bool     `json:"enabled"`
-	MasterName  string   `json:"master_name"`
-	Sentinels   []string `json:"sentinels"`
-	Password    string   `json:"password"`
+	Enabled    bool     `json:"enabled"`
+	MasterName string   `json:"master_name"`
+	Sentinels  []string `json:"sentinels"`
+	Password   string   `json:"password"`
 }
 
 // QueueConfig holds queue configuration
 type QueueConfig struct {
-	Workers          int           `json:"workers"`
-	MaxRetries       int           `json:"max_retries"`
-	RetryDelay       time.Duration `json:"retry_delay"`
+	Workers           int           `json:"workers"`
+	MaxRetries        int           `json:"max_retries"`
+	RetryDelay        time.Duration `json:"retry_delay"`
 	VisibilityTimeout time.Duration `json:"visibility_timeout"`
-	PollInterval     time.Duration `json:"poll_interval"`
-	Priorities       []string      `json:"priorities"`
-	DeadLetterQueue  bool          `json:"dead_letter_queue"`
+	PollInterval      time.Duration `json:"poll_interval"`
+	Priorities        []string      `json:"priorities"`
+	DeadLetterQueue   bool          `json:"dead_letter_queue"`
 }
 
 // BatchConfig holds batch processing configuration
 type BatchConfig struct {
-	Concurrency      int           `json:"concurrency"`
-	BatchSize        int           `json:"batch_size"`
-	MaxBatchSize     int           `json:"max_batch_size"`
+	Concurrency       int           `json:"concurrency"`
+	BatchSize         int           `json:"batch_size"`
+	MaxBatchSize      int           `json:"max_batch_size"`
 	ProcessingTimeout time.Duration `json:"processing_timeout"`
-	RetentionPeriod  time.Duration `json:"retention_period"`
+	RetentionPeriod   time.Duration `json:"retention_period"`
 }
 
 // MLConfig holds machine learning configuration
 type MLConfig struct {
-	Enabled           bool          `json:"enabled"`
-	ModelPath         string        `json:"model_path"`
-	PredictionTimeout time.Duration `json:"prediction_timeout"`
-	BatchPrediction   bool          `json:"batch_prediction"`
-	BatchSize         int           `json:"batch_size"`
+	Enabled            bool                     `json:"enabled"`
+	ModelPath          string                   `json:"model_path"`
+	PredictionTimeout  time.Duration            `json:"prediction_timeout"`
+	BatchPrediction    bool                     `json:"batch_prediction"`
+	BatchSize          int                      `json:"batch_size"`
 	ContinuousLearning ContinuousLearningConfig `json:"continuous_learning"`
-	Models            map[string]ModelConfig `json:"models"`
+	Models             map[string]ModelConfig   `json:"models"`
 }
 
 // ContinuousLearningConfig holds continuous learning configuration
 type ContinuousLearningConfig struct {
-	Enabled           bool          `json:"enabled"`
-	RetrainingInterval time.Duration `json:"retraining_interval"`
-	MinFeedbackCount  int           `json:"min_feedback_count"`
-	ValidationSplit   float64       `json:"validation_split"`
-	PerformanceThreshold float64    `json:"performance_threshold"`
+	Enabled              bool          `json:"enabled"`
+	RetrainingInterval   time.Duration `json:"retraining_interval"`
+	MinFeedbackCount     int           `json:"min_feedback_count"`
+	ValidationSplit      float64       `json:"validation_split"`
+	PerformanceThreshold float64       `json:"performance_threshold"`
 }
 
 // ModelConfig holds individual model configuration
@@ -183,26 +183,26 @@ type ModelConfig struct {
 
 // SecurityConfig holds security configuration
 type SecurityConfig struct {
-	JWT            JWTConfig      `json:"jwt"`
-	RateLimit      RateLimitConfig `json:"rate_limit"`
-	Encryption     EncryptionConfig `json:"encryption"`
-	AuditLog       AuditLogConfig `json:"audit_log"`
+	JWT             JWTConfig             `json:"jwt"`
+	RateLimit       RateLimitConfig       `json:"rate_limit"`
+	Encryption      EncryptionConfig      `json:"encryption"`
+	AuditLog        AuditLogConfig        `json:"audit_log"`
 	ThreatDetection ThreatDetectionConfig `json:"threat_detection"`
 }
 
 // JWTConfig holds JWT configuration
 type JWTConfig struct {
-	Secret         string        `json:"secret"`
-	Expiration     time.Duration `json:"expiration"`
+	Secret            string        `json:"secret"`
+	Expiration        time.Duration `json:"expiration"`
 	RefreshExpiration time.Duration `json:"refresh_expiration"`
-	Issuer         string        `json:"issuer"`
-	Audience       string        `json:"audience"`
+	Issuer            string        `json:"issuer"`
+	Audience          string        `json:"audience"`
 }
 
 // EncryptionConfig holds encryption configuration
 type EncryptionConfig struct {
-	Key       string `json:"key"`
-	Algorithm string `json:"algorithm"`
+	Key         string                      `json:"key"`
+	Algorithm   string                      `json:"algorithm"`
 	KeyRotation EncryptionKeyRotationConfig `json:"key_rotation"`
 }
 
@@ -214,29 +214,29 @@ type EncryptionKeyRotationConfig struct {
 
 // AuditLogConfig holds audit log configuration
 type AuditLogConfig struct {
-	Enabled     bool   `json:"enabled"`
-	Destination string `json:"destination"`
-	Format      string `json:"format"`
+	Enabled     bool          `json:"enabled"`
+	Destination string        `json:"destination"`
+	Format      string        `json:"format"`
 	Retention   time.Duration `json:"retention"`
 }
 
 // ThreatDetectionConfig holds threat detection configuration
 type ThreatDetectionConfig struct {
-	Enabled           bool          `json:"enabled"`
-	RealTimeScanning  bool          `json:"real_time_scanning"`
-	ScanTimeout       time.Duration `json:"scan_timeout"`
-	MaxConcurrentScans int          `json:"max_concurrent_scans"`
-	QuarantineEnabled bool          `json:"quarantine_enabled"`
+	Enabled            bool          `json:"enabled"`
+	RealTimeScanning   bool          `json:"real_time_scanning"`
+	ScanTimeout        time.Duration `json:"scan_timeout"`
+	MaxConcurrentScans int           `json:"max_concurrent_scans"`
+	QuarantineEnabled  bool          `json:"quarantine_enabled"`
 }
 
 // RateLimitConfig holds rate limiting configuration
 type RateLimitConfig struct {
-	Enabled        bool          `json:"enabled"`
-	RequestsPerMinute int        `json:"requests_per_minute"`
-	BurstSize      int          `json:"burst_size"`
-	WindowSize     time.Duration `json:"window_size"`
-	CleanupInterval time.Duration `json:"cleanup_interval"`
-	Tiers          map[string]RateLimitTier `json:"tiers"`
+	Enabled           bool                     `json:"enabled"`
+	RequestsPerMinute int                      `json:"requests_per_minute"`
+	BurstSize         int                      `json:"burst_size"`
+	WindowSize        time.Duration            `json:"window_size"`
+	CleanupInterval   time.Duration            `json:"cleanup_interval"`
+	Tiers             map[string]RateLimitTier `json:"tiers"`
 }
 
 // RateLimitTier holds rate limit tier configuration
@@ -249,46 +249,46 @@ type RateLimitTier struct {
 
 // MonitoringConfig holds monitoring configuration
 type MonitoringConfig struct {
-	Enabled    bool           `json:"enabled"`
-	Prometheus PrometheusConfig `json:"prometheus"`
-	Jaeger     JaegerConfig   `json:"jaeger"`
-	Logging    LoggingConfig  `json:"logging"`
+	Enabled     bool              `json:"enabled"`
+	Prometheus  PrometheusConfig  `json:"prometheus"`
+	Jaeger      JaegerConfig      `json:"jaeger"`
+	Logging     LoggingConfig     `json:"logging"`
 	HealthCheck HealthCheckConfig `json:"health_check"`
 }
 
 // PrometheusConfig holds Prometheus configuration
 type PrometheusConfig struct {
-	Enabled    bool   `json:"enabled"`
-	Port       int    `json:"port"`
-	Path       string `json:"path"`
-	Namespace  string `json:"namespace"`
-	Subsystem  string `json:"subsystem"`
+	Enabled   bool   `json:"enabled"`
+	Port      int    `json:"port"`
+	Path      string `json:"path"`
+	Namespace string `json:"namespace"`
+	Subsystem string `json:"subsystem"`
 }
 
 // JaegerConfig holds Jaeger configuration
 type JaegerConfig struct {
-	Enabled     bool   `json:"enabled"`
-	Endpoint    string `json:"endpoint"`
-	ServiceName string `json:"service_name"`
+	Enabled     bool    `json:"enabled"`
+	Endpoint    string  `json:"endpoint"`
+	ServiceName string  `json:"service_name"`
 	SampleRate  float64 `json:"sample_rate"`
 }
 
 // LoggingConfig holds logging configuration
 type LoggingConfig struct {
-	Level      string `json:"level"`
-	Format     string `json:"format"`
-	Output     string `json:"output"`
+	Level      string            `json:"level"`
+	Format     string            `json:"format"`
+	Output     string            `json:"output"`
 	Rotation   LogRotationConfig `json:"rotation"`
-	Structured bool   `json:"structured"`
+	Structured bool              `json:"structured"`
 }
 
 // LogRotationConfig holds log rotation configuration
 type LogRotationConfig struct {
-	Enabled    bool   `json:"enabled"`
-	MaxSize    int    `json:"max_size"`
-	MaxAge     int    `json:"max_age"`
-	MaxBackups int    `json:"max_backups"`
-	Compress   bool   `json:"compress"`
+	Enabled    bool `json:"enabled"`
+	MaxSize    int  `json:"max_size"`
+	MaxAge     int  `json:"max_age"`
+	MaxBackups int  `json:"max_backups"`
+	Compress   bool `json:"compress"`
 }
 
 // HealthCheckConfig holds health check configuration
@@ -301,7 +301,7 @@ type HealthCheckConfig struct {
 
 // StorageConfig holds storage configuration
 type StorageConfig struct {
-	MinIO MinIOConfig `json:"minio"`
+	MinIO MinIOConfig        `json:"minio"`
 	Local LocalStorageConfig `json:"local"`
 }
 
@@ -317,9 +317,9 @@ type MinIOConfig struct {
 
 // LocalStorageConfig holds local storage configuration
 type LocalStorageConfig struct {
-	Enabled   bool   `json:"enabled"`
-	BasePath  string `json:"base_path"`
-	MaxSize   int64  `json:"max_size"`
+	Enabled   bool          `json:"enabled"`
+	BasePath  string        `json:"base_path"`
+	MaxSize   int64         `json:"max_size"`
 	Retention time.Duration `json:"retention"`
 }
 

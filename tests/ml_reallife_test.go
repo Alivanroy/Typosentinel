@@ -265,7 +265,7 @@ func TestMLBatchAnalysis(t *testing.T) {
 	defer cancel()
 
 	// Analyze packages individually since AnalyzePackages is not available
-	var results []*ml.AnalysisResult
+	results := make([]*ml.AnalysisResult, 0, len(packages))
 	for _, pkg := range packages {
 		result, err := analyzer.Analyze(ctx, pkg)
 		if err != nil {
@@ -282,7 +282,7 @@ func TestMLBatchAnalysis(t *testing.T) {
 	for i, result := range results {
 		if result != nil {
 			t.Logf("Package %s: Typosquatting Score %.2f, Malicious Score %.2f",
-			packages[i].Name, result.TyposquattingScore, result.MaliciousScore)
+				packages[i].Name, result.TyposquattingScore, result.MaliciousScore)
 		}
 	}
 }

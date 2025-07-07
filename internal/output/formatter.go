@@ -31,43 +31,43 @@ const (
 
 // FormatterOptions controls output formatting behavior
 type FormatterOptions struct {
-	Format      OutputFormat `json:"format"`
-	ColorOutput bool         `json:"color_output"`
-	Quiet       bool         `json:"quiet"`
-	Verbose     bool         `json:"verbose"`
-	ShowProgress bool        `json:"show_progress"`
-	OutputFile  string       `json:"output_file"`
-	Indent      string       `json:"indent"`
-	SortBy      string       `json:"sort_by"`
-	FilterLevel string       `json:"filter_level"`
+	Format       OutputFormat `json:"format"`
+	ColorOutput  bool         `json:"color_output"`
+	Quiet        bool         `json:"quiet"`
+	Verbose      bool         `json:"verbose"`
+	ShowProgress bool         `json:"show_progress"`
+	OutputFile   string       `json:"output_file"`
+	Indent       string       `json:"indent"`
+	SortBy       string       `json:"sort_by"`
+	FilterLevel  string       `json:"filter_level"`
 }
 
 // ScanResult represents the scan results to be formatted
 type ScanResult struct {
-	Package            *types.Package                `json:"package"`
-	StaticAnalysis     interface{}                   `json:"static_analysis,omitempty"`
-	DynamicAnalysis    interface{}                   `json:"dynamic_analysis,omitempty"`
-	MLAnalysis         interface{}                   `json:"ml_analysis,omitempty"`
-	ProvenanceAnalysis interface{}                   `json:"provenance_analysis,omitempty"`
-	OverallRisk        string                        `json:"overall_risk"`
-	RiskScore          float64                       `json:"risk_score"`
-	Recommendations    []string                      `json:"recommendations"`
-	Summary            ScanSummary                   `json:"summary"`
-	Metadata           ScanMetadata                  `json:"metadata"`
-	Findings           []Finding                     `json:"findings"`
+	Package            *types.Package `json:"package"`
+	StaticAnalysis     interface{}    `json:"static_analysis,omitempty"`
+	DynamicAnalysis    interface{}    `json:"dynamic_analysis,omitempty"`
+	MLAnalysis         interface{}    `json:"ml_analysis,omitempty"`
+	ProvenanceAnalysis interface{}    `json:"provenance_analysis,omitempty"`
+	OverallRisk        string         `json:"overall_risk"`
+	RiskScore          float64        `json:"risk_score"`
+	Recommendations    []string       `json:"recommendations"`
+	Summary            ScanSummary    `json:"summary"`
+	Metadata           ScanMetadata   `json:"metadata"`
+	Findings           []Finding      `json:"findings"`
 }
 
 // ScanSummary provides a high-level summary
 type ScanSummary struct {
-	TotalFindings      int                 `json:"total_findings"`
-	CriticalFindings   int                 `json:"critical_findings"`
-	HighFindings       int                 `json:"high_findings"`
-	MediumFindings     int                 `json:"medium_findings"`
-	LowFindings        int                 `json:"low_findings"`
-	FindingsByCategory map[string]int      `json:"findings_by_category"`
-	EnginesUsed        []string            `json:"engines_used"`
-	AnalysisTime       time.Duration       `json:"analysis_time"`
-	Status             string              `json:"status"`
+	TotalFindings      int            `json:"total_findings"`
+	CriticalFindings   int            `json:"critical_findings"`
+	HighFindings       int            `json:"high_findings"`
+	MediumFindings     int            `json:"medium_findings"`
+	LowFindings        int            `json:"low_findings"`
+	FindingsByCategory map[string]int `json:"findings_by_category"`
+	EnginesUsed        []string       `json:"engines_used"`
+	AnalysisTime       time.Duration  `json:"analysis_time"`
+	Status             string         `json:"status"`
 }
 
 // ScanMetadata contains scan metadata
@@ -97,13 +97,13 @@ type Finding struct {
 
 // ProgressReporter handles progress reporting
 type ProgressReporter struct {
-	writer   io.Writer
-	enabled  bool
-	quiet    bool
-	spinner  []string
-	current  int
-	message  string
-	started  time.Time
+	writer  io.Writer
+	enabled bool
+	quiet   bool
+	spinner []string
+	current int
+	message string
+	started time.Time
 }
 
 // Formatter handles output formatting
@@ -229,7 +229,7 @@ func (f *Formatter) formatText(result *ScanResult) error {
 	// Risk assessment
 	f.printSection("Risk Assessment")
 	riskColor := f.getRiskColor(result.OverallRisk)
-	fmt.Fprintf(f.writer, "Overall Risk: %s (%.2f)\n", 
+	fmt.Fprintf(f.writer, "Overall Risk: %s (%.2f)\n",
 		f.colorize(strings.ToUpper(result.OverallRisk), riskColor), result.RiskScore)
 	fmt.Fprintf(f.writer, "Analysis Time: %v\n", result.Summary.AnalysisTime)
 	fmt.Fprintf(f.writer, "Engines Used: %s\n", strings.Join(result.Summary.EnginesUsed, ", "))
@@ -278,7 +278,7 @@ func (f *Formatter) formatTable(result *ScanResult) error {
 	// Summary table
 	table := tablewriter.NewTable(f.writer)
 	table.Header("Metric", "Value")
-	
+
 	summaryData := [][]any{
 		{"Package", result.Package.Name + "@" + result.Package.Version},
 		{"Overall Risk", strings.ToUpper(result.OverallRisk)},
@@ -364,7 +364,7 @@ func (f *Formatter) formatSummary(result *ScanResult) error {
 	f.printHeader("Scan Summary")
 	fmt.Fprintf(f.writer, "Package: %s@%s\n", result.Package.Name, result.Package.Version)
 	riskColor := f.getRiskColor(result.OverallRisk)
-	fmt.Fprintf(f.writer, "Risk: %s (%.2f)\n", 
+	fmt.Fprintf(f.writer, "Risk: %s (%.2f)\n",
 		f.colorize(strings.ToUpper(result.OverallRisk), riskColor), result.RiskScore)
 	fmt.Fprintf(f.writer, "Findings: %d\n", result.Summary.TotalFindings)
 	fmt.Fprintf(f.writer, "Time: %v\n", result.Summary.AnalysisTime)

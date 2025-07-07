@@ -152,9 +152,9 @@ github.com/lib/pq v1.10.7/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 
 	// Verify entries
 	expectedEntries := map[string]string{
-		"github.com/gorilla/mux v1.8.0":     "h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=",
+		"github.com/gorilla/mux v1.8.0":        "h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=",
 		"github.com/gorilla/mux v1.8.0/go.mod": "h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=",
-		"github.com/lib/pq v1.10.7":         "h1:p7ZhMD+KsSRozJr34udlUrhboJwWAgCg34+/ZZNvZZw=",
+		"github.com/lib/pq v1.10.7":            "h1:p7ZhMD+KsSRozJr34udlUrhboJwWAgCg34+/ZZNvZZw=",
 		"github.com/lib/pq v1.10.7/go.mod":     "h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=",
 	}
 
@@ -190,12 +190,12 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 	tmpDir := t.TempDir()
 	goModPath := filepath.Join(tmpDir, "go.mod")
 	goSumPath := filepath.Join(tmpDir, "go.sum")
-	
+
 	err := os.WriteFile(goModPath, []byte(goMod), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write go.mod: %v", err)
 	}
-	
+
 	err = os.WriteFile(goSumPath, []byte(goSum), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write go.sum: %v", err)
@@ -222,9 +222,9 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 		pkgType  string
 		indirect bool
 	}{
-		"github.com/gorilla/mux":     {version: "v1.8.0", pkgType: "production", indirect: false},
-		"github.com/lib/pq":          {version: "v1.10.7", pkgType: "production", indirect: false},
-		"golang.org/x/crypto":        {version: "v0.5.0", pkgType: "indirect", indirect: true},
+		"github.com/gorilla/mux":      {version: "v1.8.0", pkgType: "production", indirect: false},
+		"github.com/lib/pq":           {version: "v1.10.7", pkgType: "production", indirect: false},
+		"golang.org/x/crypto":         {version: "v0.5.0", pkgType: "indirect", indirect: true},
 		"github.com/stretchr/testify": {version: "v1.8.1", pkgType: "test", indirect: false},
 	}
 
@@ -325,7 +325,7 @@ require (
 	// Create temporary directory with go.mod
 	tmpDir := t.TempDir()
 	goModPath := filepath.Join(tmpDir, "go.mod")
-	
+
 	err := os.WriteFile(goModPath, []byte(goMod), 0644)
 	if err != nil {
 		t.Fatalf("Failed to write go.mod: %v", err)
@@ -488,7 +488,7 @@ func TestNewEnhancedGoAnalyzer(t *testing.T) {
 	// Test with custom GOPROXY
 	os.Setenv("GOPROXY", "https://custom.proxy.com")
 	defer os.Unsetenv("GOPROXY")
-	
+
 	analyzer2 := NewEnhancedGoAnalyzer(&config.Config{})
 	if analyzer2.proxyURL != "https://custom.proxy.com" {
 		t.Errorf("Expected custom proxy URL 'https://custom.proxy.com', got %s", analyzer2.proxyURL)

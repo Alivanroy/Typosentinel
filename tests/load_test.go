@@ -18,17 +18,17 @@ import (
 
 // LoadTestMetrics holds load testing results
 type LoadTestMetrics struct {
-	TotalRequests     int64         `json:"total_requests"`
-	SuccessfulReqs    int64         `json:"successful_requests"`
-	FailedReqs        int64         `json:"failed_requests"`
-	AvgResponseTime   time.Duration `json:"avg_response_time"`
-	P95ResponseTime   time.Duration `json:"p95_response_time"`
-	P99ResponseTime   time.Duration `json:"p99_response_time"`
-	Throughput        float64       `json:"throughput_rps"`
-	ErrorRate         float64       `json:"error_rate_percent"`
-	TestDuration      time.Duration `json:"test_duration"`
-	ConcurrentUsers   int           `json:"concurrent_users"`
-	PeakMemoryUsage   int64         `json:"peak_memory_mb"`
+	TotalRequests   int64         `json:"total_requests"`
+	SuccessfulReqs  int64         `json:"successful_requests"`
+	FailedReqs      int64         `json:"failed_requests"`
+	AvgResponseTime time.Duration `json:"avg_response_time"`
+	P95ResponseTime time.Duration `json:"p95_response_time"`
+	P99ResponseTime time.Duration `json:"p99_response_time"`
+	Throughput      float64       `json:"throughput_rps"`
+	ErrorRate       float64       `json:"error_rate_percent"`
+	TestDuration    time.Duration `json:"test_duration"`
+	ConcurrentUsers int           `json:"concurrent_users"`
+	PeakMemoryUsage int64         `json:"peak_memory_mb"`
 }
 
 // ResponseTimeRecord holds individual response time measurements
@@ -42,14 +42,14 @@ type ResponseTimeRecord struct {
 
 // LargeProjectMetrics holds metrics for large project testing
 type LargeProjectMetrics struct {
-	ProjectType       string        `json:"project_type"`
-	DependencyCount   int           `json:"dependency_count"`
-	ScanTime          time.Duration `json:"scan_time"`
-	MemoryUsage       int64         `json:"memory_usage_mb"`
-	AccuracyScore     float64       `json:"accuracy_score"`
-	ProgressReported  bool          `json:"progress_reported"`
-	Success           bool          `json:"success"`
-	ErrorMessage      string        `json:"error_message,omitempty"`
+	ProjectType      string        `json:"project_type"`
+	DependencyCount  int           `json:"dependency_count"`
+	ScanTime         time.Duration `json:"scan_time"`
+	MemoryUsage      int64         `json:"memory_usage_mb"`
+	AccuracyScore    float64       `json:"accuracy_score"`
+	ProgressReported bool          `json:"progress_reported"`
+	Success          bool          `json:"success"`
+	ErrorMessage     string        `json:"error_message,omitempty"`
 }
 
 // TestP002_1_APILoadTesting performs API load testing
@@ -57,38 +57,38 @@ func TestP002_1_APILoadTesting(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping load test in short mode")
 	}
-	
+
 	// Start the API server first
 	serverCmd := startAPIServer(t)
 	defer stopAPIServer(serverCmd)
-	
+
 	// Wait for server to start
 	time.Sleep(3 * time.Second)
-	
+
 	// Verify server is running
 	if !isServerRunning("http://localhost:8080/health") {
 		t.Skip("API server not available for load testing")
 	}
-	
+
 	t.Run("Load_Test_100_Users_15min", func(t *testing.T) {
 		metrics := performLoadTest(100, 15*time.Minute, 1000)
-		
+
 		// Log results
 		logLoadTestMetrics(t, metrics)
-		
+
 		// Validate performance requirements
 		if metrics.P95ResponseTime > 500*time.Millisecond {
 			t.Errorf("95th percentile response time %v exceeds 500ms limit", metrics.P95ResponseTime)
 		}
-		
+
 		if metrics.Throughput < 1000 {
 			t.Errorf("Throughput %.2f RPS is below 1000 RPS requirement", metrics.Throughput)
 		}
-		
+
 		if metrics.ErrorRate > 1.0 {
 			t.Errorf("Error rate %.2f%% exceeds 1%% limit", metrics.ErrorRate)
 		}
-		
+
 		if metrics.PeakMemoryUsage > 1024 {
 			t.Logf("Warning: Peak memory usage %d MB is high", metrics.PeakMemoryUsage)
 		}
@@ -100,10 +100,10 @@ func TestP002_2_LargeProjectTesting(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping large project test in short mode")
 	}
-	
+
 	projectTypes := []struct {
-		name        string
-		projectPath string
+		name         string
+		projectPath  string
 		expectedDeps int
 	}{
 		{"React_App", "test-analysis/npm-project", 50},
@@ -111,27 +111,27 @@ func TestP002_2_LargeProjectTesting(t *testing.T) {
 		{"Python_ML", "test-analysis/python-project", 20},
 		{"Go_Application", "test-analysis/go-project", 10},
 	}
-	
+
 	for _, project := range projectTypes {
 		t.Run(project.name, func(t *testing.T) {
 			metrics := measureLargeProjectPerformance(project.name, project.projectPath)
-			
+
 			// Log results
 			logLargeProjectMetrics(t, metrics)
-			
+
 			// Validate performance requirements
 			if metrics.ScanTime > 5*time.Minute {
 				t.Errorf("Scan time %v exceeds 5 minute limit for %s", metrics.ScanTime, project.name)
 			}
-			
+
 			if metrics.MemoryUsage > 2048 {
 				t.Errorf("Memory usage %d MB exceeds 2GB limit for %s", metrics.MemoryUsage, project.name)
 			}
-			
+
 			if !metrics.Success {
 				t.Errorf("Scan failed for %s: %s", project.name, metrics.ErrorMessage)
 			}
-			
+
 			if !metrics.ProgressReported {
 				t.Logf("Warning: Progress reporting not detected for %s", project.name)
 			}
@@ -145,13 +145,13 @@ func startAPIServer(t *testing.T) *exec.Cmd {
 	cmd.Dir = "/Users/alikorsi/Documents/Typosentinel"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	err := cmd.Start()
 	if err != nil {
 		t.Logf("Failed to start API server: %v", err)
 		return nil
 	}
-	
+
 	t.Logf("Started API server with PID: %d", cmd.Process.Pid)
 	return cmd
 }
@@ -185,25 +185,25 @@ func performLoadTest(concurrentUsers int, duration time.Duration, targetRPM int)
 		responseTimesMu sync.Mutex
 		peakMemory      int64
 	)
-	
+
 	startTime := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	
+
 	// Calculate request interval
 	requestInterval := time.Minute / time.Duration(targetRPM)
-	
+
 	var wg sync.WaitGroup
-	
+
 	// Start concurrent users
 	for i := 0; i < concurrentUsers; i++ {
 		wg.Add(1)
 		go func(userID int) {
 			defer wg.Done()
-			
+
 			ticker := time.NewTicker(requestInterval)
 			defer ticker.Stop()
-			
+
 			for {
 				select {
 				case <-ctx.Done():
@@ -211,19 +211,19 @@ func performLoadTest(concurrentUsers int, duration time.Duration, targetRPM int)
 				case <-ticker.C:
 					// Make API request
 					record := makeAPIRequest("http://localhost:8080/api/scan", "lodash")
-					
+
 					atomic.AddInt64(&totalRequests, 1)
 					if record.Success {
 						atomic.AddInt64(&successfulReqs, 1)
 					} else {
 						atomic.AddInt64(&failedReqs, 1)
 					}
-					
+
 					// Record response time
 					responseTimesMu.Lock()
 					responseTimes = append(responseTimes, record.ResponseTime)
 					responseTimesMu.Unlock()
-					
+
 					// Monitor memory usage
 					var m runtime.MemStats
 					runtime.ReadMemStats(&m)
@@ -235,10 +235,10 @@ func performLoadTest(concurrentUsers int, duration time.Duration, targetRPM int)
 			}
 		}(i)
 	}
-	
+
 	wg.Wait()
 	testDuration := time.Since(startTime)
-	
+
 	// Calculate metrics
 	var avgResponseTime time.Duration
 	if len(responseTimes) > 0 {
@@ -248,12 +248,12 @@ func performLoadTest(concurrentUsers int, duration time.Duration, targetRPM int)
 		}
 		avgResponseTime = total / time.Duration(len(responseTimes))
 	}
-	
+
 	p95ResponseTime := calculatePercentile(responseTimes, 0.95)
 	p99ResponseTime := calculatePercentile(responseTimes, 0.99)
 	throughput := float64(totalRequests) / testDuration.Seconds()
 	errorRate := float64(failedReqs) / float64(totalRequests) * 100
-	
+
 	return LoadTestMetrics{
 		TotalRequests:   totalRequests,
 		SuccessfulReqs:  successfulReqs,
@@ -272,38 +272,38 @@ func performLoadTest(concurrentUsers int, duration time.Duration, targetRPM int)
 // makeAPIRequest makes a single API request and measures response time
 func makeAPIRequest(url, packageName string) ResponseTimeRecord {
 	startTime := time.Now()
-	
+
 	// Prepare request body
 	requestBody := map[string]string{
 		"package": packageName,
 	}
 	jsonBody, _ := json.Marshal(requestBody)
-	
+
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonBody))
-	
+
 	responseTime := time.Since(startTime)
-	
+
 	record := ResponseTimeRecord{
 		Timestamp:    startTime,
 		ResponseTime: responseTime,
 		Success:      err == nil,
 	}
-	
+
 	if err != nil {
 		record.Error = err.Error()
 		return record
 	}
-	
+
 	defer resp.Body.Close()
 	record.StatusCode = resp.StatusCode
 	record.Success = resp.StatusCode >= 200 && resp.StatusCode < 300
-	
+
 	if !record.Success {
 		body, _ := io.ReadAll(resp.Body)
 		record.Error = fmt.Sprintf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
-	
+
 	return record
 }
 
@@ -312,25 +312,25 @@ func measureLargeProjectPerformance(projectType, projectPath string) LargeProjec
 	var m runtime.MemStats
 	runtime.GC()
 	runtime.ReadMemStats(&m)
-	
+
 	startTime := time.Now()
-	
+
 	// Execute project scan
 	cmd := exec.Command("go", "run", "main.go", "scan", "--local", projectPath, "--format", "json")
 	cmd.Dir = "/Users/alikorsi/Documents/Typosentinel"
-	
+
 	output, err := cmd.CombinedOutput()
 	scanTime := time.Since(startTime)
-	
+
 	runtime.ReadMemStats(&m)
 	memoryUsed := int64(m.Alloc / 1024 / 1024)
-	
+
 	// Analyze output for progress reporting and dependency count
 	outputStr := string(output)
 	progressReported := containsProgressIndicators(outputStr)
 	dependencyCount := countDependencies(outputStr)
 	accuracyScore := calculateAccuracyScore(outputStr)
-	
+
 	metrics := LargeProjectMetrics{
 		ProjectType:      projectType,
 		DependencyCount:  dependencyCount,
@@ -340,11 +340,11 @@ func measureLargeProjectPerformance(projectType, projectPath string) LargeProjec
 		ProgressReported: progressReported,
 		Success:          err == nil,
 	}
-	
+
 	if err != nil {
 		metrics.ErrorMessage = err.Error()
 	}
-	
+
 	return metrics
 }
 
@@ -353,7 +353,7 @@ func calculatePercentile(times []time.Duration, percentile float64) time.Duratio
 	if len(times) == 0 {
 		return 0
 	}
-	
+
 	// Sort times
 	for i := 0; i < len(times)-1; i++ {
 		for j := 0; j < len(times)-i-1; j++ {
@@ -362,12 +362,12 @@ func calculatePercentile(times []time.Duration, percentile float64) time.Duratio
 			}
 		}
 	}
-	
+
 	index := int(float64(len(times)) * percentile)
 	if index >= len(times) {
 		index = len(times) - 1
 	}
-	
+
 	return times[index]
 }
 
@@ -377,13 +377,13 @@ func containsProgressIndicators(output string) bool {
 		"progress", "scanning", "analyzing", "processing",
 		"%", "completed", "finished", "done",
 	}
-	
+
 	for _, indicator := range progressIndicators {
 		if bytes.Contains([]byte(output), []byte(indicator)) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -429,7 +429,7 @@ func logLargeProjectMetrics(t *testing.T, metrics LargeProjectMetrics) {
 func BenchmarkAPIEndpoint(b *testing.B) {
 	// This would require the API server to be running
 	b.Skip("API server required for benchmark")
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		record := makeAPIRequest("http://localhost:8080/api/scan", "lodash")
@@ -442,7 +442,7 @@ func BenchmarkAPIEndpoint(b *testing.B) {
 // BenchmarkLargeProjectScan benchmarks large project scanning
 func BenchmarkLargeProjectScan(b *testing.B) {
 	projectPath := "test-analysis/npm-project"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		cmd := exec.Command("go", "run", "main.go", "scan", "--local", projectPath, "--format", "json")

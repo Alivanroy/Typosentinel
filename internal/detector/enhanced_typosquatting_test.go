@@ -1,35 +1,35 @@
 package detector
 
 import (
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"strings"
 	"testing"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 func TestNewEnhancedTyposquattingDetector(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	if detector == nil {
 		t.Fatal("Expected detector to be created, got nil")
 	}
-	
+
 	if detector.config == nil {
 		t.Fatal("Expected config to be initialized")
 	}
-	
+
 	if len(detector.keyboardLayouts) == 0 {
 		t.Fatal("Expected keyboard layouts to be initialized")
 	}
-	
+
 	if len(detector.substitutions) == 0 {
 		t.Fatal("Expected substitutions to be initialized")
 	}
-	
+
 	// Test default config values
 	if detector.config.MinSimilarityThreshold != 0.75 {
 		t.Errorf("Expected MinSimilarityThreshold to be 0.75, got %f", detector.config.MinSimilarityThreshold)
 	}
-	
+
 	if !detector.config.EnableKeyboardAnalysis {
 		t.Error("Expected EnableKeyboardAnalysis to be true")
 	}
@@ -37,7 +37,7 @@ func TestNewEnhancedTyposquattingDetector(t *testing.T) {
 
 func TestKeyboardProximitySimilarity(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name     string
 		s1       string
@@ -70,11 +70,11 @@ func TestKeyboardProximitySimilarity(t *testing.T) {
 			expected: 1.0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			score := detector.keyboardProximitySimilarity(tt.s1, tt.s2)
-			
+
 			if tt.expected > 0 {
 				if score != tt.expected {
 					t.Errorf("Expected score %f, got %f", tt.expected, score)
@@ -90,7 +90,7 @@ func TestKeyboardProximitySimilarity(t *testing.T) {
 
 func TestVisualSimilarity(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name     string
 		s1       string
@@ -122,11 +122,11 @@ func TestVisualSimilarity(t *testing.T) {
 			minScore: 0.6,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			score := detector.visualSimilarity(tt.s1, tt.s2)
-			
+
 			if score < tt.minScore {
 				t.Errorf("Expected score >= %f, got %f", tt.minScore, score)
 			}
@@ -136,7 +136,7 @@ func TestVisualSimilarity(t *testing.T) {
 
 func TestPhoneticSimilarity(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name     string
 		s1       string
@@ -162,11 +162,11 @@ func TestPhoneticSimilarity(t *testing.T) {
 			minScore: 0.6,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			score := detector.phoneticSimilarity(tt.s1, tt.s2)
-			
+
 			if score < tt.minScore {
 				t.Errorf("Expected score >= %f, got %f", tt.minScore, score)
 			}
@@ -176,7 +176,7 @@ func TestPhoneticSimilarity(t *testing.T) {
 
 func TestCalculateEnhancedSimilarity(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name     string
 		s1       string
@@ -213,11 +213,11 @@ func TestCalculateEnhancedSimilarity(t *testing.T) {
 			maxScore: 1.0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			score := detector.calculateEnhancedSimilarity(tt.s1, tt.s2)
-			
+
 			if score < tt.minScore || score > tt.maxScore {
 				t.Errorf("Expected score between %f and %f, got %f", tt.minScore, tt.maxScore, score)
 			}
@@ -227,7 +227,7 @@ func TestCalculateEnhancedSimilarity(t *testing.T) {
 
 func TestAnalyzeTyposquattingType(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name         string
 		s1           string
@@ -265,11 +265,11 @@ func TestAnalyzeTyposquattingType(t *testing.T) {
 			expectedType: "character_substitution",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			analysis := detector.analyzeTyposquattingType(tt.s1, tt.s2)
-			
+
 			if analysis.PrimaryType != tt.expectedType {
 				t.Errorf("Expected primary type %s, got %s", tt.expectedType, analysis.PrimaryType)
 			}
@@ -279,7 +279,7 @@ func TestAnalyzeTyposquattingType(t *testing.T) {
 
 func TestDetectEnhanced(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	// Create a test dependency
 	target := types.Dependency{
 		Name:     "reakt", // Typosquatting of "react"
@@ -287,34 +287,34 @@ func TestDetectEnhanced(t *testing.T) {
 		Registry: "npm",
 		Direct:   true,
 	}
-	
+
 	// List of popular packages to compare against
 	allPackages := []string{"react", "lodash", "express", "webpack", "babel"}
-	
+
 	threats := detector.DetectEnhanced(target, allPackages, 0.75)
-	
+
 	if len(threats) == 0 {
 		t.Fatal("Expected at least one threat to be detected")
 	}
-	
+
 	// Check the first threat
 	threat := threats[0]
 	if threat.Package != "reakt" {
 		t.Errorf("Expected threat package to be 'reakt', got '%s'", threat.Package)
 	}
-	
+
 	if threat.SimilarTo != "react" {
 		t.Errorf("Expected similar package to be 'react', got '%s'", threat.SimilarTo)
 	}
-	
+
 	if threat.Type != types.ThreatTypeTyposquatting {
 		t.Errorf("Expected threat type to be typosquatting, got %v", threat.Type)
 	}
-	
+
 	if threat.DetectionMethod != "enhanced_typosquatting" {
 		t.Errorf("Expected detection method to be 'enhanced_typosquatting', got '%s'", threat.DetectionMethod)
 	}
-	
+
 	if len(threat.Evidence) == 0 {
 		t.Error("Expected evidence to be provided")
 	}
@@ -322,7 +322,7 @@ func TestDetectEnhanced(t *testing.T) {
 
 func TestDetectEnhancedMultipleThreats(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	// Create a test dependency that's similar to multiple packages
 	target := types.Dependency{
 		Name:     "reakt", // Similar to "react"
@@ -330,16 +330,16 @@ func TestDetectEnhancedMultipleThreats(t *testing.T) {
 		Registry: "npm",
 		Direct:   true,
 	}
-	
+
 	// Include packages with varying similarity
 	allPackages := []string{"react", "reach", "track", "lodash", "express"}
-	
+
 	threats := detector.DetectEnhanced(target, allPackages, 0.6) // Lower threshold
-	
+
 	if len(threats) == 0 {
 		t.Fatal("Expected at least one threat to be detected")
 	}
-	
+
 	// Should detect similarity to "react" at minimum
 	found := false
 	for _, threat := range threats {
@@ -348,7 +348,7 @@ func TestDetectEnhancedMultipleThreats(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if !found {
 		t.Error("Expected to find threat similar to 'react'")
 	}
@@ -356,7 +356,7 @@ func TestDetectEnhancedMultipleThreats(t *testing.T) {
 
 func TestDetectEnhancedNoThreats(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	// Create a test dependency that's not similar to any package
 	target := types.Dependency{
 		Name:     "completely-different-package",
@@ -364,11 +364,11 @@ func TestDetectEnhancedNoThreats(t *testing.T) {
 		Registry: "npm",
 		Direct:   true,
 	}
-	
+
 	allPackages := []string{"react", "lodash", "express", "webpack", "babel"}
-	
+
 	threats := detector.DetectEnhanced(target, allPackages, 0.75)
-	
+
 	if len(threats) != 0 {
 		t.Errorf("Expected no threats to be detected, got %d", len(threats))
 	}
@@ -376,7 +376,7 @@ func TestDetectEnhancedNoThreats(t *testing.T) {
 
 func TestCalculateSeverityEnhanced(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name             string
 		similarity       float64
@@ -418,11 +418,11 @@ func TestCalculateSeverityEnhanced(t *testing.T) {
 			expectedSeverity: types.SeverityLow,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			severity := detector.calculateSeverityEnhanced(tt.similarity, tt.analysis)
-			
+
 			if severity != tt.expectedSeverity {
 				t.Errorf("Expected severity %v, got %v", tt.expectedSeverity, severity)
 			}
@@ -432,13 +432,13 @@ func TestCalculateSeverityEnhanced(t *testing.T) {
 
 func TestGenerateThreatDescription(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
-		name        string
-		target      string
-		similar     string
-		analysis    TyposquattingAnalysis
-		contains    []string
+		name     string
+		target   string
+		similar  string
+		analysis TyposquattingAnalysis
+		contains []string
 	}{
 		{
 			name:    "Keyboard proximity",
@@ -473,11 +473,11 @@ func TestGenerateThreatDescription(t *testing.T) {
 			contains: []string{"transposition detected", "typosquatting attack"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			description := detector.generateThreatDescription(tt.target, tt.similar, tt.analysis)
-			
+
 			for _, expected := range tt.contains {
 				if !strings.Contains(strings.ToLower(description), strings.ToLower(expected)) {
 					t.Errorf("Expected description to contain '%s', got: %s", expected, description)
@@ -489,7 +489,7 @@ func TestGenerateThreatDescription(t *testing.T) {
 
 func TestGenerateEvidence(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	analysis := TyposquattingAnalysis{
 		EditDistance:       1,
 		VisualSimilarity:   0.9,
@@ -497,27 +497,27 @@ func TestGenerateEvidence(t *testing.T) {
 		KeyboardErrors:     1,
 		Transpositions:     0,
 	}
-	
+
 	evidence := detector.generateEvidence("reakt", "react", analysis)
-	
+
 	if len(evidence) < 3 {
 		t.Errorf("Expected at least 3 pieces of evidence, got %d", len(evidence))
 	}
-	
+
 	// Check for required evidence types
 	requiredTypes := []string{"edit_distance", "visual_similarity", "phonetic_similarity"}
 	found := make(map[string]bool)
-	
+
 	for _, ev := range evidence {
 		found[ev.Type] = true
 	}
-	
+
 	for _, reqType := range requiredTypes {
 		if !found[reqType] {
 			t.Errorf("Expected evidence type '%s' to be present", reqType)
 		}
 	}
-	
+
 	// Should include keyboard errors evidence
 	if !found["keyboard_errors"] {
 		t.Error("Expected keyboard_errors evidence to be present")
@@ -526,7 +526,7 @@ func TestGenerateEvidence(t *testing.T) {
 
 func TestWeightedAverage(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	tests := []struct {
 		name     string
 		scores   []float64
@@ -552,11 +552,11 @@ func TestWeightedAverage(t *testing.T) {
 			expected: 0.0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.weightedAverage(tt.scores, tt.weights)
-			
+
 			if abs(result-tt.expected) > 0.01 {
 				t.Errorf("Expected %f, got %f", tt.expected, result)
 			}
@@ -574,16 +574,16 @@ func abs(x float64) float64 {
 
 func BenchmarkDetectEnhanced(b *testing.B) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	target := types.Dependency{
 		Name:     "reakt",
 		Version:  "1.0.0",
 		Registry: "npm",
 		Direct:   true,
 	}
-	
+
 	allPackages := []string{"react", "lodash", "express", "webpack", "babel", "typescript", "angular", "vue", "jquery", "moment"}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = detector.DetectEnhanced(target, allPackages, 0.75)
@@ -592,7 +592,7 @@ func BenchmarkDetectEnhanced(b *testing.B) {
 
 func BenchmarkCalculateEnhancedSimilarity(b *testing.B) {
 	detector := NewEnhancedTyposquattingDetector()
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = detector.calculateEnhancedSimilarity("reakt", "react")

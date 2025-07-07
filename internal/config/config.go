@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/viper"
 	"github.com/go-playground/validator/v10"
+	"github.com/spf13/viper"
 
 	"github.com/Alivanroy/Typosentinel/internal/errors"
 )
@@ -29,61 +29,61 @@ const (
 type Config struct {
 	// Application settings
 	App AppConfig `mapstructure:"app" validate:"required"`
-	
+
 	// Server settings
 	Server ServerConfig `mapstructure:"server" validate:"required"`
-	
+
 	// Database settings
 	Database DatabaseConfig `mapstructure:"database" validate:"required"`
-	
+
 	// Redis settings
 	Redis RedisConfig `mapstructure:"redis" validate:"required"`
-	
+
 	// Logging settings
 	Logging LoggingConfig `mapstructure:"logging" validate:"required"`
-	
+
 	// Metrics settings
 	Metrics MetricsConfig `mapstructure:"metrics" validate:"required"`
-	
+
 	// Security settings
 	Security SecurityConfig `mapstructure:"security" validate:"required"`
-	
+
 	// ML settings
 	ML MLConfig `mapstructure:"ml" validate:"required"`
-	
+
 	// ML Service settings
 	MLService *MLServiceConfig `mapstructure:"ml_service"`
-	
+
 	// Scanner settings
 	Scanner *ScannerConfig `mapstructure:"scanner"`
-	
+
 	// API settings
 	API APIConfig `mapstructure:"api" validate:"required"`
-	
+
 	// Rate limiting settings
 	RateLimit RateLimitConfig `mapstructure:"rate_limit" validate:"required"`
-	
+
 	// Threat Intelligence settings
 	ThreatIntelligence *ThreatIntelligenceConfig `mapstructure:"threat_intelligence"`
-	
+
 	// Plugins settings
 	Plugins *PluginsConfig `mapstructure:"plugins"`
-	
+
 	// Cache settings
 	Cache *CacheConfig `mapstructure:"cache"`
-	
+
 	// Typo Detection settings
 	TypoDetection *TypoDetectionConfig `mapstructure:"typo_detection"`
-	
+
 	// Registries settings
 	Registries RegistriesConfig `mapstructure:"registries"`
-	
+
 	// ML Analysis settings
 	MLAnalysis *MLAnalysisConfig `mapstructure:"ml_analysis"`
-	
+
 	// Features settings
 	Features FeatureConfig `mapstructure:"features" validate:"required"`
-	
+
 	// Policies settings
 	Policies PoliciesConfig `mapstructure:"policies" validate:"required"`
 }
@@ -176,31 +176,31 @@ type LoggingConfig struct {
 
 // MetricsConfig contains metrics configuration
 type MetricsConfig struct {
-	Enabled    bool   `mapstructure:"enabled"`
-	Provider   string `mapstructure:"provider" validate:"required_if=Enabled true,omitempty,oneof=prometheus statsd"`
-	Address    string `mapstructure:"address" validate:"required_if=Enabled true,omitempty"`
-	Namespace  string `mapstructure:"namespace" validate:"required_if=Enabled true,omitempty,min=1"`
-	Interval   time.Duration `mapstructure:"interval" validate:"min=1s"`
-	Buckets    []float64     `mapstructure:"buckets"`
+	Enabled   bool          `mapstructure:"enabled"`
+	Provider  string        `mapstructure:"provider" validate:"required_if=Enabled true,omitempty,oneof=prometheus statsd"`
+	Address   string        `mapstructure:"address" validate:"required_if=Enabled true,omitempty"`
+	Namespace string        `mapstructure:"namespace" validate:"required_if=Enabled true,omitempty,min=1"`
+	Interval  time.Duration `mapstructure:"interval" validate:"min=1s"`
+	Buckets   []float64     `mapstructure:"buckets"`
 }
 
 // SecurityConfig contains security configuration
 type SecurityConfig struct {
-	JWT           JWTConfig           `mapstructure:"jwt"`
-	APIKeys       APIKeysConfig       `mapstructure:"api_keys"`
-	Encryption    EncryptionConfig    `mapstructure:"encryption"`
+	JWT            JWTConfig            `mapstructure:"jwt"`
+	APIKeys        APIKeysConfig        `mapstructure:"api_keys"`
+	Encryption     EncryptionConfig     `mapstructure:"encryption"`
 	PasswordPolicy PasswordPolicyConfig `mapstructure:"password_policy"`
-	CSRF          CSRFConfig          `mapstructure:"csrf"`
+	CSRF           CSRFConfig           `mapstructure:"csrf"`
 }
 
 // JWTConfig contains JWT configuration
 type JWTConfig struct {
-	Enabled       bool          `mapstructure:"enabled"`
-	Secret        string        `mapstructure:"secret" validate:"required_if=Enabled true,omitempty,min=32"`
-	Expiration    time.Duration `mapstructure:"expiration" validate:"required_if=Enabled true,omitempty,min=1m"`
+	Enabled           bool          `mapstructure:"enabled"`
+	Secret            string        `mapstructure:"secret" validate:"required_if=Enabled true,omitempty,min=32"`
+	Expiration        time.Duration `mapstructure:"expiration" validate:"required_if=Enabled true,omitempty,min=1m"`
 	RefreshExpiration time.Duration `mapstructure:"refresh_expiration" validate:"required_if=Enabled true,omitempty,min=1h"`
-	Issuer        string        `mapstructure:"issuer" validate:"required_if=Enabled true,omitempty,min=1"`
-	Audience      string        `mapstructure:"audience" validate:"required_if=Enabled true,omitempty,min=1"`
+	Issuer            string        `mapstructure:"issuer" validate:"required_if=Enabled true,omitempty,min=1"`
+	Audience          string        `mapstructure:"audience" validate:"required_if=Enabled true,omitempty,min=1"`
 }
 
 // APIKeysConfig contains API keys configuration
@@ -217,10 +217,10 @@ type EncryptionConfig struct {
 
 // PasswordPolicyConfig contains password policy configuration
 type PasswordPolicyConfig struct {
-	MinLength    int  `mapstructure:"min_length" validate:"min=8,max=128"`
-	RequireUpper bool `mapstructure:"require_upper"`
-	RequireLower bool `mapstructure:"require_lower"`
-	RequireDigit bool `mapstructure:"require_digit"`
+	MinLength     int  `mapstructure:"min_length" validate:"min=8,max=128"`
+	RequireUpper  bool `mapstructure:"require_upper"`
+	RequireLower  bool `mapstructure:"require_lower"`
+	RequireDigit  bool `mapstructure:"require_digit"`
 	RequireSymbol bool `mapstructure:"require_symbol"`
 }
 
@@ -234,61 +234,61 @@ type CSRFConfig struct {
 
 // MLConfig contains machine learning configuration
 type MLConfig struct {
-	Enabled     bool          `mapstructure:"enabled"`
-	ModelPath   string        `mapstructure:"model_path" validate:"required_if=Enabled true,omitempty,file"`
-	Threshold   float64       `mapstructure:"threshold" validate:"min=0,max=1"`
-	BatchSize   int           `mapstructure:"batch_size" validate:"min=1,max=1000"`
-	Timeout     time.Duration `mapstructure:"timeout" validate:"min=1s"`
-	CacheSize   int           `mapstructure:"cache_size" validate:"min=100,max=10000"`
+	Enabled        bool          `mapstructure:"enabled"`
+	ModelPath      string        `mapstructure:"model_path" validate:"required_if=Enabled true,omitempty,file"`
+	Threshold      float64       `mapstructure:"threshold" validate:"min=0,max=1"`
+	BatchSize      int           `mapstructure:"batch_size" validate:"min=1,max=1000"`
+	Timeout        time.Duration `mapstructure:"timeout" validate:"min=1s"`
+	CacheSize      int           `mapstructure:"cache_size" validate:"min=100,max=10000"`
 	UpdateInterval time.Duration `mapstructure:"update_interval" validate:"min=1h"`
-	MLModelConfig MLModelConfig `mapstructure:"model_config"`
+	MLModelConfig  MLModelConfig `mapstructure:"model_config"`
 }
 
 // MLModelConfig contains ML model configuration
 type MLModelConfig struct {
-	Enabled        bool              `mapstructure:"enabled"`
-	Threshold      float64           `mapstructure:"threshold" validate:"min=0,max=1"`
-	Type           string            `mapstructure:"type" validate:"required,oneof=tensorflow pytorch sklearn"`
-	Version        string            `mapstructure:"version"`
+	Enabled        bool                   `mapstructure:"enabled"`
+	Threshold      float64                `mapstructure:"threshold" validate:"min=0,max=1"`
+	Type           string                 `mapstructure:"type" validate:"required,oneof=tensorflow pytorch sklearn"`
+	Version        string                 `mapstructure:"version"`
 	Parameters     map[string]interface{} `mapstructure:"parameters"`
-	Features       []string          `mapstructure:"features"`
-	Preprocessing  PreprocessingConfig `mapstructure:"preprocessing"`
-	Postprocessing PostprocessingConfig `mapstructure:"postprocessing"`
+	Features       []string               `mapstructure:"features"`
+	Preprocessing  PreprocessingConfig    `mapstructure:"preprocessing"`
+	Postprocessing PostprocessingConfig   `mapstructure:"postprocessing"`
 }
 
 // MLAnalysisConfig contains ML analysis configuration
 type MLAnalysisConfig struct {
-	Enabled              bool                `mapstructure:"enabled"`
-	ModelPath            string              `mapstructure:"model_path" validate:"required_if=Enabled true"`
-	Threshold            float64             `mapstructure:"threshold" validate:"min=0,max=1"`
-	SimilarityThreshold  float64             `mapstructure:"similarity_threshold" validate:"min=0,max=1"`
-	MaliciousThreshold   float64             `mapstructure:"malicious_threshold" validate:"min=0,max=1"`
-	ReputationThreshold  float64             `mapstructure:"reputation_threshold" validate:"min=0,max=1"`
-	BatchSize            int                 `mapstructure:"batch_size" validate:"min=1,max=1000"`
-	MaxFeatures          int                 `mapstructure:"max_features" validate:"min=1"`
-	Timeout              time.Duration       `mapstructure:"timeout" validate:"min=1s"`
-	CacheEmbeddings      bool                `mapstructure:"cache_embeddings"`
-	ParallelProcessing   bool                `mapstructure:"parallel_processing"`
-	GPUAcceleration      bool                `mapstructure:"gpu_acceleration"`
-	FeatureStore         FeatureStoreConfig  `mapstructure:"feature_store"`
-	ModelUpdates         ModelUpdatesConfig  `mapstructure:"model_updates"`
+	Enabled             bool               `mapstructure:"enabled"`
+	ModelPath           string             `mapstructure:"model_path" validate:"required_if=Enabled true"`
+	Threshold           float64            `mapstructure:"threshold" validate:"min=0,max=1"`
+	SimilarityThreshold float64            `mapstructure:"similarity_threshold" validate:"min=0,max=1"`
+	MaliciousThreshold  float64            `mapstructure:"malicious_threshold" validate:"min=0,max=1"`
+	ReputationThreshold float64            `mapstructure:"reputation_threshold" validate:"min=0,max=1"`
+	BatchSize           int                `mapstructure:"batch_size" validate:"min=1,max=1000"`
+	MaxFeatures         int                `mapstructure:"max_features" validate:"min=1"`
+	Timeout             time.Duration      `mapstructure:"timeout" validate:"min=1s"`
+	CacheEmbeddings     bool               `mapstructure:"cache_embeddings"`
+	ParallelProcessing  bool               `mapstructure:"parallel_processing"`
+	GPUAcceleration     bool               `mapstructure:"gpu_acceleration"`
+	FeatureStore        FeatureStoreConfig `mapstructure:"feature_store"`
+	ModelUpdates        ModelUpdatesConfig `mapstructure:"model_updates"`
 }
 
 // MLServiceConfig contains ML service configuration
 type MLServiceConfig struct {
-	Enabled    bool          `mapstructure:"enabled"`
-	Endpoint   string        `mapstructure:"endpoint" validate:"required_if=Enabled true,url"`
-	Timeout    time.Duration `mapstructure:"timeout" validate:"min=1s"`
-	Retries    int           `mapstructure:"retries" validate:"min=0,max=10"`
-	APIKey     string        `mapstructure:"api_key"`
-	BatchSize  int           `mapstructure:"batch_size" validate:"min=1,max=1000"`
+	Enabled   bool          `mapstructure:"enabled"`
+	Endpoint  string        `mapstructure:"endpoint" validate:"required_if=Enabled true,url"`
+	Timeout   time.Duration `mapstructure:"timeout" validate:"min=1s"`
+	Retries   int           `mapstructure:"retries" validate:"min=0,max=10"`
+	APIKey    string        `mapstructure:"api_key"`
+	BatchSize int           `mapstructure:"batch_size" validate:"min=1,max=1000"`
 }
 
 // FeatureStoreConfig contains feature store configuration
 type FeatureStoreConfig struct {
-	Enabled    bool   `mapstructure:"enabled"`
-	Provider   string `mapstructure:"provider" validate:"required_if=Enabled true,oneof=redis postgres"`
-	Connection string `mapstructure:"connection" validate:"required_if=Enabled true"`
+	Enabled    bool          `mapstructure:"enabled"`
+	Provider   string        `mapstructure:"provider" validate:"required_if=Enabled true,oneof=redis postgres"`
+	Connection string        `mapstructure:"connection" validate:"required_if=Enabled true"`
 	TTL        time.Duration `mapstructure:"ttl" validate:"min=1m"`
 }
 
@@ -302,17 +302,17 @@ type ModelUpdatesConfig struct {
 
 // PreprocessingConfig contains preprocessing configuration
 type PreprocessingConfig struct {
-	Normalization bool              `mapstructure:"normalization"`
-	Scaling       string            `mapstructure:"scaling" validate:"oneof=standard minmax robust"`
-	FeatureSelection bool           `mapstructure:"feature_selection"`
-	CustomSteps   []ProcessingStep  `mapstructure:"custom_steps"`
+	Normalization    bool             `mapstructure:"normalization"`
+	Scaling          string           `mapstructure:"scaling" validate:"oneof=standard minmax robust"`
+	FeatureSelection bool             `mapstructure:"feature_selection"`
+	CustomSteps      []ProcessingStep `mapstructure:"custom_steps"`
 }
 
 // PostprocessingConfig contains postprocessing configuration
 type PostprocessingConfig struct {
 	ThresholdAdjustment bool             `mapstructure:"threshold_adjustment"`
-	Calibration        bool              `mapstructure:"calibration"`
-	CustomSteps        []ProcessingStep  `mapstructure:"custom_steps"`
+	Calibration         bool             `mapstructure:"calibration"`
+	CustomSteps         []ProcessingStep `mapstructure:"custom_steps"`
 }
 
 // ProcessingStep contains processing step configuration
@@ -324,13 +324,13 @@ type ProcessingStep struct {
 
 // ScannerConfig contains scanner configuration
 type ScannerConfig struct {
-	MaxConcurrency int           `mapstructure:"max_concurrency" validate:"min=1,max=50"`
-	Timeout        time.Duration `mapstructure:"timeout" validate:"min=1s"`
-	RetryAttempts  int           `mapstructure:"retry_attempts" validate:"min=0,max=10"`
-	RetryDelay     time.Duration `mapstructure:"retry_delay" validate:"min=1s"`
-	UserAgent      string        `mapstructure:"user_agent" validate:"required,min=1"`
-	IncludeDevDeps bool          `mapstructure:"include_dev_deps"`
-	EnrichMetadata bool          `mapstructure:"enrich_metadata"`
+	MaxConcurrency int              `mapstructure:"max_concurrency" validate:"min=1,max=50"`
+	Timeout        time.Duration    `mapstructure:"timeout" validate:"min=1s"`
+	RetryAttempts  int              `mapstructure:"retry_attempts" validate:"min=0,max=10"`
+	RetryDelay     time.Duration    `mapstructure:"retry_delay" validate:"min=1s"`
+	UserAgent      string           `mapstructure:"user_agent" validate:"required,min=1"`
+	IncludeDevDeps bool             `mapstructure:"include_dev_deps"`
+	EnrichMetadata bool             `mapstructure:"enrich_metadata"`
 	Registries     RegistriesConfig `mapstructure:"registries"`
 }
 
@@ -339,11 +339,11 @@ type RegistriesConfig []RegistryConfig
 
 // RegistryConfig contains individual registry configuration
 type RegistryConfig struct {
-	Enabled bool              `mapstructure:"enabled"`
-	URL     string            `mapstructure:"url" validate:"required_if=Enabled true,omitempty,url"`
-	APIKey  string            `mapstructure:"api_key"`
-	Timeout time.Duration     `mapstructure:"timeout" validate:"min=1s"`
-	Private PrivateConfig     `mapstructure:"private"`
+	Enabled bool          `mapstructure:"enabled"`
+	URL     string        `mapstructure:"url" validate:"required_if=Enabled true,omitempty,url"`
+	APIKey  string        `mapstructure:"api_key"`
+	Timeout time.Duration `mapstructure:"timeout" validate:"min=1s"`
+	Private PrivateConfig `mapstructure:"private"`
 }
 
 // PrivateConfig contains private registry configuration
@@ -363,26 +363,26 @@ type APIConfig struct {
 
 // RESTAPIConfig contains REST API configuration
 type RESTAPIConfig struct {
-	Enabled        bool                 `mapstructure:"enabled"`
-	Host           string               `mapstructure:"host"`
-	Port           int                  `mapstructure:"port"`
-	BasePath       string               `mapstructure:"base_path"`
-	Prefix         string               `mapstructure:"prefix"`
-	Version        string               `mapstructure:"version"`
-	Versioning     APIVersioning        `mapstructure:"versioning"`
-	MaxBodySize    int64                `mapstructure:"max_body_size"`
-	CORS           *CORSConfig          `mapstructure:"cors"`
-	RateLimiting   *APIRateLimiting     `mapstructure:"rate_limiting"`
-	Authentication *APIAuthentication   `mapstructure:"authentication"`
-	Documentation  APIDocumentation     `mapstructure:"documentation"`
+	Enabled        bool               `mapstructure:"enabled"`
+	Host           string             `mapstructure:"host"`
+	Port           int                `mapstructure:"port"`
+	BasePath       string             `mapstructure:"base_path"`
+	Prefix         string             `mapstructure:"prefix"`
+	Version        string             `mapstructure:"version"`
+	Versioning     APIVersioning      `mapstructure:"versioning"`
+	MaxBodySize    int64              `mapstructure:"max_body_size"`
+	CORS           *CORSConfig        `mapstructure:"cors"`
+	RateLimiting   *APIRateLimiting   `mapstructure:"rate_limiting"`
+	Authentication *APIAuthentication `mapstructure:"authentication"`
+	Documentation  APIDocumentation   `mapstructure:"documentation"`
 }
 
 // APIRateLimiting contains API rate limiting configuration
 type APIRateLimiting struct {
-	Enabled bool          `mapstructure:"enabled"`
-	RPS     int           `mapstructure:"rps"`
-	Burst   int           `mapstructure:"burst"`
-	Window  time.Duration `mapstructure:"window"`
+	Enabled bool                  `mapstructure:"enabled"`
+	RPS     int                   `mapstructure:"rps"`
+	Burst   int                   `mapstructure:"burst"`
+	Window  time.Duration         `mapstructure:"window"`
 	Global  GlobalRateLimitConfig `mapstructure:"global"`
 }
 
@@ -422,8 +422,6 @@ type APIAuthentication struct {
 	BasicAuth BasicAuthConfig `mapstructure:"basic_auth"`
 }
 
-
-
 // BasicAuthConfig contains basic auth configuration
 type BasicAuthConfig struct {
 	Users map[string]string `mapstructure:"users"`
@@ -439,20 +437,20 @@ type DocumentationConfig struct {
 
 // RateLimitConfig contains rate limiting configuration
 type RateLimitConfig struct {
-	Enabled    bool          `mapstructure:"enabled"`
-	Requests   int           `mapstructure:"requests" validate:"required_if=Enabled true,omitempty,min=1"`
-	Window     time.Duration `mapstructure:"window" validate:"required_if=Enabled true,omitempty,min=1s"`
-	Burst      int           `mapstructure:"burst" validate:"required_if=Enabled true,omitempty,min=1"`
-	SkipPaths  []string      `mapstructure:"skip_paths"`
-	Headers    bool          `mapstructure:"headers"`
+	Enabled   bool          `mapstructure:"enabled"`
+	Requests  int           `mapstructure:"requests" validate:"required_if=Enabled true,omitempty,min=1"`
+	Window    time.Duration `mapstructure:"window" validate:"required_if=Enabled true,omitempty,min=1s"`
+	Burst     int           `mapstructure:"burst" validate:"required_if=Enabled true,omitempty,min=1"`
+	SkipPaths []string      `mapstructure:"skip_paths"`
+	Headers   bool          `mapstructure:"headers"`
 }
 
 // ThreatIntelligenceConfig contains threat intelligence configuration
 type ThreatIntelligenceConfig struct {
-	Enabled    bool                 `mapstructure:"enabled"`
-	UpdateInterval time.Duration   `mapstructure:"update_interval" validate:"min=1m"`
-	Feeds      []ThreatFeedConfig   `mapstructure:"feeds"`
-	Alerting   AlertingConfig       `mapstructure:"alerting"`
+	Enabled        bool               `mapstructure:"enabled"`
+	UpdateInterval time.Duration      `mapstructure:"update_interval" validate:"min=1m"`
+	Feeds          []ThreatFeedConfig `mapstructure:"feeds"`
+	Alerting       AlertingConfig     `mapstructure:"alerting"`
 }
 
 // ThreatFeedConfig contains threat feed configuration
@@ -466,9 +464,9 @@ type ThreatFeedConfig struct {
 
 // AlertingConfig contains alerting configuration
 type AlertingConfig struct {
-	Enabled    bool              `mapstructure:"enabled"`
-	Channels   []AlertChannel    `mapstructure:"channels"`
-	Throttling ThrottlingConfig  `mapstructure:"throttling"`
+	Enabled    bool             `mapstructure:"enabled"`
+	Channels   []AlertChannel   `mapstructure:"channels"`
+	Throttling ThrottlingConfig `mapstructure:"throttling"`
 }
 
 // AlertChannel contains alert channel configuration
@@ -508,13 +506,13 @@ type CICDProvider struct {
 
 // PluginConfig contains individual plugin configuration
 type PluginConfig struct {
-	Name        string                 `mapstructure:"name" validate:"required"`
-	Enabled     bool                   `mapstructure:"enabled"`
-	Path        string                 `mapstructure:"path" validate:"required_if=Enabled true"`
-	Config      map[string]string      `mapstructure:"config"`
-	Settings    map[string]interface{} `mapstructure:"settings"`
-	Timeout     time.Duration          `mapstructure:"timeout" validate:"min=1s"`
-	Retries     int                    `mapstructure:"retries" validate:"min=0,max=10"`
+	Name     string                 `mapstructure:"name" validate:"required"`
+	Enabled  bool                   `mapstructure:"enabled"`
+	Path     string                 `mapstructure:"path" validate:"required_if=Enabled true"`
+	Config   map[string]string      `mapstructure:"config"`
+	Settings map[string]interface{} `mapstructure:"settings"`
+	Timeout  time.Duration          `mapstructure:"timeout" validate:"min=1s"`
+	Retries  int                    `mapstructure:"retries" validate:"min=0,max=10"`
 }
 
 // PluginEntry contains plugin entry information
@@ -540,15 +538,15 @@ type CacheConfig struct {
 
 // TypoDetectionConfig contains typo detection configuration
 type TypoDetectionConfig struct {
-	Enabled             bool    `mapstructure:"enabled"`
-	Threshold           float64 `mapstructure:"threshold" validate:"min=0,max=1"`
-	SimilarityThreshold float64 `mapstructure:"similarity_threshold" validate:"min=0,max=1"`
-	EditDistanceThreshold int   `mapstructure:"edit_distance_threshold" validate:"min=1"`
-	MaxDistance         int     `mapstructure:"max_distance" validate:"min=1"`
-	PhoneticMatching    bool    `mapstructure:"phonetic_matching"`
-	CheckSimilarNames   bool    `mapstructure:"check_similar_names"`
-	CheckHomoglyphs     bool    `mapstructure:"check_homoglyphs"`
-	DictionaryPath      string  `mapstructure:"dictionary_path"`
+	Enabled               bool    `mapstructure:"enabled"`
+	Threshold             float64 `mapstructure:"threshold" validate:"min=0,max=1"`
+	SimilarityThreshold   float64 `mapstructure:"similarity_threshold" validate:"min=0,max=1"`
+	EditDistanceThreshold int     `mapstructure:"edit_distance_threshold" validate:"min=1"`
+	MaxDistance           int     `mapstructure:"max_distance" validate:"min=1"`
+	PhoneticMatching      bool    `mapstructure:"phonetic_matching"`
+	CheckSimilarNames     bool    `mapstructure:"check_similar_names"`
+	CheckHomoglyphs       bool    `mapstructure:"check_homoglyphs"`
+	DictionaryPath        string  `mapstructure:"dictionary_path"`
 }
 
 // WebhookConfig contains webhook configuration
@@ -582,8 +580,8 @@ type FeatureConfig struct {
 
 // PoliciesConfig contains policy configuration
 type PoliciesConfig struct {
-	FailOnThreats   bool   `mapstructure:"fail_on_threats"`
-	MinThreatLevel  string `mapstructure:"min_threat_level" validate:"oneof=low medium high critical"`
+	FailOnThreats  bool   `mapstructure:"fail_on_threats"`
+	MinThreatLevel string `mapstructure:"min_threat_level" validate:"oneof=low medium high critical"`
 }
 
 // Manager manages application configuration
@@ -987,7 +985,7 @@ func (c *Config) IsFeatureEnabled(feature string) bool {
 // LoadConfig loads configuration from a file
 func LoadConfig(configFile string) (*Config, error) {
 	manager := NewManager()
-	
+
 	if configFile != "" {
 		// Load from specific file
 		dir := filepath.Dir(configFile)
@@ -1000,7 +998,7 @@ func LoadConfig(configFile string) (*Config, error) {
 			return nil, fmt.Errorf("failed to load default config: %w", err)
 		}
 	}
-	
+
 	return manager.Get(), nil
 }
 
@@ -1008,7 +1006,7 @@ func LoadConfig(configFile string) (*Config, error) {
 func NewDefaultConfig() *Config {
 	manager := NewManager()
 	manager.setDefaults()
-	
+
 	// Create config with defaults from viper
 	config := &Config{
 		App: AppConfig{
@@ -1065,6 +1063,6 @@ func NewDefaultConfig() *Config {
 			MinThreatLevel: viper.GetString("policies.min_threat_level"),
 		},
 	}
-	
+
 	return config
 }

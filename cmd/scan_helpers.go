@@ -111,7 +111,7 @@ func calculateSummary(findings []output.Finding, results *scanner.ScanResults) o
 	if summary.FindingsByCategory == nil {
 		summary.FindingsByCategory = make(map[string]int)
 	}
-	
+
 	// Count findings by type
 	for _, finding := range findings {
 		summary.FindingsByCategory[finding.Type]++

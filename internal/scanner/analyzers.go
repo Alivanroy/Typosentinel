@@ -406,12 +406,12 @@ func (a *PythonAnalyzer) parsePoetryProject(projectInfo *ProjectInfo) ([]*types.
 // parseRequirementString parses a requirement string and returns package name and version
 func (a *PythonAnalyzer) parseRequirementString(requirement string) (string, string) {
 	req := strings.TrimSpace(requirement)
-	
+
 	// Handle editable installs
 	if strings.HasPrefix(req, "-e ") {
 		req = strings.TrimPrefix(req, "-e ")
 	}
-	
+
 	// Handle git URLs
 	if strings.Contains(req, "git+") && strings.Contains(req, "#egg=") {
 		parts := strings.Split(req, "#egg=")
@@ -419,7 +419,7 @@ func (a *PythonAnalyzer) parseRequirementString(requirement string) (string, str
 			return parts[1], "*"
 		}
 	}
-	
+
 	// Handle local paths
 	if strings.HasPrefix(req, "./") || strings.HasPrefix(req, "/") {
 		// Extract package name from path
@@ -430,13 +430,13 @@ func (a *PythonAnalyzer) parseRequirementString(requirement string) (string, str
 		}
 		return path, "*"
 	}
-	
+
 	// Handle environment markers (remove them from version)
 	if strings.Contains(req, ";") {
 		parts := strings.Split(req, ";")
 		req = strings.TrimSpace(parts[0])
 	}
-	
+
 	// Handle extras (remove them from package name)
 	if strings.Contains(req, "[") && strings.Contains(req, "]") {
 		start := strings.Index(req, "[")
@@ -445,7 +445,7 @@ func (a *PythonAnalyzer) parseRequirementString(requirement string) (string, str
 			req = req[:start] + req[end:]
 		}
 	}
-	
+
 	// Handle standard requirements
 	reqRegex := regexp.MustCompile(`^([a-zA-Z0-9_-]+)([><=!~]+)?([0-9.]+.*)?$`)
 	matches := reqRegex.FindStringSubmatch(req)
@@ -463,12 +463,12 @@ func (a *PythonAnalyzer) parseRequirementString(requirement string) (string, str
 // parseRequirementStringPreserveSpec parses a requirement string preserving version specifications
 func (a *PythonAnalyzer) parseRequirementStringPreserveSpec(requirement string) (string, string) {
 	req := strings.TrimSpace(requirement)
-	
+
 	// Handle editable installs
 	if strings.HasPrefix(req, "-e ") {
 		req = strings.TrimPrefix(req, "-e ")
 	}
-	
+
 	// Handle git URLs
 	if strings.Contains(req, "git+") && strings.Contains(req, "#egg=") {
 		parts := strings.Split(req, "#egg=")
@@ -476,7 +476,7 @@ func (a *PythonAnalyzer) parseRequirementStringPreserveSpec(requirement string) 
 			return parts[1], "*"
 		}
 	}
-	
+
 	// Handle local paths
 	if strings.HasPrefix(req, "./") || strings.HasPrefix(req, "/") {
 		// Extract package name from path
@@ -487,13 +487,13 @@ func (a *PythonAnalyzer) parseRequirementStringPreserveSpec(requirement string) 
 		}
 		return path, "*"
 	}
-	
+
 	// Handle environment markers (remove them from version)
 	if strings.Contains(req, ";") {
 		parts := strings.Split(req, ";")
 		req = strings.TrimSpace(parts[0])
 	}
-	
+
 	// Handle extras (remove them from package name)
 	if strings.Contains(req, "[") && strings.Contains(req, "]") {
 		start := strings.Index(req, "[")
@@ -502,7 +502,7 @@ func (a *PythonAnalyzer) parseRequirementStringPreserveSpec(requirement string) 
 			req = req[:start] + req[end:]
 		}
 	}
-	
+
 	// Handle standard requirements
 	reqRegex := regexp.MustCompile(`^([a-zA-Z0-9_-]+)([><=!~]+)?([0-9.]+.*)?$`)
 	matches := reqRegex.FindStringSubmatch(req)
@@ -628,7 +628,7 @@ func (a *GoAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Depen
 
 // RustAnalyzer analyzes Rust projects
 type RustAnalyzer struct {
-	config *config.Config
+	config   *config.Config
 	analyzer *RustPackageAnalyzer
 }
 
@@ -649,7 +649,7 @@ func (a *RustAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Dep
 
 // RubyAnalyzer analyzes Ruby projects
 type RubyAnalyzer struct {
-	config *config.Config
+	config   *config.Config
 	analyzer *RubyPackageAnalyzer
 }
 
@@ -670,7 +670,7 @@ func (a *RubyAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Dep
 
 // PHPAnalyzer analyzes PHP projects
 type PHPAnalyzer struct {
-	config *config.Config
+	config   *config.Config
 	analyzer *PHPPackageAnalyzer
 }
 
@@ -691,7 +691,7 @@ func (a *PHPAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Depe
 
 // JavaAnalyzer analyzes Java projects
 type JavaAnalyzer struct {
-	config *config.Config
+	config   *config.Config
 	analyzer *JavaPackageAnalyzer
 }
 
@@ -712,7 +712,7 @@ func (a *JavaAnalyzer) AnalyzeDependencies(projectInfo *ProjectInfo) (*types.Dep
 
 // DotNetAnalyzer analyzes .NET projects
 type DotNetAnalyzer struct {
-	config *config.Config
+	config   *config.Config
 	analyzer *DotNetPackageAnalyzer
 }
 

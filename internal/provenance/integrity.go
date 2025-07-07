@@ -22,243 +22,243 @@ type ProvenanceAnalyzer struct {
 // Config contains provenance analyzer configuration
 type Config struct {
 	Enabled bool `yaml:"enabled"`
-	
+
 	// Sigstore configuration
-	SigstoreEnabled bool `yaml:"sigstore_enabled"`
-	SigstoreRekorURL string `yaml:"sigstore_rekor_url"`
+	SigstoreEnabled   bool   `yaml:"sigstore_enabled"`
+	SigstoreRekorURL  string `yaml:"sigstore_rekor_url"`
 	SigstoreFulcioURL string `yaml:"sigstore_fulcio_url"`
-	SigstoreCTLogURL string `yaml:"sigstore_ctlog_url"`
-	
+	SigstoreCTLogURL  string `yaml:"sigstore_ctlog_url"`
+
 	// SLSA configuration
-	SLSAEnabled bool `yaml:"slsa_enabled"`
-	SLSAMinLevel int `yaml:"slsa_min_level"`
+	SLSAEnabled          bool     `yaml:"slsa_enabled"`
+	SLSAMinLevel         int      `yaml:"slsa_min_level"`
 	SLSARequiredBuilders []string `yaml:"slsa_required_builders"`
-	
+
 	// Verification settings
-	VerifySignatures bool `yaml:"verify_signatures"`
-	VerifyProvenance bool `yaml:"verify_provenance"`
-	VerifyIntegrity bool `yaml:"verify_integrity"`
+	VerifySignatures       bool `yaml:"verify_signatures"`
+	VerifyProvenance       bool `yaml:"verify_provenance"`
+	VerifyIntegrity        bool `yaml:"verify_integrity"`
 	RequireTransparencyLog bool `yaml:"require_transparency_log"`
-	
+
 	// Trust settings
 	TrustedPublishers []string `yaml:"trusted_publishers"`
-	TrustedSigners []string `yaml:"trusted_signers"`
-	TrustedBuilders []string `yaml:"trusted_builders"`
-	
+	TrustedSigners    []string `yaml:"trusted_signers"`
+	TrustedBuilders   []string `yaml:"trusted_builders"`
+
 	// Timeout and retry settings
-	Timeout string `yaml:"timeout"`
-	RetryAttempts int `yaml:"retry_attempts"`
-	Verbose bool `yaml:"verbose"`
+	Timeout       string `yaml:"timeout"`
+	RetryAttempts int    `yaml:"retry_attempts"`
+	Verbose       bool   `yaml:"verbose"`
 }
 
 // AnalysisResult represents provenance analysis results
 type AnalysisResult struct {
-	PackageName string `json:"package_name"`
-	PackageVersion string `json:"package_version"`
-	Registry string `json:"registry"`
+	PackageName       string    `json:"package_name"`
+	PackageVersion    string    `json:"package_version"`
+	Registry          string    `json:"registry"`
 	AnalysisTimestamp time.Time `json:"analysis_timestamp"`
-	
+
 	// Signature verification
 	SignatureVerification *SignatureVerification `json:"signature_verification"`
-	
+
 	// SLSA provenance
 	SLSAProvenance *SLSAProvenance `json:"slsa_provenance"`
-	
+
 	// Integrity checks
 	IntegrityChecks *IntegrityChecks `json:"integrity_checks"`
-	
+
 	// Transparency log verification
 	TransparencyLog *TransparencyLogVerification `json:"transparency_log"`
-	
+
 	// Trust assessment
 	TrustAssessment *TrustAssessment `json:"trust_assessment"`
-	
+
 	// Overall assessment
-	OverallScore float64 `json:"overall_score"`
-	TrustLevel string `json:"trust_level"`
-	Findings []Finding `json:"findings"`
-	Warnings []string `json:"warnings"`
-	Recommendations []string `json:"recommendations"`
-	
+	OverallScore    float64   `json:"overall_score"`
+	TrustLevel      string    `json:"trust_level"`
+	Findings        []Finding `json:"findings"`
+	Warnings        []string  `json:"warnings"`
+	Recommendations []string  `json:"recommendations"`
+
 	// Metadata
-	ProcessingTime time.Duration `json:"processing_time"`
-	VerificationSources []string `json:"verification_sources"`
+	ProcessingTime      time.Duration `json:"processing_time"`
+	VerificationSources []string      `json:"verification_sources"`
 }
 
 // SignatureVerification represents signature verification results
 type SignatureVerification struct {
-	Verified bool `json:"verified"`
-	Signatures []Signature `json:"signatures"`
-	Certificates []Certificate `json:"certificates"`
-	KeylessSignatures []KeylessSignature `json:"keyless_signatures"`
-	VerificationErrors []string `json:"verification_errors"`
-	TrustScore float64 `json:"trust_score"`
+	Verified           bool               `json:"verified"`
+	Signatures         []Signature        `json:"signatures"`
+	Certificates       []Certificate      `json:"certificates"`
+	KeylessSignatures  []KeylessSignature `json:"keyless_signatures"`
+	VerificationErrors []string           `json:"verification_errors"`
+	TrustScore         float64            `json:"trust_score"`
 }
 
 // Signature represents a digital signature
 type Signature struct {
-	Algorithm string `json:"algorithm"`
-	Value string `json:"value"`
-	KeyID string `json:"key_id,omitempty"`
-	Signer string `json:"signer"`
-	Timestamp time.Time `json:"timestamp"`
-	Verified bool `json:"verified"`
-	Trusted bool `json:"trusted"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Algorithm string                 `json:"algorithm"`
+	Value     string                 `json:"value"`
+	KeyID     string                 `json:"key_id,omitempty"`
+	Signer    string                 `json:"signer"`
+	Timestamp time.Time              `json:"timestamp"`
+	Verified  bool                   `json:"verified"`
+	Trusted   bool                   `json:"trusted"`
+	Metadata  map[string]interface{} `json:"metadata"`
 }
 
 // Certificate represents a signing certificate
 type Certificate struct {
-	Subject string `json:"subject"`
-	Issuer string `json:"issuer"`
-	SerialNumber string `json:"serial_number"`
-	NotBefore time.Time `json:"not_before"`
-	NotAfter time.Time `json:"not_after"`
-	Fingerprint string `json:"fingerprint"`
-	Valid bool `json:"valid"`
-	Trusted bool `json:"trusted"`
-	Extensions map[string]string `json:"extensions"`
+	Subject      string            `json:"subject"`
+	Issuer       string            `json:"issuer"`
+	SerialNumber string            `json:"serial_number"`
+	NotBefore    time.Time         `json:"not_before"`
+	NotAfter     time.Time         `json:"not_after"`
+	Fingerprint  string            `json:"fingerprint"`
+	Valid        bool              `json:"valid"`
+	Trusted      bool              `json:"trusted"`
+	Extensions   map[string]string `json:"extensions"`
 }
 
 // KeylessSignature represents a keyless signature (e.g., OIDC-based)
 type KeylessSignature struct {
-	Issuer string `json:"issuer"`
-	Subject string `json:"subject"`
-	Audience string `json:"audience"`
-	Email string `json:"email,omitempty"`
-	WorkflowTrigger string `json:"workflow_trigger,omitempty"`
-	WorkflowSHA string `json:"workflow_sha,omitempty"`
-	WorkflowName string `json:"workflow_name,omitempty"`
+	Issuer             string `json:"issuer"`
+	Subject            string `json:"subject"`
+	Audience           string `json:"audience"`
+	Email              string `json:"email,omitempty"`
+	WorkflowTrigger    string `json:"workflow_trigger,omitempty"`
+	WorkflowSHA        string `json:"workflow_sha,omitempty"`
+	WorkflowName       string `json:"workflow_name,omitempty"`
 	WorkflowRepository string `json:"workflow_repository,omitempty"`
-	Verified bool `json:"verified"`
-	Trusted bool `json:"trusted"`
+	Verified           bool   `json:"verified"`
+	Trusted            bool   `json:"trusted"`
 }
 
 // SLSAProvenance represents SLSA provenance information
 type SLSAProvenance struct {
-	Present bool `json:"present"`
-	Level int `json:"level"`
-	Builder *SLSABuilder `json:"builder"`
-	BuildType string `json:"build_type"`
-	Invocation *SLSAInvocation `json:"invocation"`
+	Present     bool                   `json:"present"`
+	Level       int                    `json:"level"`
+	Builder     *SLSABuilder           `json:"builder"`
+	BuildType   string                 `json:"build_type"`
+	Invocation  *SLSAInvocation        `json:"invocation"`
 	BuildConfig map[string]interface{} `json:"build_config"`
-	Materials []SLSAMaterial `json:"materials"`
-	Metadata *SLSAMetadata `json:"metadata"`
-	Verified bool `json:"verified"`
-	TrustScore float64 `json:"trust_score"`
-	Compliance *SLSACompliance `json:"compliance"`
+	Materials   []SLSAMaterial         `json:"materials"`
+	Metadata    *SLSAMetadata          `json:"metadata"`
+	Verified    bool                   `json:"verified"`
+	TrustScore  float64                `json:"trust_score"`
+	Compliance  *SLSACompliance        `json:"compliance"`
 }
 
 // SLSABuilder represents the builder information
 type SLSABuilder struct {
-	ID string `json:"id"`
-	Version string `json:"version"`
-	Trusted bool `json:"trusted"`
-	Verified bool `json:"verified"`
+	ID       string `json:"id"`
+	Version  string `json:"version"`
+	Trusted  bool   `json:"trusted"`
+	Verified bool   `json:"verified"`
 }
 
 // SLSAInvocation represents build invocation details
 type SLSAInvocation struct {
-	ConfigSource *SLSAConfigSource `json:"config_source"`
-	Parameters map[string]interface{} `json:"parameters"`
-	Environment map[string]string `json:"environment"`
+	ConfigSource *SLSAConfigSource      `json:"config_source"`
+	Parameters   map[string]interface{} `json:"parameters"`
+	Environment  map[string]string      `json:"environment"`
 }
 
 // SLSAConfigSource represents the configuration source
 type SLSAConfigSource struct {
-	URI string `json:"uri"`
-	Digest map[string]string `json:"digest"`
-	EntryPoint string `json:"entry_point"`
+	URI        string            `json:"uri"`
+	Digest     map[string]string `json:"digest"`
+	EntryPoint string            `json:"entry_point"`
 }
 
 // SLSAMaterial represents build materials
 type SLSAMaterial struct {
-	URI string `json:"uri"`
+	URI    string            `json:"uri"`
 	Digest map[string]string `json:"digest"`
 }
 
 // SLSAMetadata represents SLSA metadata
 type SLSAMetadata struct {
-	BuildInvocationID string `json:"build_invocation_id"`
-	BuildStartedOn time.Time `json:"build_started_on"`
-	BuildFinishedOn time.Time `json:"build_finished_on"`
-	Completeness *SLSACompleteness `json:"completeness"`
-	Reproducible bool `json:"reproducible"`
+	BuildInvocationID string            `json:"build_invocation_id"`
+	BuildStartedOn    time.Time         `json:"build_started_on"`
+	BuildFinishedOn   time.Time         `json:"build_finished_on"`
+	Completeness      *SLSACompleteness `json:"completeness"`
+	Reproducible      bool              `json:"reproducible"`
 }
 
 // SLSACompleteness represents completeness information
 type SLSACompleteness struct {
-	Parameters bool `json:"parameters"`
+	Parameters  bool `json:"parameters"`
 	Environment bool `json:"environment"`
-	Materials bool `json:"materials"`
+	Materials   bool `json:"materials"`
 }
 
 // SLSACompliance represents SLSA compliance assessment
 type SLSACompliance struct {
-	Level int `json:"level"`
+	Level        int             `json:"level"`
 	Requirements map[string]bool `json:"requirements"`
-	Violations []string `json:"violations"`
-	Score float64 `json:"score"`
+	Violations   []string        `json:"violations"`
+	Score        float64         `json:"score"`
 }
 
 // IntegrityChecks represents integrity verification results
 type IntegrityChecks struct {
-	HashVerification *HashVerification `json:"hash_verification"`
-	SizeVerification *SizeVerification `json:"size_verification"`
+	HashVerification    *HashVerification    `json:"hash_verification"`
+	SizeVerification    *SizeVerification    `json:"size_verification"`
 	ContentVerification *ContentVerification `json:"content_verification"`
-	OverallVerified bool `json:"overall_verified"`
-	TrustScore float64 `json:"trust_score"`
+	OverallVerified     bool                 `json:"overall_verified"`
+	TrustScore          float64              `json:"trust_score"`
 }
 
 // HashVerification represents hash verification results
 type HashVerification struct {
-	Algorithm string `json:"algorithm"`
+	Algorithm    string `json:"algorithm"`
 	ExpectedHash string `json:"expected_hash"`
-	ActualHash string `json:"actual_hash"`
-	Verified bool `json:"verified"`
-	Source string `json:"source"`
+	ActualHash   string `json:"actual_hash"`
+	Verified     bool   `json:"verified"`
+	Source       string `json:"source"`
 }
 
 // SizeVerification represents size verification results
 type SizeVerification struct {
-	ExpectedSize int64 `json:"expected_size"`
-	ActualSize int64 `json:"actual_size"`
-	Verified bool `json:"verified"`
-	Source string `json:"source"`
+	ExpectedSize int64  `json:"expected_size"`
+	ActualSize   int64  `json:"actual_size"`
+	Verified     bool   `json:"verified"`
+	Source       string `json:"source"`
 }
 
 // ContentVerification represents content verification results
 type ContentVerification struct {
-	ManifestVerified bool `json:"manifest_verified"`
-	FilesVerified bool `json:"files_verified"`
-	PermissionsVerified bool `json:"permissions_verified"`
-	ModifiedFiles []string `json:"modified_files"`
-	MissingFiles []string `json:"missing_files"`
-	ExtraFiles []string `json:"extra_files"`
+	ManifestVerified    bool     `json:"manifest_verified"`
+	FilesVerified       bool     `json:"files_verified"`
+	PermissionsVerified bool     `json:"permissions_verified"`
+	ModifiedFiles       []string `json:"modified_files"`
+	MissingFiles        []string `json:"missing_files"`
+	ExtraFiles          []string `json:"extra_files"`
 }
 
 // TransparencyLogVerification represents transparency log verification
 type TransparencyLogVerification struct {
-	Present bool `json:"present"`
-	Entries []TransparencyLogEntry `json:"entries"`
-	Verified bool `json:"verified"`
-	TrustScore float64 `json:"trust_score"`
+	Present    bool                   `json:"present"`
+	Entries    []TransparencyLogEntry `json:"entries"`
+	Verified   bool                   `json:"verified"`
+	TrustScore float64                `json:"trust_score"`
 }
 
 // TransparencyLogEntry represents a transparency log entry
 type TransparencyLogEntry struct {
-	LogIndex int64 `json:"log_index"`
-	LogID string `json:"log_id"`
-	KindVersion *KindVersion `json:"kind_version"`
-	IntegratedTime int64 `json:"integrated_time"`
-	InclusionPromise *InclusionPromise `json:"inclusion_promise"`
-	InclusionProof *InclusionProof `json:"inclusion_proof"`
-	Verification *LogEntryVerification `json:"verification"`
+	LogIndex         int64                 `json:"log_index"`
+	LogID            string                `json:"log_id"`
+	KindVersion      *KindVersion          `json:"kind_version"`
+	IntegratedTime   int64                 `json:"integrated_time"`
+	InclusionPromise *InclusionPromise     `json:"inclusion_promise"`
+	InclusionProof   *InclusionProof       `json:"inclusion_proof"`
+	Verification     *LogEntryVerification `json:"verification"`
 }
 
 // KindVersion represents the kind and version of log entry
 type KindVersion struct {
-	Kind string `json:"kind"`
+	Kind    string `json:"kind"`
 	Version string `json:"version"`
 }
 
@@ -269,10 +269,10 @@ type InclusionPromise struct {
 
 // InclusionProof represents inclusion proof
 type InclusionProof struct {
-	LogIndex int64 `json:"log_index"`
-	RootHash string `json:"root_hash"`
-	TreeSize int64 `json:"tree_size"`
-	Hashes []string `json:"hashes"`
+	LogIndex   int64       `json:"log_index"`
+	RootHash   string      `json:"root_hash"`
+	TreeSize   int64       `json:"tree_size"`
+	Hashes     []string    `json:"hashes"`
 	Checkpoint *Checkpoint `json:"checkpoint"`
 }
 
@@ -283,7 +283,7 @@ type Checkpoint struct {
 
 // LogEntryVerification represents log entry verification results
 type LogEntryVerification struct {
-	InclusionProof *InclusionProofVerification `json:"inclusion_proof"`
+	InclusionProof       *InclusionProofVerification       `json:"inclusion_proof"`
 	SignedEntryTimestamp *SignedEntryTimestampVerification `json:"signed_entry_timestamp"`
 }
 
@@ -299,50 +299,50 @@ type SignedEntryTimestampVerification struct {
 
 // TrustAssessment represents overall trust assessment
 type TrustAssessment struct {
-	PublisherTrust *PublisherTrust `json:"publisher_trust"`
-	SignerTrust *SignerTrust `json:"signer_trust"`
-	BuilderTrust *BuilderTrust `json:"builder_trust"`
-	OverallTrustScore float64 `json:"overall_trust_score"`
-	TrustLevel string `json:"trust_level"`
-	RiskFactors []string `json:"risk_factors"`
+	PublisherTrust    *PublisherTrust `json:"publisher_trust"`
+	SignerTrust       *SignerTrust    `json:"signer_trust"`
+	BuilderTrust      *BuilderTrust   `json:"builder_trust"`
+	OverallTrustScore float64         `json:"overall_trust_score"`
+	TrustLevel        string          `json:"trust_level"`
+	RiskFactors       []string        `json:"risk_factors"`
 }
 
 // PublisherTrust represents publisher trust assessment
 type PublisherTrust struct {
-	Publisher string `json:"publisher"`
-	Trusted bool `json:"trusted"`
-	Reputation float64 `json:"reputation"`
+	Publisher           string   `json:"publisher"`
+	Trusted             bool     `json:"trusted"`
+	Reputation          float64  `json:"reputation"`
 	VerificationHistory []string `json:"verification_history"`
 }
 
 // SignerTrust represents signer trust assessment
 type SignerTrust struct {
-	Signer string `json:"signer"`
-	Trusted bool `json:"trusted"`
-	Reputation float64 `json:"reputation"`
+	Signer           string   `json:"signer"`
+	Trusted          bool     `json:"trusted"`
+	Reputation       float64  `json:"reputation"`
 	CertificateChain []string `json:"certificate_chain"`
 }
 
 // BuilderTrust represents builder trust assessment
 type BuilderTrust struct {
-	Builder string `json:"builder"`
-	Trusted bool `json:"trusted"`
+	Builder    string  `json:"builder"`
+	Trusted    bool    `json:"trusted"`
 	Reputation float64 `json:"reputation"`
 	Compliance float64 `json:"compliance"`
 }
 
 // Finding represents a security or trust finding
 type Finding struct {
-	ID string `json:"id"`
-	Type string `json:"type"`
-	Severity string `json:"severity"`
-	Title string `json:"title"`
-	Description string `json:"description"`
-	Evidence []string `json:"evidence"`
-	Remediation string `json:"remediation"`
-	Confidence float64 `json:"confidence"`
-	Timestamp time.Time `json:"timestamp"`
-	Metadata map[string]interface{} `json:"metadata"`
+	ID          string                 `json:"id"`
+	Type        string                 `json:"type"`
+	Severity    string                 `json:"severity"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Evidence    []string               `json:"evidence"`
+	Remediation string                 `json:"remediation"`
+	Confidence  float64                `json:"confidence"`
+	Timestamp   time.Time              `json:"timestamp"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // NewProvenanceAnalyzer creates a new provenance analyzer
@@ -350,74 +350,74 @@ func NewProvenanceAnalyzer(config *Config) (*ProvenanceAnalyzer, error) {
 	if config == nil {
 		config = DefaultConfig()
 	}
-	
+
 	// Validate and set default timeout if empty
 	if config.Timeout == "" {
 		config.Timeout = "30s"
 	}
-	
+
 	// Validate timeout format
 	if config.Timeout != "" {
 		if _, err := time.ParseDuration(config.Timeout); err != nil {
 			return nil, fmt.Errorf("invalid timeout format: %w", err)
 		}
 	}
-	
+
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
-	
+
 	analyzer := &ProvenanceAnalyzer{
 		config: config,
 		client: client,
 	}
-	
+
 	return analyzer, nil
 }
 
 // DefaultConfig returns default provenance analyzer configuration
 func DefaultConfig() *Config {
 	return &Config{
-		Enabled: true,
-		SigstoreEnabled: true,
-		SigstoreRekorURL: "https://rekor.sigstore.dev",
+		Enabled:           true,
+		SigstoreEnabled:   true,
+		SigstoreRekorURL:  "https://rekor.sigstore.dev",
 		SigstoreFulcioURL: "https://fulcio.sigstore.dev",
-		SigstoreCTLogURL: "https://ctfe.sigstore.dev",
-		SLSAEnabled: true,
-		SLSAMinLevel: 2,
+		SigstoreCTLogURL:  "https://ctfe.sigstore.dev",
+		SLSAEnabled:       true,
+		SLSAMinLevel:      2,
 		SLSARequiredBuilders: []string{
 			"https://github.com/slsa-framework/slsa-github-generator",
 		},
-		VerifySignatures: true,
-		VerifyProvenance: true,
-		VerifyIntegrity: true,
+		VerifySignatures:       true,
+		VerifyProvenance:       true,
+		VerifyIntegrity:        true,
 		RequireTransparencyLog: false,
-		TrustedPublishers: []string{},
-		TrustedSigners: []string{},
+		TrustedPublishers:      []string{},
+		TrustedSigners:         []string{},
 		TrustedBuilders: []string{
 			"https://github.com/slsa-framework/slsa-github-generator",
 		},
-		Timeout: "30s",
+		Timeout:       "30s",
 		RetryAttempts: 3,
-		Verbose: false,
+		Verbose:       false,
 	}
 }
 
 // AnalyzePackage performs provenance analysis on a package
 func (pa *ProvenanceAnalyzer) AnalyzePackage(ctx context.Context, packagePath, packageName, version, registry string) (*AnalysisResult, error) {
 	startTime := time.Now()
-	
+
 	result := &AnalysisResult{
-		PackageName: packageName,
-		PackageVersion: version,
-		Registry: registry,
-		AnalysisTimestamp: time.Now(),
-		Findings: []Finding{},
-		Warnings: []string{},
-		Recommendations: []string{},
+		PackageName:         packageName,
+		PackageVersion:      version,
+		Registry:            registry,
+		AnalysisTimestamp:   time.Now(),
+		Findings:            []Finding{},
+		Warnings:            []string{},
+		Recommendations:     []string{},
 		VerificationSources: []string{},
 	}
-	
+
 	// Verify signatures
 	if pa.config.VerifySignatures {
 		sigVerification, err := pa.verifySignatures(ctx, packagePath, packageName, version, registry)
@@ -427,7 +427,7 @@ func (pa *ProvenanceAnalyzer) AnalyzePackage(ctx context.Context, packagePath, p
 			result.SignatureVerification = sigVerification
 		}
 	}
-	
+
 	// Verify SLSA provenance
 	if pa.config.SLSAEnabled && pa.config.VerifyProvenance {
 		slsaProvenance, err := pa.verifySLSAProvenance(ctx, packageName, version, registry)
@@ -437,7 +437,7 @@ func (pa *ProvenanceAnalyzer) AnalyzePackage(ctx context.Context, packagePath, p
 			result.SLSAProvenance = slsaProvenance
 		}
 	}
-	
+
 	// Verify integrity
 	if pa.config.VerifyIntegrity {
 		integrityChecks, err := pa.verifyIntegrity(ctx, packagePath, packageName, version, registry)
@@ -447,7 +447,7 @@ func (pa *ProvenanceAnalyzer) AnalyzePackage(ctx context.Context, packagePath, p
 			result.IntegrityChecks = integrityChecks
 		}
 	}
-	
+
 	// Verify transparency log
 	if pa.config.SigstoreEnabled {
 		transparencyLog, err := pa.verifyTransparencyLog(ctx, packageName, version, registry)
@@ -457,62 +457,62 @@ func (pa *ProvenanceAnalyzer) AnalyzePackage(ctx context.Context, packagePath, p
 			result.TransparencyLog = transparencyLog
 		}
 	}
-	
+
 	// Assess trust
 	trustAssessment := pa.assessTrust(result)
 	result.TrustAssessment = trustAssessment
-	
+
 	// Calculate overall score and trust level
 	pa.calculateOverallAssessment(result)
-	
+
 	// Generate findings
 	pa.generateFindings(result)
-	
+
 	// Generate recommendations
 	pa.generateRecommendations(result)
-	
+
 	result.ProcessingTime = time.Since(startTime)
-	
+
 	return result, nil
 }
 
 // verifySignatures verifies package signatures
 func (pa *ProvenanceAnalyzer) verifySignatures(ctx context.Context, packagePath, packageName, version, registry string) (*SignatureVerification, error) {
 	verification := &SignatureVerification{
-		Verified: false,
-		Signatures: []Signature{},
-		Certificates: []Certificate{},
-		KeylessSignatures: []KeylessSignature{},
+		Verified:           false,
+		Signatures:         []Signature{},
+		Certificates:       []Certificate{},
+		KeylessSignatures:  []KeylessSignature{},
 		VerificationErrors: []string{},
-		TrustScore: 0.0,
+		TrustScore:         0.0,
 	}
-	
+
 	// Look for signature files
 	signatureFiles := pa.findSignatureFiles(packagePath)
-	
+
 	for _, sigFile := range signatureFiles {
 		sig, err := pa.parseSignatureFile(sigFile)
 		if err != nil {
 			verification.VerificationErrors = append(verification.VerificationErrors, fmt.Sprintf("Failed to parse signature file %s: %v", sigFile, err))
 			continue
 		}
-		
+
 		// Verify signature
 		verified, err := pa.verifySignature(ctx, packagePath, sig)
 		if err != nil {
 			verification.VerificationErrors = append(verification.VerificationErrors, fmt.Sprintf("Failed to verify signature: %v", err))
 			continue
 		}
-		
+
 		sig.Verified = verified
 		sig.Trusted = pa.isSignerTrusted(sig.Signer)
 		verification.Signatures = append(verification.Signatures, *sig)
-		
+
 		if verified {
 			verification.Verified = true
 		}
 	}
-	
+
 	// Check for keyless signatures (OIDC-based)
 	keylessSignatures := pa.findKeylessSignatures(ctx, packageName, version, registry)
 	for _, keylessSig := range keylessSignatures {
@@ -521,56 +521,56 @@ func (pa *ProvenanceAnalyzer) verifySignatures(ctx context.Context, packagePath,
 			verification.Verified = true
 		}
 	}
-	
+
 	// Calculate trust score
 	verification.TrustScore = pa.calculateSignatureTrustScore(verification)
-	
+
 	return verification, nil
 }
 
 // verifySLSAProvenance verifies SLSA provenance
 func (pa *ProvenanceAnalyzer) verifySLSAProvenance(ctx context.Context, packageName, version, registry string) (*SLSAProvenance, error) {
 	provenance := &SLSAProvenance{
-		Present: false,
-		Level: 0,
-		Verified: false,
+		Present:    false,
+		Level:      0,
+		Verified:   false,
 		TrustScore: 0.0,
-		Materials: []SLSAMaterial{},
+		Materials:  []SLSAMaterial{},
 	}
-	
+
 	// Look for SLSA provenance
 	provenanceData, err := pa.fetchSLSAProvenance(ctx, packageName, version, registry)
 	if err != nil {
 		return provenance, err
 	}
-	
+
 	if provenanceData == nil {
 		return provenance, nil
 	}
-	
+
 	provenance.Present = true
-	
+
 	// Parse provenance data
 	if err := pa.parseSLSAProvenance(provenanceData, provenance); err != nil {
 		return provenance, err
 	}
-	
+
 	// Verify provenance
 	verified, err := pa.verifySLSAProvenanceData(ctx, provenanceData)
 	if err != nil {
 		return provenance, err
 	}
-	
+
 	provenance.Verified = verified
-	
+
 	// Assess SLSA compliance
 	compliance := pa.assessSLSACompliance(provenance)
 	provenance.Compliance = compliance
 	provenance.Level = compliance.Level
-	
+
 	// Calculate trust score
 	provenance.TrustScore = pa.calculateSLSATrustScore(provenance)
-	
+
 	return provenance, nil
 }
 
@@ -578,61 +578,61 @@ func (pa *ProvenanceAnalyzer) verifySLSAProvenance(ctx context.Context, packageN
 func (pa *ProvenanceAnalyzer) verifyIntegrity(ctx context.Context, packagePath, packageName, version, registry string) (*IntegrityChecks, error) {
 	checks := &IntegrityChecks{
 		OverallVerified: false,
-		TrustScore: 0.0,
+		TrustScore:      0.0,
 	}
-	
+
 	// Verify hash
 	hashVerification, err := pa.verifyHash(packagePath, packageName, version, registry)
 	if err != nil {
 		return checks, err
 	}
 	checks.HashVerification = hashVerification
-	
+
 	// Verify size
 	sizeVerification, err := pa.verifySize(packagePath, packageName, version, registry)
 	if err != nil {
 		return checks, err
 	}
 	checks.SizeVerification = sizeVerification
-	
+
 	// Verify content
 	contentVerification, err := pa.verifyContent(packagePath, packageName, version, registry)
 	if err != nil {
 		return checks, err
 	}
 	checks.ContentVerification = contentVerification
-	
+
 	// Overall verification
 	checks.OverallVerified = hashVerification.Verified && sizeVerification.Verified && contentVerification.ManifestVerified
-	
+
 	// Calculate trust score
 	checks.TrustScore = pa.calculateIntegrityTrustScore(checks)
-	
+
 	return checks, nil
 }
 
 // verifyTransparencyLog verifies transparency log entries
 func (pa *ProvenanceAnalyzer) verifyTransparencyLog(ctx context.Context, packageName, version, registry string) (*TransparencyLogVerification, error) {
 	verification := &TransparencyLogVerification{
-		Present: false,
-		Entries: []TransparencyLogEntry{},
-		Verified: false,
+		Present:    false,
+		Entries:    []TransparencyLogEntry{},
+		Verified:   false,
 		TrustScore: 0.0,
 	}
-	
+
 	// Search for transparency log entries
 	entries, err := pa.searchTransparencyLogEntries(ctx, packageName, version, registry)
 	if err != nil {
 		return verification, err
 	}
-	
+
 	if len(entries) == 0 {
 		return verification, nil
 	}
-	
+
 	verification.Present = true
 	verification.Entries = entries
-	
+
 	// Verify each entry
 	allVerified := true
 	for i := range verification.Entries {
@@ -641,17 +641,17 @@ func (pa *ProvenanceAnalyzer) verifyTransparencyLog(ctx context.Context, package
 		if err != nil {
 			return verification, err
 		}
-		
+
 		if !verified {
 			allVerified = false
 		}
 	}
-	
+
 	verification.Verified = allVerified
-	
+
 	// Calculate trust score
 	verification.TrustScore = pa.calculateTransparencyLogTrustScore(verification)
-	
+
 	return verification, nil
 }
 
@@ -661,24 +661,24 @@ func (pa *ProvenanceAnalyzer) verifyTransparencyLog(ctx context.Context, package
 func (pa *ProvenanceAnalyzer) findSignatureFiles(packagePath string) []string {
 	// Find signature files (.sig, .asc, etc.)
 	var signatureFiles []string
-	
+
 	err := filepath.Walk(packagePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		ext := filepath.Ext(path)
 		if ext == ".sig" || ext == ".asc" || ext == ".signature" {
 			signatureFiles = append(signatureFiles, path)
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return []string{}
 	}
-	
+
 	return signatureFiles
 }
 
@@ -688,15 +688,15 @@ func (pa *ProvenanceAnalyzer) parseSignatureFile(sigFile string) (*Signature, er
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &Signature{
 		Algorithm: "RSA-SHA256",
-		Value: string(content),
-		Signer: "unknown",
+		Value:     string(content),
+		Signer:    "unknown",
 		Timestamp: time.Now(),
-		Verified: false,
-		Trusted: false,
-		Metadata: make(map[string]interface{}),
+		Verified:  false,
+		Trusted:   false,
+		Metadata:  make(map[string]interface{}),
 	}, nil
 }
 
@@ -731,12 +731,12 @@ func (pa *ProvenanceAnalyzer) parseSLSAProvenance(data map[string]interface{}, p
 	if builderData, ok := data["builder"].(map[string]interface{}); ok {
 		if builderID, ok := builderData["id"].(string); ok {
 			provenance.Builder = &SLSABuilder{
-				ID: builderID,
+				ID:      builderID,
 				Trusted: pa.isBuilderTrusted(builderID),
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -759,19 +759,19 @@ func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *
 	// Handle nil provenance
 	if provenance == nil {
 		return &SLSACompliance{
-			Level: 0,
+			Level:        0,
 			Requirements: make(map[string]bool),
-			Violations: []string{"No provenance data available"},
-			Score: 0.0,
+			Violations:   []string{"No provenance data available"},
+			Score:        0.0,
 		}
 	}
 
 	// Assess SLSA compliance level
 	compliance := &SLSACompliance{
-		Level: 0,
+		Level:        0,
 		Requirements: make(map[string]bool),
-		Violations: []string{},
-		Score: 0.0,
+		Violations:   []string{},
+		Score:        0.0,
 	}
 
 	// Check SLSA Level 1 requirements
@@ -779,7 +779,7 @@ func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *
 		compliance.Requirements["build_service"] = true
 		compliance.Level = 1
 	}
-	
+
 	// Check SLSA Level 2 requirements
 	if provenance.Invocation != nil && provenance.Invocation.ConfigSource != nil {
 		compliance.Requirements["version_controlled"] = true
@@ -787,7 +787,7 @@ func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *
 			compliance.Level = 2
 		}
 	}
-	
+
 	// Check SLSA Level 3 requirements
 	if provenance.Builder != nil && provenance.Builder.Trusted {
 		compliance.Requirements["isolated_build"] = true
@@ -795,7 +795,7 @@ func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *
 			compliance.Level = 3
 		}
 	}
-	
+
 	// Calculate compliance score
 	totalRequirements := len(compliance.Requirements)
 	metRequirements := 0
@@ -804,11 +804,11 @@ func (pa *ProvenanceAnalyzer) assessSLSACompliance(provenance *SLSAProvenance) *
 			metRequirements++
 		}
 	}
-	
+
 	if totalRequirements > 0 {
 		compliance.Score = float64(metRequirements) / float64(totalRequirements)
 	}
-	
+
 	return compliance
 }
 
@@ -819,31 +819,31 @@ func (pa *ProvenanceAnalyzer) verifyHash(packagePath, packageName, version, regi
 		return nil, err
 	}
 	defer file.Close()
-	
+
 	hash := sha256.New()
 	if _, err := file.WriteTo(hash); err != nil {
 		return nil, err
 	}
-	
+
 	actualHash := hex.EncodeToString(hash.Sum(nil))
-	
+
 	// Fetch expected hash from registry
 	expectedHash, err := pa.fetchExpectedHash(packageName, version, registry)
 	if err != nil {
 		return &HashVerification{
-			Algorithm: "SHA256",
+			Algorithm:  "SHA256",
 			ActualHash: actualHash,
-			Verified: false,
-			Source: "calculated",
+			Verified:   false,
+			Source:     "calculated",
 		}, err
 	}
-	
+
 	return &HashVerification{
-		Algorithm: "SHA256",
+		Algorithm:    "SHA256",
 		ExpectedHash: expectedHash,
-		ActualHash: actualHash,
-		Verified: expectedHash == actualHash,
-		Source: registry,
+		ActualHash:   actualHash,
+		Verified:     expectedHash == actualHash,
+		Source:       registry,
 	}, nil
 }
 
@@ -853,36 +853,36 @@ func (pa *ProvenanceAnalyzer) verifySize(packagePath, packageName, version, regi
 	if err != nil {
 		return nil, err
 	}
-	
+
 	actualSize := info.Size()
-	
+
 	// Fetch expected size from registry
 	expectedSize, err := pa.fetchExpectedSize(packageName, version, registry)
 	if err != nil {
 		return &SizeVerification{
 			ActualSize: actualSize,
-			Verified: false,
-			Source: "calculated",
+			Verified:   false,
+			Source:     "calculated",
 		}, err
 	}
-	
+
 	return &SizeVerification{
 		ExpectedSize: expectedSize,
-		ActualSize: actualSize,
-		Verified: expectedSize == actualSize,
-		Source: registry,
+		ActualSize:   actualSize,
+		Verified:     expectedSize == actualSize,
+		Source:       registry,
 	}, nil
 }
 
 func (pa *ProvenanceAnalyzer) verifyContent(packagePath, packageName, version, registry string) (*ContentVerification, error) {
 	// Verify package content integrity
 	return &ContentVerification{
-		ManifestVerified: true,
-		FilesVerified: true,
+		ManifestVerified:    true,
+		FilesVerified:       true,
 		PermissionsVerified: true,
-		ModifiedFiles: []string{},
-		MissingFiles: []string{},
-		ExtraFiles: []string{},
+		ModifiedFiles:       []string{},
+		MissingFiles:        []string{},
+		ExtraFiles:          []string{},
 	}, nil // Placeholder
 }
 
@@ -910,42 +910,42 @@ func (pa *ProvenanceAnalyzer) fetchExpectedSize(packageName, version, registry s
 func (pa *ProvenanceAnalyzer) assessTrust(result *AnalysisResult) *TrustAssessment {
 	assessment := &TrustAssessment{
 		OverallTrustScore: 0.0,
-		TrustLevel: "UNKNOWN",
-		RiskFactors: []string{},
+		TrustLevel:        "UNKNOWN",
+		RiskFactors:       []string{},
 	}
-	
+
 	// Calculate overall trust score
 	score := 0.0
 	weightSum := 0.0
-	
+
 	// Weight signature verification
 	if result.SignatureVerification != nil {
 		score += result.SignatureVerification.TrustScore * 0.3
 		weightSum += 0.3
 	}
-	
+
 	// Weight SLSA provenance
 	if result.SLSAProvenance != nil {
 		score += result.SLSAProvenance.TrustScore * 0.3
 		weightSum += 0.3
 	}
-	
+
 	// Weight integrity checks
 	if result.IntegrityChecks != nil {
 		score += result.IntegrityChecks.TrustScore * 0.2
 		weightSum += 0.2
 	}
-	
+
 	// Weight transparency log
 	if result.TransparencyLog != nil {
 		score += result.TransparencyLog.TrustScore * 0.2
 		weightSum += 0.2
 	}
-	
+
 	if weightSum > 0 {
 		assessment.OverallTrustScore = score / weightSum
 	}
-	
+
 	// Determine trust level
 	if assessment.OverallTrustScore > 0.8 {
 		assessment.TrustLevel = "HIGH"
@@ -956,72 +956,72 @@ func (pa *ProvenanceAnalyzer) assessTrust(result *AnalysisResult) *TrustAssessme
 	} else {
 		assessment.TrustLevel = "VERY_LOW"
 	}
-	
+
 	// Assess publisher trust
 	if result.SignatureVerification != nil {
 		assessment.PublisherTrust = &PublisherTrust{
-			Publisher: "unknown",
-			Trusted: false,
-			Reputation: 0.5,
+			Publisher:           "unknown",
+			Trusted:             false,
+			Reputation:          0.5,
 			VerificationHistory: []string{},
 		}
 	}
-	
+
 	// Assess signer trust
 	if result.SignatureVerification != nil && len(result.SignatureVerification.Signatures) > 0 {
 		assessment.SignerTrust = &SignerTrust{
-			Signer: result.SignatureVerification.Signatures[0].Signer,
-			Trusted: result.SignatureVerification.Signatures[0].Trusted,
-			Reputation: 0.5,
+			Signer:           result.SignatureVerification.Signatures[0].Signer,
+			Trusted:          result.SignatureVerification.Signatures[0].Trusted,
+			Reputation:       0.5,
 			CertificateChain: []string{},
 		}
 	}
-	
+
 	// Assess builder trust
 	if result.SLSAProvenance != nil && result.SLSAProvenance.Builder != nil {
 		assessment.BuilderTrust = &BuilderTrust{
-			Builder: result.SLSAProvenance.Builder.ID,
-			Trusted: result.SLSAProvenance.Builder.Trusted,
+			Builder:    result.SLSAProvenance.Builder.ID,
+			Trusted:    result.SLSAProvenance.Builder.Trusted,
 			Reputation: 0.7,
 			Compliance: result.SLSAProvenance.Compliance.Score,
 		}
 	}
-	
+
 	return assessment
 }
 
 func (pa *ProvenanceAnalyzer) calculateOverallAssessment(result *AnalysisResult) {
 	score := 0.0
 	weightSum := 0.0
-	
+
 	// Weight signature verification
 	if result.SignatureVerification != nil {
 		score += result.SignatureVerification.TrustScore * 0.3
 		weightSum += 0.3
 	}
-	
+
 	// Weight SLSA provenance
 	if result.SLSAProvenance != nil {
 		score += result.SLSAProvenance.TrustScore * 0.3
 		weightSum += 0.3
 	}
-	
+
 	// Weight integrity checks
 	if result.IntegrityChecks != nil {
 		score += result.IntegrityChecks.TrustScore * 0.2
 		weightSum += 0.2
 	}
-	
+
 	// Weight transparency log
 	if result.TransparencyLog != nil {
 		score += result.TransparencyLog.TrustScore * 0.2
 		weightSum += 0.2
 	}
-	
+
 	if weightSum > 0 {
 		result.OverallScore = score / weightSum
 	}
-	
+
 	// Determine trust level
 	if result.OverallScore > 0.8 {
 		result.TrustLevel = "HIGH"
@@ -1039,9 +1039,9 @@ func (pa *ProvenanceAnalyzer) calculateSignatureTrustScore(verification *Signatu
 	if verification == nil || !verification.Verified {
 		return 0.0
 	}
-	
+
 	score := 0.5 // Base score for verified signature
-	
+
 	// Bonus for trusted signers
 	for _, sig := range verification.Signatures {
 		if sig.Trusted {
@@ -1049,7 +1049,7 @@ func (pa *ProvenanceAnalyzer) calculateSignatureTrustScore(verification *Signatu
 			break
 		}
 	}
-	
+
 	// Bonus for keyless signatures
 	for _, keylessSig := range verification.KeylessSignatures {
 		if keylessSig.Verified && keylessSig.Trusted {
@@ -1057,7 +1057,7 @@ func (pa *ProvenanceAnalyzer) calculateSignatureTrustScore(verification *Signatu
 			break
 		}
 	}
-	
+
 	return min(score, 1.0)
 }
 
@@ -1065,21 +1065,21 @@ func (pa *ProvenanceAnalyzer) calculateSLSATrustScore(provenance *SLSAProvenance
 	if provenance == nil || !provenance.Present {
 		return 0.0
 	}
-	
+
 	score := 0.2 // Base score for having provenance
-	
+
 	if provenance.Verified {
 		score += 0.3
 	}
-	
+
 	if provenance.Builder != nil && provenance.Builder.Trusted {
 		score += 0.3
 	}
-	
+
 	if provenance.Compliance != nil {
 		score += provenance.Compliance.Score * 0.2
 	}
-	
+
 	return min(score, 1.0)
 }
 
@@ -1088,19 +1088,19 @@ func (pa *ProvenanceAnalyzer) calculateIntegrityTrustScore(checks *IntegrityChec
 		return 0.0
 	}
 	score := 0.0
-	
+
 	if checks.HashVerification != nil && checks.HashVerification.Verified {
 		score += 0.4
 	}
-	
+
 	if checks.SizeVerification != nil && checks.SizeVerification.Verified {
 		score += 0.2
 	}
-	
+
 	if checks.ContentVerification != nil && checks.ContentVerification.ManifestVerified {
 		score += 0.4
 	}
-	
+
 	return score
 }
 
@@ -1108,11 +1108,11 @@ func (pa *ProvenanceAnalyzer) calculateTransparencyLogTrustScore(verification *T
 	if verification == nil || !verification.Present {
 		return 0.0
 	}
-	
+
 	if verification.Verified {
 		return 1.0
 	}
-	
+
 	return 0.5
 }
 
@@ -1121,41 +1121,41 @@ func (pa *ProvenanceAnalyzer) generateFindings(result *AnalysisResult) {
 	// Generate findings based on verification results
 	if result.SignatureVerification != nil && !result.SignatureVerification.Verified {
 		result.Findings = append(result.Findings, Finding{
-			ID: "PROV_001",
-			Type: "signature_verification",
-			Severity: "HIGH",
-			Title: "Package Signature Verification Failed",
+			ID:          "PROV_001",
+			Type:        "signature_verification",
+			Severity:    "HIGH",
+			Title:       "Package Signature Verification Failed",
 			Description: "The package signature could not be verified",
-			Evidence: result.SignatureVerification.VerificationErrors,
+			Evidence:    result.SignatureVerification.VerificationErrors,
 			Remediation: "Verify the package source and signature",
-			Confidence: 0.9,
-			Timestamp: time.Now(),
+			Confidence:  0.9,
+			Timestamp:   time.Now(),
 		})
 	}
-	
+
 	if result.SLSAProvenance != nil && !result.SLSAProvenance.Present {
 		result.Findings = append(result.Findings, Finding{
-			ID: "PROV_002",
-			Type: "slsa_provenance",
-			Severity: "MEDIUM",
-			Title: "SLSA Provenance Not Available",
+			ID:          "PROV_002",
+			Type:        "slsa_provenance",
+			Severity:    "MEDIUM",
+			Title:       "SLSA Provenance Not Available",
 			Description: "No SLSA provenance information found for this package",
 			Remediation: "Request SLSA provenance from the package maintainer",
-			Confidence: 0.8,
-			Timestamp: time.Now(),
+			Confidence:  0.8,
+			Timestamp:   time.Now(),
 		})
 	}
-	
+
 	if result.IntegrityChecks != nil && !result.IntegrityChecks.OverallVerified {
 		result.Findings = append(result.Findings, Finding{
-			ID: "PROV_003",
-			Type: "integrity_check",
-			Severity: "HIGH",
-			Title: "Package Integrity Check Failed",
+			ID:          "PROV_003",
+			Type:        "integrity_check",
+			Severity:    "HIGH",
+			Title:       "Package Integrity Check Failed",
 			Description: "Package integrity verification failed",
 			Remediation: "Re-download the package from a trusted source",
-			Confidence: 0.95,
-			Timestamp: time.Now(),
+			Confidence:  0.95,
+			Timestamp:   time.Now(),
 		})
 	}
 }
@@ -1166,15 +1166,15 @@ func (pa *ProvenanceAnalyzer) generateRecommendations(result *AnalysisResult) {
 	} else if result.OverallScore < 0.6 {
 		result.Recommendations = append(result.Recommendations, "CAUTION: Package has limited provenance information - proceed with caution")
 	}
-	
+
 	if result.SignatureVerification == nil || !result.SignatureVerification.Verified {
 		result.Recommendations = append(result.Recommendations, "Verify package signatures before use")
 	}
-	
+
 	if result.SLSAProvenance == nil || !result.SLSAProvenance.Present {
 		result.Recommendations = append(result.Recommendations, "Request SLSA provenance information from package maintainer")
 	}
-	
+
 	if result.TransparencyLog == nil || !result.TransparencyLog.Present {
 		result.Recommendations = append(result.Recommendations, "Package not found in transparency logs - verify authenticity")
 	}
@@ -1187,12 +1187,12 @@ func (pa *ProvenanceAnalyzer) ExportResults(result *AnalysisResult, outputPath s
 	if ext != ".json" && ext != ".yaml" && ext != ".yml" {
 		return fmt.Errorf("unsupported file format: %s (supported: .json, .yaml, .yml)", ext)
 	}
-	
+
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal results: %w", err)
 	}
-	
+
 	return ioutil.WriteFile(outputPath, data, 0644)
 }
 

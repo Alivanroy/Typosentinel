@@ -8,16 +8,16 @@ import (
 
 // EnhancedMLDetector provides comprehensive ML-based threat detection
 type EnhancedMLDetector struct {
-	config                *EnhancedMLConfig
-	similarityModel     *SimilarityModel
-	malwareClassifier   *MalwareClassifier
-	anomalyDetector     *AnomalyDetector
-	typoDetector        *TypoDetector
-	reputationAnalyzer  *ReputationAnalyzer
-	behavioralAnalyzer  *BehavioralAnalyzer
-	ensembleModel       *EnsembleModel
-	metrics             *DetectionMetrics
-	lastUpdate          time.Time
+	config             *EnhancedMLConfig
+	similarityModel    *SimilarityModel
+	malwareClassifier  *MalwareClassifier
+	anomalyDetector    *AnomalyDetector
+	typoDetector       *TypoDetector
+	reputationAnalyzer *ReputationAnalyzer
+	behavioralAnalyzer *BehavioralAnalyzer
+	ensembleModel      *EnsembleModel
+	metrics            *DetectionMetrics
+	lastUpdate         time.Time
 }
 
 // DetectionMetrics tracks model performance for fine-tuning
@@ -33,85 +33,85 @@ type DetectionMetrics struct {
 
 // MLConfig contains ML detector configuration
 type EnhancedMLConfig struct {
-	Enabled                bool    `yaml:"enabled"`
-	SimilarityThreshold    float64 `yaml:"similarity_threshold"`
-	MalwareThreshold       float64 `yaml:"malware_threshold"`
-	AnomalyThreshold       float64 `yaml:"anomaly_threshold"`
-	TypoThreshold          float64 `yaml:"typo_threshold"`
-	ReputationThreshold    float64 `yaml:"reputation_threshold"`
-	EnsembleWeights        map[string]float64 `yaml:"ensemble_weights"`
-	ConfidenceThreshold    float64 `yaml:"confidence_threshold"`
-	ModelUpdateInterval    time.Duration `yaml:"model_update_interval"`
-	BatchSize              int     `yaml:"batch_size"`
-	MaxFeatures            int     `yaml:"max_features"`
-	ParallelProcessing     bool    `yaml:"parallel_processing"`
-	Verbose                bool    `yaml:"verbose"`
+	Enabled             bool               `yaml:"enabled"`
+	SimilarityThreshold float64            `yaml:"similarity_threshold"`
+	MalwareThreshold    float64            `yaml:"malware_threshold"`
+	AnomalyThreshold    float64            `yaml:"anomaly_threshold"`
+	TypoThreshold       float64            `yaml:"typo_threshold"`
+	ReputationThreshold float64            `yaml:"reputation_threshold"`
+	EnsembleWeights     map[string]float64 `yaml:"ensemble_weights"`
+	ConfidenceThreshold float64            `yaml:"confidence_threshold"`
+	ModelUpdateInterval time.Duration      `yaml:"model_update_interval"`
+	BatchSize           int                `yaml:"batch_size"`
+	MaxFeatures         int                `yaml:"max_features"`
+	ParallelProcessing  bool               `yaml:"parallel_processing"`
+	Verbose             bool               `yaml:"verbose"`
 }
 
 // EnhancedPackageFeatures represents enhanced package features for ML analysis
 type EnhancedPackageFeatures struct {
-	Name                string            `json:"name"`
-	Registry            string            `json:"registry"`
-	Version             string            `json:"version"`
-	Description         string            `json:"description"`
-	Author              string            `json:"author"`
-	Maintainers         []string          `json:"maintainers"`
-	Keywords            []string          `json:"keywords"`
-	License             string            `json:"license"`
-	Homepage            string            `json:"homepage"`
-	Repository          string            `json:"repository"`
-	Downloads           int64             `json:"downloads"`
-	Stars               int               `json:"stars"`
-	Forks               int               `json:"forks"`
-	Issues              int               `json:"issues"`
-	CreationDate        time.Time         `json:"creation_date"`
-	LastUpdated         time.Time         `json:"last_updated"`
-	Dependencies        []Dependency      `json:"dependencies"`
-	DevDependencies     []Dependency      `json:"dev_dependencies"`
-	Scripts             map[string]string `json:"scripts"`
-	FileStructure       FileStructure     `json:"file_structure"`
-	CodeMetrics         CodeMetrics       `json:"code_metrics"`
-	SecurityMetrics     SecurityMetrics   `json:"security_metrics"`
-	BehavioralMetrics   BehavioralMetrics `json:"behavioral_metrics"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	Name              string                 `json:"name"`
+	Registry          string                 `json:"registry"`
+	Version           string                 `json:"version"`
+	Description       string                 `json:"description"`
+	Author            string                 `json:"author"`
+	Maintainers       []string               `json:"maintainers"`
+	Keywords          []string               `json:"keywords"`
+	License           string                 `json:"license"`
+	Homepage          string                 `json:"homepage"`
+	Repository        string                 `json:"repository"`
+	Downloads         int64                  `json:"downloads"`
+	Stars             int                    `json:"stars"`
+	Forks             int                    `json:"forks"`
+	Issues            int                    `json:"issues"`
+	CreationDate      time.Time              `json:"creation_date"`
+	LastUpdated       time.Time              `json:"last_updated"`
+	Dependencies      []Dependency           `json:"dependencies"`
+	DevDependencies   []Dependency           `json:"dev_dependencies"`
+	Scripts           map[string]string      `json:"scripts"`
+	FileStructure     FileStructure          `json:"file_structure"`
+	CodeMetrics       CodeMetrics            `json:"code_metrics"`
+	SecurityMetrics   SecurityMetrics        `json:"security_metrics"`
+	BehavioralMetrics BehavioralMetrics      `json:"behavioral_metrics"`
+	Metadata          map[string]interface{} `json:"metadata"`
 }
 
 // Dependency represents a package dependency
 type Dependency struct {
-	Name            string `json:"name"`
-	Version         string `json:"version"`
-	Type            string `json:"type"`
-	Optional        bool   `json:"optional"`
-	Dev             bool   `json:"dev"`
-	Suspicious      bool   `json:"suspicious"`
-	RiskScore       float64 `json:"risk_score"`
+	Name       string  `json:"name"`
+	Version    string  `json:"version"`
+	Type       string  `json:"type"`
+	Optional   bool    `json:"optional"`
+	Dev        bool    `json:"dev"`
+	Suspicious bool    `json:"suspicious"`
+	RiskScore  float64 `json:"risk_score"`
 }
 
 // FileStructure represents package file structure metrics
 type FileStructure struct {
-	TotalFiles          int      `json:"total_files"`
-	JavaScriptFiles     int      `json:"javascript_files"`
-	TypeScriptFiles     int      `json:"typescript_files"`
-	ConfigFiles         int      `json:"config_files"`
-	TestFiles           int      `json:"test_files"`
-	DocumentationFiles  int      `json:"documentation_files"`
-	BinaryFiles         int      `json:"binary_files"`
-	HiddenFiles         int      `json:"hidden_files"`
-	SuspiciousFiles     []string `json:"suspicious_files"`
-	LargeFiles          []string `json:"large_files"`
-	UnusualExtensions   []string `json:"unusual_extensions"`
+	TotalFiles         int      `json:"total_files"`
+	JavaScriptFiles    int      `json:"javascript_files"`
+	TypeScriptFiles    int      `json:"typescript_files"`
+	ConfigFiles        int      `json:"config_files"`
+	TestFiles          int      `json:"test_files"`
+	DocumentationFiles int      `json:"documentation_files"`
+	BinaryFiles        int      `json:"binary_files"`
+	HiddenFiles        int      `json:"hidden_files"`
+	SuspiciousFiles    []string `json:"suspicious_files"`
+	LargeFiles         []string `json:"large_files"`
+	UnusualExtensions  []string `json:"unusual_extensions"`
 }
 
 // CodeMetrics represents code quality and complexity metrics
 type CodeMetrics struct {
-	LinesOfCode         int     `json:"lines_of_code"`
+	LinesOfCode          int     `json:"lines_of_code"`
 	CyclomaticComplexity float64 `json:"cyclomatic_complexity"`
-	CodeDuplication     float64 `json:"code_duplication"`
-	TestCoverage        float64 `json:"test_coverage"`
-	DocumentationRatio  float64 `json:"documentation_ratio"`
-	ObfuscationScore    float64 `json:"obfuscation_score"`
-	MinificationScore   float64 `json:"minification_score"`
-	CommentRatio        float64 `json:"comment_ratio"`
+	CodeDuplication      float64 `json:"code_duplication"`
+	TestCoverage         float64 `json:"test_coverage"`
+	DocumentationRatio   float64 `json:"documentation_ratio"`
+	ObfuscationScore     float64 `json:"obfuscation_score"`
+	MinificationScore    float64 `json:"minification_score"`
+	CommentRatio         float64 `json:"comment_ratio"`
 }
 
 // SecurityMetrics represents security-related metrics
@@ -131,159 +131,159 @@ type SecurityMetrics struct {
 
 // BehavioralMetrics represents behavioral analysis metrics
 type BehavioralMetrics struct {
-	InstallationBehavior  EnhancedInstallBehavior  `json:"installation_behavior"`
-	RuntimeBehavior       EnhancedRuntimeBehavior  `json:"runtime_behavior"`
-	NetworkBehavior       EnhancedNetworkBehavior  `json:"network_behavior"`
-	FileSystemBehavior    EnhancedFileSystemBehavior `json:"file_system_behavior"`
-	ProcessBehavior       EnhancedProcessBehavior  `json:"process_behavior"`
-	AnomalyScore          float64          `json:"anomaly_score"`
+	InstallationBehavior EnhancedInstallBehavior    `json:"installation_behavior"`
+	RuntimeBehavior      EnhancedRuntimeBehavior    `json:"runtime_behavior"`
+	NetworkBehavior      EnhancedNetworkBehavior    `json:"network_behavior"`
+	FileSystemBehavior   EnhancedFileSystemBehavior `json:"file_system_behavior"`
+	ProcessBehavior      EnhancedProcessBehavior    `json:"process_behavior"`
+	AnomalyScore         float64                    `json:"anomaly_score"`
 }
 
 // InstallBehavior represents installation-time behavior
 type EnhancedInstallBehavior struct {
-	PostInstallScript     bool    `json:"post_install_script"`
-	PreInstallScript      bool    `json:"pre_install_script"`
-	NetworkActivity       bool    `json:"network_activity"`
-	FileModifications     int     `json:"file_modifications"`
-	PermissionChanges     int     `json:"permission_changes"`
-	SuspiciousCommands    int     `json:"suspicious_commands"`
-	InstallationTime      float64 `json:"installation_time"`
+	PostInstallScript  bool    `json:"post_install_script"`
+	PreInstallScript   bool    `json:"pre_install_script"`
+	NetworkActivity    bool    `json:"network_activity"`
+	FileModifications  int     `json:"file_modifications"`
+	PermissionChanges  int     `json:"permission_changes"`
+	SuspiciousCommands int     `json:"suspicious_commands"`
+	InstallationTime   float64 `json:"installation_time"`
 }
 
 // RuntimeBehavior represents runtime behavior
 type EnhancedRuntimeBehavior struct {
-	CPUUsage              float64 `json:"cpu_usage"`
-	MemoryUsage           float64 `json:"memory_usage"`
-	NetworkConnections    int     `json:"network_connections"`
-	FileOperations        int     `json:"file_operations"`
-	ProcessSpawning       int     `json:"process_spawning"`
-	AntiAnalysisTechniques bool   `json:"anti_analysis_techniques"`
-	PersistenceMechanisms bool    `json:"persistence_mechanisms"`
+	CPUUsage               float64 `json:"cpu_usage"`
+	MemoryUsage            float64 `json:"memory_usage"`
+	NetworkConnections     int     `json:"network_connections"`
+	FileOperations         int     `json:"file_operations"`
+	ProcessSpawning        int     `json:"process_spawning"`
+	AntiAnalysisTechniques bool    `json:"anti_analysis_techniques"`
+	PersistenceMechanisms  bool    `json:"persistence_mechanisms"`
 }
 
 // NetworkBehavior represents network-related behavior
 type EnhancedNetworkBehavior struct {
-	OutboundConnections   int      `json:"outbound_connections"`
-	InboundConnections    int      `json:"inbound_connections"`
-	SuspiciousHosts       []string `json:"suspicious_hosts"`
-	UnusualPorts          []int    `json:"unusual_ports"`
-	DataExfiltration      bool     `json:"data_exfiltration"`
-	C2Communication       bool     `json:"c2_communication"`
-	DNSTunneling          bool     `json:"dns_tunneling"`
+	OutboundConnections int      `json:"outbound_connections"`
+	InboundConnections  int      `json:"inbound_connections"`
+	SuspiciousHosts     []string `json:"suspicious_hosts"`
+	UnusualPorts        []int    `json:"unusual_ports"`
+	DataExfiltration    bool     `json:"data_exfiltration"`
+	C2Communication     bool     `json:"c2_communication"`
+	DNSTunneling        bool     `json:"dns_tunneling"`
 }
 
 // FileSystemBehavior represents file system behavior
 type EnhancedFileSystemBehavior struct {
-	FilesCreated          int      `json:"files_created"`
-	FilesModified         int      `json:"files_modified"`
-	FilesDeleted          int      `json:"files_deleted"`
-	SuspiciousLocations   []string `json:"suspicious_locations"`
-	HiddenFiles           int      `json:"hidden_files"`
-	SystemFileAccess      bool     `json:"system_file_access"`
-	TempFileUsage         int      `json:"temp_file_usage"`
+	FilesCreated        int      `json:"files_created"`
+	FilesModified       int      `json:"files_modified"`
+	FilesDeleted        int      `json:"files_deleted"`
+	SuspiciousLocations []string `json:"suspicious_locations"`
+	HiddenFiles         int      `json:"hidden_files"`
+	SystemFileAccess    bool     `json:"system_file_access"`
+	TempFileUsage       int      `json:"temp_file_usage"`
 }
 
 // ProcessBehavior represents process-related behavior
 type EnhancedProcessBehavior struct {
-	ChildProcesses        int      `json:"child_processes"`
-	PrivilegeEscalation   bool     `json:"privilege_escalation"`
-	CodeInjection         bool     `json:"code_injection"`
-	Hollowing             bool     `json:"hollowing"`
-	DLLInjection          bool     `json:"dll_injection"`
-	SuspiciousCommands    []string `json:"suspicious_commands"`
+	ChildProcesses      int      `json:"child_processes"`
+	PrivilegeEscalation bool     `json:"privilege_escalation"`
+	CodeInjection       bool     `json:"code_injection"`
+	Hollowing           bool     `json:"hollowing"`
+	DLLInjection        bool     `json:"dll_injection"`
+	SuspiciousCommands  []string `json:"suspicious_commands"`
 }
 
 // MLDetectionResult represents the result of ML-based detection
 type MLDetectionResult struct {
-	PackageName           string                 `json:"package_name"`
-	Registry              string                 `json:"registry"`
-	AnalysisTimestamp     time.Time              `json:"analysis_timestamp"`
-	OverallRiskScore      float64                `json:"overall_risk_score"`
-	ConfidenceScore       float64                `json:"confidence_score"`
-	ThreatLevel           string                 `json:"threat_level"`
-	IsMalicious           bool                   `json:"is_malicious"`
-	IsTyposquatting       bool                   `json:"is_typosquatting"`
-	IsAnomalous           bool                   `json:"is_anomalous"`
-	SimilarityResults     []EnhancedSimilarityResult     `json:"similarity_results"`
-	MalwareClassification MalwareClassification  `json:"malware_classification"`
-	AnomalyDetection      EnhancedAnomalyDetection       `json:"anomaly_detection"`
-	TypoDetection         TypoDetection          `json:"typo_detection"`
-	ReputationAnalysis    EnhancedReputationAnalysis     `json:"reputation_analysis"`
-	BehavioralAnalysis    BehavioralAnalysisResult `json:"behavioral_analysis"`
-	EnsembleResults       EnsembleResults        `json:"ensemble_results"`
-	Recommendations       []string               `json:"recommendations"`
-	Metadata              map[string]interface{} `json:"metadata"`
+	PackageName           string                     `json:"package_name"`
+	Registry              string                     `json:"registry"`
+	AnalysisTimestamp     time.Time                  `json:"analysis_timestamp"`
+	OverallRiskScore      float64                    `json:"overall_risk_score"`
+	ConfidenceScore       float64                    `json:"confidence_score"`
+	ThreatLevel           string                     `json:"threat_level"`
+	IsMalicious           bool                       `json:"is_malicious"`
+	IsTyposquatting       bool                       `json:"is_typosquatting"`
+	IsAnomalous           bool                       `json:"is_anomalous"`
+	SimilarityResults     []EnhancedSimilarityResult `json:"similarity_results"`
+	MalwareClassification MalwareClassification      `json:"malware_classification"`
+	AnomalyDetection      EnhancedAnomalyDetection   `json:"anomaly_detection"`
+	TypoDetection         TypoDetection              `json:"typo_detection"`
+	ReputationAnalysis    EnhancedReputationAnalysis `json:"reputation_analysis"`
+	BehavioralAnalysis    BehavioralAnalysisResult   `json:"behavioral_analysis"`
+	EnsembleResults       EnsembleResults            `json:"ensemble_results"`
+	Recommendations       []string                   `json:"recommendations"`
+	Metadata              map[string]interface{}     `json:"metadata"`
 }
 
 // EnhancedSimilarityResult represents enhanced similarity analysis results
 type EnhancedSimilarityResult struct {
-	SimilarPackage        string  `json:"similar_package"`
-	SimilarityScore       float64 `json:"similarity_score"`
-	SimilarityType        string  `json:"similarity_type"`
-	Confidence            float64 `json:"confidence"`
-	Reason                string  `json:"reason"`
+	SimilarPackage  string  `json:"similar_package"`
+	SimilarityScore float64 `json:"similarity_score"`
+	SimilarityType  string  `json:"similarity_type"`
+	Confidence      float64 `json:"confidence"`
+	Reason          string  `json:"reason"`
 }
 
 // MalwareClassification represents malware classification results
 type MalwareClassification struct {
-	IsMalware             bool    `json:"is_malware"`
-	MalwareType           string  `json:"malware_type"`
-	MalwareFamily         string  `json:"malware_family"`
-	Confidence            float64 `json:"confidence"`
-	FeatureImportance     map[string]float64 `json:"feature_importance"`
-	ClassificationReason  string  `json:"classification_reason"`
+	IsMalware            bool               `json:"is_malware"`
+	MalwareType          string             `json:"malware_type"`
+	MalwareFamily        string             `json:"malware_family"`
+	Confidence           float64            `json:"confidence"`
+	FeatureImportance    map[string]float64 `json:"feature_importance"`
+	ClassificationReason string             `json:"classification_reason"`
 }
 
 // EnhancedAnomalyDetection represents enhanced anomaly detection results
 type EnhancedAnomalyDetection struct {
-	IsAnomalous           bool    `json:"is_anomalous"`
-	AnomalyScore          float64 `json:"anomaly_score"`
-	AnomalyType           string  `json:"anomaly_type"`
-	Confidence            float64 `json:"confidence"`
-	AnomalousFeatures     []string `json:"anomalous_features"`
-	BaselineDeviation     float64 `json:"baseline_deviation"`
+	IsAnomalous       bool     `json:"is_anomalous"`
+	AnomalyScore      float64  `json:"anomaly_score"`
+	AnomalyType       string   `json:"anomaly_type"`
+	Confidence        float64  `json:"confidence"`
+	AnomalousFeatures []string `json:"anomalous_features"`
+	BaselineDeviation float64  `json:"baseline_deviation"`
 }
 
 // TypoDetection represents typosquatting detection results
 type TypoDetection struct {
-	IsTyposquatting       bool     `json:"is_typosquatting"`
-	TargetPackage         string   `json:"target_package"`
-	TypoType              string   `json:"typo_type"`
-	EditDistance          int      `json:"edit_distance"`
-	SimilarityScore       float64  `json:"similarity_score"`
-	Confidence            float64  `json:"confidence"`
-	SuspiciousPatterns    []string `json:"suspicious_patterns"`
+	IsTyposquatting    bool     `json:"is_typosquatting"`
+	TargetPackage      string   `json:"target_package"`
+	TypoType           string   `json:"typo_type"`
+	EditDistance       int      `json:"edit_distance"`
+	SimilarityScore    float64  `json:"similarity_score"`
+	Confidence         float64  `json:"confidence"`
+	SuspiciousPatterns []string `json:"suspicious_patterns"`
 }
 
 // EnhancedReputationAnalysis represents enhanced reputation analysis results
 type EnhancedReputationAnalysis struct {
-	ReputationScore       float64  `json:"reputation_score"`
-	TrustLevel            string   `json:"trust_level"`
-	AuthorReputation      float64  `json:"author_reputation"`
-	MaintainerReputation  float64  `json:"maintainer_reputation"`
-	CommunityTrust        float64  `json:"community_trust"`
-	HistoricalIssues      []string `json:"historical_issues"`
-	VerificationStatus    string   `json:"verification_status"`
+	ReputationScore      float64  `json:"reputation_score"`
+	TrustLevel           string   `json:"trust_level"`
+	AuthorReputation     float64  `json:"author_reputation"`
+	MaintainerReputation float64  `json:"maintainer_reputation"`
+	CommunityTrust       float64  `json:"community_trust"`
+	HistoricalIssues     []string `json:"historical_issues"`
+	VerificationStatus   string   `json:"verification_status"`
 }
 
 // BehavioralAnalysisResult represents behavioral analysis results
 type BehavioralAnalysisResult struct {
-	BehaviorScore         float64  `json:"behavior_score"`
-	SuspiciousBehaviors   []string `json:"suspicious_behaviors"`
-	RiskFactors           []string `json:"risk_factors"`
-	BehaviorPatterns      []string `json:"behavior_patterns"`
-	AnomalousActivities   []string `json:"anomalous_activities"`
-	Confidence            float64  `json:"confidence"`
+	BehaviorScore       float64  `json:"behavior_score"`
+	SuspiciousBehaviors []string `json:"suspicious_behaviors"`
+	RiskFactors         []string `json:"risk_factors"`
+	BehaviorPatterns    []string `json:"behavior_patterns"`
+	AnomalousActivities []string `json:"anomalous_activities"`
+	Confidence          float64  `json:"confidence"`
 }
 
 // EnsembleResults represents ensemble model results
 type EnsembleResults struct {
-	FinalScore            float64            `json:"final_score"`
-	ModelScores           map[string]float64 `json:"model_scores"`
-	ModelWeights          map[string]float64 `json:"model_weights"`
-	ConsensusLevel        float64            `json:"consensus_level"`
-	DisagreementFactors   []string           `json:"disagreement_factors"`
-	Confidence            float64            `json:"confidence"`
+	FinalScore          float64            `json:"final_score"`
+	ModelScores         map[string]float64 `json:"model_scores"`
+	ModelWeights        map[string]float64 `json:"model_weights"`
+	ConsensusLevel      float64            `json:"consensus_level"`
+	DisagreementFactors []string           `json:"disagreement_factors"`
+	Confidence          float64            `json:"confidence"`
 }
 
 // NewEnhancedMLDetector creates a new enhanced ML detector
@@ -350,12 +350,12 @@ func DefaultEnhancedMLConfig() *EnhancedMLConfig {
 		TypoThreshold:       0.85,
 		ReputationThreshold: 0.6,
 		EnsembleWeights: map[string]float64{
-			"similarity":  0.2,
-			"malware":     0.25,
-			"anomaly":     0.2,
-			"typo":        0.15,
-			"reputation":  0.1,
-			"behavioral":  0.1,
+			"similarity": 0.2,
+			"malware":    0.25,
+			"anomaly":    0.2,
+			"typo":       0.15,
+			"reputation": 0.1,
+			"behavioral": 0.1,
 		},
 		ConfidenceThreshold: 0.8,
 		ModelUpdateInterval: 24 * time.Hour,
@@ -604,19 +604,19 @@ func (emd *EnhancedMLDetector) detectSimilarityPatterns(packageName, similarPack
 	if len(packageName) == 0 || len(similarPackage) == 0 {
 		return "unknown"
 	}
-	
+
 	// Simple pattern detection
 	if packageName == similarPackage {
 		return "exact_match"
 	}
-	
+
 	similarity := calculateSimpleSimilarity(packageName, similarPackage)
 	if similarity > 0.9 {
 		return "high_similarity"
 	} else if similarity > 0.7 {
 		return "medium_similarity"
 	}
-	
+
 	return "low_similarity"
 }
 
@@ -625,18 +625,18 @@ func calculateSimpleSimilarity(s1, s2 string) float64 {
 	if s1 == s2 {
 		return 1.0
 	}
-	
+
 	if len(s1) == 0 || len(s2) == 0 {
 		return 0.0
 	}
-	
+
 	// Simple Levenshtein-based similarity
 	dist := levenshteinDistance(s1, s2)
 	maxLen := len(s1)
 	if len(s2) > maxLen {
 		maxLen = len(s2)
 	}
-	
+
 	return 1.0 - float64(dist)/float64(maxLen)
 }
 
@@ -648,13 +648,13 @@ func levenshteinDistance(s1, s2 string) int {
 	if len(s2) == 0 {
 		return len(s1)
 	}
-	
+
 	// Create a matrix to store distances
 	matrix := make([][]int, len(s1)+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len(s2)+1)
 	}
-	
+
 	// Initialize first row and column
 	for i := 0; i <= len(s1); i++ {
 		matrix[i][0] = i
@@ -662,7 +662,7 @@ func levenshteinDistance(s1, s2 string) int {
 	for j := 0; j <= len(s2); j++ {
 		matrix[0][j] = j
 	}
-	
+
 	// Fill the matrix
 	for i := 1; i <= len(s1); i++ {
 		for j := 1; j <= len(s2); j++ {
@@ -670,12 +670,12 @@ func levenshteinDistance(s1, s2 string) int {
 			if s1[i-1] != s2[j-1] {
 				cost = 1
 			}
-			
+
 			// Find minimum of three values
 			deletion := matrix[i-1][j] + 1
 			insertion := matrix[i][j-1] + 1
 			substitution := matrix[i-1][j-1] + cost
-			
+
 			matrix[i][j] = deletion
 			if insertion < matrix[i][j] {
 				matrix[i][j] = insertion
@@ -685,16 +685,14 @@ func levenshteinDistance(s1, s2 string) int {
 			}
 		}
 	}
-	
+
 	return matrix[len(s1)][len(s2)]
 }
-
-
 
 // analyzeAdvancedMalwarePatterns analyzes malware patterns in package features
 func (emd *EnhancedMLDetector) analyzeAdvancedMalwarePatterns(features *EnhancedPackageFeatures) map[string]float64 {
 	patterns := make(map[string]float64)
-	
+
 	// Analyze suspicious file patterns
 	if features.FileStructure.BinaryFiles > 0 {
 		patterns["binary_files"] = 0.3
@@ -705,14 +703,14 @@ func (emd *EnhancedMLDetector) analyzeAdvancedMalwarePatterns(features *Enhanced
 	if features.SecurityMetrics.ObfuscatedCode {
 		patterns["obfuscated_code"] = 0.5
 	}
-	
+
 	return patterns
 }
 
 // extractBehavioralIndicators extracts behavioral indicators from package features
 func (emd *EnhancedMLDetector) extractBehavioralIndicators(features *EnhancedPackageFeatures) string {
 	indicators := []string{}
-	
+
 	if features.SecurityMetrics.NetworkCalls > 0 {
 		indicators = append(indicators, "network_activity")
 	}
@@ -722,18 +720,18 @@ func (emd *EnhancedMLDetector) extractBehavioralIndicators(features *EnhancedPac
 	if features.SecurityMetrics.ProcessExecution > 0 {
 		indicators = append(indicators, "process_execution")
 	}
-	
+
 	if len(indicators) == 0 {
 		return "no_suspicious_behavior"
 	}
-	
+
 	return "suspicious_behavior_detected"
 }
 
 // detectBehavioralAnomalies detects behavioral anomalies in package features
 func (emd *EnhancedMLDetector) detectBehavioralAnomalies(features *EnhancedPackageFeatures) []string {
 	anomalies := []string{}
-	
+
 	if features.BehavioralMetrics.InstallationBehavior.NetworkActivity {
 		anomalies = append(anomalies, "install_network_activity")
 	}
@@ -743,7 +741,7 @@ func (emd *EnhancedMLDetector) detectBehavioralAnomalies(features *EnhancedPacka
 	if features.BehavioralMetrics.NetworkBehavior.DataExfiltration {
 		anomalies = append(anomalies, "data_exfiltration")
 	}
-	
+
 	return anomalies
 }
 
@@ -751,33 +749,33 @@ func (emd *EnhancedMLDetector) detectBehavioralAnomalies(features *EnhancedPacka
 func (emd *EnhancedMLDetector) detectStatisticalAnomalies(features *EnhancedPackageFeatures) float64 {
 	// Simple statistical anomaly detection
 	deviation := 0.0
-	
+
 	if features.CodeMetrics.ObfuscationScore > 0.8 {
 		deviation += 0.3
 	}
 	if features.SecurityMetrics.VulnerabilityCount > 10 {
 		deviation += 0.2
 	}
-	
+
 	return deviation
 }
 
 // calculatePhoneticTypoSimilarity calculates phonetic similarity for typo detection
 func (emd *EnhancedMLDetector) calculatePhoneticTypoSimilarity(packageName string) []string {
 	patterns := []string{}
-	
+
 	// Simple phonetic pattern detection
 	if len(packageName) > 0 {
 		patterns = append(patterns, "character_substitution")
 	}
-	
+
 	return patterns
 }
 
 // detectSocialEngineeringPatterns detects social engineering patterns
 func (emd *EnhancedMLDetector) detectSocialEngineeringPatterns(features *EnhancedPackageFeatures) []string {
 	issues := []string{}
-	
+
 	// Check for suspicious naming patterns
 	if len(features.Name) > 0 {
 		// Simple check for common social engineering patterns
@@ -791,7 +789,7 @@ func (emd *EnhancedMLDetector) detectSocialEngineeringPatterns(features *Enhance
 			}
 		}
 	}
-	
+
 	return issues
 }
 
@@ -808,40 +806,40 @@ func (emd *EnhancedMLDetector) calculateAdvancedTrustMetrics(features *EnhancedP
 // detectDependencyConfusion detects dependency confusion attacks
 func (emd *EnhancedMLDetector) detectDependencyConfusion(features *EnhancedPackageFeatures) []string {
 	risks := []string{}
-	
+
 	for _, dep := range features.Dependencies {
 		if dep.Suspicious {
 			risks = append(risks, "suspicious_dependency")
 		}
 	}
-	
+
 	return risks
 }
 
 // assessSupplyChainRisk assesses supply chain risks
 func (emd *EnhancedMLDetector) assessSupplyChainRisk(features *EnhancedPackageFeatures) []string {
 	patterns := []string{}
-	
+
 	if len(features.Maintainers) == 0 {
 		patterns = append(patterns, "no_maintainers")
 	}
 	if features.SecurityMetrics.VulnerabilityCount > 0 {
 		patterns = append(patterns, "known_vulnerabilities")
 	}
-	
+
 	return patterns
 }
 
 // calculateEnhancedWeightedScores calculates enhanced weighted scores
 func (emd *EnhancedMLDetector) calculateEnhancedWeightedScores(result *MLDetectionResult) map[string]float64 {
 	scores := make(map[string]float64)
-	
+
 	scores["malware"] = result.MalwareClassification.Confidence
 	scores["anomaly"] = result.AnomalyDetection.AnomalyScore
 	scores["typo"] = result.TypoDetection.Confidence
 	scores["reputation"] = result.ReputationAnalysis.ReputationScore
 	scores["behavioral"] = result.BehavioralAnalysis.BehaviorScore
-	
+
 	return scores
 }
 
@@ -852,12 +850,12 @@ func (emd *EnhancedMLDetector) calculateConsensusScore(result *MLDetectionResult
 		result.AnomalyDetection.AnomalyScore,
 		result.TypoDetection.Confidence,
 	}
-	
+
 	total := 0.0
 	for _, score := range scores {
 		total += score
 	}
-	
+
 	return total / float64(len(scores))
 }
 
@@ -868,7 +866,7 @@ func (emd *EnhancedMLDetector) calculateDynamicWeights(result *MLDetectionResult
 	for k, v := range emd.config.EnsembleWeights {
 		weights[k] = v
 	}
-	
+
 	// Adjust weights based on detection confidence
 	if result.MalwareClassification.Confidence > 0.9 {
 		weights["malware"] *= 1.2
@@ -876,7 +874,7 @@ func (emd *EnhancedMLDetector) calculateDynamicWeights(result *MLDetectionResult
 	if result.TypoDetection.Confidence > 0.9 {
 		weights["typo"] *= 1.2
 	}
-	
+
 	return weights
 }
 
@@ -885,12 +883,12 @@ func (emd *EnhancedMLDetector) calculateAverageConfidence(factors []float64) flo
 	if len(factors) == 0 {
 		return 0.0
 	}
-	
+
 	total := 0.0
 	for _, factor := range factors {
 		total += factor
 	}
-	
+
 	return total / float64(len(factors))
 }
 
@@ -899,9 +897,9 @@ func (emd *EnhancedMLDetector) updateDetectionMetrics(result *MLDetectionResult)
 	if emd.metrics == nil {
 		emd.metrics = &DetectionMetrics{LastUpdated: time.Now()}
 	}
-	
+
 	emd.metrics.TotalDetections++
-	
+
 	// Update average confidence
 	total := float64(emd.metrics.TotalDetections)
 	emd.metrics.AverageConfidence = (emd.metrics.AverageConfidence*(total-1) + result.ConfidenceScore) / total
@@ -992,9 +990,9 @@ func (emd *EnhancedMLDetector) BatchAnalyze(ctx context.Context, packages []*Enh
 	if emd.config.ParallelProcessing {
 		// Parallel processing
 		type result struct {
-			index int
+			index  int
 			result *MLDetectionResult
-			err error
+			err    error
 		}
 
 		resultChan := make(chan result, len(packages))
@@ -1118,13 +1116,15 @@ type BehavioralAnalyzer struct{}
 type EnsembleModel struct{}
 
 // Placeholder implementations
-func NewSimilarityModel() (*SimilarityModel, error) { return &SimilarityModel{}, nil }
-func NewMalwareClassifier() (*MalwareClassifier, error) { return &MalwareClassifier{}, nil }
-func NewAnomalyDetector() (*AnomalyDetector, error) { return &AnomalyDetector{}, nil }
-func NewTypoDetector() (*TypoDetector, error) { return &TypoDetector{}, nil }
+func NewSimilarityModel() (*SimilarityModel, error)       { return &SimilarityModel{}, nil }
+func NewMalwareClassifier() (*MalwareClassifier, error)   { return &MalwareClassifier{}, nil }
+func NewAnomalyDetector() (*AnomalyDetector, error)       { return &AnomalyDetector{}, nil }
+func NewTypoDetector() (*TypoDetector, error)             { return &TypoDetector{}, nil }
 func NewReputationAnalyzer() (*ReputationAnalyzer, error) { return &ReputationAnalyzer{}, nil }
 func NewBehavioralAnalyzer() (*BehavioralAnalyzer, error) { return &BehavioralAnalyzer{}, nil }
-func NewEnsembleModel(weights map[string]float64) (*EnsembleModel, error) { return &EnsembleModel{}, nil }
+func NewEnsembleModel(weights map[string]float64) (*EnsembleModel, error) {
+	return &EnsembleModel{}, nil
+}
 
 func (sm *SimilarityModel) AnalyzeSimilarity(ctx context.Context, features *EnhancedPackageFeatures) ([]EnhancedSimilarityResult, error) {
 	return []EnhancedSimilarityResult{}, nil
@@ -1149,10 +1149,10 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 }
 
 // Update methods
-func (sm *SimilarityModel) Update(ctx context.Context) error { return nil }
-func (mc *MalwareClassifier) Update(ctx context.Context) error { return nil }
-func (ad *AnomalyDetector) Update(ctx context.Context) error { return nil }
-func (td *TypoDetector) Update(ctx context.Context) error { return nil }
+func (sm *SimilarityModel) Update(ctx context.Context) error    { return nil }
+func (mc *MalwareClassifier) Update(ctx context.Context) error  { return nil }
+func (ad *AnomalyDetector) Update(ctx context.Context) error    { return nil }
+func (td *TypoDetector) Update(ctx context.Context) error       { return nil }
 func (ra *ReputationAnalyzer) Update(ctx context.Context) error { return nil }
 func (ba *BehavioralAnalyzer) Update(ctx context.Context) error { return nil }
 
@@ -1166,8 +1166,6 @@ func (mc *MalwareClassifier) GetMetrics(ctx context.Context) (map[string]interfa
 func (ad *AnomalyDetector) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
 	return map[string]interface{}{"accuracy": 0.92}, nil
 }
-
-
 
 // UpdateParameters updates model parameters for fine-tuning
 func (emd *EnhancedMLDetector) UpdateParameters(params map[string]interface{}) error {
@@ -1266,7 +1264,6 @@ func (emd *EnhancedMLDetector) DetectThreatSimple(packageName, content string) (
 	isThreat := confidence >= emd.config.ConfidenceThreshold
 	return isThreat, confidence, nil
 }
-
 
 func (td *TypoDetector) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
 	return map[string]interface{}{"accuracy": 0.96}, nil

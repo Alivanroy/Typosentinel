@@ -8,19 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
-
 func TestLoadConfigFromEnv(t *testing.T) {
 	tests := []struct {
-		name    string
-		envVars map[string]string
+		name     string
+		envVars  map[string]string
 		validate func(*testing.T, *Config)
 	}{
 		{
 			name: "server config from env",
 			envVars: map[string]string{
-				"SERVER_HOST": "0.0.0.0",
-				"SERVER_PORT": "9090",
+				"SERVER_HOST":         "0.0.0.0",
+				"SERVER_PORT":         "9090",
 				"SERVER_READ_TIMEOUT": "45s",
 			},
 			validate: func(t *testing.T, cfg *Config) {
@@ -32,10 +30,10 @@ func TestLoadConfigFromEnv(t *testing.T) {
 		{
 			name: "database config from env",
 			envVars: map[string]string{
-				"POSTGRES_HOST": "localhost",
-				"POSTGRES_PORT": "5432",
-				"POSTGRES_DB": "typosentinel",
-				"POSTGRES_USER": "testuser",
+				"POSTGRES_HOST":     "localhost",
+				"POSTGRES_PORT":     "5432",
+				"POSTGRES_DB":       "typosentinel",
+				"POSTGRES_USER":     "testuser",
 				"POSTGRES_PASSWORD": "testpass",
 			},
 			validate: func(t *testing.T, cfg *Config) {
@@ -49,9 +47,9 @@ func TestLoadConfigFromEnv(t *testing.T) {
 		{
 			name: "redis config from env",
 			envVars: map[string]string{
-				"REDIS_ADDRESS": "redis.example.com:6380",
+				"REDIS_ADDRESS":  "redis.example.com:6380",
 				"REDIS_PASSWORD": "redispass",
-				"REDIS_DB": "2",
+				"REDIS_DB":       "2",
 			},
 			validate: func(t *testing.T, cfg *Config) {
 				assert.Equal(t, "redis.example.com:6380", cfg.Redis.Address)
@@ -62,9 +60,9 @@ func TestLoadConfigFromEnv(t *testing.T) {
 		{
 			name: "ml config from env",
 			envVars: map[string]string{
-				"ML_ENABLED": "true",
-				"ML_MODEL_PATH": "/models/typo.model",
-				"ML_BATCH_SIZE": "64",
+				"ML_ENABLED":          "true",
+				"ML_MODEL_PATH":       "/models/typo.model",
+				"ML_BATCH_SIZE":       "64",
 				"ML_BATCH_PREDICTION": "true",
 			},
 			validate: func(t *testing.T, cfg *Config) {
@@ -77,28 +75,28 @@ func TestLoadConfigFromEnv(t *testing.T) {
 		{
 			name: "security config from env",
 			envVars: map[string]string{
-				"JWT_SECRET": "test-jwt-secret",
-				"JWT_EXPIRATION": "24h",
-				"ENCRYPTION_KEY": "test-encryption-key",
+				"JWT_SECRET":                     "test-jwt-secret",
+				"JWT_EXPIRATION":                 "24h",
+				"ENCRYPTION_KEY":                 "test-encryption-key",
 				"RATE_LIMIT_REQUESTS_PER_MINUTE": "1000",
-				"RATE_LIMIT_WINDOW_SIZE": "1m",
+				"RATE_LIMIT_WINDOW_SIZE":         "1m",
 			},
 			validate: func(t *testing.T, cfg *Config) {
-					assert.Equal(t, "test-jwt-secret", cfg.Security.JWT.Secret)
-					assert.Equal(t, 24*time.Hour, cfg.Security.JWT.Expiration)
-					assert.Equal(t, "test-encryption-key", cfg.Security.Encryption.Key)
-					assert.Equal(t, 1000, cfg.RateLimit.RequestsPerMinute)
-					assert.Equal(t, time.Minute, cfg.RateLimit.WindowSize)
-				},
+				assert.Equal(t, "test-jwt-secret", cfg.Security.JWT.Secret)
+				assert.Equal(t, 24*time.Hour, cfg.Security.JWT.Expiration)
+				assert.Equal(t, "test-encryption-key", cfg.Security.Encryption.Key)
+				assert.Equal(t, 1000, cfg.RateLimit.RequestsPerMinute)
+				assert.Equal(t, time.Minute, cfg.RateLimit.WindowSize)
+			},
 		},
 		{
 			name: "storage config from env",
 			envVars: map[string]string{
-				"MINIO_ENDPOINT": "minio.example.com:9000",
-				"MINIO_ACCESS_KEY_ID": "testkey",
+				"MINIO_ENDPOINT":          "minio.example.com:9000",
+				"MINIO_ACCESS_KEY_ID":     "testkey",
 				"MINIO_SECRET_ACCESS_KEY": "testsecret",
-				"MINIO_USE_SSL": "true",
-				"LOCAL_STORAGE_ENABLED": "false",
+				"MINIO_USE_SSL":           "true",
+				"LOCAL_STORAGE_ENABLED":   "false",
 			},
 			validate: func(t *testing.T, cfg *Config) {
 				assert.Equal(t, "minio.example.com:9000", cfg.Storage.MinIO.Endpoint)
@@ -112,11 +110,11 @@ func TestLoadConfigFromEnv(t *testing.T) {
 			name: "monitoring config from env",
 			envVars: map[string]string{
 				"PROMETHEUS_ENABLED": "true",
-				"PROMETHEUS_PORT": "9091",
-				"JAEGER_ENABLED": "true",
-				"JAEGER_ENDPOINT": "http://jaeger:14268/api/traces",
-				"LOG_LEVEL": "debug",
-				"LOG_FORMAT": "json",
+				"PROMETHEUS_PORT":    "9091",
+				"JAEGER_ENABLED":     "true",
+				"JAEGER_ENDPOINT":    "http://jaeger:14268/api/traces",
+				"LOG_LEVEL":          "debug",
+				"LOG_FORMAT":         "json",
 			},
 			validate: func(t *testing.T, cfg *Config) {
 				assert.True(t, cfg.Monitoring.Prometheus.Enabled)
@@ -280,11 +278,11 @@ func TestHelperFunctions(t *testing.T) {
 
 		// Test with various duration formats
 		durationTests := map[string]time.Duration{
-			"1h":     time.Hour,
-			"30m":    30 * time.Minute,
-			"45s":    45 * time.Second,
-			"100ms":  100 * time.Millisecond,
-			"1h30m":  time.Hour + 30*time.Minute,
+			"1h":    time.Hour,
+			"30m":   30 * time.Minute,
+			"45s":   45 * time.Second,
+			"100ms": 100 * time.Millisecond,
+			"1h30m": time.Hour + 30*time.Minute,
 		}
 		for durStr, expected := range durationTests {
 			os.Setenv("DURATION_TEST", durStr)
@@ -453,7 +451,7 @@ func TestConfigValidation(t *testing.T) {
 					},
 				},
 				Security: SecurityConfig{
-					JWT: JWTConfig{Secret: "valid-secret"},
+					JWT:        JWTConfig{Secret: "valid-secret"},
 					Encryption: EncryptionConfig{Key: "valid-key"},
 				},
 				Storage: StorageConfig{
@@ -470,7 +468,7 @@ func TestConfigValidation(t *testing.T) {
 					PostgreSQL: PostgreSQLConfig{Password: "valid-password"},
 				},
 				Security: SecurityConfig{
-					JWT: JWTConfig{Secret: ""},
+					JWT:        JWTConfig{Secret: ""},
 					Encryption: EncryptionConfig{Key: "valid-key"},
 				},
 				Storage: StorageConfig{
@@ -487,7 +485,7 @@ func TestConfigValidation(t *testing.T) {
 					PostgreSQL: PostgreSQLConfig{Password: "valid-password"},
 				},
 				Security: SecurityConfig{
-					JWT: JWTConfig{Secret: "your-secret-key"},
+					JWT:        JWTConfig{Secret: "your-secret-key"},
 					Encryption: EncryptionConfig{Key: "valid-key"},
 				},
 				Storage: StorageConfig{
@@ -504,7 +502,7 @@ func TestConfigValidation(t *testing.T) {
 					PostgreSQL: PostgreSQLConfig{Password: "valid-password"},
 				},
 				Security: SecurityConfig{
-					JWT: JWTConfig{Secret: "valid-secret"},
+					JWT:        JWTConfig{Secret: "valid-secret"},
 					Encryption: EncryptionConfig{Key: ""},
 				},
 				Storage: StorageConfig{
@@ -521,7 +519,7 @@ func TestConfigValidation(t *testing.T) {
 					PostgreSQL: PostgreSQLConfig{Password: "valid-password"},
 				},
 				Security: SecurityConfig{
-					JWT: JWTConfig{Secret: "valid-secret"},
+					JWT:        JWTConfig{Secret: "valid-secret"},
 					Encryption: EncryptionConfig{Key: "valid-key"},
 				},
 				Storage: StorageConfig{

@@ -25,28 +25,28 @@ func NewPHPPackageAnalyzer(cfg *config.Config) *PHPPackageAnalyzer {
 
 // ComposerJSON represents the structure of composer.json
 type ComposerJSON struct {
-	Name            string                 `json:"name"`
-	Version         string                 `json:"version"`
-	Description     string                 `json:"description"`
-	Type            string                 `json:"type"`
-	Keywords        []string               `json:"keywords"`
-	Homepage        string                 `json:"homepage"`
-	License         interface{}            `json:"license"`
-	Authors         []ComposerAuthor       `json:"authors"`
-	Require         map[string]string      `json:"require"`
-	RequireDev      map[string]string      `json:"require-dev"`
-	Suggest         map[string]string      `json:"suggest"`
-	Provide         map[string]string      `json:"provide"`
-	Conflict        map[string]string      `json:"conflict"`
-	Replace         map[string]string      `json:"replace"`
-	Autoload        ComposerAutoload       `json:"autoload"`
-	AutoloadDev     ComposerAutoload       `json:"autoload-dev"`
-	Repositories    []ComposerRepository   `json:"repositories"`
-	Config          map[string]interface{} `json:"config"`
-	Scripts         map[string]interface{} `json:"scripts"`
-	Extra           map[string]interface{} `json:"extra"`
-	MinimumStability string                `json:"minimum-stability"`
-	PreferStable    bool                   `json:"prefer-stable"`
+	Name             string                 `json:"name"`
+	Version          string                 `json:"version"`
+	Description      string                 `json:"description"`
+	Type             string                 `json:"type"`
+	Keywords         []string               `json:"keywords"`
+	Homepage         string                 `json:"homepage"`
+	License          interface{}            `json:"license"`
+	Authors          []ComposerAuthor       `json:"authors"`
+	Require          map[string]string      `json:"require"`
+	RequireDev       map[string]string      `json:"require-dev"`
+	Suggest          map[string]string      `json:"suggest"`
+	Provide          map[string]string      `json:"provide"`
+	Conflict         map[string]string      `json:"conflict"`
+	Replace          map[string]string      `json:"replace"`
+	Autoload         ComposerAutoload       `json:"autoload"`
+	AutoloadDev      ComposerAutoload       `json:"autoload-dev"`
+	Repositories     []ComposerRepository   `json:"repositories"`
+	Config           map[string]interface{} `json:"config"`
+	Scripts          map[string]interface{} `json:"scripts"`
+	Extra            map[string]interface{} `json:"extra"`
+	MinimumStability string                 `json:"minimum-stability"`
+	PreferStable     bool                   `json:"prefer-stable"`
 }
 
 type ComposerAuthor struct {
@@ -57,11 +57,11 @@ type ComposerAuthor struct {
 }
 
 type ComposerAutoload struct {
-	Psr4       map[string]interface{} `json:"psr-4"`
-	Psr0       map[string]interface{} `json:"psr-0"`
-	Classmap   []string               `json:"classmap"`
-	Files      []string               `json:"files"`
-	ExcludeFromClassmap []string      `json:"exclude-from-classmap"`
+	Psr4                map[string]interface{} `json:"psr-4"`
+	Psr0                map[string]interface{} `json:"psr-0"`
+	Classmap            []string               `json:"classmap"`
+	Files               []string               `json:"files"`
+	ExcludeFromClassmap []string               `json:"exclude-from-classmap"`
 }
 
 type ComposerRepository struct {
@@ -71,41 +71,41 @@ type ComposerRepository struct {
 
 // ComposerLock represents the structure of composer.lock
 type ComposerLock struct {
-	Readme          []string                `json:"_readme"`
-	ContentHash     string                  `json:"content-hash"`
-	Packages        []ComposerLockPackage   `json:"packages"`
-	PackagesDev     []ComposerLockPackage   `json:"packages-dev"`
-	Aliases         []interface{}           `json:"aliases"`
+	Readme           []string               `json:"_readme"`
+	ContentHash      string                 `json:"content-hash"`
+	Packages         []ComposerLockPackage  `json:"packages"`
+	PackagesDev      []ComposerLockPackage  `json:"packages-dev"`
+	Aliases          []interface{}          `json:"aliases"`
 	MinimumStability string                 `json:"minimum-stability"`
-	StabilityFlags  map[string]interface{}  `json:"stability-flags"`
-	PreferStable    bool                    `json:"prefer-stable"`
-	PreferLowest    bool                    `json:"prefer-lowest"`
-	Platform        map[string]string       `json:"platform"`
-	PlatformDev     map[string]string       `json:"platform-dev"`
+	StabilityFlags   map[string]interface{} `json:"stability-flags"`
+	PreferStable     bool                   `json:"prefer-stable"`
+	PreferLowest     bool                   `json:"prefer-lowest"`
+	Platform         map[string]string      `json:"platform"`
+	PlatformDev      map[string]string      `json:"platform-dev"`
 	PluginAPIVersion string                 `json:"plugin-api-version"`
 }
 
 type ComposerLockPackage struct {
-	Name            string                 `json:"name"`
-	Version         string                 `json:"version"`
-	Source          ComposerSource         `json:"source"`
-	Dist            ComposerDist           `json:"dist"`
-	Require         map[string]string      `json:"require"`
-	RequireDev      map[string]string      `json:"require-dev"`
-	Conflict        map[string]string      `json:"conflict"`
-	Replace         map[string]string      `json:"replace"`
-	Provide         map[string]string      `json:"provide"`
-	Suggest         map[string]string      `json:"suggest"`
-	Type            string                 `json:"type"`
-	Autoload        ComposerAutoload       `json:"autoload"`
-	NotificationURL string                 `json:"notification-url"`
-	License         []string               `json:"license"`
-	Authors         []ComposerAuthor       `json:"authors"`
-	Description     string                 `json:"description"`
-	Homepage        string                 `json:"homepage"`
-	Keywords        []string               `json:"keywords"`
-	Support         map[string]string      `json:"support"`
-	Time            string                 `json:"time"`
+	Name            string            `json:"name"`
+	Version         string            `json:"version"`
+	Source          ComposerSource    `json:"source"`
+	Dist            ComposerDist      `json:"dist"`
+	Require         map[string]string `json:"require"`
+	RequireDev      map[string]string `json:"require-dev"`
+	Conflict        map[string]string `json:"conflict"`
+	Replace         map[string]string `json:"replace"`
+	Provide         map[string]string `json:"provide"`
+	Suggest         map[string]string `json:"suggest"`
+	Type            string            `json:"type"`
+	Autoload        ComposerAutoload  `json:"autoload"`
+	NotificationURL string            `json:"notification-url"`
+	License         []string          `json:"license"`
+	Authors         []ComposerAuthor  `json:"authors"`
+	Description     string            `json:"description"`
+	Homepage        string            `json:"homepage"`
+	Keywords        []string          `json:"keywords"`
+	Support         map[string]string `json:"support"`
+	Time            string            `json:"time"`
 }
 
 type ComposerSource struct {
@@ -239,18 +239,18 @@ func (a *PHPPackageAnalyzer) parseComposerLock(filePath string) (map[string]*typ
 				Version:  lockPkg.Version,
 				Registry: "packagist.org",
 				Metadata: map[string]interface{}{
-					"ecosystem":    "php",
-					"source":       "composer.lock",
-					"description":  lockPkg.Description,
-					"homepage":     lockPkg.Homepage,
-					"license":      lockPkg.License,
-					"authors":      lockPkg.Authors,
-					"keywords":     lockPkg.Keywords,
-					"time":         lockPkg.Time,
-					"source_url":   lockPkg.Source.URL,
-					"source_ref":   lockPkg.Source.Reference,
-					"dist_url":     lockPkg.Dist.URL,
-					"dist_shasum":  lockPkg.Dist.Shasum,
+					"ecosystem":   "php",
+					"source":      "composer.lock",
+					"description": lockPkg.Description,
+					"homepage":    lockPkg.Homepage,
+					"license":     lockPkg.License,
+					"authors":     lockPkg.Authors,
+					"keywords":    lockPkg.Keywords,
+					"time":        lockPkg.Time,
+					"source_url":  lockPkg.Source.URL,
+					"source_ref":  lockPkg.Source.Reference,
+					"dist_url":    lockPkg.Dist.URL,
+					"dist_shasum": lockPkg.Dist.Shasum,
 				},
 			},
 		}
@@ -269,18 +269,18 @@ func (a *PHPPackageAnalyzer) parseComposerLock(filePath string) (map[string]*typ
 				Version:  lockPkg.Version,
 				Registry: "packagist.org",
 				Metadata: map[string]interface{}{
-					"ecosystem":    "php",
-					"source":       "composer.lock",
-					"description":  lockPkg.Description,
-					"homepage":     lockPkg.Homepage,
-					"license":      lockPkg.License,
-					"authors":      lockPkg.Authors,
-					"keywords":     lockPkg.Keywords,
-					"time":         lockPkg.Time,
-					"source_url":   lockPkg.Source.URL,
-					"source_ref":   lockPkg.Source.Reference,
-					"dist_url":     lockPkg.Dist.URL,
-					"dist_shasum":  lockPkg.Dist.Shasum,
+					"ecosystem":   "php",
+					"source":      "composer.lock",
+					"description": lockPkg.Description,
+					"homepage":    lockPkg.Homepage,
+					"license":     lockPkg.License,
+					"authors":     lockPkg.Authors,
+					"keywords":    lockPkg.Keywords,
+					"time":        lockPkg.Time,
+					"source_url":  lockPkg.Source.URL,
+					"source_ref":  lockPkg.Source.Reference,
+					"dist_url":    lockPkg.Dist.URL,
+					"dist_shasum": lockPkg.Dist.Shasum,
 				},
 			},
 		}

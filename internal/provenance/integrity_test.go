@@ -122,9 +122,9 @@ func TestAnalyzePackage_Disabled(t *testing.T) {
 
 func TestVerifySignatures_Success(t *testing.T) {
 	cfg := &Config{
-		Enabled: true,
+		Enabled:          true,
 		VerifySignatures: true,
-		Timeout: "30s",
+		Timeout:          "30s",
 	}
 
 	analyzer, err := NewProvenanceAnalyzer(cfg)
@@ -150,9 +150,9 @@ func TestVerifySignatures_Success(t *testing.T) {
 
 func TestVerifyIntegrity_Success(t *testing.T) {
 	cfg := &Config{
-		Enabled: true,
+		Enabled:         true,
 		VerifyIntegrity: true,
-		Timeout: "30s",
+		Timeout:         "30s",
 	}
 
 	analyzer, err := NewProvenanceAnalyzer(cfg)
@@ -205,12 +205,12 @@ func TestAssessTrust_HighTrust(t *testing.T) {
 
 	result := &AnalysisResult{
 		SignatureVerification: &SignatureVerification{
-			Verified: true,
+			Verified:   true,
 			TrustScore: 0.9,
 		},
 		IntegrityChecks: &IntegrityChecks{
 			OverallVerified: true,
-			TrustScore: 0.95,
+			TrustScore:      0.95,
 		},
 	}
 
@@ -242,12 +242,12 @@ func TestAssessTrust_LowTrust(t *testing.T) {
 
 	result := &AnalysisResult{
 		SignatureVerification: &SignatureVerification{
-			Verified: false,
+			Verified:   false,
 			TrustScore: 0.45,
 		},
 		IntegrityChecks: &IntegrityChecks{
 			OverallVerified: false,
-			TrustScore: 0.45,
+			TrustScore:      0.45,
 		},
 	}
 
@@ -279,16 +279,16 @@ func TestCalculateOverallAssessment(t *testing.T) {
 
 	result := &AnalysisResult{
 		SignatureVerification: &SignatureVerification{
-			Verified: true,
+			Verified:   true,
 			TrustScore: 0.8,
 		},
 		IntegrityChecks: &IntegrityChecks{
 			OverallVerified: true,
-			TrustScore: 0.9,
+			TrustScore:      0.9,
 		},
 		TrustAssessment: &TrustAssessment{
 			OverallTrustScore: 0.8,
-			TrustLevel: "HIGH",
+			TrustLevel:        "HIGH",
 		},
 	}
 
@@ -316,7 +316,7 @@ func TestGenerateFindings(t *testing.T) {
 
 	result := &AnalysisResult{
 		SignatureVerification: &SignatureVerification{
-			Verified: false,
+			Verified:           false,
 			VerificationErrors: []string{"signature not found"},
 		},
 		Findings: []Finding{},
@@ -366,7 +366,7 @@ func TestExportResults_JSON(t *testing.T) {
 	}
 
 	result := &AnalysisResult{
-		PackageName: "test-package",
+		PackageName:    "test-package",
 		PackageVersion: "1.0.0",
 	}
 
@@ -374,7 +374,6 @@ func TestExportResults_JSON(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-
 
 }
 
@@ -390,7 +389,7 @@ func TestExportResults_YAML(t *testing.T) {
 	}
 
 	result := &AnalysisResult{
-		PackageName: "test-package",
+		PackageName:    "test-package",
 		PackageVersion: "1.0.0",
 	}
 
@@ -412,7 +411,7 @@ func TestExportResults_InvalidFormat(t *testing.T) {
 	}
 
 	result := &AnalysisResult{
-		PackageName: "test-package",
+		PackageName:    "test-package",
 		PackageVersion: "1.0.0",
 	}
 
@@ -450,9 +449,6 @@ func TestConfigValidation_EmptyTimeout(t *testing.T) {
 		t.Error("Expected default timeout to be set")
 	}
 }
-
-
-
 
 func TestVerifyIntegrity_InvalidChecksum(t *testing.T) {
 	cfg := &Config{
@@ -597,18 +593,18 @@ func TestCalculateRiskScore(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		result         *AnalysisResult
-		minScore       float64
-		maxScore       float64
+		name     string
+		result   *AnalysisResult
+		minScore float64
+		maxScore float64
 	}{
 		{
 			name: "all valid",
 			result: &AnalysisResult{
 				SignatureVerification: &SignatureVerification{Verified: true, TrustScore: 0.9},
-				IntegrityChecks: &IntegrityChecks{OverallVerified: true, TrustScore: 0.8},
-				SLSAProvenance: &SLSAProvenance{Present: true, TrustScore: 0.9},
-				TransparencyLog: &TransparencyLogVerification{Present: true, TrustScore: 0.8},
+				IntegrityChecks:       &IntegrityChecks{OverallVerified: true, TrustScore: 0.8},
+				SLSAProvenance:        &SLSAProvenance{Present: true, TrustScore: 0.9},
+				TransparencyLog:       &TransparencyLogVerification{Present: true, TrustScore: 0.8},
 			},
 			minScore: 0.8,
 			maxScore: 1.0,
@@ -617,9 +613,9 @@ func TestCalculateRiskScore(t *testing.T) {
 			name: "integrity invalid",
 			result: &AnalysisResult{
 				SignatureVerification: &SignatureVerification{Verified: true, TrustScore: 0.6},
-				IntegrityChecks: &IntegrityChecks{OverallVerified: false, TrustScore: 0.1},
-				SLSAProvenance: &SLSAProvenance{Present: true, TrustScore: 0.7},
-				TransparencyLog: &TransparencyLogVerification{Present: true, TrustScore: 0.5},
+				IntegrityChecks:       &IntegrityChecks{OverallVerified: false, TrustScore: 0.1},
+				SLSAProvenance:        &SLSAProvenance{Present: true, TrustScore: 0.7},
+				TransparencyLog:       &TransparencyLogVerification{Present: true, TrustScore: 0.5},
 			},
 			minScore: 0.3,
 			maxScore: 0.7,
@@ -636,8 +632,6 @@ func TestCalculateRiskScore(t *testing.T) {
 		})
 	}
 }
-
-
 
 func TestDefaultConfig(t *testing.T) {
 	config := DefaultConfig()
@@ -689,8 +683,8 @@ func TestVerifySignatures(t *testing.T) {
 
 func TestVerifySLSAProvenance(t *testing.T) {
 	cfg := &Config{
-		Enabled:        true,
-		SLSAEnabled:    true,
+		Enabled:          true,
+		SLSAEnabled:      true,
 		VerifyProvenance: true,
 	}
 
@@ -827,8 +821,8 @@ func TestAssessTrust(t *testing.T) {
 			},
 		},
 		SLSAProvenance: &SLSAProvenance{
-			Present: true,
-			Builder: &SLSABuilder{ID: "trusted-builder", Trusted: true},
+			Present:    true,
+			Builder:    &SLSABuilder{ID: "trusted-builder", Trusted: true},
 			Compliance: &SLSACompliance{Score: 0.8},
 		},
 	}
@@ -894,7 +888,7 @@ func TestCalculateIntegrityTrustScore(t *testing.T) {
 	}
 
 	checks := &IntegrityChecks{
-		OverallVerified: true,
+		OverallVerified:  true,
 		HashVerification: &HashVerification{Verified: true},
 		SizeVerification: &SizeVerification{Verified: true},
 		ContentVerification: &ContentVerification{
@@ -944,8 +938,8 @@ func TestAssessSLSACompliance(t *testing.T) {
 	}
 
 	provenance := &SLSAProvenance{
-		Level:   3,
-		Builder: &SLSABuilder{ID: "test-builder", Trusted: true},
+		Level:     3,
+		Builder:   &SLSABuilder{ID: "test-builder", Trusted: true},
 		BuildType: "test-build",
 	}
 
@@ -1278,19 +1272,19 @@ func TestAnalyzePackageDisabled(t *testing.T) {
 // Additional comprehensive tests for better coverage
 func TestAnalyzePackageFullFlow(t *testing.T) {
 	cfg := &Config{
-		Enabled:                   true,
-		VerifySignatures:          true,
-		VerifyProvenance:          true,
-		VerifyIntegrity:           true,
-		RequireTransparencyLog:    true,
-		TrustedSigners:            []string{"trusted@example.com"},
-		TrustedBuilders:           []string{"trusted-builder"},
-		TrustedPublishers:         []string{"trusted-publisher"},
-		Timeout:                   "30s",
-		RetryAttempts:             3,
-		SigstoreEnabled:           true,
-		SLSAEnabled:               true,
-		SLSAMinLevel:              1,
+		Enabled:                true,
+		VerifySignatures:       true,
+		VerifyProvenance:       true,
+		VerifyIntegrity:        true,
+		RequireTransparencyLog: true,
+		TrustedSigners:         []string{"trusted@example.com"},
+		TrustedBuilders:        []string{"trusted-builder"},
+		TrustedPublishers:      []string{"trusted-publisher"},
+		Timeout:                "30s",
+		RetryAttempts:          3,
+		SigstoreEnabled:        true,
+		SLSAEnabled:            true,
+		SLSAMinLevel:           1,
 	}
 
 	analyzer, err := NewProvenanceAnalyzer(cfg)
@@ -1408,7 +1402,7 @@ func TestVerifyTransparencyLogEntryError(t *testing.T) {
 
 	ctx := context.Background()
 	entry := &TransparencyLogEntry{
-		LogIndex: 12345,
+		LogIndex:       12345,
 		IntegratedTime: time.Now().Unix(),
 	}
 
@@ -1659,13 +1653,13 @@ func TestExportResultsWithCompleteData(t *testing.T) {
 	}
 
 	result := &AnalysisResult{
-		PackageName:    "test-package",
-		PackageVersion: "1.0.0",
-		Registry:       "npm",
-		OverallScore:   0.8,
-		TrustLevel:     "HIGH",
-		Findings:       []Finding{{Type: "info", Description: "test", Severity: "low"}},
-		Warnings:       []string{"test warning"},
+		PackageName:     "test-package",
+		PackageVersion:  "1.0.0",
+		Registry:        "npm",
+		OverallScore:    0.8,
+		TrustLevel:      "HIGH",
+		Findings:        []Finding{{Type: "info", Description: "test", Severity: "low"}},
+		Warnings:        []string{"test warning"},
 		Recommendations: []string{"test recommendation"},
 	}
 

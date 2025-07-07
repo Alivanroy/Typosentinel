@@ -119,27 +119,27 @@ func (a *EnhancedGoAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types
 		if sumEntry, exists := sumEntries[req.Path+"@"+req.Version]; exists {
 			pkg.Metadata = &types.PackageMetadata{
 				Metadata: map[string]interface{}{
-					"checksum": sumEntry.Checksum,
-					"indirect": req.Indirect,
-					"module":   modInfo.Module,
+					"checksum":   sumEntry.Checksum,
+					"indirect":   req.Indirect,
+					"module":     modInfo.Module,
 					"go_version": modInfo.GoVersion,
 				},
 			}
-			
+
 			// Validate checksum integrity
 			if err := a.validateChecksum(pkg, sumEntry.Checksum); err != nil {
 				pkg.Threats = append(pkg.Threats, types.Threat{
-					Type:        "checksum_mismatch",
-					Severity:    types.SeverityHigh,
-					Description: fmt.Sprintf("Checksum validation failed: %v", err),
+					Type:            "checksum_mismatch",
+					Severity:        types.SeverityHigh,
+					Description:     fmt.Sprintf("Checksum validation failed: %v", err),
 					DetectionMethod: "go_analyzer",
 				})
 			}
 		} else {
 			pkg.Metadata = &types.PackageMetadata{
 				Metadata: map[string]interface{}{
-					"indirect": req.Indirect,
-					"module":   modInfo.Module,
+					"indirect":   req.Indirect,
+					"module":     modInfo.Module,
 					"go_version": modInfo.GoVersion,
 				},
 			}
@@ -565,9 +565,9 @@ func (a *EnhancedGoAnalyzer) enrichGoModuleMetadata(pkg *types.Package) error {
 		// Check for suspicious version patterns
 		if a.hasSuspiciousVersionPattern(pkg.Version, versions) {
 			pkg.Threats = append(pkg.Threats, types.Threat{
-				Type:        "suspicious_version",
-				Severity:    types.SeverityMedium,
-				Description: "Module version follows suspicious pattern",
+				Type:            "suspicious_version",
+				Severity:        types.SeverityMedium,
+				Description:     "Module version follows suspicious pattern",
 				DetectionMethod: "go_analyzer",
 			})
 		}
@@ -581,9 +581,9 @@ func (a *EnhancedGoAnalyzer) analyzeGoModuleVulnerabilities(pkg *types.Package) 
 	// Check for typosquatting
 	if a.isTyposquattingCandidate(pkg.Name) {
 		pkg.Threats = append(pkg.Threats, types.Threat{
-			Type:        "typosquatting",
-			Severity:    types.SeverityHigh,
-			Description: fmt.Sprintf("Module name '%s' may be a typosquatting attempt", pkg.Name),
+			Type:            "typosquatting",
+			Severity:        types.SeverityHigh,
+			Description:     fmt.Sprintf("Module name '%s' may be a typosquatting attempt", pkg.Name),
 			DetectionMethod: "go_analyzer",
 		})
 	}
@@ -591,9 +591,9 @@ func (a *EnhancedGoAnalyzer) analyzeGoModuleVulnerabilities(pkg *types.Package) 
 	// Check for suspicious module characteristics
 	if a.hasSuspiciousCharacteristics(pkg) {
 		pkg.Threats = append(pkg.Threats, types.Threat{
-			Type:        "suspicious_module",
-			Severity:    types.SeverityMedium,
-			Description: "Module exhibits suspicious characteristics",
+			Type:            "suspicious_module",
+			Severity:        types.SeverityMedium,
+			Description:     "Module exhibits suspicious characteristics",
 			DetectionMethod: "go_analyzer",
 		})
 	}
@@ -625,9 +625,9 @@ func (a *EnhancedGoAnalyzer) analyzeReplaceDirective(replace GoReplace, packages
 	// Analyze replace directive for security implications
 	if a.isSuspiciousReplace(replace) {
 		targetPkg.Threats = append(targetPkg.Threats, types.Threat{
-			Type:        "suspicious_replace",
-			Severity:    types.SeverityMedium,
-			Description: fmt.Sprintf("Suspicious replace directive: %s => %s", replace.OldPath, replace.NewPath),
+			Type:            "suspicious_replace",
+			Severity:        types.SeverityMedium,
+			Description:     fmt.Sprintf("Suspicious replace directive: %s => %s", replace.OldPath, replace.NewPath),
 			DetectionMethod: "go_analyzer",
 		})
 	}
@@ -635,9 +635,9 @@ func (a *EnhancedGoAnalyzer) analyzeReplaceDirective(replace GoReplace, packages
 	// Check for local path replacements (potential security risk)
 	if a.isLocalPathReplace(replace.NewPath) {
 		targetPkg.Threats = append(targetPkg.Threats, types.Threat{
-			Type:        "local_replace",
-			Severity:    types.SeverityLow,
-			Description: "Module replaced with local path - verify integrity",
+			Type:            "local_replace",
+			Severity:        types.SeverityLow,
+			Description:     "Module replaced with local path - verify integrity",
 			DetectionMethod: "go_analyzer",
 		})
 	}
@@ -708,9 +708,9 @@ func (a *EnhancedGoAnalyzer) checkKnownVulnerabilities(moduleName, version strin
 		for _, vulnVersion := range vulnVersions {
 			if version == vulnVersion {
 				threats = append(threats, types.Threat{
-					Type:        "known_vulnerability",
-					Severity:    types.SeverityHigh,
-					Description: fmt.Sprintf("Known vulnerability in %s version %s", moduleName, version),
+					Type:            "known_vulnerability",
+					Severity:        types.SeverityHigh,
+					Description:     fmt.Sprintf("Known vulnerability in %s version %s", moduleName, version),
 					DetectionMethod: "go_analyzer",
 				})
 			}

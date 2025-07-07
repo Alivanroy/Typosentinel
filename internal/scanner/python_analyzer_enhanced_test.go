@@ -137,8 +137,8 @@ dependencies = ["ruff", "black"]`,
 
 			// Parse the file
 			projectInfo := &ProjectInfo{
-				Path:     tempDir,
-				Type:     "python",
+				Path: tempDir,
+				Type: "python",
 			}
 			packages, err := analyzer.parsePoetryProject(projectInfo)
 			if err != nil {

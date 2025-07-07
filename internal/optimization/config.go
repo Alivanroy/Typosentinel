@@ -49,11 +49,11 @@ func DefaultCacheConfig() *CacheConfig {
 			Encryption:  false,
 		},
 		L3Config: &L3Config{
-			Enabled:     false, // Redis disabled by default
-			RedisURL:    "redis://localhost:6379",
-			DefaultTTL:  2 * time.Hour,
-			MaxRetries:  3,
-			RetryDelay:  1 * time.Second,
+			Enabled:    false, // Redis disabled by default
+			RedisURL:   "redis://localhost:6379",
+			DefaultTTL: 2 * time.Hour,
+			MaxRetries: 3,
+			RetryDelay: 1 * time.Second,
 		},
 		Warming: &WarmingConfig{
 			Enabled:         true,
@@ -62,10 +62,10 @@ func DefaultCacheConfig() *CacheConfig {
 			PredictiveMode:  false,
 		},
 		Analysis: &AnalysisConfig{
-			Enabled:           true,
-			AnalysisInterval:  5 * time.Minute,
-			RetentionPeriod:   24 * time.Hour,
-			Recommendations:   true,
+			Enabled:          true,
+			AnalysisInterval: 5 * time.Minute,
+			RetentionPeriod:  24 * time.Hour,
+			Recommendations:  true,
 		},
 	}
 }
@@ -118,7 +118,7 @@ func DefaultMonitoringConfig() *MonitoringConfig {
 // DefaultResourceThresholds returns default resource usage thresholds
 func DefaultResourceThresholds() *ResourceThresholds {
 	return &ResourceThresholds{
-		MaxCPUUsage:    80.0, // 80%
+		MaxCPUUsage:    80.0,               // 80%
 		MaxMemoryUsage: 1024 * 1024 * 1024, // 1GB
 		MaxGoroutines:  1000,
 		MaxGCPause:     100 * time.Millisecond,
@@ -375,12 +375,12 @@ func OptimizeConfigForWorkload(config *PerformanceConfig, workload WorkloadProfi
 
 // WorkloadProfile describes the expected workload characteristics
 type WorkloadProfile struct {
-	Type                string  // high_throughput, low_latency, memory_constrained, cpu_intensive, io_intensive
-	ExpectedRPS         int     // Expected requests per second
-	ExpectedConcurrency int     // Expected concurrent operations
-	MemoryBudget        int64   // Available memory budget
-	CPUCores            int     // Available CPU cores
-	StorageType         string  // SSD, HDD, Network
+	Type                string // high_throughput, low_latency, memory_constrained, cpu_intensive, io_intensive
+	ExpectedRPS         int    // Expected requests per second
+	ExpectedConcurrency int    // Expected concurrent operations
+	MemoryBudget        int64  // Available memory budget
+	CPUCores            int    // Available CPU cores
+	StorageType         string // SSD, HDD, Network
 }
 
 // Helper function for min
@@ -406,7 +406,7 @@ func GetRecommendedConfig() *PerformanceConfig {
 
 	// Adjust cache size based on available memory
 	availableMemory := int64(m.Sys)
-	config.Cache.L1Config.MaxMemory = availableMemory / 8 // Use 1/8 of system memory
+	config.Cache.L1Config.MaxMemory = availableMemory / 8                       // Use 1/8 of system memory
 	config.Cache.L1Config.MaxSize = int(config.Cache.L1Config.MaxMemory / 1024) // Rough estimate
 
 	// Adjust database settings based on system capabilities

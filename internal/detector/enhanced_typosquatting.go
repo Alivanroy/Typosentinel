@@ -12,9 +12,9 @@ import (
 
 // KeyboardLayout represents different keyboard layouts for proximity analysis
 type KeyboardLayout struct {
-	Name     string
-	Layout   map[rune][]rune // character -> adjacent characters
-	Rows     []string        // keyboard rows for row-based analysis
+	Name   string
+	Layout map[rune][]rune // character -> adjacent characters
+	Rows   []string        // keyboard rows for row-based analysis
 }
 
 // CharacterSubstitution represents common character substitution patterns
@@ -34,14 +34,14 @@ type EnhancedTyposquattingDetector struct {
 
 // EnhancedDetectionConfig contains configuration for enhanced detection
 type EnhancedDetectionConfig struct {
-	KeyboardProximityWeight float64
-	VisualSimilarityWeight  float64
+	KeyboardProximityWeight  float64
+	VisualSimilarityWeight   float64
 	PhoneticSimilarityWeight float64
-	MinSimilarityThreshold  float64
-	MaxEditDistance         int
-	EnableKeyboardAnalysis  bool
-	EnableVisualAnalysis    bool
-	EnablePhoneticAnalysis  bool
+	MinSimilarityThreshold   float64
+	MaxEditDistance          int
+	EnableKeyboardAnalysis   bool
+	EnableVisualAnalysis     bool
+	EnablePhoneticAnalysis   bool
 }
 
 // NewEnhancedTyposquattingDetector creates a new enhanced detector
@@ -186,17 +186,17 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 		if similarity >= threshold {
 			// Analyze the type of typosquatting
 			analysis := etd.analyzeTyposquattingType(target.Name, pkg)
-			
+
 			// Check for advanced attack patterns
 			advancedPatterns := etd.detectAdvancedPatterns(target.Name, pkg)
-			
+
 			severity := etd.calculateSeverityEnhanced(similarity, analysis)
-			
+
 			// Adjust severity based on advanced patterns
 			if len(advancedPatterns) > 0 {
 				severity = etd.escalateSeverity(severity)
 			}
-			
+
 			threat := types.Threat{
 				ID:              generateThreatID(),
 				Package:         target.Name,
@@ -272,7 +272,7 @@ func (etd *EnhancedTyposquattingDetector) keyboardProximitySimilarity(s1, s2 str
 	// Calculate proximity-aware edit distance
 	proximityScore := etd.proximityEditDistance(s1, s2, layout)
 	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
-	
+
 	if maxLen == 0 {
 		return 1.0
 	}
@@ -308,11 +308,11 @@ func (etd *EnhancedTyposquattingDetector) proximityEditDistance(s1, s2 string, l
 			} else {
 				// Calculate proximity cost for substitution
 				proximityCost := etd.getProximityCost(runes1[i-1], runes2[j-1], layout)
-				
+
 				dp[i][j] = math.Min(
 					math.Min(
-						dp[i-1][j]+1.0,      // deletion
-						dp[i][j-1]+1.0),     // insertion
+						dp[i-1][j]+1.0,  // deletion
+						dp[i][j-1]+1.0), // insertion
 					dp[i-1][j-1]+proximityCost) // substitution with proximity cost
 			}
 		}
@@ -438,7 +438,7 @@ func (etd *EnhancedTyposquattingDetector) substitutionSimilarity(s1, s2, substit
 	// Use edit distance with substitution weights
 	distance := etd.weightedEditDistance(s1, s2, substitutionType)
 	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
-	
+
 	if maxLen == 0 {
 		return 1.0
 	}
@@ -510,7 +510,7 @@ func (etd *EnhancedTyposquattingDetector) shouldSkipLengthCheck(s1, s2 string) b
 	len1, len2 := len(s1), len(s2)
 	maxLen := math.Max(float64(len1), float64(len2))
 	minLen := math.Min(float64(len1), float64(len2))
-	
+
 	// Skip if length difference is more than 50% of the longer string
 	return (maxLen-minLen)/maxLen > 0.5
 }
@@ -518,27 +518,27 @@ func (etd *EnhancedTyposquattingDetector) shouldSkipLengthCheck(s1, s2 string) b
 // detectAdvancedPatterns detects sophisticated typosquatting patterns
 func (etd *EnhancedTyposquattingDetector) detectAdvancedPatterns(target, candidate string) []string {
 	var patterns []string
-	
+
 	// Check for homograph attacks (Unicode confusables)
 	if etd.hasHomographs(target, candidate) {
 		patterns = append(patterns, "homograph_attack")
 	}
-	
+
 	// Check for subdomain/namespace confusion
 	if etd.hasNamespaceConfusion(target, candidate) {
 		patterns = append(patterns, "namespace_confusion")
 	}
-	
+
 	// Check for brand impersonation patterns
 	if etd.hasBrandImpersonation(target, candidate) {
 		patterns = append(patterns, "brand_impersonation")
 	}
-	
+
 	// Check for character insertion/deletion patterns
 	if etd.hasInsertionDeletionPattern(target, candidate) {
 		patterns = append(patterns, "insertion_deletion")
 	}
-	
+
 	return patterns
 }
 
@@ -554,14 +554,14 @@ func (etd *EnhancedTyposquattingDetector) hasHomographs(target, candidate string
 		'x': {'х', 'χ'}, // Latin x, Cyrillic x, Greek chi
 		'y': {'у', 'γ'}, // Latin y, Cyrillic y, Greek gamma
 	}
-	
+
 	targetRunes := []rune(target)
 	candidateRunes := []rune(candidate)
-	
+
 	if len(targetRunes) != len(candidateRunes) {
 		return false
 	}
-	
+
 	for i, tr := range targetRunes {
 		cr := candidateRunes[i]
 		if tr != cr {
@@ -582,7 +582,7 @@ func (etd *EnhancedTyposquattingDetector) hasHomographs(target, candidate string
 			}
 		}
 	}
-	
+
 	return true
 }
 
@@ -596,7 +596,7 @@ func (etd *EnhancedTyposquattingDetector) hasNamespaceConfusion(target, candidat
 			return parts[1] == candidate
 		}
 	}
-	
+
 	if strings.HasPrefix(candidate, "@") && !strings.HasPrefix(target, "@") {
 		// Remove scope from candidate and compare
 		parts := strings.Split(candidate, "/")
@@ -604,7 +604,7 @@ func (etd *EnhancedTyposquattingDetector) hasNamespaceConfusion(target, candidat
 			return parts[1] == target
 		}
 	}
-	
+
 	return false
 }
 
@@ -615,7 +615,7 @@ func (etd *EnhancedTyposquattingDetector) hasBrandImpersonation(target, candidat
 		"official", "org", "js", "node", "npm", "lib", "core", "main", "base",
 		"framework", "sdk", "api", "client", "server", "dev", "prod",
 	}
-	
+
 	for _, pattern := range patterns {
 		// Check if candidate adds suspicious suffixes/prefixes
 		if strings.HasPrefix(candidate, target+"-"+pattern) ||
@@ -625,7 +625,7 @@ func (etd *EnhancedTyposquattingDetector) hasBrandImpersonation(target, candidat
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -635,12 +635,12 @@ func (etd *EnhancedTyposquattingDetector) hasInsertionDeletionPattern(target, ca
 	if len(candidate) == len(target)+1 {
 		return etd.isSingleCharacterInsertion(target, candidate)
 	}
-	
+
 	// Check for single character deletion
 	if len(target) == len(candidate)+1 {
 		return etd.isSingleCharacterInsertion(candidate, target)
 	}
-	
+
 	return false
 }
 
@@ -648,7 +648,7 @@ func (etd *EnhancedTyposquattingDetector) hasInsertionDeletionPattern(target, ca
 func (etd *EnhancedTyposquattingDetector) isSingleCharacterInsertion(shorter, longer string) bool {
 	i, j := 0, 0
 	differences := 0
-	
+
 	for i < len(shorter) && j < len(longer) {
 		if shorter[i] == longer[j] {
 			i++
@@ -661,7 +661,7 @@ func (etd *EnhancedTyposquattingDetector) isSingleCharacterInsertion(shorter, lo
 			j++ // Skip the inserted character
 		}
 	}
-	
+
 	return differences <= 1
 }
 
@@ -682,11 +682,11 @@ func (etd *EnhancedTyposquattingDetector) escalateSeverity(current types.Severit
 // generateRecommendation creates enhanced recommendations based on detected patterns
 func (etd *EnhancedTyposquattingDetector) generateRecommendation(target, candidate string, patterns []string) string {
 	baseRec := fmt.Sprintf("Verify that '%s' is the intended package. Consider using '%s' instead if that was the intention.", target, candidate)
-	
+
 	if len(patterns) == 0 {
 		return baseRec
 	}
-	
+
 	additionalWarnings := []string{}
 	for _, pattern := range patterns {
 		switch pattern {
@@ -700,11 +700,11 @@ func (etd *EnhancedTyposquattingDetector) generateRecommendation(target, candida
 			additionalWarnings = append(additionalWarnings, "WARNING: Character insertion/deletion pattern detected")
 		}
 	}
-	
+
 	if len(additionalWarnings) > 0 {
 		return baseRec + " " + strings.Join(additionalWarnings, ". ") + "."
 	}
-	
+
 	return baseRec
 }
 
@@ -767,51 +767,51 @@ func (etd *EnhancedTyposquattingDetector) weightedAverage(scores, weights []floa
 
 // TyposquattingAnalysis contains detailed analysis of typosquatting type
 type TyposquattingAnalysis struct {
-	KeyboardErrors   int
-	VisualSimilarity float64
+	KeyboardErrors     int
+	VisualSimilarity   float64
 	PhoneticSimilarity float64
-	EditDistance     int
-	Transpositions   int
-	Insertions       int
-	Deletions        int
-	Substitutions    int
-	PrimaryType      string
+	EditDistance       int
+	Transpositions     int
+	Insertions         int
+	Deletions          int
+	Substitutions      int
+	PrimaryType        string
 }
 
 // analyzeTyposquattingType analyzes the specific type of typosquatting
 func (etd *EnhancedTyposquattingDetector) analyzeTyposquattingType(s1, s2 string) TyposquattingAnalysis {
 	analysis := TyposquattingAnalysis{}
-	
+
 	// Calculate basic metrics
 	analysis.EditDistance = etd.basicEditDistance(s1, s2)
 	analysis.VisualSimilarity = etd.visualSimilarity(s1, s2)
 	analysis.PhoneticSimilarity = etd.phoneticSimilarity(s1, s2)
-	
+
 	// Analyze edit operations
 	operations := etd.analyzeEditOperations(s1, s2)
 	analysis.Insertions = operations["insertions"]
 	analysis.Deletions = operations["deletions"]
 	analysis.Substitutions = operations["substitutions"]
 	analysis.Transpositions = operations["transpositions"]
-	
+
 	// Count keyboard errors
 	analysis.KeyboardErrors = etd.countKeyboardErrors(s1, s2)
-	
+
 	// Determine primary type
 	analysis.PrimaryType = etd.determinePrimaryType(analysis)
-	
+
 	return analysis
 }
 
 // analyzeEditOperations analyzes the types of edit operations needed
 func (etd *EnhancedTyposquattingDetector) analyzeEditOperations(s1, s2 string) map[string]int {
 	operations := map[string]int{
-		"insertions":    0,
-		"deletions":     0,
-		"substitutions": 0,
+		"insertions":     0,
+		"deletions":      0,
+		"substitutions":  0,
 		"transpositions": 0,
 	}
-	
+
 	// Simple analysis based on length difference and character comparison
 	lenDiff := len(s2) - len(s1)
 	if lenDiff > 0 {
@@ -819,7 +819,7 @@ func (etd *EnhancedTyposquattingDetector) analyzeEditOperations(s1, s2 string) m
 	} else if lenDiff < 0 {
 		operations["deletions"] = -lenDiff
 	}
-	
+
 	// Count substitutions by comparing characters at same positions
 	minLen := min(len(s1), len(s2))
 	for i := 0; i < minLen; i++ {
@@ -827,7 +827,7 @@ func (etd *EnhancedTyposquattingDetector) analyzeEditOperations(s1, s2 string) m
 			operations["substitutions"]++
 		}
 	}
-	
+
 	// Simple transposition detection
 	if len(s1) == len(s2) && operations["substitutions"] == 2 {
 		// Check if it's a simple adjacent transposition
@@ -839,7 +839,7 @@ func (etd *EnhancedTyposquattingDetector) analyzeEditOperations(s1, s2 string) m
 			}
 		}
 	}
-	
+
 	return operations
 }
 
@@ -848,17 +848,17 @@ func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int
 	if len(etd.keyboardLayouts) == 0 {
 		return 0
 	}
-	
+
 	layout := etd.keyboardLayouts[0] // Use QWERTY
 	count := 0
-	
+
 	// For strings of same length, check position-by-position
 	if len(s1) == len(s2) {
 		for i := 0; i < len(s1); i++ {
 			if s1[i] != s2[i] {
 				c1 := unicode.ToLower(rune(s1[i]))
 				c2 := unicode.ToLower(rune(s2[i]))
-				
+
 				// Check if characters are adjacent on keyboard
 				if adjacent, ok := layout.Layout[c1]; ok {
 					for _, adj := range adjacent {
@@ -878,7 +878,7 @@ func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int
 			if s1[i] != s2[i] {
 				c1 := unicode.ToLower(rune(s1[i]))
 				c2 := unicode.ToLower(rune(s2[i]))
-				
+
 				// Check if characters are adjacent on keyboard
 				if adjacent, ok := layout.Layout[c1]; ok {
 					for _, adj := range adjacent {
@@ -891,7 +891,7 @@ func (etd *EnhancedTyposquattingDetector) countKeyboardErrors(s1, s2 string) int
 			}
 		}
 	}
-	
+
 	return count
 }
 
@@ -935,7 +935,7 @@ func (etd *EnhancedTyposquattingDetector) calculateSeverityEnhanced(similarity f
 	} else if similarity >= 0.8 {
 		baseSeverity = types.SeverityMedium
 	}
-	
+
 	// Adjust based on analysis
 	if analysis.KeyboardErrors > 0 || analysis.PrimaryType == "keyboard_proximity" {
 		// Keyboard errors are more likely to be accidental typos
@@ -943,21 +943,21 @@ func (etd *EnhancedTyposquattingDetector) calculateSeverityEnhanced(similarity f
 			return types.SeverityHigh
 		}
 	}
-	
+
 	if analysis.VisualSimilarity > 0.9 || analysis.PrimaryType == "visual_similarity" {
 		// Visual similarity attacks are particularly dangerous
 		if baseSeverity == types.SeverityMedium {
 			return types.SeverityHigh
 		}
 	}
-	
+
 	return baseSeverity
 }
 
 // generateThreatDescription generates a detailed threat description
 func (etd *EnhancedTyposquattingDetector) generateThreatDescription(target, similar string, analysis TyposquattingAnalysis) string {
 	baseDesc := fmt.Sprintf("Package name '%s' is very similar to '%s' (%.1f%% similarity)", target, similar, analysis.VisualSimilarity*100)
-	
+
 	switch analysis.PrimaryType {
 	case "keyboard_proximity":
 		return fmt.Sprintf("%s. Detected %d potential keyboard errors, suggesting possible typosquatting attack.", baseDesc, analysis.KeyboardErrors)
@@ -998,7 +998,7 @@ func (etd *EnhancedTyposquattingDetector) generateEvidence(target, similar strin
 			Score:       analysis.PhoneticSimilarity,
 		},
 	}
-	
+
 	if analysis.KeyboardErrors > 0 {
 		evidence = append(evidence, types.Evidence{
 			Type:        "keyboard_errors",
@@ -1007,7 +1007,7 @@ func (etd *EnhancedTyposquattingDetector) generateEvidence(target, similar strin
 			Score:       float64(analysis.KeyboardErrors) / float64(len(target)),
 		})
 	}
-	
+
 	if analysis.Transpositions > 0 {
 		evidence = append(evidence, types.Evidence{
 			Type:        "transpositions",
@@ -1016,6 +1016,6 @@ func (etd *EnhancedTyposquattingDetector) generateEvidence(target, similar strin
 			Score:       0.9, // High score for transpositions
 		})
 	}
-	
+
 	return evidence
 }

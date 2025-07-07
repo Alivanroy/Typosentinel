@@ -127,10 +127,10 @@ func TestThreatUpdater_ValidateThreat(t *testing.T) {
 
 	// Invalid threats
 	invalidThreats := []ExternalThreat{
-		{Registry: "npm", ThreatType: "typosquatting", Severity: "high", Confidence: 0.8}, // Missing package name
-		{PackageName: "test", ThreatType: "typosquatting", Severity: "high", Confidence: 0.8}, // Missing registry
-		{PackageName: "test", Registry: "npm", Severity: "high", Confidence: 0.8}, // Missing threat type
-		{PackageName: "test", Registry: "npm", ThreatType: "typosquatting", Confidence: 0.8}, // Missing severity
+		{Registry: "npm", ThreatType: "typosquatting", Severity: "high", Confidence: 0.8},                      // Missing package name
+		{PackageName: "test", ThreatType: "typosquatting", Severity: "high", Confidence: 0.8},                  // Missing registry
+		{PackageName: "test", Registry: "npm", Severity: "high", Confidence: 0.8},                              // Missing threat type
+		{PackageName: "test", Registry: "npm", ThreatType: "typosquatting", Confidence: 0.8},                   // Missing severity
 		{PackageName: "test", Registry: "npm", ThreatType: "typosquatting", Severity: "high", Confidence: 1.5}, // Invalid confidence
 	}
 

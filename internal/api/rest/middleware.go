@@ -53,15 +53,15 @@ func loggingMiddleware() gin.HandlerFunc {
 	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// Custom log format
 		logData := map[string]interface{}{
-			"timestamp":    param.TimeStamp.Format(time.RFC3339),
-			"method":       param.Method,
-			"path":         param.Path,
-			"status":       param.StatusCode,
-			"latency":      param.Latency.String(),
-			"client_ip":    param.ClientIP,
-			"user_agent":   param.Request.UserAgent(),
-			"request_id":   param.Request.Header.Get("X-Request-ID"),
-			"body_size":    param.BodySize,
+			"timestamp":  param.TimeStamp.Format(time.RFC3339),
+			"method":     param.Method,
+			"path":       param.Path,
+			"status":     param.StatusCode,
+			"latency":    param.Latency.String(),
+			"client_ip":  param.ClientIP,
+			"user_agent": param.Request.UserAgent(),
+			"request_id": param.Request.Header.Get("X-Request-ID"),
+			"body_size":  param.BodySize,
 		}
 
 		if param.ErrorMessage != "" {
@@ -159,7 +159,7 @@ func rateLimitMiddleware(rateLimitConfig config.APIRateLimiting) gin.HandlerFunc
 
 	// Initialize global rate limiter if not already done
 	if globalRateLimiter == nil {
-	globalRateLimiter = NewRateLimiter(rateLimitConfig.Global.RequestsPerSecond, rateLimitConfig.Global.BurstSize)
+		globalRateLimiter = NewRateLimiter(rateLimitConfig.Global.RequestsPerSecond, rateLimitConfig.Global.BurstSize)
 	}
 
 	return func(c *gin.Context) {
@@ -171,14 +171,14 @@ func rateLimitMiddleware(rateLimitConfig config.APIRateLimiting) gin.HandlerFunc
 		if !globalRateLimiter.Allow(key) {
 			// Add rate limit headers
 			c.Header("X-RateLimit-Limit", strconv.Itoa(rateLimitConfig.Global.RequestsPerSecond))
-		c.Header("X-RateLimit-Remaining", "0")
-		c.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(time.Second).Unix(), 10))
+			c.Header("X-RateLimit-Remaining", "0")
+			c.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(time.Second).Unix(), 10))
 
 			log.Printf("Rate limit exceeded for key: %s, IP: %s, path: %s", key, c.ClientIP(), c.Request.URL.Path)
 
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":   "Rate limit exceeded",
-				"message": "Too many requests. Please try again later.",
+				"error":       "Rate limit exceeded",
+				"message":     "Too many requests. Please try again later.",
 				"retry_after": 1,
 			})
 			c.Abort()
@@ -198,8 +198,8 @@ func authMiddleware(authConfig *config.APIAuthentication) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Skip authentication for health checks and public endpoints
 		path := c.Request.URL.Path
-		if path == "/health" || path == "/ready" || path == "/metrics" || 
-		   strings.HasSuffix(path, "/system/status") {
+		if path == "/health" || path == "/ready" || path == "/metrics" ||
+			strings.HasSuffix(path, "/system/status") {
 			c.Next()
 			return
 		}
@@ -325,8 +325,6 @@ func authenticateAPIKey(c *gin.Context, authConfig *config.APIAuthentication) (b
 	}
 
 	return false, ""
-
-	return false, ""
 }
 
 // authenticateJWT authenticates using JWT token
@@ -349,11 +347,11 @@ func authenticateJWT(c *gin.Context, authConfig *config.APIAuthentication) (bool
 			log.Printf("JWT validation failed: %v", err)
 			return false, ""
 		}
-		
+
 		// Set additional context for role-based access
 		c.Set("user_role", claims.Role)
 		c.Set("user_name", claims.Name)
-		
+
 		return true, claims.Subject
 	}
 

@@ -48,7 +48,7 @@ func (f *OSVFeed) GetType() string {
 // Initialize sets up the OSV feed
 func (f *OSVFeed) Initialize(ctx context.Context, config map[string]interface{}) error {
 	f.logger.Info("Initializing OSV threat feed")
-	
+
 	// Set update interval from config
 	if interval, ok := config["update_interval"]; ok {
 		if duration, ok := interval.(time.Duration); ok {
@@ -59,11 +59,11 @@ func (f *OSVFeed) Initialize(ctx context.Context, config map[string]interface{})
 	} else {
 		f.updateInterval = 1 * time.Hour // Default
 	}
-	
+
 	f.status.State = "active"
 	f.status.UpdateInterval = f.updateInterval
 	f.status.LastUpdate = time.Now()
-	
+
 	return nil
 }
 
@@ -72,10 +72,10 @@ func (f *OSVFeed) FetchThreats(ctx context.Context, since time.Time) ([]ThreatIn
 	f.logger.Debug("Fetching threats from OSV feed", map[string]interface{}{
 		"since": since,
 	})
-	
+
 	// Query OSV API for vulnerabilities since the given time
 	url := fmt.Sprintf("%s/query", f.baseURL)
-	
+
 	// Create query payload
 	queryPayload := map[string]interface{}{
 		"version": "1",
@@ -83,20 +83,20 @@ func (f *OSVFeed) FetchThreats(ctx context.Context, since time.Time) ([]ThreatIn
 			"modified_after": since.Format(time.RFC3339),
 		},
 	}
-	
+
 	payloadBytes, err := json.Marshal(queryPayload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal query payload: %w", err)
 	}
-	
+
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "Typosentinel/1.0")
-	
+
 	resp, err := f.client.Do(req)
 	if err != nil {
 		f.status.LastError = err.Error()
@@ -105,7 +105,7 @@ func (f *OSVFeed) FetchThreats(ctx context.Context, since time.Time) ([]ThreatIn
 		return nil, fmt.Errorf("failed to fetch from OSV API: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		errorMsg := fmt.Sprintf("OSV API returned status %d", resp.StatusCode)
 		f.status.LastError = errorMsg
@@ -113,7 +113,7 @@ func (f *OSVFeed) FetchThreats(ctx context.Context, since time.Time) ([]ThreatIn
 		f.status.Healthy = false
 		return nil, fmt.Errorf(errorMsg)
 	}
-	
+
 	var osvResponse struct {
 		Vulns []struct {
 			ID       string `json:"id"`
@@ -136,30 +136,30 @@ func (f *OSVFeed) FetchThreats(ctx context.Context, since time.Time) ([]ThreatIn
 			} `json:"references"`
 		} `json:"vulns"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&osvResponse); err != nil {
 		f.status.LastError = err.Error()
 		f.status.State = "error"
 		f.status.Healthy = false
 		return nil, fmt.Errorf("failed to decode OSV response: %w", err)
 	}
-	
+
 	// Convert OSV vulnerabilities to ThreatIntelligence format
 	var threats []ThreatIntelligence
 	for _, vuln := range osvResponse.Vulns {
 		modified, _ := time.Parse(time.RFC3339, vuln.Modified)
-		
+
 		for _, affected := range vuln.Affected {
 			severity := "medium"
 			if len(affected.Severity) > 0 {
 				severity = f.mapSeverity(affected.Severity[0].Score)
 			}
-			
+
 			references := make([]string, len(vuln.References))
 			for i, ref := range vuln.References {
 				references[i] = ref.URL
 			}
-			
+
 			threats = append(threats, ThreatIntelligence{
 				ID:              vuln.ID,
 				Source:          "OSV",
@@ -175,19 +175,19 @@ func (f *OSVFeed) FetchThreats(ctx context.Context, since time.Time) ([]ThreatIn
 				LastSeen:        time.Now(),
 				Metadata: map[string]interface{}{
 					"details": vuln.Details,
-					"osv_id": vuln.ID,
+					"osv_id":  vuln.ID,
 				},
 			})
 		}
 	}
-	
+
 	// Update status
 	f.status.LastUpdate = time.Now()
 	f.status.ThreatCount = len(threats)
 	f.status.State = "active"
 	f.status.Healthy = true
 	f.status.LastError = ""
-	
+
 	return threats, nil
 }
 
@@ -256,14 +256,14 @@ func (f *GitHubAdvisoryFeed) GetType() string {
 // Initialize sets up the GitHub Advisory feed
 func (f *GitHubAdvisoryFeed) Initialize(ctx context.Context, config map[string]interface{}) error {
 	f.logger.Info("Initializing GitHub Advisory threat feed")
-	
+
 	// Set token from config
 	if token, ok := config["token"]; ok {
 		if tokenStr, ok := token.(string); ok {
 			f.token = tokenStr
 		}
 	}
-	
+
 	// Set update interval from config
 	if interval, ok := config["update_interval"]; ok {
 		if duration, ok := interval.(time.Duration); ok {
@@ -274,11 +274,11 @@ func (f *GitHubAdvisoryFeed) Initialize(ctx context.Context, config map[string]i
 	} else {
 		f.updateInterval = 1 * time.Hour // Default
 	}
-	
+
 	f.status.State = "active"
 	f.status.UpdateInterval = f.updateInterval
 	f.status.LastUpdate = time.Now()
-	
+
 	return nil
 }
 
@@ -287,14 +287,14 @@ func (f *GitHubAdvisoryFeed) FetchThreats(ctx context.Context, since time.Time) 
 	f.logger.Debug("Fetching threats from GitHub Advisory feed", map[string]interface{}{
 		"since": since,
 	})
-	
+
 	// TODO: Implement actual GitHub Advisory API integration
 	// For now, return empty slice to avoid build errors
 	var threats []ThreatIntelligence
-	
+
 	f.status.LastUpdate = time.Now()
 	f.status.ThreatCount = len(threats)
-	
+
 	return threats, nil
 }
 
@@ -349,7 +349,7 @@ func (f *CustomFeed) Initialize(ctx context.Context, config map[string]interface
 	f.logger.Info("Initializing custom threat feed", map[string]interface{}{
 		"name": f.name,
 	})
-	
+
 	// Set update interval from config
 	if interval, ok := config["update_interval"]; ok {
 		if duration, ok := interval.(time.Duration); ok {
@@ -360,11 +360,11 @@ func (f *CustomFeed) Initialize(ctx context.Context, config map[string]interface
 	} else {
 		f.updateInterval = 1 * time.Hour // Default
 	}
-	
+
 	f.status.State = "active"
 	f.status.UpdateInterval = f.updateInterval
 	f.status.LastUpdate = time.Now()
-	
+
 	return nil
 }
 
@@ -374,7 +374,7 @@ func (f *CustomFeed) FetchThreats(ctx context.Context, since time.Time) ([]Threa
 		"name":  f.name,
 		"since": since,
 	})
-	
+
 	// TODO: Implement custom feed integration based on feed configuration
 	// This could support various formats like JSON, XML, CSV, etc.
 	return []ThreatIntelligence{

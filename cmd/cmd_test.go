@@ -13,12 +13,12 @@ func TestRootCommand(t *testing.T) {
 	if rootCmd == nil {
 		t.Error("Root command should not be nil")
 	}
-	
+
 	// Test command name
 	if rootCmd.Use != "typosentinel" {
 		t.Errorf("Expected command name 'typosentinel', got '%s'", rootCmd.Use)
 	}
-	
+
 	// Test that command has a description
 	if rootCmd.Short == "" {
 		t.Error("Root command should have a short description")
@@ -29,21 +29,21 @@ func TestExecuteHelp(t *testing.T) {
 	// Test that Execute function can handle help command
 	originalArgs := os.Args
 	defer func() { os.Args = originalArgs }()
-	
+
 	// Set args to help
 	os.Args = []string{"typosentinel", "--help"}
-	
+
 	// Capture output
 	var buf bytes.Buffer
 	rootCmd.SetOut(&buf)
 	rootCmd.SetErr(&buf)
 	rootCmd.SetArgs([]string{"--help"})
-	
+
 	err := rootCmd.Execute()
 	if err != nil {
 		t.Errorf("Execute with --help should not return error, got: %v", err)
 	}
-	
+
 	output := buf.String()
 	if len(output) == 0 {
 		t.Error("Help output should not be empty")
@@ -73,11 +73,11 @@ func TestCommandFlags(t *testing.T) {
 	if rootCmd.PersistentFlags().Lookup("config") == nil {
 		t.Error("Config flag should exist")
 	}
-	
+
 	if rootCmd.PersistentFlags().Lookup("verbose") == nil {
 		t.Error("Verbose flag should exist")
 	}
-	
+
 	if rootCmd.PersistentFlags().Lookup("debug") == nil {
 		t.Error("Debug flag should exist")
 	}
@@ -88,7 +88,7 @@ func TestExecute(t *testing.T) {
 	// We can't test Execute() directly as it would run the actual command
 	// Instead, we test that the function exists by checking if we can call it
 	// without panicking in a controlled way
-	
+
 	defer func() {
 		if r := recover(); r != nil {
 			// It's okay if Execute panics due to missing arguments or config
@@ -96,7 +96,7 @@ func TestExecute(t *testing.T) {
 			t.Logf("Execute panicked as expected: %v", r)
 		}
 	}()
-	
+
 	// Test that we can reference the Execute function
 	// This will fail to compile if Execute doesn't exist
 	_ = Execute

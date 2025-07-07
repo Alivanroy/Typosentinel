@@ -269,7 +269,7 @@ func (c *Container) GetScoped(name string, scope string) (interface{}, error) {
 	defer func() {
 		if c.metrics != nil {
 			c.metrics.RecordDuration("container.service_resolution", time.Since(start), interfaces.MetricTags{
-				"service": name,
+				"service":   name,
 				"lifecycle": string(service.Lifecycle),
 			})
 		}
@@ -365,7 +365,7 @@ func (c *Container) ClearScope(scope string) error {
 	for name, instance := range scopedInstances {
 		if service := c.services[name]; service != nil && service.Finalizer != nil {
 			if err := service.Finalizer(instance); err != nil && c.logger != nil {
-				c.logger.Error("Failed to finalize scoped service", 
+				c.logger.Error("Failed to finalize scoped service",
 					interfaces.Error(err),
 					interfaces.String("service", name),
 					interfaces.String("scope", scope),
@@ -377,7 +377,7 @@ func (c *Container) ClearScope(scope string) error {
 	delete(c.scoped, scope)
 
 	if c.logger != nil {
-		c.logger.Debug("Scope cleared", 
+		c.logger.Debug("Scope cleared",
 			interfaces.String("scope", scope),
 			interfaces.Int("services", len(scopedInstances)),
 		)
@@ -400,10 +400,10 @@ func (c *Container) Shutdown(ctx context.Context) error {
 			if service := c.services[name]; service != nil && service.Finalizer != nil {
 				if err := service.Finalizer(instance); err != nil {
 					if c.logger != nil {
-					c.logger.Error("Failed to finalize singleton service", 
-						interfaces.Error(err),
-						interfaces.String("service", name),
-					)
+						c.logger.Error("Failed to finalize singleton service",
+							interfaces.Error(err),
+							interfaces.String("service", name),
+						)
 					}
 					if shutdownErr == nil {
 						shutdownErr = err
@@ -481,7 +481,7 @@ func (c *Container) createInstance(ctx context.Context, name string, scope strin
 
 	for i := 0; i < factoryType.NumIn(); i++ {
 		paramType := factoryType.In(i)
-		
+
 		// Try to resolve dependency by type
 		dep, err := c.resolveDependency(paramType, scope)
 		if err != nil {
@@ -514,7 +514,7 @@ func (c *Container) createInstance(ctx context.Context, name string, scope strin
 
 	if c.metrics != nil {
 		c.metrics.IncrementCounter("container.service_created", interfaces.MetricTags{
-			"service": name,
+			"service":   name,
 			"lifecycle": string(service.Lifecycle),
 		})
 	}

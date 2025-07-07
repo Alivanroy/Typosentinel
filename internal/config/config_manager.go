@@ -45,22 +45,22 @@ func (cs ConfigSource) String() string {
 
 // ConfigEntry represents a configuration entry
 type ConfigEntry struct {
-	Key         string        `json:"key"`
-	Value       interface{}   `json:"value"`
-	Source      ConfigSource  `json:"source"`
-	LastUpdated time.Time     `json:"last_updated"`
-	Version     int64         `json:"version"`
+	Key         string                 `json:"key"`
+	Value       interface{}            `json:"value"`
+	Source      ConfigSource           `json:"source"`
+	LastUpdated time.Time              `json:"last_updated"`
+	Version     int64                  `json:"version"`
 	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // ConfigChangeEvent represents a configuration change
 type ConfigChangeEvent struct {
-	Key       string      `json:"key"`
-	OldValue  interface{} `json:"old_value"`
-	NewValue  interface{} `json:"new_value"`
+	Key       string       `json:"key"`
+	OldValue  interface{}  `json:"old_value"`
+	NewValue  interface{}  `json:"new_value"`
 	Source    ConfigSource `json:"source"`
-	Timestamp time.Time   `json:"timestamp"`
-	Version   int64       `json:"version"`
+	Timestamp time.Time    `json:"timestamp"`
+	Version   int64        `json:"version"`
 }
 
 // ConfigWatcher interface for watching configuration changes
@@ -110,56 +110,54 @@ type ConfigManagerOptions struct {
 type ApplicationConfig struct {
 	// Server configuration
 	Server ServerConfig `yaml:"server" json:"server"`
-	
+
 	// Database configuration
 	Database DatabaseConfig `yaml:"database" json:"database"`
-	
+
 	// Redis configuration
 	Redis RedisConfig `yaml:"redis" json:"redis"`
-	
+
 	// Scanner configuration
 	Scanner ScannerConfig `yaml:"scanner" json:"scanner"`
-	
+
 	// Queue configuration
 	Queue QueueConfig `yaml:"queue" json:"queue"`
-	
+
 	// Worker pool configuration
 	WorkerPool WorkerPoolConfig `yaml:"worker_pool" json:"worker_pool"`
-	
+
 	// Cache configuration
 	Cache CacheConfig `yaml:"cache" json:"cache"`
-	
+
 	// Monitoring configuration
 	Monitoring MonitoringConfig `yaml:"monitoring" json:"monitoring"`
-	
+
 	// Load balancer configuration
 	LoadBalancer LoadBalancerConfig `yaml:"load_balancer" json:"load_balancer"`
-	
+
 	// Auto scaler configuration
 	AutoScaler AutoScalerConfig `yaml:"auto_scaler" json:"auto_scaler"`
-	
+
 	// Batch processor configuration
 	BatchProcessor BatchProcessorConfig `yaml:"batch_processor" json:"batch_processor"`
-	
+
 	// Security configuration
 	Security SecurityConfig `yaml:"security" json:"security"`
-	
+
 	// Logging configuration
 	Logging LoggingConfig `yaml:"logging" json:"logging"`
 }
 
 // ServerConfig, DatabaseConfig, and RedisConfig are defined in config.go
 
-
-
 // MonitoringConfig holds monitoring configuration
 type MonitoringConfig struct {
-	Enabled    bool          `yaml:"enabled" json:"enabled"`
-	Interval   time.Duration `yaml:"interval" json:"interval"`
-	Endpoint   string        `yaml:"endpoint" json:"endpoint"`
-	Timeout    time.Duration `yaml:"timeout" json:"timeout"`
-	Retries    int           `yaml:"retries" json:"retries"`
-	Metrics    []string      `yaml:"metrics" json:"metrics"`
+	Enabled  bool          `yaml:"enabled" json:"enabled"`
+	Interval time.Duration `yaml:"interval" json:"interval"`
+	Endpoint string        `yaml:"endpoint" json:"endpoint"`
+	Timeout  time.Duration `yaml:"timeout" json:"timeout"`
+	Retries  int           `yaml:"retries" json:"retries"`
+	Metrics  []string      `yaml:"metrics" json:"metrics"`
 }
 
 // ScannerConfig is defined in config.go
@@ -218,12 +216,12 @@ type L3CacheConfig struct {
 
 // LoadBalancerConfig holds load balancer configuration
 type LoadBalancerConfig struct {
-	Strategy           string        `yaml:"strategy" json:"strategy"`
-	HealthCheckPath    string        `yaml:"health_check_path" json:"health_check_path"`
+	Strategy            string        `yaml:"strategy" json:"strategy"`
+	HealthCheckPath     string        `yaml:"health_check_path" json:"health_check_path"`
 	HealthCheckInterval time.Duration `yaml:"health_check_interval" json:"health_check_interval"`
-	HealthCheckTimeout time.Duration `yaml:"health_check_timeout" json:"health_check_timeout"`
-	MaxRetries         int           `yaml:"max_retries" json:"max_retries"`
-	RetryDelay         time.Duration `yaml:"retry_delay" json:"retry_delay"`
+	HealthCheckTimeout  time.Duration `yaml:"health_check_timeout" json:"health_check_timeout"`
+	MaxRetries          int           `yaml:"max_retries" json:"max_retries"`
+	RetryDelay          time.Duration `yaml:"retry_delay" json:"retry_delay"`
 }
 
 // AutoScalerConfig holds auto scaler configuration
@@ -283,8 +281,8 @@ func (cm *ConfigManager) LoadConfig() error {
 	if cm.configFile != "" {
 		if err := cm.loadFromFile(); err != nil {
 			logger.Error("Failed to load config from file", map[string]interface{}{
-			"error": err.Error(),
-		})
+				"error": err.Error(),
+			})
 		}
 	}
 
@@ -292,8 +290,8 @@ func (cm *ConfigManager) LoadConfig() error {
 	if cm.redis != nil {
 		if err := cm.loadFromRedis(); err != nil {
 			logger.Error("Failed to load config from Redis", map[string]interface{}{
-			"error": err.Error(),
-		})
+				"error": err.Error(),
+			})
 		}
 	}
 
@@ -355,7 +353,7 @@ func (cm *ConfigManager) loadFromRedis() error {
 		value, err := cm.redis.Get(cm.ctx, key).Result()
 		if err != nil {
 			logger.Error("Failed to get config value from Redis", map[string]interface{}{
-				"key": configKey,
+				"key":   configKey,
 				"error": err.Error(),
 			})
 			continue
@@ -417,57 +415,57 @@ func (cm *ConfigManager) loadFromEnvironment() {
 // setDefaults sets default configuration values
 func (cm *ConfigManager) setDefaults() {
 	defaults := map[string]interface{}{
-		"server.host":                    "0.0.0.0",
-		"server.port":                    8080,
-		"server.read_timeout":            "30s",
-		"server.write_timeout":           "30s",
-		"server.idle_timeout":            "60s",
-		"database.host":                  "localhost",
-		"database.port":                  5432,
-		"database.ssl_mode":              "disable",
-		"database.max_open_conns":        25,
-		"database.max_idle_conns":        5,
-		"database.conn_max_lifetime":     "5m",
-		"redis.host":                     "localhost",
-		"redis.port":                     6379,
-		"redis.database":                 0,
-		"redis.pool_size":                10,
-		"redis.min_idle_conns":           2,
-		"redis.dial_timeout":             "5s",
-		"redis.read_timeout":             "3s",
-		"redis.write_timeout":            "3s",
-		"scanner.timeout":                "30s",
-		"scanner.max_retries":            3,
-		"scanner.retry_delay":            "1s",
-		"scanner.concurrency":            10,
-		"scanner.rate_limit_rps":         100,
-		"scanner.cache_enabled":          true,
-		"scanner.cache_ttl":              "1h",
-		"queue.max_retries":              3,
-		"queue.retry_delay":              "30s",
-		"queue.visibility_timeout":       "5m",
-		"queue.poll_interval":            "1s",
-		"queue.batch_size":               10,
-		"worker_pool.min_workers":        1,
-		"worker_pool.max_workers":        20,
-		"worker_pool.initial_workers":    5,
-		"worker_pool.task_timeout":       "5m",
-		"worker_pool.idle_timeout":       "10m",
-		"worker_pool.auto_scale":         true,
-		"cache.default_ttl":              "1h",
-		"cache.cleanup_interval":         "10m",
+		"server.host":                      "0.0.0.0",
+		"server.port":                      8080,
+		"server.read_timeout":              "30s",
+		"server.write_timeout":             "30s",
+		"server.idle_timeout":              "60s",
+		"database.host":                    "localhost",
+		"database.port":                    5432,
+		"database.ssl_mode":                "disable",
+		"database.max_open_conns":          25,
+		"database.max_idle_conns":          5,
+		"database.conn_max_lifetime":       "5m",
+		"redis.host":                       "localhost",
+		"redis.port":                       6379,
+		"redis.database":                   0,
+		"redis.pool_size":                  10,
+		"redis.min_idle_conns":             2,
+		"redis.dial_timeout":               "5s",
+		"redis.read_timeout":               "3s",
+		"redis.write_timeout":              "3s",
+		"scanner.timeout":                  "30s",
+		"scanner.max_retries":              3,
+		"scanner.retry_delay":              "1s",
+		"scanner.concurrency":              10,
+		"scanner.rate_limit_rps":           100,
+		"scanner.cache_enabled":            true,
+		"scanner.cache_ttl":                "1h",
+		"queue.max_retries":                3,
+		"queue.retry_delay":                "30s",
+		"queue.visibility_timeout":         "5m",
+		"queue.poll_interval":              "1s",
+		"queue.batch_size":                 10,
+		"worker_pool.min_workers":          1,
+		"worker_pool.max_workers":          20,
+		"worker_pool.initial_workers":      5,
+		"worker_pool.task_timeout":         "5m",
+		"worker_pool.idle_timeout":         "10m",
+		"worker_pool.auto_scale":           true,
+		"cache.default_ttl":                "1h",
+		"cache.cleanup_interval":           "10m",
 		"monitoring.health_check_interval": "30s",
-		"monitoring.metrics_interval":    "10s",
+		"monitoring.metrics_interval":      "10s",
 		"monitoring.enable_system_metrics": true,
-		"monitoring.enable_alerts":       true,
-		"security.jwt_expiration":        "24h",
-		"security.password_min_length":   8,
-		"security.rate_limit_enabled":    true,
-		"security.rate_limit_rps":        100,
-		"security.cors_enabled":          true,
-		"logging.level":                  "info",
-		"logging.format":                 "json",
-		"logging.output":                 "stdout",
+		"monitoring.enable_alerts":         true,
+		"security.jwt_expiration":          "24h",
+		"security.password_min_length":     8,
+		"security.rate_limit_enabled":      true,
+		"security.rate_limit_rps":          100,
+		"security.cors_enabled":            true,
+		"logging.level":                    "info",
+		"logging.format":                   "json",
+		"logging.output":                   "stdout",
 	}
 
 	for key, value := range defaults {
@@ -670,8 +668,8 @@ func (cm *ConfigManager) Set(key string, value interface{}, source ConfigSource)
 	cm.metrics.ConfigUpdates.WithLabelValues(key, source.String()).Inc()
 
 	logger.Info("Configuration updated", map[string]interface{}{
-		"key": key,
-		"value": value,
+		"key":    key,
+		"value":  value,
 		"source": source.String(),
 	})
 	return nil
@@ -800,9 +798,9 @@ func (cm *ConfigManager) notifyWatchers(event ConfigChangeEvent) {
 			if watchedKey == event.Key || strings.HasPrefix(event.Key, watchedKey+".") {
 				if err := watcher.OnConfigChange(event); err != nil {
 					logger.Error("Config watcher error", map[string]interface{}{
-					"error": err.Error(),
-					"key": event.Key,
-				})
+						"error": err.Error(),
+						"key":   event.Key,
+					})
 				}
 				break
 			}
@@ -830,7 +828,7 @@ func (cm *ConfigManager) storeInRedis(key string, value interface{}) {
 	if err != nil {
 		logger.Error("Failed to marshal config value for Redis", map[string]interface{}{
 			"error": err.Error(),
-			"key": key,
+			"key":   key,
 		})
 		return
 	}
@@ -838,7 +836,7 @@ func (cm *ConfigManager) storeInRedis(key string, value interface{}) {
 	if err := cm.redis.Set(cm.ctx, redisKey, data, 0).Err(); err != nil {
 		logger.Error("Failed to store config in Redis", map[string]interface{}{
 			"error": err.Error(),
-			"key": key,
+			"key":   key,
 		})
 	}
 }
@@ -849,7 +847,7 @@ func (cm *ConfigManager) deleteFromRedis(key string) {
 	if err := cm.redis.Del(cm.ctx, redisKey).Err(); err != nil {
 		logger.Error("Failed to delete config from Redis", map[string]interface{}{
 			"error": err.Error(),
-			"key": key,
+			"key":   key,
 		})
 	}
 }

@@ -11,9 +11,9 @@ import (
 
 func TestNewAnalyzer(t *testing.T) {
 	cfg := &Config{
-		Enabled:     true,
-		SandboxType: "docker",
-		SandboxTimeout: "30s",
+		Enabled:                true,
+		SandboxType:            "docker",
+		SandboxTimeout:         "30s",
 		MaxConcurrentSandboxes: 5,
 	}
 
@@ -84,9 +84,9 @@ func TestAnalyzePackage_Disabled(t *testing.T) {
 
 func TestAnalyzePackage_DockerNotAvailable(t *testing.T) {
 	cfg := &Config{
-		Enabled:     true,
-		SandboxType: "docker",
-		SandboxImage: "node:16-alpine",
+		Enabled:        true,
+		SandboxType:    "docker",
+		SandboxImage:   "node:16-alpine",
 		SandboxTimeout: "60s",
 	}
 
@@ -112,9 +112,9 @@ func TestAnalyzePackage_DockerNotAvailable(t *testing.T) {
 
 func TestAnalyze_Success(t *testing.T) {
 	cfg := &Config{
-		Enabled:     true,
-		SandboxType: "docker",
-		SandboxImage: "node:16-alpine",
+		Enabled:        true,
+		SandboxType:    "docker",
+		SandboxImage:   "node:16-alpine",
 		SandboxTimeout: "60s",
 	}
 
@@ -157,8 +157,8 @@ func TestAnalyze_Success(t *testing.T) {
 
 func TestCreateSandbox_Success(t *testing.T) {
 	cfg := &Config{
-		Enabled:     true,
-		SandboxImage: "node:16-alpine",
+		Enabled:        true,
+		SandboxImage:   "node:16-alpine",
 		MaxMemoryUsage: 256 * 1024 * 1024,
 	}
 
@@ -195,8 +195,8 @@ func TestCreateSandbox_Success(t *testing.T) {
 
 func TestExecuteInSandbox_Success(t *testing.T) {
 	cfg := &Config{
-		Enabled:     true,
-		SandboxImage: "node:16-alpine",
+		Enabled:        true,
+		SandboxImage:   "node:16-alpine",
 		SandboxTimeout: "10s",
 	}
 
@@ -207,9 +207,9 @@ func TestExecuteInSandbox_Success(t *testing.T) {
 
 	// Mock sandbox (since we can't create real containers in tests)
 	mockSandbox := &Sandbox{
-		ID: "mock-sandbox-id",
-		Type: "docker",
-		Image: "node:16-alpine",
+		ID:     "mock-sandbox-id",
+		Type:   "docker",
+		Image:  "node:16-alpine",
 		Status: "running",
 	}
 	scriptPath := "/tmp/test-script.sh"
@@ -230,7 +230,7 @@ func TestExecuteInSandbox_Success(t *testing.T) {
 
 func TestMonitorBehavior_Success(t *testing.T) {
 	cfg := &Config{
-		Enabled: true,
+		Enabled:        true,
 		SandboxTimeout: "5s",
 	}
 
@@ -366,10 +366,10 @@ func TestCalculateRiskScore(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		findings    []SecurityFinding
-		minScore    float64
-		maxScore    float64
+		name     string
+		findings []SecurityFinding
+		minScore float64
+		maxScore float64
 	}{
 		{
 			name:     "no findings",
@@ -434,7 +434,7 @@ func TestGenerateRecommendations(t *testing.T) {
 			name: "no findings",
 			result: &AnalysisResult{
 				SecurityFindings: []SecurityFinding{},
-				RiskScore: 0.0,
+				RiskScore:        0.0,
 			},
 			expectedMin: 0,
 		},

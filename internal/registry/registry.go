@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"net/http"
 	"net/url"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Connector interface for connecting to package registries
@@ -20,12 +20,12 @@ type Connector interface {
 
 // Registry represents a package registry
 type Registry struct {
-	Name     string
-	URL      string
-	Type     string
-	Enabled  bool
-	APIKey   string
-	Timeout  int
+	Name    string
+	URL     string
+	Type    string
+	Enabled bool
+	APIKey  string
+	Timeout int
 }
 
 // NPMConnector implements Connector for NPM registry
@@ -129,20 +129,20 @@ func (n *NPMConnector) SearchPackages(ctx context.Context, query string) ([]*typ
 	if query == "" {
 		return []*types.PackageMetadata{}, nil
 	}
-	
+
 	// Use NPM search API endpoint
 	searchURL := fmt.Sprintf("https://registry.npmjs.org/-/v1/search?text=%s&size=20", url.QueryEscape(query))
-	
+
 	resp, err := http.Get(searchURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search NPM registry: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("NPM search API returned status %d", resp.StatusCode)
 	}
-	
+
 	var searchResult struct {
 		Objects []struct {
 			Package struct {
@@ -158,11 +158,11 @@ func (n *NPMConnector) SearchPackages(ctx context.Context, query string) ([]*typ
 			} `json:"package"`
 		} `json:"objects"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return nil, fmt.Errorf("failed to decode search response: %w", err)
 	}
-	
+
 	var packages []*types.PackageMetadata
 	for _, obj := range searchResult.Objects {
 		pkg := &types.PackageMetadata{
@@ -171,18 +171,18 @@ func (n *NPMConnector) SearchPackages(ctx context.Context, query string) ([]*typ
 			Description: obj.Package.Description,
 			Registry:    "npm",
 		}
-		
+
 		if obj.Package.Author.Name != "" {
 			pkg.Author = obj.Package.Author.Name
 		}
-		
+
 		for _, maintainer := range obj.Package.Maintainers {
 			pkg.Maintainers = append(pkg.Maintainers, maintainer.Name)
 		}
-		
+
 		packages = append(packages, pkg)
 	}
-	
+
 	return packages, nil
 }
 

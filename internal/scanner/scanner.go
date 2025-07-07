@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/Alivanroy/Typosentinel/internal/cache"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/fsnotify/fsnotify"
 )
 
 // Scanner handles project scanning and dependency analysis
@@ -54,7 +54,7 @@ type ScanResults struct {
 // ScanResult represents a single package scan result
 type ScanResult struct {
 	Package *types.Package `json:"package"`
-	Threats []Threat      `json:"threats"`
+	Threats []Threat       `json:"threats"`
 }
 
 // Threat represents a security threat found in a package
@@ -182,9 +182,9 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
 			metadata := map[string]interface{}{
-				"project_type": projectInfo.Type,
+				"project_type":  projectInfo.Type,
 				"package_count": len(packages),
-				"threat_count": summary.ThreatsFound,
+				"threat_count":  summary.ThreatsFound,
 			}
 			_ = s.cache.CacheAnalysisResult(cacheKey, result, metadata)
 		}
@@ -296,7 +296,6 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 // convertToMLFeatures converts a package to enhanced ML features
 func (s *Scanner) convertToMLFeatures(pkg *types.Package) *ml.EnhancedPackageFeatures {
 
-
 	var description, author, homepage, repository, license string
 	var downloads int64
 	var maintainers, keywords []string
@@ -340,8 +339,8 @@ func (s *Scanner) convertToMLFeatures(pkg *types.Package) *ml.EnhancedPackageFea
 			SuspiciousFiles: []string{},
 		},
 		CodeMetrics: ml.CodeMetrics{
-			LinesOfCode:      0,
-			ObfuscationScore: 0.0,
+			LinesOfCode:          0,
+			ObfuscationScore:     0.0,
 			CyclomaticComplexity: 0.0,
 		},
 		SecurityMetrics: ml.SecurityMetrics{

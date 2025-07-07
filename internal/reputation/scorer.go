@@ -125,7 +125,7 @@ func (s *EnhancedReputationScorer) GetPackageMetrics(pkg *types.Package) (*Packa
 // getPyPIMetrics gets metrics from PyPI
 func (s *EnhancedReputationScorer) getPyPIMetrics(pkg *types.Package) (*PackageMetrics, error) {
 	url := fmt.Sprintf("https://pypi.org/pypi/%s/json", pkg.Name)
-	
+
 	resp, err := s.httpClient.Get(url)
 	if err != nil {
 		return s.getDefaultMetrics(pkg), nil // Fallback to defaults
@@ -143,14 +143,14 @@ func (s *EnhancedReputationScorer) getPyPIMetrics(pkg *types.Package) (*PackageM
 
 	var pypiData struct {
 		Info struct {
-			Name        string    `json:"name"`
-			Version     string    `json:"version"`
-			Summary     string    `json:"summary"`
-			Description string    `json:"description"`
-			HomePage    string    `json:"home_page"`
-			Author      string    `json:"author"`
-			License     string    `json:"license"`
-			Keywords    string    `json:"keywords"`
+			Name        string            `json:"name"`
+			Version     string            `json:"version"`
+			Summary     string            `json:"summary"`
+			Description string            `json:"description"`
+			HomePage    string            `json:"home_page"`
+			Author      string            `json:"author"`
+			License     string            `json:"license"`
+			Keywords    string            `json:"keywords"`
 			ProjectURLs map[string]string `json:"project_urls"`
 		} `json:"info"`
 		Releases map[string][]struct {
@@ -191,7 +191,7 @@ func (s *EnhancedReputationScorer) getPyPIMetrics(pkg *types.Package) (*PackageM
 // getNPMMetrics gets metrics from NPM
 func (s *EnhancedReputationScorer) getNPMMetrics(pkg *types.Package) (*PackageMetrics, error) {
 	url := fmt.Sprintf("https://registry.npmjs.org/%s", pkg.Name)
-	
+
 	resp, err := s.httpClient.Get(url)
 	if err != nil {
 		return s.getDefaultMetrics(pkg), nil
@@ -275,8 +275,8 @@ func (s *EnhancedReputationScorer) getMavenMetrics(pkg *types.Package) (*Package
 // getDefaultMetrics returns default metrics when API data is unavailable
 func (s *EnhancedReputationScorer) getDefaultMetrics(pkg *types.Package) *PackageMetrics {
 	return &PackageMetrics{
-		DownloadCount:    1000,  // Conservative estimate
-		Age:              365,   // Assume 1 year old
+		DownloadCount:    1000,                         // Conservative estimate
+		Age:              365,                          // Assume 1 year old
 		LastUpdate:       time.Now().AddDate(0, -1, 0), // 1 month ago
 		MaintainerCount:  1,
 		VersionCount:     5,
@@ -302,7 +302,7 @@ func (s *EnhancedReputationScorer) getGitHubMetrics(githubURL string) *GitHubMet
 	}
 
 	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s", owner, repo)
-	
+
 	resp, err := s.httpClient.Get(apiURL)
 	if err != nil {
 		return nil
@@ -434,7 +434,7 @@ func (s *EnhancedReputationScorer) calculateSecurityScore(metrics *PackageMetric
 
 	// For now, use a simplified security scoring based on available metrics
 	// In a real implementation, this would integrate with vulnerability databases
-	
+
 	// Penalize packages with many open issues (potential security concerns)
 	if metrics.IssueCount > 50 {
 		score -= 0.2
@@ -518,14 +518,14 @@ func (s *EnhancedReputationScorer) generateReputationFactors(metrics *PackageMet
 func (s *EnhancedReputationScorer) estimateDownloads(packageName, registry string) int64 {
 	// Base estimates by ecosystem (these would be replaced with actual API calls)
 	baseDownloads := map[string]int64{
-		"npm":    50000,
-		"pypi":   25000,
-		"ruby":   15000,
-		"php":    20000,
-		"java":   30000,
-		"go":     10000,
-		"rust":   8000,
-		"nuget":  18000,
+		"npm":   50000,
+		"pypi":  25000,
+		"ruby":  15000,
+		"php":   20000,
+		"java":  30000,
+		"go":    10000,
+		"rust":  8000,
+		"nuget": 18000,
 	}
 
 	base, exists := baseDownloads[registry]
@@ -545,7 +545,7 @@ func (s *EnhancedReputationScorer) estimateDownloads(packageName, registry strin
 
 	// Add some randomness to make it more realistic
 	variation := int64(float64(base) * 0.3) // 30% variation
-	return base + (variation/2) - int64(len(packageName)*100)
+	return base + (variation / 2) - int64(len(packageName)*100)
 }
 
 // calculatePackageAge calculates package age from release data
@@ -696,15 +696,15 @@ func (s *EnhancedReputationScorer) checkForTests(owner, repo string) bool {
 func (s *EnhancedReputationScorer) isPackageVerified(ecosystem, packageName string) bool {
 	// Check for common verified package patterns
 	// In a real implementation, this would query registry APIs
-	
+
 	// Well-known verified packages by ecosystem
 	verifiedPatterns := map[string][]string{
-		"npm": {"react", "vue", "angular", "express", "lodash", "axios", "webpack", "babel"},
+		"npm":  {"react", "vue", "angular", "express", "lodash", "axios", "webpack", "babel"},
 		"pypi": {"django", "flask", "requests", "numpy", "pandas", "tensorflow", "pytorch", "scikit-learn"},
 		"ruby": {"rails", "devise", "rspec", "capybara", "sidekiq", "puma", "nokogiri"},
-		"php": {"symfony", "laravel", "doctrine", "guzzle", "monolog", "phpunit", "composer"},
+		"php":  {"symfony", "laravel", "doctrine", "guzzle", "monolog", "phpunit", "composer"},
 		"java": {"spring", "hibernate", "junit", "mockito", "jackson", "apache", "google"},
-		"go": {"gin", "echo", "gorm", "cobra", "viper", "logrus", "testify"},
+		"go":   {"gin", "echo", "gorm", "cobra", "viper", "logrus", "testify"},
 	}
 
 	patterns, exists := verifiedPatterns[ecosystem]

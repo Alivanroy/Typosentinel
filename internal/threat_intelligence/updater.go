@@ -11,46 +11,46 @@ import (
 
 // RealTimeUpdater manages real-time threat intelligence updates
 type RealTimeUpdater struct {
-	logger          *logger.Logger
-	mu              sync.RWMutex
-	updateChannels  map[string]*UpdateChannel
-	subscribers     map[string][]UpdateSubscriber
-	isRunning       bool
-	updateInterval  time.Duration
-	lastUpdate      time.Time
-	updateStats     UpdateStats
-	errorHandler    ErrorHandler
-	config          UpdaterConfig
+	logger         *logger.Logger
+	mu             sync.RWMutex
+	updateChannels map[string]*UpdateChannel
+	subscribers    map[string][]UpdateSubscriber
+	isRunning      bool
+	updateInterval time.Duration
+	lastUpdate     time.Time
+	updateStats    UpdateStats
+	errorHandler   ErrorHandler
+	config         UpdaterConfig
 }
 
 // UpdateChannel represents a real-time update channel
 type UpdateChannel struct {
-	Name            string                 `json:"name"`
-	Type            string                 `json:"type"` // "webhook", "polling", "stream", "feed"
-	Enabled         bool                   `json:"enabled"`
-	Config          map[string]interface{} `json:"config"`
-	LastUpdate      time.Time              `json:"last_update"`
-	UpdateCount     int64                  `json:"update_count"`
-	ErrorCount      int64                  `json:"error_count"`
-	Status          string                 `json:"status"` // "active", "inactive", "error"
-	Healthy         bool                   `json:"healthy"`
-	Processor       UpdateProcessor        `json:"-"`
+	Name        string                 `json:"name"`
+	Type        string                 `json:"type"` // "webhook", "polling", "stream", "feed"
+	Enabled     bool                   `json:"enabled"`
+	Config      map[string]interface{} `json:"config"`
+	LastUpdate  time.Time              `json:"last_update"`
+	UpdateCount int64                  `json:"update_count"`
+	ErrorCount  int64                  `json:"error_count"`
+	Status      string                 `json:"status"` // "active", "inactive", "error"
+	Healthy     bool                   `json:"healthy"`
+	Processor   UpdateProcessor        `json:"-"`
 }
 
 // UpdateProcessor processes updates from a specific channel
 type UpdateProcessor interface {
 	// Initialize sets up the processor
 	Initialize(ctx context.Context, config map[string]interface{}) error
-	
+
 	// Start begins processing updates
 	Start(ctx context.Context) error
-	
+
 	// Stop stops processing updates
 	Stop(ctx context.Context) error
-	
+
 	// GetStatus returns processor status
 	GetStatus() ProcessorStatus
-	
+
 	// SetUpdateHandler sets the update handler
 	SetUpdateHandler(handler UpdateHandler)
 }
@@ -59,23 +59,23 @@ type UpdateProcessor interface {
 type UpdateSubscriber interface {
 	// OnUpdate is called when an update is received
 	OnUpdate(ctx context.Context, update *ThreatUpdate) error
-	
+
 	// GetSubscriberID returns the subscriber ID
 	GetSubscriberID() string
 }
 
 // ThreatUpdate represents a threat intelligence update
 type ThreatUpdate struct {
-	ID          string                 `json:"id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Source      string                 `json:"source"`
-	Type        string                 `json:"type"` // "new", "updated", "removed"
-	Threat      *ThreatIntelligence    `json:"threat,omitempty"`
-	ThreatID    string                 `json:"threat_id,omitempty"`
-	Changes     map[string]interface{} `json:"changes,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	Priority    string                 `json:"priority"` // "low", "medium", "high", "critical"
-	Checksum    string                 `json:"checksum"`
+	ID        string                 `json:"id"`
+	Timestamp time.Time              `json:"timestamp"`
+	Source    string                 `json:"source"`
+	Type      string                 `json:"type"` // "new", "updated", "removed"
+	Threat    *ThreatIntelligence    `json:"threat,omitempty"`
+	ThreatID  string                 `json:"threat_id,omitempty"`
+	Changes   map[string]interface{} `json:"changes,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	Priority  string                 `json:"priority"` // "low", "medium", "high", "critical"
+	Checksum  string                 `json:"checksum"`
 }
 
 // UpdateHandler handles threat updates
@@ -83,38 +83,38 @@ type UpdateHandler func(ctx context.Context, update *ThreatUpdate) error
 
 // ProcessorStatus represents the status of an update processor
 type ProcessorStatus struct {
-	Name         string    `json:"name"`
-	Type         string    `json:"type"`
-	Running      bool      `json:"running"`
-	Healthy      bool      `json:"healthy"`
-	LastUpdate   time.Time `json:"last_update"`
-	LastError    string    `json:"last_error,omitempty"`
-	UpdateCount  int64     `json:"update_count"`
-	ErrorCount   int64     `json:"error_count"`
-	Latency      time.Duration `json:"latency"`
+	Name        string        `json:"name"`
+	Type        string        `json:"type"`
+	Running     bool          `json:"running"`
+	Healthy     bool          `json:"healthy"`
+	LastUpdate  time.Time     `json:"last_update"`
+	LastError   string        `json:"last_error,omitempty"`
+	UpdateCount int64         `json:"update_count"`
+	ErrorCount  int64         `json:"error_count"`
+	Latency     time.Duration `json:"latency"`
 }
 
 // UpdateStats represents update statistics
 type UpdateStats struct {
-	TotalUpdates     int64                    `json:"total_updates"`
-	UpdatesByType    map[string]int64         `json:"updates_by_type"`
-	UpdatesBySource  map[string]int64         `json:"updates_by_source"`
-	UpdatesByPriority map[string]int64        `json:"updates_by_priority"`
-	FailedUpdates    int64                    `json:"failed_updates"`
-	LastUpdate       time.Time                `json:"last_update"`
-	AverageLatency   time.Duration            `json:"average_latency"`
-	ChannelStats     map[string]*UpdateChannel `json:"channel_stats"`
+	TotalUpdates      int64                     `json:"total_updates"`
+	UpdatesByType     map[string]int64          `json:"updates_by_type"`
+	UpdatesBySource   map[string]int64          `json:"updates_by_source"`
+	UpdatesByPriority map[string]int64          `json:"updates_by_priority"`
+	FailedUpdates     int64                     `json:"failed_updates"`
+	LastUpdate        time.Time                 `json:"last_update"`
+	AverageLatency    time.Duration             `json:"average_latency"`
+	ChannelStats      map[string]*UpdateChannel `json:"channel_stats"`
 }
 
 // UpdaterConfig represents updater configuration
 type UpdaterConfig struct {
-	Enabled         bool                   `json:"enabled"`
-	UpdateInterval  time.Duration          `json:"update_interval"`
-	MaxConcurrent   int                    `json:"max_concurrent"`
-	RetryAttempts   int                    `json:"retry_attempts"`
-	RetryDelay      time.Duration          `json:"retry_delay"`
-	Channels        []UpdateChannelConfig  `json:"channels"`
-	ErrorHandling   ErrorHandlingConfig    `json:"error_handling"`
+	Enabled        bool                  `json:"enabled"`
+	UpdateInterval time.Duration         `json:"update_interval"`
+	MaxConcurrent  int                   `json:"max_concurrent"`
+	RetryAttempts  int                   `json:"retry_attempts"`
+	RetryDelay     time.Duration         `json:"retry_delay"`
+	Channels       []UpdateChannelConfig `json:"channels"`
+	ErrorHandling  ErrorHandlingConfig   `json:"error_handling"`
 }
 
 // UpdateChannelConfig represents update channel configuration
@@ -284,9 +284,9 @@ func (rtu *RealTimeUpdater) ProcessUpdate(ctx context.Context, update *ThreatUpd
 
 	rtu.logger.Debug("Processing threat update", map[string]interface{}{
 		"update_id": update.ID,
-		"source": update.Source,
-		"type": update.Type,
-		"priority": update.Priority,
+		"source":    update.Source,
+		"type":      update.Type,
+		"priority":  update.Priority,
 	})
 
 	// Update statistics
@@ -303,7 +303,7 @@ func (rtu *RealTimeUpdater) ProcessUpdate(ctx context.Context, update *ThreatUpd
 
 	rtu.logger.Debug("Threat update processed", map[string]interface{}{
 		"update_id": update.ID,
-		"latency": latency,
+		"latency":   latency,
 	})
 
 	return nil
@@ -508,15 +508,15 @@ func (rtu *RealTimeUpdater) performHealthCheck() {
 
 	for name, channel := range rtu.updateChannels {
 		status := channel.Processor.GetStatus()
-		
+
 		// Update channel health based on processor status
 		channel.Healthy = status.Healthy
 		channel.ErrorCount = status.ErrorCount
-		
+
 		if !status.Healthy {
 			channel.Status = "error"
 			rtu.logger.Warn("Update channel unhealthy", map[string]interface{}{"channel": name, "error": status.LastError})
-			
+
 			// Call error handler
 			if rtu.errorHandler != nil {
 				go rtu.errorHandler(context.Background(), name, fmt.Errorf(status.LastError))
@@ -530,7 +530,7 @@ func (rtu *RealTimeUpdater) performHealthCheck() {
 
 func (rtu *RealTimeUpdater) defaultErrorHandler(ctx context.Context, channel string, err error) {
 	rtu.logger.Error("Update channel error", map[string]interface{}{"channel": channel, "error": err})
-	
+
 	// Update error statistics
 	rtu.mu.Lock()
 	rtu.updateStats.FailedUpdates++

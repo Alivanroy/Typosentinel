@@ -16,8 +16,6 @@ import (
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
-
-
 // WebhookPlugin implements Plugin interface for generic webhook integration
 type WebhookPlugin struct {
 	info     PluginInfo
@@ -29,23 +27,23 @@ type WebhookPlugin struct {
 
 // WebhookSettings contains webhook specific configuration
 type WebhookSettings struct {
-	URL             string            `json:"url"`
-	Method          string            `json:"method"`
-	Headers         map[string]string `json:"headers"`
-	Secret          string            `json:"secret"`
-	SignatureHeader string            `json:"signature_header"`
-	ContentType     string            `json:"content_type"`
-	Timeout         int               `json:"timeout_seconds"`
-	RetryAttempts   int               `json:"retry_attempts"`
-	RetryDelay      int               `json:"retry_delay_seconds"`
-	FailOnCritical  bool              `json:"fail_on_critical"`
-	FailOnHigh      bool              `json:"fail_on_high"`
-	FilterSeverity  []string          `json:"filter_severity"`
+	URL             string                 `json:"url"`
+	Method          string                 `json:"method"`
+	Headers         map[string]string      `json:"headers"`
+	Secret          string                 `json:"secret"`
+	SignatureHeader string                 `json:"signature_header"`
+	ContentType     string                 `json:"content_type"`
+	Timeout         int                    `json:"timeout_seconds"`
+	RetryAttempts   int                    `json:"retry_attempts"`
+	RetryDelay      int                    `json:"retry_delay_seconds"`
+	FailOnCritical  bool                   `json:"fail_on_critical"`
+	FailOnHigh      bool                   `json:"fail_on_high"`
+	FilterSeverity  []string               `json:"filter_severity"`
 	CustomPayload   map[string]interface{} `json:"custom_payload"`
-	AuthType        string            `json:"auth_type"`
-	AuthToken       string            `json:"auth_token"`
-	Username        string            `json:"username"`
-	Password        string            `json:"password"`
+	AuthType        string                 `json:"auth_type"`
+	AuthToken       string                 `json:"auth_token"`
+	Username        string                 `json:"username"`
+	Password        string                 `json:"password"`
 }
 
 // WebhookOutput represents the output structure for webhook
@@ -92,11 +90,11 @@ type WebhookThreat struct {
 
 // WebhookResponse represents the response from webhook endpoint
 type WebhookResponse struct {
-	Success     bool                   `json:"success"`
-	Message     string                 `json:"message"`
-	RequestID   string                 `json:"request_id,omitempty"`
-	Actions     []string               `json:"actions,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Success   bool                   `json:"success"`
+	Message   string                 `json:"message"`
+	RequestID string                 `json:"request_id,omitempty"`
+	Actions   []string               `json:"actions,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewWebhookPlugin creates a new webhook plugin instance
@@ -175,12 +173,12 @@ func (p *WebhookPlugin) Initialize(ctx context.Context, config map[string]interf
 	p.settings.Headers["User-Agent"] = "Typosentinel-Webhook/1.0.0"
 
 	p.logger.Info("Webhook plugin initialized", map[string]interface{}{
-		"url":             p.settings.URL,
-		"method":          p.settings.Method,
-		"content_type":    p.settings.ContentType,
-		"timeout":         p.settings.Timeout,
-		"retry_attempts":  p.settings.RetryAttempts,
-		"auth_type":       p.settings.AuthType,
+		"url":            p.settings.URL,
+		"method":         p.settings.Method,
+		"content_type":   p.settings.ContentType,
+		"timeout":        p.settings.Timeout,
+		"retry_attempts": p.settings.RetryAttempts,
+		"auth_type":      p.settings.AuthType,
 	})
 
 	return nil
@@ -189,7 +187,7 @@ func (p *WebhookPlugin) Initialize(ctx context.Context, config map[string]interf
 // Execute runs the webhook integration
 func (p *WebhookPlugin) Execute(ctx context.Context, result *types.ScanResult) (*PluginResult, error) {
 	start := time.Now()
-	
+
 	// Derive package information from first package or fallback to target
 	packageName := result.Target
 	packageVersion := "unknown"
@@ -197,13 +195,13 @@ func (p *WebhookPlugin) Execute(ctx context.Context, result *types.ScanResult) (
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	// Collect all threats from all packages
 	allThreats := []types.Threat{}
 	for _, pkg := range result.Packages {
 		allThreats = append(allThreats, pkg.Threats...)
 	}
-	
+
 	p.logger.Info("Executing webhook plugin", map[string]interface{}{
 		"package": packageName,
 		"risk":    "unknown", // Risk calculation moved to individual packages
@@ -217,14 +215,14 @@ func (p *WebhookPlugin) Execute(ctx context.Context, result *types.ScanResult) (
 	if len(p.settings.FilterSeverity) > 0 && len(filteredThreats) == 0 {
 		p.logger.Info("No threats match severity filter, skipping webhook")
 		skippedData := map[string]interface{}{
-				"skipped": true,
-				"reason":  "no_matching_threats",
-			}
-			return &PluginResult{
-				Success: true,
-				Message: "No threats match severity filter",
-				Data:    skippedData,
-			}, nil
+			"skipped": true,
+			"reason":  "no_matching_threats",
+		}
+		return &PluginResult{
+			Success: true,
+			Message: "No threats match severity filter",
+			Data:    skippedData,
+		}, nil
 	}
 
 	// Create webhook payload
@@ -244,7 +242,7 @@ func (p *WebhookPlugin) Execute(ctx context.Context, result *types.ScanResult) (
 		"execution_duration_ms": time.Since(start).Milliseconds(),
 		"threats_sent":          len(filteredThreats),
 		"total_threats":         len(allThreats),
-		"risk_score":            0.0, // Risk calculation moved to individual packages
+		"risk_score":            0.0,       // Risk calculation moved to individual packages
 		"overall_risk":          "unknown", // Risk calculation moved to individual packages
 		"package_name":          packageName,
 		"package_version":       packageVersion,
@@ -253,7 +251,7 @@ func (p *WebhookPlugin) Execute(ctx context.Context, result *types.ScanResult) (
 	return &PluginResult{
 		Success: output.Success,
 		Message: p.generateSummaryMessage(result, output),
-		Data:    map[string]interface{}{
+		Data: map[string]interface{}{
 			"webhook_output": output,
 		},
 		Actions: actions,
@@ -296,13 +294,13 @@ func (p *WebhookPlugin) createPayload(result *types.ScanResult, threats []types.
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	// Calculate total threats across all packages
 	totalThreats := 0
 	for _, pkg := range result.Packages {
 		totalThreats += len(pkg.Threats)
 	}
-	
+
 	webhookThreats := make([]WebhookThreat, len(threats))
 	for i, threat := range threats {
 		webhookThreats[i] = WebhookThreat{
@@ -321,13 +319,13 @@ func (p *WebhookPlugin) createPayload(result *types.ScanResult, threats []types.
 		Version:         "1.0.0",
 		PackageName:     packageName,
 		PackageVersion:  packageVersion,
-		RiskScore:       0.0, // Risk calculation moved to individual packages
+		RiskScore:       0.0,       // Risk calculation moved to individual packages
 		OverallRisk:     "unknown", // Risk calculation moved to individual packages
 		Threats:         webhookThreats,
 		Recommendations: []string{}, // Recommendations not available in new structure
 		Metadata: map[string]interface{}{
-			"scan_timestamp": time.Now().Unix(),
-			"total_threats":  totalThreats,
+			"scan_timestamp":   time.Now().Unix(),
+			"total_threats":    totalThreats,
 			"filtered_threats": len(threats),
 		},
 	}
@@ -345,10 +343,10 @@ func (p *WebhookPlugin) sendWebhookWithRetry(ctx context.Context, payload *Webho
 	requestID := p.generateRequestID()
 	output := &WebhookOutput{
 		RequestID:      requestID,
-		URL:           p.settings.URL,
-		Method:        p.settings.Method,
+		URL:            p.settings.URL,
+		Method:         p.settings.Method,
 		RequestHeaders: make(map[string]string),
-		RetryAttempts: 0,
+		RetryAttempts:  0,
 	}
 
 	var lastErr error
@@ -542,22 +540,22 @@ func (p *WebhookPlugin) generateSummaryMessage(result *types.ScanResult, output 
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	// Calculate total threats across all packages
 	totalThreats := 0
 	for _, pkg := range result.Packages {
 		totalThreats += len(pkg.Threats)
 	}
-	
+
 	if output.Success {
 		if totalThreats == 0 {
 			return fmt.Sprintf("✅ Webhook sent successfully - No threats detected in %s@%s", packageName, packageVersion)
 		}
-		return fmt.Sprintf("✅ Webhook sent successfully - %d threats detected in %s@%s (Status: %d)", 
+		return fmt.Sprintf("✅ Webhook sent successfully - %d threats detected in %s@%s (Status: %d)",
 			totalThreats, packageName, packageVersion, output.StatusCode)
 	}
 
-	return fmt.Sprintf("❌ Webhook failed - %s@%s (Status: %d, Attempts: %d)", 
+	return fmt.Sprintf("❌ Webhook failed - %s@%s (Status: %d, Attempts: %d)",
 		packageName, packageVersion, output.StatusCode, output.RetryAttempts+1)
 }
 

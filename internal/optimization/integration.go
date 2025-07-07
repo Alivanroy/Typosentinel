@@ -44,23 +44,23 @@ type DatabaseStats struct {
 
 // CacheStats contains cache performance statistics
 type CacheStats struct {
-	L1HitRatio    float64 `json:"l1_hit_ratio"`
-	L2HitRatio    float64 `json:"l2_hit_ratio"`
-	L3HitRatio    float64 `json:"l3_hit_ratio"`
+	L1HitRatio      float64 `json:"l1_hit_ratio"`
+	L2HitRatio      float64 `json:"l2_hit_ratio"`
+	L3HitRatio      float64 `json:"l3_hit_ratio"`
 	OverallHitRatio float64 `json:"overall_hit_ratio"`
-	MemoryUsage   int64   `json:"memory_usage"`
-	EntryCount    int64   `json:"entry_count"`
-	Evictions     int64   `json:"evictions"`
+	MemoryUsage     int64   `json:"memory_usage"`
+	EntryCount      int64   `json:"entry_count"`
+	Evictions       int64   `json:"evictions"`
 }
 
 // PerformanceStats contains performance optimization statistics
 type PerformanceStats struct {
-	Throughput       float64       `json:"throughput"`
-	Latency          time.Duration `json:"latency"`
-	ErrorRate        float64       `json:"error_rate"`
-	ConcurrentTasks  int           `json:"concurrent_tasks"`
-	CompletedTasks   int64         `json:"completed_tasks"`
-	OptimizationScore float64      `json:"optimization_score"`
+	Throughput        float64       `json:"throughput"`
+	Latency           time.Duration `json:"latency"`
+	ErrorRate         float64       `json:"error_rate"`
+	ConcurrentTasks   int           `json:"concurrent_tasks"`
+	CompletedTasks    int64         `json:"completed_tasks"`
+	OptimizationScore float64       `json:"optimization_score"`
 }
 
 // ResourceStats contains resource usage statistics
@@ -74,21 +74,21 @@ type ResourceStats struct {
 
 // OverallStats contains overall optimization statistics
 type OverallStats struct {
-	EfficiencyScore   float64 `json:"efficiency_score"`
-	OptimizationLevel string  `json:"optimization_level"`
-	Recommendations   int     `json:"recommendations"`
-	ActiveAlerts      int     `json:"active_alerts"`
+	EfficiencyScore   float64       `json:"efficiency_score"`
+	OptimizationLevel string        `json:"optimization_level"`
+	Recommendations   int           `json:"recommendations"`
+	ActiveAlerts      int           `json:"active_alerts"`
 	Uptime            time.Duration `json:"uptime"`
 }
 
 // OptimizationReport provides detailed optimization analysis
 type OptimizationReport struct {
-	Stats           *OptimizationStats        `json:"stats"`
+	Stats           *OptimizationStats            `json:"stats"`
 	Recommendations []*OptimizationRecommendation `json:"recommendations"`
-	Alerts          []*OptimizationAlert      `json:"alerts"`
-	Bottlenecks     []*PerformanceBottleneck  `json:"bottlenecks"`
-	Improvements    []*OptimizationImprovement `json:"improvements"`
-	GeneratedAt     time.Time                 `json:"generated_at"`
+	Alerts          []*OptimizationAlert          `json:"alerts"`
+	Bottlenecks     []*PerformanceBottleneck      `json:"bottlenecks"`
+	Improvements    []*OptimizationImprovement    `json:"improvements"`
+	GeneratedAt     time.Time                     `json:"generated_at"`
 }
 
 // OptimizationRecommendation provides specific optimization suggestions
@@ -128,14 +128,14 @@ type PerformanceBottleneck struct {
 
 // OptimizationImprovement tracks applied optimizations
 type OptimizationImprovement struct {
-	ID               string        `json:"id"`
-	Type             string        `json:"type"`
-	Description      string        `json:"description"`
-	Applied          time.Time     `json:"applied"`
-	LatencyGain      time.Duration `json:"latency_gain"`
-	ThroughputGain   float64       `json:"throughput_gain"`
-	MemoryReduction  int64         `json:"memory_reduction"`
-	EfficiencyGain   float64       `json:"efficiency_gain"`
+	ID              string        `json:"id"`
+	Type            string        `json:"type"`
+	Description     string        `json:"description"`
+	Applied         time.Time     `json:"applied"`
+	LatencyGain     time.Duration `json:"latency_gain"`
+	ThroughputGain  float64       `json:"throughput_gain"`
+	MemoryReduction int64         `json:"memory_reduction"`
+	EfficiencyGain  float64       `json:"efficiency_gain"`
 }
 
 // NewOptimizationManager creates a new optimization manager
@@ -246,12 +246,27 @@ func (om *OptimizationManager) GetOptimizationStats() *OptimizationStats {
 			OptimizedQueries: 0,   // Would need to get from database optimizer
 		},
 		Cache: &CacheStats{
-			L1HitRatio:      func() float64 { if performanceMetrics.Cache != nil && performanceMetrics.Cache.L1Metrics != nil { return performanceMetrics.Cache.L1Metrics.HitRatio }; return 0.0 }(),
-			L2HitRatio:      func() float64 { if performanceMetrics.Cache != nil && performanceMetrics.Cache.L2Metrics != nil { return performanceMetrics.Cache.L2Metrics.HitRatio }; return 0.0 }(),
-			OverallHitRatio: func() float64 { if performanceMetrics.Cache != nil && performanceMetrics.Cache.Overall != nil { return performanceMetrics.Cache.Overall.OverallHitRatio }; return 0.0 }(),
-			MemoryUsage:     0, // Would need to get from cache manager
-			EntryCount:      0, // Would need to get from cache manager
-			Evictions:       0, // Would need to get from cache manager
+			L1HitRatio: func() float64 {
+				if performanceMetrics.Cache != nil && performanceMetrics.Cache.L1Metrics != nil {
+					return performanceMetrics.Cache.L1Metrics.HitRatio
+				}
+				return 0.0
+			}(),
+			L2HitRatio: func() float64 {
+				if performanceMetrics.Cache != nil && performanceMetrics.Cache.L2Metrics != nil {
+					return performanceMetrics.Cache.L2Metrics.HitRatio
+				}
+				return 0.0
+			}(),
+			OverallHitRatio: func() float64 {
+				if performanceMetrics.Cache != nil && performanceMetrics.Cache.Overall != nil {
+					return performanceMetrics.Cache.Overall.OverallHitRatio
+				}
+				return 0.0
+			}(),
+			MemoryUsage: 0, // Would need to get from cache manager
+			EntryCount:  0, // Would need to get from cache manager
+			Evictions:   0, // Would need to get from cache manager
 		},
 		Performance: &PerformanceStats{
 			Throughput:        performanceMetrics.Overall.Throughput,

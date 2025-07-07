@@ -17,55 +17,55 @@ import (
 
 // BenchmarkMetrics holds performance metrics for a single benchmark
 type BenchmarkMetrics struct {
-	Duration      time.Duration `json:"duration"`
-	Operations    int           `json:"operations"`
-	OpsPerSecond  float64       `json:"ops_per_second"`
-	AvgTimePerOp  time.Duration `json:"avg_time_per_op"`
-	MemoryPerOp   uint64        `json:"memory_per_op"`
-	AllocsPerOp   uint64        `json:"allocs_per_op"`
-	MinTime       time.Duration `json:"min_time,omitempty"`
-	MaxTime       time.Duration `json:"max_time,omitempty"`
-	StdDev        time.Duration `json:"std_dev,omitempty"`
-	ErrorRate     float64       `json:"error_rate,omitempty"`
-	ThroughputMB  float64       `json:"throughput_mb,omitempty"`
+	Duration     time.Duration `json:"duration"`
+	Operations   int           `json:"operations"`
+	OpsPerSecond float64       `json:"ops_per_second"`
+	AvgTimePerOp time.Duration `json:"avg_time_per_op"`
+	MemoryPerOp  uint64        `json:"memory_per_op"`
+	AllocsPerOp  uint64        `json:"allocs_per_op"`
+	MinTime      time.Duration `json:"min_time,omitempty"`
+	MaxTime      time.Duration `json:"max_time,omitempty"`
+	StdDev       time.Duration `json:"std_dev,omitempty"`
+	ErrorRate    float64       `json:"error_rate,omitempty"`
+	ThroughputMB float64       `json:"throughput_mb,omitempty"`
 }
 
 // BenchmarkResults holds the complete results of a benchmark run
 type BenchmarkResults struct {
-	Timestamp   time.Time                    `json:"timestamp"`
+	Timestamp   time.Time                   `json:"timestamp"`
 	Environment EnvironmentInfo             `json:"environment"`
 	Metrics     map[string]BenchmarkMetrics `json:"metrics"`
 }
 
 // BenchmarkSuite manages and executes performance benchmarks
 type BenchmarkSuite struct {
-	config          *config.Config
-	scanner         *analyzer.Analyzer
-	metrics         map[string]BenchmarkMetrics
-	mu              sync.RWMutex
-	Duration        time.Duration
-	Parallel        int
-	Iterations      int
-	WarmupDuration  time.Duration
-	Verbose         bool
-	Config          *config.Config
-	cpuProfileFile  string
-	memProfileFile  string
-	Name            string                     `json:"name"`
-	Description     string                     `json:"description"`
-	Results         map[string]BenchmarkMetrics `json:"results"`
-	Timestamp       time.Time                  `json:"timestamp"`
-	Environment     EnvironmentInfo            `json:"environment"`
+	config         *config.Config
+	scanner        *analyzer.Analyzer
+	metrics        map[string]BenchmarkMetrics
+	mu             sync.RWMutex
+	Duration       time.Duration
+	Parallel       int
+	Iterations     int
+	WarmupDuration time.Duration
+	Verbose        bool
+	Config         *config.Config
+	cpuProfileFile string
+	memProfileFile string
+	Name           string                      `json:"name"`
+	Description    string                      `json:"description"`
+	Results        map[string]BenchmarkMetrics `json:"results"`
+	Timestamp      time.Time                   `json:"timestamp"`
+	Environment    EnvironmentInfo             `json:"environment"`
 }
 
 // EnvironmentInfo captures system information
 type EnvironmentInfo struct {
-	OS           string `json:"os"`
-	Arch         string `json:"arch"`
-	CPUs         int    `json:"cpus"`
-	GoVersion    string `json:"go_version"`
-	MemoryMB     int64  `json:"memory_mb"`
-	Hostname     string `json:"hostname"`
+	OS        string `json:"os"`
+	Arch      string `json:"arch"`
+	CPUs      int    `json:"cpus"`
+	GoVersion string `json:"go_version"`
+	MemoryMB  int64  `json:"memory_mb"`
+	Hostname  string `json:"hostname"`
 }
 
 // BenchmarkSmallPackage tests performance with small packages (1-10 dependencies)
@@ -335,11 +335,11 @@ func BenchmarkStressTest(b *testing.B) {
 func getOptimizedConfig() *config.Config {
 	return &config.Config{
 		TypoDetection: &config.TypoDetectionConfig{
-			Enabled:   true,
-			Threshold: 0.8,
-			MaxDistance: 2,
+			Enabled:           true,
+			Threshold:         0.8,
+			MaxDistance:       2,
 			CheckSimilarNames: true,
-			CheckHomoglyphs: true,
+			CheckHomoglyphs:   true,
 		},
 		Scanner: &config.ScannerConfig{
 			IncludeDevDeps: false,

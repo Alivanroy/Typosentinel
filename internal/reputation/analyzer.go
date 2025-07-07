@@ -12,13 +12,13 @@ import (
 
 // Config represents the reputation analyzer configuration
 type Config struct {
-	Enabled     bool
-	CacheSize   int
-	CacheTTL    time.Duration
-	Timeout     time.Duration
-	MaxRetries  int
-	RetryDelay  time.Duration
-	Sources     []Source
+	Enabled    bool
+	CacheSize  int
+	CacheTTL   time.Duration
+	Timeout    time.Duration
+	MaxRetries int
+	RetryDelay time.Duration
+	Sources    []Source
 }
 
 // Source represents a reputation data source

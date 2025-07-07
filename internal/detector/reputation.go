@@ -113,7 +113,7 @@ func (re *ReputationEngine) AnalyzeReputation(dep types.Dependency) []types.Thre
 	}
 
 	// Enhanced reputation analysis with multiple threat vectors
-	
+
 	// 1. Analyze reputation score with graduated thresholds
 	if reputationData.ReputationScore < 0.2 {
 		threats = append(threats, re.createReputationThreat(dep, reputationData, "very_low_reputation"))
@@ -242,24 +242,24 @@ func (re *ReputationEngine) fetchReputationData(dep types.Dependency) (*Reputati
 func (re *ReputationEngine) fetchNPMData(data *ReputationData) error {
 	// Fetch NPM registry data with realistic estimation
 	data.Metadata["registry_api"] = "npm"
-	
+
 	// Estimate download count based on package characteristics
 	downloadCount := re.estimateNPMDownloads(data.PackageName)
 	data.DownloadCount = downloadCount
-	
+
 	// Estimate maintainer count (1-5 for most packages)
 	data.MaintainerCount = 1 + (len(data.PackageName) % 4)
-	
+
 	// Estimate creation and update times based on package name hash
 	nameHash := 0
 	for _, char := range data.PackageName {
 		nameHash += int(char)
 	}
-	
+
 	// Vary creation time (6 months to 5 years ago)
 	creationMonths := 6 + (nameHash % 54) // 6-60 months
 	data.CreatedAt = time.Now().AddDate(0, -creationMonths, 0)
-	
+
 	// Vary last update (1 day to 6 months ago)
 	updateDays := 1 + (nameHash % 180) // 1-180 days
 	data.LastUpdated = time.Now().AddDate(0, 0, -updateDays)
@@ -271,23 +271,23 @@ func (re *ReputationEngine) fetchNPMData(data *ReputationData) error {
 func (re *ReputationEngine) fetchPyPIData(data *ReputationData) error {
 	// Fetch PyPI registry data with realistic estimation
 	data.Metadata["registry_api"] = "pypi"
-	
+
 	// Estimate download count based on package characteristics
 	downloadCount := re.estimatePyPIDownloads(data.PackageName)
 	data.DownloadCount = downloadCount
-	
+
 	// Estimate maintainer count (1-3 for most Python packages)
 	data.MaintainerCount = 1 + (len(data.PackageName) % 3)
-	
+
 	// Estimate creation and update times
 	nameHash := 0
 	for _, char := range data.PackageName {
 		nameHash += int(char)
 	}
-	
+
 	creationMonths := 12 + (nameHash % 36) // 1-4 years
 	data.CreatedAt = time.Now().AddDate(0, -creationMonths, 0)
-	
+
 	updateDays := 7 + (nameHash % 90) // 1 week to 3 months
 	data.LastUpdated = time.Now().AddDate(0, 0, -updateDays)
 
@@ -298,23 +298,23 @@ func (re *ReputationEngine) fetchPyPIData(data *ReputationData) error {
 func (re *ReputationEngine) fetchGoData(data *ReputationData) error {
 	// Fetch Go module data with realistic estimation
 	data.Metadata["registry_api"] = "go"
-	
+
 	// Estimate download count based on package characteristics
 	downloadCount := re.estimateGoDownloads(data.PackageName)
 	data.DownloadCount = downloadCount
-	
+
 	// Go modules typically have 1-2 maintainers
 	data.MaintainerCount = 1 + (len(data.PackageName) % 2)
-	
+
 	// Estimate creation and update times
 	nameHash := 0
 	for _, char := range data.PackageName {
 		nameHash += int(char)
 	}
-	
+
 	creationMonths := 3 + (nameHash % 24) // 3 months to 2 years
 	data.CreatedAt = time.Now().AddDate(0, -creationMonths, 0)
-	
+
 	updateDays := 1 + (nameHash % 30) // 1-30 days
 	data.LastUpdated = time.Now().AddDate(0, 0, -updateDays)
 
@@ -593,9 +593,9 @@ func (re *ReputationEngine) createSuspiciousThreat(dep types.Dependency, data *R
 			Type:        "suspicious_pattern",
 			Description: "Package exhibits unusual download/maintenance patterns",
 			Value: map[string]interface{}{
-				"download_count":   data.DownloadCount,
-				"maintainer_count": data.MaintainerCount,
-				"age_days":         int(time.Since(data.CreatedAt).Hours() / 24),
+				"download_count":    data.DownloadCount,
+				"maintainer_count":  data.MaintainerCount,
+				"age_days":          int(time.Since(data.CreatedAt).Hours() / 24),
 				"days_since_update": int(time.Since(data.LastUpdated).Hours() / 24),
 			},
 			Score: 0.6,
@@ -681,22 +681,22 @@ func (re *ReputationEngine) compareSeverity(sev1, sev2 string) int {
 func (re *ReputationEngine) estimateNPMDownloads(packageName string) int64 {
 	// Base download count
 	baseCount := int64(1000)
-	
+
 	// Adjust based on package name length (shorter names tend to be more popular)
 	if len(packageName) < 5 {
 		baseCount *= 10
 	} else if len(packageName) < 10 {
 		baseCount *= 5
 	}
-	
+
 	// Add some randomness based on package name hash
 	nameHash := 0
 	for _, char := range packageName {
 		nameHash += int(char)
 	}
-	
+
 	// Vary between 0.1x to 10x the base count
-	multiplier := 1.0 + float64(nameHash % 100) / 10.0
+	multiplier := 1.0 + float64(nameHash%100)/10.0
 	return int64(float64(baseCount) * multiplier)
 }
 
@@ -704,20 +704,20 @@ func (re *ReputationEngine) estimateNPMDownloads(packageName string) int64 {
 func (re *ReputationEngine) estimatePyPIDownloads(packageName string) int64 {
 	// PyPI packages generally have higher download counts
 	baseCount := int64(5000)
-	
+
 	// Adjust based on common Python package patterns
 	if strings.Contains(packageName, "django") || strings.Contains(packageName, "flask") {
 		baseCount *= 20
 	} else if strings.Contains(packageName, "test") || strings.Contains(packageName, "dev") {
 		baseCount /= 2
 	}
-	
+
 	nameHash := 0
 	for _, char := range packageName {
 		nameHash += int(char)
 	}
-	
-	multiplier := 1.0 + float64(nameHash % 50) / 10.0
+
+	multiplier := 1.0 + float64(nameHash%50)/10.0
 	return int64(float64(baseCount) * multiplier)
 }
 
@@ -725,7 +725,7 @@ func (re *ReputationEngine) estimatePyPIDownloads(packageName string) int64 {
 func (re *ReputationEngine) estimateGoDownloads(packageName string) int64 {
 	// Go modules typically have lower download counts
 	baseCount := int64(500)
-	
+
 	// Adjust based on common Go patterns
 	if strings.Contains(packageName, "github.com/") {
 		baseCount *= 3
@@ -733,13 +733,13 @@ func (re *ReputationEngine) estimateGoDownloads(packageName string) int64 {
 	if strings.Contains(packageName, "golang.org/") {
 		baseCount *= 10
 	}
-	
+
 	nameHash := 0
 	for _, char := range packageName {
 		nameHash += int(char)
 	}
-	
-	multiplier := 1.0 + float64(nameHash % 30) / 10.0
+
+	multiplier := 1.0 + float64(nameHash%30)/10.0
 	return int64(float64(baseCount) * multiplier)
 }
 
@@ -787,7 +787,7 @@ func (re *ReputationEngine) GetCacheStats() map[string]interface{} {
 // detectZeroDayIndicators detects potential zero-day attack indicators
 func (re *ReputationEngine) detectZeroDayIndicators(dep types.Dependency, data *ReputationData) []types.Threat {
 	var threats []types.Threat
-	
+
 	// Check for extremely new packages with high version numbers
 	if data.CreatedAt.After(time.Now().AddDate(0, 0, -7)) { // Less than 7 days old
 		if strings.Contains(dep.Version, "1.0") || strings.Contains(dep.Version, "2.0") {
@@ -814,7 +814,7 @@ func (re *ReputationEngine) detectZeroDayIndicators(dep types.Dependency, data *
 			})
 		}
 	}
-	
+
 	// Check for packages with suspicious download spikes
 	if data.DownloadCount > 100000 && data.CreatedAt.After(time.Now().AddDate(0, -1, 0)) {
 		threats = append(threats, types.Threat{
@@ -839,14 +839,14 @@ func (re *ReputationEngine) detectZeroDayIndicators(dep types.Dependency, data *
 			},
 		})
 	}
-	
+
 	return threats
 }
 
 // detectSupplyChainIndicators detects supply chain attack indicators
 func (re *ReputationEngine) detectSupplyChainIndicators(dep types.Dependency, data *ReputationData) []types.Threat {
 	var threats []types.Threat
-	
+
 	// Check for packages with no maintainer information
 	if data.MaintainerCount == 0 {
 		threats = append(threats, types.Threat{
@@ -871,7 +871,7 @@ func (re *ReputationEngine) detectSupplyChainIndicators(dep types.Dependency, da
 			},
 		})
 	}
-	
+
 	// Check for packages that haven't been updated in a long time but are still being downloaded
 	if time.Since(data.LastUpdated) > 365*24*time.Hour && data.DownloadCount > 1000 {
 		threats = append(threats, types.Threat{
@@ -896,14 +896,14 @@ func (re *ReputationEngine) detectSupplyChainIndicators(dep types.Dependency, da
 			},
 		})
 	}
-	
+
 	return threats
 }
 
 // detectEnterpriseSecurityViolations detects enterprise security policy violations
 func (re *ReputationEngine) detectEnterpriseSecurityViolations(dep types.Dependency, data *ReputationData) []types.Threat {
 	var threats []types.Threat
-	
+
 	// Check for packages with very low reputation scores (enterprise threshold)
 	if data.ReputationScore < 0.7 {
 		threats = append(threats, types.Threat{
@@ -928,7 +928,7 @@ func (re *ReputationEngine) detectEnterpriseSecurityViolations(dep types.Depende
 			},
 		})
 	}
-	
+
 	// Check for packages with insufficient download history (enterprise stability requirement)
 	if data.DownloadCount < 10000 {
 		threats = append(threats, types.Threat{
@@ -953,7 +953,7 @@ func (re *ReputationEngine) detectEnterpriseSecurityViolations(dep types.Depende
 			},
 		})
 	}
-	
+
 	// Check for packages that are too new for enterprise use
 	if data.CreatedAt.After(time.Now().AddDate(0, -6, 0)) { // Less than 6 months old
 		threats = append(threats, types.Threat{
@@ -978,6 +978,6 @@ func (re *ReputationEngine) detectEnterpriseSecurityViolations(dep types.Depende
 			},
 		})
 	}
-	
+
 	return threats
 }

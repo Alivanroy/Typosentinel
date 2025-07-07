@@ -43,7 +43,7 @@ Example usage:
 
 func init() {
 	rootCmd.AddCommand(trainCmd)
-	
+
 	trainCmd.Flags().StringVarP(&trainDatasetPath, "dataset", "d", "./tests/datasets", "Path to training datasets directory")
 	trainCmd.Flags().StringVarP(&trainOutputPath, "output", "o", "./models", "Output directory for trained models")
 	trainCmd.Flags().IntVarP(&trainEpochs, "epochs", "e", 50, "Number of training epochs")
@@ -52,13 +52,13 @@ func init() {
 }
 
 type TrainingPackage struct {
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Description  string                 `json:"description"`
-	ExpectedRisk string                 `json:"expected_risk"`
-	ExpectedScore float64               `json:"expected_score"`
-	RiskFactors  []string               `json:"risk_factors"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	Name          string                 `json:"name"`
+	Version       string                 `json:"version"`
+	Description   string                 `json:"description"`
+	ExpectedRisk  string                 `json:"expected_risk"`
+	ExpectedScore float64                `json:"expected_score"`
+	RiskFactors   []string               `json:"risk_factors"`
+	Metadata      map[string]interface{} `json:"metadata"`
 }
 
 type TrainingConfig struct {
@@ -193,7 +193,7 @@ func loadPackageData(datasetPath, packageFile string, label float64, registry st
 	for _, pkg := range packages {
 		// Extract features from package
 		features := extractPackageFeatures(pkg, registry)
-		
+
 		trainingData = append(trainingData, ml.TrainingData{
 			Features: features,
 			Label:    label,

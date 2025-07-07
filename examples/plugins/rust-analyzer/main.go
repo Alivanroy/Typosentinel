@@ -25,11 +25,11 @@ type RustAnalyzer struct {
 
 // CargoToml represents the structure of a Cargo.toml file
 type CargoToml struct {
-	Package      CargoPackage            `toml:"package"`
-	Dependencies map[string]CargoDep     `toml:"dependencies"`
-	DevDeps      map[string]CargoDep     `toml:"dev-dependencies"`
-	BuildDeps    map[string]CargoDep     `toml:"build-dependencies"`
-	Workspace    *CargoWorkspace         `toml:"workspace"`
+	Package      CargoPackage        `toml:"package"`
+	Dependencies map[string]CargoDep `toml:"dependencies"`
+	DevDeps      map[string]CargoDep `toml:"dev-dependencies"`
+	BuildDeps    map[string]CargoDep `toml:"build-dependencies"`
+	Workspace    *CargoWorkspace     `toml:"workspace"`
 }
 
 // CargoPackage represents the [package] section
@@ -45,16 +45,16 @@ type CargoPackage struct {
 
 // CargoDep represents a dependency entry
 type CargoDep struct {
-	Version  string            `toml:"version"`
-	Path     string            `toml:"path"`
-	Git      string            `toml:"git"`
-	Branch   string            `toml:"branch"`
-	Tag      string            `toml:"tag"`
-	Rev      string            `toml:"rev"`
-	Registry string            `toml:"registry"`
-	Features []string          `toml:"features"`
-	Optional bool              `toml:"optional"`
-	Default  bool              `toml:"default-features"`
+	Version  string   `toml:"version"`
+	Path     string   `toml:"path"`
+	Git      string   `toml:"git"`
+	Branch   string   `toml:"branch"`
+	Tag      string   `toml:"tag"`
+	Rev      string   `toml:"rev"`
+	Registry string   `toml:"registry"`
+	Features []string `toml:"features"`
+	Optional bool     `toml:"optional"`
+	Default  bool     `toml:"default-features"`
 }
 
 // CargoWorkspace represents workspace configuration
@@ -80,10 +80,10 @@ type CargoLockPackage struct {
 // GetMetadata returns metadata about the Rust analyzer
 func (r *RustAnalyzer) GetMetadata() *scanner.AnalyzerMetadata {
 	return &scanner.AnalyzerMetadata{
-		Name:        "rust-cargo",
-		Version:     "1.0.0",
-		Author:      "TypoSentinel Team",
-		Description: "Analyzer for Rust projects using Cargo package manager",
+		Name:                "rust-cargo",
+		Version:             "1.0.0",
+		Author:              "TypoSentinel Team",
+		Description:         "Analyzer for Rust projects using Cargo package manager",
 		SupportedExtensions: []string{".rs"},
 		ManifestFiles:       []string{"Cargo.toml"},
 		LockFiles:           []string{"Cargo.lock"},
@@ -179,7 +179,7 @@ func (r *RustAnalyzer) ExtractDependencies(projectInfo *scanner.ProjectInfo) ([]
 // ValidateProject validates Rust project structure and files
 func (r *RustAnalyzer) ValidateProject(projectInfo *scanner.ProjectInfo) error {
 	cargoTomlPath := filepath.Join(projectInfo.Path, "Cargo.toml")
-	
+
 	// Check if Cargo.toml exists
 	if _, err := os.Stat(cargoTomlPath); os.IsNotExist(err) {
 		return fmt.Errorf("Cargo.toml not found in project root")
@@ -223,24 +223,24 @@ func (r *RustAnalyzer) parseCargoToml(cargoTomlPath string) ([]*types.Package, e
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		if line == "[dependencies]" {
 			inDependencies = true
 			continue
 		}
-		
+
 		if strings.HasPrefix(line, "[") && line != "[dependencies]" {
 			inDependencies = false
 			continue
 		}
-		
+
 		if inDependencies && strings.Contains(line, "=") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
 				name := strings.TrimSpace(parts[0])
 				versionPart := strings.TrimSpace(parts[1])
 				version := strings.Trim(versionPart, `"'`)
-				
+
 				pkg := &types.Package{
 					Name:     name,
 					Version:  version,
@@ -312,7 +312,7 @@ func (r *RustAnalyzer) parseCargoLockTOML(content string) ([]*types.Package, err
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		if line == "[[package]]" {
 			if currentPkg != nil {
 				packages = append(packages, currentPkg)
@@ -327,13 +327,13 @@ func (r *RustAnalyzer) parseCargoLockTOML(content string) ([]*types.Package, err
 			inPackage = true
 			continue
 		}
-		
+
 		if inPackage && strings.Contains(line, "=") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {
 				key := strings.TrimSpace(parts[0])
 				value := strings.Trim(strings.TrimSpace(parts[1]), `"'`)
-				
+
 				switch key {
 				case "name":
 					currentPkg.Name = value
@@ -407,17 +407,17 @@ func (r *RustAnalyzer) analyzeWorkspace(projectInfo *scanner.ProjectInfo) ([]*ty
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		if line == "[workspace]" {
 			inWorkspace = true
 			continue
 		}
-		
+
 		if strings.HasPrefix(line, "[") && line != "[workspace]" {
 			inWorkspace = false
 			continue
 		}
-		
+
 		if inWorkspace && strings.HasPrefix(line, "members") {
 			// Parse workspace members
 			// This is a simplified implementation
@@ -466,17 +466,17 @@ func (r *RustAnalyzer) extractCargoMetadata(projectPath string) (map[string]inte
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		if line == "[package]" {
 			inPackage = true
 			continue
 		}
-		
+
 		if strings.HasPrefix(line, "[") && line != "[package]" {
 			inPackage = false
 			continue
 		}
-		
+
 		if inPackage && strings.Contains(line, "=") {
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) == 2 {

@@ -22,16 +22,16 @@ type GitHubActionsPlugin struct {
 
 // GitHubActionsSettings contains GitHub Actions specific configuration
 type GitHubActionsSettings struct {
-	Token              string   `json:"token"`
-	Repository         string   `json:"repository"`
-	FailOnCritical     bool     `json:"fail_on_critical"`
-	FailOnHigh         bool     `json:"fail_on_high"`
-	CreateIssues       bool     `json:"create_issues"`
-	CommentOnPR        bool     `json:"comment_on_pr"`
-	BlockedPackages    []string `json:"blocked_packages"`
-	AllowedPackages    []string `json:"allowed_packages"`
-	NotificationUsers  []string `json:"notification_users"`
-	CustomLabels       []string `json:"custom_labels"`
+	Token              string             `json:"token"`
+	Repository         string             `json:"repository"`
+	FailOnCritical     bool               `json:"fail_on_critical"`
+	FailOnHigh         bool               `json:"fail_on_high"`
+	CreateIssues       bool               `json:"create_issues"`
+	CommentOnPR        bool               `json:"comment_on_pr"`
+	BlockedPackages    []string           `json:"blocked_packages"`
+	AllowedPackages    []string           `json:"allowed_packages"`
+	NotificationUsers  []string           `json:"notification_users"`
+	CustomLabels       []string           `json:"custom_labels"`
 	SeverityThresholds map[string]float64 `json:"severity_thresholds"`
 }
 
@@ -78,7 +78,7 @@ func (ga *GitHubActionsPlugin) GetInfo() PluginInfo {
 			"security_alerts",
 		},
 		Requirements: map[string]string{
-			"GITHUB_TOKEN":     "GitHub token with appropriate permissions",
+			"GITHUB_TOKEN":      "GitHub token with appropriate permissions",
 			"GITHUB_REPOSITORY": "Repository in format owner/repo",
 		},
 		ConfigSchema: map[string]interface{}{

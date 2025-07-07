@@ -26,14 +26,14 @@ type CacheManager struct {
 
 // L1Cache represents the fastest in-memory cache layer
 type L1Cache struct {
-	data      map[string]*CacheEntry
-	ttl       time.Duration
-	maxSize   int
-	maxMemory int64
+	data          map[string]*CacheEntry
+	ttl           time.Duration
+	maxSize       int
+	maxMemory     int64
 	currentMemory int64
-	hitCount  int64
-	missCount int64
-	mu        sync.RWMutex
+	hitCount      int64
+	missCount     int64
+	mu            sync.RWMutex
 }
 
 // L2Cache represents file-based persistent cache
@@ -79,33 +79,33 @@ const (
 
 // CacheWarmer proactively warms cache with frequently accessed data
 type CacheWarmer struct {
-	manager       *CacheManager
-	db            *database.ThreatDB
-	warmingRules  []*WarmingRule
-	schedule      *WarmingSchedule
-	ctx           context.Context
-	cancel        context.CancelFunc
-	mu            sync.RWMutex
+	manager      *CacheManager
+	db           *database.ThreatDB
+	warmingRules []*WarmingRule
+	schedule     *WarmingSchedule
+	ctx          context.Context
+	cancel       context.CancelFunc
+	mu           sync.RWMutex
 }
 
 // WarmingRule defines conditions for cache warming
 type WarmingRule struct {
-	Name        string
-	Condition   func() bool
-	DataLoader  func() (interface{}, error)
-	CacheKey    string
-	Priority    CachePriority
-	TTL         time.Duration
-	Schedule    string // Cron-like schedule
-	Enabled     bool
+	Name       string
+	Condition  func() bool
+	DataLoader func() (interface{}, error)
+	CacheKey   string
+	Priority   CachePriority
+	TTL        time.Duration
+	Schedule   string // Cron-like schedule
+	Enabled    bool
 }
 
 // WarmingSchedule manages cache warming schedules
 type WarmingSchedule struct {
-	rules     []*ScheduledRule
-	ticker    *time.Ticker
-	running   bool
-	mu        sync.RWMutex
+	rules   []*ScheduledRule
+	ticker  *time.Ticker
+	running bool
+	mu      sync.RWMutex
 }
 
 // ScheduledRule represents a scheduled cache warming rule
@@ -118,11 +118,11 @@ type ScheduledRule struct {
 
 // CacheAnalyzer analyzes cache performance and provides insights
 type CacheAnalyzer struct {
-	metrics        *CacheMetrics
-	performanceLog []*CacheOperation
-	analysisRules  []*AnalysisRule
+	metrics         *CacheMetrics
+	performanceLog  []*CacheOperation
+	analysisRules   []*AnalysisRule
 	recommendations []*CacheRecommendation
-	mu             sync.RWMutex
+	mu              sync.RWMutex
 }
 
 // CacheOperation represents a cache operation for analysis
@@ -164,28 +164,28 @@ type CacheConfig struct {
 
 // L1Config configures in-memory cache
 type L1Config struct {
-	MaxSize      int
-	MaxMemory    int64
-	DefaultTTL   time.Duration
+	MaxSize        int
+	MaxMemory      int64
+	DefaultTTL     time.Duration
 	EvictionPolicy string // LRU, LFU, FIFO
 }
 
 // L2Config configures file-based cache
 type L2Config struct {
-	CacheDir     string
-	MaxSize      int64
-	DefaultTTL   time.Duration
-	Compression  bool
-	Encryption   bool
+	CacheDir    string
+	MaxSize     int64
+	DefaultTTL  time.Duration
+	Compression bool
+	Encryption  bool
 }
 
 // L3Config configures Redis cache
 type L3Config struct {
-	Enabled      bool
-	RedisURL     string
-	DefaultTTL   time.Duration
-	MaxRetries   int
-	RetryDelay   time.Duration
+	Enabled    bool
+	RedisURL   string
+	DefaultTTL time.Duration
+	MaxRetries int
+	RetryDelay time.Duration
 }
 
 // WarmingConfig configures cache warming
@@ -198,10 +198,10 @@ type WarmingConfig struct {
 
 // AnalysisConfig configures cache analysis
 type AnalysisConfig struct {
-	Enabled           bool
-	AnalysisInterval  time.Duration
-	RetentionPeriod   time.Duration
-	Recommendations   bool
+	Enabled          bool
+	AnalysisInterval time.Duration
+	RetentionPeriod  time.Duration
+	Recommendations  bool
 }
 
 // CacheMetrics tracks cache performance
@@ -215,27 +215,27 @@ type CacheMetrics struct {
 
 // LayerMetrics tracks metrics for a specific cache layer
 type LayerMetrics struct {
-	Hits          int64
-	Misses        int64
-	Sets          int64
-	Deletes       int64
-	Evictions     int64
-	HitRatio      float64
-	AvgLatency    time.Duration
-	MemoryUsage   int64
-	EntryCount    int64
-	LastUpdated   time.Time
+	Hits        int64
+	Misses      int64
+	Sets        int64
+	Deletes     int64
+	Evictions   int64
+	HitRatio    float64
+	AvgLatency  time.Duration
+	MemoryUsage int64
+	EntryCount  int64
+	LastUpdated time.Time
 }
 
 // OverallMetrics tracks overall cache performance
 type OverallMetrics struct {
-	TotalHits     int64
-	TotalMisses   int64
+	TotalHits       int64
+	TotalMisses     int64
 	OverallHitRatio float64
-	AvgLatency    time.Duration
-	TotalMemory   int64
-	Efficiency    float64
-	LastUpdated   time.Time
+	AvgLatency      time.Duration
+	TotalMemory     int64
+	Efficiency      float64
+	LastUpdated     time.Time
 }
 
 // NewCacheManager creates a new comprehensive cache manager
@@ -744,7 +744,7 @@ func (cm *CacheManager) startEvictionProcess() {
 func (cm *CacheManager) performMaintenance() {
 	// Clean expired entries
 	cm.cleanExpiredEntries()
-	
+
 	// Optimize cache based on access patterns
 	cm.optimizeCache()
 }

@@ -153,16 +153,16 @@ func (m *TyposquattingModel) Predict(features []float64) (*Prediction, error) {
 	var threats []types.Threat
 	if normalizedScore > 0.7 {
 		threats = append(threats, types.Threat{
-			Type:           "typosquatting",
-			Severity:       types.SeverityHigh,
-			Description:    fmt.Sprintf("High probability of typosquatting (score: %.2f)", normalizedScore),
+			Type:            "typosquatting",
+			Severity:        types.SeverityHigh,
+			Description:     fmt.Sprintf("High probability of typosquatting (score: %.2f)", normalizedScore),
 			DetectionMethod: "typosquatting_model",
 		})
 	} else if normalizedScore > 0.5 {
 		threats = append(threats, types.Threat{
-			Type:           "potential_typosquatting",
-			Severity:       types.SeverityMedium,
-			Description:    fmt.Sprintf("Potential typosquatting detected (score: %.2f)", normalizedScore),
+			Type:            "potential_typosquatting",
+			Severity:        types.SeverityMedium,
+			Description:     fmt.Sprintf("Potential typosquatting detected (score: %.2f)", normalizedScore),
 			DetectionMethod: "typosquatting_model",
 		})
 	}
@@ -189,7 +189,7 @@ func (m *TyposquattingModel) Train(data []TrainingData) error {
 	maliciousCount := 0
 	benignCount := 0
 	featureStats := make([][]float64, len(m.featureWeights))
-	
+
 	for i := range featureStats {
 		featureStats[i] = make([]float64, 0)
 	}
@@ -201,7 +201,7 @@ func (m *TyposquattingModel) Train(data []TrainingData) error {
 		} else {
 			benignCount++
 		}
-		
+
 		// Collect feature values for statistical analysis
 		for i, feature := range sample.Features {
 			if i < len(featureStats) {
@@ -219,17 +219,17 @@ func (m *TyposquattingModel) Train(data []TrainingData) error {
 				mean += val
 			}
 			mean /= float64(len(featureStats[i]))
-			
+
 			variance := 0.0
 			for _, val := range featureStats[i] {
 				variance += math.Pow(val-mean, 2)
 			}
 			variance /= float64(len(featureStats[i]))
-			
+
 			// Higher variance indicates more discriminative feature
 			discriminationPower := math.Sqrt(variance)
 			m.featureWeights[i] = 0.5 + (discriminationPower * 0.5)
-			
+
 			// Ensure weights are within reasonable bounds
 			if m.featureWeights[i] > 1.0 {
 				m.featureWeights[i] = 1.0
@@ -306,7 +306,7 @@ func (m *TyposquattingModel) calculateConfidence(features []float64) float64 {
 
 	// Combine scores with weights
 	confidence := (consistencyScore * 0.4) + (stengthScore * 0.4) + (coverageScore * 0.2)
-	
+
 	// Apply confidence bounds
 	if confidence > 0.95 {
 		confidence = 0.95
@@ -344,7 +344,7 @@ func (m *TyposquattingModel) calculateTrainingAccuracy(data []TrainingData) floa
 		if err != nil {
 			continue
 		}
-		
+
 		// Consider prediction correct if it matches the expected classification
 		predictedMalicious := prediction.Probability > 0.5
 		if predictedMalicious == (sample.Label > 0.5) {
@@ -444,9 +444,9 @@ func (m *ReputationModel) Predict(features []float64) (*Prediction, error) {
 	var threats []types.Threat
 	if threatScore > 0.7 {
 		threats = append(threats, types.Threat{
-			Type:           "low_reputation",
-			Severity:       types.SeverityMedium,
-			Description:    fmt.Sprintf("Package has low reputation score (%.2f)", normalizedScore),
+			Type:            "low_reputation",
+			Severity:        types.SeverityMedium,
+			Description:     fmt.Sprintf("Package has low reputation score (%.2f)", normalizedScore),
 			DetectionMethod: "reputation_model",
 		})
 	}
@@ -603,9 +603,9 @@ func (m *AnomalyModel) Predict(features []float64) (*Prediction, error) {
 		}
 
 		threats = append(threats, types.Threat{
-			Type:           "anomalous_characteristics",
-			Severity:       severity,
-			Description:    fmt.Sprintf("Package exhibits %d anomalous characteristics", anomalyCount),
+			Type:            "anomalous_characteristics",
+			Severity:        severity,
+			Description:     fmt.Sprintf("Package exhibits %d anomalous characteristics", anomalyCount),
 			DetectionMethod: "anomaly_model",
 		})
 	}

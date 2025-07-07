@@ -14,8 +14,6 @@ import (
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
-
-
 // SupplyChainDetector detects compromised packages and malicious maintainer takeovers
 type SupplyChainDetector struct {
 	config     *config.Config
@@ -25,7 +23,7 @@ type SupplyChainDetector struct {
 
 // SupplyChainResult represents the result of supply chain analysis
 type SupplyChainResult struct {
-	IsCompromised       bool                   `json:"is_compromised"`
+	IsCompromised      bool                   `json:"is_compromised"`
 	RiskScore          float64                `json:"risk_score"`
 	MaintainerAnalysis MaintainerAnalysis     `json:"maintainer_analysis"`
 	VersionAnalysis    VersionAnalysis        `json:"version_analysis"`
@@ -37,20 +35,20 @@ type SupplyChainResult struct {
 
 // MaintainerAnalysis represents maintainer reputation and change analysis
 type MaintainerAnalysis struct {
-	CurrentMaintainers    []Maintainer `json:"current_maintainers"`
-	RecentChanges         []MaintainerChange `json:"recent_changes"`
-	ReputationScore       float64      `json:"reputation_score"`
-	SuspiciousActivities  []string     `json:"suspicious_activities"`
-	VerificationStatus    string       `json:"verification_status"`
+	CurrentMaintainers   []Maintainer       `json:"current_maintainers"`
+	RecentChanges        []MaintainerChange `json:"recent_changes"`
+	ReputationScore      float64            `json:"reputation_score"`
+	SuspiciousActivities []string           `json:"suspicious_activities"`
+	VerificationStatus   string             `json:"verification_status"`
 }
 
 // VersionAnalysis represents version pattern and history analysis
 type VersionAnalysis struct {
-	VersionHistory        []VersionInfo `json:"version_history"`
-	UnusualPatterns       []string      `json:"unusual_patterns"`
-	ReleaseFrequency      float64       `json:"release_frequency"`
-	VersionJumps          []VersionJump `json:"version_jumps"`
-	DependencyChanges     []DependencyChange `json:"dependency_changes"`
+	VersionHistory    []VersionInfo      `json:"version_history"`
+	UnusualPatterns   []string           `json:"unusual_patterns"`
+	ReleaseFrequency  float64            `json:"release_frequency"`
+	VersionJumps      []VersionJump      `json:"version_jumps"`
+	DependencyChanges []DependencyChange `json:"dependency_changes"`
 }
 
 // IntegrityAnalysis represents package integrity verification
@@ -65,20 +63,20 @@ type IntegrityAnalysis struct {
 // Supporting types
 type Maintainer struct {
 	Username        string    `json:"username"`
-	Email          string    `json:"email"`
-	JoinDate       time.Time `json:"join_date"`
+	Email           string    `json:"email"`
+	JoinDate        time.Time `json:"join_date"`
 	PackageCount    int       `json:"package_count"`
 	ActivityLevel   string    `json:"activity_level"`
 	ReputationScore float64   `json:"reputation_score"`
-	Verified       bool      `json:"verified"`
-	Suspicious     bool      `json:"suspicious"`
+	Verified        bool      `json:"verified"`
+	Suspicious      bool      `json:"suspicious"`
 }
 
 type MaintainerChange struct {
-	Type        string    `json:"type"` // "added", "removed", "permissions_changed"
+	Type        string     `json:"type"` // "added", "removed", "permissions_changed"
 	Maintainer  Maintainer `json:"maintainer"`
-	Timestamp   time.Time `json:"timestamp"`
-	Description string    `json:"description"`
+	Timestamp   time.Time  `json:"timestamp"`
+	Description string     `json:"description"`
 }
 
 type VersionInfo struct {
@@ -97,11 +95,11 @@ type VersionJump struct {
 }
 
 type DependencyChange struct {
-	Type        string `json:"type"` // "added", "removed", "updated"
-	Dependency  string `json:"dependency"`
-	OldVersion  string `json:"old_version,omitempty"`
-	NewVersion  string `json:"new_version,omitempty"`
-	Suspicious  bool   `json:"suspicious"`
+	Type       string `json:"type"` // "added", "removed", "updated"
+	Dependency string `json:"dependency"`
+	OldVersion string `json:"old_version,omitempty"`
+	NewVersion string `json:"new_version,omitempty"`
+	Suspicious bool   `json:"suspicious"`
 }
 
 type SupplyChainAnomaly struct {
@@ -174,11 +172,11 @@ func (s *SupplyChainDetector) Analyze(ctx context.Context, pkg *types.Package) (
 	result.Details["threshold_used"] = threshold
 
 	s.logger.Debug("Supply chain analysis completed", map[string]interface{}{
-		"package": pkg.Name,
-		"risk_score": riskScore,
+		"package":        pkg.Name,
+		"risk_score":     riskScore,
 		"is_compromised": result.IsCompromised,
-		"anomalies": len(anomalies),
-		"duration": time.Since(start),
+		"anomalies":      len(anomalies),
+		"duration":       time.Since(start),
 	})
 
 	return result, nil
@@ -293,7 +291,7 @@ func (s *SupplyChainDetector) detectAnomalies(maintainer *MaintainerAnalysis, ve
 					Description: "Suspicious maintainer was recently added to the package",
 					Evidence: map[string]interface{}{
 						"maintainer": change.Maintainer.Username,
-						"timestamp": change.Timestamp,
+						"timestamp":  change.Timestamp,
 					},
 					Timestamp: change.Timestamp,
 				})
@@ -418,7 +416,7 @@ func (s *SupplyChainDetector) generateRecommendations(result *SupplyChainResult)
 // Helper methods (simplified implementations)
 func (s *SupplyChainDetector) getCurrentMaintainers(pkg *types.Package) ([]Maintainer, error) {
 	maintainers := []Maintainer{}
-	
+
 	// Extract maintainer information based on package registry
 	switch pkg.Registry {
 	case "npm":
@@ -433,27 +431,27 @@ func (s *SupplyChainDetector) getCurrentMaintainers(pkg *types.Package) ([]Maint
 			if author := getStringFromMetadata(pkg.Metadata.Metadata, "author"); author != "" {
 				maintainers = append(maintainers, Maintainer{
 					Username:        author,
-			Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
-					JoinDate:     time.Now().AddDate(-1, 0, 0), // Default to 1 year ago
-					PackageCount: 1,
-					ActivityLevel: "medium",
+					Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
+					JoinDate:        time.Now().AddDate(-1, 0, 0), // Default to 1 year ago
+					PackageCount:    1,
+					ActivityLevel:   "medium",
 					ReputationScore: 0.5,
-					Verified:     false,
-					Suspicious:   false,
+					Verified:        false,
+					Suspicious:      false,
 				})
 			}
 		}
 	}
-	
+
 	return maintainers, nil
 }
 
 func (s *SupplyChainDetector) getRecentMaintainerChanges(pkg *types.Package) ([]MaintainerChange, error) {
 	changes := []MaintainerChange{}
-	
+
 	// Check for recent maintainer changes in the last 6 months
 	cutoffDate := time.Now().AddDate(0, -6, 0)
-	
+
 	// This would typically query a database or API for maintainer history
 	// For now, we'll simulate based on package metadata patterns
 	if pkg.Metadata != nil && len(pkg.Metadata.Metadata) > 0 {
@@ -463,14 +461,14 @@ func (s *SupplyChainDetector) getRecentMaintainerChanges(pkg *types.Package) ([]
 				if published.After(cutoffDate) {
 					// Recent publication might indicate new maintainer
 					maintainer := Maintainer{
-						Username: getStringFromMetadata(pkg.Metadata.Metadata, "author"),
-						Email: getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
-						JoinDate: published,
-						PackageCount: 1,
-						ActivityLevel: "medium",
+						Username:        getStringFromMetadata(pkg.Metadata.Metadata, "author"),
+						Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
+						JoinDate:        published,
+						PackageCount:    1,
+						ActivityLevel:   "medium",
 						ReputationScore: 0.5,
-						Verified: false,
-						Suspicious: false,
+						Verified:        false,
+						Suspicious:      false,
 					}
 					changes = append(changes, MaintainerChange{
 						Type:        "added",
@@ -482,7 +480,7 @@ func (s *SupplyChainDetector) getRecentMaintainerChanges(pkg *types.Package) ([]
 			}
 		}
 	}
-	
+
 	return changes, nil
 }
 
@@ -490,25 +488,25 @@ func (s *SupplyChainDetector) calculateMaintainerReputation(maintainers []Mainta
 	if len(maintainers) == 0 {
 		return 0.0
 	}
-	
+
 	totalScore := 0.0
 	for _, maintainer := range maintainers {
 		score := 0.0
-		
+
 		// Account age (30% weight)
 		accountAge := time.Since(maintainer.JoinDate).Hours() / (24 * 365) // years
-		ageScore := math.Min(accountAge/2.0, 1.0) // Max score at 2+ years
+		ageScore := math.Min(accountAge/2.0, 1.0)                          // Max score at 2+ years
 		score += ageScore * 0.3
-		
+
 		// Package count (25% weight)
 		packageScore := math.Min(float64(maintainer.PackageCount)/10.0, 1.0) // Max score at 10+ packages
 		score += packageScore * 0.25
-		
+
 		// Verification status (25% weight)
 		if maintainer.Verified {
 			score += 0.25
 		}
-		
+
 		// Activity level (20% weight)
 		activityScore := 0.0
 		switch maintainer.ActivityLevel {
@@ -522,28 +520,28 @@ func (s *SupplyChainDetector) calculateMaintainerReputation(maintainers []Mainta
 			activityScore = 0.5
 		}
 		score += activityScore * 0.2
-		
+
 		totalScore += score
 	}
-	
+
 	return totalScore / float64(len(maintainers))
 }
 
 func (s *SupplyChainDetector) detectSuspiciousMaintainerActivities(maintainers []Maintainer, changes []MaintainerChange) []string {
 	suspiciousActivities := []string{}
-	
+
 	// Check for new maintainers with low reputation
 	for _, maintainer := range maintainers {
 		accountAge := time.Since(maintainer.JoinDate).Hours() / (24 * 30) // months
 		if accountAge < 3 && maintainer.PackageCount < 2 {
 			suspiciousActivities = append(suspiciousActivities, "new_maintainer_low_reputation")
 		}
-		
+
 		if !maintainer.Verified && maintainer.PackageCount > 5 {
 			suspiciousActivities = append(suspiciousActivities, "unverified_prolific_maintainer")
 		}
 	}
-	
+
 	// Check for frequent maintainer changes
 	recentChanges := 0
 	cutoffDate := time.Now().AddDate(0, -3, 0) // Last 3 months
@@ -552,18 +550,18 @@ func (s *SupplyChainDetector) detectSuspiciousMaintainerActivities(maintainers [
 			recentChanges++
 		}
 	}
-	
+
 	if recentChanges > 2 {
 		suspiciousActivities = append(suspiciousActivities, "frequent_maintainer_changes")
 	}
-	
+
 	// Check for ownership transfers without clear reason
 	for _, change := range changes {
 		if change.Type == "ownership_transfer" && change.Description == "" {
 			suspiciousActivities = append(suspiciousActivities, "unexplained_ownership_transfer")
 		}
 	}
-	
+
 	return suspiciousActivities
 }
 
@@ -571,16 +569,16 @@ func (s *SupplyChainDetector) determineMaintainerVerificationStatus(maintainers 
 	if len(maintainers) == 0 {
 		return "no_maintainers"
 	}
-	
+
 	verifiedCount := 0
 	for _, maintainer := range maintainers {
 		if maintainer.Verified {
 			verifiedCount++
 		}
 	}
-	
+
 	verificationRatio := float64(verifiedCount) / float64(len(maintainers))
-	
+
 	switch {
 	case verificationRatio == 1.0:
 		return "fully_verified"
@@ -595,7 +593,7 @@ func (s *SupplyChainDetector) determineMaintainerVerificationStatus(maintainers 
 
 func (s *SupplyChainDetector) getVersionHistory(pkg *types.Package) ([]VersionInfo, error) {
 	versions := []VersionInfo{}
-	
+
 	// Create mock version history based on package metadata
 	if pkg.Metadata != nil && len(pkg.Metadata.Metadata) > 0 {
 		// Add current version
@@ -607,7 +605,7 @@ func (s *SupplyChainDetector) getVersionHistory(pkg *types.Package) ([]VersionIn
 			Size:        1024 * 1024, // 1MB default
 		}
 		versions = append(versions, currentVersion)
-		
+
 		// Add some historical versions
 		for i := 1; i <= 5; i++ {
 			version := VersionInfo{
@@ -620,7 +618,7 @@ func (s *SupplyChainDetector) getVersionHistory(pkg *types.Package) ([]VersionIn
 			versions = append(versions, version)
 		}
 	}
-	
+
 	return versions, nil
 }
 
@@ -628,21 +626,21 @@ func (s *SupplyChainDetector) calculateReleaseFrequency(versions []VersionInfo) 
 	if len(versions) < 2 {
 		return 0.0
 	}
-	
+
 	// Sort versions by release date
 	sort.Slice(versions, func(i, j int) bool {
 		return versions[i].ReleaseDate.Before(versions[j].ReleaseDate)
 	})
-	
+
 	// Calculate average days between releases
 	totalDays := 0.0
 	for i := 1; i < len(versions); i++ {
 		days := versions[i].ReleaseDate.Sub(versions[i-1].ReleaseDate).Hours() / 24
 		totalDays += days
 	}
-	
+
 	avgDaysBetweenReleases := totalDays / float64(len(versions)-1)
-	
+
 	// Return releases per month
 	if avgDaysBetweenReleases > 0 {
 		return 30.0 / avgDaysBetweenReleases
@@ -652,11 +650,11 @@ func (s *SupplyChainDetector) calculateReleaseFrequency(versions []VersionInfo) 
 
 func (s *SupplyChainDetector) detectUnusualVersionPatterns(versions []VersionInfo) []string {
 	patterns := []string{}
-	
+
 	if len(versions) < 2 {
 		return patterns
 	}
-	
+
 	// Check for rapid successive releases
 	rapidReleases := 0
 	for i := 1; i < len(versions); i++ {
@@ -665,11 +663,11 @@ func (s *SupplyChainDetector) detectUnusualVersionPatterns(versions []VersionInf
 			rapidReleases++
 		}
 	}
-	
+
 	if rapidReleases > 2 {
 		patterns = append(patterns, "rapid_successive_releases")
 	}
-	
+
 	// Check for unusual size changes
 	for i := 1; i < len(versions); i++ {
 		sizeRatio := float64(versions[i].Size) / float64(versions[i-1].Size)
@@ -681,7 +679,7 @@ func (s *SupplyChainDetector) detectUnusualVersionPatterns(versions []VersionInf
 			break
 		}
 	}
-	
+
 	// Check for maintainer changes
 	maintainerChanges := 0
 	for i := 1; i < len(versions); i++ {
@@ -689,34 +687,34 @@ func (s *SupplyChainDetector) detectUnusualVersionPatterns(versions []VersionInf
 			maintainerChanges++
 		}
 	}
-	
+
 	if maintainerChanges > len(versions)/3 {
 		patterns = append(patterns, "frequent_maintainer_changes")
 	}
-	
+
 	return patterns
 }
 
 func (s *SupplyChainDetector) detectVersionJumps(versions []VersionInfo) []VersionJump {
 	jumps := []VersionJump{}
-	
+
 	if len(versions) < 2 {
 		return jumps
 	}
-	
+
 	// Sort versions by release date
 	sort.Slice(versions, func(i, j int) bool {
 		return versions[i].ReleaseDate.Before(versions[j].ReleaseDate)
 	})
-	
+
 	for i := 1; i < len(versions); i++ {
 		fromVer := versions[i-1].Version
 		toVer := versions[i].Version
-		
+
 		// Simple version jump detection (looking for major version jumps)
 		jumpSize := s.calculateVersionJumpSize(fromVer, toVer)
 		suspicious := jumpSize > 5.0 // Major version jump of more than 5
-		
+
 		if jumpSize > 1.0 {
 			jumps = append(jumps, VersionJump{
 				FromVersion: fromVer,
@@ -726,13 +724,13 @@ func (s *SupplyChainDetector) detectVersionJumps(versions []VersionInfo) []Versi
 			})
 		}
 	}
-	
+
 	return jumps
 }
 
 func (s *SupplyChainDetector) analyzeDependencyChanges(versions []VersionInfo) []DependencyChange {
 	changes := []DependencyChange{}
-	
+
 	// Mock dependency change analysis
 	// In a real implementation, this would parse dependency files for each version
 	if len(versions) >= 2 {
@@ -743,7 +741,7 @@ func (s *SupplyChainDetector) analyzeDependencyChanges(versions []VersionInfo) [
 			NewVersion: "4.17.21",
 			Suspicious: false,
 		})
-		
+
 		changes = append(changes, DependencyChange{
 			Type:       "updated",
 			Dependency: "express",
@@ -751,7 +749,7 @@ func (s *SupplyChainDetector) analyzeDependencyChanges(versions []VersionInfo) [
 			NewVersion: "4.18.2",
 			Suspicious: false,
 		})
-		
+
 		// Add a suspicious change
 		changes = append(changes, DependencyChange{
 			Type:       "added",
@@ -760,7 +758,7 @@ func (s *SupplyChainDetector) analyzeDependencyChanges(versions []VersionInfo) [
 			Suspicious: true,
 		})
 	}
-	
+
 	return changes
 }
 
@@ -799,50 +797,50 @@ func (s *SupplyChainDetector) calculateIntegrityScore(analysis *IntegrityAnalysi
 // Ecosystem-specific maintainer lookup functions
 func (s *SupplyChainDetector) getNPMMaintainers(pkg *types.Package) ([]Maintainer, error) {
 	maintainers := []Maintainer{}
-	
+
 	// Extract from npm package.json metadata
 	if pkg.Metadata != nil && len(pkg.Metadata.Metadata) > 0 {
 		if author := getStringFromMetadata(pkg.Metadata.Metadata, "author"); author != "" {
 			maintainers = append(maintainers, Maintainer{
 				Username:        author,
-			Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
+				Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
 				JoinDate:        time.Now().AddDate(-2, 0, 0), // Default to 2 years ago
-				PackageCount:    5, // Default moderate package count
-				ActivityLevel:   "medium", // Default moderate activity
+				PackageCount:    5,                            // Default moderate package count
+				ActivityLevel:   "medium",                     // Default moderate activity
 				ReputationScore: 0.7,
 				Verified:        getStringFromMetadata(pkg.Metadata.Metadata, "verified") == "true",
 				Suspicious:      false,
 			})
 		}
-		
+
 		// Check for contributors/maintainers array
 		if contributors := getStringFromMetadata(pkg.Metadata.Metadata, "contributors"); contributors != "" {
 			// Parse contributors string/array if available
 			_ = contributors // Placeholder for contributor parsing
 		}
 	}
-	
+
 	return maintainers, nil
 }
 
 func (s *SupplyChainDetector) getPyPIMaintainers(pkg *types.Package) ([]Maintainer, error) {
 	maintainers := []Maintainer{}
-	
+
 	// Extract from PyPI metadata
 	if pkg.Metadata != nil && len(pkg.Metadata.Metadata) > 0 {
 		if author := getStringFromMetadata(pkg.Metadata.Metadata, "author"); author != "" {
 			maintainers = append(maintainers, Maintainer{
 				Username:        author,
-			Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
+				Email:           getStringFromMetadata(pkg.Metadata.Metadata, "author_email"),
 				JoinDate:        time.Now().AddDate(-3, 0, 0), // Default to 3 years ago
-				PackageCount:    3, // Default package count
-				ActivityLevel:   "low", // Default activity level
+				PackageCount:    3,                            // Default package count
+				ActivityLevel:   "low",                        // Default activity level
 				ReputationScore: 0.6,
 				Verified:        getStringFromMetadata(pkg.Metadata.Metadata, "verified") == "true",
 				Suspicious:      false,
 			})
 		}
-		
+
 		if maintainer := getStringFromMetadata(pkg.Metadata.Metadata, "maintainer"); maintainer != "" {
 			maintainers = append(maintainers, Maintainer{
 				Username:        maintainer,
@@ -856,29 +854,29 @@ func (s *SupplyChainDetector) getPyPIMaintainers(pkg *types.Package) ([]Maintain
 			})
 		}
 	}
-	
+
 	return maintainers, nil
 }
 
 func (s *SupplyChainDetector) getGoMaintainers(pkg *types.Package) ([]Maintainer, error) {
 	maintainers := []Maintainer{}
-	
+
 	// Extract from Go module metadata
 	if pkg.Metadata != nil && len(pkg.Metadata.Metadata) > 0 {
 		// Go modules often use repository information
 		if repoOwner := getStringFromMetadata(pkg.Metadata.Metadata, "repo_owner"); repoOwner != "" {
 			maintainers = append(maintainers, Maintainer{
 				Username:        repoOwner,
-			Email:           getStringFromMetadata(pkg.Metadata.Metadata, "owner_email"),
+				Email:           getStringFromMetadata(pkg.Metadata.Metadata, "owner_email"),
 				JoinDate:        time.Now().AddDate(-4, 0, 0), // Default to 4 years ago
-				PackageCount:    8, // Go developers often have multiple modules
-				ActivityLevel:   "high", // Higher activity for Go ecosystem
+				PackageCount:    8,                            // Go developers often have multiple modules
+				ActivityLevel:   "high",                       // Higher activity for Go ecosystem
 				ReputationScore: 0.8,
 				Verified:        true, // Go modules often have better verification
 				Suspicious:      false,
 			})
 		}
-		
+
 		if author := getStringFromMetadata(pkg.Metadata.Metadata, "author"); author != "" {
 			maintainers = append(maintainers, Maintainer{
 				Username:        author,
@@ -892,7 +890,7 @@ func (s *SupplyChainDetector) getGoMaintainers(pkg *types.Package) ([]Maintainer
 			})
 		}
 	}
-	
+
 	return maintainers, nil
 }
 
@@ -911,7 +909,7 @@ func (s *SupplyChainDetector) calculateVersionJumpSize(fromVersion, toVersion st
 	// Simple version comparison - extract major version numbers
 	fromMajor := s.extractMajorVersion(fromVersion)
 	toMajor := s.extractMajorVersion(toVersion)
-	
+
 	if toMajor > fromMajor {
 		return float64(toMajor - fromMajor)
 	}
@@ -922,7 +920,7 @@ func (s *SupplyChainDetector) calculateVersionJumpSize(fromVersion, toVersion st
 func (s *SupplyChainDetector) extractMajorVersion(version string) int {
 	// Remove 'v' prefix if present
 	version = strings.TrimPrefix(version, "v")
-	
+
 	// Split by dots and get first part
 	parts := strings.Split(version, ".")
 	if len(parts) > 0 {

@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // DependencyResolver handles dependency resolution and conflict detection
@@ -24,10 +24,10 @@ type ResolutionResult struct {
 
 // Conflict represents a dependency version conflict
 type Conflict struct {
-	PackageName     string   `json:"packageName"`
+	PackageName         string        `json:"packageName"`
 	ConflictingVersions []VersionInfo `json:"conflictingVersions"`
-	Severity        string   `json:"severity"`
-	Description     string   `json:"description"`
+	Severity            string        `json:"severity"`
+	Description         string        `json:"description"`
 }
 
 // VersionInfo contains version and source information
@@ -69,15 +69,15 @@ func (r *DependencyResolver) ResolveDependencies(dependencies []types.Dependency
 	// Analyze each package group for conflicts
 	for packageName, deps := range packageGroups {
 		conflict, resolved, warnings := r.analyzePackageGroup(packageName, deps)
-		
+
 		if conflict != nil {
 			result.Conflicts = append(result.Conflicts, *conflict)
 		}
-		
+
 		if resolved != nil {
 			result.Resolved = append(result.Resolved, *resolved)
 		}
-		
+
 		result.Warnings = append(result.Warnings, warnings...)
 	}
 
@@ -89,7 +89,7 @@ func (r *DependencyResolver) ResolveDependencies(dependencies []types.Dependency
 		return result.Conflicts[i].PackageName < result.Conflicts[j].PackageName
 	})
 
-	logrus.Debugf("Resolution complete: %d resolved, %d conflicts, %d warnings", 
+	logrus.Debugf("Resolution complete: %d resolved, %d conflicts, %d warnings",
 		len(result.Resolved), len(result.Conflicts), len(result.Warnings))
 
 	return result, nil
@@ -98,14 +98,14 @@ func (r *DependencyResolver) ResolveDependencies(dependencies []types.Dependency
 // groupDependenciesByName groups dependencies by package name
 func (r *DependencyResolver) groupDependenciesByName(dependencies []types.Dependency) map[string][]types.Dependency {
 	groups := make(map[string][]types.Dependency)
-	
+
 	for _, dep := range dependencies {
 		if dep.Name == "" {
 			continue
 		}
 		groups[dep.Name] = append(groups[dep.Name], dep)
 	}
-	
+
 	return groups
 }
 
@@ -150,13 +150,13 @@ func (r *DependencyResolver) analyzePackageGroup(packageName string, deps []type
 		conflict := &Conflict{
 			PackageName:         packageName,
 			ConflictingVersions: versionInfos,
-			Severity:           r.determineConflictSeverity(versionInfos),
-			Description:        r.generateConflictDescription(packageName, versionInfos),
+			Severity:            r.determineConflictSeverity(versionInfos),
+			Description:         r.generateConflictDescription(packageName, versionInfos),
 		}
-		
+
 		// Try to resolve by picking the "best" version
 		resolvedDep = r.selectBestVersion(deps)
-		
+
 		return conflict, resolvedDep, warnings
 	}
 
@@ -210,12 +210,12 @@ func (r *DependencyResolver) determineConflictSeverity(versions []VersionInfo) s
 func (r *DependencyResolver) hasSignificantVersionDifference(versions []VersionInfo) bool {
 	// Simplified check - look for major version differences
 	majorVersions := make(map[string]bool)
-	
+
 	for _, v := range versions {
 		major := r.extractMajorVersion(v.Version)
 		majorVersions[major] = true
 	}
-	
+
 	return len(majorVersions) > 1
 }
 
@@ -259,7 +259,7 @@ func (r *DependencyResolver) generateConflictDescription(packageName string, ver
 			versionStrs[i] = fmt.Sprintf("%s from %s", v.Version, source)
 		}
 	}
-	
+
 	return fmt.Sprintf("Package %s has conflicting versions: %s", packageName, strings.Join(versionStrs, ", "))
 }
 
@@ -278,7 +278,7 @@ func (r *DependencyResolver) getSourceList(deps []types.Dependency) []string {
 	for _, dep := range deps {
 		sources[r.getShortSource(dep.Source)] = true
 	}
-	
+
 	var result []string
 	for source := range sources {
 		result = append(result, source)

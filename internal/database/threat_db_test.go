@@ -15,7 +15,7 @@ func setupTestDB(t *testing.T) *ThreatDB {
 	if !cgoEnabled() {
 		t.Skip("Skipping SQLite tests: CGO not enabled")
 	}
-	
+
 	// Use in-memory SQLite database for testing
 	db, err := NewThreatDB(":memory:")
 	if err != nil {

@@ -42,8 +42,6 @@ func TestNewAnalyzer(t *testing.T) {
 		t.Error("Expected analyzer config to match provided config")
 	}
 
-
-
 	// Note: apiKey is not a direct field of MLAnalyzer
 	// API key would be handled through the Config field
 }
@@ -287,9 +285,9 @@ func TestAnalyzePackages_Batch(t *testing.T) {
 	// Create mock HTTP server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var request struct {
-		PackageName string `json:"package_name"`
-		Registry    string `json:"registry"`
-	}
+			PackageName string `json:"package_name"`
+			Registry    string `json:"registry"`
+		}
 		json.NewDecoder(r.Body).Decode(&request)
 
 		response := AnalysisResult{
@@ -387,7 +385,6 @@ func TestPackageRequest(t *testing.T) {
 		t.Errorf("Expected registry npm, got %s", request.Registry)
 	}
 
-
 }
 
 func TestAnalysisResult(t *testing.T) {
@@ -454,7 +451,6 @@ func TestThreat(t *testing.T) {
 	if threat.Confidence != 0.95 {
 		t.Errorf("Expected confidence 0.95, got %f", threat.Confidence)
 	}
-
 
 }
 

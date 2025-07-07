@@ -10,9 +10,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
+	"github.com/spf13/cobra"
 )
 
 // pluginCmd represents the plugin command

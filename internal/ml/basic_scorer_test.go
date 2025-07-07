@@ -18,12 +18,12 @@ func TestNewBasicMLScorer(t *testing.T) {
 		t.Fatal("Expected non-nil config")
 	}
 
-	if scorer.config.MaliciousThreshold != 0.7 {
-		t.Errorf("Expected malicious threshold 0.7, got %f", scorer.config.MaliciousThreshold)
+	if scorer.config.MaliciousThreshold != 0.55 {
+		t.Errorf("Expected malicious threshold 0.55, got %f", scorer.config.MaliciousThreshold)
 	}
 
-	if scorer.config.SuspiciousThreshold != 0.4 {
-		t.Errorf("Expected suspicious threshold 0.4, got %f", scorer.config.SuspiciousThreshold)
+	if scorer.config.SuspiciousThreshold != 0.35 {
+		t.Errorf("Expected suspicious threshold 0.35, got %f", scorer.config.SuspiciousThreshold)
 	}
 
 	if len(scorer.weights) == 0 {
@@ -111,21 +111,21 @@ func TestScorePackage_LegitimatePackage(t *testing.T) {
 
 	// Features of a legitimate package
 	features := BasicPackageFeatures{
-		DownloadCount:         100000,  // High downloads
-		MaintainerReputation:  0.9,     // Good reputation
-		PackageAge:           1000,     // Old package
-		VersionCount:         20,       // Many versions
-		DescriptionLength:    150,      // Good description
-		DependencyCount:      5,        // Reasonable dependencies
-		TyposquattingSimilarity: 0.1,   // Low similarity to known packages
-		NameEntropy:          3.5,      // Normal entropy
-		UpdateFrequency:      0.1,      // Regular updates
-		LicensePresent:       1.0,      // Has license
-		ReadmePresent:        1.0,      // Has README
-		HomepagePresent:      1.0,      // Has homepage
-		RepositoryPresent:    1.0,      // Has repository
-		KeywordCount:         5,        // Good keywords
-		MaintainerCount:      2,        // Multiple maintainers
+		DownloadCount:           100000, // High downloads
+		MaintainerReputation:    0.9,    // Good reputation
+		PackageAge:              1000,   // Old package
+		VersionCount:            20,     // Many versions
+		DescriptionLength:       150,    // Good description
+		DependencyCount:         5,      // Reasonable dependencies
+		TyposquattingSimilarity: 0.1,    // Low similarity to known packages
+		NameEntropy:             3.5,    // Normal entropy
+		UpdateFrequency:         0.1,    // Regular updates
+		LicensePresent:          1.0,    // Has license
+		ReadmePresent:           1.0,    // Has README
+		HomepagePresent:         1.0,    // Has homepage
+		RepositoryPresent:       1.0,    // Has repository
+		KeywordCount:            5,      // Good keywords
+		MaintainerCount:         2,      // Multiple maintainers
 	}
 
 	score := scorer.ScorePackage(features)
@@ -148,21 +148,21 @@ func TestScorePackage_SuspiciousPackage(t *testing.T) {
 
 	// Features of a suspicious package
 	features := BasicPackageFeatures{
-		DownloadCount:         10,      // Very low downloads
-		MaintainerReputation:  0.1,     // Poor reputation
-		PackageAge:           1,        // Very new
-		VersionCount:         1,        // Only one version
-		DescriptionLength:    10,       // Short description
-		DependencyCount:      0,        // No dependencies
-		TyposquattingSimilarity: 0.9,   // High similarity to known packages
-		NameEntropy:          5.0,      // High entropy (random name)
-		UpdateFrequency:      0.0,      // No updates
-		LicensePresent:       0.0,      // No license
-		ReadmePresent:        0.0,      // No README
-		HomepagePresent:      0.0,      // No homepage
-		RepositoryPresent:    0.0,      // No repository
-		KeywordCount:         0,        // No keywords
-		MaintainerCount:      1,        // Single maintainer
+		DownloadCount:           10,  // Very low downloads
+		MaintainerReputation:    0.1, // Poor reputation
+		PackageAge:              1,   // Very new
+		VersionCount:            1,   // Only one version
+		DescriptionLength:       10,  // Short description
+		DependencyCount:         0,   // No dependencies
+		TyposquattingSimilarity: 0.9, // High similarity to known packages
+		NameEntropy:             5.0, // High entropy (random name)
+		UpdateFrequency:         0.0, // No updates
+		LicensePresent:          0.0, // No license
+		ReadmePresent:           0.0, // No README
+		HomepagePresent:         0.0, // No homepage
+		RepositoryPresent:       0.0, // No repository
+		KeywordCount:            0,   // No keywords
+		MaintainerCount:         1,   // Single maintainer
 	}
 
 	score := scorer.ScorePackage(features)
@@ -229,7 +229,7 @@ func TestSigmoid(t *testing.T) {
 
 	for _, tt := range tests {
 		result := scorer.sigmoid(tt.input)
-		if abs(result-tt.expected) > 1e-6 {
+		if absFloat(result-tt.expected) > 1e-6 {
 			t.Errorf("sigmoid(%f) = %f, expected %f", tt.input, result, tt.expected)
 		}
 	}
@@ -291,10 +291,10 @@ func TestDetermineRiskLevel(t *testing.T) {
 	}{
 		{0.1, "LOW"},
 		{0.3, "LOW"},
+		{0.4, "MEDIUM"},
 		{0.5, "MEDIUM"},
-		{0.6, "MEDIUM"},
+		{0.6, "HIGH"},
 		{0.8, "HIGH"},
-		{0.9, "HIGH"},
 	}
 
 	for _, tt := range tests {
@@ -321,8 +321,8 @@ func TestFeaturesToMap(t *testing.T) {
 	scorer := NewBasicMLScorer()
 
 	features := BasicPackageFeatures{
-		DownloadCount: 1000,
-		PackageAge:    365,
+		DownloadCount:  1000,
+		PackageAge:     365,
 		LicensePresent: 1.0,
 	}
 
@@ -342,7 +342,7 @@ func TestFeaturesToMap(t *testing.T) {
 }
 
 // Helper function for floating point comparison
-func abs(x float64) float64 {
+func absFloat(x float64) float64 {
 	if x < 0 {
 		return -x
 	}
@@ -353,21 +353,21 @@ func abs(x float64) float64 {
 func BenchmarkScorePackage(b *testing.B) {
 	scorer := NewBasicMLScorer()
 	features := BasicPackageFeatures{
-		DownloadCount:         10000,
-		MaintainerReputation:  0.8,
-		PackageAge:           365,
-		VersionCount:         10,
-		DescriptionLength:    100,
-		DependencyCount:      5,
+		DownloadCount:           10000,
+		MaintainerReputation:    0.8,
+		PackageAge:              365,
+		VersionCount:            10,
+		DescriptionLength:       100,
+		DependencyCount:         5,
 		TyposquattingSimilarity: 0.2,
-		NameEntropy:          3.0,
-		UpdateFrequency:      0.1,
-		LicensePresent:       1.0,
-		ReadmePresent:        1.0,
-		HomepagePresent:      1.0,
-		RepositoryPresent:    1.0,
-		KeywordCount:         3,
-		MaintainerCount:      2,
+		NameEntropy:             3.0,
+		UpdateFrequency:         0.1,
+		LicensePresent:          1.0,
+		ReadmePresent:           1.0,
+		HomepagePresent:         1.0,
+		RepositoryPresent:       1.0,
+		KeywordCount:            3,
+		MaintainerCount:         2,
 	}
 
 	b.ResetTimer()

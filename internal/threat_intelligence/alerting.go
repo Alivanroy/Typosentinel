@@ -29,13 +29,13 @@ type AlertingSystem struct {
 type AlertChannelHandler interface {
 	// Initialize sets up the channel
 	Initialize(ctx context.Context, settings map[string]interface{}) error
-	
+
 	// SendAlert sends an alert through the channel
 	SendAlert(ctx context.Context, alert *ThreatAlert) error
-	
+
 	// GetStatus returns the channel status
 	GetStatus() ChannelStatus
-	
+
 	// Close closes the channel
 	Close() error
 }
@@ -61,25 +61,25 @@ type ThreatAlert struct {
 
 // ChannelStatus represents the status of an alert channel
 type ChannelStatus struct {
-	Name         string    `json:"name"`
-	Type         string    `json:"type"`
-	Enabled      bool      `json:"enabled"`
-	Healthy      bool      `json:"healthy"`
-	LastAlert    time.Time `json:"last_alert"`
-	LastError    string    `json:"last_error,omitempty"`
-	AlertsSent   int64     `json:"alerts_sent"`
-	ErrorCount   int64     `json:"error_count"`
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
+	Enabled    bool      `json:"enabled"`
+	Healthy    bool      `json:"healthy"`
+	LastAlert  time.Time `json:"last_alert"`
+	LastError  string    `json:"last_error,omitempty"`
+	AlertsSent int64     `json:"alerts_sent"`
+	ErrorCount int64     `json:"error_count"`
 }
 
 // AlertingStats represents alerting system statistics
 type AlertingStats struct {
-	TotalAlerts     int64                    `json:"total_alerts"`
-	AlertsBySeverity map[string]int64        `json:"alerts_by_severity"`
-	AlertsByChannel map[string]int64         `json:"alerts_by_channel"`
-	ThrottledAlerts int64                    `json:"throttled_alerts"`
-	FailedAlerts    int64                    `json:"failed_alerts"`
-	LastAlert       time.Time                `json:"last_alert"`
-	ChannelStats    map[string]ChannelStatus `json:"channel_stats"`
+	TotalAlerts      int64                    `json:"total_alerts"`
+	AlertsBySeverity map[string]int64         `json:"alerts_by_severity"`
+	AlertsByChannel  map[string]int64         `json:"alerts_by_channel"`
+	ThrottledAlerts  int64                    `json:"throttled_alerts"`
+	FailedAlerts     int64                    `json:"failed_alerts"`
+	LastAlert        time.Time                `json:"last_alert"`
+	ChannelStats     map[string]ChannelStatus `json:"channel_stats"`
 }
 
 // AlertThrottler manages alert throttling
@@ -531,13 +531,13 @@ type EmailChannel struct {
 }
 
 type EmailSettings struct {
-	SMTPHost     string   `json:"smtp_host"`
-	SMTPPort     int      `json:"smtp_port"`
-	Username     string   `json:"username"`
-	Password     string   `json:"password"`
-	FromAddress  string   `json:"from_address"`
-	ToAddresses  []string `json:"to_addresses"`
-	SubjectPrefix string  `json:"subject_prefix"`
+	SMTPHost      string   `json:"smtp_host"`
+	SMTPPort      int      `json:"smtp_port"`
+	Username      string   `json:"username"`
+	Password      string   `json:"password"`
+	FromAddress   string   `json:"from_address"`
+	ToAddresses   []string `json:"to_addresses"`
+	SubjectPrefix string   `json:"subject_prefix"`
 }
 
 func NewEmailChannel(logger *logger.Logger) *EmailChannel {

@@ -107,10 +107,10 @@ func (d *DependencyConfusionDetector) Analyze(ctx context.Context, pkg *types.Pa
 	result.Details["threshold_used"] = threshold
 
 	d.logger.Debug("Dependency confusion analysis completed", map[string]interface{}{
-		"package":        pkg.Name,
+		"package":         pkg.Name,
 		"confusion_score": confusionScore,
-		"is_risk":        result.IsConfusionRisk,
-		"duration":       time.Since(start),
+		"is_risk":         result.IsConfusionRisk,
+		"duration":        time.Since(start),
 	})
 
 	return result, nil
@@ -258,10 +258,10 @@ func (d *DependencyConfusionDetector) generateRecommendations(result *Dependency
 // Helper methods (simplified implementations)
 func (d *DependencyConfusionDetector) findExactMatches(name, registry string) []types.Package {
 	matches := []types.Package{}
-	
+
 	// Check across different public registries
 	registries := []string{"npmjs.org", "pypi.org", "proxy.golang.org", "crates.io"}
-	
+
 	for _, reg := range registries {
 		if reg != registry {
 			// Simulate database lookup - in real implementation, this would query actual registries
@@ -274,16 +274,16 @@ func (d *DependencyConfusionDetector) findExactMatches(name, registry string) []
 			}
 		}
 	}
-	
+
 	return matches
 }
 
 func (d *DependencyConfusionDetector) findSimilarPackages(name, registry string) []types.Package {
 	similarPackages := []types.Package{}
-	
+
 	// Generate fuzzy search candidates
 	candidates := d.generateFuzzySearchCandidates(name)
-	
+
 	for _, candidate := range candidates {
 		if d.simulatePackageExists(candidate, registry) {
 			similarity := d.calculateNameSimilarity(name, candidate)
@@ -296,13 +296,13 @@ func (d *DependencyConfusionDetector) findSimilarPackages(name, registry string)
 			}
 		}
 	}
-	
+
 	return similarPackages
 }
 
 func (d *DependencyConfusionDetector) generateTypoVariants(name string) []string {
 	variants := []string{}
-	
+
 	// Character substitution variants
 	for i, char := range name {
 		// Common character substitutions
@@ -315,7 +315,7 @@ func (d *DependencyConfusionDetector) generateTypoVariants(name string) []string
 			'l': {'1', 'I'},
 			'g': {'9'},
 		}
-		
+
 		if subs, exists := substitutions[char]; exists {
 			for _, sub := range subs {
 				variant := name[:i] + string(sub) + name[i+1:]
@@ -323,7 +323,7 @@ func (d *DependencyConfusionDetector) generateTypoVariants(name string) []string
 			}
 		}
 	}
-	
+
 	// Character insertion variants
 	for i := 0; i <= len(name); i++ {
 		// Insert common typo characters
@@ -333,7 +333,7 @@ func (d *DependencyConfusionDetector) generateTypoVariants(name string) []string
 			variants = append(variants, variant)
 		}
 	}
-	
+
 	// Character deletion variants
 	for i := 0; i < len(name); i++ {
 		variant := name[:i] + name[i+1:]
@@ -341,14 +341,14 @@ func (d *DependencyConfusionDetector) generateTypoVariants(name string) []string
 			variants = append(variants, variant)
 		}
 	}
-	
+
 	// Character transposition variants
 	for i := 0; i < len(name)-1; i++ {
 		runes := []rune(name)
 		runes[i], runes[i+1] = runes[i+1], runes[i]
 		variants = append(variants, string(runes))
 	}
-	
+
 	// Remove duplicates and original name
 	uniqueVariants := []string{}
 	seen := make(map[string]bool)
@@ -358,7 +358,7 @@ func (d *DependencyConfusionDetector) generateTypoVariants(name string) []string
 			uniqueVariants = append(uniqueVariants, variant)
 		}
 	}
-	
+
 	return uniqueVariants
 }
 
@@ -373,25 +373,25 @@ func (d *DependencyConfusionDetector) calculateNameSimilarity(name1, name2 strin
 	if len(name2) > maxLen {
 		maxLen = len(name2)
 	}
-	
+
 	if maxLen == 0 {
 		return 1.0
 	}
-	
+
 	similarity := 1.0 - float64(distance)/float64(maxLen)
 	if similarity < 0 {
 		similarity = 0
 	}
-	
+
 	return similarity
 }
 
 func (d *DependencyConfusionDetector) determineRegistryType(registry string) string {
 	publicRegistries := map[string]bool{
-		"npmjs.org":   true,
-		"pypi.org":    true,
+		"npmjs.org":        true,
+		"pypi.org":         true,
 		"proxy.golang.org": true,
-		"crates.io":   true,
+		"crates.io":        true,
 	}
 
 	if publicRegistries[registry] {
@@ -425,12 +425,12 @@ func (d *DependencyConfusionDetector) calculateScopeConfidence(analysis *ScopeAn
 func (d *DependencyConfusionDetector) simulatePackageExists(name, registry string) bool {
 	// Simulate some packages existing based on common patterns
 	commonPackages := map[string][]string{
-		"npmjs.org": {"lodash", "express", "react", "vue", "angular", "webpack", "babel", "eslint"},
-		"pypi.org": {"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch", "scikit-learn"},
+		"npmjs.org":        {"lodash", "express", "react", "vue", "angular", "webpack", "babel", "eslint"},
+		"pypi.org":         {"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch", "scikit-learn"},
 		"proxy.golang.org": {"gin", "echo", "fiber", "gorilla", "testify", "logrus", "viper", "cobra"},
-		"crates.io": {"serde", "tokio", "clap", "regex", "rand", "log", "env_logger", "anyhow"},
+		"crates.io":        {"serde", "tokio", "clap", "regex", "rand", "log", "env_logger", "anyhow"},
 	}
-	
+
 	if packages, exists := commonPackages[registry]; exists {
 		for _, pkg := range packages {
 			if pkg == name {
@@ -442,7 +442,7 @@ func (d *DependencyConfusionDetector) simulatePackageExists(name, registry strin
 			}
 		}
 	}
-	
+
 	// Simulate some random packages existing
 	return len(name) > 3 && len(name) < 20 && strings.Contains(name, "-")
 }
@@ -450,7 +450,7 @@ func (d *DependencyConfusionDetector) simulatePackageExists(name, registry strin
 // generateFuzzySearchCandidates generates candidates for fuzzy search
 func (d *DependencyConfusionDetector) generateFuzzySearchCandidates(name string) []string {
 	candidates := []string{}
-	
+
 	// Add common variations
 	variations := []string{
 		name + "-js",
@@ -466,29 +466,29 @@ func (d *DependencyConfusionDetector) generateFuzzySearchCandidates(name string)
 		strings.ReplaceAll(name, "-", ""),
 		strings.ReplaceAll(name, "_", ""),
 	}
-	
+
 	candidates = append(candidates, variations...)
-	
+
 	// Add some typo variants
 	typoVariants := d.generateTypoVariants(name)
 	if len(typoVariants) > 10 {
 		typoVariants = typoVariants[:10] // Limit to first 10 variants
 	}
 	candidates = append(candidates, typoVariants...)
-	
+
 	return candidates
 }
 
 // levenshteinDistance calculates the Levenshtein distance between two strings
 func (d *DependencyConfusionDetector) levenshteinDistance(s1, s2 string) int {
 	len1, len2 := len(s1), len(s2)
-	
+
 	// Create a matrix to store distances
 	matrix := make([][]int, len1+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len2+1)
 	}
-	
+
 	// Initialize first row and column
 	for i := 0; i <= len1; i++ {
 		matrix[i][0] = i
@@ -496,7 +496,7 @@ func (d *DependencyConfusionDetector) levenshteinDistance(s1, s2 string) int {
 	for j := 0; j <= len2; j++ {
 		matrix[0][j] = j
 	}
-	
+
 	// Fill the matrix
 	for i := 1; i <= len1; i++ {
 		for j := 1; j <= len2; j++ {
@@ -504,7 +504,7 @@ func (d *DependencyConfusionDetector) levenshteinDistance(s1, s2 string) int {
 			if s1[i-1] != s2[j-1] {
 				cost = 1
 			}
-			
+
 			matrix[i][j] = minInt(
 				matrix[i-1][j]+1,      // deletion
 				matrix[i][j-1]+1,      // insertion
@@ -512,7 +512,7 @@ func (d *DependencyConfusionDetector) levenshteinDistance(s1, s2 string) int {
 			)
 		}
 	}
-	
+
 	return matrix[len1][len2]
 }
 

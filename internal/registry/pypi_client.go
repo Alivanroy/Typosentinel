@@ -20,32 +20,32 @@ type PyPIClient struct {
 // PyPIPackageInfo represents package information from PyPI API
 type PyPIPackageInfo struct {
 	Info struct {
-		Name        string `json:"name"`
-		Version     string `json:"version"`
-		Summary     string `json:"summary"`
-		Description string `json:"description"`
-		Author      string `json:"author"`
-		AuthorEmail string `json:"author_email"`
-		Maintainer  string `json:"maintainer"`
-		HomePage    string `json:"home_page"`
-		License     string `json:"license"`
-		Keywords    string `json:"keywords"`
-		Classifiers []string `json:"classifiers"`
+		Name        string            `json:"name"`
+		Version     string            `json:"version"`
+		Summary     string            `json:"summary"`
+		Description string            `json:"description"`
+		Author      string            `json:"author"`
+		AuthorEmail string            `json:"author_email"`
+		Maintainer  string            `json:"maintainer"`
+		HomePage    string            `json:"home_page"`
+		License     string            `json:"license"`
+		Keywords    string            `json:"keywords"`
+		Classifiers []string          `json:"classifiers"`
 		ProjectURLs map[string]string `json:"project_urls"`
 	} `json:"info"`
 	Releases map[string][]PyPIRelease `json:"releases"`
-	URLs     []PyPIRelease `json:"urls"`
+	URLs     []PyPIRelease            `json:"urls"`
 }
 
 // PyPIRelease represents a release file from PyPI
 type PyPIRelease struct {
-	Filename     string    `json:"filename"`
-	PackageType  string    `json:"packagetype"`
-	PythonVersion string   `json:"python_version"`
-	Size         int64     `json:"size"`
-	UploadTime   time.Time `json:"upload_time"`
-	URL          string    `json:"url"`
-	Digests      struct {
+	Filename      string    `json:"filename"`
+	PackageType   string    `json:"packagetype"`
+	PythonVersion string    `json:"python_version"`
+	Size          int64     `json:"size"`
+	UploadTime    time.Time `json:"upload_time"`
+	URL           string    `json:"url"`
+	Digests       struct {
 		MD5    string `json:"md5"`
 		SHA256 string `json:"sha256"`
 	} `json:"digests"`
@@ -161,13 +161,13 @@ func (c *PyPIClient) EnrichPackage(pkg *types.Package) error {
 	pkg.Metadata.Author = packageInfo.Info.Author
 	pkg.Metadata.Homepage = packageInfo.Info.HomePage
 	pkg.Metadata.License = packageInfo.Info.License
-	
+
 	// Add author email to metadata map
 	pkg.Metadata.Metadata["author_email"] = packageInfo.Info.AuthorEmail
 	pkg.Metadata.Metadata["maintainer"] = packageInfo.Info.Maintainer
 	pkg.Metadata.Metadata["classifiers"] = packageInfo.Info.Classifiers
 	pkg.Metadata.Metadata["project_urls"] = packageInfo.Info.ProjectURLs
-	
+
 	// Convert keywords string to slice and add to metadata map
 	if packageInfo.Info.Keywords != "" {
 		keywords := strings.Split(strings.TrimSpace(packageInfo.Info.Keywords), ",")

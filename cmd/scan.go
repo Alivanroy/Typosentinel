@@ -4,11 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
-	"github.com/spf13/cobra"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/dynamic"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
@@ -17,33 +12,38 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/static"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/spf13/cobra"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 // ScanResult represents the combined results from all analysis engines.
 type ScanResult struct {
-	Package            *types.Package                `json:"package"`
-	StaticAnalysis     *static.AnalysisResult        `json:"static_analysis,omitempty"`
-	DynamicAnalysis    *dynamic.AnalysisResult       `json:"dynamic_analysis,omitempty"`
-	MLAnalysis         *ml.AnalysisResult            `json:"ml_analysis,omitempty"`
-	ProvenanceAnalysis *provenance.AnalysisResult    `json:"provenance_analysis,omitempty"`
-	OverallRisk        string                        `json:"overall_risk"`
-	RiskScore          float64                       `json:"risk_score"`
-	Recommendations    []string                      `json:"recommendations"`
-	Summary            ScanSummary                   `json:"summary"`
-	Metadata           ScanMetadata                  `json:"metadata"`
+	Package            *types.Package             `json:"package"`
+	StaticAnalysis     *static.AnalysisResult     `json:"static_analysis,omitempty"`
+	DynamicAnalysis    *dynamic.AnalysisResult    `json:"dynamic_analysis,omitempty"`
+	MLAnalysis         *ml.AnalysisResult         `json:"ml_analysis,omitempty"`
+	ProvenanceAnalysis *provenance.AnalysisResult `json:"provenance_analysis,omitempty"`
+	OverallRisk        string                     `json:"overall_risk"`
+	RiskScore          float64                    `json:"risk_score"`
+	Recommendations    []string                   `json:"recommendations"`
+	Summary            ScanSummary                `json:"summary"`
+	Metadata           ScanMetadata               `json:"metadata"`
 }
 
 // ScanSummary provides a high-level summary of the scan results.
 type ScanSummary struct {
-	TotalFindings      int                 `json:"total_findings"`
-	CriticalFindings   int                 `json:"critical_findings"`
-	HighFindings       int                 `json:"high_findings"`
-	MediumFindings     int                 `json:"medium_findings"`
-	LowFindings        int                 `json:"low_findings"`
-	FindingsByCategory map[string]int      `json:"findings_by_category"`
-	EnginesUsed        []string            `json:"engines_used"`
-	AnalysisTime       time.Duration       `json:"analysis_time"`
-	Status             string              `json:"status"`
+	TotalFindings      int            `json:"total_findings"`
+	CriticalFindings   int            `json:"critical_findings"`
+	HighFindings       int            `json:"high_findings"`
+	MediumFindings     int            `json:"medium_findings"`
+	LowFindings        int            `json:"low_findings"`
+	FindingsByCategory map[string]int `json:"findings_by_category"`
+	EnginesUsed        []string       `json:"engines_used"`
+	AnalysisTime       time.Duration  `json:"analysis_time"`
+	Status             string         `json:"status"`
 }
 
 // ScanMetadata contains metadata about the scan.
@@ -89,14 +89,14 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 		"enabled": true,
 	})
 	staticConfig := &static.Config{
-		Enabled: true,
+		Enabled:               true,
 		AnalyzeInstallScripts: true,
-		AnalyzeManifests: true,
-			YaraRulesEnabled: false,
-		YaraRulesPath: "",
-		MaxFileSize: 10485760, // 10MB default
-		Timeout: "30s",
-		Verbose: cfg.App.Verbose,
+		AnalyzeManifests:      true,
+		YaraRulesEnabled:      false,
+		YaraRulesPath:         "",
+		MaxFileSize:           10485760, // 10MB default
+		Timeout:               "30s",
+		Verbose:               cfg.App.Verbose,
 	}
 	staticAnalyzer, err := static.NewStaticAnalyzer(staticConfig)
 	if err != nil {
@@ -109,7 +109,7 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 	logger.Info("Static analyzer initialized successfully")
 	logger.DebugWithContext("Static analyzer details", map[string]interface{}{
 		"analyzer_type": fmt.Sprintf("%T", staticAnalyzer),
-		"config":       staticConfig,
+		"config":        staticConfig,
 	})
 
 	// Dynamic analysis is disabled in the simplified configuration
@@ -117,23 +117,23 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 	if false { // Disabled for now
 		logger.VerboseWithContext("Dynamic analyzer disabled in simplified config", map[string]interface{}{})
 		dynamicConfig := &dynamic.Config{
-			Enabled: false,
-			SandboxType: "docker",
-			SandboxImage: "ubuntu:latest",
-			SandboxTimeout: "30s",
+			Enabled:                false,
+			SandboxType:            "docker",
+			SandboxImage:           "ubuntu:latest",
+			SandboxTimeout:         "30s",
 			MaxConcurrentSandboxes: 1,
-			AnalyzeInstallScripts: false,
+			AnalyzeInstallScripts:  false,
 			AnalyzeNetworkActivity: false,
-			AnalyzeFileSystem: false,
-			AnalyzeProcesses: false,
-			AnalyzeEnvironment: false,
-			MaxExecutionTime: "30s",
-			MaxMemoryUsage: 1073741824, // 1GB default
-			MaxDiskUsage: 1073741824,   // 1GB default
-			MaxNetworkConnections: 100,
-			MonitoringInterval: "1s",
-			Verbose: cfg.App.Verbose,
-			LogLevel: "info",
+			AnalyzeFileSystem:      false,
+			AnalyzeProcesses:       false,
+			AnalyzeEnvironment:     false,
+			MaxExecutionTime:       "30s",
+			MaxMemoryUsage:         1073741824, // 1GB default
+			MaxDiskUsage:           1073741824, // 1GB default
+			MaxNetworkConnections:  100,
+			MonitoringInterval:     "1s",
+			Verbose:                cfg.App.Verbose,
+			LogLevel:               "info",
 		}
 		dynamicAnalyzer, err := dynamic.NewDynamicAnalyzer(dynamicConfig)
 		if err != nil {
@@ -151,30 +151,30 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 	mlServiceEnabled := cfg.MLService != nil && cfg.MLService.Enabled
 	mlAnalysisEnabled := cfg.MLAnalysis != nil && cfg.MLAnalysis.Enabled
 	logger.VerboseWithContext("Initializing ML analyzer", map[string]interface{}{
-		"ml_service_enabled": mlServiceEnabled,
+		"ml_service_enabled":  mlServiceEnabled,
 		"ml_analysis_enabled": mlAnalysisEnabled,
 	})
-	
+
 	if mlServiceEnabled {
 		// Create ML analysis config from MLService config
 		mlConfig := config.MLAnalysisConfig{
-			Enabled: true,
-			ModelPath: "./models",
+			Enabled:             true,
+			ModelPath:           "./models",
 			SimilarityThreshold: 0.8,
-			MaliciousThreshold: 0.7,
+			MaliciousThreshold:  0.7,
 			ReputationThreshold: 0.6,
-			BatchSize: int(cfg.MLService.BatchSize),
-			MaxFeatures: 1000,
-			CacheEmbeddings: true,
-			ParallelProcessing: true,
-			GPUAcceleration: false,
+			BatchSize:           int(cfg.MLService.BatchSize),
+			MaxFeatures:         1000,
+			CacheEmbeddings:     true,
+			ParallelProcessing:  true,
+			GPUAcceleration:     false,
 		}
 		mlAnalyzer := ml.NewMLAnalyzer(mlConfig)
 		scanner.mlAnalyzer = mlAnalyzer
 		logger.Info("ML analyzer initialized successfully (via MLService config)")
 		logger.DebugWithContext("ML analyzer details", map[string]interface{}{
 			"analyzer_type": fmt.Sprintf("%T", mlAnalyzer),
-			"config": mlConfig,
+			"config":        mlConfig,
 		})
 	} else if mlAnalysisEnabled {
 		// Use internal ML analysis config directly
@@ -183,7 +183,7 @@ func NewScanner(cfg *config.Config) (*Scanner, error) {
 		logger.Info("ML analyzer initialized successfully (via MLAnalysis config)")
 		logger.DebugWithContext("ML analyzer details", map[string]interface{}{
 			"analyzer_type": fmt.Sprintf("%T", mlAnalyzer),
-			"config": *cfg.MLAnalysis,
+			"config":        *cfg.MLAnalysis,
 		})
 	} else {
 		logger.VerboseWithContext("ML analyzer disabled - neither MLService nor MLAnalysis configured", map[string]interface{}{})
@@ -285,13 +285,13 @@ func runScan(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	logger.VerboseWithContext("Starting scan command", map[string]interface{}{
-		"args":         args,
-		"registry":     registry,
-		"version":      version,
-		"local":        local,
+		"args":          args,
+		"registry":      registry,
+		"version":       version,
+		"local":         local,
 		"output_format": outputFormat,
-		"timeout":      timeout,
-		"parallel":     parallel,
+		"timeout":       timeout,
+		"parallel":      parallel,
 	})
 
 	// Parse timeout
@@ -382,11 +382,11 @@ func runScan(cmd *cobra.Command, args []string) error {
 
 	// Create comprehensive scanner with ML analysis
 	logger.Info("Starting package scan", map[string]interface{}{
-		"package": pkg.Name,
-		"version": pkg.Version,
+		"package":  pkg.Name,
+		"version":  pkg.Version,
 		"registry": pkg.Registry,
 	})
-	
+
 	// Create comprehensive scanner with all analyzers
 	comprehensiveScanner, err := NewScanner(regularConfig)
 	if err != nil {
@@ -395,7 +395,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 		})
 		return fmt.Errorf("failed to create comprehensive scanner: %w", err)
 	}
-	
+
 	// Perform comprehensive scan
 	result, err := comprehensiveScanner.Scan(ctx, pkg)
 	if err != nil {
@@ -414,19 +414,19 @@ func runScan(cmd *cobra.Command, args []string) error {
 		}
 		// Convert optimized result to standard ScanResult format
 		result = &ScanResult{
-			Package: optimizedPkg,
+			Package:     optimizedPkg,
 			OverallRisk: optimizedPkg.RiskLevel.String(),
-			RiskScore: optimizedPkg.RiskScore,
+			RiskScore:   optimizedPkg.RiskScore,
 			Summary: ScanSummary{
 				TotalFindings: 1,
-				EnginesUsed: []string{"optimized"},
-				AnalysisTime: time.Since(time.Now()),
-				Status: "completed",
+				EnginesUsed:   []string{"optimized"},
+				AnalysisTime:  time.Since(time.Now()),
+				Status:        "completed",
 			},
 			Metadata: ScanMetadata{
-				ScanID: generateScanID(),
+				ScanID:    generateScanID(),
 				Timestamp: time.Now(),
-				Version: "1.0.0",
+				Version:   "1.0.0",
 			},
 		}
 	}
@@ -460,10 +460,10 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 	startTime := time.Now()
 
 	logger.VerboseWithContext("Starting comprehensive package scan", map[string]interface{}{
-		"package":     pkg.Name,
-		"version":     pkg.Version,
-		"registry":    pkg.Registry,
-		"start_time":  startTime.Format(time.RFC3339),
+		"package":    pkg.Name,
+		"version":    pkg.Version,
+		"registry":   pkg.Registry,
+		"start_time": startTime.Format(time.RFC3339),
 	})
 
 	// Initialize result
@@ -473,7 +473,7 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 		Metadata: ScanMetadata{
 			ScanID:      scanID,
 			Timestamp:   startTime,
-			Version:     "1.0.0", // Should come from build info
+			Version:     "1.0.0",      // Should come from build info
 			Environment: "production", // Default environment
 		},
 	}
@@ -490,9 +490,9 @@ func (s *Scanner) Scan(ctx context.Context, pkg *types.Package) (*ScanResult, er
 	// Run static analysis
 	if s.staticAnalyzer != nil && shouldRunEngine("static") {
 		logger.VerboseWithContext("Starting static analysis", map[string]interface{}{
-			"package":    pkg.Name,
-			"analyzer":   fmt.Sprintf("%T", s.staticAnalyzer),
-			"fail_fast":  failFast,
+			"package":   pkg.Name,
+			"analyzer":  fmt.Sprintf("%T", s.staticAnalyzer),
+			"fail_fast": failFast,
 		})
 		if verbose {
 			fmt.Println("Running static analysis...")
@@ -881,12 +881,12 @@ func resolveRegistryPackage(name, registry, version string) (*types.Package, err
 	if name == "" {
 		return nil, fmt.Errorf("package name cannot be empty")
 	}
-	
+
 	// Set default version if not specified
 	if version == "" {
 		version = "latest"
 	}
-	
+
 	// Validate registry type
 	validRegistries := map[string]bool{
 		"npm":  true,
@@ -894,11 +894,11 @@ func resolveRegistryPackage(name, registry, version string) (*types.Package, err
 		"go":   true,
 		"gem":  true,
 	}
-	
+
 	if !validRegistries[registry] {
 		return nil, fmt.Errorf("unsupported registry: %s", registry)
 	}
-	
+
 	// Create package with resolved information
 	pkg := &types.Package{
 		Name:     name,
@@ -908,7 +908,7 @@ func resolveRegistryPackage(name, registry, version string) (*types.Package, err
 			Metadata: make(map[string]interface{}),
 		},
 	}
-	
+
 	// Add basic metadata based on registry
 	if pkg.Metadata.Metadata == nil {
 		pkg.Metadata.Metadata = make(map[string]interface{})
@@ -927,7 +927,7 @@ func resolveRegistryPackage(name, registry, version string) (*types.Package, err
 		pkg.Metadata.Metadata["package_manager"] = "gem"
 		pkg.Metadata.Metadata["ecosystem"] = "ruby"
 	}
-	
+
 	return pkg, nil
 }
 
@@ -1010,11 +1010,11 @@ func outputTable(result *ScanResult) error {
 		fmt.Println("\n" + strings.Repeat("-", 100))
 		fmt.Printf("| %-15s | %-10s | %-10s | %-50s |\n", "TYPE", "SEVERITY", "CONFIDENCE", "DESCRIPTION")
 		fmt.Println(strings.Repeat("-", 100))
-		
+
 		// Display threat summary since individual threats are in analysis results
 		fmt.Printf("| %-15s | %-15s | %-15s | %-15s | %-15s |\n", "Critical", "High", "Medium", "Low", "Total")
-		fmt.Printf("| %-15d | %-15d | %-15d | %-15d | %-15d |\n", 
-			result.Summary.CriticalFindings, result.Summary.HighFindings, 
+		fmt.Printf("| %-15d | %-15d | %-15d | %-15d | %-15d |\n",
+			result.Summary.CriticalFindings, result.Summary.HighFindings,
 			result.Summary.MediumFindings, result.Summary.LowFindings, result.Summary.TotalFindings)
 		fmt.Println(strings.Repeat("-", 100))
 	} else {
@@ -1023,8 +1023,6 @@ func outputTable(result *ScanResult) error {
 
 	return nil
 }
-
-
 
 func saveDetailedReport(result *ScanResult) error {
 	reportFile := fmt.Sprintf("typosentinel-report-%s.json", result.Metadata.ScanID)
@@ -1046,8 +1044,6 @@ func saveDetailedReport(result *ScanResult) error {
 	return nil
 }
 
-
-
 func handleExitCodeLegacy(result *ScanResult) error {
 	// Exit with non-zero code for high-risk packages
 	switch result.OverallRisk {
@@ -1058,8 +1054,6 @@ func handleExitCodeLegacy(result *ScanResult) error {
 	}
 	return nil
 }
-
-
 
 func removeDuplicates(slice []string) []string {
 	seen := make(map[string]bool)

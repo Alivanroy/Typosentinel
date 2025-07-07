@@ -9,10 +9,10 @@ import (
 func TestMain(m *testing.M) {
 	// Setup test environment
 	os.Setenv("GO_ENV", "test")
-	
+
 	// Run tests
 	code := m.Run()
-	
+
 	// Cleanup
 	os.Exit(code)
 }
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 func TestMainFunction(t *testing.T) {
 	// Test basic functionality and system initialization
 	t.Log("Testing main function initialization...")
-	
+
 	// Test that we can create basic components
 	tests := []struct {
 		name string
@@ -50,7 +50,7 @@ func TestMainFunction(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if err := test.test(); err != nil {
@@ -58,6 +58,6 @@ func TestMainFunction(t *testing.T) {
 			}
 		})
 	}
-	
+
 	t.Log("Main test setup completed successfully")
 }

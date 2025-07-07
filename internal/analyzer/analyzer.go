@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/registry"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // Analyzer orchestrates the security scanning process
@@ -39,16 +39,16 @@ type ScanOptions struct {
 
 // ScanResult contains the results of a security scan
 type ScanResult struct {
-	ScanID       string                `json:"scan_id"`
-	Timestamp    time.Time             `json:"timestamp"`
-	Duration     time.Duration         `json:"duration"`
-	Path         string                `json:"path"`
-	TotalPackages int                  `json:"total_packages"`
-	Threats      []types.Threat        `json:"threats"`
-	Warnings     []types.Warning       `json:"warnings"`
-	Resolution   *ResolutionResult     `json:"resolution,omitempty"`
-	Summary      ScanSummary           `json:"summary"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	ScanID        string                 `json:"scan_id"`
+	Timestamp     time.Time              `json:"timestamp"`
+	Duration      time.Duration          `json:"duration"`
+	Path          string                 `json:"path"`
+	TotalPackages int                    `json:"total_packages"`
+	Threats       []types.Threat         `json:"threats"`
+	Warnings      []types.Warning        `json:"warnings"`
+	Resolution    *ResolutionResult      `json:"resolution,omitempty"`
+	Summary       ScanSummary            `json:"summary"`
+	Metadata      map[string]interface{} `json:"metadata"`
 }
 
 // ScanSummary provides a high-level overview of scan results
@@ -102,8 +102,6 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 		return nil, fmt.Errorf("failed to discover dependency files: %w", err)
 	}
 
-
-
 	if len(depFiles) == 0 {
 		if options.AllowEmptyProjects {
 			// No dependency files found - return empty result instead of error
@@ -144,9 +142,9 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 		if err != nil {
 			logrus.Warnf("Dependency resolution failed: %v", err)
 		} else {
-			logrus.Debugf("Dependency resolution completed: %d conflicts, %d warnings", 
+			logrus.Debugf("Dependency resolution completed: %d conflicts, %d warnings",
 				len(resolution.Conflicts), len(resolution.Warnings))
-			
+
 			// Use resolved dependencies for threat detection if available
 			if len(resolution.Resolved) > 0 {
 				filteredDeps = resolution.Resolved
@@ -166,7 +164,7 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 	result.Resolution = resolution
 	result.Duration = time.Since(start)
 	result.Summary = a.calculateSummary(threats, warnings, len(filteredDeps))
-	
+
 	// Update summary with resolution data if available
 	if resolution != nil {
 		result.Summary.ConflictCount = len(resolution.Conflicts)
@@ -271,7 +269,7 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 func (a *Analyzer) parseNPMDependencies(filePath string, options *ScanOptions) ([]types.Dependency, error) {
 	fileName := filepath.Base(filePath)
 	logrus.Printf("DEBUG: parseNPMDependencies called with fileName: %s", fileName)
-	
+
 	switch fileName {
 	case "package.json":
 		return a.parsePackageJSON(filePath, options)
@@ -319,7 +317,7 @@ func (a *Analyzer) parsePackageJSON(filePath string, options *ScanOptions) ([]ty
 		return nil, fmt.Errorf("package.json missing required 'name' field")
 	}
 
-	logrus.Debugf("Parsing package.json for %s@%s with %d dependencies and %d devDependencies", 
+	logrus.Debugf("Parsing package.json for %s@%s with %d dependencies and %d devDependencies",
 		packageData.Name, packageData.Version, len(packageData.Dependencies), len(packageData.DevDependencies))
 
 	var dependencies []types.Dependency
@@ -475,10 +473,10 @@ func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) (
 
 	// Enhanced lock file structure
 	var lockData struct {
-		Name         string `json:"name"`
-		Version      string `json:"version"`
-		LockfileVersion int `json:"lockfileVersion"`
-		Packages map[string]struct {
+		Name            string `json:"name"`
+		Version         string `json:"version"`
+		LockfileVersion int    `json:"lockfileVersion"`
+		Packages        map[string]struct {
 			Version      string            `json:"version"`
 			Dev          bool              `json:"dev"`
 			Optional     bool              `json:"optional"`
@@ -500,7 +498,7 @@ func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) (
 		logrus.Warnf("package-lock.json missing lockfileVersion, assuming version 1")
 	}
 
-	logrus.Debugf("Parsing package-lock.json v%d for %s@%s with %d packages", 
+	logrus.Debugf("Parsing package-lock.json v%d for %s@%s with %d packages",
 		lockData.LockfileVersion, lockData.Name, lockData.Version, len(lockData.Packages))
 
 	var dependencies []types.Dependency
@@ -518,7 +516,7 @@ func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) (
 
 		// Extract package name from path (remove node_modules/ prefix)
 		packageName := strings.TrimPrefix(packagePath, "node_modules/")
-		
+
 		// Handle scoped packages correctly
 		if strings.Contains(packageName, "/node_modules/") {
 			// This is a nested dependency, extract the actual package name
@@ -552,11 +550,11 @@ func (a *Analyzer) parsePackageLockJSON(filePath string, options *ScanOptions) (
 			Direct:      !strings.Contains(packagePath, "/node_modules/"),
 			Development: packageInfo.Dev,
 			ExtraData: map[string]interface{}{
-				"resolved":     packageInfo.Resolved,
-				"integrity":    packageInfo.Integrity,
-				"type":         depType,
-				"path":         packagePath,
-				"license":      packageInfo.License,
+				"resolved":    packageInfo.Resolved,
+				"integrity":   packageInfo.Integrity,
+				"type":        depType,
+				"path":        packagePath,
+				"license":     packageInfo.License,
 				"lockVersion": lockData.LockfileVersion,
 			},
 		}
@@ -602,14 +600,14 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 				packageDecl := strings.TrimSuffix(line, ":")
 				currentPackages = a.parseYarnPackageDeclaration(packageDecl)
 				inPackageBlock = len(currentPackages) > 0
-				
+
 				if inPackageBlock {
 					currentDep = &types.Dependency{
 						Registry:    "npm",
 						Source:      filePath,
 						Direct:      true,
 						Development: false, // Yarn.lock doesn't distinguish dev deps
-						ExtraData:    make(map[string]interface{}),
+						ExtraData:   make(map[string]interface{}),
 					}
 				}
 			} else {
@@ -653,9 +651,9 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 							Source:      currentDep.Source,
 							Direct:      currentDep.Direct,
 							Development: currentDep.Development,
-							ExtraData:    make(map[string]interface{}),
+							ExtraData:   make(map[string]interface{}),
 						}
-						
+
 						// Copy metadata
 						for k, v := range currentDep.ExtraData {
 							dep.ExtraData[k] = v
@@ -666,7 +664,7 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 						dependencies = append(dependencies, *dep)
 					}
 				}
-				
+
 				// Reset for next package
 				currentPackages = nil
 				currentDep = nil
@@ -682,13 +680,13 @@ func (a *Analyzer) parseYarnLock(filePath string, options *ScanOptions) ([]types
 // parseYarnPackageDeclaration parses a yarn package declaration line
 func (a *Analyzer) parseYarnPackageDeclaration(decl string) []string {
 	var packages []string
-	
+
 	// Handle multiple package declarations separated by commas
 	parts := strings.Split(decl, ",")
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		part = strings.Trim(part, `"'`)
-		
+
 		// Extract package name (everything before the last @)
 		if strings.Contains(part, "@") {
 			// Handle scoped packages like @babel/core@^7.0.0
@@ -701,7 +699,7 @@ func (a *Analyzer) parseYarnPackageDeclaration(decl string) []string {
 			}
 		}
 	}
-	
+
 	return packages
 }
 
@@ -711,7 +709,7 @@ func (a *Analyzer) extractYarnValue(line string) string {
 	if len(parts) < 2 {
 		return ""
 	}
-	
+
 	value := strings.TrimSpace(parts[1])
 	value = strings.Trim(value, `"'`)
 	return value
@@ -909,11 +907,11 @@ func (r *ScanResult) OutputHTML(w io.Writer) error {
 `
 
 	// Write header with summary information
-	_, err := fmt.Fprintf(w, html, 
+	_, err := fmt.Fprintf(w, html,
 		time.Now().Format("2006-01-02 15:04:05"),
 		r.Duration,
 		r.TotalPackages,
-		r.Summary.CriticalThreats + r.Summary.HighThreats + r.Summary.MediumThreats + r.Summary.LowThreats,
+		r.Summary.CriticalThreats+r.Summary.HighThreats+r.Summary.MediumThreats+r.Summary.LowThreats,
 		"Medium")
 	if err != nil {
 		return err
@@ -922,7 +920,7 @@ func (r *ScanResult) OutputHTML(w io.Writer) error {
 	// Write threat details
 	for _, threat := range r.Threats {
 		className := "threat"
-		
+
 		_, err := fmt.Fprintf(w, `		<div class="package %s">
 			<h3>%s</h3>
 			<div class="metadata">Severity: %s</div>
@@ -931,23 +929,23 @@ func (r *ScanResult) OutputHTML(w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		
+
 		_, err = fmt.Fprintf(w, "\t\t\t<h4>Threat Details:</h4>\n\t\t\t<ul>\n")
 		if err != nil {
 			return err
 		}
-		
-		_, err = fmt.Fprintf(w, "\t\t\t\t<li><strong>%s</strong> (%s): %s</li>\n", 
+
+		_, err = fmt.Fprintf(w, "\t\t\t\t<li><strong>%s</strong> (%s): %s</li>\n",
 			threat.Type, threat.Severity, threat.Description)
 		if err != nil {
 			return err
 		}
-		
+
 		_, err = fmt.Fprintf(w, "\t\t\t</ul>\n")
 		if err != nil {
 			return err
 		}
-		
+
 		_, err = fmt.Fprintf(w, "\t\t</div>\n")
 		if err != nil {
 			return err

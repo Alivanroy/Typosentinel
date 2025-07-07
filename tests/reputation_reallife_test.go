@@ -105,8 +105,8 @@ func TestReputationAnalysisRealLife(t *testing.T) {
 
 			// Analyze package reputation
 			result, err := analyzer.AnalyzePackage(ctx, tt.pkg)
-		if err != nil {
-			t.Logf("Warning: Reputation analysis failed for %s: %v", tt.pkg.Name, err)
+			if err != nil {
+				t.Logf("Warning: Reputation analysis failed for %s: %v", tt.pkg.Name, err)
 				// Don't fail the test for network issues, just log
 				return
 			}
@@ -118,7 +118,7 @@ func TestReputationAnalysisRealLife(t *testing.T) {
 
 			// Log the analysis results
 			t.Logf("Package: %s, Score: %.2f, Risk: %s",
-			tt.pkg.Name, result.Score, result.Risk)
+				tt.pkg.Name, result.Score, result.Risk)
 
 			// Verify risk assessment is reasonable
 			if result.Score < 0 || result.Score > 1 {
@@ -204,7 +204,7 @@ func TestReputationAnalysisBatch(t *testing.T) {
 
 	for i, result := range results {
 		if result != nil {
-			t.Logf("Package %s: Score %.2f, Risk %s", 
+			t.Logf("Package %s: Score %.2f, Risk %s",
 				packages[i].Name, result.Score, result.Risk)
 		}
 	}

@@ -146,12 +146,12 @@ func (v *JWTValidator) generateSignature(payload string) string {
 // GetTestTokens returns a map of test tokens for development/testing
 func GetTestTokens() map[string]string {
 	validator := NewJWTValidator("test-secret-key", "typosentinel")
-	
+
 	// Generate test tokens
 	adminToken, _ := validator.GenerateToken("admin", "Administrator", "admin", 24)
 	userToken, _ := validator.GenerateToken("user", "Regular User", "user", 24)
 	readonlyToken, _ := validator.GenerateToken("readonly", "Read Only User", "readonly", 24)
-	
+
 	return map[string]string{
 		adminToken:    "admin",
 		userToken:     "user",

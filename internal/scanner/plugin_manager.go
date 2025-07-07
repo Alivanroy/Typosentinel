@@ -163,12 +163,12 @@ func (pm *PluginManager) loadPlugin(pluginEntry config.PluginEntry) error {
 
 	// Create plugin info
 	pluginInfo := &PluginInfo{
-		Name:        pluginEntry.Name,
-		Path:        pluginEntry.Path,
-		LoadedAt:    time.Now(),
-		Enabled:     true,
-		Config:      pluginEntry.Config,
-		Analyzer:    analyzer,
+		Name:     pluginEntry.Name,
+		Path:     pluginEntry.Path,
+		LoadedAt: time.Now(),
+		Enabled:  true,
+		Config:   pluginEntry.Config,
+		Analyzer: analyzer,
 	}
 
 	// Extract metadata if available
@@ -276,24 +276,24 @@ func (pm *PluginManager) ValidatePlugin(pluginPath string) error {
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 		return fmt.Errorf("plugin file does not exist: %s", pluginPath)
 	}
-	
+
 	// Check file extension
 	if !strings.HasSuffix(pluginPath, ".so") {
 		return fmt.Errorf("invalid plugin file extension: %s", pluginPath)
 	}
-	
+
 	// Try to open the plugin to validate it
 	plugin, err := plugin.Open(pluginPath)
 	if err != nil {
 		return fmt.Errorf("failed to open plugin: %w", err)
 	}
-	
+
 	// Check for required symbols
 	_, err = plugin.Lookup("GetAnalyzer")
 	if err != nil {
 		return fmt.Errorf("plugin missing required GetAnalyzer function: %w", err)
 	}
-	
+
 	return nil
 }
 

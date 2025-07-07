@@ -15,10 +15,10 @@ import (
 
 // E2ETestSuite contains end-to-end tests
 type E2ETestSuite struct {
-	binaryPath   string
-	tempDir      string
-	configPath   string
-	outputDir    string
+	binaryPath string
+	tempDir    string
+	configPath string
+	outputDir  string
 }
 
 // E2ETestCase represents an end-to-end test case
@@ -399,7 +399,7 @@ func TestE2EPerformance(t *testing.T) {
 	for i, pkg := range packages {
 		t.Run(fmt.Sprintf("performance_scan_%d_%s_%s", i+1, pkg.registry, pkg.name), func(t *testing.T) {
 			startTime := time.Now()
-			
+
 			testCase := E2ETestCase{
 				Name: fmt.Sprintf("performance_scan_%s_%s", pkg.registry, pkg.name),
 				Args: []string{
@@ -414,13 +414,13 @@ func TestE2EPerformance(t *testing.T) {
 				ExpectedOutput: []string{pkg.name, pkg.version},
 				Timeout:        120 * time.Second,
 			}
-			
+
 			suite.runE2ETest(t, testCase)
 			processingTime := time.Since(startTime)
 			totalProcessingTime += processingTime
-			
+
 			t.Logf("Package %s@%s processed in %v", pkg.name, pkg.version, processingTime)
-			
+
 			// Performance assertion: each package should be processed within reasonable time
 			if processingTime > 60*time.Second {
 				t.Errorf("Package %s@%s took too long to process: %v", pkg.name, pkg.version, processingTime)
@@ -594,7 +594,7 @@ func TestE2EConcurrentScanning(t *testing.T) {
 	for _, parallelism := range parallelismLevels {
 		t.Run(fmt.Sprintf("concurrent_scan_parallelism_%d", parallelism), func(t *testing.T) {
 			startTime := time.Now()
-			
+
 			testCase := E2ETestCase{
 				Name: fmt.Sprintf("concurrent_scan_p%d", parallelism),
 				Args: []string{
@@ -610,10 +610,10 @@ func TestE2EConcurrentScanning(t *testing.T) {
 				ExpectedOutput: []string{"express", "lodash", "react", "vue"},
 				Timeout:        180 * time.Second,
 			}
-			
+
 			suite.runE2ETest(t, testCase)
 			processingTime := time.Since(startTime)
-			
+
 			t.Logf("Concurrent scan with parallelism %d completed in %v", parallelism, processingTime)
 		})
 	}

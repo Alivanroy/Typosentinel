@@ -677,13 +677,13 @@ func TestLogger_EdgeCases(t *testing.T) {
 
 	// Test fields with various types
 	complexFields := map[string]interface{}{
-		"string":  "value",
-		"int":     42,
-		"float":   3.14,
-		"bool":    true,
-		"nil":     nil,
-		"slice":   []string{"a", "b"},
-		"map":     map[string]string{"key": "value"},
+		"string": "value",
+		"int":    42,
+		"float":  3.14,
+		"bool":   true,
+		"nil":    nil,
+		"slice":  []string{"a", "b"},
+		"map":    map[string]string{"key": "value"},
 	}
 	logger.Info("complex fields", complexFields)
 
@@ -950,7 +950,7 @@ func TestParseDebugMode(t *testing.T) {
 		{"OFF", DebugModeOff},
 		{"BASIC", DebugModeBasic},
 		{"invalid", DebugModeOff}, // Falls back to off
-		{"", DebugModeOff}, // Falls back to off
+		{"", DebugModeOff},        // Falls back to off
 	}
 
 	for _, test := range tests {
@@ -962,8 +962,8 @@ func TestParseDebugMode(t *testing.T) {
 func TestDefaultDebugConfig(t *testing.T) {
 	config := DefaultDebugConfig()
 	assert.Equal(t, DebugModeOff, config.Mode)
-	assert.True(t, config.ShowCaller)     // Default is true
-	assert.True(t, config.ShowTimestamp)  // Default is true
+	assert.True(t, config.ShowCaller)    // Default is true
+	assert.True(t, config.ShowTimestamp) // Default is true
 	assert.False(t, config.ShowGoroutine)
 	assert.False(t, config.ShowMemStats)
 	assert.False(t, config.IncludeStack)
@@ -1091,8 +1091,8 @@ func TestDebugLogger_TraceWithContext(t *testing.T) {
 	}
 	logger := NewWithConfig(config)
 	debugConfig := &DebugConfig{
-		Mode:         DebugModeTrace,
-		IncludeStack: true,
+		Mode:          DebugModeTrace,
+		IncludeStack:  true,
 		MaxStackDepth: 3,
 	}
 	debugLogger := NewDebugLogger(logger, debugConfig)
@@ -1364,7 +1364,7 @@ func TestFieldLogger_NilFieldValue(t *testing.T) {
 	logger := NewWithConfig(config)
 
 	fieldLogger := logger.WithFields(map[string]interface{}{
-		"nil_field": nil,
+		"nil_field":   nil,
 		"valid_field": "value",
 	})
 	fieldLogger.Info("test message")

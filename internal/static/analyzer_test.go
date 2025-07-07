@@ -423,8 +423,8 @@ func TestCalculateRiskScore(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Skip this test as calculateRiskScore is not a public method
-		// The risk calculation is done internally in AnalyzePackage
-		t.Skip("Risk score calculation is internal to AnalyzePackage method")
+			// The risk calculation is done internally in AnalyzePackage
+			t.Skip("Risk score calculation is internal to AnalyzePackage method")
 		})
 	}
 }
@@ -448,8 +448,8 @@ func TestDetermineThreatLevel(t *testing.T) {
 	for _, test := range tests {
 		t.Run("score_"+strings.ReplaceAll(string(rune(int(test.riskScore*10))), ".", "_"), func(t *testing.T) {
 			// Skip this test as determineThreatLevel is not a public method
-		// The threat level determination is done internally
-		t.Skip("Threat level determination is internal to the analyzer")
+			// The threat level determination is done internally
+			t.Skip("Threat level determination is internal to the analyzer")
 		})
 	}
 }

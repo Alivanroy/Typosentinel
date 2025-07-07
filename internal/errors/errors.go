@@ -14,103 +14,103 @@ type ErrorCode string
 
 const (
 	// General errors
-	INTERNAL_ERROR     ErrorCode = "INTERNAL_ERROR"
-	INVALID_INPUT      ErrorCode = "INVALID_INPUT"
-	UNAUTHORIZED       ErrorCode = "UNAUTHORIZED"
-	FORBIDDEN          ErrorCode = "FORBIDDEN"
-	RATE_LIMITED       ErrorCode = "RATE_LIMITED"
-	NOT_FOUND_ERROR    ErrorCode = "NOT_FOUND_ERROR"
-	VALIDATION_ERROR   ErrorCode = "VALIDATION_ERROR"
+	INTERNAL_ERROR   ErrorCode = "INTERNAL_ERROR"
+	INVALID_INPUT    ErrorCode = "INVALID_INPUT"
+	UNAUTHORIZED     ErrorCode = "UNAUTHORIZED"
+	FORBIDDEN        ErrorCode = "FORBIDDEN"
+	RATE_LIMITED     ErrorCode = "RATE_LIMITED"
+	NOT_FOUND_ERROR  ErrorCode = "NOT_FOUND_ERROR"
+	VALIDATION_ERROR ErrorCode = "VALIDATION_ERROR"
 
 	// Package scanning errors
-	PACKAGE_NOT_FOUND  ErrorCode = "PACKAGE_NOT_FOUND"
-	SCAN_FAILED        ErrorCode = "SCAN_FAILED"
-	INVALID_PACKAGE    ErrorCode = "INVALID_PACKAGE"
+	PACKAGE_NOT_FOUND ErrorCode = "PACKAGE_NOT_FOUND"
+	SCAN_FAILED       ErrorCode = "SCAN_FAILED"
+	INVALID_PACKAGE   ErrorCode = "INVALID_PACKAGE"
 
 	// Database errors
-	DB_CONNECTION_ERROR ErrorCode = "DB_CONNECTION_ERROR"
-	DB_QUERY_ERROR     ErrorCode = "DB_QUERY_ERROR"
+	DB_CONNECTION_ERROR  ErrorCode = "DB_CONNECTION_ERROR"
+	DB_QUERY_ERROR       ErrorCode = "DB_QUERY_ERROR"
 	DB_TRANSACTION_ERROR ErrorCode = "DB_TRANSACTION_ERROR"
 
 	// Cache errors
-	CACHE_ERROR        ErrorCode = "CACHE_ERROR"
-	CACHE_MISS         ErrorCode = "CACHE_MISS"
+	CACHE_ERROR ErrorCode = "CACHE_ERROR"
+	CACHE_MISS  ErrorCode = "CACHE_MISS"
 
 	// ML/AI errors
-	ML_MODEL_ERROR     ErrorCode = "ML_MODEL_ERROR"
+	ML_MODEL_ERROR      ErrorCode = "ML_MODEL_ERROR"
 	ML_PREDICTION_ERROR ErrorCode = "ML_PREDICTION_ERROR"
 
 	// Configuration errors
-	CONFIG_ERROR       ErrorCode = "CONFIG_ERROR"
+	CONFIG_ERROR            ErrorCode = "CONFIG_ERROR"
 	CONFIG_VALIDATION_ERROR ErrorCode = "CONFIG_VALIDATION_ERROR"
 
 	// Input validation errors
-	ErrCodeValidation ErrorCode = "VALIDATION_ERROR"
-	ErrCodeInvalidInput ErrorCode = "INVALID_INPUT"
+	ErrCodeValidation      ErrorCode = "VALIDATION_ERROR"
+	ErrCodeInvalidInput    ErrorCode = "INVALID_INPUT"
 	ErrCodeMissingRequired ErrorCode = "MISSING_REQUIRED"
-	
+
 	// Network and external service errors
-	ErrCodeNetwork ErrorCode = "NETWORK_ERROR"
-	ErrCodeTimeout ErrorCode = "TIMEOUT_ERROR"
-	ErrCodeRateLimit ErrorCode = "RATE_LIMIT_ERROR"
+	ErrCodeNetwork            ErrorCode = "NETWORK_ERROR"
+	ErrCodeTimeout            ErrorCode = "TIMEOUT_ERROR"
+	ErrCodeRateLimit          ErrorCode = "RATE_LIMIT_ERROR"
 	ErrCodeServiceUnavailable ErrorCode = "SERVICE_UNAVAILABLE"
-	
+
 	// Resource errors
-	ErrCodeNotFound ErrorCode = "NOT_FOUND"
-	ErrCodeAlreadyExists ErrorCode = "ALREADY_EXISTS"
+	ErrCodeNotFound         ErrorCode = "NOT_FOUND"
+	ErrCodeAlreadyExists    ErrorCode = "ALREADY_EXISTS"
 	ErrCodePermissionDenied ErrorCode = "PERMISSION_DENIED"
-	ErrCodeQuotaExceeded ErrorCode = "QUOTA_EXCEEDED"
-	
+	ErrCodeQuotaExceeded    ErrorCode = "QUOTA_EXCEEDED"
+
 	// Processing errors
 	ErrCodeProcessing ErrorCode = "PROCESSING_ERROR"
-	ErrCodeParsing ErrorCode = "PARSING_ERROR"
-	ErrCodeEncoding ErrorCode = "ENCODING_ERROR"
-	ErrCodeDecoding ErrorCode = "DECODING_ERROR"
-	
+	ErrCodeParsing    ErrorCode = "PARSING_ERROR"
+	ErrCodeEncoding   ErrorCode = "ENCODING_ERROR"
+	ErrCodeDecoding   ErrorCode = "DECODING_ERROR"
+
 	// Database errors
-	ErrCodeDatabase ErrorCode = "DATABASE_ERROR"
+	ErrCodeDatabase    ErrorCode = "DATABASE_ERROR"
 	ErrCodeTransaction ErrorCode = "TRANSACTION_ERROR"
-	ErrCodeConstraint ErrorCode = "CONSTRAINT_ERROR"
-	
+	ErrCodeConstraint  ErrorCode = "CONSTRAINT_ERROR"
+
 	// Authentication and authorization errors
-	ErrCodeAuth ErrorCode = "AUTH_ERROR"
+	ErrCodeAuth         ErrorCode = "AUTH_ERROR"
 	ErrCodeUnauthorized ErrorCode = "UNAUTHORIZED"
-	ErrCodeForbidden ErrorCode = "FORBIDDEN"
+	ErrCodeForbidden    ErrorCode = "FORBIDDEN"
 	ErrCodeTokenExpired ErrorCode = "TOKEN_EXPIRED"
-	
+
 	// Configuration errors
-	ErrCodeConfig ErrorCode = "CONFIG_ERROR"
+	ErrCodeConfig        ErrorCode = "CONFIG_ERROR"
 	ErrCodeMissingConfig ErrorCode = "MISSING_CONFIG"
 	ErrCodeInvalidConfig ErrorCode = "INVALID_CONFIG"
-	
+
 	// Internal system errors
 	ErrCodeInternal ErrorCode = "INTERNAL_ERROR"
-	ErrCodePanic ErrorCode = "PANIC_ERROR"
-	ErrCodeUnknown ErrorCode = "UNKNOWN_ERROR"
+	ErrCodePanic    ErrorCode = "PANIC_ERROR"
+	ErrCodeUnknown  ErrorCode = "UNKNOWN_ERROR"
 )
 
 // Severity represents the severity level of an error
 type Severity string
 
 const (
-	SeverityLow    Severity = "LOW"
-	SeverityMedium Severity = "MEDIUM"
-	SeverityHigh   Severity = "HIGH"
+	SeverityLow      Severity = "LOW"
+	SeverityMedium   Severity = "MEDIUM"
+	SeverityHigh     Severity = "HIGH"
 	SeverityCritical Severity = "CRITICAL"
 )
 
 // AppError represents a structured application error
 type AppError struct {
-	Code      ErrorCode              `json:"code"`
-	Message   string                 `json:"message"`
-	Cause     error                  `json:"-"`
-	Context   map[string]interface{} `json:"context,omitempty"`
-	Severity  Severity               `json:"severity"`
-	Timestamp time.Time              `json:"timestamp"`
-	StackTrace string                `json:"stack_trace,omitempty"`
-	RequestID string                 `json:"request_id,omitempty"`
-	UserID    string                 `json:"user_id,omitempty"`
-	Retryable bool                   `json:"retryable"`
+	Code       ErrorCode              `json:"code"`
+	Message    string                 `json:"message"`
+	Cause      error                  `json:"-"`
+	Context    map[string]interface{} `json:"context,omitempty"`
+	Severity   Severity               `json:"severity"`
+	Timestamp  time.Time              `json:"timestamp"`
+	StackTrace string                 `json:"stack_trace,omitempty"`
+	RequestID  string                 `json:"request_id,omitempty"`
+	UserID     string                 `json:"user_id,omitempty"`
+	Retryable  bool                   `json:"retryable"`
 }
 
 // Error implements the error interface
@@ -173,11 +173,11 @@ func (e *AppError) GetCode() ErrorCode {
 // New creates a new AppError
 func New(code ErrorCode, message string) *AppError {
 	return &AppError{
-		Code:      code,
-		Message:   message,
-		Severity:  getSeverityForCode(code),
-		Timestamp: time.Now(),
-		Retryable: isRetryableCode(code),
+		Code:       code,
+		Message:    message,
+		Severity:   getSeverityForCode(code),
+		Timestamp:  time.Now(),
+		Retryable:  isRetryableCode(code),
 		StackTrace: getStackTrace(),
 	}
 }

@@ -163,7 +163,7 @@ func (r *TreeRenderer) renderNode(node *types.DependencyTree, prefix string, isL
 	// Render each dependency
 	for i, dep := range node.Dependencies {
 		isLastDep := i == len(node.Dependencies)-1
-		
+
 		// Choose appropriate tree characters
 		var connector, childPrefix string
 		if r.ASCIIOnly {
@@ -224,7 +224,7 @@ func (r *TreeRenderer) formatNode(node *types.DependencyTree, isRoot bool) strin
 		} else {
 			result += " ⚠️"
 		}
-		
+
 		if !r.CompactMode {
 			// Show threat details
 			for _, threat := range node.Threats {

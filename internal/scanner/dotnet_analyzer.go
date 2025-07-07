@@ -26,32 +26,32 @@ func NewDotNetPackageAnalyzer(cfg *config.Config) *DotNetPackageAnalyzer {
 
 // Project file structures
 type CSProj struct {
-	XMLName        xml.Name              `xml:"Project"`
-	Sdk            string                `xml:"Sdk,attr"`
-	PropertyGroups []PropertyGroup       `xml:"PropertyGroup"`
-	ItemGroups     []ItemGroup           `xml:"ItemGroup"`
-	Targets        []Target              `xml:"Target"`
+	XMLName        xml.Name        `xml:"Project"`
+	Sdk            string          `xml:"Sdk,attr"`
+	PropertyGroups []PropertyGroup `xml:"PropertyGroup"`
+	ItemGroups     []ItemGroup     `xml:"ItemGroup"`
+	Targets        []Target        `xml:"Target"`
 }
 
 type PropertyGroup struct {
-	TargetFramework         string `xml:"TargetFramework"`
-	TargetFrameworks        string `xml:"TargetFrameworks"`
-	OutputType              string `xml:"OutputType"`
-	RootNamespace           string `xml:"RootNamespace"`
-	AssemblyName            string `xml:"AssemblyName"`
-	Version                 string `xml:"Version"`
-	AssemblyVersion         string `xml:"AssemblyVersion"`
-	FileVersion             string `xml:"FileVersion"`
-	PackageVersion          string `xml:"PackageVersion"`
-	Description             string `xml:"Description"`
-	Authors                 string `xml:"Authors"`
-	Company                 string `xml:"Company"`
-	Product                 string `xml:"Product"`
-	Copyright               string `xml:"Copyright"`
+	TargetFramework          string `xml:"TargetFramework"`
+	TargetFrameworks         string `xml:"TargetFrameworks"`
+	OutputType               string `xml:"OutputType"`
+	RootNamespace            string `xml:"RootNamespace"`
+	AssemblyName             string `xml:"AssemblyName"`
+	Version                  string `xml:"Version"`
+	AssemblyVersion          string `xml:"AssemblyVersion"`
+	FileVersion              string `xml:"FileVersion"`
+	PackageVersion           string `xml:"PackageVersion"`
+	Description              string `xml:"Description"`
+	Authors                  string `xml:"Authors"`
+	Company                  string `xml:"Company"`
+	Product                  string `xml:"Product"`
+	Copyright                string `xml:"Copyright"`
 	PackageLicenseExpression string `xml:"PackageLicenseExpression"`
-	RepositoryUrl           string `xml:"RepositoryUrl"`
-	PackageProjectUrl       string `xml:"PackageProjectUrl"`
-	PackageTags             string `xml:"PackageTags"`
+	RepositoryUrl            string `xml:"RepositoryUrl"`
+	PackageProjectUrl        string `xml:"PackageProjectUrl"`
+	PackageTags              string `xml:"PackageTags"`
 }
 
 type ItemGroup struct {
@@ -64,12 +64,12 @@ type ItemGroup struct {
 }
 
 type PackageReference struct {
-	Include           string `xml:"Include,attr"`
-	Version           string `xml:"Version,attr"`
-	PrivateAssets     string `xml:"PrivateAssets,attr"`
-	IncludeAssets     string `xml:"IncludeAssets,attr"`
-	ExcludeAssets     string `xml:"ExcludeAssets,attr"`
-	Condition         string `xml:"Condition,attr"`
+	Include       string `xml:"Include,attr"`
+	Version       string `xml:"Version,attr"`
+	PrivateAssets string `xml:"PrivateAssets,attr"`
+	IncludeAssets string `xml:"IncludeAssets,attr"`
+	ExcludeAssets string `xml:"ExcludeAssets,attr"`
+	Condition     string `xml:"Condition,attr"`
 }
 
 type ProjectReference struct {
@@ -77,9 +77,9 @@ type ProjectReference struct {
 }
 
 type Reference struct {
-	Include   string `xml:"Include,attr"`
-	HintPath  string `xml:"HintPath"`
-	Private   string `xml:"Private"`
+	Include         string `xml:"Include,attr"`
+	HintPath        string `xml:"HintPath"`
+	Private         string `xml:"Private"`
 	SpecificVersion string `xml:"SpecificVersion"`
 }
 
@@ -101,40 +101,40 @@ type ProjectTarget struct {
 
 // packages.config structure
 type PackagesConfig struct {
-	XMLName  xml.Name `xml:"packages"`
+	XMLName  xml.Name             `xml:"packages"`
 	Packages []PackageConfigEntry `xml:"package"`
 }
 
 type PackageConfigEntry struct {
-	ID              string `xml:"id,attr"`
-	Version         string `xml:"version,attr"`
-	TargetFramework string `xml:"targetFramework,attr"`
-	DevelopmentDependency bool `xml:"developmentDependency,attr"`
+	ID                    string `xml:"id,attr"`
+	Version               string `xml:"version,attr"`
+	TargetFramework       string `xml:"targetFramework,attr"`
+	DevelopmentDependency bool   `xml:"developmentDependency,attr"`
 }
 
 // project.assets.json structure (NuGet lock file)
 type ProjectAssets struct {
-	Version   int                           `json:"version"`
-	Targets   map[string]map[string]Target  `json:"targets"`
+	Version   int                          `json:"version"`
+	Targets   map[string]map[string]Target `json:"targets"`
 	Libraries map[string]Library           `json:"libraries"`
 	Project   ProjectAssetsProject         `json:"project"`
 }
 
 type Target struct {
-	Type         string                    `json:"type"`
-	Framework    string                    `json:"framework"`
-	Dependencies map[string]string         `json:"dependencies"`
-	Runtime      map[string]RuntimeAsset   `json:"runtime"`
-	Compile      map[string]CompileAsset   `json:"compile"`
+	Type         string                  `json:"type"`
+	Framework    string                  `json:"framework"`
+	Dependencies map[string]string       `json:"dependencies"`
+	Runtime      map[string]RuntimeAsset `json:"runtime"`
+	Compile      map[string]CompileAsset `json:"compile"`
 }
 
 type Library struct {
-	Sha512    string            `json:"sha512"`
-	Type      string            `json:"type"`
-	Path      string            `json:"path"`
-	Files     []string          `json:"files"`
-	HashPath  string            `json:"hashPath"`
-	Serviceable bool            `json:"serviceable"`
+	Sha512      string   `json:"sha512"`
+	Type        string   `json:"type"`
+	Path        string   `json:"path"`
+	Files       []string `json:"files"`
+	HashPath    string   `json:"hashPath"`
+	Serviceable bool     `json:"serviceable"`
 }
 
 type RuntimeAsset struct {
@@ -146,22 +146,22 @@ type CompileAsset struct {
 }
 
 type ProjectAssetsProject struct {
-	Version      string                    `json:"version"`
-	Restore      ProjectRestore            `json:"restore"`
-	Frameworks   map[string]Framework      `json:"frameworks"`
+	Version    string               `json:"version"`
+	Restore    ProjectRestore       `json:"restore"`
+	Frameworks map[string]Framework `json:"frameworks"`
 }
 
 type ProjectRestore struct {
-	ProjectUniqueName string   `json:"projectUniqueName"`
-	ProjectName       string   `json:"projectName"`
-	ProjectPath       string   `json:"projectPath"`
-	PackagesPath      string   `json:"packagesPath"`
-	OutputPath        string   `json:"outputPath"`
-	ProjectStyle      string   `json:"projectStyle"`
-	OriginalTargetFrameworks []string `json:"originalTargetFrameworks"`
-	Sources           map[string]Source `json:"sources"`
-	FallbackFolders   []string `json:"fallbackFolders"`
-	ConfigFilePaths   []string `json:"configFilePaths"`
+	ProjectUniqueName        string            `json:"projectUniqueName"`
+	ProjectName              string            `json:"projectName"`
+	ProjectPath              string            `json:"projectPath"`
+	PackagesPath             string            `json:"packagesPath"`
+	OutputPath               string            `json:"outputPath"`
+	ProjectStyle             string            `json:"projectStyle"`
+	OriginalTargetFrameworks []string          `json:"originalTargetFrameworks"`
+	Sources                  map[string]Source `json:"sources"`
+	FallbackFolders          []string          `json:"fallbackFolders"`
+	ConfigFilePaths          []string          `json:"configFilePaths"`
 }
 
 type Source struct {
@@ -169,12 +169,12 @@ type Source struct {
 }
 
 type Framework struct {
-	TargetAlias   string                    `json:"targetAlias"`
-	Imports       []string                  `json:"imports"`
-	AssetTargetFallback bool                `json:"assetTargetFallback"`
-	Warn          bool                      `json:"warn"`
+	TargetAlias         string                        `json:"targetAlias"`
+	Imports             []string                      `json:"imports"`
+	AssetTargetFallback bool                          `json:"assetTargetFallback"`
+	Warn                bool                          `json:"warn"`
 	FrameworkReferences map[string]FrameworkReference `json:"frameworkReferences"`
-	Dependencies  map[string]Dependency     `json:"dependencies"`
+	Dependencies        map[string]Dependency         `json:"dependencies"`
 }
 
 type FrameworkReference struct {
@@ -182,15 +182,15 @@ type FrameworkReference struct {
 }
 
 type Dependency struct {
-	Target            string `json:"target"`
-	Version           string `json:"version"`
-	AutoReferenced    bool   `json:"autoReferenced"`
-	Include           string `json:"include"`
-	Exclude           string `json:"exclude"`
-	SuppressParent    string `json:"suppressParent"`
-	PrivateAssets     string `json:"privateAssets"`
-	IncludeAssets     string `json:"includeAssets"`
-	ExcludeAssets     string `json:"excludeAssets"`
+	Target         string `json:"target"`
+	Version        string `json:"version"`
+	AutoReferenced bool   `json:"autoReferenced"`
+	Include        string `json:"include"`
+	Exclude        string `json:"exclude"`
+	SuppressParent string `json:"suppressParent"`
+	PrivateAssets  string `json:"privateAssets"`
+	IncludeAssets  string `json:"includeAssets"`
+	ExcludeAssets  string `json:"excludeAssets"`
 }
 
 func (a *DotNetPackageAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Package, error) {
@@ -304,8 +304,8 @@ func (a *DotNetPackageAnalyzer) parseProjectFile(filePath string) ([]*types.Pack
 			// Determine if it's a development dependency
 			depType := "production"
 			if strings.Contains(pkgRef.PrivateAssets, "all") ||
-			   strings.Contains(pkgRef.IncludeAssets, "build") ||
-			   strings.Contains(pkgRef.Condition, "Debug") {
+				strings.Contains(pkgRef.IncludeAssets, "build") ||
+				strings.Contains(pkgRef.Condition, "Debug") {
 				depType = "development"
 			}
 
@@ -319,12 +319,12 @@ func (a *DotNetPackageAnalyzer) parseProjectFile(filePath string) ([]*types.Pack
 					Version:  version,
 					Registry: "nuget.org",
 					Metadata: map[string]interface{}{
-						"ecosystem":      "dotnet",
-						"source":         filepath.Base(filePath),
-						"privateAssets":  pkgRef.PrivateAssets,
-						"includeAssets":  pkgRef.IncludeAssets,
-						"excludeAssets":  pkgRef.ExcludeAssets,
-						"condition":      pkgRef.Condition,
+						"ecosystem":     "dotnet",
+						"source":        filepath.Base(filePath),
+						"privateAssets": pkgRef.PrivateAssets,
+						"includeAssets": pkgRef.IncludeAssets,
+						"excludeAssets": pkgRef.ExcludeAssets,
+						"condition":     pkgRef.Condition,
 					},
 				},
 			}
@@ -364,9 +364,9 @@ func (a *DotNetPackageAnalyzer) parsePackagesConfig(filePath string) ([]*types.P
 				Version:  pkg.Version,
 				Registry: "nuget.org",
 				Metadata: map[string]interface{}{
-					"ecosystem":        "dotnet",
-					"source":           "packages.config",
-					"targetFramework":  pkg.TargetFramework,
+					"ecosystem":             "dotnet",
+					"source":                "packages.config",
+					"targetFramework":       pkg.TargetFramework,
 					"developmentDependency": pkg.DevelopmentDependency,
 				},
 			},

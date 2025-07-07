@@ -38,9 +38,8 @@ func TestNPMAnalyzer_ParsePackageJSON(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
-		Scanner: &config.ScannerConfig{
-			IncludeDevDeps: true,
+		Features: config.FeatureConfig{
+			MLScoring: true,
 		},
 	}
 
@@ -112,9 +111,8 @@ func TestNPMAnalyzer_ParsePackageLockJSON(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
-		Scanner: &config.ScannerConfig{
-			IncludeDevDeps: false,
+		Features: config.FeatureConfig{
+			MLScoring: true,
 		},
 	}
 
@@ -171,7 +169,9 @@ lodash@4.17.21:
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)
@@ -208,7 +208,9 @@ func TestNPMAnalyzer_EmptyProject(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)
@@ -260,7 +262,9 @@ func TestNPMAnalyzer_InvalidJSON(t *testing.T) {
 	}
 
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{},
+		Features: config.FeatureConfig{
+			MLScoring: true,
+		},
 	}
 
 	analyzer, err := New(cfg)
@@ -286,11 +290,11 @@ func TestNPMAnalyzer_InvalidJSON(t *testing.T) {
 
 func TestNPMAnalyzer_VersionConstraints(t *testing.T) {
 	tests := []struct {
-		name        string
-		version     string
-		expectedOp  string
+		name       string
+		version    string
+		expectedOp string
 	}{
-		{"Caret constraint", "^4.18.0", "^"}, 
+		{"Caret constraint", "^4.18.0", "^"},
 		{"Tilde constraint", "~0.27.0", "~"},
 		{"Exact version", "4.17.21", ""},
 		{"Greater than", ">1.0.0", ">"},
@@ -329,7 +333,9 @@ func TestNPMAnalyzer_FileDetection(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{
-				Detection: &config.DetectionConfig{},
+				Features: config.FeatureConfig{
+					MLScoring: true,
+				},
 			}
 
 			analyzer, err := New(cfg)
@@ -337,7 +343,7 @@ func TestNPMAnalyzer_FileDetection(t *testing.T) {
 				t.Fatalf("Failed to create analyzer: %v", err)
 			}
 			fileType, _ := analyzer.detectFileType(tt.filename)
-			
+
 			if tt.expected == "" {
 				if fileType != "" {
 					t.Errorf("Expected empty file type for %s, got %s", tt.filename, fileType)

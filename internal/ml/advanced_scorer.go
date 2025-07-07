@@ -13,35 +13,35 @@ import (
 
 // AdvancedScorer implements sophisticated ML-based scoring using ensemble methods
 type AdvancedScorer struct {
-	config       *ScorerConfig
-	modelInfo    *ModelInfo
-	featureStats map[string]FeatureStats
+	config          *ScorerConfig
+	modelInfo       *ModelInfo
+	featureStats    map[string]FeatureStats
 	ensembleWeights map[string]float64
-	baseScorers  []Scorer
+	baseScorers     []Scorer
 }
 
 // NewAdvancedScorer creates a new advanced scorer with the given configuration
 func NewAdvancedScorer(config *ScorerConfig) (*AdvancedScorer, error) {
 	if config == nil {
 		config = &ScorerConfig{
-			Thresholds: DefaultScoringThresholds(),
+			Thresholds:     DefaultScoringThresholds(),
 			FeatureWeights: getDefaultFeatureWeights(),
-			Normalization: true,
+			Normalization:  true,
 		}
 	}
 
 	scorer := &AdvancedScorer{
 		config: config,
 		modelInfo: &ModelInfo{
-			Name:        "AdvancedEnsembleScorer",
-			Version:     "1.0.0",
-			Description: "Advanced ML scorer using ensemble methods",
-			Type:        "ensemble",
-			TrainedAt:   time.Now(),
-			Accuracy:    0.92,
-			Precision:   0.89,
-			Recall:      0.94,
-			F1Score:     0.91,
+			Name:         "AdvancedEnsembleScorer",
+			Version:      "1.0.0",
+			Description:  "Advanced ML scorer using ensemble methods",
+			Type:         "ensemble",
+			TrainedAt:    time.Now(),
+			Accuracy:     0.92,
+			Precision:    0.89,
+			Recall:       0.94,
+			F1Score:      0.91,
 			FeatureCount: len(config.FeatureWeights),
 		},
 		featureStats: getDefaultFeatureStats(),
@@ -68,16 +68,16 @@ func (s *AdvancedScorer) Score(ctx context.Context, pkg *types.Package, features
 
 	// Calculate component scores
 	componentScores := s.calculateComponentScores(normalizedFeatures)
-	
+
 	// Calculate ensemble score
 	ensembleScore := s.calculateEnsembleScore(componentScores)
-	
+
 	// Calculate confidence
 	confidence := s.calculateConfidence(componentScores, normalizedFeatures)
-	
+
 	// Determine risk level
 	riskLevel := s.config.Thresholds.GetRiskLevel(ensembleScore)
-	
+
 	// Generate explanation
 	explanation := s.generateExplanation(componentScores, riskLevel)
 
@@ -90,9 +90,9 @@ func (s *AdvancedScorer) Score(ctx context.Context, pkg *types.Package, features
 		ModelVersion:   s.modelInfo.Version,
 		ProcessingTime: float64(time.Since(start).Nanoseconds()) / 1e6,
 		Metadata: map[string]interface{}{
-			"package_name": pkg.Name,
+			"package_name":    pkg.Name,
 			"package_version": pkg.Version,
-			"scorer_type": "advanced_ensemble",
+			"scorer_type":     "advanced_ensemble",
 		},
 	}
 
@@ -171,13 +171,13 @@ func (s *AdvancedScorer) calculateComponentScores(features map[string]float64) m
 
 	// Typosquatting score
 	scores["typosquatting"] = s.calculateTyposquattingScore(features)
-	
+
 	// Reputation score
 	scores["reputation"] = s.calculateReputationScore(features)
-	
+
 	// Behavioral score
 	scores["behavioral"] = s.calculateBehavioralScore(features)
-	
+
 	// Metadata score
 	scores["metadata"] = s.calculateMetadataScore(features)
 
@@ -346,11 +346,11 @@ func getDefaultFeatureWeights() map[string]float64 {
 // getDefaultFeatureStats returns default statistics for feature normalization
 func getDefaultFeatureStats() map[string]FeatureStats {
 	return map[string]FeatureStats{
-		"download_count": {Mean: 1000, StdDev: 5000, Min: 0, Max: 100000},
-		"package_age":    {Mean: 365, StdDev: 730, Min: 0, Max: 3650},
-		"dependency_count": {Mean: 10, StdDev: 15, Min: 0, Max: 100},
+		"download_count":     {Mean: 1000, StdDev: 5000, Min: 0, Max: 100000},
+		"package_age":        {Mean: 365, StdDev: 730, Min: 0, Max: 3650},
+		"dependency_count":   {Mean: 10, StdDev: 15, Min: 0, Max: 100},
 		"description_length": {Mean: 100, StdDev: 50, Min: 0, Max: 500},
-		"name_entropy": {Mean: 3.5, StdDev: 1.0, Min: 0, Max: 5},
-		"update_frequency": {Mean: 30, StdDev: 60, Min: 0, Max: 365},
+		"name_entropy":       {Mean: 3.5, StdDev: 1.0, Min: 0, Max: 5},
+		"update_frequency":   {Mean: 30, StdDev: 60, Min: 0, Max: 365},
 	}
 }

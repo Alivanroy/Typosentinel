@@ -9,19 +9,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/spf13/cobra"
 )
 
 var (
-	servePort     int
-	serveHost     string
-	serveWorkers  int
-	serveTimeout  int
+	servePort    int
+	serveHost    string
+	serveWorkers int
+	serveTimeout int
 )
 
 // serveCmd represents the serve command

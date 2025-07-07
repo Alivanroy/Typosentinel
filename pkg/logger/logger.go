@@ -69,12 +69,12 @@ func ParseLogLevel(level string) LogLevel {
 
 // Config represents logger configuration
 type Config struct {
-	Level      LogLevel
-	Format     string // "text" or "json"
-	Output     io.Writer
-	Timestamp  bool
-	Caller     bool
-	Prefix     string
+	Level     LogLevel
+	Format    string // "text" or "json"
+	Output    io.Writer
+	Timestamp bool
+	Caller    bool
+	Prefix    string
 }
 
 // DefaultConfig returns a default logger configuration

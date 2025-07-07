@@ -11,8 +11,6 @@ import (
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
-
-
 // AzureDevOpsPlugin implements Plugin interface for Azure DevOps integration
 type AzureDevOpsPlugin struct {
 	info     PluginInfo
@@ -40,44 +38,44 @@ type AzureDevOpsSettings struct {
 
 // AzureDevOpsOutput represents the output structure for Azure DevOps
 type AzureDevOpsOutput struct {
-	TaskResult       string                    `json:"task_result"`
-	ExitCode         int                       `json:"exit_code"`
-	Variables        map[string]string         `json:"variables"`
-	TestResults      AzureDevOpsTestResults    `json:"test_results"`
-	Artifacts        []AzureDevOpsArtifact     `json:"artifacts"`
-	WorkItems        []AzureDevOpsWorkItem     `json:"work_items"`
-	PRComments       []AzureDevOpsPRComment    `json:"pr_comments"`
-	Timeline         []AzureDevOpsTimelineEntry `json:"timeline"`
-	Metrics          map[string]interface{}    `json:"metrics"`
-	SecurityReport   AzureDevOpsSecurityReport `json:"security_report"`
+	TaskResult     string                     `json:"task_result"`
+	ExitCode       int                        `json:"exit_code"`
+	Variables      map[string]string          `json:"variables"`
+	TestResults    AzureDevOpsTestResults     `json:"test_results"`
+	Artifacts      []AzureDevOpsArtifact      `json:"artifacts"`
+	WorkItems      []AzureDevOpsWorkItem      `json:"work_items"`
+	PRComments     []AzureDevOpsPRComment     `json:"pr_comments"`
+	Timeline       []AzureDevOpsTimelineEntry `json:"timeline"`
+	Metrics        map[string]interface{}     `json:"metrics"`
+	SecurityReport AzureDevOpsSecurityReport  `json:"security_report"`
 }
 
 // AzureDevOpsTestResults represents Azure DevOps test results
 type AzureDevOpsTestResults struct {
-	TestRun      string                   `json:"test_run"`
-	TotalTests   int                      `json:"total_tests"`
-	PassedTests  int                      `json:"passed_tests"`
-	FailedTests  int                      `json:"failed_tests"`
-	SkippedTests int                      `json:"skipped_tests"`
-	TestCases    []AzureDevOpsTestCase    `json:"test_cases"`
+	TestRun      string                `json:"test_run"`
+	TotalTests   int                   `json:"total_tests"`
+	PassedTests  int                   `json:"passed_tests"`
+	FailedTests  int                   `json:"failed_tests"`
+	SkippedTests int                   `json:"skipped_tests"`
+	TestCases    []AzureDevOpsTestCase `json:"test_cases"`
 }
 
 // AzureDevOpsTestCase represents a test case
 type AzureDevOpsTestCase struct {
-	Name        string `json:"name"`
-	Outcome     string `json:"outcome"`
-	Duration    int64  `json:"duration_ms"`
+	Name         string `json:"name"`
+	Outcome      string `json:"outcome"`
+	Duration     int64  `json:"duration_ms"`
 	ErrorMessage string `json:"error_message,omitempty"`
 	StackTrace   string `json:"stack_trace,omitempty"`
 }
 
 // AzureDevOpsArtifact represents a build artifact
 type AzureDevOpsArtifact struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	Path         string `json:"path"`
-	Size         int64  `json:"size"`
-	ContainerID  string `json:"container_id,omitempty"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Path        string `json:"path"`
+	Size        int64  `json:"size"`
+	ContainerID string `json:"container_id,omitempty"`
 }
 
 // AzureDevOpsWorkItem represents a work item
@@ -95,11 +93,11 @@ type AzureDevOpsWorkItem struct {
 
 // AzureDevOpsPRComment represents a pull request comment
 type AzureDevOpsPRComment struct {
-	PRID       int    `json:"pr_id"`
-	ThreadID   int    `json:"thread_id,omitempty"`
-	Content    string `json:"content"`
+	PRID        int    `json:"pr_id"`
+	ThreadID    int    `json:"thread_id,omitempty"`
+	Content     string `json:"content"`
 	CommentType string `json:"comment_type"`
-	Status     string `json:"status"`
+	Status      string `json:"status"`
 }
 
 // AzureDevOpsTimelineEntry represents a timeline entry
@@ -112,9 +110,9 @@ type AzureDevOpsTimelineEntry struct {
 
 // AzureDevOpsSecurityReport represents security report for Azure DevOps
 type AzureDevOpsSecurityReport struct {
-	Version         string                           `json:"version"`
-	Vulnerabilities []AzureDevOpsVulnerability       `json:"vulnerabilities"`
-	Summary         AzureDevOpsSecuritySummary       `json:"summary"`
+	Version         string                     `json:"version"`
+	Vulnerabilities []AzureDevOpsVulnerability `json:"vulnerabilities"`
+	Summary         AzureDevOpsSecuritySummary `json:"summary"`
 }
 
 // AzureDevOpsVulnerability represents a vulnerability
@@ -236,7 +234,7 @@ func (p *AzureDevOpsPlugin) Execute(ctx context.Context, result *types.ScanResul
 	} else {
 		packageName = result.Target
 	}
-	
+
 	p.logger.Info("Executing Azure DevOps plugin", map[string]interface{}{
 		"package": packageName,
 		"risk":    "unknown", // Risk calculation moved to individual packages
@@ -301,23 +299,23 @@ func (p *AzureDevOpsPlugin) Execute(ctx context.Context, result *types.ScanResul
 
 	// Create metrics
 	output.Metrics = map[string]interface{}{
-		"scan_duration_ms":    time.Since(start).Milliseconds(),
-		"threats_detected":    totalThreats,
-		"risk_score":          0.0, // Risk calculation moved to individual packages
-		"overall_risk":        "unknown", // Risk calculation moved to individual packages
-		"package_name":        packageName,
-		"package_version":     packageVersion,
-		"scan_timestamp":      time.Now().Unix(),
-		"build_id":            p.settings.BuildID,
-		"pipeline_id":         p.settings.PipelineID,
+		"scan_duration_ms": time.Since(start).Milliseconds(),
+		"threats_detected": totalThreats,
+		"risk_score":       0.0,       // Risk calculation moved to individual packages
+		"overall_risk":     "unknown", // Risk calculation moved to individual packages
+		"package_name":     packageName,
+		"package_version":  packageVersion,
+		"scan_timestamp":   time.Now().Unix(),
+		"build_id":         p.settings.BuildID,
+		"pipeline_id":      p.settings.PipelineID,
 	}
 
 	// Convert output to JSON
 	return &PluginResult{
-		Success:   output.TaskResult == "Succeeded" || output.TaskResult == "SucceededWithIssues",
-		Message:   p.generateSummaryMessage(result),
-		Data:      map[string]interface{}{"azure_devops_output": output},
-		Actions:   actions,
+		Success: output.TaskResult == "Succeeded" || output.TaskResult == "SucceededWithIssues",
+		Message: p.generateSummaryMessage(result),
+		Data:    map[string]interface{}{"azure_devops_output": output},
+		Actions: actions,
 		Metadata: map[string]interface{}{
 			"platform":     "azure-devops",
 			"organization": p.settings.Organization,
@@ -357,7 +355,7 @@ func (p *AzureDevOpsPlugin) setAzureDevOpsVariables(output *AzureDevOpsOutput, r
 		packageVersion = "unknown"
 	}
 
-	output.Variables["TYPOSENTINEL_RISK_SCORE"] = "0.0" // Risk calculation moved to individual packages
+	output.Variables["TYPOSENTINEL_RISK_SCORE"] = "0.0"       // Risk calculation moved to individual packages
 	output.Variables["TYPOSENTINEL_OVERALL_RISK"] = "unknown" // Risk calculation moved to individual packages
 	output.Variables["TYPOSENTINEL_THREATS_COUNT"] = fmt.Sprintf("%d", totalThreats)
 	output.Variables["TYPOSENTINEL_PACKAGE_NAME"] = packageName
@@ -623,16 +621,16 @@ func (p *AzureDevOpsPlugin) handleWorkItems(output *AzureDevOpsOutput, result *t
 
 	hasCriticalOrHigh := false
 	for _, pkg := range result.Packages {
-			for _, threat := range pkg.Threats {
-				if threat.Severity == types.SeverityCritical || threat.Severity == types.SeverityHigh {
-					hasCriticalOrHigh = true
-					break
-				}
-			}
-			if hasCriticalOrHigh {
+		for _, threat := range pkg.Threats {
+			if threat.Severity == types.SeverityCritical || threat.Severity == types.SeverityHigh {
+				hasCriticalOrHigh = true
 				break
 			}
 		}
+		if hasCriticalOrHigh {
+			break
+		}
+	}
 
 	if hasCriticalOrHigh {
 		workItem := AzureDevOpsWorkItem{
@@ -644,8 +642,8 @@ func (p *AzureDevOpsPlugin) handleWorkItems(output *AzureDevOpsOutput, result *t
 			Severity:    "1 - Critical",
 			Tags:        []string{"security", "typosentinel", "dependency"},
 			Fields: map[string]string{
-				"System.AreaPath":     p.settings.Project,
-				"System.IterationPath": p.settings.Project,
+				"System.AreaPath":                p.settings.Project,
+				"System.IterationPath":           p.settings.Project,
 				"Microsoft.VSTS.Common.Priority": "1",
 				"Microsoft.VSTS.Common.Severity": "1 - Critical",
 			},

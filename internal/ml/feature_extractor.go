@@ -1,13 +1,13 @@
 package ml
 
 import (
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"math"
 	"regexp"
 	"strings"
 	"time"
-	"github.com/Alivanroy/Typosentinel/internal/config"
-	"github.com/Alivanroy/Typosentinel/pkg/logger"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // AdvancedFeatureExtractor implements sophisticated feature extraction for ML models

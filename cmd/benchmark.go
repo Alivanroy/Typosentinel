@@ -46,19 +46,19 @@ Examples:
 
 // Benchmark command flags
 var (
-	benchmarkSuite     string
-	benchmarkOutput    string
-	benchmarkFormat    string
-	benchmarkDuration  time.Duration
-	benchmarkParallel  int
-	benchmarkCompare   string
-	benchmarkQuiet     bool
-	benchmarkVerbose   bool
+	benchmarkSuite      string
+	benchmarkOutput     string
+	benchmarkFormat     string
+	benchmarkDuration   time.Duration
+	benchmarkParallel   int
+	benchmarkCompare    string
+	benchmarkQuiet      bool
+	benchmarkVerbose    bool
 	benchmarkMemProfile string
 	benchmarkCPUProfile string
-	benchmarkConfig    string
+	benchmarkConfig     string
 	benchmarkIterations int
-	benchmarkWarmup    time.Duration
+	benchmarkWarmup     time.Duration
 )
 
 func init() {

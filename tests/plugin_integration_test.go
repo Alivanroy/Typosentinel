@@ -35,13 +35,16 @@ func TestPluginSystemIntegration(t *testing.T) {
 			PluginDirectory: pluginDir,
 			AutoLoad:        false, // Disable auto-loading to avoid loading non-existent plugins
 
-			Plugins: []config.PluginEntry{}, // Empty plugin list for testing
+			Plugins: map[string]config.PluginConfig{}, // Empty plugin list for testing
 		},
 		Scanner: &config.ScannerConfig{
-			Enabled:        true,
-			Concurrency:    4,
+			MaxConcurrency: 4,
 			IncludeDevDeps: false,
 			EnrichMetadata: true,
+			Timeout:        30 * time.Second,
+			RetryAttempts:  3,
+			RetryDelay:     1 * time.Second,
+			UserAgent:      "typosentinel-test",
 		},
 	}
 
@@ -317,9 +320,9 @@ plugins:
 			t.Fatalf("Failed to create temp directory: %v", err)
 		}
 		defer os.RemoveAll(invalidTempDir)
-		
+
 		invalidPluginDir := filepath.Join(invalidTempDir, "nonexistent")
-		
+
 		invalidCfg := *cfg
 		invalidCfg.Plugins.PluginDirectory = invalidPluginDir
 
@@ -351,16 +354,16 @@ plugins:
 			t.Fatalf("Failed to create temp directory: %v", err)
 		}
 		defer os.RemoveAll(concurrentTempDir)
-		
+
 		concurrentPluginDir := filepath.Join(concurrentTempDir, "plugins")
 		err = os.MkdirAll(concurrentPluginDir, 0755)
 		if err != nil {
 			t.Fatalf("Failed to create plugin directory: %v", err)
 		}
-		
+
 		concurrentCfg := *cfg
 		concurrentCfg.Plugins.PluginDirectory = concurrentPluginDir
-		
+
 		registry := scanner.NewAnalyzerRegistry(&concurrentCfg)
 		pluginManager := scanner.NewPluginManager(&concurrentCfg, registry)
 
@@ -432,7 +435,7 @@ func TestPluginSystemPerformance(t *testing.T) {
 			Enabled:         true,
 			PluginDirectory: pluginDir,
 			AutoLoad:        false,
-			Plugins: []config.PluginEntry{},
+			Plugins:         map[string]config.PluginConfig{},
 		},
 	}
 

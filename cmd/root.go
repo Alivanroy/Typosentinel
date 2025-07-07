@@ -12,14 +12,14 @@ import (
 
 var (
 	// Global flags
-	cfgFile    string
-	debug      bool
-	verbose    bool
-	trace      bool
-	debugMode  string
-	logLevel   string
-	logFormat  string
-	logOutput  string
+	cfgFile   string
+	debug     bool
+	verbose   bool
+	trace     bool
+	debugMode string
+	logLevel  string
+	logFormat string
+	logOutput string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -101,7 +101,7 @@ func initializeConfig(cmd *cobra.Command, args []string) error {
 			})
 			return nil // Continue with defaults instead of failing
 		}
-		
+
 		// Note: Logging configuration would need to be added to config struct
 		// For now, use default logger settings
 

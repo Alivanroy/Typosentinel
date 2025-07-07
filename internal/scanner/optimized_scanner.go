@@ -41,10 +41,10 @@ type ScanJob struct {
 
 // ScanJobResult represents the result of a scanning job
 type ScanJobResult struct {
-	JobID    string
-	Result   *types.Package
-	Error    error
-	Duration time.Duration
+	JobID     string
+	Result    *types.Package
+	Error     error
+	Duration  time.Duration
 	FromCache bool
 }
 
@@ -53,9 +53,9 @@ type CacheManager struct {
 	// L1: In-memory cache for hot data
 	memoryCache *sync.Map
 	// L2: File system cache for persistent storage
-	fsCache     map[string]*CacheEntry
-	fsCacheMu   sync.RWMutex
-	config      *CacheConfig
+	fsCache   map[string]*CacheEntry
+	fsCacheMu sync.RWMutex
+	config    *CacheConfig
 }
 
 // CacheConfig holds cache configuration
@@ -81,7 +81,7 @@ func NewOptimizedScanner(scanner *Scanner, cfg *config.Config) *OptimizedScanner
 	cacheConfig := &CacheConfig{
 		MemoryTTL:     30 * time.Minute,
 		FSTTL:         24 * time.Hour,
-		MaxMemorySize: 100 * 1024 * 1024, // 100MB
+		MaxMemorySize: 100 * 1024 * 1024,  // 100MB
 		MaxFSSize:     1024 * 1024 * 1024, // 1GB
 		CacheDir:      "/tmp/typosentinel-cache",
 	}
@@ -335,7 +335,7 @@ func (os *OptimizedScanner) ScanPackageParallel(pkg *types.Package) (*types.Pack
 // scanPackageWithCache scans a package with caching
 func (os *OptimizedScanner) scanPackageWithCache(pkg *types.Package) (*types.Package, bool, error) {
 	cacheKey := generateCacheKey(pkg.Name, pkg.Registry, pkg.Version)
-	
+
 	// Check cache first
 	if cached, found := os.cache.Get(cacheKey); found {
 		if cachedPkg, ok := cached.(*types.Package); ok {

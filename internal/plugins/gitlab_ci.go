@@ -37,13 +37,13 @@ type GitLabCISettings struct {
 
 // GitLabCIOutput represents the output structure for GitLab CI
 type GitLabCIOutput struct {
-	JobStatus    string                 `json:"job_status"`
-	ExitCode     int                    `json:"exit_code"`
-	Variables    map[string]string      `json:"variables"`
-	Artifacts    []string               `json:"artifacts"`
-	Annotations  []GitLabCIAnnotation   `json:"annotations"`
-	Metrics      map[string]interface{} `json:"metrics"`
-	Reports      GitLabCIReports        `json:"reports"`
+	JobStatus   string                 `json:"job_status"`
+	ExitCode    int                    `json:"exit_code"`
+	Variables   map[string]string      `json:"variables"`
+	Artifacts   []string               `json:"artifacts"`
+	Annotations []GitLabCIAnnotation   `json:"annotations"`
+	Metrics     map[string]interface{} `json:"metrics"`
+	Reports     GitLabCIReports        `json:"reports"`
 }
 
 // GitLabCIAnnotation represents a GitLab CI annotation
@@ -127,10 +127,10 @@ func (p *GitLabCIPlugin) Initialize(ctx context.Context, config map[string]inter
 	}
 
 	p.logger.Info("GitLab CI plugin initialized", map[string]interface{}{
-		"project_id":   p.settings.ProjectID,
-		"pipeline_id":  p.settings.PipelineID,
-		"job_id":       p.settings.JobID,
-		"environment":  p.settings.Environment,
+		"project_id":  p.settings.ProjectID,
+		"pipeline_id": p.settings.PipelineID,
+		"job_id":      p.settings.JobID,
+		"environment": p.settings.Environment,
 	})
 
 	return nil
@@ -139,7 +139,7 @@ func (p *GitLabCIPlugin) Initialize(ctx context.Context, config map[string]inter
 // Execute runs the GitLab CI integration
 func (p *GitLabCIPlugin) Execute(ctx context.Context, result *types.ScanResult) (*PluginResult, error) {
 	start := time.Now()
-	
+
 	// Derive package information from first package or fallback to target
 	packageName := result.Target
 	packageVersion := "unknown"
@@ -147,13 +147,13 @@ func (p *GitLabCIPlugin) Execute(ctx context.Context, result *types.ScanResult) 
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	// Calculate total threats across all packages
 	totalThreats := 0
 	for _, pkg := range result.Packages {
 		totalThreats += len(pkg.Threats)
 	}
-	
+
 	p.logger.Info("Executing GitLab CI plugin", map[string]interface{}{
 		"package": packageName,
 		"risk":    "unknown", // Risk calculation moved to individual packages
@@ -192,13 +192,13 @@ func (p *GitLabCIPlugin) Execute(ctx context.Context, result *types.ScanResult) 
 
 	// Create metrics
 	output.Metrics = map[string]interface{}{
-		"scan_duration_ms":    time.Since(start).Milliseconds(),
-		"threats_detected":    totalThreats,
-		"risk_score":          0.0, // Risk calculation moved to individual packages
-		"overall_risk":        "unknown", // Risk calculation moved to individual packages
-		"package_name":        packageName,
-		"package_version":     packageVersion,
-		"scan_timestamp":      time.Now().Unix(),
+		"scan_duration_ms": time.Since(start).Milliseconds(),
+		"threats_detected": totalThreats,
+		"risk_score":       0.0,       // Risk calculation moved to individual packages
+		"overall_risk":     "unknown", // Risk calculation moved to individual packages
+		"package_name":     packageName,
+		"package_version":  packageVersion,
+		"scan_timestamp":   time.Now().Unix(),
 	}
 
 	// Convert output to JSON
@@ -208,16 +208,16 @@ func (p *GitLabCIPlugin) Execute(ctx context.Context, result *types.ScanResult) 
 	}
 
 	return &PluginResult{
-		Success:   output.JobStatus == "success",
-		Message:   p.generateSummaryMessage(result),
-		Data:      map[string]interface{}{"gitlab_ci_output": string(outputData)},
-		Actions:   actions,
+		Success: output.JobStatus == "success",
+		Message: p.generateSummaryMessage(result),
+		Data:    map[string]interface{}{"gitlab_ci_output": string(outputData)},
+		Actions: actions,
 		Metadata: map[string]interface{}{
-			"platform":     "gitlab-ci",
-			"project_id":   p.settings.ProjectID,
-			"pipeline_id":  p.settings.PipelineID,
-			"job_id":       p.settings.JobID,
-			"exit_code":    output.ExitCode,
+			"platform":    "gitlab-ci",
+			"project_id":  p.settings.ProjectID,
+			"pipeline_id": p.settings.PipelineID,
+			"job_id":      p.settings.JobID,
+			"exit_code":   output.ExitCode,
 		},
 	}, nil
 }
@@ -231,14 +231,14 @@ func (p *GitLabCIPlugin) setGitLabVariables(output *GitLabCIOutput, result *type
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	// Calculate total threats across all packages
 	totalThreats := 0
 	for _, pkg := range result.Packages {
 		totalThreats += len(pkg.Threats)
 	}
-	
-	output.Variables["TYPOSENTINEL_RISK_SCORE"] = "0.0" // Risk calculation moved to individual packages
+
+	output.Variables["TYPOSENTINEL_RISK_SCORE"] = "0.0"       // Risk calculation moved to individual packages
 	output.Variables["TYPOSENTINEL_OVERALL_RISK"] = "unknown" // Risk calculation moved to individual packages
 	output.Variables["TYPOSENTINEL_THREATS_COUNT"] = fmt.Sprintf("%d", totalThreats)
 	output.Variables["TYPOSENTINEL_PACKAGE_NAME"] = packageName
@@ -304,7 +304,7 @@ func (p *GitLabCIPlugin) generateSecurityReport(output *GitLabCIOutput, result *
 				"severity":    strings.ToUpper(threat.Severity.String()),
 				"confidence":  "High",
 				"location": map[string]interface{}{
-					"file":            "package.json", // or requirements.txt, etc.
+					"file": "package.json", // or requirements.txt, etc.
 					"dependency": map[string]interface{}{
 						"package": map[string]interface{}{
 							"name": pkg.Name,
@@ -330,7 +330,7 @@ func (p *GitLabCIPlugin) generateSecurityReport(output *GitLabCIOutput, result *
 		"vulnerabilities": vulnerabilities,
 		"dependency_files": []map[string]interface{}{
 			{
-				"path":         "package.json",
+				"path":            "package.json",
 				"package_manager": "npm",
 			},
 		},
@@ -365,9 +365,9 @@ func (p *GitLabCIPlugin) handleSeverityActions(result *types.ScanResult) []Plugi
 		actions = append(actions, PluginAction{
 			Type: "create_issue",
 			Data: map[string]interface{}{
-				"title": fmt.Sprintf("Critical security threat detected in %s", packageName),
+				"title":       fmt.Sprintf("Critical security threat detected in %s", packageName),
 				"description": p.generateIssueDescription(result),
-				"labels": []string{"security", "critical", "typosentinel"},
+				"labels":      []string{"security", "critical", "typosentinel"},
 			},
 		})
 	}
@@ -408,13 +408,13 @@ func (p *GitLabCIPlugin) generateSummaryMessage(result *types.ScanResult) string
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	// Calculate total threats across all packages
 	totalThreats := 0
 	for _, pkg := range result.Packages {
 		totalThreats += len(pkg.Threats)
 	}
-	
+
 	if totalThreats == 0 {
 		return fmt.Sprintf("✅ No security threats detected in %s@%s", packageName, packageVersion)
 	}
@@ -452,7 +452,7 @@ func (p *GitLabCIPlugin) generateIssueDescription(result *types.ScanResult) stri
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	description := fmt.Sprintf("## Security Threat Detection Report\n\n")
 	description += fmt.Sprintf("**Package:** %s@%s\n", packageName, packageVersion)
 	// Risk information moved to individual packages
@@ -485,7 +485,7 @@ func (p *GitLabCIPlugin) generateMRComment(result *types.ScanResult) string {
 		packageName = result.Packages[0].Name
 		packageVersion = result.Packages[0].Version
 	}
-	
+
 	comment := "## 🚨 Typosentinel Security Alert\n\n"
 	comment += fmt.Sprintf("Security threats detected in **%s@%s**\n\n", packageName, packageVersion)
 

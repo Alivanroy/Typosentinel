@@ -1,11 +1,11 @@
 package tests
 
 import (
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"testing"
 	"time"
-	"github.com/Alivanroy/Typosentinel/internal/config"
-	"github.com/Alivanroy/Typosentinel/internal/analyzer"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Debug test for basic analyzer functionality
@@ -16,7 +16,7 @@ func TestDebug(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create analyzer: %v", err)
 	}
-	
+
 	// Create a test scan result
 	testResult := &types.ScanResult{
 		ID:          "test-scan-1",
@@ -33,21 +33,21 @@ func TestDebug(t *testing.T) {
 			},
 		},
 		Summary: &types.ScanSummary{
-			TotalPackages: 1,
+			TotalPackages:   1,
 			ScannedPackages: 1,
-			CleanPackages: 0,
+			CleanPackages:   0,
 			CriticalThreats: 0,
-			HighThreats: 0,
-			MediumThreats: 1,
-			LowThreats: 0,
-			TotalThreats: 1,
-			ThreatsFound: 1,
+			HighThreats:     0,
+			MediumThreats:   1,
+			LowThreats:      0,
+			TotalThreats:    1,
+			ThreatsFound:    1,
 			HighestSeverity: types.SeverityMedium,
 		},
 		Duration:  time.Second * 5,
 		CreatedAt: time.Now(),
 	}
-	
+
 	// Test that analyzer was created successfully
 	if a == nil {
 		t.Error("Analyzer should not be nil")
@@ -60,7 +60,7 @@ func TestDebug(t *testing.T) {
 	if testResult.Summary.TotalThreats != 1 {
 		t.Errorf("Expected 1 threat, got %d", testResult.Summary.TotalThreats)
 	}
-	
+
 	t.Logf("Debug test completed successfully")
 	t.Logf("Analyzer created and scan result validated")
 }

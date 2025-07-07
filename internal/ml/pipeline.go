@@ -3,10 +3,10 @@ package ml
 import (
 	"context"
 	"fmt"
-	"sync"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"sync"
 )
 
 // MLPipeline represents the machine learning pipeline for threat detection

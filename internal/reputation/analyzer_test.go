@@ -15,12 +15,12 @@ import (
 
 func TestNewAnalyzer(t *testing.T) {
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -72,16 +72,16 @@ func TestAnalyzePackage_Success(t *testing.T) {
 			Score:       0.85,
 			Risk:        "low",
 			Metrics: ReputationMetrics{
-				DownloadCount:    1000000,
-				AgeInDays:        365,
-				MaintainerCount:  3,
-				IssueCount:       5,
-				StarCount:        500,
-				ForkCount:        50,
-				LastUpdateDays:   7,
+				DownloadCount:      1000000,
+				AgeInDays:          365,
+				MaintainerCount:    3,
+				IssueCount:         5,
+				StarCount:          500,
+				ForkCount:          50,
+				LastUpdateDays:     7,
 				VulnerabilityCount: 0,
-				LicenseScore:     0.9,
-				CommunityScore:   0.8,
+				LicenseScore:       0.9,
+				CommunityScore:     0.8,
 			},
 			Flags: []ReputationFlag{
 				{
@@ -110,12 +110,12 @@ func TestAnalyzePackage_Success(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -188,12 +188,12 @@ func TestAnalyzePackage_ServerError(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  1, // Reduce retries for faster test
-		RetryDelay:  10 * time.Millisecond,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 1, // Reduce retries for faster test
+		RetryDelay: 10 * time.Millisecond,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -231,12 +231,12 @@ func TestAnalyzePackage_ContextCancellation(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -275,12 +275,12 @@ func TestAnalyzePackage_Timeout(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     50 * time.Millisecond, // Short timeout
-		MaxRetries:  1,
-		RetryDelay:  10 * time.Millisecond,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    50 * time.Millisecond, // Short timeout
+		MaxRetries: 1,
+		RetryDelay: 10 * time.Millisecond,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -336,12 +336,12 @@ func TestAnalyzePackages_Batch(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -412,12 +412,12 @@ func TestCacheHit(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "test-source",
@@ -503,12 +503,12 @@ func TestMultipleSources(t *testing.T) {
 	defer server2.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "source1",
@@ -615,12 +615,12 @@ func TestReputationFlag(t *testing.T) {
 
 func TestSourceResult(t *testing.T) {
 	source := SourceResult{
-		Name:      "virustotal",
-		Score:     0.75,
-		Weight:    0.3,
-		Status:    "success",
-		Latency:   120 * time.Millisecond,
-		Error:     "",
+		Name:    "virustotal",
+		Score:   0.75,
+		Weight:  0.3,
+		Status:  "success",
+		Latency: 120 * time.Millisecond,
+		Error:   "",
 		Metadata: map[string]interface{}{
 			"detections": 2,
 			"scanners":   45,
@@ -691,12 +691,12 @@ func TestConcurrentReputationAnalysis(t *testing.T) {
 	defer server.Close()
 
 	cfg := &Config{
-		Enabled:     true,
-		CacheSize:   1000,
-		CacheTTL:    time.Hour,
-		Timeout:     30 * time.Second,
-		MaxRetries:  3,
-		RetryDelay:  time.Second,
+		Enabled:    true,
+		CacheSize:  1000,
+		CacheTTL:   time.Hour,
+		Timeout:    30 * time.Second,
+		MaxRetries: 3,
+		RetryDelay: time.Second,
 		Sources: []Source{
 			{
 				Name:     "test-source",

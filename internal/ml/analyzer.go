@@ -3,12 +3,12 @@ package ml
 import (
 	"context"
 	"fmt"
+	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"math"
 	"regexp"
 	"strings"
 	"time"
-	"github.com/Alivanroy/Typosentinel/internal/config"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"unicode"
 )
 
@@ -359,18 +359,18 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 	// Whitelist of legitimate packages that should have very low similarity scores
 	legitimatePackages := map[string]bool{
-		"lodash": true, "react": true, "express": true, "requests": true, 
+		"lodash": true, "react": true, "express": true, "requests": true,
 		"numpy": true, "flask": true, "django": true, "axios": true,
 		"moment": true, "jquery": true, "bootstrap": true, "vue": true,
 		"angular": true, "typescript": true, "webpack": true, "babel": true,
 	}
-	
+
 	// If this is a known legitimate package, return very low similarity
 	if legitimatePackages[pkg.Name] {
 		fmt.Printf("DEBUG: Found legitimate package %s, returning low similarity score\n", pkg.Name)
 		return 0.1 // Very low similarity score for legitimate packages
 	}
-	
+
 	// Enhanced list of popular packages to check against
 	popularPackages := []string{
 		// JavaScript/Node.js packages
@@ -406,28 +406,26 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 	maxSimilarity := 0.0
 	mostSimilarPackage := ""
 
-	
-
 	// Enhanced similarity detection with multiple algorithms
 	for _, popular := range popularPackages {
 		// Skip exact matches - legitimate packages should not be flagged as typosquatting
 		if pkg.Name == popular {
 			continue
 		}
-		
+
 		// Calculate multiple similarity metrics
 		levenshteinSim := a.calculateSimilarity(pkg.Name, popular)
 		jaroWinklerSim := a.calculateJaroWinklerSimilarity(pkg.Name, popular)
 		phoneticSim := a.calculatePhoneticSimilarity(pkg.Name, popular)
-		
+
 		// Weighted combination of similarity metrics
 		combinedSim := (levenshteinSim*0.5 + jaroWinklerSim*0.3 + phoneticSim*0.2)
-		
+
 		if combinedSim > maxSimilarity {
 			maxSimilarity = combinedSim
 			mostSimilarPackage = popular
 		}
-		
+
 		// For Go modules, also compare full paths
 		if strings.Contains(pkg.Name, "/") && strings.Contains(popular, "/") {
 			fullSimilarity := a.calculateSimilarity(pkg.Name, popular)
@@ -436,11 +434,11 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 				mostSimilarPackage = popular
 			}
 		}
-		
+
 		// Also compare just the package names
 		pkgName := a.extractPackageName(pkg.Name)
 		popularPkgName := a.extractPackageName(popular)
-		
+
 		// Skip exact matches for extracted names too
 		if pkgName != popularPkgName {
 			nameSimilarity := a.calculateSimilarity(pkgName, popularPkgName)
@@ -460,12 +458,12 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 	// Enhanced typosquatting detection with pattern analysis
 	if maxSimilarity > 0.6 {
 		typoScore := a.calculateTyposquattingPatternScore(pkg.Name, mostSimilarPackage)
-		maxSimilarity = math.Min(maxSimilarity + typoScore, 1.0)
+		maxSimilarity = math.Min(maxSimilarity+typoScore, 1.0)
 	}
 
 	// Check for suspicious naming patterns
 	suspiciousScore := a.calculateSuspiciousPatternScore(pkg.Name)
-	maxSimilarity = math.Min(maxSimilarity + suspiciousScore, 1.0)
+	maxSimilarity = math.Min(maxSimilarity+suspiciousScore, 1.0)
 
 	return maxSimilarity
 }
@@ -485,27 +483,27 @@ func (a *MLAnalyzer) calculateJaroWinklerSimilarity(s1, s2 string) float64 {
 	if s1 == s2 {
 		return 1.0
 	}
-	
+
 	len1, len2 := len(s1), len(s2)
 	if len1 == 0 || len2 == 0 {
 		return 0.0
 	}
-	
+
 	// Calculate match window
 	matchWindow := a.max(len1, len2)/2 - 1
 	if matchWindow < 0 {
 		matchWindow = 0
 	}
-	
+
 	s1Matches := make([]bool, len1)
 	s2Matches := make([]bool, len2)
 	matches := 0
-	
+
 	// Find matches
 	for i := 0; i < len1; i++ {
 		start := a.max(0, i-matchWindow)
 		end := a.min(i+matchWindow+1, len2)
-		
+
 		for j := start; j < end; j++ {
 			if s2Matches[j] || s1[i] != s2[j] {
 				continue
@@ -516,11 +514,11 @@ func (a *MLAnalyzer) calculateJaroWinklerSimilarity(s1, s2 string) float64 {
 			break
 		}
 	}
-	
+
 	if matches == 0 {
 		return 0.0
 	}
-	
+
 	// Calculate transpositions
 	transpositions := 0
 	k := 0
@@ -536,10 +534,10 @@ func (a *MLAnalyzer) calculateJaroWinklerSimilarity(s1, s2 string) float64 {
 		}
 		k++
 	}
-	
+
 	// Calculate Jaro similarity
 	jaro := (float64(matches)/float64(len1) + float64(matches)/float64(len2) + float64(matches-transpositions/2)/float64(matches)) / 3.0
-	
+
 	// Calculate common prefix length (up to 4 characters)
 	prefixLength := 0
 	for i := 0; i < a.min(len1, len2, 4); i++ {
@@ -549,7 +547,7 @@ func (a *MLAnalyzer) calculateJaroWinklerSimilarity(s1, s2 string) float64 {
 			break
 		}
 	}
-	
+
 	// Calculate Jaro-Winkler similarity
 	return jaro + (0.1 * float64(prefixLength) * (1.0 - jaro))
 }
@@ -558,11 +556,11 @@ func (a *MLAnalyzer) calculateJaroWinklerSimilarity(s1, s2 string) float64 {
 func (a *MLAnalyzer) calculatePhoneticSimilarity(s1, s2 string) float64 {
 	soundex1 := a.calculateSoundex(s1)
 	soundex2 := a.calculateSoundex(s2)
-	
+
 	if soundex1 == soundex2 {
 		return 1.0
 	}
-	
+
 	// Calculate similarity between soundex codes
 	return a.calculateSimilarity(soundex1, soundex2)
 }
@@ -572,10 +570,10 @@ func (a *MLAnalyzer) calculateSoundex(s string) string {
 	if len(s) == 0 {
 		return ""
 	}
-	
+
 	s = strings.ToUpper(s)
 	result := string(s[0])
-	
+
 	// Soundex mapping
 	mapping := map[rune]rune{
 		'B': '1', 'F': '1', 'P': '1', 'V': '1',
@@ -585,7 +583,7 @@ func (a *MLAnalyzer) calculateSoundex(s string) string {
 		'M': '5', 'N': '5',
 		'R': '6',
 	}
-	
+
 	prevCode := '0'
 	for i := 1; i < len(s) && len(result) < 4; i++ {
 		code, exists := mapping[rune(s[i])]
@@ -596,44 +594,44 @@ func (a *MLAnalyzer) calculateSoundex(s string) string {
 			prevCode = '0'
 		}
 	}
-	
+
 	// Pad with zeros if necessary
 	for len(result) < 4 {
 		result += "0"
 	}
-	
+
 	return result
 }
 
 // calculateTyposquattingPatternScore analyzes specific typosquatting patterns
 func (a *MLAnalyzer) calculateTyposquattingPatternScore(suspicious, legitimate string) float64 {
 	score := 0.0
-	
+
 	// Check for character repetition (e.g., "requessts" vs "requests")
 	if a.hasCharacterRepetition(suspicious, legitimate) {
 		score += 0.3
 	}
-	
+
 	// Check for character omission (e.g., "reqests" vs "requests")
 	if a.hasCharacterOmission(suspicious, legitimate) {
 		score += 0.25
 	}
-	
+
 	// Check for character addition (e.g., "requestss" vs "requests")
 	if a.hasCharacterAddition(suspicious, legitimate) {
 		score += 0.25
 	}
-	
+
 	// Check for character substitution (e.g., "reqeusts" vs "requests")
 	if a.hasCharacterSubstitution(suspicious, legitimate) {
 		score += 0.2
 	}
-	
+
 	// Check for homoglyph attacks (e.g., "requ3sts" vs "requests")
 	if a.hasHomoglyphSubstitution(suspicious, legitimate) {
 		score += 0.4
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -641,7 +639,7 @@ func (a *MLAnalyzer) calculateTyposquattingPatternScore(suspicious, legitimate s
 func (a *MLAnalyzer) calculateSuspiciousPatternScore(packageName string) float64 {
 	score := 0.0
 	lowerName := strings.ToLower(packageName)
-	
+
 	// Check for suspicious keywords
 	suspiciousKeywords := []string{
 		"hack", "crack", "exploit", "backdoor", "malware", "virus",
@@ -649,30 +647,30 @@ func (a *MLAnalyzer) calculateSuspiciousPatternScore(packageName string) float64
 		"unofficial", "mirror", "clone", "copy", "duplicate",
 		"temp", "test", "demo", "sample", "example",
 	}
-	
+
 	for _, keyword := range suspiciousKeywords {
 		if strings.Contains(lowerName, keyword) {
 			score += 0.2
 		}
 	}
-	
+
 	// Check for excessive hyphens or underscores
 	hyphenCount := strings.Count(packageName, "-")
 	underscoreCount := strings.Count(packageName, "_")
 	if hyphenCount > 3 || underscoreCount > 3 {
 		score += 0.1
 	}
-	
+
 	// Check for mixed case in suspicious patterns
 	if a.hasSuspiciousCasing(packageName) {
 		score += 0.15
 	}
-	
+
 	// Check for number substitutions
 	if a.hasNumberSubstitutions(packageName) {
 		score += 0.2
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -719,7 +717,7 @@ func (a *MLAnalyzer) hasCharacterSubstitution(s1, s2 string) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
-	
+
 	differences := 0
 	for i := 0; i < len(s1); i++ {
 		if s1[i] != s2[i] {
@@ -748,12 +746,12 @@ func (a *MLAnalyzer) hasHomoglyphSubstitution(s1, s2 string) bool {
 		'5': {'s'},
 		'$': {'s'},
 	}
-	
+
 	for i, char := range s1 {
 		if i >= len(s2) {
 			break
 		}
-		
+
 		if char != rune(s2[i]) {
 			if substitutes, exists := homoglyphs[char]; exists {
 				for _, substitute := range substitutes {
@@ -771,7 +769,7 @@ func (a *MLAnalyzer) hasSuspiciousCasing(packageName string) bool {
 	// Check for alternating case or random capitalization
 	upperCount := 0
 	lowerCount := 0
-	
+
 	for _, char := range packageName {
 		if char >= 'A' && char <= 'Z' {
 			upperCount++
@@ -779,7 +777,7 @@ func (a *MLAnalyzer) hasSuspiciousCasing(packageName string) bool {
 			lowerCount++
 		}
 	}
-	
+
 	// Suspicious if mixed case in unusual patterns
 	return upperCount > 0 && lowerCount > 0 && upperCount < len(packageName)/4
 }
@@ -793,7 +791,7 @@ func (a *MLAnalyzer) hasNumberSubstitutions(packageName string) bool {
 		'5': 's',
 		'7': 't',
 	}
-	
+
 	for _, char := range packageName {
 		if _, exists := numberSubstitutions[char]; exists {
 			return true
@@ -988,12 +986,12 @@ func (a *MLAnalyzer) detectMaliciousPackage(ctx context.Context, pkg *types.Pack
 
 	// Whitelist of legitimate packages that should have very low malicious scores
 	legitimatePackages := map[string]bool{
-		"lodash": true, "react": true, "express": true, "requests": true, 
+		"lodash": true, "react": true, "express": true, "requests": true,
 		"numpy": true, "flask": true, "django": true, "axios": true,
 		"moment": true, "jquery": true, "bootstrap": true, "vue": true,
 		"angular": true, "typescript": true, "webpack": true, "babel": true,
 	}
-	
+
 	// If this is a known legitimate package, return very low malicious score
 	if legitimatePackages[pkg.Name] {
 		fmt.Printf("DEBUG: Found legitimate package %s in malicious detection, returning low score\n", pkg.Name)
@@ -1058,54 +1056,54 @@ func (a *MLAnalyzer) detectMaliciousPackage(ctx context.Context, pkg *types.Pack
 // analyzeMetadataForMaliciousPatterns analyzes package metadata for malicious indicators
 func (a *MLAnalyzer) analyzeMetadataForMaliciousPatterns(metadata *types.PackageMetadata) float64 {
 	score := 0.0
-	
+
 	// Check description for suspicious content
 	if description := metadata.Description; description != "" {
 		lowerDesc := strings.ToLower(description)
-		
+
 		// Check for script injection patterns
 		scriptPatterns := []string{
 			"postinstall", "preinstall", "curl", "wget", "exec", "eval",
 			"child_process", "spawn", "system", "shell", "cmd", "powershell",
 			"base64", "atob", "btoa", "unescape", "fromcharcode",
 		}
-		
+
 		for _, pattern := range scriptPatterns {
 			if strings.Contains(lowerDesc, pattern) {
 				score += 0.3
 			}
 		}
-		
+
 		// Check for social engineering keywords
 		socialPatterns := []string{
 			"urgent", "critical", "security", "fix", "patch", "update",
 			"vulnerability", "exploit", "breach", "compromise",
 		}
-		
+
 		for _, pattern := range socialPatterns {
 			if strings.Contains(lowerDesc, pattern) {
 				score += 0.2
 			}
 		}
-		
+
 		// Very short or missing descriptions are suspicious (reduced penalty)
 		if len(description) < 10 {
 			score += 0.1 // Reduced from 0.4
 		}
 	}
-	
+
 	// Check author patterns
 	if author := metadata.Author; author != "" {
 		lowerAuthor := strings.ToLower(author)
 		suspiciousAuthors := []string{"fake", "temp", "test", "admin", "root", "user"}
-		
+
 		for _, suspicious := range suspiciousAuthors {
 			if strings.Contains(lowerAuthor, suspicious) {
 				score += 0.3
 			}
 		}
 	}
-	
+
 	// Check for missing critical metadata (reduced penalties for test environment)
 	if metadata.Repository == "" {
 		score += 0.05 // Reduced from 0.2
@@ -1116,7 +1114,7 @@ func (a *MLAnalyzer) analyzeMetadataForMaliciousPatterns(metadata *types.Package
 	if metadata.License == "" {
 		score += 0.05 // Reduced from 0.2
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -1125,31 +1123,31 @@ func (a *MLAnalyzer) analyzeVersionPatterns(version string) float64 {
 	if version == "" {
 		return 0.2 // Missing version is suspicious
 	}
-	
+
 	score := 0.0
-	
+
 	// Very high version numbers are suspicious
 	if strings.HasPrefix(version, "999") || strings.HasPrefix(version, "9999") {
 		score += 0.6
 	}
-	
+
 	// Check for suspicious version patterns
 	if strings.Contains(version, "alpha") || strings.Contains(version, "beta") {
 		score += 0.1 // Pre-release versions are slightly more risky
 	}
-	
+
 	// Very long version strings can be suspicious
 	if len(version) > 20 {
 		score += 0.3
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
 // analyzeRegistrySpecificPatterns analyzes registry-specific suspicious patterns
 func (a *MLAnalyzer) analyzeRegistrySpecificPatterns(pkg *types.Package) float64 {
 	score := 0.0
-	
+
 	switch strings.ToLower(pkg.Registry) {
 	case "npm":
 		// NPM-specific patterns
@@ -1160,14 +1158,14 @@ func (a *MLAnalyzer) analyzeRegistrySpecificPatterns(pkg *types.Package) float64
 			// Packages mimicking core tools
 			score += 0.3
 		}
-		
+
 	case "pypi":
 		// PyPI-specific patterns
 		if strings.Contains(pkg.Name, "python-") || strings.Contains(pkg.Name, "py-") {
 			// Common prefixes, but can be used maliciously
 			score += 0.1
 		}
-		
+
 	case "go":
 		// Go module specific patterns
 		if !strings.Contains(pkg.Name, "/") {
@@ -1178,14 +1176,14 @@ func (a *MLAnalyzer) analyzeRegistrySpecificPatterns(pkg *types.Package) float64
 			score -= 0.1
 		}
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
 // analyzeBehavioralPatterns analyzes behavioral patterns from features
 func (a *MLAnalyzer) analyzeBehavioralPatterns(pkg *types.Package, features map[string]float64) float64 {
 	score := 0.0
-	
+
 	// Analyze file count patterns
 	if fileCount, exists := features["file_count"]; exists {
 		if fileCount < 2 {
@@ -1194,14 +1192,14 @@ func (a *MLAnalyzer) analyzeBehavioralPatterns(pkg *types.Package, features map[
 			score += 0.2 // Excessive files can hide malicious content
 		}
 	}
-	
+
 	// Analyze download patterns (if available)
 	if downloads, exists := features["downloads"]; exists {
 		if downloads == 0 {
 			score += 0.2 // No downloads is suspicious for older packages
 		}
 	}
-	
+
 	// Analyze name patterns
 	if nameLength, exists := features["name_length"]; exists {
 		if nameLength < 3 {
@@ -1210,7 +1208,7 @@ func (a *MLAnalyzer) analyzeBehavioralPatterns(pkg *types.Package, features map[
 			score += 0.2 // Very long names are suspicious
 		}
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -1218,80 +1216,80 @@ func (a *MLAnalyzer) analyzeBehavioralPatterns(pkg *types.Package, features map[
 func (a *MLAnalyzer) detectSocialEngineeringPatterns(packageName string) float64 {
 	score := 0.0
 	lowerName := strings.ToLower(packageName)
-	
+
 	// Check for urgency indicators
 	urgencyKeywords := []string{
 		"urgent", "critical", "emergency", "hotfix", "patch",
 		"security", "vulnerability", "exploit", "breach",
 	}
-	
+
 	for _, keyword := range urgencyKeywords {
 		if strings.Contains(lowerName, keyword) {
 			score += 0.4
 		}
 	}
-	
+
 	// Check for authority mimicking
 	authorityKeywords := []string{
 		"official", "verified", "certified", "approved", "endorsed",
 		"microsoft", "google", "apple", "amazon", "facebook",
 	}
-	
+
 	for _, keyword := range authorityKeywords {
 		if strings.Contains(lowerName, keyword) {
 			score += 0.5
 		}
 	}
-	
+
 	// Check for tool mimicking
 	toolKeywords := []string{
 		"helper", "util", "tool", "fix", "repair", "clean",
 		"optimize", "boost", "enhance", "improve",
 	}
-	
+
 	for _, keyword := range toolKeywords {
 		if strings.Contains(lowerName, keyword) {
 			score += 0.2
 		}
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
 // detectDependencyConfusion detects dependency confusion attack patterns
 func (a *MLAnalyzer) detectDependencyConfusion(pkg *types.Package) float64 {
 	score := 0.0
-	
+
 	// Check for common internal package naming patterns
 	internalPatterns := []string{
 		"internal", "private", "corp", "company", "org",
 		"enterprise", "business", "commercial",
 	}
-	
+
 	lowerName := strings.ToLower(pkg.Name)
 	for _, pattern := range internalPatterns {
 		if strings.Contains(lowerName, pattern) {
 			score += 0.4
 		}
 	}
-	
+
 	// Check for SDK/API mimicking
 	sdkPatterns := []string{
 		"sdk", "api", "client", "wrapper", "binding",
 		"connector", "adapter", "interface",
 	}
-	
+
 	for _, pattern := range sdkPatterns {
 		if strings.Contains(lowerName, pattern) {
 			score += 0.3
 		}
 	}
-	
+
 	// Check for version confusion patterns
 	if strings.Contains(lowerName, "next") || strings.Contains(lowerName, "beta") || strings.Contains(lowerName, "alpha") {
 		score += 0.2
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -1578,14 +1576,14 @@ func (a *MLAnalyzer) hasSuspiciousNamePattern(name string) bool {
 // analyzeBehavior analyzes package behavior using static and dynamic analysis.
 func (a *MLAnalyzer) analyzeBehavior(pkg *types.Package) BehavioralAnalysis {
 	// Analyze package behavior based on available metadata and content
-	
+
 	installBehavior := InstallBehavior{
 		SuspiciousCommands: a.detectSuspiciousCommands(pkg),
 		NetworkRequests:    a.detectNetworkRequests(pkg),
 		FileModifications:  a.detectFileModifications(pkg),
 		PermissionChanges:  a.detectPermissionChanges(pkg),
 	}
-	
+
 	runtimeBehavior := RuntimeBehavior{
 		ProcessSpawning:   a.detectProcessSpawning(pkg),
 		SystemCalls:       a.detectSystemCalls(pkg),
@@ -1615,7 +1613,7 @@ func (a *MLAnalyzer) analyzeBehavior(pkg *types.Package) BehavioralAnalysis {
 func (a *MLAnalyzer) calculateTyposquattingScore(similarityScore, maliciousScore, reputationScore float64) float64 {
 	// Use consistent reputation risk calculation
 	reputationRisk := math.Max(0, 0.5-reputationScore)
-	
+
 	// If similarity is very high (>0.9), it's likely typosquatting regardless of other factors
 	if similarityScore > 0.9 {
 		// Heavily weight similarity for very high scores
@@ -1929,7 +1927,7 @@ func getFeatureNames(features map[string]float64) []string {
 func (a *MLAnalyzer) detectSuspiciousCommands(pkg *types.Package) []string {
 	// Analyze package scripts and dependencies for suspicious commands
 	suspiciousCommands := []string{}
-	
+
 	// Check package.json scripts, setup.py commands, etc.
 	if pkg.Metadata != nil {
 		if scripts, ok := pkg.Metadata.Metadata["scripts"]; ok {
@@ -1944,7 +1942,7 @@ func (a *MLAnalyzer) detectSuspiciousCommands(pkg *types.Package) []string {
 			}
 		}
 	}
-	
+
 	return suspiciousCommands
 }
 
@@ -1991,12 +1989,12 @@ func (a *MLAnalyzer) containsSuspiciousCommand(command string) bool {
 		"rm -rf", "chmod 777",
 		"sudo", "su -",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(strings.ToLower(command), pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }

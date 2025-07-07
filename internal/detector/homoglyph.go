@@ -61,7 +61,7 @@ func (hd *HomoglyphDetector) Detect(target types.Dependency, allPackages []strin
 // generateHomoglyphVariants generates possible homoglyph variants of a string
 func (hd *HomoglyphDetector) generateHomoglyphVariants(s string) []string {
 	var variants []string
-	
+
 	// For each character, try replacing with homoglyphs
 	for i, char := range s {
 		if homoglyphs, exists := hd.homoglyphMap[char]; exists {
@@ -173,10 +173,10 @@ func (hd *HomoglyphDetector) buildHomoglyphEvidence(s1, s2 string) []types.Evide
 				Type:        "homoglyph_substitution",
 				Description: fmt.Sprintf("Character '%c' (U+%04X) replaced with '%c' (U+%04X) at position %d", char1, char1, char2, char2, i),
 				Value: map[string]interface{}{
-					"original":    string(char1),
-					"substitute":  string(char2),
-					"position":    i,
-					"original_unicode": fmt.Sprintf("U+%04X", char1),
+					"original":           string(char1),
+					"substitute":         string(char2),
+					"position":           i,
+					"original_unicode":   fmt.Sprintf("U+%04X", char1),
 					"substitute_unicode": fmt.Sprintf("U+%04X", char2),
 				},
 				Score: 0.9,
@@ -191,53 +191,53 @@ func (hd *HomoglyphDetector) buildHomoglyphEvidence(s1, s2 string) []types.Evide
 func buildHomoglyphMap() map[rune][]rune {
 	homoglyphs := map[rune][]rune{
 		// Latin to Cyrillic homoglyphs
-		'a': {'а', 'ɑ', 'α'}, // Latin 'a' vs Cyrillic 'а', Greek 'α'
-		'e': {'е', 'ε'},      // Latin 'e' vs Cyrillic 'е', Greek 'ε'
-		'o': {'о', 'ο', '0'}, // Latin 'o' vs Cyrillic 'о', Greek 'ο', digit '0'
-		'p': {'р', 'ρ'},      // Latin 'p' vs Cyrillic 'р', Greek 'ρ'
-		'c': {'с', 'ϲ'},      // Latin 'c' vs Cyrillic 'с', Greek 'ϲ'
-		'x': {'х', 'χ'},      // Latin 'x' vs Cyrillic 'х', Greek 'χ'
-		'y': {'у', 'γ'},      // Latin 'y' vs Cyrillic 'у', Greek 'γ'
+		'a': {'а', 'ɑ', 'α'},           // Latin 'a' vs Cyrillic 'а', Greek 'α'
+		'e': {'е', 'ε'},                // Latin 'e' vs Cyrillic 'е', Greek 'ε'
+		'o': {'о', 'ο', '0'},           // Latin 'o' vs Cyrillic 'о', Greek 'ο', digit '0'
+		'p': {'р', 'ρ'},                // Latin 'p' vs Cyrillic 'р', Greek 'ρ'
+		'c': {'с', 'ϲ'},                // Latin 'c' vs Cyrillic 'с', Greek 'ϲ'
+		'x': {'х', 'χ'},                // Latin 'x' vs Cyrillic 'х', Greek 'χ'
+		'y': {'у', 'γ'},                // Latin 'y' vs Cyrillic 'у', Greek 'γ'
 		'i': {'і', 'ι', '1', 'l', '|'}, // Latin 'i' vs Cyrillic 'і', Greek 'ι', digit '1', 'l', pipe
-		'j': {'ј'},          // Latin 'j' vs Cyrillic 'ј'
-		's': {'ѕ', 'σ'},      // Latin 's' vs Cyrillic 'ѕ', Greek 'σ'
-		'h': {'һ'},          // Latin 'h' vs Cyrillic 'һ'
-		'k': {'κ'},          // Latin 'k' vs Greek 'κ'
-		'n': {'η'},          // Latin 'n' vs Greek 'η'
-		'm': {'м'},          // Latin 'm' vs Cyrillic 'м'
-		'r': {'г'},          // Latin 'r' vs Cyrillic 'г'
-		't': {'τ'},          // Latin 't' vs Greek 'τ'
-		'u': {'υ'},          // Latin 'u' vs Greek 'υ'
-		'v': {'ν'},          // Latin 'v' vs Greek 'ν'
-		'w': {'ω'},          // Latin 'w' vs Greek 'ω'
-		'z': {'ζ'},          // Latin 'z' vs Greek 'ζ'
+		'j': {'ј'},                     // Latin 'j' vs Cyrillic 'ј'
+		's': {'ѕ', 'σ'},                // Latin 's' vs Cyrillic 'ѕ', Greek 'σ'
+		'h': {'һ'},                     // Latin 'h' vs Cyrillic 'һ'
+		'k': {'κ'},                     // Latin 'k' vs Greek 'κ'
+		'n': {'η'},                     // Latin 'n' vs Greek 'η'
+		'm': {'м'},                     // Latin 'm' vs Cyrillic 'м'
+		'r': {'г'},                     // Latin 'r' vs Cyrillic 'г'
+		't': {'τ'},                     // Latin 't' vs Greek 'τ'
+		'u': {'υ'},                     // Latin 'u' vs Greek 'υ'
+		'v': {'ν'},                     // Latin 'v' vs Greek 'ν'
+		'w': {'ω'},                     // Latin 'w' vs Greek 'ω'
+		'z': {'ζ'},                     // Latin 'z' vs Greek 'ζ'
 
 		// Uppercase variants
-		'A': {'А', 'Α'},      // Latin 'A' vs Cyrillic 'А', Greek 'Α'
-		'B': {'В', 'Β'},      // Latin 'B' vs Cyrillic 'В', Greek 'Β'
-		'C': {'С'},          // Latin 'C' vs Cyrillic 'С'
-		'E': {'Е', 'Ε'},      // Latin 'E' vs Cyrillic 'Е', Greek 'Ε'
-		'H': {'Н', 'Η'},      // Latin 'H' vs Cyrillic 'Н', Greek 'Η'
-		'I': {'І', 'Ι'},      // Latin 'I' vs Cyrillic 'І', Greek 'Ι'
-		'J': {'Ј'},          // Latin 'J' vs Cyrillic 'Ј'
-		'K': {'К', 'Κ'},      // Latin 'K' vs Cyrillic 'К', Greek 'Κ'
-		'M': {'М', 'Μ'},      // Latin 'M' vs Cyrillic 'М', Greek 'Μ'
-		'N': {'Ν'},          // Latin 'N' vs Greek 'Ν'
-		'O': {'О', 'Ο'},      // Latin 'O' vs Cyrillic 'О', Greek 'Ο'
-		'P': {'Р', 'Ρ'},      // Latin 'P' vs Cyrillic 'Р', Greek 'Ρ'
-		'S': {'Ѕ'},          // Latin 'S' vs Cyrillic 'Ѕ'
-		'T': {'Т', 'Τ'},      // Latin 'T' vs Cyrillic 'Т', Greek 'Τ'
-		'X': {'Х', 'Χ'},      // Latin 'X' vs Cyrillic 'Х', Greek 'Χ'
-		'Y': {'У', 'Υ'},      // Latin 'Y' vs Cyrillic 'У', Greek 'Υ'
-		'Z': {'Ζ'},          // Latin 'Z' vs Greek 'Ζ'
+		'A': {'А', 'Α'}, // Latin 'A' vs Cyrillic 'А', Greek 'Α'
+		'B': {'В', 'Β'}, // Latin 'B' vs Cyrillic 'В', Greek 'Β'
+		'C': {'С'},      // Latin 'C' vs Cyrillic 'С'
+		'E': {'Е', 'Ε'}, // Latin 'E' vs Cyrillic 'Е', Greek 'Ε'
+		'H': {'Н', 'Η'}, // Latin 'H' vs Cyrillic 'Н', Greek 'Η'
+		'I': {'І', 'Ι'}, // Latin 'I' vs Cyrillic 'І', Greek 'Ι'
+		'J': {'Ј'},      // Latin 'J' vs Cyrillic 'Ј'
+		'K': {'К', 'Κ'}, // Latin 'K' vs Cyrillic 'К', Greek 'Κ'
+		'M': {'М', 'Μ'}, // Latin 'M' vs Cyrillic 'М', Greek 'Μ'
+		'N': {'Ν'},      // Latin 'N' vs Greek 'Ν'
+		'O': {'О', 'Ο'}, // Latin 'O' vs Cyrillic 'О', Greek 'Ο'
+		'P': {'Р', 'Ρ'}, // Latin 'P' vs Cyrillic 'Р', Greek 'Ρ'
+		'S': {'Ѕ'},      // Latin 'S' vs Cyrillic 'Ѕ'
+		'T': {'Т', 'Τ'}, // Latin 'T' vs Cyrillic 'Т', Greek 'Τ'
+		'X': {'Х', 'Χ'}, // Latin 'X' vs Cyrillic 'Х', Greek 'Χ'
+		'Y': {'У', 'Υ'}, // Latin 'Y' vs Cyrillic 'У', Greek 'Υ'
+		'Z': {'Ζ'},      // Latin 'Z' vs Greek 'Ζ'
 
 		// Numbers and symbols
 		'0': {'О', 'о', 'Ο', 'ο'}, // Digit '0' vs letters
 		'1': {'l', 'I', 'і', '|'}, // Digit '1' vs letters
-		'2': {'Ζ'},              // Digit '2' vs Greek 'Ζ'
-		'3': {'Ε'},              // Digit '3' vs Greek 'Ε'
-		'5': {'Ѕ'},              // Digit '5' vs Cyrillic 'Ѕ'
-		'6': {'б'},              // Digit '6' vs Cyrillic 'б'
+		'2': {'Ζ'},                // Digit '2' vs Greek 'Ζ'
+		'3': {'Ε'},                // Digit '3' vs Greek 'Ε'
+		'5': {'Ѕ'},                // Digit '5' vs Cyrillic 'Ѕ'
+		'6': {'б'},                // Digit '6' vs Cyrillic 'б'
 
 		// Special characters that look similar
 		'-': {'‐', '‑', '‒', '–', '—', '―'}, // Various dash types
@@ -309,7 +309,7 @@ func getUnicodeScript(r rune) string {
 // detectMixedScripts detects packages using mixed scripts (potential homoglyph attack)
 func (hd *HomoglyphDetector) detectMixedScripts(packageName string) bool {
 	scripts := make(map[string]bool)
-	
+
 	for _, char := range packageName {
 		script := getUnicodeScript(char)
 		if script != "Symbol" && script != "Digit" { // Ignore symbols and digits
@@ -325,7 +325,7 @@ func (hd *HomoglyphDetector) detectMixedScripts(packageName string) bool {
 func (hd *HomoglyphDetector) normalizeForComparison(s string) string {
 	// Convert to lowercase and normalize similar characters
 	normalized := strings.ToLower(s)
-	
+
 	// Replace common homoglyphs with their Latin equivalents
 	replacements := map[string]string{
 		"а": "a", "е": "e", "о": "o", "р": "p", "с": "c",

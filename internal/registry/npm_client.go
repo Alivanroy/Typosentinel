@@ -28,34 +28,34 @@ type CacheEntry struct {
 
 // NPMPackageInfo represents package information from NPM registry
 type NPMPackageInfo struct {
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Description  string                 `json:"description"`
-	Keywords     []string               `json:"keywords"`
-	Homepage     string                 `json:"homepage"`
-	Bugs         map[string]interface{} `json:"bugs"`
-	License      interface{}            `json:"license"`
-	Author       interface{}            `json:"author"`
-	Maintainers  []interface{}          `json:"maintainers"`
-	Repository   map[string]interface{} `json:"repository"`
-	Dependencies map[string]string      `json:"dependencies"`
-	DevDependencies map[string]string   `json:"devDependencies"`
-	PeerDependencies map[string]string  `json:"peerDependencies"`
-	OptionalDependencies map[string]string `json:"optionalDependencies"`
-	Engines      map[string]string      `json:"engines"`
-	Scripts      map[string]string      `json:"scripts"`
-	Dist         NPMDistInfo            `json:"dist"`
-	Time         map[string]string      `json:"time"`
-	Versions     map[string]interface{} `json:"versions"`
+	Name                 string                 `json:"name"`
+	Version              string                 `json:"version"`
+	Description          string                 `json:"description"`
+	Keywords             []string               `json:"keywords"`
+	Homepage             string                 `json:"homepage"`
+	Bugs                 map[string]interface{} `json:"bugs"`
+	License              interface{}            `json:"license"`
+	Author               interface{}            `json:"author"`
+	Maintainers          []interface{}          `json:"maintainers"`
+	Repository           map[string]interface{} `json:"repository"`
+	Dependencies         map[string]string      `json:"dependencies"`
+	DevDependencies      map[string]string      `json:"devDependencies"`
+	PeerDependencies     map[string]string      `json:"peerDependencies"`
+	OptionalDependencies map[string]string      `json:"optionalDependencies"`
+	Engines              map[string]string      `json:"engines"`
+	Scripts              map[string]string      `json:"scripts"`
+	Dist                 NPMDistInfo            `json:"dist"`
+	Time                 map[string]string      `json:"time"`
+	Versions             map[string]interface{} `json:"versions"`
 }
 
 // NPMDistInfo represents distribution information
 type NPMDistInfo struct {
-	Shasum     string `json:"shasum"`
-	Tarball    string `json:"tarball"`
-	Integrity  string `json:"integrity"`
-	FileCount  int    `json:"fileCount"`
-	UnpackedSize int  `json:"unpackedSize"`
+	Shasum       string `json:"shasum"`
+	Tarball      string `json:"tarball"`
+	Integrity    string `json:"integrity"`
+	FileCount    int    `json:"fileCount"`
+	UnpackedSize int    `json:"unpackedSize"`
 }
 
 // NPMDownloadStats represents download statistics

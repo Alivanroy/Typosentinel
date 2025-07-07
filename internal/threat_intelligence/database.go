@@ -23,36 +23,36 @@ type ThreatDatabase struct {
 
 // DatabaseStats represents database statistics
 type DatabaseStats struct {
-	TotalThreats     int64     `json:"total_threats"`
-	ThreatsByType    map[string]int64 `json:"threats_by_type"`
+	TotalThreats      int64            `json:"total_threats"`
+	ThreatsByType     map[string]int64 `json:"threats_by_type"`
 	ThreatsBySeverity map[string]int64 `json:"threats_by_severity"`
-	ThreatsBySource  map[string]int64 `json:"threats_by_source"`
-	LastUpdate       time.Time `json:"last_update"`
-	DatabaseSize     int64     `json:"database_size_bytes"`
+	ThreatsBySource   map[string]int64 `json:"threats_by_source"`
+	LastUpdate        time.Time        `json:"last_update"`
+	DatabaseSize      int64            `json:"database_size_bytes"`
 }
 
 // ThreatQuery represents a threat search query
 type ThreatQuery struct {
-	PackageName     string    `json:"package_name,omitempty"`
-	Ecosystem       string    `json:"ecosystem,omitempty"`
-	ThreatType      string    `json:"threat_type,omitempty"`
-	Severity        string    `json:"severity,omitempty"`
-	Source          string    `json:"source,omitempty"`
-	MinConfidence   float64   `json:"min_confidence,omitempty"`
-	Since           *time.Time `json:"since,omitempty"`
-	Until           *time.Time `json:"until,omitempty"`
-	Limit           int       `json:"limit,omitempty"`
-	Offset          int       `json:"offset,omitempty"`
-	IncludeExpired  bool      `json:"include_expired"`
+	PackageName    string     `json:"package_name,omitempty"`
+	Ecosystem      string     `json:"ecosystem,omitempty"`
+	ThreatType     string     `json:"threat_type,omitempty"`
+	Severity       string     `json:"severity,omitempty"`
+	Source         string     `json:"source,omitempty"`
+	MinConfidence  float64    `json:"min_confidence,omitempty"`
+	Since          *time.Time `json:"since,omitempty"`
+	Until          *time.Time `json:"until,omitempty"`
+	Limit          int        `json:"limit,omitempty"`
+	Offset         int        `json:"offset,omitempty"`
+	IncludeExpired bool       `json:"include_expired"`
 }
 
 // ThreatSearchResult represents the result of a threat search
 type ThreatSearchResult struct {
-	Threats    []ThreatIntelligence `json:"threats"`
-	Total      int64                `json:"total"`
-	Limit      int                  `json:"limit"`
-	Offset     int                  `json:"offset"`
-	QueryTime  time.Duration        `json:"query_time"`
+	Threats   []ThreatIntelligence `json:"threats"`
+	Total     int64                `json:"total"`
+	Limit     int                  `json:"limit"`
+	Offset    int                  `json:"offset"`
+	QueryTime time.Duration        `json:"query_time"`
 }
 
 // NewThreatDatabase creates a new threat database instance

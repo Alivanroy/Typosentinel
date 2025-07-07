@@ -84,62 +84,62 @@ const (
 
 // Dependency represents a package dependency
 type Dependency struct {
-	Name         string            `json:"name"`
-	Version      string            `json:"version"`
-	Registry     string            `json:"registry"`
-	Source       string            `json:"source"` // file where dependency was found
-	Direct       bool              `json:"direct"` // true if direct dependency, false if transitive
-	Development  bool              `json:"development"` // true if dev dependency
-	Metadata     PackageMetadata   `json:"metadata,omitempty"`
-	Constraints  string            `json:"constraints,omitempty"` // version constraints
-	ExtraData    map[string]interface{} `json:"extra_data,omitempty"`
+	Name        string                 `json:"name"`
+	Version     string                 `json:"version"`
+	Registry    string                 `json:"registry"`
+	Source      string                 `json:"source"`      // file where dependency was found
+	Direct      bool                   `json:"direct"`      // true if direct dependency, false if transitive
+	Development bool                   `json:"development"` // true if dev dependency
+	Metadata    PackageMetadata        `json:"metadata,omitempty"`
+	Constraints string                 `json:"constraints,omitempty"` // version constraints
+	ExtraData   map[string]interface{} `json:"extra_data,omitempty"`
 }
 
 // PackageMetadata contains metadata about a package
 type PackageMetadata struct {
-	Name           string                 `json:"name"`
-	Version        string                 `json:"version"`
-	Registry       string                 `json:"registry"`
-	Description    string                 `json:"description,omitempty"`
-	Author         string                 `json:"author,omitempty"`
-	Maintainers    []string               `json:"maintainers,omitempty"`
-	Homepage       string                 `json:"homepage,omitempty"`
-	Repository     string                 `json:"repository,omitempty"`
-	License        string                 `json:"license,omitempty"`
-	Keywords       []string               `json:"keywords,omitempty"`
-	Downloads      int64                  `json:"downloads,omitempty"`
-	PublishedAt    *time.Time             `json:"published_at,omitempty"`
-	LastUpdated    *time.Time             `json:"last_updated,omitempty"`
-	CreationDate   *time.Time             `json:"creation_date,omitempty"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
-	Dependencies   []string               `json:"dependencies,omitempty"`
-	HasInstallScript bool                 `json:"has_install_script"`
-	FileCount      int                    `json:"file_count,omitempty"`
-	Size           int64                  `json:"size,omitempty"`
-	Checksums      map[string]string      `json:"checksums,omitempty"`
-	Tags           []string               `json:"tags,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	Name             string                 `json:"name"`
+	Version          string                 `json:"version"`
+	Registry         string                 `json:"registry"`
+	Description      string                 `json:"description,omitempty"`
+	Author           string                 `json:"author,omitempty"`
+	Maintainers      []string               `json:"maintainers,omitempty"`
+	Homepage         string                 `json:"homepage,omitempty"`
+	Repository       string                 `json:"repository,omitempty"`
+	License          string                 `json:"license,omitempty"`
+	Keywords         []string               `json:"keywords,omitempty"`
+	Downloads        int64                  `json:"downloads,omitempty"`
+	PublishedAt      *time.Time             `json:"published_at,omitempty"`
+	LastUpdated      *time.Time             `json:"last_updated,omitempty"`
+	CreationDate     *time.Time             `json:"creation_date,omitempty"`
+	CreatedAt        time.Time              `json:"created_at"`
+	UpdatedAt        time.Time              `json:"updated_at"`
+	Dependencies     []string               `json:"dependencies,omitempty"`
+	HasInstallScript bool                   `json:"has_install_script"`
+	FileCount        int                    `json:"file_count,omitempty"`
+	Size             int64                  `json:"size,omitempty"`
+	Checksums        map[string]string      `json:"checksums,omitempty"`
+	Tags             []string               `json:"tags,omitempty"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Threat represents a detected security threat
 type Threat struct {
-	ID             string                 `json:"id"`
-	Package        string                 `json:"package"`
-	Version        string                 `json:"version,omitempty"`
-	Registry       string                 `json:"registry"`
-	Type           ThreatType             `json:"type"`
-	Severity       Severity               `json:"severity"`
-	Confidence     float64                `json:"confidence"` // 0.0 to 1.0
-	Description    string                 `json:"description"`
-	SimilarTo      string                 `json:"similar_to,omitempty"`
-	Recommendation string                 `json:"recommendation,omitempty"`
-	Evidence       []Evidence             `json:"evidence,omitempty"`
-	CVEs           []string               `json:"cves,omitempty"`
-	References     []string               `json:"references,omitempty"`
-	DetectedAt     time.Time              `json:"detected_at"`
-	DetectionMethod string                `json:"detection_method"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	ID              string                 `json:"id"`
+	Package         string                 `json:"package"`
+	Version         string                 `json:"version,omitempty"`
+	Registry        string                 `json:"registry"`
+	Type            ThreatType             `json:"type"`
+	Severity        Severity               `json:"severity"`
+	Confidence      float64                `json:"confidence"` // 0.0 to 1.0
+	Description     string                 `json:"description"`
+	SimilarTo       string                 `json:"similar_to,omitempty"`
+	Recommendation  string                 `json:"recommendation,omitempty"`
+	Evidence        []Evidence             `json:"evidence,omitempty"`
+	CVEs            []string               `json:"cves,omitempty"`
+	References      []string               `json:"references,omitempty"`
+	DetectedAt      time.Time              `json:"detected_at"`
+	DetectionMethod string                 `json:"detection_method"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AnalysisResult represents the result of package analysis
@@ -162,23 +162,23 @@ type Evidence struct {
 
 // ThreatEvidence represents evidence for a specific threat
 type ThreatEvidence struct {
-	Type        string  `json:"type"`
-	Description string  `json:"description"`
-	Confidence  float64 `json:"confidence"`
+	Type        string      `json:"type"`
+	Description string      `json:"description"`
+	Confidence  float64     `json:"confidence"`
 	Value       interface{} `json:"value,omitempty"`
 }
 
 // Warning represents a non-critical security warning
 type Warning struct {
-	ID          string                 `json:"id"`
-	Package     string                 `json:"package"`
-	Version     string                 `json:"version,omitempty"`
-	Registry    string                 `json:"registry"`
-	Type        string                 `json:"type"`
-	Message     string                 `json:"message"`
-	Suggestion  string                 `json:"suggestion,omitempty"`
-	DetectedAt  time.Time              `json:"detected_at"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	ID         string                 `json:"id"`
+	Package    string                 `json:"package"`
+	Version    string                 `json:"version,omitempty"`
+	Registry   string                 `json:"registry"`
+	Type       string                 `json:"type"`
+	Message    string                 `json:"message"`
+	Suggestion string                 `json:"suggestion,omitempty"`
+	DetectedAt time.Time              `json:"detected_at"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ScanRequest represents a scan request
@@ -231,11 +231,11 @@ type ScanResponse struct {
 type ScanStatus string
 
 const (
-	ScanStatusPending    ScanStatus = "pending"
-	ScanStatusRunning    ScanStatus = "running"
-	ScanStatusCompleted  ScanStatus = "completed"
-	ScanStatusFailed     ScanStatus = "failed"
-	ScanStatusCancelled  ScanStatus = "cancelled"
+	ScanStatusPending   ScanStatus = "pending"
+	ScanStatusRunning   ScanStatus = "running"
+	ScanStatusCompleted ScanStatus = "completed"
+	ScanStatusFailed    ScanStatus = "failed"
+	ScanStatusCancelled ScanStatus = "cancelled"
 )
 
 // ScanSummary provides a summary of scan results
@@ -283,20 +283,20 @@ type PolicyRule struct {
 type PolicyRuleType string
 
 const (
-	PolicyRuleTypeBlock     PolicyRuleType = "block"
-	PolicyRuleTypeAllow     PolicyRuleType = "allow"
-	PolicyRuleTypeWarn      PolicyRuleType = "warn"
-	PolicyRuleTypeMonitor   PolicyRuleType = "monitor"
+	PolicyRuleTypeBlock   PolicyRuleType = "block"
+	PolicyRuleTypeAllow   PolicyRuleType = "allow"
+	PolicyRuleTypeWarn    PolicyRuleType = "warn"
+	PolicyRuleTypeMonitor PolicyRuleType = "monitor"
 )
 
 // PolicyAction represents the action to take when a rule matches
 type PolicyAction string
 
 const (
-	PolicyActionBlock   PolicyAction = "block"
-	PolicyActionWarn    PolicyAction = "warn"
-	PolicyActionAllow   PolicyAction = "allow"
-	PolicyActionIgnore  PolicyAction = "ignore"
+	PolicyActionBlock  PolicyAction = "block"
+	PolicyActionWarn   PolicyAction = "warn"
+	PolicyActionAllow  PolicyAction = "allow"
+	PolicyActionIgnore PolicyAction = "ignore"
 )
 
 // PolicyCondition represents a condition in a policy rule
@@ -305,8 +305,6 @@ type PolicyCondition struct {
 	Operator string      `json:"operator"`
 	Value    interface{} `json:"value"`
 }
-
-
 
 // User represents a user in the system
 type User struct {
@@ -321,33 +319,33 @@ type User struct {
 
 // Organization represents an organization in the system
 type Organization struct {
-	ID        int                     `json:"id"`
-	Name      string                  `json:"name"`
-	Settings  *OrganizationSettings   `json:"settings,omitempty"`
-	CreatedAt time.Time               `json:"created_at"`
-	UpdatedAt time.Time               `json:"updated_at"`
+	ID        int                   `json:"id"`
+	Name      string                `json:"name"`
+	Settings  *OrganizationSettings `json:"settings,omitempty"`
+	CreatedAt time.Time             `json:"created_at"`
+	UpdatedAt time.Time             `json:"updated_at"`
 }
 
 // OrganizationSettings contains organization-specific settings
 type OrganizationSettings struct {
-	CustomRegistries      []*CustomRegistry      `json:"custom_registries,omitempty"`
-	ScanSettings          *ScanSettings          `json:"scan_settings,omitempty"`
-	NotificationSettings  *NotificationSettings  `json:"notification_settings,omitempty"`
+	CustomRegistries     []*CustomRegistry     `json:"custom_registries,omitempty"`
+	ScanSettings         *ScanSettings         `json:"scan_settings,omitempty"`
+	NotificationSettings *NotificationSettings `json:"notification_settings,omitempty"`
 }
 
 // CustomRegistry represents a custom package registry
 type CustomRegistry struct {
-	ID             int    `json:"id"`
-	OrganizationID int    `json:"organization_id"`
-	Name           string `json:"name"`
-	Type           string `json:"type"` // npm, pypi, maven, nuget, etc.
-	URL            string `json:"url"`
-	AuthType       string `json:"auth_type"` // none, basic, token, oauth
-	Username       string `json:"username,omitempty"`
-	Password       string `json:"password,omitempty"`
-	Token          string `json:"token,omitempty"`
-	Enabled        bool   `json:"enabled"`
-	Priority       int    `json:"priority"`
+	ID             int       `json:"id"`
+	OrganizationID int       `json:"organization_id"`
+	Name           string    `json:"name"`
+	Type           string    `json:"type"` // npm, pypi, maven, nuget, etc.
+	URL            string    `json:"url"`
+	AuthType       string    `json:"auth_type"` // none, basic, token, oauth
+	Username       string    `json:"username,omitempty"`
+	Password       string    `json:"password,omitempty"`
+	Token          string    `json:"token,omitempty"`
+	Enabled        bool      `json:"enabled"`
+	Priority       int       `json:"priority"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
@@ -376,51 +374,51 @@ type NotificationSettings struct {
 
 // Package represents a scanned package with its analysis results
 type Package struct {
-	Name         string            `json:"name"`
-	Version      string            `json:"version"`
-	Type         string            `json:"type,omitempty"`
-	Registry     string            `json:"registry"`
-	Threats      []Threat          `json:"threats,omitempty"`
-	Warnings     []Warning         `json:"warnings,omitempty"`
-	RiskLevel    Severity          `json:"risk_level"`
-	RiskScore    float64           `json:"risk_score"`
-	Metadata     *PackageMetadata  `json:"metadata,omitempty"`
-	Dependencies []Dependency      `json:"dependencies,omitempty"`
-	AnalyzedAt   time.Time         `json:"analyzed_at"`
+	Name         string           `json:"name"`
+	Version      string           `json:"version"`
+	Type         string           `json:"type,omitempty"`
+	Registry     string           `json:"registry"`
+	Threats      []Threat         `json:"threats,omitempty"`
+	Warnings     []Warning        `json:"warnings,omitempty"`
+	RiskLevel    Severity         `json:"risk_level"`
+	RiskScore    float64          `json:"risk_score"`
+	Metadata     *PackageMetadata `json:"metadata,omitempty"`
+	Dependencies []Dependency     `json:"dependencies,omitempty"`
+	AnalyzedAt   time.Time        `json:"analyzed_at"`
 }
 
 // DependencyTree represents a tree structure of package dependencies
 type DependencyTree struct {
-	Name         interface{}         `json:"name"`
-	Version      interface{}         `json:"version"`
-	Type         string              `json:"type"`
-	Threats      []Threat            `json:"threats,omitempty"`
-	Dependencies []DependencyTree    `json:"dependencies"`
-	Depth        int                 `json:"depth,omitempty"`
-	TotalCount   int                 `json:"total_count,omitempty"`
-	CreatedAt    time.Time           `json:"created_at,omitempty"`
+	Name         interface{}      `json:"name"`
+	Version      interface{}      `json:"version"`
+	Type         string           `json:"type"`
+	Threats      []Threat         `json:"threats,omitempty"`
+	Dependencies []DependencyTree `json:"dependencies"`
+	Depth        int              `json:"depth,omitempty"`
+	TotalCount   int              `json:"total_count,omitempty"`
+	CreatedAt    time.Time        `json:"created_at,omitempty"`
 }
 
 // ScanResult represents the result of a package scan
 type ScanResult struct {
-	ID               string                 `json:"id"`
-	ProjectID        int                    `json:"project_id,omitempty"`
-	PackageID        string                 `json:"package_id,omitempty"`
-	OrganizationID   string                 `json:"organization_id,omitempty"`
-	Target           string                 `json:"target"`
-	Type             string                 `json:"type"`
-	ScanType         string                 `json:"scan_type,omitempty"`
-	Status           string                 `json:"status"`
-	OverallRisk      string                 `json:"overall_risk,omitempty"`
-	RiskScore        float64                `json:"risk_score,omitempty"`
-	Packages         []*Package             `json:"packages"`
-	Findings         []interface{}          `json:"findings,omitempty"`
-	Summary          *ScanSummary           `json:"summary"`
-	Duration         time.Duration          `json:"duration"`
-	ScanDurationMs   int64                  `json:"scan_duration_ms,omitempty"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
-	CreatedAt        time.Time              `json:"created_at"`
-	Error       string                 `json:"error,omitempty"`
+	ID             string                 `json:"id"`
+	ProjectID      int                    `json:"project_id,omitempty"`
+	PackageID      string                 `json:"package_id,omitempty"`
+	OrganizationID string                 `json:"organization_id,omitempty"`
+	Target         string                 `json:"target"`
+	Type           string                 `json:"type"`
+	ScanType       string                 `json:"scan_type,omitempty"`
+	Status         string                 `json:"status"`
+	OverallRisk    string                 `json:"overall_risk,omitempty"`
+	RiskScore      float64                `json:"risk_score,omitempty"`
+	Packages       []*Package             `json:"packages"`
+	Findings       []interface{}          `json:"findings,omitempty"`
+	Summary        *ScanSummary           `json:"summary"`
+	Duration       time.Duration          `json:"duration"`
+	ScanDurationMs int64                  `json:"scan_duration_ms,omitempty"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	CreatedAt      time.Time              `json:"created_at"`
+	Error          string                 `json:"error,omitempty"`
 }
 
 // VulnerabilityCredit represents credit for vulnerability discovery/reporting
@@ -432,7 +430,7 @@ type VulnerabilityCredit struct {
 
 // VersionRange represents a range of affected versions
 type VersionRange struct {
-	Type   string         `json:"type"`   // ECOSYSTEM, SEMVER, GIT
+	Type   string         `json:"type"` // ECOSYSTEM, SEMVER, GIT
 	Repo   string         `json:"repo,omitempty"`
 	Events []VersionEvent `json:"events"`
 }
@@ -454,12 +452,12 @@ type VulnerabilityDatabase interface {
 
 // VulnerabilityDatabaseConfig represents configuration for vulnerability databases
 type VulnerabilityDatabaseConfig struct {
-	Type     string                 `json:"type"`     // osv, github, nvd
-	Enabled  bool                   `json:"enabled"`
-	APIKey   string                 `json:"api_key,omitempty"`
-	BaseURL  string                 `json:"base_url,omitempty"`
-	Timeout  time.Duration          `json:"timeout,omitempty"`
-	Options  map[string]interface{} `json:"options,omitempty"`
+	Type    string                 `json:"type"` // osv, github, nvd
+	Enabled bool                   `json:"enabled"`
+	APIKey  string                 `json:"api_key,omitempty"`
+	BaseURL string                 `json:"base_url,omitempty"`
+	Timeout time.Duration          `json:"timeout,omitempty"`
+	Options map[string]interface{} `json:"options,omitempty"`
 }
 
 // ProjectScan represents a project that can be scanned
@@ -479,10 +477,10 @@ type ProjectScan struct {
 type UserRole string
 
 const (
-	UserRoleAdmin     UserRole = "admin"
-	UserRoleMember    UserRole = "member"
-	UserRoleViewer    UserRole = "viewer"
-	UserRoleAPIOnly   UserRole = "api_only"
+	UserRoleAdmin   UserRole = "admin"
+	UserRoleMember  UserRole = "member"
+	UserRoleViewer  UserRole = "viewer"
+	UserRoleAPIOnly UserRole = "api_only"
 )
 
 // APIKey represents an API key for authentication
@@ -499,31 +497,31 @@ type APIKey struct {
 
 // RegistryInfo represents information about a package registry
 type RegistryInfo struct {
-	Name        string            `json:"name"`
-	Type        string            `json:"type"`
-	URL         string            `json:"url"`
-	Description string            `json:"description,omitempty"`
-	Supported   bool              `json:"supported"`
-	Features    []string          `json:"features,omitempty"`
+	Name        string                 `json:"name"`
+	Type        string                 `json:"type"`
+	URL         string                 `json:"url"`
+	Description string                 `json:"description,omitempty"`
+	Supported   bool                   `json:"supported"`
+	Features    []string               `json:"features,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // DetectionResult represents the result of a detection algorithm
 type DetectionResult struct {
-	Algorithm   string                 `json:"algorithm"`
-	Confidence  float64                `json:"confidence"`
-	Matches     []DetectionMatch       `json:"matches,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	Duration    time.Duration          `json:"duration"`
+	Algorithm  string                 `json:"algorithm"`
+	Confidence float64                `json:"confidence"`
+	Matches    []DetectionMatch       `json:"matches,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	Duration   time.Duration          `json:"duration"`
 }
 
 // DetectionMatch represents a match found by a detection algorithm
 type DetectionMatch struct {
-	Package     string                 `json:"package"`
-	Similarity  float64                `json:"similarity"`
-	Type        string                 `json:"type"`
-	Evidence    []Evidence             `json:"evidence,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Package    string                 `json:"package"`
+	Similarity float64                `json:"similarity"`
+	Type       string                 `json:"type"`
+	Evidence   []Evidence             `json:"evidence,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // MLModelInfo represents information about an ML model
@@ -540,23 +538,23 @@ type MLModelInfo struct {
 
 // BatchJob represents a batch processing job
 type BatchJob struct {
-	ID               string     `json:"id"`
-	OrganizationID   string     `json:"organization_id"`
-	UserID           string     `json:"user_id"`
-	Name             string     `json:"name"`
-	Description      string     `json:"description,omitempty"`
-	Status           string     `json:"status"`
-	Progress         float64    `json:"progress"`
-	TotalPackages    int        `json:"total_packages"`
-	ProcessedCount   int        `json:"processed_count"`
-	SuccessCount     int        `json:"success_count"`
-	FailureCount     int        `json:"failure_count"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
-	CompletedAt      *time.Time `json:"completed_at,omitempty"`
-	Configuration    map[string]interface{} `json:"configuration,omitempty"`
-	Results          []AnalysisResult `json:"results,omitempty"`
-	Errors           []string   `json:"errors,omitempty"`
+	ID             string                 `json:"id"`
+	OrganizationID string                 `json:"organization_id"`
+	UserID         string                 `json:"user_id"`
+	Name           string                 `json:"name"`
+	Description    string                 `json:"description,omitempty"`
+	Status         string                 `json:"status"`
+	Progress       float64                `json:"progress"`
+	TotalPackages  int                    `json:"total_packages"`
+	ProcessedCount int                    `json:"processed_count"`
+	SuccessCount   int                    `json:"success_count"`
+	FailureCount   int                    `json:"failure_count"`
+	CreatedAt      time.Time              `json:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at"`
+	CompletedAt    *time.Time             `json:"completed_at,omitempty"`
+	Configuration  map[string]interface{} `json:"configuration,omitempty"`
+	Results        []AnalysisResult       `json:"results,omitempty"`
+	Errors         []string               `json:"errors,omitempty"`
 }
 
 // TrustLevel represents the trust level of a package
@@ -579,41 +577,41 @@ type ReputationScore struct {
 
 // Vulnerability represents a security vulnerability
 type Vulnerability struct {
-	ID               string                 `json:"id"`
-	CVE              string                 `json:"cve,omitempty"`
-	Title            string                 `json:"title"`
-	Description      string                 `json:"description"`
-	Severity         Severity               `json:"severity"`
-	CVSS             string                 `json:"cvss,omitempty"`        // CVSS vector string or score
-	CVSSScore        float64                `json:"cvss_score,omitempty"`
-	Package          string                 `json:"package"`
-	Versions         []string               `json:"versions,omitempty"`
-	AffectedPackages []AffectedPackage      `json:"affected_packages,omitempty"`
-	References       []string               `json:"references,omitempty"`
-	Aliases          []string               `json:"aliases,omitempty"`     // Alternative IDs (CVE, GHSA, etc.)
-	Published        string                 `json:"published,omitempty"`   // Published date as string
-	Modified         string                 `json:"modified,omitempty"`    // Modified date as string
-	PublishedAt      time.Time              `json:"published_at,omitempty"`
-	UpdatedAt        time.Time              `json:"updated_at,omitempty"`
-	Withdrawn        string                 `json:"withdrawn,omitempty"`   // Withdrawn date if applicable
-	Source           string                 `json:"source,omitempty"`      // Source database (OSV, GitHub, NVD)
-	DatabaseSpecific map[string]interface{} `json:"database_specific,omitempty"` // Database-specific fields
+	ID                string                 `json:"id"`
+	CVE               string                 `json:"cve,omitempty"`
+	Title             string                 `json:"title"`
+	Description       string                 `json:"description"`
+	Severity          Severity               `json:"severity"`
+	CVSS              string                 `json:"cvss,omitempty"` // CVSS vector string or score
+	CVSSScore         float64                `json:"cvss_score,omitempty"`
+	Package           string                 `json:"package"`
+	Versions          []string               `json:"versions,omitempty"`
+	AffectedPackages  []AffectedPackage      `json:"affected_packages,omitempty"`
+	References        []string               `json:"references,omitempty"`
+	Aliases           []string               `json:"aliases,omitempty"`   // Alternative IDs (CVE, GHSA, etc.)
+	Published         string                 `json:"published,omitempty"` // Published date as string
+	Modified          string                 `json:"modified,omitempty"`  // Modified date as string
+	PublishedAt       time.Time              `json:"published_at,omitempty"`
+	UpdatedAt         time.Time              `json:"updated_at,omitempty"`
+	Withdrawn         string                 `json:"withdrawn,omitempty"`          // Withdrawn date if applicable
+	Source            string                 `json:"source,omitempty"`             // Source database (OSV, GitHub, NVD)
+	DatabaseSpecific  map[string]interface{} `json:"database_specific,omitempty"`  // Database-specific fields
 	EcosystemSpecific map[string]interface{} `json:"ecosystem_specific,omitempty"` // Ecosystem-specific fields
-	Credits          []VulnerabilityCredit  `json:"credits,omitempty"`     // Credits for discovery/reporting
-	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	Credits           []VulnerabilityCredit  `json:"credits,omitempty"`            // Credits for discovery/reporting
+	Metadata          map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AffectedPackage represents a package affected by a vulnerability
 type AffectedPackage struct {
-	Name         string   `json:"name"`
-	Vendor       string   `json:"vendor,omitempty"`
-	Version      string   `json:"version,omitempty"`
-	Versions     []string `json:"versions,omitempty"`     // Multiple affected versions
-	VersionRange string   `json:"version_range,omitempty"`
-	Ecosystem    string   `json:"ecosystem,omitempty"`
-	PURL         string   `json:"purl,omitempty"`         // Package URL
-	Ranges       []VersionRange `json:"ranges,omitempty"`  // Version ranges with events
-	DatabaseSpecific map[string]interface{} `json:"database_specific,omitempty"`
+	Name              string                 `json:"name"`
+	Vendor            string                 `json:"vendor,omitempty"`
+	Version           string                 `json:"version,omitempty"`
+	Versions          []string               `json:"versions,omitempty"` // Multiple affected versions
+	VersionRange      string                 `json:"version_range,omitempty"`
+	Ecosystem         string                 `json:"ecosystem,omitempty"`
+	PURL              string                 `json:"purl,omitempty"`   // Package URL
+	Ranges            []VersionRange         `json:"ranges,omitempty"` // Version ranges with events
+	DatabaseSpecific  map[string]interface{} `json:"database_specific,omitempty"`
 	EcosystemSpecific map[string]interface{} `json:"ecosystem_specific,omitempty"`
 }
 
@@ -631,5 +629,5 @@ type AuditLog struct {
 	UserAgent      string                 `json:"user_agent,omitempty"`
 	Timestamp      time.Time              `json:"timestamp"`
 	Success        bool                   `json:"success"`
-	Error       string                 `json:"error,omitempty"`
+	Error          string                 `json:"error,omitempty"`
 }

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // Engine is the main detection engine that orchestrates various detection algorithms
@@ -35,11 +35,11 @@ func New(cfg *config.Config) *Engine {
 	if cfg == nil {
 		cfg = &config.Config{
 			TypoDetection: &config.TypoDetectionConfig{
-				Enabled:   true,
-				Threshold: 0.8,
-				MaxDistance: 2,
+				Enabled:           true,
+				Threshold:         0.8,
+				MaxDistance:       2,
 				CheckSimilarNames: true,
-				CheckHomoglyphs: true,
+				CheckHomoglyphs:   true,
 			},
 		}
 	}
@@ -60,14 +60,14 @@ func (e *Engine) Version() string {
 
 // CheckPackageResult represents the result of a single package check
 type CheckPackageResult struct {
-	Package        string                 `json:"package"`
-	Registry       string                 `json:"registry"`
-	ThreatLevel    string                 `json:"threat_level"`
-	Confidence     float64                `json:"confidence"`
-	Threats        []types.Threat         `json:"threats"`
-	Warnings       []types.Warning        `json:"warnings"`
-	SimilarPackages []string              `json:"similar_packages,omitempty"`
-	Details        map[string]interface{} `json:"details,omitempty"`
+	Package         string                 `json:"package"`
+	Registry        string                 `json:"registry"`
+	ThreatLevel     string                 `json:"threat_level"`
+	Confidence      float64                `json:"confidence"`
+	Threats         []types.Threat         `json:"threats"`
+	Warnings        []types.Warning        `json:"warnings"`
+	SimilarPackages []string               `json:"similar_packages,omitempty"`
+	Details         map[string]interface{} `json:"details,omitempty"`
 }
 
 // CheckPackage performs threat analysis on a single package
@@ -78,7 +78,7 @@ func (e *Engine) CheckPackage(ctx context.Context, packageName, registry string)
 		return nil, ctx.Err()
 	default:
 	}
-	
+
 	logrus.Infof("Checking package %s from %s registry", packageName, registry)
 	start := time.Now()
 
@@ -131,8 +131,8 @@ func (e *Engine) CheckPackage(ctx context.Context, packageName, registry string)
 	// Create detailed analysis results
 	details := map[string]interface{}{
 		"analysis_duration": time.Since(start).String(),
-		"checks_performed": []string{"lexical_similarity", "homoglyph_detection", "reputation_analysis"},
-		"package_length":   len(packageName),
+		"checks_performed":  []string{"lexical_similarity", "homoglyph_detection", "reputation_analysis"},
+		"package_length":    len(packageName),
 	}
 
 	result := &CheckPackageResult{
@@ -282,7 +282,7 @@ func (e *Engine) detectDependencyConfusion(dep types.Dependency) []types.Threat 
 	var threats []types.Threat
 
 	// Enhanced dependency confusion detection
-	
+
 	// 1. Check if package name matches private namespace patterns
 	for _, regConfig := range e.config.Registries {
 		for _, namespace := range regConfig.Private.Namespaces {
@@ -307,12 +307,12 @@ func (e *Engine) detectDependencyConfusion(dep types.Dependency) []types.Threat 
 							Value:       namespace,
 							Score:       0.9,
 						},
-						},
-					}
-					threats = append(threats, threat)
+					},
 				}
+				threats = append(threats, threat)
 			}
 		}
+	}
 
 	// 2. Check for suspicious version patterns (dependency confusion indicator)
 	if e.detectSuspiciousVersioning(dep) {
@@ -373,19 +373,19 @@ func (e *Engine) detectSuspiciousVersioning(dep types.Dependency) bool {
 	if strings.Contains(dep.Version, "999") || strings.Contains(dep.Version, "9999") {
 		return true
 	}
-	
+
 	// Check for suspicious pre-release patterns
 	suspiciousPatterns := []string{
 		"internal", "private", "corp", "company", "enterprise",
 		"staging", "dev", "test", "beta-internal",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(strings.ToLower(dep.Version), pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -397,14 +397,14 @@ func (e *Engine) detectInternalNamingPatterns(dep types.Dependency) bool {
 		"-internal", "-corp", "-company", "-enterprise",
 		"-private", "-staging", "-dev", "-test",
 	}
-	
+
 	packageName := strings.ToLower(dep.Name)
 	for _, pattern := range internalPatterns {
 		if strings.Contains(packageName, pattern) {
 			return true
 		}
 	}
-	
+
 	// Check for organization-specific patterns
 	if strings.Contains(packageName, "@") {
 		// Scoped packages - check for internal-looking scopes
@@ -418,7 +418,7 @@ func (e *Engine) detectInternalNamingPatterns(dep types.Dependency) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -518,7 +518,7 @@ func (ld *LexicalDetector) Detect(target types.Dependency, allPackages []string,
 
 		if maxSimilarity >= threshold {
 			severity := ld.calculateSeverity(maxSimilarity)
-			
+
 			threat := types.Threat{
 				ID:              generateThreatID(),
 				Package:         target.Name,

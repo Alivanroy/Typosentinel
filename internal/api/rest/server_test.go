@@ -221,32 +221,31 @@ func setupTestServer(t *testing.T) *Server {
 
 	// Create test configuration
 	cfg := config.RESTAPIConfig{
-		Port:    8080,
-		Host:    "localhost",
-		Enabled: true,
+		Port:     8080,
+		Host:     "localhost",
+		Enabled:  true,
 		BasePath: "/api",
 		Authentication: &config.APIAuthentication{
-			Enabled: true,
-			Methods: []string{"jwt"},
+			Enabled:   true,
+			Methods:   []string{"jwt"},
 			JWTSecret: "test-secret",
 		},
 		RateLimiting: &config.APIRateLimiting{
 			Enabled: true,
-			Global: &config.RateLimitRule{
-				RequestsPerSecond: 10,
-			},
+			RPS:     10,
+			Burst:   20,
 		},
 		CORS: &config.CORSConfig{
 			AllowedOrigins: []string{"*"},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 			AllowedHeaders: []string{"*"},
 		},
-		Documentation: &config.APIDocumentation{
+		Documentation: config.APIDocumentation{
 			Enabled: true,
 		},
-		Versioning: &config.APIVersioning{
-			Enabled: true,
-			DefaultVersion: "v1",
+		Versioning: config.APIVersioning{
+			Enabled:           true,
+			DefaultVersion:    "v1",
 			SupportedVersions: []string{"v1"},
 		},
 	}
@@ -269,13 +268,13 @@ func setupTestServerWithoutRateLimit(t *testing.T) *Server {
 
 	// Create test configuration without rate limiting
 	cfg := config.RESTAPIConfig{
-		Port:    8080,
-		Host:    "localhost",
-		Enabled: true,
+		Port:     8080,
+		Host:     "localhost",
+		Enabled:  true,
 		BasePath: "/api",
 		Authentication: &config.APIAuthentication{
-			Enabled: true,
-			Methods: []string{"jwt"},
+			Enabled:   true,
+			Methods:   []string{"jwt"},
 			JWTSecret: "test-secret",
 		},
 		RateLimiting: &config.APIRateLimiting{
@@ -286,12 +285,12 @@ func setupTestServerWithoutRateLimit(t *testing.T) *Server {
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 			AllowedHeaders: []string{"*"},
 		},
-		Documentation: &config.APIDocumentation{
+		Documentation: config.APIDocumentation{
 			Enabled: true,
 		},
-		Versioning: &config.APIVersioning{
-			Enabled: true,
-			DefaultVersion: "v1",
+		Versioning: config.APIVersioning{
+			Enabled:           true,
+			DefaultVersion:    "v1",
 			SupportedVersions: []string{"v1"},
 		},
 	}
@@ -331,6 +330,6 @@ func TestJWTValidator_ExpiredToken(t *testing.T) {
 	assert.Error(t, err)
 	// The error could be either "invalid token format" or a parsing error
 	// Both are valid for malformed tokens
-	assert.True(t, strings.Contains(err.Error(), "invalid token format") || 
-				 strings.Contains(err.Error(), "failed to parse header"))
+	assert.True(t, strings.Contains(err.Error(), "invalid token format") ||
+		strings.Contains(err.Error(), "failed to parse header"))
 }

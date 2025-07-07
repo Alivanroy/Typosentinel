@@ -204,12 +204,12 @@ func (l *Logger) WithFields(fields ...interfaces.LogField) interfaces.Logger {
 		file:      l.file,
 		ctxFields: make(map[string]interface{}),
 	}
-	
+
 	// Copy context fields
 	for k, v := range l.ctxFields {
 		newLogger.ctxFields[k] = v
 	}
-	
+
 	return newLogger
 }
 
@@ -223,15 +223,15 @@ func (l *Logger) WithContext(ctx context.Context) interfaces.Logger {
 		file:      l.file,
 		ctxFields: make(map[string]interface{}),
 	}
-	
+
 	// Copy existing fields
 	newLogger.fields = append(newLogger.fields, l.fields...)
-	
+
 	// Copy existing context fields
 	for k, v := range l.ctxFields {
 		newLogger.ctxFields[k] = v
 	}
-	
+
 	// Extract context values
 	if requestID := ctx.Value("request_id"); requestID != nil {
 		newLogger.ctxFields["request_id"] = requestID
@@ -245,7 +245,7 @@ func (l *Logger) WithContext(ctx context.Context) interfaces.Logger {
 	if spanID := ctx.Value("span_id"); spanID != nil {
 		newLogger.ctxFields["span_id"] = spanID
 	}
-	
+
 	return newLogger
 }
 
@@ -255,13 +255,13 @@ func (l *Logger) SetLevel(level string) error {
 	if err != nil {
 		return errors.Wrapf(err, errors.ErrCodeValidation, "invalid log level: %s", level)
 	}
-	
+
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	l.logger.SetLevel(logLevel)
 	l.config.Level = level
-	
+
 	return nil
 }
 
@@ -276,7 +276,7 @@ func (l *Logger) GetLevel() string {
 func (l *Logger) Close() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	if l.file != nil {
 		return l.file.Close()
 	}
@@ -287,7 +287,7 @@ func (l *Logger) Close() error {
 func (l *Logger) Rotate() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	if l.file != nil {
 		return l.file.Rotate()
 	}
@@ -307,14 +307,14 @@ func (l *Logger) logWithFields(level logrus.Level, message string, fields []inte
 	for _, field := range fields {
 		logrusFields[field.Key] = field.Value
 	}
-	
+
 	entry := l.logger.WithFields(logrusFields)
-	
+
 	// Add context fields
 	for k, v := range l.ctxFields {
 		entry = entry.WithField(k, v)
 	}
-	
+
 	// Add caller information
 	if pc, file, line, ok := runtime.Caller(3); ok {
 		funcName := runtime.FuncForPC(pc).Name()
@@ -331,20 +331,20 @@ func (l *Logger) logWithFields(level logrus.Level, message string, fields []inte
 			"caller_file": fmt.Sprintf("%s:%d", file, line),
 		})
 	}
-	
+
 	entry.Log(level, message)
 }
 
 // mergeFields merges multiple field slices with the logger's base fields
 func (l *Logger) mergeFields(fields ...interfaces.LogField) []interfaces.LogField {
 	var result []interfaces.LogField
-	
+
 	// Start with logger's base fields
 	result = append(result, l.fields...)
-	
+
 	// Add provided fields
 	result = append(result, fields...)
-	
+
 	return result
 }
 
@@ -361,7 +361,7 @@ func NewStructuredLogger(cfg *config.LoggingConfig, component, version string) (
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &StructuredLogger{
 		Logger:    baseLogger,
 		component: component,
@@ -377,9 +377,9 @@ func (sl *StructuredLogger) LogRequest(ctx context.Context, method, path string,
 	logFields = append(logFields, interfaces.String("http_path", path))
 	logFields = append(logFields, interfaces.Int("http_status", statusCode))
 	logFields = append(logFields, interfaces.Int("duration_ms", int(duration.Milliseconds())))
-	
+
 	logger := sl.WithContext(ctx)
-	
+
 	if statusCode >= 500 {
 		logger.Error("HTTP request failed", logFields...)
 	} else if statusCode >= 400 {
@@ -396,9 +396,9 @@ func (sl *StructuredLogger) LogDatabaseOperation(ctx context.Context, operation,
 	logFields = append(logFields, interfaces.String("db_operation", operation))
 	logFields = append(logFields, interfaces.String("db_table", table))
 	logFields = append(logFields, interfaces.Int("duration_ms", int(duration.Milliseconds())))
-	
+
 	logger := sl.WithContext(ctx)
-	
+
 	if err != nil {
 		errorFields := append(logFields, interfaces.String("error", err.Error()))
 		logger.Error("Database operation failed", errorFields...)
@@ -415,7 +415,7 @@ func (sl *StructuredLogger) LogCacheOperation(ctx context.Context, operation, ke
 	logFields = append(logFields, interfaces.String("cache_key", key))
 	logFields = append(logFields, interfaces.Bool("cache_hit", hit))
 	logFields = append(logFields, interfaces.Int("duration_ms", int(duration.Milliseconds())))
-	
+
 	logger := sl.WithContext(ctx)
 	logger.Debug("Cache operation completed", logFields...)
 }
@@ -428,9 +428,9 @@ func (sl *StructuredLogger) LogScanOperation(ctx context.Context, packageName, r
 	logFields = append(logFields, interfaces.String("registry", registry))
 	logFields = append(logFields, interfaces.Float64("risk_score", riskScore))
 	logFields = append(logFields, interfaces.Int("duration_ms", int(duration.Milliseconds())))
-	
+
 	logger := sl.WithContext(ctx)
-	
+
 	if err != nil {
 		errorFields := append(logFields, interfaces.String("error", err.Error()))
 		logger.Error("Package scan failed", errorFields...)
@@ -447,9 +447,9 @@ func (sl *StructuredLogger) LogMLOperation(ctx context.Context, operation string
 	logFields = append(logFields, interfaces.Int("input_size", inputSize))
 	logFields = append(logFields, interfaces.Float64("confidence", confidence))
 	logFields = append(logFields, interfaces.Int("duration_ms", int(duration.Milliseconds())))
-	
+
 	logger := sl.WithContext(ctx)
-	
+
 	if err != nil {
 		errorFields := append(logFields, interfaces.String("error", err.Error()))
 		logger.Error("ML operation failed", errorFields...)
@@ -465,9 +465,9 @@ func (sl *StructuredLogger) LogSecurityEvent(ctx context.Context, eventType, des
 	logFields = append(logFields, interfaces.String("security_event_type", eventType))
 	logFields = append(logFields, interfaces.String("security_severity", severity))
 	logFields = append(logFields, interfaces.String("description", description))
-	
+
 	logger := sl.WithContext(ctx)
-	
+
 	switch severity {
 	case "critical", "high":
 		logger.Error("Security event detected", logFields...)
@@ -485,7 +485,7 @@ func (sl *StructuredLogger) LogPerformanceMetric(ctx context.Context, metricName
 	logFields = append(logFields, interfaces.String("metric_name", metricName))
 	logFields = append(logFields, interfaces.Float64("metric_value", value))
 	logFields = append(logFields, interfaces.String("metric_unit", unit))
-	
+
 	logger := sl.WithContext(ctx)
 	logger.Debug("Performance metric recorded", logFields...)
 }
@@ -496,7 +496,7 @@ func (sl *StructuredLogger) LogStartup(ctx context.Context, fields ...interfaces
 	logFields = append(logFields, interfaces.String("component", sl.component))
 	logFields = append(logFields, interfaces.String("version", sl.version))
 	logFields = append(logFields, interfaces.String("event", "startup"))
-	
+
 	logger := sl.WithContext(ctx)
 	logger.Info("Application starting", logFields...)
 }
@@ -508,7 +508,7 @@ func (sl *StructuredLogger) LogShutdown(ctx context.Context, reason string, fiel
 	logFields = append(logFields, interfaces.String("version", sl.version))
 	logFields = append(logFields, interfaces.String("event", "shutdown"))
 	logFields = append(logFields, interfaces.String("reason", reason))
-	
+
 	logger := sl.WithContext(ctx)
 	logger.Info("Application shutting down", logFields...)
 }
@@ -518,14 +518,14 @@ func (l *Logger) HealthCheck() error {
 	// Test if we can write to the output
 	testEntry := l.logger.WithField("health_check", true)
 	testEntry.Debug("Logger health check")
-	
+
 	// If using file output, check if file is writable
 	if l.file != nil {
 		if _, err := os.Stat(l.config.File); err != nil {
 			return errors.Wrap(err, errors.ErrCodeInternal, "log file is not accessible")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -536,7 +536,7 @@ func (l *Logger) GetStats() map[string]interface{} {
 		"format": l.config.Format,
 		"output": l.config.Output,
 	}
-	
+
 	if l.config.Output == "file" {
 		stats["file"] = l.config.File
 		stats["max_size"] = l.config.MaxSize
@@ -544,6 +544,6 @@ func (l *Logger) GetStats() map[string]interface{} {
 		stats["max_age"] = l.config.MaxAge
 		stats["compress"] = l.config.Compress
 	}
-	
+
 	return stats
 }

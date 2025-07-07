@@ -14,14 +14,14 @@ import (
 
 // DatabaseOptimizer provides advanced database optimization features
 type DatabaseOptimizer struct {
-	db                *database.ThreatDB
-	connectionPool    *sql.DB
-	queryCache        *QueryCache
-	batchProcessor    *BatchProcessor
-	indexManager      *IndexManager
-	queryAnalyzer     *QueryAnalyzer
-	mu                sync.RWMutex
-	metrics           *OptimizationMetrics
+	db             *database.ThreatDB
+	connectionPool *sql.DB
+	queryCache     *QueryCache
+	batchProcessor *BatchProcessor
+	indexManager   *IndexManager
+	queryAnalyzer  *QueryAnalyzer
+	mu             sync.RWMutex
+	metrics        *OptimizationMetrics
 }
 
 // QueryCache implements intelligent query result caching
@@ -70,21 +70,21 @@ type IndexManager struct {
 
 // IndexInfo contains information about database indexes
 type IndexInfo struct {
-	Name        string
-	Table       string
-	Columns     []string
-	UsageCount  int64
-	CreatedAt   time.Time
-	LastUsed    time.Time
-	Efficiency  float64
+	Name       string
+	Table      string
+	Columns    []string
+	UsageCount int64
+	CreatedAt  time.Time
+	LastUsed   time.Time
+	Efficiency float64
 }
 
 // QueryAnalyzer analyzes query performance and suggests optimizations
 type QueryAnalyzer struct {
-	queryStats    map[string]*QueryStats
-	slowQueries   []*SlowQuery
-	threshold     time.Duration
-	mu            sync.RWMutex
+	queryStats  map[string]*QueryStats
+	slowQueries []*SlowQuery
+	threshold   time.Duration
+	mu          sync.RWMutex
 }
 
 // QueryStats tracks performance statistics for database queries
@@ -108,18 +108,18 @@ type SlowQuery struct {
 
 // OptimizationMetrics tracks optimization performance
 type OptimizationMetrics struct {
-	CacheHitRatio     float64
-	AvgQueryTime      time.Duration
-	BatchEfficiency   float64
-	IndexUtilization  float64
-	OptimizedQueries  int64
-	mu                sync.RWMutex
+	CacheHitRatio    float64
+	AvgQueryTime     time.Duration
+	BatchEfficiency  float64
+	IndexUtilization float64
+	OptimizedQueries int64
+	mu               sync.RWMutex
 }
 
 // NewDatabaseOptimizer creates a new database optimizer
 func NewDatabaseOptimizer(db *database.ThreatDB, config *OptimizationConfig) *DatabaseOptimizer {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	optimizer := &DatabaseOptimizer{
 		db: db,
 		queryCache: &QueryCache{
@@ -169,7 +169,7 @@ type OptimizationConfig struct {
 // OptimizedGetThreat retrieves threat with caching and optimization
 func (do *DatabaseOptimizer) OptimizedGetThreat(packageName, registry string) (*database.ThreatRecord, error) {
 	cacheKey := fmt.Sprintf("threat:%s:%s", packageName, registry)
-	
+
 	// Check cache first
 	if cached := do.queryCache.Get(cacheKey); cached != nil {
 		if threat, ok := cached.Result.(*database.ThreatRecord); ok {
@@ -215,7 +215,7 @@ func (do *DatabaseOptimizer) BatchAddThreats(threats []*database.ThreatRecord) e
 // OptimizedGetThreats retrieves threats with advanced filtering and caching
 func (do *DatabaseOptimizer) OptimizedGetThreats(registry, threatType string, limit int) ([]*database.ThreatRecord, error) {
 	cacheKey := fmt.Sprintf("threats:%s:%s:%d", registry, threatType, limit)
-	
+
 	// Check cache
 	if cached := do.queryCache.Get(cacheKey); cached != nil {
 		if threats, ok := cached.Result.([]*database.ThreatRecord); ok {
@@ -568,11 +568,11 @@ func (do *DatabaseOptimizer) GetOptimizationMetrics() *OptimizationMetrics {
 	defer do.metrics.mu.RUnlock()
 
 	return &OptimizationMetrics{
-		CacheHitRatio:     do.metrics.CacheHitRatio,
-		AvgQueryTime:      do.metrics.AvgQueryTime,
-		BatchEfficiency:   do.metrics.BatchEfficiency,
-		IndexUtilization:  do.metrics.IndexUtilization,
-		OptimizedQueries:  do.metrics.OptimizedQueries,
+		CacheHitRatio:    do.metrics.CacheHitRatio,
+		AvgQueryTime:     do.metrics.AvgQueryTime,
+		BatchEfficiency:  do.metrics.BatchEfficiency,
+		IndexUtilization: do.metrics.IndexUtilization,
+		OptimizedQueries: do.metrics.OptimizedQueries,
 	}
 }
 

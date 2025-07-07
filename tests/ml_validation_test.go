@@ -13,10 +13,10 @@ import (
 func TestMLAnalysisValidation(t *testing.T) {
 	// Initialize ML analyzer with default configuration
 	analyzer := ml.NewMLAnalyzer(config.MLAnalysisConfig{
-		Enabled:              true,
-		SimilarityThreshold:  0.8,
-		MaliciousThreshold:   0.7,
-		ReputationThreshold:  0.6,
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
 		ModelPath:           "./models/test_model.pkl",
 		BatchSize:           32,
 		MaxFeatures:         1000,
@@ -107,10 +107,10 @@ func TestGoDatasetValidation(t *testing.T) {
 func runPackageManagerTest(t *testing.T, packageManager string) {
 	// Initialize ML analyzer
 	analyzer := ml.NewMLAnalyzer(config.MLAnalysisConfig{
-		Enabled:              true,
-		SimilarityThreshold:  0.8,
-		MaliciousThreshold:   0.7,
-		ReputationThreshold:  0.6,
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
 		ModelPath:           "./models/test_model.pkl",
 		BatchSize:           32,
 		MaxFeatures:         1000,
@@ -173,10 +173,10 @@ func runPackageManagerTest(t *testing.T, packageManager string) {
 func TestPerformanceBenchmarks(t *testing.T) {
 	// Initialize ML analyzer
 	analyzer := ml.NewMLAnalyzer(config.MLAnalysisConfig{
-		Enabled:              true,
-		SimilarityThreshold:  0.8,
-		MaliciousThreshold:   0.7,
-		ReputationThreshold:  0.6,
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
 		ModelPath:           "./models/test_model.pkl",
 		BatchSize:           32,
 		MaxFeatures:         1000,
@@ -237,10 +237,10 @@ func TestPerformanceBenchmarks(t *testing.T) {
 func TestSpecificRiskFactors(t *testing.T) {
 	// Initialize ML analyzer
 	analyzer := ml.NewMLAnalyzer(config.MLAnalysisConfig{
-		Enabled:              true,
-		SimilarityThreshold:  0.8,
-		MaliciousThreshold:   0.7,
-		ReputationThreshold:  0.6,
+		Enabled:             true,
+		SimilarityThreshold: 0.8,
+		MaliciousThreshold:  0.7,
+		ReputationThreshold: 0.6,
 		ModelPath:           "./models/test_model.pkl",
 		BatchSize:           32,
 		MaxFeatures:         1000,

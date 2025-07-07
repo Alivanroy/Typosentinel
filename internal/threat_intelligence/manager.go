@@ -30,19 +30,19 @@ type ThreatIntelligenceManager struct {
 type ThreatFeed interface {
 	// GetName returns the feed name
 	GetName() string
-	
+
 	// GetType returns the feed type
 	GetType() string
-	
+
 	// Initialize sets up the feed
 	Initialize(ctx context.Context, config map[string]interface{}) error
-	
+
 	// FetchThreats retrieves latest threats from the feed
 	FetchThreats(ctx context.Context, since time.Time) ([]ThreatIntelligence, error)
-	
+
 	// GetStatus returns feed status
 	GetStatus() FeedStatus
-	
+
 	// Close closes the feed connection
 	Close() error
 }
@@ -78,23 +78,23 @@ type ThreatIndicator struct {
 
 // FeedStatus represents the status of a threat feed
 type FeedStatus struct {
-	Name           string    `json:"name"`
-	State          string    `json:"state"` // "active", "inactive", "error", "disabled"
-	LastUpdate     time.Time `json:"last_update"`
-	LastError      string    `json:"last_error,omitempty"`
-	ThreatCount    int       `json:"threat_count"`
+	Name           string        `json:"name"`
+	State          string        `json:"state"` // "active", "inactive", "error", "disabled"
+	LastUpdate     time.Time     `json:"last_update"`
+	LastError      string        `json:"last_error,omitempty"`
+	ThreatCount    int           `json:"threat_count"`
 	UpdateInterval time.Duration `json:"update_interval"`
-	Healthy        bool      `json:"healthy"`
+	Healthy        bool          `json:"healthy"`
 }
 
 // ThreatCorrelationResult represents the result of threat correlation
 type ThreatCorrelationResult struct {
-	PackageName     string              `json:"package_name"`
-	Matches         []ThreatMatch       `json:"matches"`
-	OverallSeverity string              `json:"overall_severity"`
-	ConfidenceScore float64             `json:"confidence_score"`
-	Recommendations []string            `json:"recommendations"`
-	LastUpdated     time.Time           `json:"last_updated"`
+	PackageName     string        `json:"package_name"`
+	Matches         []ThreatMatch `json:"matches"`
+	OverallSeverity string        `json:"overall_severity"`
+	ConfidenceScore float64       `json:"confidence_score"`
+	Recommendations []string      `json:"recommendations"`
+	LastUpdated     time.Time     `json:"last_updated"`
 }
 
 // ThreatMatch represents a match between a package and threat intelligence
@@ -111,14 +111,12 @@ type ThreatMatch struct {
 
 // AlertConfig represents alerting configuration
 type AlertConfig struct {
-	Enabled         bool                     `json:"enabled"`
-	SeverityLevels  []string                 `json:"severity_levels"`
-	Channels        []config.AlertChannel    `json:"channels"`
-	Throttling      config.ThrottlingConfig  `json:"throttling"`
-	Filters         []AlertFilter            `json:"filters"`
+	Enabled        bool                    `json:"enabled"`
+	SeverityLevels []string                `json:"severity_levels"`
+	Channels       []config.AlertChannel   `json:"channels"`
+	Throttling     config.ThrottlingConfig `json:"throttling"`
+	Filters        []AlertFilter           `json:"filters"`
 }
-
-
 
 // AlertFilter represents an alert filter
 type AlertFilter struct {
@@ -135,14 +133,14 @@ func NewThreatIntelligenceManager(config *config.Config, logger *logger.Logger) 
 	if config.ThreatIntelligence != nil {
 		// Convert from config.AlertingConfig to local AlertConfig
 		alertingConfig = AlertConfig{
-			Enabled: config.ThreatIntelligence.Alerting.Enabled,
+			Enabled:        config.ThreatIntelligence.Alerting.Enabled,
 			SeverityLevels: []string{"critical", "high", "medium", "low"},
-			Channels: config.ThreatIntelligence.Alerting.Channels,
-			Throttling: config.ThreatIntelligence.Alerting.Throttling,
-			Filters: []AlertFilter{},
+			Channels:       config.ThreatIntelligence.Alerting.Channels,
+			Throttling:     config.ThreatIntelligence.Alerting.Throttling,
+			Filters:        []AlertFilter{},
 		}
 	}
-	
+
 	return &ThreatIntelligenceManager{
 		config:         config,
 		feeds:          make(map[string]ThreatFeed),
@@ -341,7 +339,7 @@ func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error
 		tim.logger.Info("No threat intelligence configuration found, skipping feed initialization")
 		return nil
 	}
-	
+
 	// Initialize OSV feed if enabled
 	if tim.config.ThreatIntelligence.Feeds != nil {
 		// For now, create basic feeds without specific configuration
@@ -353,7 +351,7 @@ func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error
 			return fmt.Errorf("failed to initialize OSV feed: %w", err)
 		}
 		tim.feeds["osv"] = osvFeed
-		
+
 		// Initialize GitHub Advisory feed
 		ghFeed := NewGitHubAdvisoryFeed(tim.logger)
 		if err := ghFeed.Initialize(ctx, map[string]interface{}{
@@ -374,7 +372,7 @@ func (tim *ThreatIntelligenceManager) loadInitialThreats(ctx context.Context) er
 		tim.logger.Debug("Loading threats from feed", map[string]interface{}{
 			"feed": name,
 		})
-		
+
 		// Load threats from the beginning of time for initial load
 		threats, err := feed.FetchThreats(ctx, time.Time{})
 		if err != nil {
@@ -416,8 +414,8 @@ func (tim *ThreatIntelligenceManager) startUpdateLoop(ctx context.Context) {
 			if tim.isRunning {
 				if err := tim.performUpdate(ctx); err != nil {
 					tim.logger.Error("Threat intelligence update failed", map[string]interface{}{
-				"error": err,
-			})
+						"error": err,
+					})
 				}
 			}
 		}

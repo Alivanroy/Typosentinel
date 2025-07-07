@@ -10,14 +10,10 @@ import (
 
 func TestNewEngine(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 
@@ -31,19 +27,14 @@ func TestNewEngine(t *testing.T) {
 		t.Error("Expected engine config to match provided config")
 	}
 
-
 }
 
 func TestDetectTyposquatting_ExactMatch(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
@@ -59,14 +50,10 @@ func TestDetectTyposquatting_ExactMatch(t *testing.T) {
 
 func TestDetectTyposquatting_HighSimilarity(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
@@ -91,14 +78,10 @@ func TestDetectTyposquatting_HighSimilarity(t *testing.T) {
 
 func TestDetectTyposquatting_LowSimilarity(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
@@ -115,14 +98,10 @@ func TestDetectTyposquatting_LowSimilarity(t *testing.T) {
 
 func TestDetectTyposquatting_CommonTypos(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	lexicalDetector := NewLexicalDetector(cfg)
@@ -132,12 +111,12 @@ func TestDetectTyposquatting_CommonTypos(t *testing.T) {
 		typo     string
 		expected bool
 	}{
-		{"lodash", "lodahs", true},     // Character swap
-		{"express", "expres", true},   // Missing character
-		{"react", "reactt", true},     // Extra character
-		{"vue", "veu", true},          // Character swap
-		{"angular", "angualr", true},  // Character swap
-		{"jquery", "jqeury", true},    // Character swap
+		{"lodash", "lodahs", true},      // Character swap
+		{"express", "expres", true},     // Missing character
+		{"react", "reactt", true},       // Extra character
+		{"vue", "veu", true},            // Character swap
+		{"angular", "angualr", true},    // Character swap
+		{"jquery", "jqeury", true},      // Character swap
 		{"bootstrap", "bootstrp", true}, // Missing characters but still similar
 	}
 
@@ -164,19 +143,19 @@ func TestCalculateSimilarity(t *testing.T) {
 	lexicalDetector := NewLexicalDetector(cfg)
 
 	tests := []struct {
-		str1     string
-		str2     string
-		minSim   float64
-		maxSim   float64
+		str1   string
+		str2   string
+		minSim float64
+		maxSim float64
 	}{
-		{"test", "test", 1.0, 1.0},           // Identical
-		{"test", "tset", 0.5, 0.9},           // Transposition
-		{"test", "tes", 0.6, 0.9},            // Missing character
-		{"test", "testt", 0.6, 0.9},          // Extra character
-		{"test", "best", 0.6, 0.9},           // Substitution
-		{"test", "completely", 0.0, 0.3},     // Very different
-		{"", "", 1.0, 1.0},                   // Both empty
-		{"a", "", 0.0, 0.0},                  // One empty
+		{"test", "test", 1.0, 1.0},       // Identical
+		{"test", "tset", 0.5, 0.9},       // Transposition
+		{"test", "tes", 0.6, 0.9},        // Missing character
+		{"test", "testt", 0.6, 0.9},      // Extra character
+		{"test", "best", 0.6, 0.9},       // Substitution
+		{"test", "completely", 0.0, 0.3}, // Very different
+		{"", "", 1.0, 1.0},               // Both empty
+		{"a", "", 0.0, 0.0},              // One empty
 	}
 
 	for _, test := range tests {
@@ -199,15 +178,15 @@ func TestLevenshteinDistance(t *testing.T) {
 		str2     string
 		expected int
 	}{
-		{"test", "test", 0},     // Identical
-		{"test", "tes", 1},      // One deletion
-		{"test", "testt", 1},    // One insertion
-		{"test", "best", 1},     // One substitution
-		{"test", "tset", 2},     // Two operations
+		{"test", "test", 0},      // Identical
+		{"test", "tes", 1},       // One deletion
+		{"test", "testt", 1},     // One insertion
+		{"test", "best", 1},      // One substitution
+		{"test", "tset", 2},      // Two operations
 		{"kitten", "sitting", 3}, // Classic example
-		{"", "", 0},             // Both empty
-		{"a", "", 1},            // One empty
-		{"", "a", 1},            // Other empty
+		{"", "", 0},              // Both empty
+		{"a", "", 1},             // One empty
+		{"", "a", 1},             // Other empty
 	}
 
 	for _, test := range tests {
@@ -223,14 +202,10 @@ func TestLevenshteinDistance(t *testing.T) {
 
 func TestCheckPackage_SuspiciousPackage(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 
@@ -266,14 +241,10 @@ func TestCheckPackage_SuspiciousPackage(t *testing.T) {
 
 func TestCheckPackage_CleanPackage(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 
@@ -315,14 +286,10 @@ func TestEngineVersion(t *testing.T) {
 
 func TestAnalyze(t *testing.T) {
 	cfg := &config.Config{
-		Detection: &config.DetectionConfig{
-			Enabled: true,
-			Typosquatting: config.TyposquattingConfig{
-				Enabled:             true,
-				SimilarityThreshold: 0.8,
-				MinLength:           3,
-				MaxDistance:         3,
-			},
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
 		},
 	}
 	engine := New(cfg)

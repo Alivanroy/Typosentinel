@@ -5,21 +5,24 @@ run:
   timeout: 5m
   issues-exit-code: 1
   tests: true
-  skip-dirs:
+
+issues:
+  exclude-dirs:
     - vendor
     - temp
     - artifacts
     - reports
     - dist
-  skip-files:
-    - ".*\.pb\.go$"
-    - ".*_generated\.go$"
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*_generated\\.go$"
+  uniq-by-line: true
 
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: true
   sort-results: true
 
 linters-settings:
@@ -94,7 +97,6 @@ linters-settings:
 
   # Struct tags
   govet:
-    check-shadowing: true
     settings:
       printf:
         funcs:
@@ -107,10 +109,6 @@ linters-settings:
   whitespace:
     multi-if: false
     multi-func: false
-
-  # Interface compliance
-  interfacer:
-    check-exported: true
 
   # Duplicate code
   dupl:
@@ -135,7 +133,7 @@ linters-settings:
 
   # Test packages
   testpackage:
-    skip-regexp: (export|internal)_test\.go
+    skip-regexp: (export|internal)_test\\.go
 
   # Exhaustive switch
   exhaustive:
@@ -170,15 +168,11 @@ linters:
     - staticcheck
     - typecheck
     - unused
-    - varcheck
-    - deadcode
-    - structcheck
     
     # Code style
     - gofmt
     - gofumpt
     - goimports
-    - golint
     - stylecheck
     - unconvert
     - unparam
@@ -222,16 +216,8 @@ linters:
     
     # Formatting
     - lll
-    - interfacer
     
-  disable:
-    - maligned  # deprecated
-    - scopelint # deprecated
-    - interfacer # deprecated
-    - golint    # deprecated, replaced by revive
-    - varcheck  # deprecated
-    - deadcode  # deprecated
-    - structcheck # deprecated
+  disable: []
 
   # Enable all available linters
   # enable-all: true
@@ -254,98 +240,3 @@ linters:
   #   - complexity
   #   - style
   #   - performance
-
-issues:
-  # List of regexps of issue texts to exclude
-  exclude:
-    # Exclude some linters from running on tests files
-    - "G404: Use of weak random number generator"  # Often acceptable in tests
-    - "G101: Potential hardcoded credentials"      # Often false positives in tests
-    
-  # Excluding configuration per-path, per-linter, per-text and per-source
-  exclude-rules:
-    # Exclude some linters from running on tests files
-    - path: _test\.go
-      linters:
-        - gomnd
-        - funlen
-        - gocyclo
-        - gocognit
-        - dupl
-        - lll
-        - gosec
-        - goconst
-        
-    # Exclude some linters from running on example files
-    - path: examples/
-      linters:
-        - gomnd
-        - goconst
-        - gosec
-        
-    # Exclude some linters from running on cmd files (CLI interface)
-    - path: cmd/
-      linters:
-        - lll
-        - funlen
-        
-    # Exclude some linters from running on main.go
-    - path: main\.go
-      linters:
-        - gomnd
-        
-    # Exclude specific rules
-    - text: "weak cryptographic primitive"
-      linters:
-        - gosec
-        
-    # Exclude shadow checking on err variables
-    - text: "shadow: declaration of \"err\""
-      linters:
-        - govet
-        
-    # Exclude certain gocritic checks
-    - text: "(commentedOutCode|importShadow)"
-      linters:
-        - gocritic
-        
-  # Independently from option `exclude` we use default exclude patterns
-  exclude-use-default: false
-  
-  # Show only new issues: if there are unstaged changes or untracked files,
-  # only those changes are analyzed, else only changes in HEAD~ are analyzed
-  new: false
-  
-  # Show only new issues created after git revision `REV`
-  # new-from-rev: REV
-  
-  # Show only new issues created in git patch with set file path
-  # new-from-patch: path/to/patch/file
-  
-  # Maximum issues count per one linter. Set to 0 to disable
-  max-issues-per-linter: 0
-  
-  # Maximum count of issues with the same text. Set to 0 to disable
-  max-same-issues: 0
-
-severity:
-  # Default value is empty string
-  # Set the default severity for issues
-  default-severity: error
-  
-  # The default value is false
-  # If set to true severity-rules regular expressions become case sensitive
-  case-sensitive: false
-  
-  # Default value is empty list
-  # When a list of severity rules are provided, severity information will be added to lint issues
-  rules:
-    - linters:
-        - dupl
-      severity: info
-    - linters:
-        - gocritic
-      severity: warning
-    - linters:
-        - gosec
-      severity: error

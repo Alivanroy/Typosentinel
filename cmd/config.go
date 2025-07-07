@@ -155,13 +155,13 @@ Examples:
 
 // Command flags
 var (
-	configTemplate    string
-	configForce       bool
-	configFormat      string
-	configStrict      bool
+	configTemplate     string
+	configForce        bool
+	configFormat       string
+	configStrict       bool
 	configWarningsOnly bool
-	configShowEnvVars bool
-	configDescription string
+	configShowEnvVars  bool
+	configDescription  string
 )
 
 func init() {
@@ -491,7 +491,7 @@ func outputConfigAsJSON(configEntries map[string]*config.ConfigEntry) error {
 	for key, entry := range configEntries {
 		configMap[key] = entry.Value
 	}
-	
+
 	data, err := json.MarshalIndent(configMap, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config as JSON: %w", err)
@@ -506,7 +506,7 @@ func outputConfigAsYAML(configEntries map[string]*config.ConfigEntry) error {
 	for key, entry := range configEntries {
 		configMap[key] = entry.Value
 	}
-	
+
 	data, err := yaml.Marshal(configMap)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config as YAML: %w", err)
@@ -526,7 +526,7 @@ func getCustomTemplatesDir() string {
 // generateConfigFile creates a configuration file from a template
 func generateConfigFile(filename, templateName string) error {
 	var configContent string
-	
+
 	switch templateName {
 	case "default":
 		configContent = getDefaultConfigTemplate()
@@ -541,7 +541,7 @@ func generateConfigFile(filename, templateName string) error {
 	default:
 		return fmt.Errorf("unknown template: %s", templateName)
 	}
-	
+
 	return os.WriteFile(filename, []byte(configContent), 0644)
 }
 
@@ -560,13 +560,13 @@ func validateConfiguration(configManager *config.ConfigManager) (struct {
 		Errors:   []string{},
 		Valid:    true,
 	}
-	
+
 	// Get all configuration entries
 	configEntries := configManager.GetAllConfig()
 	if len(configEntries) == 0 {
 		result.Warnings = append(result.Warnings, "No configuration entries found")
 	}
-	
+
 	// Validate scanner configuration
 	if maxConcurrency, exists := configEntries["scanner.max_concurrency"]; exists {
 		if val, ok := maxConcurrency.Value.(int); ok && val <= 0 {
@@ -576,11 +576,11 @@ func validateConfiguration(configManager *config.ConfigManager) (struct {
 	} else {
 		result.Warnings = append(result.Warnings, "Scanner max concurrency not configured")
 	}
-	
+
 	if timeout, exists := configEntries["scanner.timeout"]; !exists || timeout.Value == nil {
 		result.Warnings = append(result.Warnings, "Scanner timeout is not set, using default")
 	}
-	
+
 	// Validate ML configuration
 	if mlEnabled, exists := configEntries["ml.enabled"]; exists {
 		if enabled, ok := mlEnabled.Value.(bool); ok && enabled {
@@ -590,7 +590,7 @@ func validateConfiguration(configManager *config.ConfigManager) (struct {
 			}
 		}
 	}
-	
+
 	// Validate API configuration
 	if apiEnabled, exists := configEntries["api.enabled"]; exists {
 		if enabled, ok := apiEnabled.Value.(bool); ok && enabled {
@@ -605,7 +605,7 @@ func validateConfiguration(configManager *config.ConfigManager) (struct {
 			}
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -619,11 +619,11 @@ func getConfigInfo(configManager *config.ConfigManager, configFile string) map[s
 		"version":       "1.0",
 		"loaded":        true,
 	}
-	
+
 	if configFile == "" {
 		info["config_file"] = "config.yaml"
 	}
-	
+
 	// Collect environment variables
 	envVars := []string{}
 	for _, env := range os.Environ() {
@@ -632,7 +632,7 @@ func getConfigInfo(configManager *config.ConfigManager, configFile string) map[s
 		}
 	}
 	info["env_variables"] = envVars
-	
+
 	return info
 }
 
@@ -643,7 +643,7 @@ func createTemplate(name, description string, configEntries map[string]*config.C
 	for key, entry := range configEntries {
 		configMap[key] = entry.Value
 	}
-	
+
 	return map[string]interface{}{
 		"name":        name,
 		"description": description,

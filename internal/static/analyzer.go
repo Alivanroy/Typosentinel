@@ -14,80 +14,80 @@ import (
 
 // StaticAnalyzer performs static analysis on packages
 type StaticAnalyzer struct {
-	config *Config
-	yaraRules []*YaraRule
+	config         *Config
+	yaraRules      []*YaraRule
 	scriptPatterns []*ScriptPattern
 }
 
 // Config contains static analyzer configuration
 type Config struct {
-	Enabled                bool     `yaml:"enabled"`
-	AnalyzeInstallScripts  bool     `yaml:"analyze_install_scripts"`
-	AnalyzeManifests       bool     `yaml:"analyze_manifests"`
-	YaraRulesEnabled       bool     `yaml:"yara_rules_enabled"`
-	YaraRulesPath          string   `yaml:"yara_rules_path"`
-	SuspiciousCommands     []string `yaml:"suspicious_commands"`
-	DangerousPermissions   []string `yaml:"dangerous_permissions"`
-	MaxFileSize            int64    `yaml:"max_file_size"`
-	Timeout                string   `yaml:"timeout"`
-	Verbose                bool     `yaml:"verbose"`
+	Enabled               bool     `yaml:"enabled"`
+	AnalyzeInstallScripts bool     `yaml:"analyze_install_scripts"`
+	AnalyzeManifests      bool     `yaml:"analyze_manifests"`
+	YaraRulesEnabled      bool     `yaml:"yara_rules_enabled"`
+	YaraRulesPath         string   `yaml:"yara_rules_path"`
+	SuspiciousCommands    []string `yaml:"suspicious_commands"`
+	DangerousPermissions  []string `yaml:"dangerous_permissions"`
+	MaxFileSize           int64    `yaml:"max_file_size"`
+	Timeout               string   `yaml:"timeout"`
+	Verbose               bool     `yaml:"verbose"`
 }
 
 // AnalysisResult represents static analysis results
 type AnalysisResult struct {
-	PackageName       string                 `json:"package_name"`
-	Registry          string                 `json:"registry"`
-	AnalysisTimestamp time.Time              `json:"analysis_timestamp"`
-	
+	PackageName       string    `json:"package_name"`
+	Registry          string    `json:"registry"`
+	AnalysisTimestamp time.Time `json:"analysis_timestamp"`
+
 	// Install script analysis
-	InstallScripts    []InstallScriptAnalysis `json:"install_scripts"`
-	
+	InstallScripts []InstallScriptAnalysis `json:"install_scripts"`
+
 	// Manifest analysis
-	Manifests         []ManifestAnalysis      `json:"manifests"`
-	
+	Manifests []ManifestAnalysis `json:"manifests"`
+
 	// YARA rule matches
-	YaraMatches       []YaraMatch             `json:"yara_matches"`
-	
+	YaraMatches []YaraMatch `json:"yara_matches"`
+
 	// Overall assessment
-	RiskScore         float64                 `json:"risk_score"`
-	ThreatLevel       string                  `json:"threat_level"`
-	Findings          []Finding               `json:"findings"`
-	Warnings          []string                `json:"warnings"`
-	Recommendations   []string                `json:"recommendations"`
-	
+	RiskScore       float64   `json:"risk_score"`
+	ThreatLevel     string    `json:"threat_level"`
+	Findings        []Finding `json:"findings"`
+	Warnings        []string  `json:"warnings"`
+	Recommendations []string  `json:"recommendations"`
+
 	// Metadata
-	ProcessingTime    time.Duration           `json:"processing_time"`
-	FilesAnalyzed     int                     `json:"files_analyzed"`
-	TotalFileSize     int64                   `json:"total_file_size"`
+	ProcessingTime time.Duration `json:"processing_time"`
+	FilesAnalyzed  int           `json:"files_analyzed"`
+	TotalFileSize  int64         `json:"total_file_size"`
 }
 
 // InstallScriptAnalysis represents analysis of installation scripts
 type InstallScriptAnalysis struct {
-	FilePath          string              `json:"file_path"`
-	ScriptType        string              `json:"script_type"`
-	FileSize          int64               `json:"file_size"`
+	FilePath           string              `json:"file_path"`
+	ScriptType         string              `json:"script_type"`
+	FileSize           int64               `json:"file_size"`
 	SuspiciousCommands []SuspiciousCommand `json:"suspicious_commands"`
-	NetworkCalls      []NetworkCall       `json:"network_calls"`
-	FileOperations    []FileOperation     `json:"file_operations"`
-	PermissionChanges []PermissionChange  `json:"permission_changes"`
-	EnvironmentAccess []EnvironmentAccess `json:"environment_access"`
-	RiskScore         float64             `json:"risk_score"`
-	Recommendation    string              `json:"recommendation"`
+	NetworkCalls       []NetworkCall       `json:"network_calls"`
+	FileOperations     []FileOperation     `json:"file_operations"`
+	PermissionChanges  []PermissionChange  `json:"permission_changes"`
+	EnvironmentAccess  []EnvironmentAccess `json:"environment_access"`
+	RiskScore          float64             `json:"risk_score"`
+	Recommendation     string              `json:"recommendation"`
 }
 
 // ManifestAnalysis represents analysis of package manifests
 type ManifestAnalysis struct {
-	FilePath           string                 `json:"file_path"`
-	ManifestType       string                 `json:"manifest_type"`
-	FileSize           int64                  `json:"file_size"`
-	Dependencies       []DependencyAnalysis   `json:"dependencies"`
-	Scripts            map[string]string      `json:"scripts"`
-	SuspiciousFields   []SuspiciousField      `json:"suspicious_fields"`
-	MissingFields      []string               `json:"missing_fields"`
-	VersionAnomalies   []VersionAnomaly       `json:"version_anomalies"`
-	LicenseIssues      []LicenseIssue         `json:"license_issues"`
-	RiskScore          float64                `json:"risk_score"`
-	Recommendation     string                 `json:"recommendation"`
+	FilePath         string               `json:"file_path"`
+	ManifestType     string               `json:"manifest_type"`
+	FileSize         int64                `json:"file_size"`
+	Dependencies     []DependencyAnalysis `json:"dependencies"`
+	Scripts          map[string]string    `json:"scripts"`
+	SuspiciousFields []SuspiciousField    `json:"suspicious_fields"`
+	MissingFields    []string             `json:"missing_fields"`
+	VersionAnomalies []VersionAnomaly     `json:"version_anomalies"`
+	LicenseIssues    []LicenseIssue       `json:"license_issues"`
+	RiskScore        float64              `json:"risk_score"`
+	Recommendation   string               `json:"recommendation"`
 }
 
 // SuspiciousCommand represents a suspicious command found in scripts
@@ -156,11 +156,11 @@ type DependencyAnalysis struct {
 
 // SuspiciousField represents suspicious manifest fields
 type SuspiciousField struct {
-	Field       string  `json:"field"`
-	Value       string  `json:"value"`
-	Reason      string  `json:"reason"`
-	RiskLevel   string  `json:"risk_level"`
-	Confidence  float64 `json:"confidence"`
+	Field      string  `json:"field"`
+	Value      string  `json:"value"`
+	Reason     string  `json:"reason"`
+	RiskLevel  string  `json:"risk_level"`
+	Confidence float64 `json:"confidence"`
 }
 
 // VersionAnomaly represents version-related anomalies
@@ -238,23 +238,23 @@ func NewStaticAnalyzer(config *Config) (*StaticAnalyzer, error) {
 	if config == nil {
 		config = DefaultConfig()
 	}
-	
+
 	analyzer := &StaticAnalyzer{
 		config: config,
 	}
-	
+
 	// Load YARA rules
 	if config.YaraRulesEnabled {
 		if err := analyzer.loadYaraRules(); err != nil {
 			return nil, fmt.Errorf("failed to load YARA rules: %w", err)
 		}
 	}
-	
+
 	// Load script patterns
 	if err := analyzer.loadScriptPatterns(); err != nil {
 		return nil, fmt.Errorf("failed to load script patterns: %w", err)
 	}
-	
+
 	return analyzer, nil
 }
 
@@ -284,7 +284,7 @@ func DefaultConfig() *Config {
 // AnalyzePackage performs static analysis on a package
 func (sa *StaticAnalyzer) AnalyzePackage(ctx context.Context, packagePath string) (*AnalysisResult, error) {
 	startTime := time.Now()
-	
+
 	result := &AnalysisResult{
 		PackageName:       filepath.Base(packagePath),
 		AnalysisTimestamp: time.Now(),
@@ -295,21 +295,21 @@ func (sa *StaticAnalyzer) AnalyzePackage(ctx context.Context, packagePath string
 		Warnings:          []string{},
 		Recommendations:   []string{},
 	}
-	
+
 	// Walk through package files
 	err := filepath.Walk(packagePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		// Skip directories and large files
 		if info.IsDir() || info.Size() > sa.config.MaxFileSize {
 			return nil
 		}
-		
+
 		result.FilesAnalyzed++
 		result.TotalFileSize += info.Size()
-		
+
 		// Analyze install scripts
 		if sa.config.AnalyzeInstallScripts && sa.isInstallScript(path) {
 			scriptAnalysis, err := sa.analyzeInstallScript(path)
@@ -319,7 +319,7 @@ func (sa *StaticAnalyzer) AnalyzePackage(ctx context.Context, packagePath string
 				result.InstallScripts = append(result.InstallScripts, *scriptAnalysis)
 			}
 		}
-		
+
 		// Analyze manifests
 		if sa.config.AnalyzeManifests && sa.isManifest(path) {
 			manifestAnalysis, err := sa.analyzeManifest(path)
@@ -329,7 +329,7 @@ func (sa *StaticAnalyzer) AnalyzePackage(ctx context.Context, packagePath string
 				result.Manifests = append(result.Manifests, *manifestAnalysis)
 			}
 		}
-		
+
 		// Apply enhanced YARA rules
 		if sa.config.YaraRulesEnabled {
 			matches, err := sa.applyEnhancedYaraRules(path)
@@ -339,7 +339,7 @@ func (sa *StaticAnalyzer) AnalyzePackage(ctx context.Context, packagePath string
 				result.YaraMatches = append(result.YaraMatches, matches...)
 			}
 		}
-		
+
 		// Perform enhanced static analysis
 		enhancedFindings, err := sa.performEnhancedAnalysis(path)
 		if err != nil {
@@ -347,25 +347,25 @@ func (sa *StaticAnalyzer) AnalyzePackage(ctx context.Context, packagePath string
 		} else {
 			result.Findings = append(result.Findings, enhancedFindings...)
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk package directory: %w", err)
 	}
-	
+
 	// Calculate enhanced risk assessment
 	sa.calculateEnhancedRiskAssessment(result)
-	
+
 	// Generate findings
 	sa.generateFindings(result)
-	
+
 	// Generate recommendations
 	sa.generateRecommendations(result)
-	
+
 	result.ProcessingTime = time.Since(startTime)
-	
+
 	return result, nil
 }
 
@@ -378,13 +378,13 @@ func (sa *StaticAnalyzer) isInstallScript(path string) bool {
 		"install.js", "postinstall.js", "preinstall.js",
 		"install.py", "setup.py", "build.py",
 	}
-	
+
 	for _, name := range scriptNames {
 		if strings.EqualFold(filename, name) {
 			return true
 		}
 	}
-	
+
 	// Check file extensions
 	ext := filepath.Ext(path)
 	scriptExts := []string{".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd"}
@@ -393,7 +393,7 @@ func (sa *StaticAnalyzer) isInstallScript(path string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -409,13 +409,13 @@ func (sa *StaticAnalyzer) isManifest(path string) bool {
 		"Gemfile", "Gemfile.lock",
 		"composer.json", "composer.lock",
 	}
-	
+
 	for _, name := range manifestNames {
 		if strings.EqualFold(filename, name) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -426,59 +426,59 @@ func (sa *StaticAnalyzer) analyzeInstallScript(scriptPath string) (*InstallScrip
 		return nil, err
 	}
 	defer file.Close()
-	
+
 	info, err := file.Stat()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	analysis := &InstallScriptAnalysis{
-		FilePath:          scriptPath,
-		ScriptType:        sa.detectScriptType(scriptPath),
-		FileSize:          info.Size(),
+		FilePath:           scriptPath,
+		ScriptType:         sa.detectScriptType(scriptPath),
+		FileSize:           info.Size(),
 		SuspiciousCommands: []SuspiciousCommand{},
-		NetworkCalls:      []NetworkCall{},
-		FileOperations:    []FileOperation{},
-		PermissionChanges: []PermissionChange{},
-		EnvironmentAccess: []EnvironmentAccess{},
+		NetworkCalls:       []NetworkCall{},
+		FileOperations:     []FileOperation{},
+		PermissionChanges:  []PermissionChange{},
+		EnvironmentAccess:  []EnvironmentAccess{},
 	}
-	
+
 	scanner := bufio.NewScanner(file)
 	lineNumber := 0
-	
+
 	for scanner.Scan() {
 		lineNumber++
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		
+
 		// Analyze for suspicious commands
 		sa.analyzeSuspiciousCommands(line, lineNumber, analysis)
-		
+
 		// Analyze for network calls
 		sa.analyzeNetworkCalls(line, lineNumber, analysis)
-		
+
 		// Analyze for file operations
 		sa.analyzeFileOperations(line, lineNumber, analysis)
-		
+
 		// Analyze for permission changes
 		sa.analyzePermissionChanges(line, lineNumber, analysis)
-		
+
 		// Analyze for environment access
 		sa.analyzeEnvironmentAccess(line, lineNumber, analysis)
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	
+
 	// Calculate risk score
 	analysis.RiskScore = sa.calculateScriptRiskScore(analysis)
 	analysis.Recommendation = sa.generateScriptRecommendation(analysis)
-	
+
 	return analysis, nil
 }
 
@@ -489,12 +489,12 @@ func (sa *StaticAnalyzer) analyzeManifest(manifestPath string) (*ManifestAnalysi
 		return nil, err
 	}
 	defer file.Close()
-	
+
 	info, err := file.Stat()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	analysis := &ManifestAnalysis{
 		FilePath:         manifestPath,
 		ManifestType:     sa.detectManifestType(manifestPath),
@@ -506,7 +506,7 @@ func (sa *StaticAnalyzer) analyzeManifest(manifestPath string) (*ManifestAnalysi
 		VersionAnomalies: []VersionAnomaly{},
 		LicenseIssues:    []LicenseIssue{},
 	}
-	
+
 	// Parse manifest based on type
 	switch analysis.ManifestType {
 	case "package.json":
@@ -518,15 +518,15 @@ func (sa *StaticAnalyzer) analyzeManifest(manifestPath string) (*ManifestAnalysi
 	default:
 		err = sa.analyzeGenericManifest(file, analysis)
 	}
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Calculate risk score
 	analysis.RiskScore = sa.calculateManifestRiskScore(analysis)
 	analysis.Recommendation = sa.generateManifestRecommendation(analysis)
-	
+
 	return analysis, nil
 }
 
@@ -601,7 +601,7 @@ func (sa *StaticAnalyzer) analyzeNetworkCalls(line string, lineNumber int, analy
 		`wget\s+.*https?://`,
 		`fetch\s+.*https?://`,
 	}
-	
+
 	for _, pattern := range networkPatterns {
 		if matched, _ := regexp.MatchString(pattern, line); matched {
 			analysis.NetworkCalls = append(analysis.NetworkCalls, NetworkCall{
@@ -625,7 +625,7 @@ func (sa *StaticAnalyzer) analyzeFileOperations(line string, lineNumber int, ana
 		`mv\s+.*`,
 		`mkdir\s+.*`,
 	}
-	
+
 	for _, pattern := range filePatterns {
 		if matched, _ := regexp.MatchString(pattern, line); matched {
 			analysis.FileOperations = append(analysis.FileOperations, FileOperation{
@@ -683,13 +683,13 @@ func (sa *StaticAnalyzer) analyzePackageJSON(file *os.File, analysis *ManifestAn
 	if err := json.NewDecoder(file).Decode(&packageData); err != nil {
 		return err
 	}
-	
+
 	// Analyze scripts
 	if scripts, ok := packageData["scripts"].(map[string]interface{}); ok {
 		for name, script := range scripts {
 			if scriptStr, ok := script.(string); ok {
 				analysis.Scripts[name] = scriptStr
-				
+
 				// Check for suspicious commands in scripts
 				for _, cmd := range sa.config.SuspiciousCommands {
 					if strings.Contains(strings.ToLower(scriptStr), strings.ToLower(cmd)) {
@@ -706,7 +706,7 @@ func (sa *StaticAnalyzer) analyzePackageJSON(file *os.File, analysis *ManifestAn
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -762,53 +762,53 @@ func (sa *StaticAnalyzer) analyzeGenericManifest(file *os.File, analysis *Manife
 // Risk calculation and assessment functions
 func (sa *StaticAnalyzer) calculateScriptRiskScore(analysis *InstallScriptAnalysis) float64 {
 	score := 0.0
-	
+
 	// Weight different risk factors
 	score += float64(len(analysis.SuspiciousCommands)) * 0.3
 	score += float64(len(analysis.NetworkCalls)) * 0.2
 	score += float64(len(analysis.PermissionChanges)) * 0.4
 	score += float64(len(analysis.FileOperations)) * 0.1
-	
+
 	return min(score, 1.0)
 }
 
 func (sa *StaticAnalyzer) calculateManifestRiskScore(analysis *ManifestAnalysis) float64 {
 	score := 0.0
-	
+
 	// Weight different risk factors
 	score += float64(len(analysis.SuspiciousFields)) * 0.4
 	score += float64(len(analysis.VersionAnomalies)) * 0.3
 	score += float64(len(analysis.LicenseIssues)) * 0.2
 	score += float64(len(analysis.MissingFields)) * 0.1
-	
+
 	return min(score, 1.0)
 }
 
 func (sa *StaticAnalyzer) calculateRiskAssessment(result *AnalysisResult) {
 	totalRisk := 0.0
 	count := 0
-	
+
 	// Average script risks
 	for _, script := range result.InstallScripts {
 		totalRisk += script.RiskScore
 		count++
 	}
-	
+
 	// Average manifest risks
 	for _, manifest := range result.Manifests {
 		totalRisk += manifest.RiskScore
 		count++
 	}
-	
+
 	// YARA matches increase risk
 	totalRisk += float64(len(result.YaraMatches)) * 0.2
-	
+
 	if count > 0 {
 		result.RiskScore = totalRisk / float64(count)
 	} else {
 		result.RiskScore = 0.0
 	}
-	
+
 	// Determine threat level
 	if result.RiskScore > 0.8 {
 		result.ThreatLevel = "CRITICAL"
@@ -826,22 +826,22 @@ func (sa *StaticAnalyzer) calculateRiskAssessment(result *AnalysisResult) {
 func (sa *StaticAnalyzer) calculateEnhancedRiskAssessment(result *AnalysisResult) {
 	totalRisk := 0.0
 	count := 0
-	
+
 	// Enhanced risk calculation with weighted factors
 	for _, script := range result.InstallScripts {
 		totalRisk += script.RiskScore * 1.2 // Scripts have higher weight
 		count++
 	}
-	
+
 	// Average manifest risks
 	for _, manifest := range result.Manifests {
 		totalRisk += manifest.RiskScore
 		count++
 	}
-	
+
 	// YARA matches increase risk significantly
 	totalRisk += float64(len(result.YaraMatches)) * 0.3
-	
+
 	// Enhanced findings contribute to risk
 	for _, finding := range result.Findings {
 		switch finding.Severity {
@@ -855,13 +855,13 @@ func (sa *StaticAnalyzer) calculateEnhancedRiskAssessment(result *AnalysisResult
 			totalRisk += 0.1
 		}
 	}
-	
+
 	if count > 0 {
-		result.RiskScore = min(totalRisk / float64(count), 1.0)
+		result.RiskScore = min(totalRisk/float64(count), 1.0)
 	} else {
 		result.RiskScore = 0.0
 	}
-	
+
 	// Determine threat level with enhanced criteria
 	if result.RiskScore > 0.8 {
 		result.ThreatLevel = "CRITICAL"

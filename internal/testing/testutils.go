@@ -174,8 +174,8 @@ func (ts *TestSuite) createTestConfig() *config.Config {
 			Enabled: false,
 		},
 		Features: config.FeatureConfig{
-			Caching:     false,
-			MLScoring:   false,
+			Caching:      false,
+			MLScoring:    false,
 			BulkScanning: true,
 		},
 	}

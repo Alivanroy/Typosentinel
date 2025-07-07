@@ -71,7 +71,7 @@ pytest-cov==4.0.0
 
 	// Verify results
 	expected := map[string]string{
-		"requests":    "==2.28.1",
+		"requests":   "==2.28.1",
 		"numpy":      ">=1.21.0",
 		"pandas":     "~=1.5.0",
 		"flask":      "<=2.2.0",

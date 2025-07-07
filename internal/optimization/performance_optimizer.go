@@ -14,57 +14,57 @@ import (
 
 // PerformanceOptimizer provides comprehensive performance optimization
 type PerformanceOptimizer struct {
-	dbOptimizer    *DatabaseOptimizer
-	cacheManager   *CacheManager
-	resourceMonitor *ResourceMonitor
-	concurrencyManager *ConcurrencyManager
+	dbOptimizer         *DatabaseOptimizer
+	cacheManager        *CacheManager
+	resourceMonitor     *ResourceMonitor
+	concurrencyManager  *ConcurrencyManager
 	performanceProfiler *PerformanceProfiler
-	optimizationEngine *OptimizationEngine
-	config         *PerformanceConfig
-	metrics        *PerformanceMetrics
-	mu             sync.RWMutex
+	optimizationEngine  *OptimizationEngine
+	config              *PerformanceConfig
+	metrics             *PerformanceMetrics
+	mu                  sync.RWMutex
 }
 
 // ResourceMonitor tracks system resource usage
 type ResourceMonitor struct {
-	cpuUsage      float64
-	memoryUsage   int64
+	cpuUsage       float64
+	memoryUsage    int64
 	goroutineCount int
-	gcStats       *GCStats
-	thresholds    *ResourceThresholds
-	alerts        []*ResourceAlert
-	mu            sync.RWMutex
+	gcStats        *GCStats
+	thresholds     *ResourceThresholds
+	alerts         []*ResourceAlert
+	mu             sync.RWMutex
 }
 
 // GCStats tracks garbage collection statistics
 type GCStats struct {
-	NumGC        uint32
-	PauseTotal   time.Duration
-	LastGC       time.Time
-	HeapSize     uint64
-	HeapInUse    uint64
-	StackInUse   uint64
-	NextGC       uint64
+	NumGC      uint32
+	PauseTotal time.Duration
+	LastGC     time.Time
+	HeapSize   uint64
+	HeapInUse  uint64
+	StackInUse uint64
+	NextGC     uint64
 }
 
 // ResourceThresholds defines resource usage thresholds
 type ResourceThresholds struct {
-	MaxCPUUsage      float64
-	MaxMemoryUsage   int64
-	MaxGoroutines    int
-	MaxGCPause       time.Duration
-	MaxHeapSize      uint64
+	MaxCPUUsage    float64
+	MaxMemoryUsage int64
+	MaxGoroutines  int
+	MaxGCPause     time.Duration
+	MaxHeapSize    uint64
 }
 
 // ResourceAlert represents a resource usage alert
 type ResourceAlert struct {
-	Type        string
-	Message     string
-	Severity    string
-	Timestamp   time.Time
-	Value       interface{}
-	Threshold   interface{}
-	Resolved    bool
+	Type      string
+	Message   string
+	Severity  string
+	Timestamp time.Time
+	Value     interface{}
+	Threshold interface{}
+	Resolved  bool
 }
 
 // ConcurrencyManager optimizes concurrent operations
@@ -129,11 +129,11 @@ type RequestLimiter struct {
 
 // RateLimiter implements token bucket rate limiting
 type RateLimiter struct {
-	tokens    int
-	maxTokens int
+	tokens     int
+	maxTokens  int
 	refillRate time.Duration
 	lastRefill time.Time
-	mu        sync.Mutex
+	mu         sync.Mutex
 }
 
 // LoadBalancer distributes load across multiple resources
@@ -167,11 +167,11 @@ const (
 
 // PerformanceProfiler profiles application performance
 type PerformanceProfiler struct {
-	profiles       map[string]*PerformanceProfile
-	sampling       *SamplingConfig
-	bottlenecks    []*Bottleneck
-	optimizations  []*OptimizationSuggestion
-	mu             sync.RWMutex
+	profiles      map[string]*PerformanceProfile
+	sampling      *SamplingConfig
+	bottlenecks   []*Bottleneck
+	optimizations []*OptimizationSuggestion
+	mu            sync.RWMutex
 }
 
 // PerformanceProfile contains performance data for a specific operation
@@ -200,9 +200,9 @@ type PerformanceStatistics struct {
 
 // SamplingConfig configures performance sampling
 type SamplingConfig struct {
-	Enabled        bool
-	SampleRate     float64
-	MaxSamples     int
+	Enabled         bool
+	SampleRate      float64
+	MaxSamples      int
 	RetentionPeriod time.Duration
 }
 
@@ -230,10 +230,10 @@ type OptimizationSuggestion struct {
 
 // OptimizationEngine automatically applies performance optimizations
 type OptimizationEngine struct {
-	rules          []*OptimizationRule
-	autoOptimize   bool
-	optimizations  []*AppliedOptimization
-	mu             sync.RWMutex
+	rules         []*OptimizationRule
+	autoOptimize  bool
+	optimizations []*AppliedOptimization
+	mu            sync.RWMutex
 }
 
 // OptimizationRule defines conditions and actions for optimization
@@ -249,20 +249,20 @@ type OptimizationRule struct {
 
 // AppliedOptimization tracks applied optimizations
 type AppliedOptimization struct {
-	Rule        string
-	Applied     time.Time
-	Impact      *OptimizationImpact
-	Reverted    bool
-	RevertTime  time.Time
+	Rule       string
+	Applied    time.Time
+	Impact     *OptimizationImpact
+	Reverted   bool
+	RevertTime time.Time
 }
 
 // OptimizationImpact measures the impact of an optimization
 type OptimizationImpact struct {
-	LatencyImprovement   time.Duration
+	LatencyImprovement    time.Duration
 	ThroughputImprovement float64
-	MemoryReduction      int64
-	CPUReduction         float64
-	ErrorRateReduction   float64
+	MemoryReduction       int64
+	CPUReduction          float64
+	ErrorRateReduction    float64
 }
 
 // PerformanceConfig contains performance optimization configuration
@@ -277,49 +277,49 @@ type PerformanceConfig struct {
 
 // ConcurrencyConfig configures concurrency optimization
 type ConcurrencyConfig struct {
-	MaxWorkers      int
-	WorkerPoolSize  int
-	QueueSize       int
-	RateLimit       int
-	BatchSize       int
-	LoadBalancing   bool
-	Adaptive        bool
+	MaxWorkers     int
+	WorkerPoolSize int
+	QueueSize      int
+	RateLimit      int
+	BatchSize      int
+	LoadBalancing  bool
+	Adaptive       bool
 }
 
 // ProfilingConfig configures performance profiling
 type ProfilingConfig struct {
-	Enabled         bool
-	SamplingRate    float64
-	ProfileInterval time.Duration
-	RetentionPeriod time.Duration
+	Enabled             bool
+	SamplingRate        float64
+	ProfileInterval     time.Duration
+	RetentionPeriod     time.Duration
 	BottleneckDetection bool
 }
 
 // OptimizationEngineConfig configures the optimization engine
 type OptimizationEngineConfig struct {
-	Enabled         bool
-	AutoOptimize    bool
+	Enabled              bool
+	AutoOptimize         bool
 	OptimizationInterval time.Duration
-	SafetyMode      bool
-	RevertOnFailure bool
+	SafetyMode           bool
+	RevertOnFailure      bool
 }
 
 // MonitoringConfig configures performance monitoring
 type MonitoringConfig struct {
-	Enabled           bool
+	Enabled            bool
 	MonitoringInterval time.Duration
-	AlertThresholds   *ResourceThresholds
-	MetricsRetention  time.Duration
+	AlertThresholds    *ResourceThresholds
+	MetricsRetention   time.Duration
 }
 
 // PerformanceMetrics tracks overall performance metrics
 type PerformanceMetrics struct {
-	Database     *OptimizationMetrics
-	Cache        *CacheMetrics
-	Resource     *ResourceMetrics
-	Concurrency  *ConcurrencyMetrics
-	Overall      *OverallPerformanceMetrics
-	mu           sync.RWMutex
+	Database    *OptimizationMetrics
+	Cache       *CacheMetrics
+	Resource    *ResourceMetrics
+	Concurrency *ConcurrencyMetrics
+	Overall     *OverallPerformanceMetrics
+	mu          sync.RWMutex
 }
 
 // ResourceMetrics tracks resource usage metrics
@@ -333,35 +333,35 @@ type ResourceMetrics struct {
 
 // ConcurrencyMetrics tracks concurrency performance
 type ConcurrencyMetrics struct {
-	ActiveWorkers    int
-	QueuedTasks      int
-	CompletedTasks   int64
-	FailedTasks      int64
-	AvgTaskDuration  time.Duration
-	Throughput       float64
-	LastUpdated      time.Time
+	ActiveWorkers   int
+	QueuedTasks     int
+	CompletedTasks  int64
+	FailedTasks     int64
+	AvgTaskDuration time.Duration
+	Throughput      float64
+	LastUpdated     time.Time
 }
 
 // OverallPerformanceMetrics tracks overall system performance
 type OverallPerformanceMetrics struct {
-	Latency         time.Duration
-	Throughput      float64
-	ErrorRate       float64
-	Availability    float64
-	Efficiency      float64
+	Latency           time.Duration
+	Throughput        float64
+	ErrorRate         float64
+	Availability      float64
+	Efficiency        float64
 	OptimizationScore float64
-	LastUpdated     time.Time
+	LastUpdated       time.Time
 }
 
 // WorkerPoolMetrics tracks worker pool performance
 type WorkerPoolMetrics struct {
-	ActiveWorkers   int
-	IdleWorkers     int
-	QueueLength     int
-	TasksProcessed  int64
-	TasksFailed     int64
-	AvgProcessTime  time.Duration
-	Throughput      float64
+	ActiveWorkers  int
+	IdleWorkers    int
+	QueueLength    int
+	TasksProcessed int64
+	TasksFailed    int64
+	AvgProcessTime time.Duration
+	Throughput     float64
 }
 
 // WorkerMetrics tracks individual worker performance
@@ -436,7 +436,7 @@ func NewPerformanceOptimizer(config *PerformanceConfig, db *database.ThreatDB) *
 		concurrencyManager:  concurrencyManager,
 		performanceProfiler: performanceProfiler,
 		optimizationEngine:  optimizationEngine,
-		config:             config,
+		config:              config,
 		metrics: &PerformanceMetrics{
 			Resource:    &ResourceMetrics{},
 			Concurrency: &ConcurrencyMetrics{},
@@ -623,13 +623,13 @@ func (w *Worker) processTask(task Task) {
 func (w *Worker) performThreatLookup(pkg types.Package) (*database.ThreatRecord, error) {
 	// Integrate with the actual threat lookup logic
 	// This would typically query a threat intelligence database
-	
+
 	// Check if package name matches known malicious patterns
 	suspiciousPatterns := []string{
 		"malicious", "evil", "backdoor", "trojan",
 		"phishing", "scam", "fake", "virus",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(strings.ToLower(pkg.Name), pattern) {
 			return &database.ThreatRecord{
@@ -641,7 +641,7 @@ func (w *Worker) performThreatLookup(pkg types.Package) (*database.ThreatRecord,
 			}, nil
 		}
 	}
-	
+
 	// No threats detected
 	return nil, nil
 }

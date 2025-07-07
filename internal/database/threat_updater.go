@@ -13,10 +13,10 @@ import (
 
 // ThreatSource represents a source of threat intelligence
 type ThreatSource struct {
-	Name        string `json:"name"`
-	URL         string `json:"url"`
-	APIKey      string `json:"api_key,omitempty"`
-	Enabled     bool   `json:"enabled"`
+	Name        string    `json:"name"`
+	URL         string    `json:"url"`
+	APIKey      string    `json:"api_key,omitempty"`
+	Enabled     bool      `json:"enabled"`
 	LastUpdated time.Time `json:"last_updated"`
 }
 

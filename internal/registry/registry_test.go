@@ -150,7 +150,7 @@ func TestConnector_Interface(t *testing.T) {
 
 func TestRegistry_Types(t *testing.T) {
 	tests := []struct {
-		name string
+		name    string
 		regType string
 	}{
 		{"NPM Registry", "npm"},
@@ -238,7 +238,7 @@ func TestRegistry_URLBuilding(t *testing.T) {
 	npmRegistry := &Registry{
 		Name:    "npm",
 		Type:    "npm",
-		URL: "https://registry.npmjs.org",
+		URL:     "https://registry.npmjs.org",
 		Enabled: true,
 	}
 
@@ -249,7 +249,7 @@ func TestRegistry_URLBuilding(t *testing.T) {
 	pypiRegistry := &Registry{
 		Name:    "pypi",
 		Type:    "pypi",
-		URL: "https://pypi.org",
+		URL:     "https://pypi.org",
 		Enabled: true,
 	}
 

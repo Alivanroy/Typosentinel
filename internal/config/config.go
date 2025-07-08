@@ -86,6 +86,9 @@ type Config struct {
 
 	// Policies settings
 	Policies PoliciesConfig `mapstructure:"policies" validate:"required"`
+
+	// Integrations settings
+	Integrations *IntegrationsConfig `mapstructure:"integrations"`
 }
 
 // AppConfig contains application-level configuration
@@ -820,6 +823,40 @@ func (m *Manager) setDefaults() {
 	// Policies defaults
 	viper.SetDefault("policies.fail_on_threats", false)
 	viper.SetDefault("policies.min_threat_level", "medium")
+}
+
+// IntegrationsConfig contains integrations configuration
+type IntegrationsConfig struct {
+	Enabled    bool                        `mapstructure:"enabled"`
+	Connectors map[string]ConnectorConfig `mapstructure:"connectors"`
+	Filters    []FilterConfig             `mapstructure:"filters"`
+}
+
+// ConnectorConfig contains connector configuration
+type ConnectorConfig struct {
+	Type     string                 `mapstructure:"type" validate:"required,oneof=splunk slack webhook email"`
+	Enabled  bool                   `mapstructure:"enabled"`
+	Settings map[string]interface{} `mapstructure:"settings" validate:"required"`
+	Retry    RetryConfig            `mapstructure:"retry"`
+	Filters  []string               `mapstructure:"filters"`
+}
+
+// RetryConfig contains retry configuration
+type RetryConfig struct {
+	Enabled     bool          `mapstructure:"enabled"`
+	MaxAttempts int           `mapstructure:"max_attempts" validate:"min=1,max=10"`
+	InitialDelay time.Duration `mapstructure:"initial_delay" validate:"min=1s"`
+	MaxDelay     time.Duration `mapstructure:"max_delay" validate:"min=1s"`
+	BackoffFactor float64      `mapstructure:"backoff_factor" validate:"min=1.0,max=10.0"`
+}
+
+// FilterConfig contains filter configuration
+type FilterConfig struct {
+	Name      string                 `mapstructure:"name" validate:"required"`
+	Type      string                 `mapstructure:"type" validate:"required,oneof=severity package_name threat_type"`
+	Condition string                 `mapstructure:"condition" validate:"required,oneof=equals contains regex"`
+	Value     interface{}            `mapstructure:"value" validate:"required"`
+	Metadata  map[string]interface{} `mapstructure:"metadata"`
 }
 
 // validate validates the configuration

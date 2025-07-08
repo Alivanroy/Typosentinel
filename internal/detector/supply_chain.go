@@ -763,18 +763,303 @@ func (s *SupplyChainDetector) analyzeDependencyChanges(versions []VersionInfo) [
 }
 
 func (s *SupplyChainDetector) verifyChecksums(pkg *types.Package) bool {
-	// TODO: Implement checksum verification
-	return true
+	// Verify package checksums against registry metadata
+	if pkg.Metadata == nil || len(pkg.Metadata.Metadata) == 0 {
+		s.logger.Debug("No metadata available for checksum verification", map[string]interface{}{
+			"package": pkg.Name,
+		})
+		return false
+	}
+
+	// Check for checksum fields in metadata
+	checksum := getStringFromMetadata(pkg.Metadata.Metadata, "checksum")
+	sha1 := getStringFromMetadata(pkg.Metadata.Metadata, "sha1")
+	sha256 := getStringFromMetadata(pkg.Metadata.Metadata, "sha256")
+	sha512 := getStringFromMetadata(pkg.Metadata.Metadata, "sha512")
+	md5 := getStringFromMetadata(pkg.Metadata.Metadata, "md5")
+
+	// If no checksums are available, consider it unverified but not necessarily suspicious
+	if checksum == "" && sha1 == "" && sha256 == "" && sha512 == "" && md5 == "" {
+		s.logger.Debug("No checksums available in package metadata", map[string]interface{}{
+			"package": pkg.Name,
+		})
+		return false
+	}
+
+	// For now, we assume checksums are valid if they exist and follow expected formats
+	// In a real implementation, we would download the package and verify the checksums
+	validChecksums := 0
+	totalChecksums := 0
+
+	if checksum != "" {
+		totalChecksums++
+		if len(checksum) >= 32 { // Minimum length for a reasonable checksum
+			validChecksums++
+		}
+	}
+
+	if sha1 != "" {
+		totalChecksums++
+		if len(sha1) == 40 { // SHA1 is 40 hex characters
+			validChecksums++
+		}
+	}
+
+	if sha256 != "" {
+		totalChecksums++
+		if len(sha256) == 64 { // SHA256 is 64 hex characters
+			validChecksums++
+		}
+	}
+
+	if sha512 != "" {
+		totalChecksums++
+		if len(sha512) == 128 { // SHA512 is 128 hex characters
+			validChecksums++
+		}
+	}
+
+	if md5 != "" {
+		totalChecksums++
+		if len(md5) == 32 { // MD5 is 32 hex characters
+			validChecksums++
+		}
+	}
+
+	// Consider verification successful if at least 80% of checksums are valid
+	verificationSuccess := totalChecksums > 0 && float64(validChecksums)/float64(totalChecksums) >= 0.8
+
+	s.logger.Debug("Checksum verification completed", map[string]interface{}{
+		"package":         pkg.Name,
+		"valid_checksums": validChecksums,
+		"total_checksums": totalChecksums,
+		"verified":        verificationSuccess,
+	})
+
+	return verificationSuccess
 }
 
 func (s *SupplyChainDetector) verifySignatures(pkg *types.Package) bool {
-	// TODO: Implement signature verification
-	return true
+	// Verify package signatures (GPG, code signing, etc.)
+	if pkg.Metadata == nil || len(pkg.Metadata.Metadata) == 0 {
+		s.logger.Debug("No metadata available for signature verification", map[string]interface{}{
+			"package": pkg.Name,
+		})
+		return false
+	}
+
+	// Check for signature-related fields
+	signature := getStringFromMetadata(pkg.Metadata.Metadata, "signature")
+	gpgSignature := getStringFromMetadata(pkg.Metadata.Metadata, "gpg_signature")
+	codeSignature := getStringFromMetadata(pkg.Metadata.Metadata, "code_signature")
+	signingKey := getStringFromMetadata(pkg.Metadata.Metadata, "signing_key")
+	signed := getStringFromMetadata(pkg.Metadata.Metadata, "signed")
+
+	// Check registry-specific signature indicators
+	var hasSignature bool
+	switch pkg.Registry {
+	case "npm":
+		// NPM packages can have signatures via npm audit signatures
+		npmSignature := getStringFromMetadata(pkg.Metadata.Metadata, "npm_signature")
+		hasSignature = signature != "" || npmSignature != "" || signed == "true"
+	case "pypi":
+		// PyPI packages can have GPG signatures
+		hasSignature = gpgSignature != "" || signature != "" || signed == "true"
+	case "go":
+		// Go modules use checksum database and module authentication
+		goSum := getStringFromMetadata(pkg.Metadata.Metadata, "go_sum")
+		moduleAuth := getStringFromMetadata(pkg.Metadata.Metadata, "module_auth")
+		hasSignature = goSum != "" || moduleAuth != "" || signed == "true"
+	case "maven":
+		// Maven artifacts can have PGP signatures
+		pgpSignature := getStringFromMetadata(pkg.Metadata.Metadata, "pgp_signature")
+		hasSignature = pgpSignature != "" || signature != "" || signed == "true"
+	default:
+		// Generic signature check
+		hasSignature = signature != "" || gpgSignature != "" || codeSignature != "" || signed == "true"
+	}
+
+	// Additional verification: check if signing key is provided and valid
+	if hasSignature && signingKey != "" {
+		// In a real implementation, we would verify the signing key against trusted authorities
+		// For now, we just check if it looks like a valid key format
+		if len(signingKey) >= 16 { // Minimum reasonable key length
+			hasSignature = true
+		}
+	}
+
+	s.logger.Debug("Signature verification completed", map[string]interface{}{
+		"package":       pkg.Name,
+		"registry":      pkg.Registry,
+		"has_signature": hasSignature,
+		"signing_key":   signingKey != "",
+	})
+
+	return hasSignature
 }
 
 func (s *SupplyChainDetector) checkSourceConsistency(pkg *types.Package) bool {
-	// TODO: Implement source consistency check
-	return true
+	// Check consistency between package metadata and source repository
+	if pkg.Metadata == nil || len(pkg.Metadata.Metadata) == 0 {
+		s.logger.Debug("No metadata available for source consistency check", map[string]interface{}{
+			"package": pkg.Name,
+		})
+		return false
+	}
+
+	// Extract source-related information
+	repository := getStringFromMetadata(pkg.Metadata.Metadata, "repository")
+	homepage := getStringFromMetadata(pkg.Metadata.Metadata, "homepage")
+	bugsURL := getStringFromMetadata(pkg.Metadata.Metadata, "bugs_url")
+	author := getStringFromMetadata(pkg.Metadata.Metadata, "author")
+	maintainer := getStringFromMetadata(pkg.Metadata.Metadata, "maintainer")
+	license := getStringFromMetadata(pkg.Metadata.Metadata, "license")
+
+	consistencyScore := 0
+	totalChecks := 0
+
+	// Check 1: Repository URL should be present and valid
+	if repository != "" {
+		totalChecks++
+		if s.isValidRepositoryURL(repository) {
+			consistencyScore++
+		}
+	}
+
+	// Check 2: Homepage should be consistent with repository or be a valid URL
+	if homepage != "" {
+		totalChecks++
+		if s.isValidURL(homepage) {
+			consistencyScore++
+			// Bonus: if homepage matches repository domain
+			if repository != "" && s.domainsMatch(repository, homepage) {
+				consistencyScore++ // Extra point for consistency
+				totalChecks++
+			}
+		}
+	}
+
+	// Check 3: Author/maintainer information should be present
+	if author != "" || maintainer != "" {
+		totalChecks++
+		consistencyScore++
+	}
+
+	// Check 4: License should be specified
+	if license != "" {
+		totalChecks++
+		if s.isValidLicense(license) {
+			consistencyScore++
+		}
+	}
+
+	// Check 5: Bug tracking URL should be consistent
+	if bugsURL != "" {
+		totalChecks++
+		if s.isValidURL(bugsURL) {
+			consistencyScore++
+			// Check if bugs URL is related to repository
+			if repository != "" && s.isRelatedURL(repository, bugsURL) {
+				consistencyScore++ // Extra point for consistency
+				totalChecks++
+			}
+		}
+	}
+
+	// Calculate consistency ratio
+	consistent := totalChecks > 0 && float64(consistencyScore)/float64(totalChecks) >= 0.7
+
+	s.logger.Debug("Source consistency check completed", map[string]interface{}{
+		"package":           pkg.Name,
+		"consistency_score": consistencyScore,
+		"total_checks":      totalChecks,
+		"consistent":        consistent,
+		"repository":        repository != "",
+		"homepage":          homepage != "",
+		"license":           license != "",
+	})
+
+	return consistent
+}
+
+// Helper functions for source consistency checks
+func (s *SupplyChainDetector) isValidRepositoryURL(url string) bool {
+	// Check if URL looks like a valid repository URL
+	url = strings.ToLower(url)
+	return strings.Contains(url, "github.com") ||
+		strings.Contains(url, "gitlab.com") ||
+		strings.Contains(url, "bitbucket.org") ||
+		strings.Contains(url, "git") ||
+		strings.HasPrefix(url, "https://") ||
+		strings.HasPrefix(url, "http://")
+}
+
+func (s *SupplyChainDetector) isValidURL(url string) bool {
+	// Basic URL validation
+	return strings.HasPrefix(url, "https://") || strings.HasPrefix(url, "http://")
+}
+
+func (s *SupplyChainDetector) domainsMatch(url1, url2 string) bool {
+	// Extract domains and check if they match
+	domain1 := s.extractDomain(url1)
+	domain2 := s.extractDomain(url2)
+	return domain1 != "" && domain1 == domain2
+}
+
+func (s *SupplyChainDetector) isRelatedURL(repoURL, otherURL string) bool {
+	// Check if URLs are related (same domain or subdomain)
+	repoURL = strings.ToLower(repoURL)
+	otherURL = strings.ToLower(otherURL)
+
+	// Extract base domains
+	repoDomain := s.extractDomain(repoURL)
+	otherDomain := s.extractDomain(otherURL)
+
+	if repoDomain == "" || otherDomain == "" {
+		return false
+	}
+
+	// Check for exact match or subdomain relationship
+	return repoDomain == otherDomain ||
+		strings.Contains(otherURL, repoDomain) ||
+		strings.Contains(repoURL, otherDomain)
+}
+
+func (s *SupplyChainDetector) extractDomain(url string) string {
+	// Simple domain extraction
+	url = strings.TrimPrefix(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+	url = strings.TrimPrefix(url, "www.")
+
+	parts := strings.Split(url, "/")
+	if len(parts) > 0 {
+		domain := parts[0]
+		// Remove port if present
+		if colonIndex := strings.Index(domain, ":"); colonIndex != -1 {
+			domain = domain[:colonIndex]
+		}
+		return domain
+	}
+	return ""
+}
+
+func (s *SupplyChainDetector) isValidLicense(license string) bool {
+	// Check against common license identifiers
+	commonLicenses := []string{
+		"mit", "apache", "gpl", "bsd", "lgpl", "mpl", "isc", "unlicense",
+		"apache-2.0", "mit", "gpl-3.0", "bsd-3-clause", "bsd-2-clause",
+		"lgpl-2.1", "mpl-2.0", "isc", "cc0-1.0", "artistic-2.0",
+	}
+
+	licenseLower := strings.ToLower(license)
+	for _, commonLicense := range commonLicenses {
+		if strings.Contains(licenseLower, commonLicense) {
+			return true
+		}
+	}
+
+	// Also accept if it's a URL to a license
+	return s.isValidURL(license)
 }
 
 func (s *SupplyChainDetector) calculateIntegrityScore(analysis *IntegrityAnalysis) float64 {

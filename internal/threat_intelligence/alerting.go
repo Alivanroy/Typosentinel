@@ -755,25 +755,163 @@ func (wc *WebhookChannel) Close() error {
 // These would be implemented similarly to Email and Webhook channels
 
 type SlackChannel struct {
-	logger *logger.Logger
-	status ChannelStatus
+	logger   *logger.Logger
+	status   ChannelStatus
+	settings SlackSettings
+	client   *http.Client
+}
+
+type SlackSettings struct {
+	WebhookURL string `json:"webhook_url"`
+	Channel    string `json:"channel"`
+	Username   string `json:"username"`
+	IconEmoji  string `json:"icon_emoji"`
 }
 
 func NewSlackChannel(logger *logger.Logger) *SlackChannel {
 	return &SlackChannel{
 		logger: logger,
 		status: ChannelStatus{Name: "slack", Type: "slack", Enabled: true, Healthy: true},
+		client: &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
 func (sc *SlackChannel) Initialize(ctx context.Context, settings map[string]interface{}) error {
-	// TODO: Implement Slack channel initialization
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal slack settings: %w", err)
+	}
+
+	if err := json.Unmarshal(settingsJSON, &sc.settings); err != nil {
+		return fmt.Errorf("failed to unmarshal slack settings: %w", err)
+	}
+
+	if sc.settings.WebhookURL == "" {
+		return fmt.Errorf("slack webhook URL is required")
+	}
+
+	if sc.settings.Username == "" {
+		sc.settings.Username = "TypoSentinel"
+	}
+
+	if sc.settings.IconEmoji == "" {
+		sc.settings.IconEmoji = ":warning:"
+	}
+
+	sc.logger.Info("Slack channel initialized", map[string]interface{}{
+		"channel": sc.settings.Channel,
+	})
 	return nil
 }
 
 func (sc *SlackChannel) SendAlert(ctx context.Context, alert *ThreatAlert) error {
-	// TODO: Implement Slack alert sending
+	color := sc.getSeverityColor(alert.Severity)
+	attachment := map[string]interface{}{
+		"color":      color,
+		"title":      alert.Title,
+		"text":       alert.Description,
+		"timestamp":  alert.Timestamp.Unix(),
+		"footer":     "TypoSentinel",
+		"footer_icon": ":shield:",
+		"fields": []map[string]interface{}{
+			{
+				"title": "Package",
+				"value": fmt.Sprintf("%s (%s)", alert.PackageName, alert.Ecosystem),
+				"short": true,
+			},
+			{
+				"title": "Severity",
+				"value": strings.ToUpper(alert.Severity),
+				"short": true,
+			},
+			{
+				"title": "Confidence",
+				"value": fmt.Sprintf("%.1f%%", alert.ConfidenceLevel*100),
+				"short": true,
+			},
+			{
+				"title": "Source",
+				"value": alert.Source,
+				"short": true,
+			},
+		},
+	}
+
+	if len(alert.References) > 0 {
+		refs := strings.Join(alert.References[:min(3, len(alert.References))], "\n")
+		attachment["fields"] = append(attachment["fields"].([]map[string]interface{}), map[string]interface{}{
+			"title": "References",
+			"value": refs,
+			"short": false,
+		})
+	}
+
+	payload := map[string]interface{}{
+		"username":    sc.settings.Username,
+		"icon_emoji":  sc.settings.IconEmoji,
+		"attachments": []map[string]interface{}{attachment},
+	}
+
+	if sc.settings.Channel != "" {
+		payload["channel"] = sc.settings.Channel
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal slack payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", sc.settings.WebhookURL, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create slack request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := sc.client.Do(req)
+	if err != nil {
+		sc.status.ErrorCount++
+		sc.status.LastError = err.Error()
+		sc.status.Healthy = false
+		return fmt.Errorf("failed to send slack alert: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		sc.status.ErrorCount++
+		sc.status.LastError = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		sc.status.Healthy = false
+		return fmt.Errorf("slack API returned status %d", resp.StatusCode)
+	}
+
+	sc.status.AlertsSent++
+	sc.status.LastAlert = time.Now()
+	sc.status.Healthy = true
+	sc.status.LastError = ""
+
 	return nil
+}
+
+func (sc *SlackChannel) getSeverityColor(severity string) string {
+	switch strings.ToLower(severity) {
+	case "critical":
+		return "danger"
+	case "high":
+		return "warning"
+	case "medium":
+		return "#ff9500"
+	case "low":
+		return "good"
+	default:
+		return "#cccccc"
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func (sc *SlackChannel) GetStatus() ChannelStatus {
@@ -785,25 +923,156 @@ func (sc *SlackChannel) Close() error {
 }
 
 type GitHubChannel struct {
-	logger *logger.Logger
-	status ChannelStatus
+	logger   *logger.Logger
+	status   ChannelStatus
+	settings GitHubSettings
+	client   *http.Client
+}
+
+type GitHubSettings struct {
+	Token      string `json:"token"`
+	Owner      string `json:"owner"`
+	Repo       string `json:"repo"`
+	CreateIssues bool `json:"create_issues"`
+	Labels     []string `json:"labels"`
 }
 
 func NewGitHubChannel(logger *logger.Logger) *GitHubChannel {
 	return &GitHubChannel{
 		logger: logger,
 		status: ChannelStatus{Name: "github", Type: "github", Enabled: true, Healthy: true},
+		client: &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
 func (gc *GitHubChannel) Initialize(ctx context.Context, settings map[string]interface{}) error {
-	// TODO: Implement GitHub channel initialization
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal github settings: %w", err)
+	}
+
+	if err := json.Unmarshal(settingsJSON, &gc.settings); err != nil {
+		return fmt.Errorf("failed to unmarshal github settings: %w", err)
+	}
+
+	if gc.settings.Token == "" {
+		return fmt.Errorf("github token is required")
+	}
+
+	if gc.settings.Owner == "" {
+		return fmt.Errorf("github owner is required")
+	}
+
+	if gc.settings.Repo == "" {
+		return fmt.Errorf("github repo is required")
+	}
+
+	if len(gc.settings.Labels) == 0 {
+		gc.settings.Labels = []string{"security", "vulnerability"}
+	}
+
+	gc.logger.Info("GitHub channel initialized", map[string]interface{}{
+		"owner": gc.settings.Owner,
+		"repo":  gc.settings.Repo,
+	})
 	return nil
 }
 
 func (gc *GitHubChannel) SendAlert(ctx context.Context, alert *ThreatAlert) error {
-	// TODO: Implement GitHub alert sending (issues, security advisories)
+	if !gc.settings.CreateIssues {
+		gc.logger.Debug("GitHub issue creation disabled")
+		return nil
+	}
+
+	title := fmt.Sprintf("[SECURITY] %s", alert.Title)
+	body := gc.formatIssueBody(alert)
+
+	issue := map[string]interface{}{
+		"title": title,
+		"body":  body,
+		"labels": gc.settings.Labels,
+	}
+
+	payloadBytes, err := json.Marshal(issue)
+	if err != nil {
+		return fmt.Errorf("failed to marshal github issue: %w", err)
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues", gc.settings.Owner, gc.settings.Repo)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create github request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "token "+gc.settings.Token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "TypoSentinel/1.0")
+
+	resp, err := gc.client.Do(req)
+	if err != nil {
+		gc.status.ErrorCount++
+		gc.status.LastError = err.Error()
+		gc.status.Healthy = false
+		return fmt.Errorf("failed to send github alert: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		gc.status.ErrorCount++
+		gc.status.LastError = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		gc.status.Healthy = false
+		return fmt.Errorf("github API returned status %d", resp.StatusCode)
+	}
+
+	gc.status.AlertsSent++
+	gc.status.LastAlert = time.Now()
+	gc.status.Healthy = true
+	gc.status.LastError = ""
+
 	return nil
+}
+
+func (gc *GitHubChannel) formatIssueBody(alert *ThreatAlert) string {
+	var body strings.Builder
+
+	body.WriteString("## Security Alert\n\n")
+	body.WriteString(fmt.Sprintf("**Package:** %s (%s)\n", alert.PackageName, alert.Ecosystem))
+	body.WriteString(fmt.Sprintf("**Severity:** %s\n", strings.ToUpper(alert.Severity)))
+	body.WriteString(fmt.Sprintf("**Confidence:** %.1f%%\n", alert.ConfidenceLevel*100))
+	body.WriteString(fmt.Sprintf("**Source:** %s\n", alert.Source))
+	body.WriteString(fmt.Sprintf("**Threat ID:** %s\n\n", alert.ThreatID))
+
+	body.WriteString("## Description\n\n")
+	body.WriteString(alert.Description)
+	body.WriteString("\n\n")
+
+	if len(alert.Recommendations) > 0 {
+		body.WriteString("## Recommendations\n\n")
+		for _, rec := range alert.Recommendations {
+			body.WriteString(fmt.Sprintf("- %s\n", rec))
+		}
+		body.WriteString("\n")
+	}
+
+	if len(alert.References) > 0 {
+		body.WriteString("## References\n\n")
+		for _, ref := range alert.References {
+			body.WriteString(fmt.Sprintf("- %s\n", ref))
+		}
+		body.WriteString("\n")
+	}
+
+	if len(alert.Tags) > 0 {
+		body.WriteString("## Tags\n\n")
+		body.WriteString(strings.Join(alert.Tags, ", "))
+		body.WriteString("\n\n")
+	}
+
+	body.WriteString("---\n")
+	body.WriteString(fmt.Sprintf("*Generated by TypoSentinel at %s*", alert.Timestamp.Format(time.RFC3339)))
+
+	return body.String()
 }
 
 func (gc *GitHubChannel) GetStatus() ChannelStatus {

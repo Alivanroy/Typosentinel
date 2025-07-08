@@ -334,35 +334,128 @@ func (tim *ThreatIntelligenceManager) Shutdown(ctx context.Context) error {
 // Helper methods
 
 func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error {
-	// Check if ThreatIntelligence configuration exists
 	if tim.config.ThreatIntelligence == nil {
-		tim.logger.Info("No threat intelligence configuration found, skipping feed initialization")
-		return nil
-	}
-
-	// Initialize OSV feed if enabled
-	if tim.config.ThreatIntelligence.Feeds != nil {
-		// For now, create basic feeds without specific configuration
-		// TODO: Implement proper feed configuration structure
+		tim.logger.Info("No threat intelligence configuration found, using defaults")
+		// Initialize default feeds
 		osvFeed := NewOSVFeed(tim.logger)
 		if err := osvFeed.Initialize(ctx, map[string]interface{}{
 			"update_interval": 1 * time.Hour,
 		}); err != nil {
-			return fmt.Errorf("failed to initialize OSV feed: %w", err)
+			return fmt.Errorf("failed to initialize default OSV feed: %w", err)
 		}
 		tim.feeds["osv"] = osvFeed
 
-		// Initialize GitHub Advisory feed
 		ghFeed := NewGitHubAdvisoryFeed(tim.logger)
 		if err := ghFeed.Initialize(ctx, map[string]interface{}{
 			"update_interval": 1 * time.Hour,
 		}); err != nil {
-			return fmt.Errorf("failed to initialize GitHub Advisory feed: %w", err)
+			return fmt.Errorf("failed to initialize default GitHub Advisory feed: %w", err)
 		}
 		tim.feeds["github_advisory"] = ghFeed
+		tim.logger.Info("Initialized default threat feeds")
+		return nil
+	}
+
+	// Initialize feeds based on configuration
+	if tim.config.ThreatIntelligence.Feeds != nil {
+		// Initialize OSV feed if configured
+		if osvConfig, exists := tim.config.ThreatIntelligence.Feeds["osv"]; exists {
+			osvFeed := NewOSVFeed(tim.logger)
+			feedConfig := tim.buildFeedConfig(osvConfig)
+			if err := osvFeed.Initialize(ctx, feedConfig); err != nil {
+				return fmt.Errorf("failed to initialize OSV feed: %w", err)
+			}
+			tim.feeds["osv"] = osvFeed
+			tim.logger.Info("Initialized OSV threat feed")
+		}
+
+		// Initialize GitHub Advisory feed if configured
+		if ghConfig, exists := tim.config.ThreatIntelligence.Feeds["github_advisory"]; exists {
+			ghFeed := NewGitHubAdvisoryFeed(tim.logger)
+			feedConfig := tim.buildFeedConfig(ghConfig)
+			if err := ghFeed.Initialize(ctx, feedConfig); err != nil {
+				return fmt.Errorf("failed to initialize GitHub Advisory feed: %w", err)
+			}
+			tim.feeds["github_advisory"] = ghFeed
+			tim.logger.Info("Initialized GitHub Advisory threat feed")
+		}
+
+		// Initialize custom feeds
+		for _, feedConfig := range tim.config.ThreatIntelligence.Feeds {
+			if feedConfig.Name == "osv" || feedConfig.Name == "github_advisory" {
+				continue // Already handled above
+			}
+
+			if !feedConfig.Enabled {
+				tim.logger.Debug("Skipping disabled custom feed", map[string]interface{}{
+					"feed": feedConfig.Name,
+				})
+				continue
+			}
+
+			// Create custom feed
+			customFeed := NewCustomFeed(feedConfig.Name, tim.logger)
+			config := tim.buildFeedConfig(feedConfig)
+			if err := customFeed.Initialize(ctx, config); err != nil {
+				tim.logger.Warn("Failed to initialize custom feed", map[string]interface{}{
+					"feed":  feedConfig.Name,
+					"error": err,
+				})
+				continue
+			}
+			tim.feeds[feedConfig.Name] = customFeed
+			tim.logger.Info("Initialized custom threat feed", map[string]interface{}{
+				"feed": feedConfig.Name,
+			})
+		}
+	} else {
+		// Default initialization if no specific feed configuration
+		osvFeed := NewOSVFeed(tim.logger)
+		if err := osvFeed.Initialize(ctx, map[string]interface{}{
+			"update_interval": 1 * time.Hour,
+		}); err != nil {
+			return fmt.Errorf("failed to initialize default OSV feed: %w", err)
+		}
+		tim.feeds["osv"] = osvFeed
+
+		ghFeed := NewGitHubAdvisoryFeed(tim.logger)
+		if err := ghFeed.Initialize(ctx, map[string]interface{}{
+			"update_interval": 1 * time.Hour,
+		}); err != nil {
+			return fmt.Errorf("failed to initialize default GitHub Advisory feed: %w", err)
+		}
+		tim.feeds["github_advisory"] = ghFeed
+		tim.logger.Info("Initialized default threat feeds")
 	}
 
 	return nil
+}
+
+// buildFeedConfig converts feed configuration to the format expected by feeds
+func (tim *ThreatIntelligenceManager) buildFeedConfig(config config.ThreatFeedConfig) map[string]interface{} {
+	feedConfig := make(map[string]interface{})
+
+	// Set update interval from config or default
+	if config.Interval > 0 {
+		feedConfig["update_interval"] = config.Interval
+	} else {
+		feedConfig["update_interval"] = 1 * time.Hour
+	}
+
+	// Set URL
+	if config.URL != "" {
+		feedConfig["url"] = config.URL
+	}
+
+	// Set API key if provided
+	if config.APIKey != "" {
+		feedConfig["api_key"] = config.APIKey
+	}
+
+	// Set default timeout
+	feedConfig["timeout"] = 30 * time.Second
+
+	return feedConfig
 }
 
 func (tim *ThreatIntelligenceManager) loadInitialThreats(ctx context.Context) error {

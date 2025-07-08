@@ -1,9 +1,11 @@
 package plugins
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -540,17 +542,289 @@ func (ga *GitHubActionsPlugin) setWorkflowExitCode(exitCode int) {
 }
 
 func (ga *GitHubActionsPlugin) testGitHubAPIAccess(ctx context.Context) error {
-	// TODO: Implement GitHub API access test
-	// This would make a simple API call to verify token and permissions
+	token := os.Getenv("GITHUB_TOKEN")
+	if token == "" {
+		return fmt.Errorf("GITHUB_TOKEN environment variable not set")
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.github.com/user", nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "token "+token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "TypoSentinel/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to test GitHub API access: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("GitHub API access test failed with status %d", resp.StatusCode)
+	}
+
+	ga.logger.Info("GitHub API access test successful")
 	return nil
 }
 
 func (ga *GitHubActionsPlugin) createSecurityIssues(ctx context.Context, results *types.ScanResult) []PluginAction {
-	// TODO: Implement GitHub issue creation for security findings
-	return []PluginAction{}
+	var actions []PluginAction
+
+	token := os.Getenv("GITHUB_TOKEN")
+	repo := os.Getenv("GITHUB_REPOSITORY")
+	if token == "" || repo == "" {
+		ga.logger.Warn("GitHub token or repository not configured for issue creation")
+		return actions
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	// Create issues for critical and high severity findings
+	for _, pkg := range results.Packages {
+		for _, threat := range pkg.Threats {
+			if threat.Severity == types.SeverityCritical || threat.Severity == types.SeverityHigh {
+				if err := ga.createSecurityIssue(ctx, client, token, repo, pkg, threat); err != nil {
+					ga.logger.Warn("Failed to create security issue", map[string]interface{}{
+						"package": pkg.Name,
+						"error":   err,
+					})
+					continue
+				}
+
+				actions = append(actions, PluginAction{
+					Type:        "issue_created",
+					Target:      "github",
+					Description: fmt.Sprintf("Created security issue for %s", pkg.Name),
+					Metadata: map[string]interface{}{
+						"package":  pkg.Name,
+						"severity": string(threat.Severity),
+						"type":     string(threat.Type),
+					},
+					Timestamp: time.Now(),
+				})
+			}
+		}
+	}
+
+	return actions
+}
+
+func (ga *GitHubActionsPlugin) createSecurityIssue(ctx context.Context, client *http.Client, token, repo string, pkg *types.Package, threat types.Threat) error {
+	title := fmt.Sprintf("[SECURITY] %s vulnerability in %s", strings.ToUpper(string(threat.Severity)), pkg.Name)
+	body := ga.formatSecurityIssueBody(pkg, threat)
+
+	issue := map[string]interface{}{
+		"title": title,
+		"body":  body,
+		"labels": []string{"security", "vulnerability", string(threat.Severity)},
+	}
+
+	payloadBytes, err := json.Marshal(issue)
+	if err != nil {
+		return fmt.Errorf("failed to marshal issue: %w", err)
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/issues", repo)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "token "+token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "TypoSentinel/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to create issue: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (ga *GitHubActionsPlugin) formatSecurityIssueBody(pkg *types.Package, threat types.Threat) string {
+	var body strings.Builder
+
+	body.WriteString("## 🔒 Security Vulnerability Detected\n\n")
+	body.WriteString(fmt.Sprintf("**Package:** `%s`\n", pkg.Name))
+	body.WriteString(fmt.Sprintf("**Version:** `%s`\n", pkg.Version))
+	body.WriteString(fmt.Sprintf("**Ecosystem:** `%s`\n", pkg.Ecosystem))
+	body.WriteString(fmt.Sprintf("**Severity:** %s\n", strings.ToUpper(string(threat.Severity))))
+	body.WriteString(fmt.Sprintf("**Threat Type:** %s\n", string(threat.Type)))
+	body.WriteString(fmt.Sprintf("**Confidence:** %.2f\n\n", threat.Confidence))
+
+	body.WriteString("## Description\n\n")
+	body.WriteString(threat.Description)
+	body.WriteString("\n\n")
+
+	if len(threat.References) > 0 {
+		body.WriteString("## References\n\n")
+		for _, ref := range threat.References {
+			body.WriteString(fmt.Sprintf("- %s\n", ref))
+		}
+		body.WriteString("\n")
+	}
+
+	body.WriteString("## Recommendations\n\n")
+	body.WriteString("- Review and update the package to a secure version\n")
+	body.WriteString("- Consider alternative packages if no secure version is available\n")
+	body.WriteString("- Implement additional security measures if the package is critical\n\n")
+
+	body.WriteString("---\n")
+	body.WriteString("*This issue was automatically created by TypoSentinel*")
+
+	return body.String()
 }
 
 func (ga *GitHubActionsPlugin) commentOnPullRequest(ctx context.Context, results *types.ScanResult, output *GitHubActionsOutput) []PluginAction {
-	// TODO: Implement PR commenting functionality
-	return []PluginAction{}
+	var actions []PluginAction
+
+	token := os.Getenv("GITHUB_TOKEN")
+	repo := os.Getenv("GITHUB_REPOSITORY")
+	prNumber := os.Getenv("GITHUB_PR_NUMBER")
+
+	if token == "" || repo == "" || prNumber == "" {
+		ga.logger.Debug("GitHub PR commenting not configured or not in PR context")
+		return actions
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	commentBody := ga.formatPRComment(results, output)
+
+	comment := map[string]interface{}{
+		"body": commentBody,
+	}
+
+	payloadBytes, err := json.Marshal(comment)
+	if err != nil {
+		ga.logger.Warn("Failed to marshal PR comment", map[string]interface{}{"error": err})
+		return actions
+	}
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", repo, prNumber)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		ga.logger.Warn("Failed to create PR comment request", map[string]interface{}{"error": err})
+		return actions
+	}
+
+	req.Header.Set("Authorization", "token "+token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "TypoSentinel/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		ga.logger.Warn("Failed to post PR comment", map[string]interface{}{"error": err})
+		return actions
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		ga.logger.Warn("GitHub API returned error for PR comment", map[string]interface{}{
+			"status": resp.StatusCode,
+		})
+		return actions
+	}
+
+	actions = append(actions, PluginAction{
+		Type:        "pr_comment",
+		Target:      "github",
+		Description: "Posted security scan results to pull request",
+		Metadata: map[string]interface{}{
+			"pr_number":      prNumber,
+			"critical_count": output.CriticalCount,
+			"high_count":     output.HighCount,
+			"total_packages": output.TotalPackages,
+		},
+		Timestamp: time.Now(),
+	})
+
+	return actions
+}
+
+func (ga *GitHubActionsPlugin) formatPRComment(results *types.ScanResult, output *GitHubActionsOutput) string {
+	var comment strings.Builder
+
+	comment.WriteString("## 🔒 TypoSentinel Security Scan Results\n\n")
+
+	// Status badge
+	if output.CriticalCount > 0 {
+		comment.WriteString("![Status](https://img.shields.io/badge/Security-CRITICAL-red)\n\n")
+	} else if output.HighCount > 0 {
+		comment.WriteString("![Status](https://img.shields.io/badge/Security-HIGH-orange)\n\n")
+	} else if output.MediumCount > 0 {
+		comment.WriteString("![Status](https://img.shields.io/badge/Security-MEDIUM-yellow)\n\n")
+	} else {
+		comment.WriteString("![Status](https://img.shields.io/badge/Security-CLEAN-green)\n\n")
+	}
+
+	// Summary table
+	comment.WriteString("### 📊 Summary\n\n")
+	comment.WriteString("| Severity | Count |\n")
+	comment.WriteString("|----------|-------|\n")
+	comment.WriteString(fmt.Sprintf("| 🔴 Critical | %d |\n", output.CriticalCount))
+	comment.WriteString(fmt.Sprintf("| 🟠 High | %d |\n", output.HighCount))
+	comment.WriteString(fmt.Sprintf("| 🟡 Medium | %d |\n", output.MediumCount))
+	comment.WriteString(fmt.Sprintf("| 🟢 Low | %d |\n", output.LowCount))
+	comment.WriteString(fmt.Sprintf("| 📦 Total Packages | %d |\n\n", output.TotalPackages))
+
+	// Critical findings details
+	if output.CriticalCount > 0 {
+		comment.WriteString("### 🔴 Critical Findings\n\n")
+		for _, pkg := range results.Packages {
+			for _, threat := range pkg.Threats {
+				if threat.Severity == types.SeverityCritical {
+					comment.WriteString(fmt.Sprintf("- **%s**: %s (Confidence: %.2f)\n", pkg.Name, threat.Description, threat.Confidence))
+				}
+			}
+		}
+		comment.WriteString("\n")
+	}
+
+	// High findings details
+	if output.HighCount > 0 {
+		comment.WriteString("### 🟠 High Severity Findings\n\n")
+		for _, pkg := range results.Packages {
+			for _, threat := range pkg.Threats {
+				if threat.Severity == types.SeverityHigh {
+					comment.WriteString(fmt.Sprintf("- **%s**: %s (Confidence: %.2f)\n", pkg.Name, threat.Description, threat.Confidence))
+				}
+			}
+		}
+		comment.WriteString("\n")
+	}
+
+	// Blocked packages
+	if len(output.BlockedPackages) > 0 {
+		comment.WriteString("### 🚫 Blocked Packages\n\n")
+		for _, pkg := range output.BlockedPackages {
+			comment.WriteString(fmt.Sprintf("- `%s`\n", pkg))
+		}
+		comment.WriteString("\n")
+	}
+
+	// Recommendations
+	if len(output.Recommendations) > 0 {
+		comment.WriteString("### 💡 Recommendations\n\n")
+		for _, rec := range output.Recommendations {
+			comment.WriteString(fmt.Sprintf("- %s\n", rec))
+		}
+		comment.WriteString("\n")
+	}
+
+	comment.WriteString("---\n")
+	comment.WriteString("*Scan completed by [TypoSentinel](https://github.com/Alivanroy/Typosentinel)*")
+
+	return comment.String()
 }

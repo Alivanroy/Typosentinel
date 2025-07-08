@@ -3,8 +3,10 @@ package threat_intelligence
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -288,12 +290,184 @@ func (f *GitHubAdvisoryFeed) FetchThreats(ctx context.Context, since time.Time) 
 		"since": since,
 	})
 
-	// TODO: Implement actual GitHub Advisory API integration
-	// For now, return empty slice to avoid build errors
+	// GitHub Advisory Database GraphQL API endpoint
+	url := "https://api.github.com/graphql"
+	
+	// GraphQL query to fetch security advisories
+	query := `{
+		securityAdvisories(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}) {
+			nodes {
+				ghsaId
+				summary
+				description
+				severity
+				updatedAt
+				publishedAt
+				vulnerabilities(first: 10) {
+					nodes {
+						package {
+							name
+							ecosystem
+						}
+						vulnerableVersionRange
+						firstPatchedVersion {
+							identifier
+						}
+					}
+				}
+			}
+		}
+	}`
+
+	reqBody := map[string]string{
+		"query": query,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal GraphQL query: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "TypoSentinel/1.0")
+	if f.token != "" {
+		req.Header.Set("Authorization", "Bearer "+f.token)
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch GitHub advisories: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
+	}
+
+	var response struct {
+		Data struct {
+			SecurityAdvisories struct {
+				Nodes []struct {
+					GhsaId      string `json:"ghsaId"`
+					Summary     string `json:"summary"`
+					Description string `json:"description"`
+					Severity    string `json:"severity"`
+					UpdatedAt   string `json:"updatedAt"`
+					PublishedAt string `json:"publishedAt"`
+					Vulnerabilities struct {
+						Nodes []struct {
+							Package struct {
+								Name      string `json:"name"`
+								Ecosystem string `json:"ecosystem"`
+							} `json:"package"`
+							VulnerableVersionRange string `json:"vulnerableVersionRange"`
+							FirstPatchedVersion    struct {
+								Identifier string `json:"identifier"`
+							} `json:"firstPatchedVersion"`
+						} `json:"nodes"`
+					} `json:"vulnerabilities"`
+				} `json:"nodes"`
+			} `json:"securityAdvisories"`
+		} `json:"data"`
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode GitHub API response: %w", err)
+	}
+
+	if len(response.Errors) > 0 {
+		return nil, fmt.Errorf("GitHub API errors: %v", response.Errors)
+	}
+
 	var threats []ThreatIntelligence
+
+	for _, advisory := range response.Data.SecurityAdvisories.Nodes {
+		updatedAt, err := time.Parse(time.RFC3339, advisory.UpdatedAt)
+		if err != nil {
+			continue // Skip if we can't parse the date
+		}
+
+		// Filter by since time
+		if updatedAt.Before(since) {
+			continue
+		}
+
+		publishedAt, _ := time.Parse(time.RFC3339, advisory.PublishedAt)
+
+		// Process each vulnerability in the advisory
+		for _, vuln := range advisory.Vulnerabilities.Nodes {
+			// Map GitHub ecosystem to our registry names
+			ecosystem := strings.ToLower(vuln.Package.Ecosystem)
+			switch ecosystem {
+			case "npm":
+				ecosystem = "npm"
+			case "pip":
+				ecosystem = "pypi"
+			case "rubygems":
+				ecosystem = "rubygems"
+			case "nuget":
+				ecosystem = "nuget"
+			case "maven":
+				ecosystem = "maven"
+			case "go":
+				ecosystem = "go"
+			default:
+				ecosystem = "unknown"
+			}
+
+			// Determine threat type based on description
+			threatType := "vulnerability"
+			descLower := strings.ToLower(advisory.Description + " " + advisory.Summary)
+			if strings.Contains(descLower, "typosquat") || strings.Contains(descLower, "malicious") {
+				threatType = "typosquatting"
+			} else if strings.Contains(descLower, "dependency confusion") {
+				threatType = "dependency_confusion"
+			}
+
+			// Map severity
+			severity := strings.ToLower(advisory.Severity)
+			if severity == "" {
+				severity = "medium"
+			}
+
+			threat := ThreatIntelligence{
+				ID:              advisory.GhsaId,
+				Source:          "github_advisory",
+				Type:            threatType,
+				Severity:        severity,
+				PackageName:     vuln.Package.Name,
+				Ecosystem:       ecosystem,
+				Description:     advisory.Summary,
+				ConfidenceLevel: 0.9, // High confidence for GitHub advisories
+				FirstSeen:       publishedAt,
+				LastSeen:        updatedAt,
+				Metadata: map[string]interface{}{
+					"vulnerable_range": vuln.VulnerableVersionRange,
+					"patched_version":  vuln.FirstPatchedVersion.Identifier,
+					"full_description": advisory.Description,
+				},
+			}
+			threats = append(threats, threat)
+		}
+	}
 
 	f.status.LastUpdate = time.Now()
 	f.status.ThreatCount = len(threats)
+
+	f.logger.Info("Successfully fetched GitHub Advisory threats", map[string]interface{}{
+		"count": len(threats),
+		"since": since,
+	})
 
 	return threats, nil
 }
@@ -375,22 +549,177 @@ func (f *CustomFeed) FetchThreats(ctx context.Context, since time.Time) ([]Threa
 		"since": since,
 	})
 
-	// TODO: Implement custom feed integration based on feed configuration
-	// This could support various formats like JSON, XML, CSV, etc.
-	return []ThreatIntelligence{
-		{
-			ID:              "custom-001",
+	// If no URL configured, return empty results
+	if f.url == "" {
+		f.logger.Debug("No URL configured for custom feed", map[string]interface{}{
+			"name": f.name,
+		})
+		return []ThreatIntelligence{}, nil
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "GET", f.url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add API key if configured
+	if f.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+f.apiKey)
+	}
+
+	// Add since parameter if supported
+	if !since.IsZero() {
+		q := req.URL.Query()
+		q.Add("since", since.Format(time.RFC3339))
+		req.URL.RawQuery = q.Encode()
+	}
+
+	// Make request
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch custom feed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("custom feed returned status %d", resp.StatusCode)
+	}
+
+	// Parse response based on content type
+	contentType := resp.Header.Get("Content-Type")
+	var threats []ThreatIntelligence
+
+	if strings.Contains(contentType, "application/json") {
+		threats, err = f.parseJSONFeed(resp.Body)
+	} else if strings.Contains(contentType, "text/csv") {
+		threats, err = f.parseCSVFeed(resp.Body)
+	} else {
+		// Default to JSON parsing
+		threats, err = f.parseJSONFeed(resp.Body)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse custom feed: %w", err)
+	}
+
+	f.status.LastUpdate = time.Now()
+	f.status.ThreatCount = len(threats)
+
+	f.logger.Info("Successfully fetched custom feed threats", map[string]interface{}{
+		"name":  f.name,
+		"count": len(threats),
+	})
+
+	return threats, nil
+}
+
+// parseJSONFeed parses JSON format threat feed
+func (f *CustomFeed) parseJSONFeed(body io.Reader) ([]ThreatIntelligence, error) {
+	var data struct {
+		Threats []map[string]interface{} `json:"threats"`
+	}
+
+	if err := json.NewDecoder(body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("failed to decode JSON: %w", err)
+	}
+
+	var threats []ThreatIntelligence
+	for _, item := range data.Threats {
+		threat := ThreatIntelligence{
+			ID:              f.getStringValue(item, "id", ""),
 			Source:          f.name,
-			Type:            "typosquatting",
-			Severity:        "high",
-			PackageName:     "suspicious-package",
-			Ecosystem:       "npm",
-			Description:     "Mock custom feed threat",
-			ConfidenceLevel: 0.8,
-			FirstSeen:       time.Now().Add(-6 * time.Hour),
-			LastSeen:        time.Now(),
-		},
-	}, nil
+			Type:            f.getStringValue(item, "type", "unknown"),
+			Severity:        f.getStringValue(item, "severity", "medium"),
+			PackageName:     f.getStringValue(item, "package_name", ""),
+			Ecosystem:       f.getStringValue(item, "ecosystem", "unknown"),
+			Description:     f.getStringValue(item, "description", ""),
+			ConfidenceLevel: f.getFloatValue(item, "confidence", 0.5),
+			FirstSeen:       f.getTimeValue(item, "first_seen", time.Now()),
+			LastSeen:        f.getTimeValue(item, "last_seen", time.Now()),
+			Metadata:        make(map[string]interface{}),
+		}
+
+		// Copy additional metadata
+		for key, value := range item {
+			if !isStandardField(key) {
+				threat.Metadata[key] = value
+			}
+		}
+
+		threats = append(threats, threat)
+	}
+
+	return threats, nil
+}
+
+// parseCSVFeed parses CSV format threat feed
+func (f *CustomFeed) parseCSVFeed(body io.Reader) ([]ThreatIntelligence, error) {
+	reader := csv.NewReader(body)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CSV: %w", err)
+	}
+
+	if len(records) == 0 {
+		return []ThreatIntelligence{}, nil
+	}
+
+	// First row should be headers
+	headers := records[0]
+	var threats []ThreatIntelligence
+
+	for i := 1; i < len(records); i++ {
+		record := records[i]
+		if len(record) != len(headers) {
+			continue // Skip malformed rows
+		}
+
+		// Create map from headers and values
+		data := make(map[string]interface{})
+		for j, header := range headers {
+			data[header] = record[j]
+		}
+
+		threat := ThreatIntelligence{
+			ID:              f.getStringValue(data, "id", ""),
+			Source:          f.name,
+			Type:            f.getStringValue(data, "type", "unknown"),
+			Severity:        f.getStringValue(data, "severity", "medium"),
+			PackageName:     f.getStringValue(data, "package_name", ""),
+			Ecosystem:       f.getStringValue(data, "ecosystem", "unknown"),
+			Description:     f.getStringValue(data, "description", ""),
+			ConfidenceLevel: f.getFloatValue(data, "confidence", 0.5),
+			FirstSeen:       f.getTimeValue(data, "first_seen", time.Now()),
+			LastSeen:        f.getTimeValue(data, "last_seen", time.Now()),
+			Metadata:        make(map[string]interface{}),
+		}
+
+		// Copy additional metadata
+		for key, value := range data {
+			if !isStandardField(key) {
+				threat.Metadata[key] = value
+			}
+		}
+
+		threats = append(threats, threat)
+	}
+
+	return threats, nil
+}
+
+// isStandardField checks if a field is a standard threat intelligence field
+func isStandardField(field string) bool {
+	standardFields := []string{
+		"id", "type", "severity", "package_name", "ecosystem",
+		"description", "confidence", "first_seen", "last_seen",
+	}
+	for _, std := range standardFields {
+		if field == std {
+			return true
+		}
+	}
+	return false
 }
 
 // GetStatus returns feed status

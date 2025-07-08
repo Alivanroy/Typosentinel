@@ -11,6 +11,8 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/pelletier/go-toml/v2"
+	"gopkg.in/yaml.v3"
 )
 
 // NodeJSAnalyzer analyzes Node.js projects
@@ -254,9 +256,97 @@ func (a *NodeJSAnalyzer) parseYarnLock(filePath string) ([]*types.Package, error
 
 // parsePnpmLock parses pnpm-lock.yaml for dependency information
 func (a *NodeJSAnalyzer) parsePnpmLock(filePath string) ([]*types.Package, error) {
-	// TODO: Implement YAML parsing for pnpm-lock.yaml
-	// This requires adding a YAML parser dependency like gopkg.in/yaml.v3
-	return nil, fmt.Errorf("pnpm-lock.yaml parsing not implemented yet - requires YAML parser")
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read pnpm-lock.yaml: %w", err)
+	}
+
+	// Parse YAML structure for pnpm-lock.yaml
+	var pnpmLock struct {
+		LockfileVersion string `yaml:"lockfileVersion"`
+		Dependencies    map[string]struct {
+			Version  string `yaml:"version"`
+			Resolved string `yaml:"resolved,omitempty"`
+		} `yaml:"dependencies,omitempty"`
+		DevDependencies map[string]struct {
+			Version  string `yaml:"version"`
+			Resolved string `yaml:"resolved,omitempty"`
+		} `yaml:"devDependencies,omitempty"`
+		Packages map[string]struct {
+			Name         string            `yaml:"name,omitempty"`
+			Version      string            `yaml:"version,omitempty"`
+			Resolution   map[string]string `yaml:"resolution,omitempty"`
+			Dependencies map[string]string `yaml:"dependencies,omitempty"`
+			DevDeps      map[string]string `yaml:"devDependencies,omitempty"`
+			Dev          bool              `yaml:"dev,omitempty"`
+		} `yaml:"packages,omitempty"`
+	}
+
+	err = yaml.Unmarshal(data, &pnpmLock)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse pnpm-lock.yaml: %w", err)
+	}
+
+	var packages []*types.Package
+
+	// Parse direct dependencies
+	for name, dep := range pnpmLock.Dependencies {
+		pkg := &types.Package{
+			Name:     name,
+			Version:  dep.Version,
+			Registry: "npm",
+			Type:     "production",
+		}
+		packages = append(packages, pkg)
+	}
+
+	// Parse dev dependencies
+	for name, dep := range pnpmLock.DevDependencies {
+		pkg := &types.Package{
+			Name:     name,
+			Version:  dep.Version,
+			Registry: "npm",
+			Type:     "development",
+		}
+		packages = append(packages, pkg)
+	}
+
+	// Parse packages section for more detailed information
+	for pkgPath, pkgInfo := range pnpmLock.Packages {
+		// Extract package name from path (e.g., "/package-name/1.0.0" -> "package-name")
+		name := pkgInfo.Name
+		if name == "" {
+			// Extract from path if name is not provided
+			parts := strings.Split(strings.Trim(pkgPath, "/"), "/")
+			if len(parts) >= 1 {
+				name = parts[0]
+				// Handle scoped packages
+				if strings.HasPrefix(name, "@") && len(parts) >= 2 {
+					name = parts[0] + "/" + parts[1]
+				}
+			}
+		}
+
+		if name != "" {
+			pkgType := "production"
+			if pkgInfo.Dev {
+				pkgType = "development"
+			}
+
+			pkg := &types.Package{
+				Name:     name,
+				Version:  pkgInfo.Version,
+				Registry: "npm",
+				Type:     pkgType,
+			}
+			packages = append(packages, pkg)
+		}
+	}
+
+	// Remove duplicates
+	packages = a.removeDuplicatePackages(packages)
+
+	return packages, nil
 }
 
 // mergePackages merges two package slices, preferring the second slice for conflicts
@@ -273,6 +363,32 @@ func (a *NodeJSAnalyzer) mergePackages(existing, new []*types.Package) []*types.
 	for _, pkg := range new {
 		key := pkg.Name + "@" + pkg.Registry
 		packageMap[key] = pkg
+	}
+
+	// Convert back to slice
+	var result []*types.Package
+	for _, pkg := range packageMap {
+		result = append(result, pkg)
+	}
+
+	return result
+}
+
+// removeDuplicatePackages removes duplicate packages from a slice
+func (a *NodeJSAnalyzer) removeDuplicatePackages(packages []*types.Package) []*types.Package {
+	packageMap := make(map[string]*types.Package)
+
+	// Use package name and registry as key to identify duplicates
+	for _, pkg := range packages {
+		key := pkg.Name + "@" + pkg.Registry
+		if existing, exists := packageMap[key]; exists {
+			// Keep the package with more specific version info
+			if pkg.Version != "*" && (existing.Version == "*" || len(pkg.Version) > len(existing.Version)) {
+				packageMap[key] = pkg
+			}
+		} else {
+			packageMap[key] = pkg
+		}
 	}
 
 	// Convert back to slice
@@ -381,20 +497,263 @@ func (a *PythonAnalyzer) parseRequirementsTxt(projectInfo *ProjectInfo) ([]*type
 }
 
 func (a *PythonAnalyzer) parsePyprojectToml(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement TOML parsing for pyproject.toml
-	// This requires adding a TOML parser dependency like github.com/BurntSushi/toml
-	return nil, fmt.Errorf("pyproject.toml parsing not implemented yet - requires TOML parser")
+	filePath := filepath.Join(projectInfo.Path, projectInfo.ManifestFile)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read pyproject.toml: %w", err)
+	}
+
+	// Parse TOML structure for pyproject.toml
+	var pyproject struct {
+		Project struct {
+			Name         string   `toml:"name"`
+			Version      string   `toml:"version"`
+			Dependencies []string `toml:"dependencies"`
+		} `toml:"project"`
+		BuildSystem struct {
+			Requires []string `toml:"requires"`
+		} `toml:"build-system"`
+		Tool struct {
+			Poetry struct {
+				Dependencies    map[string]interface{} `toml:"dependencies"`
+				DevDependencies map[string]interface{} `toml:"dev-dependencies"`
+			} `toml:"poetry"`
+		} `toml:"tool"`
+	}
+
+	err = toml.Unmarshal(data, &pyproject)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse pyproject.toml: %w", err)
+	}
+
+	var packages []*types.Package
+
+	// Parse PEP 621 dependencies
+	for _, dep := range pyproject.Project.Dependencies {
+		name, version := a.parseRequirementString(dep)
+		if name != "" {
+			pkg := &types.Package{
+				Name:     name,
+				Version:  version,
+				Registry: "pypi",
+				Type:     "production",
+			}
+			packages = append(packages, pkg)
+		}
+	}
+
+	// Parse build system requirements
+	for _, dep := range pyproject.BuildSystem.Requires {
+		name, version := a.parseRequirementString(dep)
+		if name != "" {
+			pkg := &types.Package{
+				Name:     name,
+				Version:  version,
+				Registry: "pypi",
+				Type:     "build",
+			}
+			packages = append(packages, pkg)
+		}
+	}
+
+	// Parse Poetry dependencies
+	for name, versionSpec := range pyproject.Tool.Poetry.Dependencies {
+		if name == "python" {
+			continue // Skip Python version requirement
+		}
+
+		version := "*"
+		switch v := versionSpec.(type) {
+		case string:
+			version = v
+		case map[string]interface{}:
+			if ver, ok := v["version"]; ok {
+				if verStr, ok := ver.(string); ok {
+					version = verStr
+				}
+			}
+		}
+
+		pkg := &types.Package{
+			Name:     name,
+			Version:  version,
+			Registry: "pypi",
+			Type:     "production",
+		}
+		packages = append(packages, pkg)
+	}
+
+	// Parse Poetry dev dependencies
+	for name, versionSpec := range pyproject.Tool.Poetry.DevDependencies {
+		version := "*"
+		switch v := versionSpec.(type) {
+		case string:
+			version = v
+		case map[string]interface{}:
+			if ver, ok := v["version"]; ok {
+				if verStr, ok := ver.(string); ok {
+					version = verStr
+				}
+			}
+		}
+
+		pkg := &types.Package{
+			Name:     name,
+			Version:  version,
+			Registry: "pypi",
+			Type:     "development",
+		}
+		packages = append(packages, pkg)
+	}
+
+	return packages, nil
 }
 
 func (a *PythonAnalyzer) parseSetupPy(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement setup.py parsing
-	// This requires parsing Python AST or using regex to extract install_requires
-	return nil, fmt.Errorf("setup.py parsing not implemented yet")
+	filePath := filepath.Join(projectInfo.Path, projectInfo.ManifestFile)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read setup.py: %w", err)
+	}
+
+	content := string(data)
+	var packages []*types.Package
+
+	// Extract install_requires using regex
+	installRequiresRegex := regexp.MustCompile(`install_requires\s*=\s*\[([^\]]+)\]`)
+	matches := installRequiresRegex.FindStringSubmatch(content)
+	if len(matches) > 1 {
+		// Parse the requirements list
+		requirementsStr := matches[1]
+		// Remove quotes and split by comma
+		requirements := strings.Split(requirementsStr, ",")
+		for _, req := range requirements {
+			req = strings.TrimSpace(req)
+			req = strings.Trim(req, `"'`)
+			if req != "" {
+				name, version := a.parseRequirementString(req)
+				if name != "" {
+					pkg := &types.Package{
+						Name:     name,
+						Version:  version,
+						Registry: "pypi",
+						Type:     "production",
+					}
+					packages = append(packages, pkg)
+				}
+			}
+		}
+	}
+
+	// Extract extras_require for optional dependencies
+	extrasRequireRegex := regexp.MustCompile(`extras_require\s*=\s*\{([^}]+)\}`)
+	extrasMatches := extrasRequireRegex.FindStringSubmatch(content)
+	if len(extrasMatches) > 1 {
+		extrasStr := extrasMatches[1]
+		// Simple parsing of extras - this could be more sophisticated
+		lines := strings.Split(extrasStr, "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.Contains(line, ":") {
+				parts := strings.Split(line, ":")
+				if len(parts) >= 2 {
+					requirementsStr := parts[1]
+					requirementsStr = strings.Trim(requirementsStr, " \t[],")
+					requirements := strings.Split(requirementsStr, ",")
+					for _, req := range requirements {
+						req = strings.TrimSpace(req)
+						req = strings.Trim(req, `"'`)
+						if req != "" {
+							name, version := a.parseRequirementString(req)
+							if name != "" {
+								pkg := &types.Package{
+									Name:     name,
+									Version:  version,
+									Registry: "pypi",
+									Type:     "optional",
+								}
+								packages = append(packages, pkg)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return packages, nil
 }
 
 func (a *PythonAnalyzer) parsePipfile(projectInfo *ProjectInfo) ([]*types.Package, error) {
-	// TODO: Implement Pipfile parsing
-	return nil, fmt.Errorf("Pipfile parsing not implemented yet")
+	filePath := filepath.Join(projectInfo.Path, projectInfo.ManifestFile)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Pipfile: %w", err)
+	}
+
+	// Parse TOML structure for Pipfile
+	var pipfile struct {
+		Packages    map[string]interface{} `toml:"packages"`
+		DevPackages map[string]interface{} `toml:"dev-packages"`
+		Requires    struct {
+			PythonVersion string `toml:"python_version"`
+		} `toml:"requires"`
+	}
+
+	err = toml.Unmarshal(data, &pipfile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Pipfile: %w", err)
+	}
+
+	var packages []*types.Package
+
+	// Parse production packages
+	for name, versionSpec := range pipfile.Packages {
+		version := "*"
+		switch v := versionSpec.(type) {
+		case string:
+			version = v
+		case map[string]interface{}:
+			if ver, ok := v["version"]; ok {
+				if verStr, ok := ver.(string); ok {
+					version = verStr
+				}
+			}
+		}
+
+		pkg := &types.Package{
+			Name:     name,
+			Version:  version,
+			Registry: "pypi",
+			Type:     "production",
+		}
+		packages = append(packages, pkg)
+	}
+
+	// Parse dev packages
+	for name, versionSpec := range pipfile.DevPackages {
+		version := "*"
+		switch v := versionSpec.(type) {
+		case string:
+			version = v
+		case map[string]interface{}:
+			if ver, ok := v["version"]; ok {
+				if verStr, ok := ver.(string); ok {
+					version = verStr
+				}
+			}
+		}
+
+		pkg := &types.Package{
+			Name:     name,
+			Version:  version,
+			Registry: "pypi",
+			Type:     "development",
+		}
+		packages = append(packages, pkg)
+	}
+
+	return packages, nil
 }
 
 // parsePoetryProject parses pyproject.toml files for Poetry projects

@@ -99,7 +99,7 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 	}
 
 	// Extract dev dependencies if enabled
-	if a.config.Scanner.IncludeDevDeps {
+	if a.config != nil && a.config.Scanner != nil && a.config.Scanner.IncludeDevDeps {
 		if devDeps, ok := packageJSON["devDependencies"].(map[string]interface{}); ok {
 			for name, version := range devDeps {
 				if versionStr, ok := version.(string); ok {

@@ -827,9 +827,10 @@ func (m *Manager) setDefaults() {
 
 // IntegrationsConfig contains integrations configuration
 type IntegrationsConfig struct {
-	Enabled    bool                        `mapstructure:"enabled"`
-	Connectors map[string]ConnectorConfig `mapstructure:"connectors"`
-	Filters    []FilterConfig             `mapstructure:"filters"`
+	Enabled      bool                        `mapstructure:"enabled"`
+	Connectors   map[string]ConnectorConfig `mapstructure:"connectors"`
+	EventRouting map[string][]string         `mapstructure:"event_routing"`
+	Filters      []FilterConfig             `mapstructure:"filters"`
 }
 
 // ConnectorConfig contains connector configuration

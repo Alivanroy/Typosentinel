@@ -12,6 +12,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/events"
 	"github.com/Alivanroy/Typosentinel/internal/integrations/hub"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	pkgevents "github.com/Alivanroy/Typosentinel/pkg/events"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/fsnotify/fsnotify"
@@ -87,15 +88,15 @@ func New(cfg *config.Config) (*Scanner, error) {
 		analyzerRegistry: NewAnalyzerRegistry(cfg),
 	}
 
+	// Initialize logger
+	loggerInstance := logger.New()
+
 	// Initialize event bus
-	s.eventBus = events.NewEventBus()
+	s.eventBus = events.NewEventBus(*loggerInstance, 1000)
 
 	// Initialize integration hub if integrations are configured
 	if cfg.Integrations != nil {
-		integrationHub, err := hub.NewIntegrationHub(cfg.Integrations, s.eventBus)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize integration hub: %w", err)
-		}
+		integrationHub := hub.NewIntegrationHub(s.eventBus, cfg.Integrations, *loggerInstance)
 		s.integrationHub = integrationHub
 	}
 
@@ -200,12 +201,7 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			metadata := map[string]interface{}{
-				"project_type":  projectInfo.Type,
-				"package_count": len(packages),
-				"threat_count":  summary.ThreatsFound,
-			}
-			_ = s.cache.CacheAnalysisResult(cacheKey, result, metadata)
+			_ = s.cache.SetCachedAnalysisResult(cacheKey, result)
 		}
 	}
 
@@ -853,19 +849,7 @@ func (s *Scanner) generateCacheKey(projectPath string) (string, error) {
 		return "", fmt.Errorf("cache not initialized")
 	}
 
-	// Get enabled analyzers
-	enabledAnalyzers := make([]string, 0, len(s.analyzers))
-	for name := range s.analyzers {
-		enabledAnalyzers = append(enabledAnalyzers, name)
-	}
-
-	// Create config map for cache key generation
-	configMap := map[string]interface{}{
-		"analyzers": enabledAnalyzers,
-		"version":   "1.0.0", // Scanner version for cache invalidation
-	}
-
-	return s.cache.GenerateScanKey(projectPath, enabledAnalyzers, configMap)
+	return s.cache.GenerateScanKey(projectPath)
 }
 
 // GetCacheStats returns cache statistics
@@ -897,7 +881,7 @@ func (s *Scanner) SetCacheConfig(config *cache.CacheConfig) error {
 	if s.cache == nil {
 		return fmt.Errorf("cache not initialized")
 	}
-	return s.cache.SetCacheConfig(config)
+	return s.cache.SetCacheConfig(*config)
 }
 
 // IsCacheEnabled returns whether caching is enabled
@@ -993,26 +977,29 @@ func (s *Scanner) emitSecurityEvent(pkg *types.Package, threat *types.Threat, pr
 	event := &pkgevents.SecurityEvent{
 		ID:        fmt.Sprintf("event_%d", time.Now().UnixNano()),
 		Timestamp: time.Now(),
-		Type:      s.convertThreatTypeToEventType(threat.Type),
-		Severity:  s.convertSeverityToEventSeverity(threat.Severity),
+		Type:      s.convertThreatTypeToEventType(string(threat.Type)),
+		Severity:  s.convertSeverityToEventSeverity(threat.Severity.String()),
 		Package: pkgevents.PackageInfo{
 			Name:     pkg.Name,
 			Version:  pkg.Version,
 			Registry: pkg.Registry,
 		},
 		Threat: pkgevents.ThreatInfo{
-			Type:        threat.Type,
+			Type:        string(threat.Type),
 			Description: threat.Description,
-			RiskScore:   threat.Score,
+			RiskScore:   threat.Confidence,
 			Confidence:  threat.Confidence,
 			Evidence:    s.convertEvidenceToMap(threat.Evidence),
 			Mitigations: []string{threat.Recommendation},
 		},
 		Metadata: pkgevents.EventMetadata{
-			DetectionMethod: threat.Source,
-			ProjectPath:     projectInfo.Path,
-			ProjectType:     projectInfo.Type,
-			ScannerVersion:  "1.0.0",
+			DetectionMethod: threat.DetectionMethod,
+			Tags:           []string{"scanner", "automated"},
+			CustomFields: map[string]string{
+				"project_path":    projectInfo.Path,
+				"project_type":    projectInfo.Type,
+				"scanner_version": "1.0.0",
+			},
 		},
 	}
 
@@ -1051,14 +1038,18 @@ func (s *Scanner) convertSeverityToEventSeverity(severity string) pkgevents.Seve
 	}
 }
 
-// convertEvidenceToMap converts evidence string to map format
-func (s *Scanner) convertEvidenceToMap(evidence string) map[string]string {
-	if evidence == "" {
+// convertEvidenceToMap converts evidence slice to map format
+func (s *Scanner) convertEvidenceToMap(evidence []types.Evidence) map[string]string {
+	if len(evidence) == 0 {
 		return make(map[string]string)
 	}
-	return map[string]string{
-		"details": evidence,
+	
+	result := make(map[string]string)
+	for i, ev := range evidence {
+		key := fmt.Sprintf("evidence_%d", i)
+		result[key] = fmt.Sprintf("%s: %s", ev.Type, ev.Description)
 	}
+	return result
 }
 
 // generateScanID generates a unique scan ID

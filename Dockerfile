@@ -54,12 +54,8 @@ RUN mkdir -p /app/data /app/logs && \
 # Switch to non-root user
 USER appuser
 
-# Expose port
+# Expose port (for future server implementation)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/api/health || exit 1
-
-# Default command
-CMD ["./typosentinel", "serve", "--config", "config/config.yaml", "--port", "8080"]
+# Default command - show help since there's no serve command
+CMD ["./typosentinel", "--help"]

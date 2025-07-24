@@ -53,6 +53,10 @@ coverage/
 /temp/
 /artifacts/
 /reports/
+temp_*/
+*_test_results_*/
+test_project/
+test_vulnerable_project/
 
 # Build artifacts
 /typosentinel
@@ -66,6 +70,14 @@ test-*
 *_test_results_*/
 performance_test_*.txt
 security_test_*.txt
+performance-dashboard-*.html
+
+# Development and test artifacts
+ci-results/
+dynamic-test-results/
+stress-test-results/
+demospec
+newintegration.md
 
 # IDE and Editor specific files
 .cursor/

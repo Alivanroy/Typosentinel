@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/cmd"
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -55,9 +55,9 @@ type IntegrationTestResult struct {
 	ScanResult      *ScanResult
 }
 
-// Scanner represents the main scanner (imported from cmd package)
-type Scanner = cmd.Scanner
-type ScanResult = cmd.ScanResult
+// Scanner represents the main scanner (imported from analyzer package)
+type Scanner = analyzer.Analyzer
+type ScanResult = analyzer.ScanResult
 
 // SetupIntegrationTestSuite initializes the integration test suite
 func SetupIntegrationTestSuite(t *testing.T) *IntegrationTestSuite {
@@ -88,7 +88,7 @@ func SetupIntegrationTestSuite(t *testing.T) *IntegrationTestSuite {
 	}
 
 	// Create scanner
-	scanner, err := cmd.NewScanner(cfg)
+	scanner, err := analyzer.New(cfg)
 	if err != nil {
 		t.Fatalf("Failed to create scanner: %v", err)
 	}

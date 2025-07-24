@@ -53,23 +53,30 @@ dynamic_analysis:
   network_isolation: true
   file_system_monitoring: true
 
-# Machine Learning Configuration (Latest Fine-tuning Results)
+# Machine Learning Configuration (Optimized for Threat Detection)
 ml_analysis:
   enabled: true
   model_path: "./ml/models/"
-  similarity_threshold: 0.8
-  malware_threshold: 0.729
-  anomaly_threshold: 0.6
-  typo_threshold: 0.85
-  reputation_threshold: 0.5
-  confidence_threshold: 0.75
+  # Lowered similarity threshold to catch more potential typosquatting
+  similarity_threshold: 0.75
+  # Lowered malware threshold to increase detection sensitivity
+  malware_threshold: 0.65
+  # Lowered anomaly threshold to detect more unusual patterns
+  anomaly_threshold: 0.55
+  # Adjusted typo threshold for better detection
+  typo_threshold: 0.80
+  # Lowered reputation threshold to be more strict with unknown packages
+  reputation_threshold: 0.45
+  # Slightly lowered confidence threshold to include more borderline cases
+  confidence_threshold: 0.70
   feature_extraction: true
+  # Rebalanced ensemble weights to prioritize malware and typo detection
   ensemble_weights:
-    similarity: 0.216
-    malware: 0.294
-    anomaly: 0.196
-    typo: 0.196
-    reputation: 0.098
+    similarity: 0.25
+    malware: 0.30
+    anomaly: 0.20
+    typo: 0.20
+    reputation: 0.05
 
 # Behavioral Analysis Configuration (Tuned for Better Performance)
 behavioral_analysis:

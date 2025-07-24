@@ -14,6 +14,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/registry"
+	"github.com/Alivanroy/Typosentinel/internal/vulnerability"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/sirupsen/logrus"
 )
@@ -35,6 +36,9 @@ type ScanOptions struct {
 	SimilarityThreshold    float64
 	ExcludePackages        []string
 	AllowEmptyProjects     bool
+	CheckVulnerabilities   bool
+	VulnerabilityDBs       []string
+	VulnConfigPath         string
 }
 
 // ScanResult contains the results of a security scan
@@ -763,12 +767,133 @@ func (a *Analyzer) filterDependencies(deps []types.Dependency, excludePackages [
 
 // detectThreats performs threat detection on the given dependencies
 func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, options *ScanOptions) ([]types.Threat, []types.Warning, error) {
-	detectionOptions := &detector.Options{
-		DeepAnalysis:        options.DeepAnalysis,
-		SimilarityThreshold: options.SimilarityThreshold,
+	logrus.Infof("Starting threat analysis for %d dependencies", len(deps))
+	start := time.Now()
+
+	var allThreats []types.Threat
+	var allWarnings []types.Warning
+
+	// Initialize vulnerability manager if vulnerability checking is enabled
+	var vulnManager *vulnerability.Manager
+	if options.CheckVulnerabilities {
+		logrus.Info("Vulnerability checking enabled, initializing vulnerability manager")
+		
+		// Validate vulnerability database names
+		validDBs := map[string]bool{
+			"osv":    true,
+			"github": true,
+			"nvd":    true,
+		}
+		
+		var validatedDBs []string
+		for _, dbName := range options.VulnerabilityDBs {
+			if validDBs[dbName] {
+				validatedDBs = append(validatedDBs, dbName)
+			} else {
+				return nil, nil, fmt.Errorf("invalid vulnerability database: %s. Valid options are: osv, github, nvd", dbName)
+			}
+		}
+		
+		if len(validatedDBs) == 0 {
+			return nil, nil, fmt.Errorf("no valid vulnerability databases specified")
+		}
+		
+		// Create manager configuration
+		managerConfig := &vulnerability.ManagerConfig{
+			ParallelQueries: true,
+			Timeout:         30 * time.Second,
+			CacheEnabled:    true,
+			CacheTTL:        1 * time.Hour,
+			MergeResults:    true,
+			DeduplicateByID: true,
+			Priority:        validatedDBs,
+		}
+
+		// Create database configurations based on user selection
+		for _, dbName := range validatedDBs {
+			dbConfig := types.VulnerabilityDatabaseConfig{
+				Type:    dbName,
+				Enabled: true,
+			}
+			managerConfig.Databases = append(managerConfig.Databases, dbConfig)
+		}
+
+		vulnManager = vulnerability.NewManager(managerConfig)
+		logrus.Infof("Vulnerability manager initialized with %d databases", len(validatedDBs))
 	}
 
-	return a.detector.Analyze(ctx, deps, detectionOptions)
+	// Analyze each dependency individually using CheckPackage for better threat detection
+	for _, dep := range deps {
+		select {
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+		default:
+		}
+
+		// Use CheckPackage which compares against popular packages
+		result, err := a.detector.CheckPackage(ctx, dep.Name, dep.Registry)
+		if err != nil {
+			logrus.Warnf("Failed to check package %s: %v", dep.Name, err)
+			continue
+		}
+
+		// Add threats and warnings from the result
+		allThreats = append(allThreats, result.Threats...)
+		allWarnings = append(allWarnings, result.Warnings...)
+
+		// Check for vulnerabilities if enabled
+		if vulnManager != nil {
+			// Create package object for vulnerability checking
+			pkg := &types.Package{
+				Name:     dep.Name,
+				Version:  dep.Version,
+				Type:     dep.Registry, // Set the package type to the registry
+				Registry: dep.Registry,
+			}
+
+			vulns, err := vulnManager.CheckVulnerabilities(pkg)
+			if err != nil {
+				logrus.Warnf("Failed to check vulnerabilities for %s@%s: %v", dep.Name, dep.Version, err)
+				continue
+			}
+
+			// Convert vulnerabilities to threats
+			for _, vuln := range vulns {
+				threat := types.Threat{
+					Package:         dep.Name,
+					Version:         dep.Version,
+					Registry:        dep.Registry,
+					Type:            types.ThreatTypeVulnerable,
+					Severity:        vuln.Severity,
+					Description:     vuln.Description,
+					Recommendation:  fmt.Sprintf("Update to a version that fixes %s", vuln.ID),
+					Confidence:      1.0, // High confidence for known vulnerabilities
+					DetectedAt:      time.Now(),
+					DetectionMethod: "vulnerability_database",
+					CVEs:            []string{vuln.CVE},
+					References:      vuln.References,
+					Metadata: map[string]interface{}{
+						"vulnerability_id": vuln.ID,
+						"cvss_score":      vuln.CVSSScore,
+						"published":       vuln.Published,
+						"modified":        vuln.Modified,
+						"source":          vuln.Source,
+						"aliases":         vuln.Aliases,
+					},
+				}
+				allThreats = append(allThreats, threat)
+			}
+
+			if len(vulns) > 0 {
+				logrus.Infof("Found %d vulnerabilities for %s@%s", len(vulns), dep.Name, dep.Version)
+			}
+		}
+	}
+
+	duration := time.Since(start)
+	logrus.Infof("Threat analysis completed in %v. Found %d threats, %d warnings", duration, len(allThreats), len(allWarnings))
+
+	return allThreats, allWarnings, nil
 }
 
 // calculateSummary generates a summary of scan results

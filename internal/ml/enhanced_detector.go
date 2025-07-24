@@ -327,10 +327,7 @@ func NewEnhancedMLDetector(config *EnhancedMLConfig) (*EnhancedMLDetector, error
 		return nil, fmt.Errorf("failed to initialize reputation analyzer: %w", err)
 	}
 
-	detector.behavioralAnalyzer, err = NewBehavioralAnalyzer()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize behavioral analyzer: %w", err)
-	}
+	detector.behavioralAnalyzer = NewBehavioralAnalyzer()
 
 	detector.ensembleModel, err = NewEnsembleModel(config.EnsembleWeights)
 	if err != nil {
@@ -511,7 +508,7 @@ func (emd *EnhancedMLDetector) runEnhancedReputationAnalysis(ctx context.Context
 
 // runAdvancedBehavioralAnalysis performs enhanced behavioral analysis
 func (emd *EnhancedMLDetector) runAdvancedBehavioralAnalysis(ctx context.Context, features *EnhancedPackageFeatures) (*BehavioralAnalysisResult, error) {
-	behavioralResult, err := emd.behavioralAnalyzer.AnalyzeBehavior(ctx, features)
+	behavioralResult, err := emd.behavioralAnalyzer.AnalyzeBehaviorEnhanced(ctx, features)
 	if err != nil {
 		return nil, err
 	}
@@ -1112,7 +1109,6 @@ type MalwareClassifier struct{}
 type AnomalyDetector struct{}
 type TypoDetector struct{}
 type ReputationAnalyzer struct{}
-type BehavioralAnalyzer struct{}
 type EnsembleModel struct{}
 
 // Placeholder implementations
@@ -1121,7 +1117,6 @@ func NewMalwareClassifier() (*MalwareClassifier, error)   { return &MalwareClass
 func NewAnomalyDetector() (*AnomalyDetector, error)       { return &AnomalyDetector{}, nil }
 func NewTypoDetector() (*TypoDetector, error)             { return &TypoDetector{}, nil }
 func NewReputationAnalyzer() (*ReputationAnalyzer, error) { return &ReputationAnalyzer{}, nil }
-func NewBehavioralAnalyzer() (*BehavioralAnalyzer, error) { return &BehavioralAnalyzer{}, nil }
 func NewEnsembleModel(weights map[string]float64) (*EnsembleModel, error) {
 	return &EnsembleModel{}, nil
 }
@@ -1141,9 +1136,6 @@ func (td *TypoDetector) DetectTyposquatting(ctx context.Context, features *Enhan
 func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *EnhancedPackageFeatures) (*EnhancedReputationAnalysis, error) {
 	return &EnhancedReputationAnalysis{}, nil
 }
-func (ba *BehavioralAnalyzer) AnalyzeBehavior(ctx context.Context, features *EnhancedPackageFeatures) (*BehavioralAnalysisResult, error) {
-	return &BehavioralAnalysisResult{}, nil
-}
 func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetectionResult) (*EnsembleResults, error) {
 	return &EnsembleResults{}, nil
 }
@@ -1154,7 +1146,6 @@ func (mc *MalwareClassifier) Update(ctx context.Context) error  { return nil }
 func (ad *AnomalyDetector) Update(ctx context.Context) error    { return nil }
 func (td *TypoDetector) Update(ctx context.Context) error       { return nil }
 func (ra *ReputationAnalyzer) Update(ctx context.Context) error { return nil }
-func (ba *BehavioralAnalyzer) Update(ctx context.Context) error { return nil }
 
 // Metrics methods
 func (sm *SimilarityModel) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
@@ -1270,9 +1261,6 @@ func (td *TypoDetector) GetMetrics(ctx context.Context) (map[string]interface{},
 }
 func (ra *ReputationAnalyzer) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
 	return map[string]interface{}{"accuracy": 0.89}, nil
-}
-func (ba *BehavioralAnalyzer) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
-	return map[string]interface{}{"accuracy": 0.94}, nil
 }
 func (em *EnsembleModel) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
 	return map[string]interface{}{"accuracy": 0.99}, nil

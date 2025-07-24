@@ -383,13 +383,13 @@ func (da *DynamicAnalyzer) createSandbox(ctx context.Context) (*Sandbox, error) 
 // createDockerSandbox creates a Docker-based sandbox
 func (da *DynamicAnalyzer) createDockerSandbox(ctx context.Context, sandbox *Sandbox) error {
 	// Create Docker container with security constraints
+	// Note: Removed --read-only to allow docker cp operations
 	cmd := exec.CommandContext(ctx, "docker", "run", "-d",
 		"--name", sandbox.ID,
 		"--rm",
 		"--network", "none", // Isolated network
 		"--memory", fmt.Sprintf("%d", da.config.MaxMemoryUsage),
 		"--cpus", "0.5",
-		"--read-only", // Read-only root filesystem
 		"--tmpfs", "/tmp:rw,noexec,nosuid,size=100m",
 		"--tmpfs", "/var/tmp:rw,noexec,nosuid,size=100m",
 		"--security-opt", "no-new-privileges:true",

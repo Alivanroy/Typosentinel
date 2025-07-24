@@ -92,7 +92,7 @@ func (e *Engine) CheckPackage(ctx context.Context, packageName, registry string)
 	// Use default options for single package check
 	options := &Options{
 		DeepAnalysis:        true,
-		SimilarityThreshold: 0.8,
+		SimilarityThreshold: 0.7,
 	}
 
 	// For single package analysis, we need to get popular packages for comparison

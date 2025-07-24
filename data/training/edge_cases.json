@@ -1,0 +1,264 @@
+{
+  "edge_cases": [
+    {
+      "package_name": "reactt",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "react",
+      "features": {
+        "character_addition": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.95,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "1odash",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "lodash",
+      "features": {
+        "character_substitution": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.92,
+        "has_suspicious_code": true,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "expresss",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "express",
+      "features": {
+        "character_repetition": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.96,
+        "has_suspicious_code": true,
+        "has_obfuscation": true
+      }
+    },
+    {
+      "package_name": "anglar",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "angular",
+      "features": {
+        "character_omission": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.94,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "vuejs-framework",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "vue",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 12,
+        "jaro_winkler": 0.65,
+        "has_suspicious_code": true,
+        "has_obfuscation": true
+      }
+    },
+    {
+      "package_name": "react-utils",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "react",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 6,
+        "jaro_winkler": 0.70,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "node-postgres",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "pg",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 12,
+        "jaro_winkler": 0.40,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "bootstrap-ui",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "bootstrap",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 3,
+        "jaro_winkler": 0.82,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "axois",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "axios",
+      "features": {
+        "character_transposition": true,
+        "edit_distance": 2,
+        "jaro_winkler": 0.91,
+        "has_suspicious_code": true,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "moment-timezone",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "moment",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 9,
+        "jaro_winkler": 0.68,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "jqury",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "jquery",
+      "features": {
+        "character_omission": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.93,
+        "has_suspicious_code": true,
+        "has_obfuscation": true
+      }
+    },
+    {
+      "package_name": "redux-toolkit",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "redux",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 8,
+        "jaro_winkler": 0.65,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "tailwindcss-components",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "tailwindcss",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 11,
+        "jaro_winkler": 0.72,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "graphq1",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "graphql",
+      "features": {
+        "character_substitution": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.95,
+        "has_suspicious_code": true,
+        "has_obfuscation": true
+      }
+    },
+    {
+      "package_name": "material-ui-core",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "material-ui",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 5,
+        "jaro_winkler": 0.85,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "nextjs",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "next",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 2,
+        "jaro_winkler": 0.88,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "nxt",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "next",
+      "features": {
+        "character_omission": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.89,
+        "has_suspicious_code": true,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "svelte-kit",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "svelte",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 4,
+        "jaro_winkler": 0.79,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    },
+    {
+      "package_name": "svlet",
+      "is_threat": true,
+      "threat_type": "typosquatting",
+      "similar_to": "svelte",
+      "features": {
+        "character_omission": true,
+        "edit_distance": 1,
+        "jaro_winkler": 0.92,
+        "has_suspicious_code": true,
+        "has_obfuscation": true
+      }
+    },
+    {
+      "package_name": "prisma-client",
+      "is_threat": false,
+      "threat_type": null,
+      "similar_to": "prisma",
+      "features": {
+        "name_extension": true,
+        "edit_distance": 7,
+        "jaro_winkler": 0.71,
+        "has_suspicious_code": false,
+        "has_obfuscation": false
+      }
+    }
+  ]
+}

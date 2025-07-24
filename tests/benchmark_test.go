@@ -14,14 +14,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/cmd"
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // BenchmarkSuite contains performance benchmark tests
 type BenchmarkSuite struct {
-	scanner      *cmd.Scanner
+	scanner      *analyzer.Analyzer
 	config       *config.Config
 	tempDir      string
 	testPackages []BenchmarkPackage
@@ -151,7 +151,7 @@ func SetupBenchmarkSuite(b *testing.B) *BenchmarkSuite {
 	}
 
 	// Create scanner
-	scanner, err := cmd.NewScanner(cfg)
+	scanner, err := analyzer.New(cfg)
 	if err != nil {
 		b.Fatalf("Failed to create scanner: %v", err)
 	}

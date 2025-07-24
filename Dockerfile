@@ -45,7 +45,6 @@ WORKDIR /app
 COPY --from=go-builder /app/typosentinel ./
 
 # Copy configuration files
-COPY config.yaml ./
 COPY config/ ./config/
 
 # Create necessary directories
@@ -63,4 +62,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/api/health || exit 1
 
 # Default command
-CMD ["./typosentinel", "serve", "--config", "config.yaml", "--port", "8080"]
+CMD ["./typosentinel", "serve", "--config", "config/config.yaml", "--port", "8080"]

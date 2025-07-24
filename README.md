@@ -511,29 +511,22 @@ make perf-test
 - Download statistics
 - Community feedback
 
-## 📊 Performance & Test Results
-
-### Latest Test Results (100% Pass Rate)
-- **Total Tests**: 17/17 passing ✅
-- **Legitimate Package Detection**: 6/6 perfect (0% false positives)
-- **Typosquatting Detection**: 5/5 perfect (0% false negatives)
-- **CLI Functionality**: 6/6 all features working
-- **Risk Score Accuracy**: Clear separation (0.06 safe vs 0.84+ malicious)
+## 📊 Performance
 
 ### Performance Metrics
 - **Scanning Speed**: 1000+ packages per minute
 - **Memory Usage**: < 100MB for typical workloads
-- **Detection Accuracy**: 100% in comprehensive tests
+- **Detection Accuracy**: High precision with low false positive rates
 - **Response Time**: < 60ms for safe packages, < 2s for threat analysis
 - **Supported Formats**: 15+ package managers
 
-### Verified Detection Capabilities
-- ✅ **lodahs** (lodash typosquat) - Risk: 0.850, Status: Critical
-- ✅ **recat** (react typosquat) - Risk: 0.842, Status: Critical  
-- ✅ **expresss** (express typosquat) - Risk: 0.850, Status: Critical
-- ✅ **reqeusts** (requests typosquat) - Risk: 0.850, Status: Critical
-- ✅ **nmupy** (numpy typosquat) - Risk: 0.841, Status: Critical
-- ✅ All legitimate packages correctly identified as safe
+### Detection Capabilities
+TypoSentinel effectively detects various types of typosquatting attacks including:
+- Character substitution (e.g., `expresss` vs `express`)
+- Character omission (e.g., `lodahs` vs `lodash`)
+- Character insertion (e.g., `recat` vs `react`)
+- Homoglyph attacks using similar-looking characters
+- Domain squatting and namespace confusion
 
 ## 🤝 Contributing
 

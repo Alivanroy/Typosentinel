@@ -14,8 +14,10 @@ import (
 
 // MLAnalyzer performs machine learning-based analysis for typosquatting detection.
 type MLAnalyzer struct {
-	Config config.MLAnalysisConfig
-	Client *Client
+	Config             config.MLAnalysisConfig
+	Client             *Client
+	BehavioralAnalyzer *BehavioralAnalyzer
+	FeedbackLoop       *FeedbackLoop
 }
 
 // Config holds the configuration for the ML analyzer.
@@ -196,17 +198,41 @@ type AnalysisMetadata struct {
 
 // NewMLAnalyzer creates a new instance of the MLAnalyzer.
 func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
+	// Initialize behavioral analyzer
+	behavioralAnalyzer := NewBehavioralAnalyzer()
+	
+	// Initialize feedback loop
+	feedbackLoop, err := NewFeedbackLoop("./data/feedback")
+	if err != nil {
+		// Non-fatal error, log it but continue
+		fmt.Printf("Warning: Failed to initialize feedback loop: %v\n", err)
+	}
+	
 	return &MLAnalyzer{
-		Config: cfg,
-		Client: nil, // Client can be set separately for testing
+		Config:             cfg,
+		Client:             nil, // Client can be set separately for testing
+		BehavioralAnalyzer: behavioralAnalyzer,
+		FeedbackLoop:       feedbackLoop,
 	}
 }
 
 // NewMLAnalyzerWithClient creates a new ML analyzer with a specific client
 func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAnalyzer {
+	// Initialize behavioral analyzer
+	behavioralAnalyzer := NewBehavioralAnalyzer()
+	
+	// Initialize feedback loop
+	feedbackLoop, err := NewFeedbackLoop("./data/feedback")
+	if err != nil {
+		// Non-fatal error, log it but continue
+		fmt.Printf("Warning: Failed to initialize feedback loop: %v\n", err)
+	}
+	
 	return &MLAnalyzer{
-		Config: cfg,
-		Client: client,
+		Config:             cfg,
+		Client:             client,
+		BehavioralAnalyzer: behavioralAnalyzer,
+		FeedbackLoop:       feedbackLoop,
 	}
 }
 
@@ -253,8 +279,14 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	// Perform anomaly detection
 	anomalyDetection := a.detectAnomalies(pkg, features)
 
-	// Perform behavioral analysis (placeholder)
-	behavioralAnalysis := a.analyzeBehavior(pkg)
+	// Perform behavioral analysis using the integrated analyzer
+	var behavioralAnalysis BehavioralAnalysis
+	if a.BehavioralAnalyzer != nil {
+		behavioralAnalysis = a.BehavioralAnalyzer.AnalyzeBehavior(pkg)
+	} else {
+		// Fallback to the existing method
+		behavioralAnalysis = a.analyzeBehavior(pkg)
+	}
 
 	// Calculate typosquatting score
 	typosquattingScore := a.calculateTyposquattingScore(similarityScore, maliciousScore, reputationAnalysis.OverallScore)
@@ -265,8 +297,8 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	// Perform risk assessment
 	riskAssessment := a.assessRisk(typosquattingScore, maliciousScore, reputationAnalysis.OverallScore)
 
-	// Generate findings
-	findings := a.generateFindings(pkg, similarityScore, maliciousScore, reputationAnalysis, anomalyDetection)
+	// Generate findings including behavioral analysis
+	findings := a.generateFindings(pkg, similarityScore, maliciousScore, reputationAnalysis, anomalyDetection, behavioralAnalysis)
 
 	// Generate recommendations
 	recommendations := a.generateRecommendations(riskAssessment, findings)
@@ -282,7 +314,8 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 		AnalysisVersion: "1.0.0",
 	}
 
-	return &AnalysisResult{
+	// Create analysis result
+	result := &AnalysisResult{
 		SimilarityScore:    similarityScore,
 		MaliciousScore:     maliciousScore,
 		ReputationScore:    reputationAnalysis.OverallScore,
@@ -297,10 +330,73 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 		Findings:           findings,
 		Recommendations:    recommendations,
 		Metadata:           metadata,
-	}, nil
+	}
+
+	// Record analysis for feedback loop (if enabled)
+	if a.FeedbackLoop != nil && a.FeedbackLoop.LearningEnabled {
+		// Determine predicted label based on risk assessment
+		predictedLabel := "safe"
+		if riskAssessment.OverallRisk == "critical" || riskAssessment.OverallRisk == "high" {
+			predictedLabel = "malicious"
+		} else if riskAssessment.OverallRisk == "medium" {
+			predictedLabel = "suspicious"
+		}
+		
+		// Add to feedback loop (non-blocking)
+		go func() {
+			if err := a.FeedbackLoop.AddFeedback(pkg, predictedLabel, "", 
+				riskAssessment.RiskScore, "automated_analysis", features); err != nil {
+				// Log error but don't fail the analysis
+				fmt.Printf("Warning: Failed to record feedback: %v\n", err)
+			}
+		}()
+	}
+
+	return result, nil
 }
 
-// extractFeatures extracts features from a package for ML analysis.
+// ProvideFeedback allows users to provide feedback on analysis results for continuous learning
+func (a *MLAnalyzer) ProvideFeedback(pkg *types.Package, predictedLabel, actualLabel string, 
+	confidenceScore float64, feedbackSource string) error {
+	
+	if a.FeedbackLoop == nil {
+		return fmt.Errorf("feedback loop is not initialized")
+	}
+	
+	// Extract features for the feedback
+	features := a.extractFeatures(pkg)
+	
+	// Add feedback to the loop
+	return a.FeedbackLoop.AddFeedback(pkg, predictedLabel, actualLabel, 
+		confidenceScore, feedbackSource, features)
+}
+
+// GetFeedbackStats returns statistics about the feedback system
+func (a *MLAnalyzer) GetFeedbackStats() map[string]interface{} {
+	if a.FeedbackLoop == nil {
+		return map[string]interface{}{
+			"error": "feedback loop is not initialized",
+		}
+	}
+	
+	return a.FeedbackLoop.GetFeedbackStats()
+}
+
+// EnableLearning enables continuous learning
+func (a *MLAnalyzer) EnableLearning() {
+	if a.FeedbackLoop != nil {
+		a.FeedbackLoop.EnableLearning()
+	}
+}
+
+// DisableLearning disables continuous learning
+func (a *MLAnalyzer) DisableLearning() {
+	if a.FeedbackLoop != nil {
+		a.FeedbackLoop.DisableLearning()
+	}
+}
+
+// extractFeatures extracts features from a package for ML analysis with enhanced pattern detection.
 func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 	features := make(map[string]float64)
 
@@ -310,11 +406,26 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 	features["name_vowel_ratio"] = calculateVowelRatio(pkg.Name)
 	features["name_digit_ratio"] = calculateDigitRatio(pkg.Name)
 	features["name_special_char_ratio"] = calculateSpecialCharRatio(pkg.Name)
+	
+	// Enhanced name pattern features
+	features["name_consecutive_consonants"] = float64(countConsecutiveConsonants(pkg.Name))
+	features["name_consecutive_vowels"] = float64(countConsecutiveVowels(pkg.Name))
+	features["name_consecutive_digits"] = float64(countConsecutiveDigits(pkg.Name))
+	features["name_has_homoglyphs"] = boolToFloat(hasHomoglyphs(pkg.Name))
+	features["name_has_mixed_case"] = boolToFloat(hasMixedCase(pkg.Name))
+	features["name_has_unusual_chars"] = boolToFloat(hasUnusualCharacters(pkg.Name))
+	features["name_has_suspicious_pattern"] = boolToFloat(hasSuspiciousPattern(pkg.Name))
+	features["name_has_common_prefix"] = boolToFloat(hasCommonPrefix(pkg.Name))
+	features["name_has_common_suffix"] = boolToFloat(hasCommonSuffix(pkg.Name))
+	features["name_has_repeated_chars"] = boolToFloat(hasRepeatedCharacters(pkg.Name))
+	features["name_has_keyboard_pattern"] = boolToFloat(hasKeyboardPattern(pkg.Name))
 
 	// Version-based features
 	if pkg.Version != "" {
 		features["version_length"] = float64(len(pkg.Version))
 		features["version_parts"] = float64(len(strings.Split(pkg.Version, ".")))
+		features["version_is_unusual"] = boolToFloat(isUnusualVersion(pkg.Version))
+		features["version_is_very_new"] = boolToFloat(isVeryNewVersion(pkg.Version))
 	}
 
 	// Metadata-based features
@@ -323,12 +434,17 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 		if pkg.Metadata.Description != "" {
 			features["description_length"] = float64(len(pkg.Metadata.Description))
 			features["description_entropy"] = calculateEntropy(pkg.Metadata.Description)
+			features["description_has_suspicious_terms"] = boolToFloat(hasSuspiciousTerms(pkg.Metadata.Description))
+			features["description_has_unusual_chars"] = boolToFloat(hasUnusualCharacters(pkg.Metadata.Description))
+			features["description_has_urls"] = boolToFloat(hasURLs(pkg.Metadata.Description))
 		}
 
 		// Author-based features
 		if pkg.Metadata.Author != "" {
 			features["author_length"] = float64(len(pkg.Metadata.Author))
 			features["author_entropy"] = calculateEntropy(pkg.Metadata.Author)
+			features["author_has_unusual_chars"] = boolToFloat(hasUnusualCharacters(pkg.Metadata.Author))
+			features["author_has_random_pattern"] = boolToFloat(hasRandomPattern(pkg.Metadata.Author))
 		}
 
 		features["has_homepage"] = boolToFloat(pkg.Metadata.Homepage != "")
@@ -338,6 +454,22 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 		features["downloads"] = float64(pkg.Metadata.Downloads)
 		features["file_count"] = float64(pkg.Metadata.FileCount)
 		features["size"] = float64(pkg.Metadata.Size)
+		
+		// Age and activity features
+		features["package_age_days"] = float64(calculatePackageAgeDays(pkg.Metadata.CreatedAt))
+		features["days_since_last_update"] = float64(calculateDaysSinceLastUpdate(pkg.Metadata.UpdatedAt))
+		// Simple update frequency calculation
+		if pkg.Metadata.LastUpdated != nil {
+			daysSinceCreation := time.Since(pkg.Metadata.CreatedAt).Hours() / 24
+			daysSinceLastUpdate := time.Since(*pkg.Metadata.LastUpdated).Hours() / 24
+			if daysSinceCreation > 0 {
+				features["update_frequency"] = 1.0 / (daysSinceLastUpdate + 1) // Higher value for more recent updates
+			} else {
+				features["update_frequency"] = 0.0
+			}
+		} else {
+			features["update_frequency"] = 0.0
+		}
 	} else {
 		// Default values when metadata is nil
 		features["has_homepage"] = 0.0
@@ -347,10 +479,26 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 		features["downloads"] = 0.0
 		features["file_count"] = 0.0
 		features["size"] = 0.0
+		features["package_age_days"] = 0.0
+		features["days_since_last_update"] = 0.0
+		features["update_frequency"] = 0.0
 	}
 
-	// Dependency-based features (placeholder)
-	features["dependency_count"] = 0 // Would be calculated from actual dependencies
+	// Dependency-based features
+	if pkg.Dependencies != nil && len(pkg.Dependencies) > 0 {
+		// Convert Dependencies slice to map for helper functions
+		depMap := make(map[string]string)
+		for _, dep := range pkg.Dependencies {
+			depMap[dep.Name] = dep.Version
+		}
+		features["dependency_count"] = float64(len(pkg.Dependencies))
+		features["has_suspicious_deps"] = boolToFloat(hasSuspiciousDependencies(depMap))
+		features["has_unusual_dep_versions"] = boolToFloat(hasUnusualDependencyVersions(depMap))
+	} else {
+		features["dependency_count"] = 0.0
+		features["has_suspicious_deps"] = 0.0
+		features["has_unusual_dep_versions"] = 0.0
+	}
 
 	return features
 }
@@ -635,22 +783,38 @@ func (a *MLAnalyzer) calculateTyposquattingPatternScore(suspicious, legitimate s
 	return math.Min(score, 1.0)
 }
 
-// calculateSuspiciousPatternScore checks for suspicious naming patterns
+// calculateSuspiciousPatternScore checks for suspicious naming patterns with enhanced detection
 func (a *MLAnalyzer) calculateSuspiciousPatternScore(packageName string) float64 {
 	score := 0.0
 	lowerName := strings.ToLower(packageName)
 
-	// Check for suspicious keywords
+	// Check for suspicious keywords - expanded list
 	suspiciousKeywords := []string{
 		"hack", "crack", "exploit", "backdoor", "malware", "virus",
 		"trojan", "keylog", "steal", "phish", "scam", "fake",
 		"unofficial", "mirror", "clone", "copy", "duplicate",
-		"temp", "test", "demo", "sample", "example",
+		"temp", "test", "demo", "sample", "example", "poc",
+		"password", "credential", "token", "auth", "login", "admin",
+		"root", "sudo", "shell", "command", "exec", "run", "eval",
+		"crypto", "wallet", "bitcoin", "ethereum", "nft", "token",
+		"free", "cracked", "nulled", "patched", "keygen", "serial",
+		"bypass", "inject", "payload", "rootkit", "ransomware", "spyware",
 	}
 
 	for _, keyword := range suspiciousKeywords {
 		if strings.Contains(lowerName, keyword) {
-			score += 0.2
+			// Higher score for exact matches or standalone words
+			if lowerName == keyword || 
+			   strings.HasPrefix(lowerName, keyword+"-") || 
+			   strings.HasPrefix(lowerName, keyword+"_") || 
+			   strings.HasSuffix(lowerName, "-"+keyword) || 
+			   strings.HasSuffix(lowerName, "_"+keyword) || 
+			   strings.Contains(lowerName, "-"+keyword+"-") || 
+			   strings.Contains(lowerName, "_"+keyword+"_") {
+				score += 0.3
+			} else {
+				score += 0.2
+			}
 		}
 	}
 
@@ -669,6 +833,31 @@ func (a *MLAnalyzer) calculateSuspiciousPatternScore(packageName string) float64
 	// Check for number substitutions
 	if a.hasNumberSubstitutions(packageName) {
 		score += 0.2
+	}
+
+	// Check for random-looking strings (high entropy)
+	if calculateEntropy(packageName) > 4.0 && len(packageName) > 5 {
+		score += 0.15
+	}
+
+	// Check for keyboard patterns (e.g., qwerty, asdf)
+	if hasKeyboardPattern(packageName) {
+		score += 0.15
+	}
+
+	// Check for excessive consecutive consonants (unusual in natural language)
+	if countConsecutiveConsonants(packageName) >= 4 {
+		score += 0.1
+	}
+
+	// Check for unusual character combinations
+	if hasUnusualCharacterCombinations(packageName) {
+		score += 0.15
+	}
+
+	// Check for common legitimate package prefixes/suffixes used deceptively
+	if hasDeceptivePrefix(packageName) || hasDeceptiveSuffix(packageName) {
+		score += 0.25
 	}
 
 	return math.Min(score, 1.0)
@@ -1668,8 +1857,51 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 	reputationRisk := math.Max(0, 0.5-reputationScore)
 	riskScore := (typosquattingScore*0.6 + maliciousScore*0.3 + reputationRisk*0.1)
 
+	// Implement ensemble voting for borderline cases
+	// Each model gets a vote on the risk level
+	votes := make(map[string]int)
+	
+	// Typosquatting vote
+	if typosquattingScore >= 0.8 {
+		votes["critical"]++
+	} else if typosquattingScore >= 0.6 {
+		votes["high"]++
+	} else if typosquattingScore >= 0.4 {
+		votes["medium"]++
+	} else if typosquattingScore >= 0.2 {
+		votes["low"]++
+	} else {
+		votes["minimal"]++
+	}
+	
+	// Malicious vote
+	if maliciousScore >= 0.8 {
+		votes["critical"]++
+	} else if maliciousScore >= 0.6 {
+		votes["high"]++
+	} else if maliciousScore >= 0.4 {
+		votes["medium"]++
+	} else if maliciousScore >= 0.2 {
+		votes["low"]++
+	} else {
+		votes["minimal"]++
+	}
+	
+	// Reputation vote (inverse - lower reputation means higher risk)
+	if reputationScore <= 0.2 {
+		votes["high"]++
+	} else if reputationScore <= 0.4 {
+		votes["medium"]++
+	} else if reputationScore <= 0.6 {
+		votes["low"]++
+	} else {
+		votes["minimal"]++
+	}
+	
 	// Determine risk level with adjusted thresholds
 	var overallRisk string
+	
+	// First use the weighted score for the initial assessment
 	switch {
 	case riskScore >= 0.7:
 		overallRisk = "critical"
@@ -1681,6 +1913,34 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 		overallRisk = "low"
 	default:
 		overallRisk = "minimal"
+	}
+	
+	// For borderline cases (within 0.05 of a threshold), use ensemble voting
+	isBorderline := (math.Abs(riskScore - 0.7) <= 0.05) || 
+				  (math.Abs(riskScore - 0.5) <= 0.05) || 
+				  (math.Abs(riskScore - 0.3) <= 0.05) || 
+				  (math.Abs(riskScore - 0.15) <= 0.05)
+	
+	if isBorderline {
+		// Find the risk level with the most votes
+		maxVotes := 0
+		for level, count := range votes {
+			if count > maxVotes {
+				maxVotes = count
+				overallRisk = level
+			}
+		}
+		
+		// In case of a tie, use the higher risk level
+		if votes["critical"] == maxVotes {
+			overallRisk = "critical"
+		} else if votes["high"] == maxVotes {
+			overallRisk = "high"
+		} else if votes["medium"] == maxVotes {
+			overallRisk = "medium"
+		} else if votes["low"] == maxVotes {
+			overallRisk = "low"
+		}
 	}
 
 	// Generate risk factors
@@ -1734,7 +1994,7 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 
 // generateFindings generates specific findings from the analysis.
 func (a *MLAnalyzer) generateFindings(pkg *types.Package, similarityScore, maliciousScore float64,
-	reputationAnalysis ReputationAnalysis, anomalyDetection AnomalyDetection) []Finding {
+	reputationAnalysis ReputationAnalysis, anomalyDetection AnomalyDetection, behavioralAnalysis BehavioralAnalysis) []Finding {
 
 	findings := []Finding{}
 
@@ -1783,6 +2043,57 @@ func (a *MLAnalyzer) generateFindings(pkg *types.Package, similarityScore, malic
 			Description: fmt.Sprintf("Package exhibits anomalous characteristics: %s", anomalyDetection.AnomalyType),
 			Evidence:    fmt.Sprintf("Anomaly features: %v", anomalyDetection.AnomalyFeatures),
 			Model:       "anomaly_detection_model",
+		})
+	}
+
+	// Behavioral analysis findings
+	// Check for suspicious install behavior
+	if len(behavioralAnalysis.InstallBehavior.SuspiciousCommands) > 0 {
+		findings = append(findings, Finding{
+			Type:        "suspicious_install",
+			Severity:    "high",
+			Confidence:  0.8,
+			Description: "Package has suspicious installation behavior",
+			Evidence:    fmt.Sprintf("Suspicious commands: %v", behavioralAnalysis.InstallBehavior.SuspiciousCommands),
+			Model:       "behavioral_analysis_model",
+		})
+	}
+
+	// Check for network behavior
+	if len(behavioralAnalysis.NetworkBehavior.OutboundConnections) > 0 {
+		findings = append(findings, Finding{
+			Type:        "suspicious_network",
+			Severity:    "medium",
+			Confidence:  0.7,
+			Description: "Package exhibits network behavior",
+			Evidence:    fmt.Sprintf("Outbound connections: %v", behavioralAnalysis.NetworkBehavior.OutboundConnections),
+			Model:       "behavioral_analysis_model",
+		})
+	}
+
+	// Check for file system behavior
+	if len(behavioralAnalysis.FileSystemBehavior.FileCreation) > 0 || len(behavioralAnalysis.FileSystemBehavior.FileDeletion) > 0 {
+		findings = append(findings, Finding{
+			Type:        "suspicious_filesystem",
+			Severity:    "medium",
+			Confidence:  0.6,
+			Description: "Package exhibits file system behavior",
+			Evidence:    fmt.Sprintf("File operations: create=%v, delete=%v", 
+				behavioralAnalysis.FileSystemBehavior.FileCreation,
+				behavioralAnalysis.FileSystemBehavior.FileDeletion),
+			Model:       "behavioral_analysis_model",
+		})
+	}
+
+	// Check for runtime behavior
+	if len(behavioralAnalysis.RuntimeBehavior.ProcessSpawning) > 0 {
+		findings = append(findings, Finding{
+			Type:        "suspicious_runtime",
+			Severity:    "high",
+			Confidence:  0.8,
+			Description: "Package spawns processes at runtime",
+			Evidence:    fmt.Sprintf("Process spawning: %v", behavioralAnalysis.RuntimeBehavior.ProcessSpawning),
+			Model:       "behavioral_analysis_model",
 		})
 	}
 

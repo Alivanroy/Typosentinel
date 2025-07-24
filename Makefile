@@ -59,6 +59,20 @@ build-all: clean
 	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o dist/$(BINARY_NAME)-darwin-arm64 .
 	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o dist/$(BINARY_NAME)-windows-amd64.exe .
 
+# Package binaries for release
+.PHONY: package
+package: build-all
+	@echo "Creating release packages..."
+	mkdir -p dist
+	# Create tar.gz for Linux and macOS
+	cd dist && tar -czf $(BINARY_NAME)-linux-amd64.tar.gz $(BINARY_NAME)-linux-amd64
+	cd dist && tar -czf $(BINARY_NAME)-darwin-amd64.tar.gz $(BINARY_NAME)-darwin-amd64
+	cd dist && tar -czf $(BINARY_NAME)-darwin-arm64.tar.gz $(BINARY_NAME)-darwin-arm64
+	# Create zip for Windows
+	cd dist && zip $(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME)-windows-amd64.exe
+	# Generate checksums (use shasum on macOS, sha256sum on Linux)
+	cd dist && (shasum -a 256 *.tar.gz *.zip > checksums.sha256 2>/dev/null || sha256sum *.tar.gz *.zip > checksums.sha256)
+
 # Test targets
 .PHONY: test
 test:

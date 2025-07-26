@@ -64,6 +64,10 @@ test_vulnerable_project/
 # Temporary test files
 test-*
 !test-config.yaml
+test_package.json
+simple_docker_test.sh
+test_docker_implementation.sh
+docker_test_project/
 
 # Generated reports
 *-report-*.json

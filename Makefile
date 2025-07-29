@@ -1,6 +1,6 @@
 # TypoSentinel Makefile
 
-# Go parameters
+# Go build parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -28,6 +28,9 @@ INTEGRATION_DIR=test/integration
 E2E_DIR=test/e2e
 BENCH_DIR=test/benchmarks
 
+# Cross-compilation targets
+PLATFORMS=linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64 freebsd/amd64
+
 # Test configuration
 TEST_CONFIG=configs/test.yaml
 TEST_TIMEOUT=10m
@@ -47,12 +50,49 @@ all: clean build
 .PHONY: build
 build:
 	@echo "Building $(BINARY_NAME)..."
-	go build $(LDFLAGS) -o $(BINARY_NAME) .
+	@mkdir -p $(BUILD_DIR)
+	$(GOBUILD) $(BUILD_FLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
 
-# Build for multiple platforms
+# Cross-platform builds
 .PHONY: build-all
 build-all: clean
-	@echo "Building for multiple platforms..."
+	@echo "Building for all platforms..."
+	@mkdir -p $(DIST_DIR)
+	@for platform in $(PLATFORMS); do \
+		echo "Building for $$platform..."; \
+		GOOS=$$(echo $$platform | cut -d'/' -f1); \
+		GOARCH=$$(echo $$platform | cut -d'/' -f2); \
+		output_name=$(BINARY_NAME)-$(VERSION)-$$GOOS-$$GOARCH; \
+		if [ $$GOOS = "windows" ]; then output_name=$$output_name.exe; fi; \
+		CGO_ENABLED=0 GOOS=$$GOOS GOARCH=$$GOARCH $(GOBUILD) $(BUILD_FLAGS) -o $(DIST_DIR)/$$output_name .; \
+	done
+
+# Create release archives
+.PHONY: release
+release: build-all
+	@echo "Creating release archives..."
+	@cd $(DIST_DIR) && for file in $(BINARY_NAME)-$(VERSION)-*; do \
+		if [[ $$file == *".exe" ]]; then \
+			zip $$file.zip $$file; \
+		else \
+			tar -czf $$file.tar.gz $$file; \
+		fi; \
+		sha256sum $$file > $$file.sha256; \
+	done
+
+# Quick release for current platform
+.PHONY: release-local
+release-local: build
+	@echo "Creating local release..."
+	@mkdir -p $(DIST_DIR)
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $(DIST_DIR)/$(BINARY_NAME)-$(VERSION)-$$(go env GOOS)-$$(go env GOARCH)
+	@cd $(DIST_DIR) && tar -czf $(BINARY_NAME)-$(VERSION)-$$(go env GOOS)-$$(go env GOARCH).tar.gz $(BINARY_NAME)-$(VERSION)-$$(go env GOOS)-$$(go env GOARCH)
+	@cd $(DIST_DIR) && sha256sum $(BINARY_NAME)-$(VERSION)-$$(go env GOOS)-$$(go env GOARCH) > $(BINARY_NAME)-$(VERSION)-$$(go env GOOS)-$$(go env GOARCH).sha256
+
+# Legacy build for multiple platforms (kept for compatibility)
+.PHONY: build-legacy
+build-legacy: clean
+	@echo "Building for multiple platforms (legacy)..."
 	mkdir -p dist
 	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o dist/$(BINARY_NAME)-linux-amd64 .
 	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o dist/$(BINARY_NAME)-darwin-amd64 .

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typosentinel Enterprise Dashboard - Real-Life Test Environment</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .logo .subtitle {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 15px;
+            color: #555;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .status-indicator.healthy {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-indicator.warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status-indicator.critical {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .metric-title {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .metric-change {
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .metric-change.positive {
+            color: #28a745;
+        }
+
+        .metric-change.negative {
+            color: #dc3545;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .activity-feed {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            color: white;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .activity-time {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .threat-alerts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .alert-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .alert-severity {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .alert-severity.critical {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .alert-severity.high {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>🛡️ Typosentinel</h1>
+                <div class="subtitle">Enterprise Security</div>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="overview">📊 Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="scanning">🔍 Scanning</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="threats">⚠️ Threats</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="compliance">📋 Compliance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="organizations">🏢 Organizations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="users">👥 Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="settings">⚙️ Settings</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-top">
+                    <h2>Enterprise Security Dashboard</h2>
+                    <div class="user-info">
+                        <div class="user-avatar">JD</div>
+                        <div>
+                            <div style="font-weight: 500;">John Doe</div>
+                            <div style="font-size: 0.8em; color: #666;">Security Admin</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-indicators">
+                    <div class="status-indicator healthy">
+                        <div class="status-dot"></div>
+                        System Healthy
+                    </div>
+                    <div class="status-indicator warning">
+                        <div class="status-dot"></div>
+                        3 Active Scans
+                    </div>
+                    <div class="status-indicator critical">
+                        <div class="status-dot"></div>
+                        12 Critical Threats
+                    </div>
+                </div>
+            </header>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">Total Repositories</div>
+                        <div class="metric-icon" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">📁</div>
+                    </div>
+                    <div class="metric-value" style="color: #667eea;">1,247</div>
+                    <div class="metric-change positive">
+                        <span>↗️</span> +23 this week
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">Active Threats</div>
+                        <div class="metric-icon" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">🚨</div>
+                    </div>
+                    <div class="metric-value" style="color: #dc3545;">47</div>
+                    <div class="metric-change negative">
+                        <span>↗️</span> +5 today
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">Scan Success Rate</div>
+                        <div class="metric-icon" style="background: rgba(40, 167, 69, 0.1); color: #28a745;">✅</div>
+                    </div>
+                    <div class="metric-value" style="color: #28a745;">98.7%</div>
+                    <div class="metric-change positive">
+                        <span>↗️</span> +0.3% this month
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-title">Organizations</div>
+                        <div class="metric-icon" style="background: rgba(255, 193, 7, 0.1); color: #ffc107;">🏢</div>
+                    </div>
+                    <div class="metric-value" style="color: #ffc107;">15</div>
+                    <div class="metric-change positive">
+                        <span>↗️</span> +2 this quarter
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <div class="chart-title">Threat Detection Trends (Last 30 Days)</div>
+                    <canvas id="threatTrendsChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="activity-feed">
+                    <div class="chart-title">Recent Activity</div>
+                    <div class="activity-item">
+                        <div class="activity-icon" style="background: #dc3545;">🚨</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Critical threat detected in acme-corp/backend</div>
+                            <div class="activity-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon" style="background: #28a745;">✅</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Scan completed for tech-startup/frontend</div>
+                            <div class="activity-time">15 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon" style="background: #667eea;">👤</div>
+                        <div class="activity-content">
+                            <div class="activity-title">New user added to enterprise-solutions org</div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon" style="background: #ffc107;">📊</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Weekly compliance report generated</div>
+                            <div class="activity-time">3 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container" style="margin-bottom: 30px;">
+                <div class="chart-title">Organization Security Overview</div>
+                <canvas id="organizationChart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="threat-alerts">
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <h4>Suspicious Package Detected</h4>
+                        <span class="alert-severity critical">CRITICAL</span>
+                    </div>
+                    <p><strong>Repository:</strong> acme-corp/payment-service</p>
+                    <p><strong>Package:</strong> fake-stripe-sdk</p>
+                    <p><strong>Risk Score:</strong> 9.2/10</p>
+                    <p style="margin: 10px 0;">Potential typosquatting attack targeting Stripe SDK. Package contains obfuscated code.</p>
+                    <button class="btn btn-primary">Investigate</button>
+                </div>
+
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <h4>Policy Violation</h4>
+                        <span class="alert-severity high">HIGH</span>
+                    </div>
+                    <p><strong>Repository:</strong> tech-startup/mobile-app</p>
+                    <p><strong>Violation:</strong> Unapproved dependency</p>
+                    <p><strong>Package:</strong> react-native-crypto</p>
+                    <p style="margin: 10px 0;">Package not in approved dependency list. Requires security review.</p>
+                    <button class="btn btn-primary">Review</button>
+                </div>
+
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <h4>Vulnerability Found</h4>
+                        <span class="alert-severity critical">CRITICAL</span>
+                    </div>
+                    <p><strong>Repository:</strong> enterprise-solutions/api-gateway</p>
+                    <p><strong>CVE:</strong> CVE-2024-1234</p>
+                    <p><strong>Package:</strong> express@4.17.1</p>
+                    <p style="margin: 10px 0;">Known vulnerability in Express.js. Update to 4.18.2+ required.</p>
+                    <button class="btn btn-primary">Patch</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="refresh-indicator" id="refreshIndicator">
+        🔄 Refreshing data...
+    </div>
+
+    <script>
+        // Initialize charts
+        const threatTrendsCtx = document.getElementById('threatTrendsChart').getContext('2d');
+        const organizationCtx = document.getElementById('organizationChart').getContext('2d');
+
+        // Threat trends chart
+        new Chart(threatTrendsCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan 1', 'Jan 8', 'Jan 15', 'Jan 22', 'Jan 29', 'Feb 5', 'Feb 12'],
+                datasets: [{
+                    label: 'Critical Threats',
+                    data: [12, 19, 15, 25, 22, 18, 47],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'High Threats',
+                    data: [25, 32, 28, 35, 30, 28, 62],
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Medium Threats',
+                    data: [45, 52, 48, 55, 50, 48, 78],
+                    borderColor: '#17a2b8',
+                    backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Organization chart
+        new Chart(organizationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['acme-corp', 'tech-startup', 'enterprise-solutions', 'fintech-inc', 'others'],
+                datasets: [{
+                    data: [342, 189, 156, 98, 462],
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#f093fb',
+                        '#f5576c',
+                        '#4facfe'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+
+        // Navigation functionality
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                link.classList.add('active');
+                
+                // Simulate section switching
+                const section = link.dataset.section;
+                console.log(`Switching to ${section} section`);
+                
+                // Show refresh indicator
+                showRefreshIndicator();
+            });
+        });
+
+        // Auto-refresh functionality
+        function showRefreshIndicator() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.style.display = 'block';
+            
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update threat count randomly
+            const threatElement = document.querySelector('.metric-card:nth-child(2) .metric-value');
+            const currentThreats = parseInt(threatElement.textContent);
+            const change = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+            threatElement.textContent = Math.max(0, currentThreats + change);
+            
+            // Add loading animation
+            threatElement.classList.add('loading');
+            setTimeout(() => {
+                threatElement.classList.remove('loading');
+            }, 1000);
+            
+            // Update activity timestamps with native date formatting
+            const activityTimes = document.querySelectorAll('.activity-time');
+            activityTimes.forEach(timeEl => {
+                const timestamp = new Date();
+                timeEl.textContent = timestamp.toLocaleDateString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            });
+        }, 30000); // Update every 30 seconds
+
+        // Initialize dashboard
+        console.log('Typosentinel Enterprise Dashboard initialized');
+        console.log('Real-life test environment ready');
+        
+        // Simulate enterprise features
+        const enterpriseFeatures = {
+            multiTenant: true,
+            rbac: true,
+            auditLogging: true,
+            complianceReporting: true,
+            organizationScanning: true,
+            realTimeAlerts: true
+        };
+        
+        console.log('Enterprise features enabled:', enterpriseFeatures);
+    </script>
+</body>
+</html>

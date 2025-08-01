@@ -27,7 +27,6 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/errors"
 	"github.com/Alivanroy/Typosentinel/internal/interfaces"
 	"github.com/Alivanroy/Typosentinel/internal/logging"
-	"github.com/Alivanroy/Typosentinel/internal/metrics"
 )
 
 // TestSuite provides a base test suite with common setup and teardown
@@ -197,14 +196,7 @@ func (ts *TestSuite) createTestLogger() interfaces.Logger {
 
 // createTestMetrics creates a test metrics collector
 func (ts *TestSuite) createTestMetrics() interfaces.Metrics {
-	metricsConfig := &config.MetricsConfig{
-		Enabled: false, // Disabled by default for tests
-	}
-
-	metricsCollector, err := metrics.NewCollector(metricsConfig)
-	require.NoError(ts.T(), err)
-
-	return metricsCollector
+	return NewMockMetrics()
 }
 
 // createTestContainer creates a test dependency injection container

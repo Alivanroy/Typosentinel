@@ -688,6 +688,178 @@ paths:
               schema:
                 type: string
 
+  /v1/supply-chain/scan:
+    post:
+      tags:
+        - Supply Chain Security
+      summary: Enhanced Supply Chain Scan
+      description: |
+        Performs comprehensive supply chain security scanning of a package,
+        including build integrity, zero-day detection, threat intelligence,
+        and honeypot detection.
+      operationId: scanSupplyChain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplyChainScanRequest'
+            examples:
+              basic_scan:
+                summary: Basic package scan
+                value:
+                  package_name: "express"
+                  version: "4.18.2"
+                  registry: "npm"
+                  scan_options:
+                    build_integrity: true
+                    zero_day_detection: true
+                    dependency_graph: true
+                    threat_intel: true
+                    honeypot_detection: true
+                    deep_scan: false
+      responses:
+        '200':
+          description: Scan completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplyChainScanResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/supply-chain/analysis/{id}:
+    get:
+      tags:
+        - Supply Chain Security
+      summary: Get Supply Chain Analysis Results
+      description: Retrieves the results of a previously initiated supply chain scan.
+      operationId: getSupplyChainAnalysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Analysis ID returned from the scan request
+          schema:
+            type: string
+            example: "sc_1703123456789"
+      responses:
+        '200':
+          description: Analysis results retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplyChainScanResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Invalid analysis ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/supply-chain/graph/analyze:
+    post:
+      tags:
+        - Dependency Analysis
+      summary: Dependency Graph Analysis
+      description: |
+        Analyzes the dependency graph of one or more packages,
+        identifying potential supply chain risks across the entire
+        dependency tree.
+      operationId: analyzeDependendencyGraph
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphAnalyzeRequest'
+            examples:
+              single_package:
+                summary: Single package analysis
+                value:
+                  packages:
+                    - name: "react"
+                      version: "18.2.0"
+                      registry: "npm"
+                  depth: 3
+                  include_devs: false
+      responses:
+        '200':
+          description: Dependency graph analysis completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphAnalysisResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/supply-chain/threats/intel:
+    get:
+      tags:
+        - Threat Intelligence
+      summary: Threat Intelligence Query
+      description: |
+        Queries the threat intelligence database for known threats,
+        indicators of compromise, and security advisories related
+        to packages or specific threat types.
+      operationId: queryThreatIntelligence
+      parameters:
+        - name: package
+          in: query
+          description: Package name to query threats for
+          schema:
+            type: string
+            example: "express"
+        - name: type
+          in: query
+          description: Type of threats to filter by
+          schema:
+            type: string
+            enum: ["typosquatting", "malware", "backdoor", "data_exfiltration", "supply_chain"]
+            example: "typosquatting"
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 20
+      responses:
+        '200':
+          description: Threat intelligence data retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatIntelResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     Error:
@@ -1196,20 +1368,472 @@ components:
           type: number
           format: float
 
+    SupplyChainScanRequest:
+      type: object
+      required:
+        - package_name
+      properties:
+        package_name:
+          type: string
+          description: Name of the package to scan
+          example: "express"
+        version:
+          type: string
+          description: Version of the package (optional, defaults to latest)
+          example: "4.18.2"
+        registry:
+          type: string
+          description: Package registry (npm, pypi, etc.)
+          example: "npm"
+        scan_options:
+          $ref: '#/components/schemas/SupplyChainScanOptions'
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional metadata for the scan
+
+    SupplyChainScanOptions:
+      type: object
+      properties:
+        build_integrity:
+          type: boolean
+          description: Enable build integrity verification
+          default: true
+        zero_day_detection:
+          type: boolean
+          description: Enable zero-day vulnerability detection
+          default: true
+        dependency_graph:
+          type: boolean
+          description: Enable dependency graph analysis
+          default: true
+        threat_intel:
+          type: boolean
+          description: Enable threat intelligence lookup
+          default: true
+        honeypot_detection:
+          type: boolean
+          description: Enable honeypot package detection
+          default: true
+        deep_scan:
+          type: boolean
+          description: Enable deep scanning (slower but more thorough)
+          default: false
+
+    SupplyChainScanResponse:
+      type: object
+      properties:
+        analysis_id:
+          type: string
+          description: Unique identifier for this analysis
+          example: "sc_1703123456789"
+        status:
+          type: string
+          enum: ["pending", "running", "completed", "failed"]
+          description: Current status of the scan
+          example: "completed"
+        start_time:
+          type: string
+          format: date-time
+          description: When the scan was initiated
+        result:
+          $ref: '#/components/schemas/SupplyChainScanResult'
+        message:
+          type: string
+          description: Human-readable status message
+          example: "Supply chain scan completed successfully"
+
+    SupplyChainScanResult:
+      type: object
+      properties:
+        build_integrity_findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BuildIntegrityFinding'
+        zero_day_findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZeroDayFinding'
+        threat_intel_findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreatIntelFinding'
+        honeypot_detections:
+          type: array
+          items:
+            $ref: '#/components/schemas/HoneypotDetection'
+        supply_chain_risk:
+          $ref: '#/components/schemas/SupplyChainRiskScore'
+        scan_metadata:
+          $ref: '#/components/schemas/SupplyChainScanMetadata'
+
+    BuildIntegrityFinding:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique finding identifier
+        type:
+          type: string
+          description: Type of build integrity issue
+          example: "unsigned_package"
+        severity:
+          $ref: '#/components/schemas/Severity'
+        description:
+          type: string
+          description: Human-readable description of the finding
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score for this finding
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional metadata for the finding
+        detected_at:
+          type: string
+          format: date-time
+          description: When this finding was detected
+
+    ZeroDayFinding:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique finding identifier
+        type:
+          type: string
+          description: Type of zero-day finding
+          example: "behavioral_anomaly"
+        severity:
+          $ref: '#/components/schemas/Severity'
+        description:
+          type: string
+          description: Human-readable description of the finding
+        behavior_type:
+          type: string
+          description: Type of suspicious behavior detected
+          example: "network_activity"
+        anomaly_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Anomaly detection score
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score for this finding
+        recommendation:
+          type: string
+          description: Recommended action for this finding
+        metadata:
+          type: object
+          additionalProperties: true
+        detected_at:
+          type: string
+          format: date-time
+
+    ThreatIntelFinding:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique finding identifier
+        source:
+          type: string
+          description: Source of the threat intelligence
+          example: "TypoSentinel Intelligence"
+        type:
+          type: string
+          description: Type of threat
+          example: "typosquatting"
+        severity:
+          $ref: '#/components/schemas/Severity'
+        description:
+          type: string
+          description: Human-readable description of the threat
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score for this threat
+        references:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: External references for this threat
+        metadata:
+          type: object
+          additionalProperties: true
+        detected_at:
+          type: string
+          format: date-time
+
+    HoneypotDetection:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique detection identifier
+        type:
+          type: string
+          description: Type of honeypot detected
+          example: "package_trap"
+        description:
+          type: string
+          description: Human-readable description
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score for this detection
+        metadata:
+          type: object
+          additionalProperties: true
+        detected_at:
+          type: string
+          format: date-time
+
+    SupplyChainRiskScore:
+      type: object
+      properties:
+        overall_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Overall risk score
+        risk_level:
+          $ref: '#/components/schemas/Severity'
+        factors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskFactor'
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: Risk mitigation recommendations
+        metadata:
+          type: object
+          additionalProperties: true
+        calculated_at:
+          type: string
+          format: date-time
+
+    RiskFactor:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of risk factor
+          example: "build_integrity"
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Risk score for this factor
+
+    SupplyChainScanMetadata:
+      type: object
+      properties:
+        scan_id:
+          type: string
+          description: Unique scan identifier
+        scan_type:
+          type: string
+          description: Type of scan performed
+          example: "enhanced_supply_chain"
+        detectors_used:
+          type: array
+          items:
+            type: string
+          description: List of detectors used in the scan
+        scan_duration:
+          type: string
+          description: Duration of the scan
+          example: "2.5s"
+        packages_scanned:
+          type: integer
+          description: Number of packages scanned
+        findings_count:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of findings by type
+        configuration:
+          type: object
+          additionalProperties: true
+          description: Scan configuration used
+        timestamp:
+          type: string
+          format: date-time
+
+    GraphAnalyzeRequest:
+      type: object
+      required:
+        - packages
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageInfo'
+          minItems: 1
+          description: List of packages to analyze
+        depth:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+          description: Maximum depth to traverse in dependency graph
+        include_devs:
+          type: boolean
+          default: false
+          description: Include development dependencies in analysis
+
+    PackageInfo:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          description: Package name
+          example: "express"
+        version:
+          type: string
+          description: Package version
+          example: "4.18.2"
+        registry:
+          type: string
+          description: Package registry
+          example: "npm"
+
+    GraphAnalysisResponse:
+      type: object
+      properties:
+        analysis_count:
+          type: integer
+          description: Number of packages analyzed
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupplyChainScanResult'
+        depth:
+          type: integer
+          description: Depth used for analysis
+        include_devs:
+          type: boolean
+          description: Whether dev dependencies were included
+        timestamp:
+          type: string
+          format: date-time
+
+    ThreatIntelResponse:
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/ThreatIntelQuery'
+        threats:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreatInfo'
+        timestamp:
+          type: string
+          format: date-time
+        source:
+          type: string
+          description: Source of threat intelligence
+          example: "TypoSentinel Threat Intelligence"
+
+    ThreatIntelQuery:
+      type: object
+      properties:
+        package_name:
+          type: string
+          description: Package name queried
+        indicators:
+          type: array
+          items:
+            type: string
+          description: Threat indicators queried
+        threat_types:
+          type: array
+          items:
+            type: string
+          description: Types of threats queried
+        limit:
+          type: integer
+          description: Result limit applied
+
+    ThreatInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique threat identifier
+        package:
+          type: string
+          description: Associated package name
+        type:
+          type: string
+          description: Type of threat
+          example: "typosquatting"
+        severity:
+          type: string
+          description: Threat severity level
+          example: "medium"
+        description:
+          type: string
+          description: Human-readable threat description
+        indicators:
+          type: array
+          items:
+            type: string
+          description: Threat indicators
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score
+        timestamp:
+          type: string
+          format: date-time
+
+    Severity:
+      type: string
+      enum: ["low", "medium", "high", "critical"]
+      description: Severity level
+      example: "medium"
+
 tags:
   - name: Health
-    description: Health and readiness checks
+    description: Health check endpoints
   - name: Package Analysis
-    description: Package security analysis endpoints
+    description: Package analysis endpoints
   - name: ML Prediction
     description: Machine learning prediction endpoints
   - name: Vulnerability Scanning
     description: Vulnerability scanning endpoints
+  - name: Supply Chain Security
+    description: Supply chain security analysis endpoints
   - name: System
-    description: System status and metrics
+    description: System management endpoints
   - name: Configuration
-    description: Configuration management
+    description: Configuration management endpoints
   - name: Analysis Results
-    description: Analysis results and statistics
+    description: Analysis results management endpoints
   - name: Documentation
     description: API documentation endpoints

@@ -660,6 +660,470 @@ typosentinel config show
 typosentinel scan . --dry-run
 ```
 
+## Enterprise Features
+
+Typosentinel Enterprise provides advanced security features for large-scale deployments, including Role-Based Access Control (RBAC), policy management, advanced reporting, and enterprise integrations.
+
+### Overview
+
+Enterprise features include:
+- **Repository Scanning**: Automated discovery and scanning of repositories across multiple platforms
+- **Role-Based Access Control (RBAC)**: Fine-grained permission management
+- **Policy Management**: Custom security policies with automated enforcement
+- **Advanced Reporting**: SARIF, SPDX, CycloneDX, and executive dashboard formats
+- **Enterprise Integration**: LDAP, SSO, SIEM, and audit logging
+- **Scheduled Scanning**: Automated scanning with cron-like scheduling
+- **Multi-tenant Support**: Isolated environments for different organizations
+
+### Repository Scanning
+
+#### Supported Platforms
+- GitHub (github.com and GitHub Enterprise)
+- GitLab (gitlab.com and self-hosted)
+- Bitbucket (bitbucket.org and Bitbucket Server)
+- Azure DevOps (dev.azure.com and Azure DevOps Server)
+
+#### Configuration Example
+
+```yaml
+# enterprise-repository-config.yaml
+repository:
+  connectors:
+    github:
+      enabled: true
+      token: "${GITHUB_TOKEN}"
+      base_url: "https://api.github.com"
+      organizations: ["myorg", "mycompany"]
+      discovery:
+        enabled: true
+        include_forks: false
+        include_archived: false
+        languages: ["javascript", "python", "go"]
+    
+    gitlab:
+      enabled: true
+      token: "${GITLAB_TOKEN}"
+      base_url: "https://gitlab.com/api/v4"
+      groups: ["mygroup"]
+      discovery:
+        enabled: true
+        include_subgroups: true
+    
+    azure_devops:
+      enabled: true
+      token: "${AZURE_DEVOPS_TOKEN}"
+      organization: "myorganization"
+      projects: ["project1", "project2"]
+
+scheduler:
+  enabled: true
+  cron: "0 2 * * *"  # Daily at 2 AM
+  timezone: "UTC"
+  
+scanning:
+  concurrency: 10
+  timeout: "30m"
+  batch_size: 50
+  
+output:
+  formats: ["sarif", "json", "dashboard"]
+  storage:
+    type: "database"
+    retention_days: 90
+```
+
+#### Running Repository Scans
+
+```bash
+# Scan all repositories in an organization
+typosentinel enterprise scan-org --org myorg --platform github
+
+# Scan specific repositories
+typosentinel enterprise scan-repos --repos "myorg/repo1,myorg/repo2"
+
+# Schedule automated scans
+typosentinel enterprise schedule --config enterprise-repository-config.yaml
+
+# View scan results
+typosentinel enterprise results --format dashboard
+```
+
+### Role-Based Access Control (RBAC)
+
+#### Default Roles
+
+**Administrator**
+- Full access to all enterprise features
+- Can manage policies, roles, and enforcement settings
+- Can approve/reject policy violations
+
+**Security Manager**
+- Can create and modify security policies
+- Can view all scan results and reports
+- Can manage enforcement settings
+
+**Security Analyst**
+- Read-only access to policies and scan results
+- Can view reports and dashboards
+- Cannot modify configurations
+
+**Developer**
+- Can view scan results for assigned projects
+- Can request policy exceptions
+- Limited access to reports
+
+#### Permission System
+
+```yaml
+# RBAC configuration
+rbac:
+  enabled: true
+  roles:
+    security_manager:
+      name: "Security Manager"
+      description: "Manages security policies and enforcement"
+      permissions:
+        - "policies:read"
+        - "policies:create"
+        - "policies:update"
+        - "enforcement:read"
+        - "enforcement:update"
+        - "reports:read"
+        - "dashboards:read"
+    
+    project_lead:
+      name: "Project Lead"
+      description: "Manages project-specific security settings"
+      permissions:
+        - "policies:read"
+        - "reports:read:project"
+        - "scans:trigger:project"
+        - "exceptions:request"
+  
+  users:
+    - username: "alice@company.com"
+      roles: ["security_manager"]
+      projects: ["*"]
+    
+    - username: "bob@company.com"
+      roles: ["project_lead"]
+      projects: ["frontend", "backend"]
+```
+
+#### API Usage
+
+```bash
+# Create a new role
+curl -X POST http://localhost:8080/api/v1/enterprise/rbac/roles \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "custom_role",
+    "description": "Custom role for specific needs",
+    "permissions": ["policies:read", "reports:read"]
+  }'
+
+# Check user permissions
+curl -X POST http://localhost:8080/api/v1/enterprise/rbac/users/alice@company.com/check-permission \
+  -H "Content-Type: application/json" \
+  -d '{
+    "permission": "policies:create",
+    "resource": "security-policy-1"
+  }'
+```
+
+### Policy Management
+
+#### Policy Types
+
+**Security Policies**
+- Block packages with high risk scores
+- Require approval for new dependencies
+- Enforce license compliance
+
+**Compliance Policies**
+- GDPR compliance checks
+- Industry-specific requirements
+- Custom organizational rules
+
+#### Example Policies
+
+```yaml
+# High-risk package blocking policy
+policies:
+  - id: "block-high-risk"
+    name: "Block High Risk Packages"
+    description: "Automatically block packages with risk score > 0.8"
+    enabled: true
+    conditions:
+      - field: "risk_score"
+        operator: "gt"
+        value: 0.8
+    actions:
+      - type: "block"
+        message: "Package blocked due to high security risk"
+      - type: "notify"
+        channels: ["slack", "email"]
+  
+  # License compliance policy
+  - id: "license-compliance"
+    name: "License Compliance Check"
+    description: "Ensure only approved licenses are used"
+    enabled: true
+    conditions:
+      - field: "license"
+        operator: "not_in"
+        value: ["MIT", "Apache-2.0", "BSD-3-Clause"]
+    actions:
+      - type: "require_approval"
+        approvers: ["legal@company.com"]
+      - type: "notify"
+        channels: ["legal-team"]
+```
+
+#### Policy Enforcement
+
+```bash
+# Evaluate policies against scan results
+typosentinel enterprise policy evaluate --scan-result results.json
+
+# Apply policies with enforcement
+typosentinel enterprise policy enforce --config policy-config.yaml
+
+# View policy violations
+typosentinel enterprise policy violations --status pending
+```
+
+### Advanced Reporting
+
+#### SARIF Output
+
+```bash
+# Generate SARIF report
+typosentinel scan . --format sarif --output results.sarif
+
+# Enterprise SARIF with additional metadata
+typosentinel enterprise scan --format sarif --include-metadata --output enterprise-results.sarif
+```
+
+#### Executive Dashboard
+
+```bash
+# Generate executive dashboard
+typosentinel enterprise dashboard --output dashboard.html
+
+# Dashboard with custom date range
+typosentinel enterprise dashboard --from 2024-01-01 --to 2024-01-31 --output monthly-dashboard.html
+```
+
+#### SPDX and CycloneDX
+
+```bash
+# Generate SPDX SBOM
+typosentinel scan . --format spdx --output sbom.spdx.json
+
+# Generate CycloneDX SBOM
+typosentinel scan . --format cyclonedx --output sbom.cyclonedx.json
+```
+
+### Enterprise Integration
+
+#### LDAP Authentication
+
+```yaml
+auth:
+  ldap:
+    enabled: true
+    server: "ldap://ldap.company.com:389"
+    bind_dn: "cn=typosentinel,ou=services,dc=company,dc=com"
+    bind_password: "${LDAP_PASSWORD}"
+    user_base: "ou=users,dc=company,dc=com"
+    user_filter: "(uid=%s)"
+    group_base: "ou=groups,dc=company,dc=com"
+    group_filter: "(member=%s)"
+    attributes:
+      username: "uid"
+      email: "mail"
+      display_name: "displayName"
+```
+
+#### SSO Integration
+
+```yaml
+auth:
+  sso:
+    enabled: true
+    provider: "saml"
+    saml:
+      entity_id: "typosentinel"
+      sso_url: "https://sso.company.com/saml/sso"
+      certificate_file: "/etc/typosentinel/sso-cert.pem"
+      attribute_mapping:
+        username: "NameID"
+        email: "Email"
+        groups: "Groups"
+```
+
+#### SIEM Integration
+
+```yaml
+siem:
+  enabled: true
+  splunk:
+    endpoint: "https://splunk.company.com:8088/services/collector"
+    token: "${SPLUNK_HEC_TOKEN}"
+    index: "security"
+    source: "typosentinel"
+    streaming: true
+    batch_size: 100
+    flush_interval: "30s"
+```
+
+### Monitoring and Alerting
+
+#### Metrics
+
+```yaml
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  
+  alerts:
+    - name: "high_threat_detection"
+      condition: "threats_detected_total > 10"
+      duration: "5m"
+      severity: "critical"
+      channels: ["pagerduty", "slack"]
+    
+    - name: "scan_failure_rate"
+      condition: "scan_failure_rate > 0.1"
+      duration: "10m"
+      severity: "warning"
+      channels: ["email"]
+```
+
+#### Health Checks
+
+```bash
+# Check enterprise service health
+curl http://localhost:8080/health/enterprise
+
+# Detailed health status
+curl http://localhost:8080/health/detailed
+```
+
+### CLI Commands
+
+```bash
+# Enterprise-specific commands
+typosentinel enterprise --help
+
+# Repository management
+typosentinel enterprise repos list
+typosentinel enterprise repos scan --org myorg
+typosentinel enterprise repos schedule --cron "0 2 * * *"
+
+# Policy management
+typosentinel enterprise policies list
+typosentinel enterprise policies create --file policy.yaml
+typosentinel enterprise policies evaluate --scan-result results.json
+
+# RBAC management
+typosentinel enterprise rbac roles list
+typosentinel enterprise rbac users assign --user alice@company.com --role security_manager
+
+# Reporting
+typosentinel enterprise reports generate --format dashboard --output report.html
+typosentinel enterprise reports export --format sarif --date-range 30d
+```
+
+### Deployment
+
+#### Docker Compose
+
+```yaml
+# docker-compose.enterprise.yml
+version: '3.8'
+services:
+  typosentinel-enterprise:
+    image: typosentinel:enterprise
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - TYPOSENTINEL_CONFIG=/config/enterprise.yaml
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+    volumes:
+      - ./config:/config
+      - ./data:/data
+    depends_on:
+      - postgres
+      - redis
+  
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=typosentinel
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:7
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+#### Kubernetes
+
+```yaml
+# k8s-enterprise-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: typosentinel-enterprise
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: typosentinel-enterprise
+  template:
+    metadata:
+      labels:
+        app: typosentinel-enterprise
+    spec:
+      containers:
+      - name: typosentinel
+        image: typosentinel:enterprise
+        ports:
+        - containerPort: 8080
+        - containerPort: 9090
+        env:
+        - name: TYPOSENTINEL_CONFIG
+          value: "/config/enterprise.yaml"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: config
+        configMap:
+          name: typosentinel-config
+```
+
 ## Language-Specific Guides
 
 ### Node.js / npm Projects

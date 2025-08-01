@@ -1,0 +1,427 @@
+# Typosentinel Enterprise Test Configuration
+# Real-life test environment for enterprise dashboard features
+
+api:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+  cors:
+    enabled: true
+    origins: ["*"]
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 1000
+
+# Enterprise Authentication & Authorization
+auth:
+  enabled: true
+  type: "enterprise"
+  session_timeout: "24h"
+  
+  # RBAC Configuration
+  rbac:
+    enabled: true
+    roles:
+      - name: "admin"
+        permissions: ["*"]
+      - name: "security_analyst"
+        permissions: ["scan:read", "threat:read", "report:read", "alert:manage"]
+      - name: "developer"
+        permissions: ["scan:read", "repo:read"]
+      - name: "auditor"
+        permissions: ["audit:read", "compliance:read", "report:read"]
+  
+  # Test Users
+  users:
+    - username: "admin@acme-corp.com"
+      role: "admin"
+      organization: "acme-corp"
+    - username: "analyst@tech-startup.com"
+      role: "security_analyst"
+      organization: "tech-startup"
+    - username: "dev@enterprise-solutions.com"
+      role: "developer"
+      organization: "enterprise-solutions"
+
+# Multi-tenant Configuration
+multi_tenant:
+  enabled: true
+  isolation_level: "strict"
+  
+  # Test Organizations
+  organizations:
+    - id: "acme-corp"
+      name: "ACME Corporation"
+      tier: "enterprise"
+      max_repositories: 500
+      max_users: 100
+      features: ["advanced_scanning", "compliance_reporting", "custom_policies"]
+      
+    - id: "tech-startup"
+      name: "Tech Startup Inc"
+      tier: "professional"
+      max_repositories: 100
+      max_users: 25
+      features: ["basic_scanning", "standard_reporting"]
+      
+    - id: "enterprise-solutions"
+      name: "Enterprise Solutions Ltd"
+      tier: "enterprise"
+      max_repositories: 1000
+      max_users: 200
+      features: ["advanced_scanning", "compliance_reporting", "custom_policies", "api_access"]
+      
+    - id: "fintech-inc"
+      name: "FinTech Inc"
+      tier: "enterprise"
+      max_repositories: 300
+      max_users: 75
+      features: ["advanced_scanning", "compliance_reporting", "financial_compliance"]
+
+# Repository Connectors for Testing
+repository:
+  connectors:
+    github:
+      enabled: true
+      organizations:
+        - name: "acme-corp"
+          token: "${GITHUB_TOKEN_ACME}"
+          include_private: true
+          include_forks: false
+          include_archived: false
+          
+        - name: "tech-startup"
+          token: "${GITHUB_TOKEN_STARTUP}"
+          include_private: true
+          include_forks: true
+          include_archived: false
+          
+    gitlab:
+      enabled: true
+      organizations:
+        - name: "enterprise-solutions"
+          token: "${GITLAB_TOKEN_ENTERPRISE}"
+          url: "https://gitlab.enterprise-solutions.com"
+          include_private: true
+          
+    bitbucket:
+      enabled: true
+      organizations:
+        - name: "fintech-inc"
+          username: "${BITBUCKET_USER}"
+          password: "${BITBUCKET_PASSWORD}"
+          workspace: "fintech-inc"
+
+# Scanning Configuration
+scanning:
+  # Orchestration
+  orchestrator:
+    enabled: true
+    max_concurrent_scans: 10
+    scan_timeout: "30m"
+    retry_attempts: 3
+    
+  # Scheduling
+  scheduler:
+    enabled: true
+    default_schedule: "0 2 * * *"  # Daily at 2 AM
+    
+    # Organization-specific schedules
+    organization_schedules:
+      acme-corp: "0 1 * * *"      # Daily at 1 AM
+      tech-startup: "0 3 * * 1"   # Weekly on Monday at 3 AM
+      enterprise-solutions: "0 0 */6 * *"  # Every 6 hours
+      fintech-inc: "0 2 * * 1,3,5"  # Mon, Wed, Fri at 2 AM
+  
+  # Detection Configuration
+  detection:
+    similarity_threshold: 0.8
+    deep_analysis: true
+    include_dev_dependencies: true
+    
+    # Advanced ML Features
+    ml:
+      enabled: true
+      behavioral_analysis: true
+      reputation_scoring: true
+      threat_intelligence: true
+
+# Enterprise Dashboard Configuration
+dashboard:
+  enabled: true
+  refresh_interval: "30s"
+  retention_period: "90d"
+  max_data_points: 1000
+  real_time_updates: true
+  
+  # Metrics Collection
+  metrics:
+    - name: "threat_detection_rate"
+      interval: "1m"
+    - name: "scan_performance"
+      interval: "5m"
+    - name: "system_health"
+      interval: "30s"
+    - name: "compliance_score"
+      interval: "1h"
+
+# Monitoring & Alerting
+monitoring:
+  enabled: true
+  
+  # Prometheus Integration
+  prometheus:
+    enabled: true
+    endpoint: "/metrics"
+    
+  # Alert Rules
+  alerts:
+    - name: "critical_threat_detected"
+      condition: "threat_severity == 'critical'"
+      channels: ["email", "slack", "webhook"]
+      
+    - name: "scan_failure_rate_high"
+      condition: "scan_failure_rate > 0.1"
+      channels: ["email", "slack"]
+      
+    - name: "system_resource_high"
+      condition: "cpu_usage > 0.8 OR memory_usage > 0.9"
+      channels: ["email"]
+      
+    - name: "compliance_violation"
+      condition: "compliance_score < 0.8"
+      channels: ["email", "webhook"]
+
+# Compliance & Policy Configuration
+compliance:
+  enabled: true
+  
+  # Standards
+  standards:
+    - name: "SOC2"
+      enabled: true
+      requirements:
+        - "vulnerability_scanning"
+        - "access_controls"
+        - "audit_logging"
+        
+    - name: "ISO27001"
+      enabled: true
+      requirements:
+        - "risk_assessment"
+        - "security_monitoring"
+        - "incident_response"
+        
+    - name: "PCI-DSS"
+      enabled: true
+      organizations: ["fintech-inc"]
+      requirements:
+        - "secure_coding"
+        - "vulnerability_management"
+        - "access_controls"
+  
+  # Policy Enforcement
+  policies:
+    - name: "approved_dependencies_only"
+      type: "dependency_whitelist"
+      organizations: ["acme-corp", "fintech-inc"]
+      action: "block"
+      
+    - name: "no_critical_vulnerabilities"
+      type: "vulnerability_threshold"
+      severity: "critical"
+      max_count: 0
+      action: "alert"
+      
+    - name: "license_compliance"
+      type: "license_check"
+      allowed_licenses: ["MIT", "Apache-2.0", "BSD-3-Clause"]
+      action: "warn"
+
+# Audit Configuration
+audit:
+  enabled: true
+  retention_period: "7y"
+  
+  # Event Types to Log
+  events:
+    - "user_login"
+    - "user_logout"
+    - "scan_initiated"
+    - "scan_completed"
+    - "threat_detected"
+    - "policy_violation"
+    - "configuration_change"
+    - "report_generated"
+    - "alert_triggered"
+  
+  # Storage Configuration
+  storage:
+    type: "database"
+    encryption: true
+    compression: true
+
+# Reporting Configuration
+reporting:
+  enabled: true
+  
+  # Report Types
+  types:
+    - name: "executive_summary"
+      schedule: "weekly"
+      recipients: ["admin@acme-corp.com"]
+      
+    - name: "security_detailed"
+      schedule: "daily"
+      recipients: ["analyst@tech-startup.com"]
+      
+    - name: "compliance_report"
+      schedule: "monthly"
+      recipients: ["compliance@enterprise-solutions.com"]
+  
+  # Export Formats
+  formats:
+    - "pdf"
+    - "html"
+    - "json"
+    - "csv"
+    - "sarif"
+    - "cyclonedx"
+    - "spdx"
+
+# Integration Configuration
+integrations:
+  # SIEM Integration
+  siem:
+    splunk:
+      enabled: true
+      endpoint: "https://splunk.enterprise.com:8088"
+      token: "${SPLUNK_TOKEN}"
+      
+    elastic:
+      enabled: true
+      endpoint: "https://elasticsearch.enterprise.com:9200"
+      index: "typosentinel-logs"
+  
+  # Notification Channels
+  notifications:
+    slack:
+      enabled: true
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channels:
+        critical: "#security-alerts"
+        high: "#security-monitoring"
+        
+    email:
+      enabled: true
+      smtp_server: "smtp.enterprise.com"
+      smtp_port: 587
+      username: "${SMTP_USERNAME}"
+      password: "${SMTP_PASSWORD}"
+      
+    webhook:
+      enabled: true
+      endpoints:
+        - url: "https://api.enterprise.com/security/webhooks"
+          secret: "${WEBHOOK_SECRET}"
+
+# Database Configuration
+database:
+  type: "postgresql"
+  host: "localhost"
+  port: 5432
+  database: "typosentinel_enterprise"
+  username: "${DB_USERNAME}"
+  password: "${DB_PASSWORD}"
+  ssl_mode: "require"
+  
+  # Connection Pool
+  pool:
+    max_connections: 50
+    idle_timeout: "5m"
+    max_lifetime: "1h"
+
+# Logging Configuration
+logging:
+  level: "info"
+  format: "json"
+  
+  # Log Destinations
+  outputs:
+    - type: "file"
+      path: "/var/log/typosentinel/enterprise.log"
+      rotation:
+        max_size: "100MB"
+        max_files: 10
+        
+    - type: "syslog"
+      network: "tcp"
+      address: "syslog.enterprise.com:514"
+      
+    - type: "elasticsearch"
+      endpoint: "https://logs.enterprise.com:9200"
+      index: "typosentinel-logs"
+
+# Performance Configuration
+performance:
+  # Caching
+  cache:
+    enabled: true
+    type: "redis"
+    endpoint: "redis://localhost:6379"
+    ttl: "1h"
+    
+  # Rate Limiting
+  rate_limiting:
+    enabled: true
+    global_limit: 10000
+    per_user_limit: 1000
+    per_organization_limit: 5000
+    
+  # Resource Limits
+  limits:
+    max_memory: "8GB"
+    max_cpu_cores: 4
+    max_disk_space: "100GB"
+
+# Test Data Generation
+test_data:
+  enabled: true
+  
+  # Simulate realistic scenarios
+  scenarios:
+    - name: "typosquatting_attack"
+      frequency: "daily"
+      target_organizations: ["acme-corp", "fintech-inc"]
+      
+    - name: "vulnerability_discovery"
+      frequency: "weekly"
+      severity_distribution:
+        critical: 0.1
+        high: 0.2
+        medium: 0.4
+        low: 0.3
+        
+    - name: "policy_violations"
+      frequency: "daily"
+      violation_types:
+        - "unapproved_dependency"
+        - "license_violation"
+        - "security_policy_breach"
+        
+    - name: "compliance_events"
+      frequency: "monthly"
+      standards: ["SOC2", "ISO27001", "PCI-DSS"]
+
+# Feature Flags
+features:
+  advanced_ml: true
+  behavioral_analysis: true
+  threat_intelligence: true
+  custom_policies: true
+  api_access: true
+  white_labeling: true
+  sso_integration: true
+  advanced_reporting: true
+  real_time_scanning: true
+  container_scanning: true

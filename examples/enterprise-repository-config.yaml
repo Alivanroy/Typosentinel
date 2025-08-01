@@ -1,0 +1,540 @@
+# TypoSentinel Enterprise Repository Scanning Configuration
+# This configuration demonstrates multi-platform repository scanning capabilities
+
+# Enterprise Configuration
+enterprise:
+  enabled: true
+  license:
+    key: "your-enterprise-license-key"
+    type: "enterprise"
+    max_users: 100
+    max_scans: 10000
+    features:
+      - "multi_platform_scanning"
+      - "scheduled_scanning"
+      - "advanced_reporting"
+      - "enterprise_auth"
+      - "audit_logging"
+      - "siem_integration"
+
+  # Repository Scanning Configuration
+  repository:
+    enabled: true
+    
+    # Platform Configurations
+    platforms:
+      github:
+        enabled: true
+        base_url: "https://api.github.com"
+        auth:
+          type: "token"  # token, oauth, app
+          token: "${GITHUB_TOKEN}"
+        timeout: 30s
+        rate_limit:
+          requests_per_hour: 5000
+          burst: 100
+          retry_delay: 5s
+          max_retries: 3
+        settings:
+          include_private: true
+          include_archived: false
+          include_forks: false
+        targets:
+          - type: "organization"
+            name: "your-org"
+            filter:
+              languages: ["JavaScript", "Python", "Go", "Java"]
+              min_stars: 1
+              include_private: true
+              exclude_patterns: ["test-*", "demo-*"]
+          - type: "user"
+            name: "your-username"
+            filter:
+              languages: ["Python", "Go"]
+              include_private: false
+
+      gitlab:
+        enabled: true
+        base_url: "https://gitlab.com/api/v4"
+        auth:
+          type: "token"
+          token: "${GITLAB_TOKEN}"
+        timeout: 30s
+        rate_limit:
+          requests_per_hour: 2000
+          burst: 50
+          retry_delay: 5s
+          max_retries: 3
+        targets:
+          - type: "group"
+            name: "your-group"
+            filter:
+              languages: ["Python", "JavaScript", "Go"]
+              include_private: true
+          - type: "project"
+            name: "specific-project"
+            group: "your-group"
+
+      bitbucket:
+        enabled: true
+        base_url: "https://api.bitbucket.org/2.0"
+        auth:
+          type: "oauth"
+          client_id: "${BITBUCKET_CLIENT_ID}"
+          client_secret: "${BITBUCKET_CLIENT_SECRET}"
+        timeout: 30s
+        rate_limit:
+          requests_per_hour: 1000
+          burst: 25
+          retry_delay: 5s
+          max_retries: 3
+        targets:
+          - type: "user"
+            name: "your-username"
+            filter:
+              languages: ["Python", "JavaScript"]
+
+      azuredevops:
+        enabled: true
+        base_url: "https://dev.azure.com"
+        auth:
+          type: "token"
+          token: "${AZURE_DEVOPS_TOKEN}"
+        timeout: 30s
+        rate_limit:
+          requests_per_hour: 3000
+          burst: 75
+          retry_delay: 5s
+          max_retries: 3
+        targets:
+          - type: "organization"
+            name: "your-azure-org"
+            filter:
+              languages: ["C#", "JavaScript", "Python"]
+              include_private: true
+
+    # Repository Discovery Configuration
+    discovery:
+      enabled: true
+      interval: 1h
+      max_repos_per_platform: 1000
+      workers: 4
+      timeout: 5m
+      platforms:
+        - platform: "github"
+          enabled: true
+          organizations: ["your-org"]
+          users: ["your-username"]
+          search_queries:
+            - "language:python stars:>10"
+            - "language:javascript topic:security"
+          filter:
+            languages: ["Python", "JavaScript", "Go"]
+            min_stars: 5
+            include_private: true
+            exclude_patterns: ["archived-*", "legacy-*"]
+        - platform: "gitlab"
+          enabled: true
+          groups: ["your-group"]
+          projects: ["important-project"]
+      cache:
+        enabled: true
+        ttl: 24h
+        backend: "redis"
+
+    # Scanning Configuration
+    scanning:
+      concurrency:
+        max_concurrent_repos: 10
+        max_concurrent_files: 50
+        worker_pool_size: 4
+      timeouts:
+        repository_clone: 5m
+        package_analysis: 10m
+        total_scan: 30m
+        api_request: 30s
+      cache:
+        enabled: true
+        ttl: 24h
+        backend: "redis"
+      filters:
+        file_size_limit: 10485760  # 10MB
+        exclude_patterns:
+          - "**/node_modules/**"
+          - "**/vendor/**"
+          - "**/.git/**"
+          - "**/test/**"
+          - "**/tests/**"
+          - "**/__pycache__/**"
+        include_patterns:
+          - "**/package.json"
+          - "**/requirements.txt"
+          - "**/go.mod"
+          - "**/pom.xml"
+          - "**/Cargo.toml"
+        include_languages:
+          - "javascript"
+          - "python"
+          - "go"
+          - "java"
+          - "csharp"
+          - "rust"
+        exclude_languages:
+          - "markdown"
+          - "text"
+      package_managers:
+        - "npm"
+        - "pip"
+        - "go"
+        - "maven"
+        - "nuget"
+        - "composer"
+        - "cargo"
+        - "rubygems"
+      scan_types:
+        - "dependency"
+        - "vulnerability"
+        - "license"
+        - "secret"
+        - "typosquatting"
+      output_formats:
+        - "json"
+        - "sarif"
+        - "spdx"
+        - "cyclonedx"
+      policies:
+        - name: "critical_vulnerabilities"
+          description: "Block repositories with critical vulnerabilities"
+          enabled: true
+          conditions:
+            - field: "vulnerability_severity"
+              operator: "eq"
+              value: "critical"
+          actions:
+            - type: "block"
+              parameters:
+                message: "Critical vulnerabilities detected"
+        - name: "license_compliance"
+          description: "Ensure license compliance"
+          enabled: true
+          conditions:
+            - field: "license_type"
+              operator: "in"
+              value: ["GPL", "AGPL"]
+          actions:
+            - type: "warn"
+              parameters:
+                message: "Copyleft license detected"
+
+    # Webhook Configuration
+    webhooks:
+      enabled: true
+      endpoint: "https://your-domain.com/webhooks/typosentinel"
+      secret: "${WEBHOOK_SECRET}"
+      events:
+        - "push"
+        - "pull_request"
+        - "release"
+        - "repository_created"
+      platforms:
+        github:
+          enabled: true
+          content_type: "application/json"
+          ssl_verify: true
+          events: ["push", "pull_request"]
+        gitlab:
+          enabled: true
+          content_type: "application/json"
+          ssl_verify: true
+          events: ["push", "merge_request"]
+      security:
+        validate_signature: true
+        allowed_ips:
+          - "192.30.252.0/22"  # GitHub IPs
+          - "185.199.108.0/22"  # GitHub IPs
+        rate_limit: 100
+
+    # Global Repository Filters
+    filters:
+      include_private: true
+      include_archived: false
+      include_forks: false
+      min_stars: 1
+      languages:
+        - "Go"
+        - "Python"
+        - "JavaScript"
+        - "TypeScript"
+        - "Java"
+        - "C#"
+        - "Rust"
+      exclude_patterns:
+        - "test-*"
+        - "demo-*"
+        - "example-*"
+        - "archived-*"
+
+    # Scheduled Repository Scans
+    scheduled:
+      - id: "daily-critical-repos"
+        name: "Daily Critical Repository Scan"
+        description: "Scan critical repositories daily for security issues"
+        enabled: true
+        schedule: "0 2 * * *"  # Daily at 2 AM
+        timezone: "UTC"
+        targets:
+          - type: "organization"
+            name: "your-org"
+            filter:
+              topics: ["critical", "production"]
+              include_private: true
+        options:
+          scan_types: ["vulnerability", "secret", "dependency"]
+          output_formats: ["sarif", "json"]
+        output:
+          - format: "sarif"
+            destination: "s3://your-bucket/scans/daily/"
+            enabled: true
+          - format: "json"
+            destination: "webhook://your-siem-endpoint"
+            enabled: true
+        policies:
+          - name: "critical_vulnerabilities"
+            enabled: true
+        metadata:
+          team: "security"
+          priority: "high"
+
+      - id: "weekly-full-scan"
+        name: "Weekly Full Organization Scan"
+        description: "Comprehensive weekly scan of all repositories"
+        enabled: true
+        schedule: "0 1 * * 0"  # Weekly on Sunday at 1 AM
+        timezone: "UTC"
+        targets:
+          - type: "organization"
+            name: "your-org"
+            include_all: true
+        options:
+          scan_types: ["dependency", "vulnerability", "license", "secret"]
+          output_formats: ["spdx", "cyclonedx", "sarif"]
+        output:
+          - format: "spdx"
+            destination: "s3://your-bucket/compliance/weekly/"
+            enabled: true
+          - format: "cyclonedx"
+            destination: "s3://your-bucket/sbom/weekly/"
+            enabled: true
+        metadata:
+          team: "compliance"
+          priority: "medium"
+
+  # Security Configuration
+  enterprise_security:
+    encryption:
+      enabled: true
+      algorithm: "AES-256-GCM"
+      key_file: "/etc/typosentinel/encryption.key"
+      rotation: 720h  # 30 days
+    authentication:
+      enabled: true
+      method: "jwt"
+      session_timeout: 24h
+      jwt:
+        secret: "${JWT_SECRET}"
+        expiration: 24h
+        issuer: "typosentinel-enterprise"
+        audience: "typosentinel-users"
+    authorization:
+      enabled: true
+      model: "rbac"
+      roles:
+        - name: "admin"
+          description: "Full system access"
+          permissions:
+            - "*"
+        - name: "security_analyst"
+          description: "Security analysis and reporting"
+          permissions:
+            - "scan:read"
+            - "scan:create"
+            - "report:read"
+            - "audit:read"
+        - name: "developer"
+          description: "Limited access for developers"
+          permissions:
+            - "scan:read"
+            - "repository:read"
+    tls:
+      enabled: true
+      cert_file: "/etc/typosentinel/server.crt"
+      key_file: "/etc/typosentinel/server.key"
+      min_version: "1.3"
+
+  # Audit Configuration
+  audit:
+    enabled: true
+    level: "detailed"
+    destination: "database"
+    database:
+      driver: "postgres"
+      dsn: "${DATABASE_URL}"
+      table: "audit_logs"
+      batch_size: 100
+    retention: 2160h  # 90 days
+    compression: true
+
+  # Rate Limiting
+  enterprise_rate_limit:
+    enabled: true
+    global:
+      requests: 10000
+      window: 1h
+    per_user:
+      requests: 1000
+      window: 1h
+    per_ip:
+      requests: 500
+      window: 1h
+    endpoints:
+      - path: "/api/scan"
+        method: "POST"
+        requests: 100
+        window: 1h
+
+  # SSO Configuration
+  sso:
+    enabled: true
+    default: "okta"
+    providers:
+      - name: "okta"
+        type: "oidc"
+        enabled: true
+        config:
+          client_id: "${OKTA_CLIENT_ID}"
+          client_secret: "${OKTA_CLIENT_SECRET}"
+          issuer: "https://your-org.okta.com"
+          redirect_url: "https://typosentinel.your-org.com/auth/callback"
+    mapping:
+      username: "preferred_username"
+      email: "email"
+      name: "name"
+      groups: "groups"
+      roles: "roles"
+
+  # Reporting Configuration
+  reporting:
+    enabled: true
+    scheduled:
+      - name: "weekly_security_report"
+        template: "security_summary"
+        schedule: "0 9 * * 1"  # Monday at 9 AM
+        recipients:
+          - "security-team@your-org.com"
+          - "ciso@your-org.com"
+        enabled: true
+      - name: "monthly_compliance_report"
+        template: "compliance_detailed"
+        schedule: "0 9 1 * *"  # First day of month at 9 AM
+        recipients:
+          - "compliance-team@your-org.com"
+          - "legal@your-org.com"
+        enabled: true
+    templates:
+      - name: "security_summary"
+        description: "Weekly security summary report"
+        format: "pdf"
+        query: "SELECT * FROM scan_results WHERE severity IN ('high', 'critical') AND created_at >= NOW() - INTERVAL '7 days'"
+      - name: "compliance_detailed"
+        description: "Detailed compliance report"
+        format: "pdf"
+        query: "SELECT * FROM compliance_results WHERE created_at >= NOW() - INTERVAL '30 days'"
+    delivery:
+      email:
+        enabled: true
+        smtp:
+          host: "smtp.your-org.com"
+          port: 587
+          username: "${SMTP_USERNAME}"
+          password: "${SMTP_PASSWORD}"
+          tls: true
+        from: "typosentinel@your-org.com"
+        subject: "TypoSentinel Report - {{.ReportName}}"
+      webhook:
+        enabled: true
+        url: "https://your-siem.com/api/reports"
+        headers:
+          Authorization: "Bearer ${SIEM_TOKEN}"
+        timeout: 30s
+      s3:
+        enabled: true
+        bucket: "your-reports-bucket"
+        prefix: "typosentinel/reports/"
+        region: "us-east-1"
+        access_key: "${AWS_ACCESS_KEY}"
+        secret_key: "${AWS_SECRET_KEY}"
+    retention: 8760h  # 1 year
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  tls:
+    enabled: true
+    cert_file: "/etc/typosentinel/server.crt"
+    key_file: "/etc/typosentinel/server.key"
+
+# Database Configuration
+database:
+  driver: "postgres"
+  host: "localhost"
+  port: 5432
+  name: "typosentinel"
+  username: "typosentinel"
+  password: "${DATABASE_PASSWORD}"
+  ssl_mode: "require"
+  max_connections: 100
+  max_idle_connections: 10
+  connection_lifetime: 3600s
+
+# Cache Configuration
+cache:
+  type: "redis"
+  redis:
+    host: "localhost"
+    port: 6379
+    password: "${REDIS_PASSWORD}"
+    database: 0
+    pool_size: 10
+  default_ttl: 3600s
+  max_memory: 1073741824  # 1GB
+  eviction_policy: "lru"
+
+# Logging Configuration
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  file:
+    enabled: false
+    path: "/var/log/typosentinel/app.log"
+    max_size: 104857600  # 100MB
+    max_backups: 5
+    max_age: 30
+    compress: true
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    path: "/metrics"
+    port: 9090
+  jaeger:
+    enabled: true
+    endpoint: "http://localhost:14268/api/traces"
+    service_name: "typosentinel-enterprise"
+  health_check:
+    enabled: true
+    path: "/health"
+    interval: 30s

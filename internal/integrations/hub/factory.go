@@ -26,6 +26,12 @@ func (cf *ConnectorFactory) CreateConnector(connectorType, name string, settings
 	case "splunk":
 		return connectors.NewSplunkConnector(name, settings, cf.logger)
 
+	case "elasticsearch":
+		return connectors.NewElasticsearchConnector(name, settings, cf.logger)
+
+	case "qradar":
+		return connectors.NewQRadarConnector(name, settings, cf.logger)
+
 	case "slack":
 		return connectors.NewSlackConnector(name, settings, cf.logger)
 
@@ -44,6 +50,8 @@ func (cf *ConnectorFactory) CreateConnector(connectorType, name string, settings
 func (cf *ConnectorFactory) GetSupportedTypes() []string {
 	return []string{
 		"splunk",
+		"elasticsearch",
+		"qradar",
 		"slack",
 		"webhook",
 		"email",

@@ -1,0 +1,386 @@
+# GitHub Actions CI/CD Pipeline Template for Typosentinel
+# This template provides automated security scanning for your repositories
+
+name: Typosentinel Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of scan to perform'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+        - full
+        - incremental
+        - targeted
+      severity_threshold:
+        description: 'Minimum severity level to report'
+        required: false
+        default: 'medium'
+        type: choice
+        options:
+        - low
+        - medium
+        - high
+        - critical
+
+env:
+  TYPOSENTINEL_API_URL: ${{ secrets.TYPOSENTINEL_API_URL || 'https://api.typosentinel.com' }}
+  TYPOSENTINEL_API_KEY: ${{ secrets.TYPOSENTINEL_API_KEY }}
+  SCAN_TIMEOUT: 1800 # 30 minutes
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      matrix:
+        node-version: [18, 20]
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Full history for better analysis
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci --audit=false
+        # Install Typosentinel CLI if not already present
+        if ! command -v typosentinel &> /dev/null; then
+          npm install -g @typosentinel/cli
+        fi
+    
+    - name: Cache Typosentinel results
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.typosentinel/cache
+          .typosentinel/cache
+        key: typosentinel-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}
+        restore-keys: |
+          typosentinel-${{ runner.os }}-
+    
+    - name: Run Typosentinel scan
+      id: scan
+      run: |
+        # Determine scan type
+        SCAN_TYPE="${{ github.event.inputs.scan_type || 'full' }}"
+        SEVERITY_THRESHOLD="${{ github.event.inputs.severity_threshold || 'medium' }}"
+        
+        # Set scan parameters based on event type
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          SCAN_TYPE="incremental"
+          BASE_REF="${{ github.event.pull_request.base.sha }}"
+          HEAD_REF="${{ github.event.pull_request.head.sha }}"
+        elif [[ "${{ github.event_name }}" == "push" ]]; then
+          BASE_REF="${{ github.event.before }}"
+          HEAD_REF="${{ github.sha }}"
+        fi
+        
+        # Create scan configuration
+        cat > .typosentinel.yml << EOF
+        api:
+          url: ${TYPOSENTINEL_API_URL}
+          key: ${TYPOSENTINEL_API_KEY}
+          timeout: ${SCAN_TIMEOUT}
+        
+        scan:
+          type: ${SCAN_TYPE}
+          severity_threshold: ${SEVERITY_THRESHOLD}
+          include_dev_dependencies: true
+          max_depth: 5
+          parallel_scans: 4
+        
+        reporting:
+          formats:
+            - json
+            - sarif
+            - github-security
+          output_dir: ./typosentinel-results
+          upload_artifacts: true
+        
+        policies:
+          block_on_critical: true
+          block_on_high: false
+          require_approval_on_medium: true
+          auto_quarantine: true
+        
+        integrations:
+          github:
+            create_issues: true
+            comment_on_pr: true
+            update_status_checks: true
+          slack:
+            webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+            notify_on_threats: true
+        EOF
+        
+        # Run the scan
+        echo "Starting Typosentinel security scan..."
+        typosentinel scan \
+          --config .typosentinel.yml \
+          --output-format json,sarif,github-security \
+          --output-dir ./typosentinel-results \
+          --verbose \
+          ${BASE_REF:+--base-ref $BASE_REF} \
+          ${HEAD_REF:+--head-ref $HEAD_REF} \
+          || echo "scan_failed=true" >> $GITHUB_OUTPUT
+        
+        # Check scan results
+        if [[ -f "./typosentinel-results/scan-results.json" ]]; then
+          THREAT_COUNT=$(jq '.summary.total_threats // 0' ./typosentinel-results/scan-results.json)
+          CRITICAL_COUNT=$(jq '.summary.critical_threats // 0' ./typosentinel-results/scan-results.json)
+          HIGH_COUNT=$(jq '.summary.high_threats // 0' ./typosentinel-results/scan-results.json)
+          
+          echo "threat_count=${THREAT_COUNT}" >> $GITHUB_OUTPUT
+          echo "critical_count=${CRITICAL_COUNT}" >> $GITHUB_OUTPUT
+          echo "high_count=${HIGH_COUNT}" >> $GITHUB_OUTPUT
+          
+          # Set job status based on policy
+          if [[ ${CRITICAL_COUNT} -gt 0 ]]; then
+            echo "scan_status=failed" >> $GITHUB_OUTPUT
+            echo "❌ Critical security threats detected!" >> $GITHUB_STEP_SUMMARY
+          elif [[ ${HIGH_COUNT} -gt 0 ]]; then
+            echo "scan_status=warning" >> $GITHUB_OUTPUT
+            echo "⚠️ High severity threats detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "scan_status=passed" >> $GITHUB_OUTPUT
+            echo "✅ No critical threats detected" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "scan_status=error" >> $GITHUB_OUTPUT
+          echo "❌ Scan failed to complete" >> $GITHUB_STEP_SUMMARY
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload SARIF results
+      if: always() && hashFiles('./typosentinel-results/*.sarif') != ''
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ./typosentinel-results/
+        category: typosentinel
+    
+    - name: Upload scan artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: typosentinel-results-${{ matrix.node-version }}
+        path: |
+          ./typosentinel-results/
+          .typosentinel.yml
+        retention-days: 30
+    
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = './typosentinel-results/scan-results.json';
+          
+          if (!fs.existsSync(path)) {
+            console.log('No scan results found');
+            return;
+          }
+          
+          const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const { summary } = results;
+          
+          const threatCount = summary.total_threats || 0;
+          const criticalCount = summary.critical_threats || 0;
+          const highCount = summary.high_threats || 0;
+          const mediumCount = summary.medium_threats || 0;
+          const lowCount = summary.low_threats || 0;
+          
+          let status = '✅';
+          let statusText = 'Passed';
+          
+          if (criticalCount > 0) {
+            status = '❌';
+            statusText = 'Failed';
+          } else if (highCount > 0) {
+            status = '⚠️';
+            statusText = 'Warning';
+          }
+          
+          const comment = `## ${status} Typosentinel Security Scan Results
+          
+          **Status:** ${statusText}
+          **Total Threats:** ${threatCount}
+          
+          | Severity | Count |
+          |----------|-------|
+          | Critical | ${criticalCount} |
+          | High | ${highCount} |
+          | Medium | ${mediumCount} |
+          | Low | ${lowCount} |
+          
+          ${criticalCount > 0 ? '🚨 **Critical threats detected!** This PR should not be merged until resolved.' : ''}
+          ${highCount > 0 ? '⚠️ **High severity threats detected.** Please review before merging.' : ''}
+          
+          <details>
+          <summary>View detailed results</summary>
+          
+          \`\`\`json
+          ${JSON.stringify(results, null, 2)}
+          \`\`\`
+          
+          </details>
+          
+          ---
+          *Scan performed by [Typosentinel](https://typosentinel.com) at ${new Date().toISOString()}*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    
+    - name: Update commit status
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const scanStatus = '${{ steps.scan.outputs.scan_status }}';
+          const threatCount = '${{ steps.scan.outputs.threat_count }}';
+          const criticalCount = '${{ steps.scan.outputs.critical_count }}';
+          
+          let state = 'success';
+          let description = `No threats detected`;
+          
+          if (scanStatus === 'failed') {
+            state = 'failure';
+            description = `${criticalCount} critical threats detected`;
+          } else if (scanStatus === 'warning') {
+            state = 'success'; // Don't fail the build for warnings
+            description = `${threatCount} threats detected (review recommended)`;
+          } else if (scanStatus === 'error') {
+            state = 'error';
+            description = 'Scan failed to complete';
+          }
+          
+          github.rest.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: context.sha,
+            state: state,
+            target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            description: description,
+            context: 'Typosentinel Security Scan'
+          });
+    
+    - name: Fail job on critical threats
+      if: steps.scan.outputs.scan_status == 'failed'
+      run: |
+        echo "❌ Critical security threats detected. Failing the build."
+        echo "Please review and resolve the security issues before proceeding."
+        exit 1
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: security-scan
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    
+    steps:
+    - name: Send Slack notification
+      if: env.SLACK_WEBHOOK_URL
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ needs.security-scan.result }}
+        channel: '#security'
+        username: 'Typosentinel Bot'
+        icon_emoji: ':shield:'
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        custom_payload: |
+          {
+            attachments: [{
+              color: '${{ needs.security-scan.result }}' === 'success' ? 'good' : 'danger',
+              blocks: [
+                {
+                  type: 'section',
+                  text: {
+                    type: 'mrkdwn',
+                    text: `*Typosentinel Security Scan*\n*Repository:* ${process.env.AS_REPO}\n*Status:* ${{ needs.security-scan.result }}\n*Workflow:* ${process.env.AS_WORKFLOW}`
+                  }
+                }
+              ]
+            }]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  security-policy:
+    name: Enforce Security Policy
+    runs-on: ubuntu-latest
+    needs: security-scan
+    if: always() && needs.security-scan.outputs.critical_count > 0
+    
+    steps:
+    - name: Create security issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const criticalCount = '${{ needs.security-scan.outputs.critical_count }}';
+          const threatCount = '${{ needs.security-scan.outputs.threat_count }}';
+          
+          const issueTitle = `🚨 Critical Security Threats Detected - ${criticalCount} Critical, ${threatCount} Total`;
+          const issueBody = `## Critical Security Alert
+          
+          Typosentinel has detected **${criticalCount} critical security threats** in this repository.
+          
+          **Immediate Action Required:**
+          - Review the scan results in the [latest workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+          - Address all critical threats before deploying to production
+          - Consider implementing additional security measures
+          
+          **Scan Details:**
+          - Total threats: ${threatCount}
+          - Critical threats: ${criticalCount}
+          - Scan triggered by: ${context.eventName}
+          - Commit: ${context.sha}
+          
+          This issue was automatically created by Typosentinel security scanning.
+          
+          /cc @security-team`;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: issueTitle,
+            body: issueBody,
+            labels: ['security', 'critical', 'typosentinel']
+          });
+    
+    - name: Request security review
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.pulls.requestReviewers({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number,
+            team_reviewers: ['security-team']
+          });

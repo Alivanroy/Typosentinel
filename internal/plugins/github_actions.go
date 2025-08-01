@@ -658,7 +658,7 @@ func (ga *GitHubActionsPlugin) formatSecurityIssueBody(pkg *types.Package, threa
 	body.WriteString("## 🔒 Security Vulnerability Detected\n\n")
 	body.WriteString(fmt.Sprintf("**Package:** `%s`\n", pkg.Name))
 	body.WriteString(fmt.Sprintf("**Version:** `%s`\n", pkg.Version))
-	body.WriteString(fmt.Sprintf("**Ecosystem:** `%s`\n", pkg.Ecosystem))
+	body.WriteString(fmt.Sprintf("**Registry:** `%s`\n", pkg.Registry))
 	body.WriteString(fmt.Sprintf("**Severity:** %s\n", strings.ToUpper(string(threat.Severity))))
 	body.WriteString(fmt.Sprintf("**Threat Type:** %s\n", string(threat.Type)))
 	body.WriteString(fmt.Sprintf("**Confidence:** %.2f\n\n", threat.Confidence))

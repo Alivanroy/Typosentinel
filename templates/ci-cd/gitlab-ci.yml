@@ -1,0 +1,481 @@
+# GitLab CI/CD Pipeline Template for Typosentinel
+# This template provides automated security scanning for your repositories
+
+stages:
+  - prepare
+  - scan
+  - report
+  - notify
+  - security-policy
+
+variables:
+  TYPOSENTINEL_API_URL: "${TYPOSENTINEL_API_URL:-https://api.typosentinel.com}"
+  SCAN_TIMEOUT: "1800"
+  NODE_VERSION: "20"
+  SCAN_CACHE_KEY: "typosentinel-${CI_PROJECT_ID}-${CI_COMMIT_REF_SLUG}"
+  RESULTS_DIR: "typosentinel-results"
+
+# Global cache configuration
+cache:
+  key: "${SCAN_CACHE_KEY}"
+  paths:
+    - node_modules/
+    - .typosentinel/cache/
+    - ~/.typosentinel/cache/
+
+# Security scan job template
+.scan_template: &scan_template
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - apk add --no-cache git curl jq
+    - npm install -g @typosentinel/cli
+    - mkdir -p ${RESULTS_DIR}
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - ${RESULTS_DIR}/
+      - .typosentinel.yml
+    reports:
+      junit: ${RESULTS_DIR}/junit-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: ${RESULTS_DIR}/coverage.xml
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+prepare:
+  stage: prepare
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - echo "Preparing Typosentinel scan environment"
+    - npm ci --audit=false
+    - |
+      cat > .typosentinel.yml << EOF
+      api:
+        url: ${TYPOSENTINEL_API_URL}
+        key: ${TYPOSENTINEL_API_KEY}
+        timeout: ${SCAN_TIMEOUT}
+      
+      scan:
+        type: full
+        severity_threshold: medium
+        include_dev_dependencies: true
+        max_depth: 5
+        parallel_scans: 4
+      
+      reporting:
+        formats:
+          - json
+          - sarif
+          - junit
+          - gitlab-security
+        output_dir: ./${RESULTS_DIR}
+        upload_artifacts: true
+      
+      policies:
+        block_on_critical: true
+        block_on_high: false
+        require_approval_on_medium: true
+        auto_quarantine: true
+      
+      integrations:
+        gitlab:
+          create_issues: true
+          comment_on_mr: true
+          update_pipeline_status: true
+        slack:
+          webhook_url: ${SLACK_WEBHOOK_URL}
+          notify_on_threats: true
+      EOF
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - .typosentinel.yml
+      - node_modules/
+  cache:
+    key: "${SCAN_CACHE_KEY}"
+    paths:
+      - node_modules/
+
+# Full security scan (scheduled and manual)
+full-scan:
+  <<: *scan_template
+  stage: scan
+  script:
+    - echo "Starting full Typosentinel security scan"
+    - |
+      typosentinel scan \
+        --config .typosentinel.yml \
+        --type full \
+        --output-format json,sarif,junit,gitlab-security \
+        --output-dir ${RESULTS_DIR} \
+        --verbose || SCAN_FAILED=true
+    - |
+      if [[ -f "${RESULTS_DIR}/scan-results.json" ]]; then
+        THREAT_COUNT=$(jq '.summary.total_threats // 0' ${RESULTS_DIR}/scan-results.json)
+        CRITICAL_COUNT=$(jq '.summary.critical_threats // 0' ${RESULTS_DIR}/scan-results.json)
+        HIGH_COUNT=$(jq '.summary.high_threats // 0' ${RESULTS_DIR}/scan-results.json)
+        
+        echo "THREAT_COUNT=${THREAT_COUNT}" >> scan.env
+        echo "CRITICAL_COUNT=${CRITICAL_COUNT}" >> scan.env
+        echo "HIGH_COUNT=${HIGH_COUNT}" >> scan.env
+        
+        if [[ ${CRITICAL_COUNT} -gt 0 ]]; then
+          echo "SCAN_STATUS=failed" >> scan.env
+          echo "❌ Critical security threats detected!"
+        elif [[ ${HIGH_COUNT} -gt 0 ]]; then
+          echo "SCAN_STATUS=warning" >> scan.env
+          echo "⚠️ High severity threats detected"
+        else
+          echo "SCAN_STATUS=passed" >> scan.env
+          echo "✅ No critical threats detected"
+        fi
+      else
+        echo "SCAN_STATUS=error" >> scan.env
+        echo "❌ Scan failed to complete"
+      fi
+  artifacts:
+    reports:
+      junit: ${RESULTS_DIR}/junit-report.xml
+      sast: ${RESULTS_DIR}/gitlab-sast-report.json
+      dependency_scanning: ${RESULTS_DIR}/gitlab-dependency-scanning-report.json
+    expire_in: 30 days
+    paths:
+      - ${RESULTS_DIR}/
+      - scan.env
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - package.json
+        - package-lock.json
+        - yarn.lock
+        - pnpm-lock.yaml
+
+# Incremental scan for merge requests
+incremental-scan:
+  <<: *scan_template
+  stage: scan
+  script:
+    - echo "Starting incremental Typosentinel security scan for MR"
+    - |
+      # Configure for incremental scan
+      sed -i 's/type: full/type: incremental/' .typosentinel.yml
+      
+      typosentinel scan \
+        --config .typosentinel.yml \
+        --type incremental \
+        --base-ref origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME} \
+        --head-ref ${CI_COMMIT_SHA} \
+        --output-format json,sarif,junit,gitlab-security \
+        --output-dir ${RESULTS_DIR} \
+        --verbose || SCAN_FAILED=true
+    - |
+      if [[ -f "${RESULTS_DIR}/scan-results.json" ]]; then
+        THREAT_COUNT=$(jq '.summary.total_threats // 0' ${RESULTS_DIR}/scan-results.json)
+        CRITICAL_COUNT=$(jq '.summary.critical_threats // 0' ${RESULTS_DIR}/scan-results.json)
+        HIGH_COUNT=$(jq '.summary.high_threats // 0' ${RESULTS_DIR}/scan-results.json)
+        
+        echo "THREAT_COUNT=${THREAT_COUNT}" >> scan.env
+        echo "CRITICAL_COUNT=${CRITICAL_COUNT}" >> scan.env
+        echo "HIGH_COUNT=${HIGH_COUNT}" >> scan.env
+        
+        if [[ ${CRITICAL_COUNT} -gt 0 ]]; then
+          echo "SCAN_STATUS=failed" >> scan.env
+          echo "❌ Critical security threats detected in MR!"
+          exit 1
+        elif [[ ${HIGH_COUNT} -gt 0 ]]; then
+          echo "SCAN_STATUS=warning" >> scan.env
+          echo "⚠️ High severity threats detected in MR"
+        else
+          echo "SCAN_STATUS=passed" >> scan.env
+          echo "✅ No critical threats detected in MR"
+        fi
+      else
+        echo "SCAN_STATUS=error" >> scan.env
+        echo "❌ Incremental scan failed to complete"
+        exit 1
+      fi
+  artifacts:
+    reports:
+      junit: ${RESULTS_DIR}/junit-report.xml
+      sast: ${RESULTS_DIR}/gitlab-sast-report.json
+      dependency_scanning: ${RESULTS_DIR}/gitlab-dependency-scanning-report.json
+    expire_in: 7 days
+    paths:
+      - ${RESULTS_DIR}/
+      - scan.env
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# Generate comprehensive security report
+generate-report:
+  stage: report
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - apk add --no-cache jq
+    - |
+      if [[ -f "scan.env" ]]; then
+        source scan.env
+      else
+        echo "No scan results found"
+        exit 1
+      fi
+    - |
+      # Generate HTML report
+      cat > ${RESULTS_DIR}/security-report.html << EOF
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Typosentinel Security Report</title>
+          <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { background: #f8f9fa; padding: 20px; border-radius: 5px; }
+              .status-passed { color: #28a745; }
+              .status-warning { color: #ffc107; }
+              .status-failed { color: #dc3545; }
+              .threat-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              .threat-table th, .threat-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              .threat-table th { background-color: #f2f2f2; }
+              .critical { background-color: #f8d7da; }
+              .high { background-color: #fff3cd; }
+              .medium { background-color: #d1ecf1; }
+              .low { background-color: #d4edda; }
+          </style>
+      </head>
+      <body>
+          <div class="header">
+              <h1>🛡️ Typosentinel Security Report</h1>
+              <p><strong>Project:</strong> ${CI_PROJECT_NAME}</p>
+              <p><strong>Branch:</strong> ${CI_COMMIT_REF_NAME}</p>
+              <p><strong>Commit:</strong> ${CI_COMMIT_SHA}</p>
+              <p><strong>Pipeline:</strong> <a href="${CI_PIPELINE_URL}">#${CI_PIPELINE_ID}</a></p>
+              <p><strong>Scan Date:</strong> $(date)</p>
+              <p><strong>Status:</strong> <span class="status-${SCAN_STATUS}">${SCAN_STATUS^^}</span></p>
+          </div>
+          
+          <h2>📊 Threat Summary</h2>
+          <table class="threat-table">
+              <tr><th>Severity</th><th>Count</th></tr>
+              <tr class="critical"><td>Critical</td><td>${CRITICAL_COUNT:-0}</td></tr>
+              <tr class="high"><td>High</td><td>${HIGH_COUNT:-0}</td></tr>
+              <tr class="medium"><td>Medium</td><td>$(jq '.summary.medium_threats // 0' ${RESULTS_DIR}/scan-results.json 2>/dev/null || echo 0)</td></tr>
+              <tr class="low"><td>Low</td><td>$(jq '.summary.low_threats // 0' ${RESULTS_DIR}/scan-results.json 2>/dev/null || echo 0)</td></tr>
+              <tr><td><strong>Total</strong></td><td><strong>${THREAT_COUNT:-0}</strong></td></tr>
+          </table>
+          
+          <h2>📋 Detailed Results</h2>
+          <p>For detailed scan results, please check the artifacts or view the JSON report.</p>
+          
+          <footer>
+              <p><em>Generated by <a href="https://typosentinel.com">Typosentinel</a></em></p>
+          </footer>
+      </body>
+      </html>
+      EOF
+    - |
+      # Generate Markdown summary for GitLab
+      cat > ${RESULTS_DIR}/security-summary.md << EOF
+      ## 🛡️ Typosentinel Security Scan Results
+      
+      **Status:** $(if [[ "${SCAN_STATUS}" == "passed" ]]; then echo "✅ Passed"; elif [[ "${SCAN_STATUS}" == "warning" ]]; then echo "⚠️ Warning"; else echo "❌ Failed"; fi)
+      **Total Threats:** ${THREAT_COUNT:-0}
+      
+      | Severity | Count |
+      |----------|-------|
+      | Critical | ${CRITICAL_COUNT:-0} |
+      | High | ${HIGH_COUNT:-0} |
+      | Medium | $(jq '.summary.medium_threats // 0' ${RESULTS_DIR}/scan-results.json 2>/dev/null || echo 0) |
+      | Low | $(jq '.summary.low_threats // 0' ${RESULTS_DIR}/scan-results.json 2>/dev/null || echo 0) |
+      
+      $(if [[ ${CRITICAL_COUNT:-0} -gt 0 ]]; then echo "🚨 **Critical threats detected!** This MR should not be merged until resolved."; fi)
+      $(if [[ ${HIGH_COUNT:-0} -gt 0 ]]; then echo "⚠️ **High severity threats detected.** Please review before merging."; fi)
+      
+      ---
+      *Scan performed by [Typosentinel](https://typosentinel.com) at $(date)*
+      EOF
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - ${RESULTS_DIR}/security-report.html
+      - ${RESULTS_DIR}/security-summary.md
+  dependencies:
+    - full-scan
+    - incremental-scan
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Comment on merge request
+comment-mr:
+  stage: notify
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl jq
+    - |
+      if [[ -f "scan.env" ]]; then
+        source scan.env
+      else
+        echo "No scan results found"
+        exit 0
+      fi
+    - |
+      if [[ -f "${RESULTS_DIR}/security-summary.md" ]]; then
+        COMMENT_BODY=$(cat ${RESULTS_DIR}/security-summary.md)
+        
+        curl --request POST \
+          --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" \
+          --header "Content-Type: application/json" \
+          --data "{ \"body\": \"${COMMENT_BODY}\" }" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${CI_MERGE_REQUEST_IID}/notes"
+      fi
+  dependencies:
+    - generate-report
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: true
+
+# Slack notification
+notify-slack:
+  stage: notify
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl jq
+    - |
+      if [[ -f "scan.env" ]]; then
+        source scan.env
+      else
+        echo "No scan results found"
+        exit 0
+      fi
+    - |
+      if [[ -n "${SLACK_WEBHOOK_URL}" ]]; then
+        COLOR="good"
+        if [[ "${SCAN_STATUS}" == "failed" ]]; then
+          COLOR="danger"
+        elif [[ "${SCAN_STATUS}" == "warning" ]]; then
+          COLOR="warning"
+        fi
+        
+        PAYLOAD=$(cat << EOF
+        {
+          "channel": "#security",
+          "username": "Typosentinel Bot",
+          "icon_emoji": ":shield:",
+          "attachments": [
+            {
+              "color": "${COLOR}",
+              "title": "Typosentinel Security Scan Results",
+              "title_link": "${CI_PIPELINE_URL}",
+              "fields": [
+                {
+                  "title": "Project",
+                  "value": "${CI_PROJECT_NAME}",
+                  "short": true
+                },
+                {
+                  "title": "Branch",
+                  "value": "${CI_COMMIT_REF_NAME}",
+                  "short": true
+                },
+                {
+                  "title": "Status",
+                  "value": "${SCAN_STATUS^^}",
+                  "short": true
+                },
+                {
+                  "title": "Threats",
+                  "value": "${THREAT_COUNT:-0} total, ${CRITICAL_COUNT:-0} critical",
+                  "short": true
+                }
+              ],
+              "footer": "Typosentinel",
+              "ts": $(date +%s)
+            }
+          ]
+        }
+        EOF
+        )
+        
+        curl -X POST -H 'Content-type: application/json' \
+          --data "${PAYLOAD}" \
+          "${SLACK_WEBHOOK_URL}"
+      fi
+  dependencies:
+    - generate-report
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  allow_failure: true
+
+# Create security issue for critical threats
+create-security-issue:
+  stage: security-policy
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl jq
+    - |
+      if [[ -f "scan.env" ]]; then
+        source scan.env
+      else
+        echo "No scan results found"
+        exit 0
+      fi
+    - |
+      if [[ ${CRITICAL_COUNT:-0} -gt 0 ]]; then
+        ISSUE_TITLE="🚨 Critical Security Threats Detected - ${CRITICAL_COUNT} Critical, ${THREAT_COUNT} Total"
+        ISSUE_DESCRIPTION="## Critical Security Alert
+        
+        Typosentinel has detected **${CRITICAL_COUNT} critical security threats** in this repository.
+        
+        **Immediate Action Required:**
+        - Review the scan results in the [pipeline](${CI_PIPELINE_URL})
+        - Address all critical threats before deploying to production
+        - Consider implementing additional security measures
+        
+        **Scan Details:**
+        - Total threats: ${THREAT_COUNT}
+        - Critical threats: ${CRITICAL_COUNT}
+        - Branch: ${CI_COMMIT_REF_NAME}
+        - Commit: ${CI_COMMIT_SHA}
+        
+        This issue was automatically created by Typosentinel security scanning.
+        
+        /cc @security-team"
+        
+        curl --request POST \
+          --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" \
+          --header "Content-Type: application/json" \
+          --data "{ \"title\": \"${ISSUE_TITLE}\", \"description\": \"${ISSUE_DESCRIPTION}\", \"labels\": \"security,critical,typosentinel\" }" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/issues"
+      fi
+  dependencies:
+    - generate-report
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: true
+
+# Cleanup old artifacts
+cleanup:
+  stage: .post
+  image: alpine:latest
+  script:
+    - echo "Cleaning up old scan artifacts"
+    - |
+      # This would typically involve API calls to clean up old artifacts
+      # For now, just log the cleanup action
+      echo "Cleanup completed for pipeline ${CI_PIPELINE_ID}"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  allow_failure: true

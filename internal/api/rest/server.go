@@ -29,10 +29,17 @@ type Server struct {
 	mlPipeline *ml.MLPipeline
 	analyzer   *analyzer.Analyzer
 	running    bool
+	// Enterprise components
+	enterpriseHandlers *EnterpriseHandlers
 }
 
 // NewServer creates a new REST API server
 func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzer.Analyzer) *Server {
+	return NewServerWithEnterprise(cfg, mlPipeline, analyzer, nil)
+}
+
+// NewServerWithEnterprise creates a new REST API server with optional enterprise features
+func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzer.Analyzer, enterpriseHandlers *EnterpriseHandlers) *Server {
 	// Set gin mode based on API configuration
 	if !cfg.Enabled {
 		gin.SetMode(gin.ReleaseMode)
@@ -63,10 +70,11 @@ func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *an
 	// Timeout middleware removed - not available in RESTAPIConfig
 
 	server := &Server{
-		config:     cfg,
-		gin:        r,
-		mlPipeline: mlPipeline,
-		analyzer:   analyzer,
+		config:             cfg,
+		gin:                r,
+		mlPipeline:         mlPipeline,
+		analyzer:           analyzer,
+		enterpriseHandlers: enterpriseHandlers,
 	}
 
 	// Setup routes
@@ -173,6 +181,12 @@ func (s *Server) setupRoutes() {
 			v1.GET("/docs/openapi", s.getOpenAPISpec)
 			v1.GET("/docs", s.getSwaggerUI)
 			v1.GET("/docs/", s.getSwaggerUI)
+
+			// Enterprise endpoints
+			if s.enterpriseHandlers != nil {
+				enterpriseGroup := v1.Group("/enterprise")
+				s.enterpriseHandlers.RegisterRoutes(enterpriseGroup)
+			}
 		}
 
 		// Dashboard endpoints (non-versioned for frontend compatibility)

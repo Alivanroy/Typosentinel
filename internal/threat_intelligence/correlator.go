@@ -557,18 +557,18 @@ func (tc *ThreatCorrelator) levenshteinDistance(s1, s2 string) int {
 				cost = 1
 			}
 
-			matrix[i][j] = min(
-				matrix[i-1][j]+1,      // deletion
-				matrix[i][j-1]+1,      // insertion
-				matrix[i-1][j-1]+cost, // substitution
-			)
+			matrix[i][j] = minThree(
+			matrix[i-1][j]+1,      // deletion
+			matrix[i][j-1]+1,      // insertion
+			matrix[i-1][j-1]+cost, // substitution
+		)
 		}
 	}
 
 	return matrix[len1][len2]
 }
 
-func min(a, b, c int) int {
+func minThree(a, b, c int) int {
 	if a < b {
 		if a < c {
 			return a

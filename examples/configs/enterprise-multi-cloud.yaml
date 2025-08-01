@@ -1,0 +1,752 @@
+# Enterprise Multi-Cloud Configuration
+# Designed for organizations using multiple cloud providers and platforms
+
+# Multi-platform repository configuration
+repository:
+  connectors:
+    # GitHub Enterprise Cloud
+    github_cloud:
+      enabled: true
+      token: "${GITHUB_CLOUD_TOKEN}"
+      base_url: "https://api.github.com"
+      organizations: ["company-public", "company-oss"]
+      discovery:
+        enabled: true
+        include_forks: false
+        languages: ["javascript", "python", "go"]
+    
+    # GitHub Enterprise Server (on-premises)
+    github_enterprise:
+      enabled: true
+      token: "${GITHUB_ENTERPRISE_TOKEN}"
+      base_url: "https://github.company.com/api/v3"
+      organizations: ["engineering", "platform"]
+      discovery:
+        enabled: true
+        include_private: true
+        ssl_verify: true
+        ca_cert_file: "/etc/ssl/certs/company-ca.pem"
+    
+    # GitLab SaaS
+    gitlab_saas:
+      enabled: true
+      token: "${GITLAB_SAAS_TOKEN}"
+      base_url: "https://gitlab.com/api/v4"
+      groups: ["company-group"]
+      discovery:
+        enabled: true
+        include_subgroups: true
+        visibility: ["internal", "private"]
+    
+    # GitLab Self-Managed
+    gitlab_selfmanaged:
+      enabled: true
+      token: "${GITLAB_SELFMANAGED_TOKEN}"
+      base_url: "https://gitlab.company.com/api/v4"
+      groups: ["core-platform", "applications"]
+      discovery:
+        enabled: true
+        ssl_verify: true
+        ca_cert_file: "/etc/ssl/certs/company-ca.pem"
+    
+    # Azure DevOps Services
+    azure_devops_services:
+      enabled: true
+      token: "${AZURE_DEVOPS_SERVICES_TOKEN}"
+      organization: "company"
+      projects: ["WebApplications", "MobileApps"]
+      discovery:
+        enabled: true
+        include_disabled: false
+    
+    # Azure DevOps Server (on-premises)
+    azure_devops_server:
+      enabled: true
+      token: "${AZURE_DEVOPS_SERVER_TOKEN}"
+      base_url: "https://tfs.company.com/DefaultCollection"
+      projects: ["LegacyApplications", "Infrastructure"]
+      discovery:
+        enabled: true
+        ssl_verify: true
+    
+    # Bitbucket Cloud
+    bitbucket_cloud:
+      enabled: true
+      username: "${BITBUCKET_USERNAME}"
+      app_password: "${BITBUCKET_APP_PASSWORD}"
+      workspaces: ["company-workspace"]
+      discovery:
+        enabled: true
+        include_forks: false
+    
+    # Bitbucket Server (on-premises)
+    bitbucket_server:
+      enabled: true
+      token: "${BITBUCKET_SERVER_TOKEN}"
+      base_url: "https://bitbucket.company.com"
+      projects: ["CORE", "TOOLS"]
+      discovery:
+        enabled: true
+        ssl_verify: true
+
+# Cloud-native scanning configuration
+scanning:
+  # Distributed across multiple cloud regions
+  distributed:
+    enabled: true
+    regions:
+      - name: "us-east-1"
+        provider: "aws"
+        worker_nodes: 3
+        capacity: 100
+      - name: "us-west-2"
+        provider: "aws"
+        worker_nodes: 2
+        capacity: 50
+      - name: "europe-west1"
+        provider: "gcp"
+        worker_nodes: 2
+        capacity: 50
+      - name: "eastus"
+        provider: "azure"
+        worker_nodes: 2
+        capacity: 50
+    
+    # Load balancing strategy
+    load_balancing:
+      strategy: "least_loaded"  # round_robin, least_loaded, geographic
+      health_check_interval: "30s"
+      failover_enabled: true
+  
+  # Cloud-specific optimizations
+  cloud_optimizations:
+    aws:
+      use_spot_instances: true
+      auto_scaling:
+        enabled: true
+        min_instances: 1
+        max_instances: 10
+        target_cpu: 70
+      
+      storage:
+        type: "s3"
+        bucket: "company-typosentinel-results"
+        region: "us-east-1"
+        encryption: "AES256"
+    
+    gcp:
+      use_preemptible_instances: true
+      auto_scaling:
+        enabled: true
+        min_instances: 1
+        max_instances: 8
+        target_cpu: 70
+      
+      storage:
+        type: "gcs"
+        bucket: "company-typosentinel-results-gcp"
+        region: "us-central1"
+        encryption: "google_managed"
+    
+    azure:
+      use_spot_instances: true
+      auto_scaling:
+        enabled: true
+        min_instances: 1
+        max_instances: 8
+        target_cpu: 70
+      
+      storage:
+        type: "blob"
+        account: "companytyposentinel"
+        container: "scan-results"
+        encryption: "microsoft_managed"
+
+# Multi-cloud authentication and identity
+authentication:
+  # Primary identity provider
+  primary:
+    type: "azure_ad"
+    azure_ad:
+      tenant_id: "${AZURE_AD_TENANT_ID}"
+      client_id: "${AZURE_AD_CLIENT_ID}"
+      client_secret: "${AZURE_AD_CLIENT_SECRET}"
+      
+      # Multi-tenant support
+      tenants:
+        - tenant_id: "${AZURE_AD_TENANT_MAIN}"
+          name: "main"
+          domains: ["company.com"]
+        - tenant_id: "${AZURE_AD_TENANT_SUBSIDIARY}"
+          name: "subsidiary"
+          domains: ["subsidiary.com"]
+  
+  # Federated identity providers
+  federated:
+    - name: "aws_sso"
+      type: "saml"
+      saml:
+        entity_id: "typosentinel-aws"
+        sso_url: "https://portal.sso.us-east-1.amazonaws.com/saml/assertion/..."
+        certificate_file: "/etc/typosentinel/certs/aws-sso.pem"
+    
+    - name: "google_workspace"
+      type: "oidc"
+      oidc:
+        issuer: "https://accounts.google.com"
+        client_id: "${GOOGLE_CLIENT_ID}"
+        client_secret: "${GOOGLE_CLIENT_SECRET}"
+        scopes: ["openid", "email", "profile"]
+  
+  # Cross-cloud role mapping
+  role_mapping:
+    # Azure AD groups to roles
+    azure_ad:
+      "Security-Admins": "administrator"
+      "Security-Managers": "security_manager"
+      "Developers": "developer"
+    
+    # AWS SSO groups to roles
+    aws_sso:
+      "SecurityAdministrators": "administrator"
+      "SecurityAnalysts": "security_analyst"
+      "Developers": "developer"
+    
+    # Google Workspace groups to roles
+    google_workspace:
+      "security@company.com": "security_manager"
+      "developers@company.com": "developer"
+
+# Multi-cloud data storage and replication
+storage:
+  # Primary storage
+  primary:
+    type: "postgresql"
+    provider: "aws_rds"
+    postgresql:
+      host: "typosentinel-primary.cluster-xyz.us-east-1.rds.amazonaws.com"
+      port: 5432
+      database: "typosentinel"
+      username: "typosentinel"
+      password: "${RDS_PASSWORD}"
+      ssl_mode: "require"
+      
+      # High availability
+      multi_az: true
+      backup_retention: 30
+      
+      # Read replicas
+      read_replicas:
+        - region: "us-west-2"
+          instance_class: "db.r5.large"
+        - region: "eu-west-1"
+          instance_class: "db.r5.large"
+  
+  # Cross-cloud replication
+  replication:
+    enabled: true
+    targets:
+      - provider: "gcp"
+        type: "cloud_sql"
+        region: "us-central1"
+        sync_interval: "1h"
+        
+      - provider: "azure"
+        type: "sql_database"
+        region: "eastus"
+        sync_interval: "1h"
+  
+  # Distributed caching
+  cache:
+    type: "redis_cluster"
+    clusters:
+      - provider: "aws"
+        region: "us-east-1"
+        cluster_id: "typosentinel-cache-use1"
+        node_type: "cache.r6g.large"
+        num_nodes: 3
+        
+      - provider: "gcp"
+        region: "us-central1"
+        instance_id: "typosentinel-cache-usc1"
+        tier: "standard"
+        memory_size: 4
+        
+      - provider: "azure"
+        region: "eastus"
+        name: "typosentinel-cache-eus"
+        sku: "Premium"
+        capacity: 6
+
+# Multi-cloud monitoring and observability
+monitoring:
+  # Cloud-native monitoring
+  providers:
+    aws:
+      cloudwatch:
+        enabled: true
+        region: "us-east-1"
+        log_groups:
+          - "/aws/lambda/typosentinel"
+          - "/aws/ecs/typosentinel"
+        
+        metrics:
+          namespace: "Typosentinel/Enterprise"
+          dimensions:
+            - Environment
+            - Region
+            - Service
+        
+        alarms:
+          - name: "HighThreatDetectionRate"
+            metric: "ThreatsDetected"
+            threshold: 50
+            comparison: "GreaterThanThreshold"
+            period: 300
+            evaluation_periods: 2
+    
+    gcp:
+      stackdriver:
+        enabled: true
+        project_id: "${GCP_PROJECT_ID}"
+        
+        metrics:
+          prefix: "typosentinel.enterprise"
+          labels:
+            - environment
+            - region
+            - service
+        
+        alerts:
+          - name: "high-scan-failure-rate"
+            condition: "rate(scan_failures) > 0.1"
+            duration: "5m"
+    
+    azure:
+      monitor:
+        enabled: true
+        subscription_id: "${AZURE_SUBSCRIPTION_ID}"
+        resource_group: "typosentinel-rg"
+        
+        metrics:
+          namespace: "Typosentinel/Enterprise"
+          dimensions:
+            - Environment
+            - Region
+            - Component
+        
+        alerts:
+          - name: "DatabaseConnectionFailure"
+            metric: "DatabaseConnections"
+            threshold: 0
+            operator: "LessThanOrEqual"
+            frequency: "PT1M"
+  
+  # Unified observability
+  unified:
+    # Centralized logging
+    logging:
+      type: "elasticsearch"
+      elasticsearch:
+        cloud_id: "${ELASTIC_CLOUD_ID}"
+        api_key: "${ELASTIC_API_KEY}"
+        
+        indices:
+          logs: "typosentinel-logs-%{+yyyy.MM.dd}"
+          metrics: "typosentinel-metrics-%{+yyyy.MM.dd}"
+          traces: "typosentinel-traces-%{+yyyy.MM.dd}"
+    
+    # Distributed tracing
+    tracing:
+      type: "jaeger"
+      jaeger:
+        endpoint: "https://jaeger.company.com:14268/api/traces"
+        service_name: "typosentinel-enterprise"
+        
+        # Sampling configuration
+        sampling:
+          type: "probabilistic"
+          param: 0.1  # 10% sampling rate
+    
+    # Metrics aggregation
+    metrics:
+      type: "prometheus"
+      prometheus:
+        remote_write:
+          - url: "https://prometheus.company.com/api/v1/write"
+            basic_auth:
+              username: "${PROMETHEUS_USERNAME}"
+              password: "${PROMETHEUS_PASSWORD}"
+
+# Multi-cloud security and compliance
+security:
+  # Encryption at rest and in transit
+  encryption:
+    at_rest:
+      enabled: true
+      algorithm: "AES-256"
+      key_management:
+        aws:
+          type: "kms"
+          key_id: "${AWS_KMS_KEY_ID}"
+          region: "us-east-1"
+        
+        gcp:
+          type: "kms"
+          key_ring: "typosentinel-keyring"
+          key: "typosentinel-key"
+          location: "global"
+        
+        azure:
+          type: "key_vault"
+          vault_url: "https://typosentinel-kv.vault.azure.net/"
+          key_name: "typosentinel-key"
+    
+    in_transit:
+      enabled: true
+      tls_version: "1.3"
+      cipher_suites:
+        - "TLS_AES_256_GCM_SHA384"
+        - "TLS_CHACHA20_POLY1305_SHA256"
+        - "TLS_AES_128_GCM_SHA256"
+  
+  # Network security
+  network:
+    # VPC/VNet configuration
+    vpc:
+      aws:
+        vpc_id: "vpc-12345678"
+        subnets:
+          - "subnet-12345678"  # Private subnet
+          - "subnet-87654321"  # Private subnet
+        security_groups:
+          - "sg-typosentinel-app"
+          - "sg-typosentinel-db"
+      
+      gcp:
+        network: "typosentinel-network"
+        subnetwork: "typosentinel-subnet"
+        firewall_rules:
+          - "typosentinel-allow-internal"
+          - "typosentinel-allow-https"
+      
+      azure:
+        vnet: "typosentinel-vnet"
+        subnet: "typosentinel-subnet"
+        nsg: "typosentinel-nsg"
+    
+    # Private endpoints
+    private_endpoints:
+      enabled: true
+      services:
+        - "database"
+        - "cache"
+        - "storage"
+  
+  # Compliance frameworks
+  compliance:
+    frameworks:
+      - "SOC2"
+      - "ISO27001"
+      - "GDPR"
+      - "HIPAA"
+      - "PCI-DSS"
+    
+    # Compliance monitoring
+    monitoring:
+      enabled: true
+      reports:
+        - framework: "SOC2"
+          schedule: "monthly"
+          recipients: ["compliance@company.com"]
+        
+        - framework: "GDPR"
+          schedule: "quarterly"
+          recipients: ["privacy@company.com"]
+
+# Disaster recovery and business continuity
+disaster_recovery:
+  # Multi-region backup strategy
+  backup:
+    strategy: "3-2-1"  # 3 copies, 2 different media, 1 offsite
+    
+    schedules:
+      - name: "daily"
+        frequency: "0 2 * * *"
+        retention: "30d"
+        regions: ["us-east-1", "us-west-2"]
+      
+      - name: "weekly"
+        frequency: "0 3 * * 0"
+        retention: "12w"
+        regions: ["us-east-1", "eu-west-1"]
+      
+      - name: "monthly"
+        frequency: "0 4 1 * *"
+        retention: "12m"
+        regions: ["us-east-1", "ap-southeast-1"]
+  
+  # Failover configuration
+  failover:
+    enabled: true
+    
+    # Primary to secondary region failover
+    regions:
+      primary: "us-east-1"
+      secondary: "us-west-2"
+      tertiary: "eu-west-1"
+    
+    # Automatic failover triggers
+    triggers:
+      - type: "health_check"
+        threshold: 3  # Failed health checks
+        duration: "5m"
+      
+      - type: "error_rate"
+        threshold: 0.5  # 50% error rate
+        duration: "2m"
+    
+    # Recovery time objectives
+    rto: "15m"  # Recovery Time Objective
+    rpo: "1h"   # Recovery Point Objective
+
+# Cost optimization
+cost_optimization:
+  # Resource scheduling
+  scheduling:
+    # Scale down non-production environments
+    non_production:
+      scale_down:
+        schedule: "0 18 * * 1-5"  # 6 PM weekdays
+        scale_factor: 0.2
+      
+      scale_up:
+        schedule: "0 8 * * 1-5"   # 8 AM weekdays
+        scale_factor: 1.0
+  
+  # Reserved capacity
+  reserved_capacity:
+    aws:
+      ec2_instances:
+        - instance_type: "m5.large"
+          count: 5
+          term: "1year"
+      
+      rds_instances:
+        - instance_class: "db.r5.large"
+          count: 2
+          term: "1year"
+    
+    gcp:
+      committed_use:
+        - machine_type: "n1-standard-4"
+          count: 3
+          term: "1year"
+    
+    azure:
+      reserved_instances:
+        - vm_size: "Standard_D4s_v3"
+          count: 3
+          term: "1year"
+  
+  # Cost monitoring
+  monitoring:
+    budgets:
+      - name: "monthly-budget"
+        amount: 10000
+        currency: "USD"
+        alerts:
+          - threshold: 80
+            recipients: ["finance@company.com"]
+          - threshold: 100
+            recipients: ["finance@company.com", "engineering@company.com"]
+    
+    # Cost allocation tags
+    tags:
+      Environment: "production"
+      Project: "typosentinel"
+      Owner: "security-team"
+      CostCenter: "engineering"
+
+# Performance optimization for multi-cloud
+performance:
+  # Global load balancing
+  load_balancing:
+    type: "global"
+    
+    # Geographic routing
+    routing:
+      - region: "us"
+        endpoints: ["us-east-1", "us-west-2"]
+        weight: 70
+      
+      - region: "eu"
+        endpoints: ["eu-west-1", "eu-central-1"]
+        weight: 20
+      
+      - region: "asia"
+        endpoints: ["ap-southeast-1", "ap-northeast-1"]
+        weight: 10
+  
+  # Content delivery
+  cdn:
+    enabled: true
+    providers:
+      - "cloudflare"
+      - "aws_cloudfront"
+    
+    caching:
+      static_assets: "1y"
+      api_responses: "5m"
+      reports: "1h"
+  
+  # Database optimization
+  database:
+    # Connection pooling
+    connection_pooling:
+      max_connections: 200
+      max_idle: 20
+      max_lifetime: "1h"
+    
+    # Query optimization
+    query_optimization:
+      slow_query_threshold: "1s"
+      explain_analyze: true
+      index_recommendations: true
+    
+    # Partitioning strategy
+    partitioning:
+      scan_results:
+        type: "time"
+        interval: "monthly"
+      
+      audit_logs:
+        type: "time"
+        interval: "weekly"
+
+# API gateway and service mesh
+api_gateway:
+  # Multi-cloud API gateway
+  providers:
+    aws:
+      type: "api_gateway_v2"
+      domain: "api-aws.typosentinel.company.com"
+      certificate_arn: "${AWS_CERTIFICATE_ARN}"
+    
+    gcp:
+      type: "cloud_endpoints"
+      domain: "api-gcp.typosentinel.company.com"
+    
+    azure:
+      type: "api_management"
+      domain: "api-azure.typosentinel.company.com"
+  
+  # Rate limiting
+  rate_limiting:
+    global:
+      requests_per_minute: 10000
+      burst_limit: 1000
+    
+    per_user:
+      requests_per_minute: 100
+      burst_limit: 20
+  
+  # Authentication
+  authentication:
+    methods: ["jwt", "api_key", "oauth2"]
+    
+    jwt:
+      issuer: "https://auth.company.com"
+      audience: "typosentinel-api"
+      algorithms: ["RS256"]
+    
+    oauth2:
+      authorization_url: "https://auth.company.com/oauth2/authorize"
+      token_url: "https://auth.company.com/oauth2/token"
+      scopes: ["read", "write", "admin"]
+
+# Service mesh configuration
+service_mesh:
+  type: "istio"
+  
+  # Traffic management
+  traffic:
+    # Circuit breaker
+    circuit_breaker:
+      max_connections: 100
+      max_pending_requests: 50
+      max_requests: 200
+      max_retries: 3
+    
+    # Retry policy
+    retry:
+      attempts: 3
+      per_try_timeout: "30s"
+      retry_on: "5xx,reset,connect-failure,refused-stream"
+    
+    # Timeout
+    timeout: "60s"
+  
+  # Security policies
+  security:
+    # mTLS
+    mtls:
+      mode: "STRICT"
+    
+    # Authorization
+    authorization:
+      enabled: true
+      default_action: "DENY"
+      
+      rules:
+        - from:
+            - source:
+                principals: ["cluster.local/ns/typosentinel/sa/api"]
+          to:
+            - operation:
+                methods: ["GET", "POST"]
+          when:
+            - key: "request.headers[authorization]"
+              values: ["Bearer *"]
+
+# Logging configuration for multi-cloud
+logging:
+  # Structured logging
+  format: "json"
+  level: "info"
+  
+  # Multi-destination logging
+  destinations:
+    # Cloud-native logging
+    - type: "cloudwatch"
+      provider: "aws"
+      region: "us-east-1"
+      log_group: "/aws/typosentinel/application"
+      
+    - type: "stackdriver"
+      provider: "gcp"
+      project_id: "${GCP_PROJECT_ID}"
+      log_name: "typosentinel-application"
+      
+    - type: "azure_monitor"
+      provider: "azure"
+      workspace_id: "${AZURE_WORKSPACE_ID}"
+      
+    # Centralized logging
+    - type: "elasticsearch"
+      cluster: "https://elasticsearch.company.com:9200"
+      index: "typosentinel-logs-%{+yyyy.MM.dd}"
+      username: "${ELASTICSEARCH_USERNAME}"
+      password: "${ELASTICSEARCH_PASSWORD}"
+  
+  # Log correlation
+  correlation:
+    trace_id_header: "X-Trace-Id"
+    span_id_header: "X-Span-Id"
+    
+  # Log retention
+  retention:
+    application_logs: "90d"
+    audit_logs: "7y"
+    security_logs: "2y"
+    performance_logs: "30d"

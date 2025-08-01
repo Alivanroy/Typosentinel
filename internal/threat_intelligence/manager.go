@@ -358,55 +358,47 @@ func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error
 
 	// Initialize feeds based on configuration
 	if tim.config.ThreatIntelligence.Feeds != nil {
-		// Initialize OSV feed if configured
-		if osvConfig, exists := tim.config.ThreatIntelligence.Feeds["osv"]; exists {
-			osvFeed := NewOSVFeed(tim.logger)
-			feedConfig := tim.buildFeedConfig(osvConfig)
-			if err := osvFeed.Initialize(ctx, feedConfig); err != nil {
-				return fmt.Errorf("failed to initialize OSV feed: %w", err)
-			}
-			tim.feeds["osv"] = osvFeed
-			tim.logger.Info("Initialized OSV threat feed")
-		}
-
-		// Initialize GitHub Advisory feed if configured
-		if ghConfig, exists := tim.config.ThreatIntelligence.Feeds["github_advisory"]; exists {
-			ghFeed := NewGitHubAdvisoryFeed(tim.logger)
-			feedConfig := tim.buildFeedConfig(ghConfig)
-			if err := ghFeed.Initialize(ctx, feedConfig); err != nil {
-				return fmt.Errorf("failed to initialize GitHub Advisory feed: %w", err)
-			}
-			tim.feeds["github_advisory"] = ghFeed
-			tim.logger.Info("Initialized GitHub Advisory threat feed")
-		}
-
-		// Initialize custom feeds
+		// Iterate through configured feeds
 		for _, feedConfig := range tim.config.ThreatIntelligence.Feeds {
-			if feedConfig.Name == "osv" || feedConfig.Name == "github_advisory" {
-				continue // Already handled above
+			if !feedConfig.Enabled {
+				continue
 			}
 
-			if !feedConfig.Enabled {
-				tim.logger.Debug("Skipping disabled custom feed", map[string]interface{}{
+			switch feedConfig.Name {
+			case "osv":
+				osvFeed := NewOSVFeed(tim.logger)
+				config := tim.buildFeedConfig(feedConfig)
+				if err := osvFeed.Initialize(ctx, config); err != nil {
+					return fmt.Errorf("failed to initialize OSV feed: %w", err)
+				}
+				tim.feeds["osv"] = osvFeed
+				tim.logger.Info("Initialized OSV threat feed")
+
+			case "github_advisory":
+				ghFeed := NewGitHubAdvisoryFeed(tim.logger)
+				config := tim.buildFeedConfig(feedConfig)
+				if err := ghFeed.Initialize(ctx, config); err != nil {
+					return fmt.Errorf("failed to initialize GitHub Advisory feed: %w", err)
+				}
+				tim.feeds["github_advisory"] = ghFeed
+				tim.logger.Info("Initialized GitHub Advisory threat feed")
+
+			default:
+				// Handle custom feeds
+				customFeed := NewCustomFeed(feedConfig.Name, tim.logger)
+				config := tim.buildFeedConfig(feedConfig)
+				if err := customFeed.Initialize(ctx, config); err != nil {
+					tim.logger.Warn("Failed to initialize custom feed", map[string]interface{}{
+						"feed":  feedConfig.Name,
+						"error": err,
+					})
+					continue
+				}
+				tim.feeds[feedConfig.Name] = customFeed
+				tim.logger.Info("Initialized custom threat feed", map[string]interface{}{
 					"feed": feedConfig.Name,
 				})
-				continue
 			}
-
-			// Create custom feed
-			customFeed := NewCustomFeed(feedConfig.Name, tim.logger)
-			config := tim.buildFeedConfig(feedConfig)
-			if err := customFeed.Initialize(ctx, config); err != nil {
-				tim.logger.Warn("Failed to initialize custom feed", map[string]interface{}{
-					"feed":  feedConfig.Name,
-					"error": err,
-				})
-				continue
-			}
-			tim.feeds[feedConfig.Name] = customFeed
-			tim.logger.Info("Initialized custom threat feed", map[string]interface{}{
-				"feed": feedConfig.Name,
-			})
 		}
 	} else {
 		// Default initialization if no specific feed configuration

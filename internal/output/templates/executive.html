@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Security Report - {{.Organization}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 3px solid #007bff;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .executive-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+        
+        .executive-summary h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .key-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 5px solid #007bff;
+        }
+        
+        .metric-card.critical {
+            border-left-color: #dc3545;
+        }
+        
+        .metric-card.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .metric-card.success {
+            border-left-color: #28a745;
+        }
+        
+        .metric-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value.critical {
+            color: #dc3545;
+        }
+        
+        .metric-value.warning {
+            color: #ffc107;
+        }
+        
+        .metric-value.success {
+            color: #28a745;
+        }
+        
+        .metric-label {
+            font-size: 1.1em;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            font-size: 1.8em;
+            color: #007bff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .risk-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        
+        .risk-item.critical {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .risk-item.high {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .risk-item.medium {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+        
+        .risk-item.low {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .recommendations {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+        }
+        
+        .recommendations h3 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        
+        .recommendations ul {
+            list-style: none;
+        }
+        
+        .recommendations li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .recommendations li:before {
+            content: "→";
+            color: #007bff;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 2px solid #e9ecef;
+            margin-top: 40px;
+            color: #666;
+        }
+        
+        .trend-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .trend-up {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .trend-down {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .trend-stable {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Executive Security Report</h1>
+            <div class="subtitle">{{.Organization}} - Security Posture Overview</div>
+            <div class="report-meta">
+                <span>Report Period: {{.ReportPeriod}}</span>
+                <span>Generated: {{.GeneratedAt}}</span>
+                <span>Report ID: {{.ReportID}}</span>
+            </div>
+        </div>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>{{.ExecutiveSummary}}</p>
+        </div>
+        
+        <div class="key-metrics">
+            <div class="metric-card critical">
+                <div class="metric-value critical">{{.CriticalThreats}}</div>
+                <div class="metric-label">Critical Threats</div>
+                <span class="trend-indicator {{.CriticalTrend}}">{{.CriticalTrendText}}</span>
+            </div>
+            
+            <div class="metric-card warning">
+                <div class="metric-value warning">{{.HighThreats}}</div>
+                <div class="metric-label">High Risk Issues</div>
+                <span class="trend-indicator {{.HighTrend}}">{{.HighTrendText}}</span>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value">{{.TotalRepositories}}</div>
+                <div class="metric-label">Repositories Scanned</div>
+            </div>
+            
+            <div class="metric-card success">
+                <div class="metric-value success">{{.SecurityScore}}%</div>
+                <div class="metric-label">Security Score</div>
+                <span class="trend-indicator {{.ScoreTrend}}">{{.ScoreTrendText}}</span>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Risk Assessment</h2>
+            <div class="risk-matrix">
+                <div class="risk-item critical">
+                    <h3>{{.CriticalRisks}}</h3>
+                    <p>Critical Risks</p>
+                </div>
+                <div class="risk-item high">
+                    <h3>{{.HighRisks}}</h3>
+                    <p>High Risks</p>
+                </div>
+                <div class="risk-item medium">
+                    <h3>{{.MediumRisks}}</h3>
+                    <p>Medium Risks</p>
+                </div>
+                <div class="risk-item low">
+                    <h3>{{.LowRisks}}</h3>
+                    <p>Low Risks</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Top Security Concerns</h2>
+            <div class="chart-container">
+                {{range .TopThreats}}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #e9ecef;">
+                    <div>
+                        <strong>{{.Name}}</strong>
+                        <p style="color: #666; margin: 5px 0;">{{.Description}}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="metric-value {{.SeverityClass}}" style="font-size: 1.2em;">{{.Count}}</span>
+                        <p style="color: #666;">{{.Severity}}</p>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Compliance Status</h2>
+            <div class="key-metrics">
+                {{range .ComplianceStandards}}
+                <div class="metric-card">
+                    <div class="metric-value {{.StatusClass}}">{{.Score}}%</div>
+                    <div class="metric-label">{{.Name}}</div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        
+        <div class="recommendations">
+            <h3>Strategic Recommendations</h3>
+            <ul>
+                {{range .Recommendations}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>This report was generated by TypoSentinel Enterprise Security Platform</p>
+            <p>For technical details and remediation steps, please refer to the Technical Report</p>
+        </div>
+    </div>
+</body>
+</html>

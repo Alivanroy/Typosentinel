@@ -689,7 +689,7 @@ func NewMockMetrics() *MockMetrics {
 }
 
 // IncrementCounter increments a counter metric
-func (m *MockMetrics) IncrementCounter(name string, labels map[string]string) {
+func (m *MockMetrics) IncrementCounter(name string, labels interfaces.MetricTags) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.calls = append(m.calls, fmt.Sprintf("IncrementCounter:%s", name))
@@ -703,7 +703,7 @@ func (m *MockMetrics) IncrementCounter(name string, labels map[string]string) {
 }
 
 // SetGauge sets a gauge metric
-func (m *MockMetrics) SetGauge(name string, value float64, labels map[string]string) {
+func (m *MockMetrics) SetGauge(name string, value float64, labels interfaces.MetricTags) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.calls = append(m.calls, fmt.Sprintf("SetGauge:%s:%f", name, value))
@@ -711,7 +711,7 @@ func (m *MockMetrics) SetGauge(name string, value float64, labels map[string]str
 }
 
 // RecordHistogram records a histogram metric
-func (m *MockMetrics) RecordHistogram(name string, value float64, labels map[string]string) {
+func (m *MockMetrics) RecordHistogram(name string, value float64, labels interfaces.MetricTags) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.calls = append(m.calls, fmt.Sprintf("RecordHistogram:%s:%f", name, value))
@@ -750,9 +750,75 @@ func (m *MockMetrics) GetCalls() []string {
 	return calls
 }
 
+// RecordDuration records a duration metric
+func (m *MockMetrics) RecordDuration(name string, duration time.Duration, tags interfaces.MetricTags) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, fmt.Sprintf("RecordDuration:%s:%v", name, duration))
+	m.metrics[name] = duration
+}
+
+// Counter creates or retrieves a counter metric
+func (m *MockMetrics) Counter(name string, tags interfaces.MetricTags) interfaces.Counter {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, fmt.Sprintf("Counter:%s", name))
+	return &MockCounter{}
+}
+
+// Gauge creates or retrieves a gauge metric
+func (m *MockMetrics) Gauge(name string, tags interfaces.MetricTags) interfaces.Gauge {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, fmt.Sprintf("Gauge:%s", name))
+	return &MockGauge{}
+}
+
+// Histogram creates or retrieves a histogram metric
+func (m *MockMetrics) Histogram(name string, tags interfaces.MetricTags) interfaces.Histogram {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, fmt.Sprintf("Histogram:%s", name))
+	return &MockHistogram{}
+}
+
+// Timer creates or retrieves a timer metric
+func (m *MockMetrics) Timer(name string, tags interfaces.MetricTags) interfaces.Timer {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.calls = append(m.calls, fmt.Sprintf("Timer:%s", name))
+	return &MockTimer{}
+}
+
 // ClearMetrics clears all metrics
 func (m *MockMetrics) ClearMetrics() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.metrics = make(map[string]interface{})
 }
+
+// MockCounter implements interfaces.Counter
+type MockCounter struct{}
+
+func (c *MockCounter) Inc() {}
+func (c *MockCounter) Add(value float64) {}
+
+// MockGauge implements interfaces.Gauge
+type MockGauge struct{}
+
+func (g *MockGauge) Set(value float64) {}
+func (g *MockGauge) Inc() {}
+func (g *MockGauge) Dec() {}
+func (g *MockGauge) Add(value float64) {}
+func (g *MockGauge) Sub(value float64) {}
+
+// MockHistogram implements interfaces.Histogram
+type MockHistogram struct{}
+
+func (h *MockHistogram) Observe(value float64) {}
+
+// MockTimer implements interfaces.Timer
+type MockTimer struct{}
+
+func (t *MockTimer) Time() func() { return func() {} }
+func (t *MockTimer) Record(duration time.Duration) {}

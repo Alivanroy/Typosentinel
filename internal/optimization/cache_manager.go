@@ -504,11 +504,9 @@ func (l2 *L2Cache) get(key string) (interface{}, bool) {
 	defer l2.mu.RUnlock()
 
 	// Use existing file cache implementation
-	if result, found := l2.fileCache.Get(key); found {
+	if result, found, err := l2.fileCache.GetCachedAnalysisResult(key); err == nil && found {
 		l2.hitCount++
-		if data, ok := result.Metadata["data"]; ok {
-			return data, true
-		}
+		return result, true
 	}
 
 	l2.missCount++
@@ -519,13 +517,8 @@ func (l2 *L2Cache) set(key string, value interface{}, ttl time.Duration) {
 	l2.mu.Lock()
 	defer l2.mu.Unlock()
 
-	// Convert value to cache entry format
-	cacheEntry := &cache.CacheEntry{
-		Timestamp: time.Now(),
-		Metadata:  map[string]interface{}{"data": value},
-	}
-
-	l2.fileCache.Set(key, nil, nil, map[string]interface{}{"data": cacheEntry})
+	// For now, we'll use the Set method with basic serialization
+	l2.fileCache.Set(key, value, nil, nil)
 }
 
 func (l2 *L2Cache) delete(key string) {

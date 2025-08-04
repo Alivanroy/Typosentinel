@@ -13,6 +13,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/auth"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/internal/enterprise/audit"
 	"github.com/Alivanroy/Typosentinel/internal/enterprise/dashboard"
 	"github.com/Alivanroy/Typosentinel/internal/events"
@@ -34,6 +35,7 @@ var (
 	configFile string
 	verbose    bool
 	logLevel   string
+	startTime  time.Time
 )
 
 // LoggerAdapter adapts logging.Logger to interfaces.Logger interface
@@ -703,6 +705,9 @@ func integrationCmd() *cobra.Command {
 // Command implementations
 
 func runServer(cmd *cobra.Command, args []string) {
+	// Record application start time for uptime calculation
+	startTime = time.Now()
+	
 	bind, _ := cmd.Flags().GetString("bind")
 	enableUI, _ := cmd.Flags().GetBool("enable-ui")
 	enableAPI, _ := cmd.Flags().GetBool("enable-api")
@@ -765,7 +770,7 @@ func runServer(cmd *cobra.Command, args []string) {
 				},
 			},
 		}
-		auditLogger, err = audit.NewAuditLogger(auditConfig, *pkgLogger)
+		auditLogger, err = audit.NewAuditLogger(auditConfig, pkgLogger)
 		if err != nil {
 			log.Fatalf("Failed to initialize audit logger: %v", err)
 		}
@@ -775,7 +780,7 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	var monitoringService *monitoring.MonitoringService
 	if enableMonitoring {
-		monitoringService = monitoring.NewMonitoringService(enterpriseConfig.Monitoring, *pkgLogger)
+		monitoringService = monitoring.NewMonitoringService(enterpriseConfig.Monitoring, pkgLogger)
 		monitoringService.Start(ctx)
 		defer monitoringService.Stop()
 	}
@@ -797,24 +802,54 @@ func runServer(cmd *cobra.Command, args []string) {
 		fmt.Println("Scheduler initialization would go here")
 	}
 
+	// Initialize database service
+	dbConfig := &database.DatabaseConfig{
+		Host:     "localhost",
+		Port:     5432,
+		User:     "typosentinel",
+		Password: "password",
+		DBName:   "typosentinel",
+		SSLMode:  "disable",
+		MaxConns: 10,
+		MaxIdle:  5,
+	}
+	dbService, err := database.NewDatabaseService(dbConfig)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize database service: %v", err)
+		// Continue without database service for now
+		dbService = nil
+	}
+	if dbService != nil {
+		defer dbService.Close()
+	}
+
 	// Initialize policy manager
 	policyEngine := auth.NewPolicyEngine(authLoggerAdapter)
 	rbacEngine := auth.NewRBACEngine(&config.AuthzConfig{})
 	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, authLoggerAdapter)
 
-	// Initialize dashboard
+	// Initialize dashboard with start time
+	dashboardConfig := &dashboard.DashboardConfig{
+		Enabled:         true,
+		RefreshInterval: 30 * time.Second,
+		RetentionPeriod: 24 * time.Hour,
+		MaxDataPoints:   100,
+		RealTimeUpdates: true,
+		StartTime:       startTime,
+	}
 	dashboardInstance := dashboard.NewEnterpriseDashboard(
-		*pkgLogger,
+		pkgLogger,
 		monitoringService,
 		scheduler,
 		repoManager,
 		policyManager,
-		nil, // Use default config
+		dbService,
+		dashboardConfig,
 	)
 
 	// Initialize integration hub
-	eventBus := events.NewEventBus(*pkgLogger, 1000)
-	integrationHub := hub.NewIntegrationHub(eventBus, cfg.Integrations, *pkgLogger)
+	eventBus := events.NewEventBus(pkgLogger, 1000)
+	integrationHub := hub.NewIntegrationHub(eventBus, cfg.Integrations, pkgLogger)
 	integrationHub.Initialize(ctx)
 	defer integrationHub.Stop(ctx)
 

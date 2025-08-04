@@ -1,0 +1,607 @@
+# GitHub Actions Workflow for TypoSentinel Security Scanning
+# This workflow provides comprehensive security scanning with TypoSentinel
+# across different events and environments.
+
+name: 🛡️ TypoSentinel Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily security scan at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of scan to perform'
+        required: true
+        default: 'comprehensive'
+        type: choice
+        options:
+          - quick
+          - comprehensive
+          - enterprise
+      project_type:
+        description: 'Project type override'
+        required: false
+        type: choice
+        options:
+          - auto-detect
+          - nodejs
+          - go
+          - python
+          - java
+          - generic
+
+env:
+  TYPOSENTINEL_VERSION: latest
+  SCAN_TIMEOUT: 300
+  CACHE_VERSION: v1
+
+jobs:
+  # Project detection and validation
+  detect-project:
+    name: 🔍 Detect Project Type
+    runs-on: ubuntu-latest
+    outputs:
+      project-type: ${{ steps.detect.outputs.project-type }}
+      scan-args: ${{ steps.detect.outputs.scan-args }}
+      exclude-patterns: ${{ steps.detect.outputs.exclude-patterns }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect project type
+        id: detect
+        run: |
+          echo "🔍 Detecting project type..."
+          
+          # Override from workflow input
+          if [ "${{ github.event.inputs.project_type }}" != "auto-detect" ] && [ -n "${{ github.event.inputs.project_type }}" ]; then
+            PROJECT_TYPE="${{ github.event.inputs.project_type }}"
+            echo "📝 Using manual override: $PROJECT_TYPE"
+          else
+            # Auto-detect based on files
+            if [ -f "package.json" ]; then
+              PROJECT_TYPE="nodejs"
+              echo "✅ Node.js project detected"
+            elif [ -f "go.mod" ]; then
+              PROJECT_TYPE="go"
+              echo "✅ Go project detected"
+            elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
+              PROJECT_TYPE="python"
+              echo "✅ Python project detected"
+            elif [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+              PROJECT_TYPE="java"
+              echo "✅ Java project detected"
+            elif [ -f "Cargo.toml" ]; then
+              PROJECT_TYPE="rust"
+              echo "✅ Rust project detected"
+            elif [ -f "composer.json" ]; then
+              PROJECT_TYPE="php"
+              echo "✅ PHP project detected"
+            else
+              PROJECT_TYPE="generic"
+              echo "⚠️ Unknown project type, using generic scanning"
+            fi
+          fi
+          
+          # Set scan arguments based on project type
+          case "$PROJECT_TYPE" in
+            "nodejs")
+              SCAN_ARGS="--project-type nodejs"
+              EXCLUDE_PATTERNS="node_modules/,dist/,build/"
+              ;;
+            "go")
+              SCAN_ARGS="--project-type go"
+              EXCLUDE_PATTERNS="vendor/,bin/"
+              ;;
+            "python")
+              SCAN_ARGS="--project-type python"
+              EXCLUDE_PATTERNS="__pycache__/,venv/,.venv/,dist/,build/"
+              ;;
+            "java")
+              SCAN_ARGS="--project-type java"
+              EXCLUDE_PATTERNS="target/,build/,.gradle/"
+              ;;
+            "rust")
+              SCAN_ARGS="--project-type rust"
+              EXCLUDE_PATTERNS="target/,Cargo.lock"
+              ;;
+            "php")
+              SCAN_ARGS="--project-type php"
+              EXCLUDE_PATTERNS="vendor/,cache/"
+              ;;
+            *)
+              SCAN_ARGS=""
+              EXCLUDE_PATTERNS=".git/,node_modules/,vendor/"
+              ;;
+          esac
+          
+          echo "project-type=$PROJECT_TYPE" >> $GITHUB_OUTPUT
+          echo "scan-args=$SCAN_ARGS" >> $GITHUB_OUTPUT
+          echo "exclude-patterns=$EXCLUDE_PATTERNS" >> $GITHUB_OUTPUT
+          
+          echo "📊 Project Type: $PROJECT_TYPE"
+          echo "🔧 Scan Args: $SCAN_ARGS"
+          echo "🚫 Exclude Patterns: $EXCLUDE_PATTERNS"
+
+  # Quick scan for pull requests
+  quick-scan:
+    name: ⚡ Quick Security Scan
+    runs-on: ubuntu-latest
+    needs: detect-project
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache TypoSentinel
+        uses: actions/cache@v3
+        with:
+          path: ~/.typosentinel
+          key: typosentinel-${{ env.CACHE_VERSION }}-${{ runner.os }}-${{ env.TYPOSENTINEL_VERSION }}
+
+      - name: Download TypoSentinel
+        run: |
+          echo "📥 Downloading TypoSentinel..."
+          mkdir -p ~/.typosentinel
+          
+          # Determine architecture
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            ARCH="amd64"
+          elif [ "$ARCH" = "aarch64" ]; then
+            ARCH="arm64"
+          fi
+          
+          # Download if not cached
+          if [ ! -f ~/.typosentinel/typosentinel ]; then
+            curl -L "https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-${ARCH}" \
+                 -o ~/.typosentinel/typosentinel
+            chmod +x ~/.typosentinel/typosentinel
+          fi
+          
+          # Verify installation
+          ~/.typosentinel/typosentinel version
+
+      - name: Run quick scan
+        id: scan
+        run: |
+          echo "🚀 Starting quick security scan..."
+          
+          # Prepare scan command
+          SCAN_CMD="~/.typosentinel/typosentinel scan --preset quick"
+          
+          if [ -n "${{ needs.detect-project.outputs.scan-args }}" ]; then
+            SCAN_CMD="$SCAN_CMD ${{ needs.detect-project.outputs.scan-args }}"
+          fi
+          
+          if [ -n "${{ needs.detect-project.outputs.exclude-patterns }}" ]; then
+            IFS=',' read -ra EXCLUDES <<< "${{ needs.detect-project.outputs.exclude-patterns }}"
+            for exclude in "${EXCLUDES[@]}"; do
+              SCAN_CMD="$SCAN_CMD --exclude $exclude"
+            done
+          fi
+          
+          # Add output options
+          SCAN_CMD="$SCAN_CMD --output json --output-file quick-scan-results.json"
+          SCAN_CMD="$SCAN_CMD --output sarif --output-file quick-scan.sarif"
+          SCAN_CMD="$SCAN_CMD --timeout 180s --concurrency 4"
+          
+          echo "🔧 Running: $SCAN_CMD"
+          
+          # Run scan with timeout
+          timeout $SCAN_TIMEOUT bash -c "$SCAN_CMD" || SCAN_EXIT_CODE=$?
+          
+          # Process results
+          if [ -f "quick-scan-results.json" ]; then
+            echo "📊 Scan completed successfully"
+            
+            # Extract metrics
+            TOTAL_PACKAGES=$(jq -r '.summary.total_packages // 0' quick-scan-results.json)
+            THREATS_FOUND=$(jq -r '.summary.threats_found // 0' quick-scan-results.json)
+            HIGH_SEVERITY=$(jq -r '.summary.severity_breakdown.high // 0' quick-scan-results.json)
+            CRITICAL_SEVERITY=$(jq -r '.summary.severity_breakdown.critical // 0' quick-scan-results.json)
+            
+            echo "total-packages=$TOTAL_PACKAGES" >> $GITHUB_OUTPUT
+            echo "threats-found=$THREATS_FOUND" >> $GITHUB_OUTPUT
+            echo "high-severity=$HIGH_SEVERITY" >> $GITHUB_OUTPUT
+            echo "critical-severity=$CRITICAL_SEVERITY" >> $GITHUB_OUTPUT
+            
+            echo "📦 Total packages scanned: $TOTAL_PACKAGES"
+            echo "⚠️ Threats found: $THREATS_FOUND"
+            echo "🔴 High severity: $HIGH_SEVERITY"
+            echo "💀 Critical severity: $CRITICAL_SEVERITY"
+            
+            # Set scan status
+            if [ "$CRITICAL_SEVERITY" -gt 0 ] || [ "$HIGH_SEVERITY" -gt 0 ]; then
+              echo "scan-status=failed" >> $GITHUB_OUTPUT
+              echo "❌ Scan failed due to high/critical severity threats"
+            else
+              echo "scan-status=passed" >> $GITHUB_OUTPUT
+              echo "✅ Scan passed"
+            fi
+          else
+            echo "❌ Scan failed or no results generated"
+            echo "scan-status=error" >> $GITHUB_OUTPUT
+            exit ${SCAN_EXIT_CODE:-1}
+          fi
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always() && hashFiles('quick-scan.sarif') != ''
+        with:
+          sarif_file: quick-scan.sarif
+          category: typosentinel-quick
+
+      - name: Comment PR with results
+        uses: actions/github-script@v6
+        if: always() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let comment = `## 🛡️ TypoSentinel Security Scan Results\n\n`;
+            comment += `**Scan Type:** Quick Scan (PR)\n`;
+            comment += `**Project Type:** ${{ needs.detect-project.outputs.project-type }}\n`;
+            comment += `**Commit:** ${context.sha.substring(0, 7)}\n\n`;
+            
+            if (fs.existsSync('quick-scan-results.json')) {
+              const results = JSON.parse(fs.readFileSync('quick-scan-results.json', 'utf8'));
+              
+              comment += `### 📊 Summary\n`;
+              comment += `- **Total Packages:** ${results.summary?.total_packages || 0}\n`;
+              comment += `- **Threats Found:** ${results.summary?.threats_found || 0}\n`;
+              comment += `- **Critical:** ${results.summary?.severity_breakdown?.critical || 0}\n`;
+              comment += `- **High:** ${results.summary?.severity_breakdown?.high || 0}\n`;
+              comment += `- **Medium:** ${results.summary?.severity_breakdown?.medium || 0}\n`;
+              comment += `- **Low:** ${results.summary?.severity_breakdown?.low || 0}\n\n`;
+              
+              if (results.summary?.threats_found > 0) {
+                comment += `### 🚨 Detected Threats\n`;
+                results.threats?.forEach(threat => {
+                  comment += `- **${threat.package_name}** (${threat.severity}): ${threat.description}\n`;
+                });
+                comment += `\n`;
+                
+                const critical = results.summary?.severity_breakdown?.critical || 0;
+                const high = results.summary?.severity_breakdown?.high || 0;
+                
+                if (critical > 0 || high > 0) {
+                  comment += `❌ **Action Required:** Please review and address the security issues before merging.\n`;
+                } else {
+                  comment += `⚠️ **Review Recommended:** Consider addressing the identified security issues.\n`;
+                }
+              } else {
+                comment += `✅ **No security threats detected!**\n`;
+              }
+            } else {
+              comment += `❌ **Scan Error:** Unable to complete security scan. Please check the workflow logs.\n`;
+            }
+            
+            // Find existing comment and update or create new
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(c => 
+              c.body.includes('🛡️ TypoSentinel Security Scan Results')
+            );
+            
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+      - name: Fail on critical/high threats
+        if: steps.scan.outputs.scan-status == 'failed'
+        run: |
+          echo "❌ Pipeline failed due to critical or high severity security threats"
+          echo "🔧 Please review and address the security issues before merging"
+          exit 1
+
+      - name: Upload scan artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: quick-scan-results
+          path: |
+            quick-scan-results.json
+            quick-scan.sarif
+          retention-days: 7
+
+  # Comprehensive scan for main branches
+  comprehensive-scan:
+    name: 🔍 Comprehensive Security Scan
+    runs-on: ubuntu-latest
+    needs: detect-project
+    if: github.event_name == 'push' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.scan_type == 'comprehensive')
+    permissions:
+      contents: read
+      security-events: write
+      actions: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache TypoSentinel
+        uses: actions/cache@v3
+        with:
+          path: ~/.typosentinel
+          key: typosentinel-${{ env.CACHE_VERSION }}-${{ runner.os }}-${{ env.TYPOSENTINEL_VERSION }}
+
+      - name: Download TypoSentinel
+        run: |
+          echo "📥 Downloading TypoSentinel..."
+          mkdir -p ~/.typosentinel
+          
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            ARCH="amd64"
+          elif [ "$ARCH" = "aarch64" ]; then
+            ARCH="arm64"
+          fi
+          
+          if [ ! -f ~/.typosentinel/typosentinel ]; then
+            curl -L "https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-${ARCH}" \
+                 -o ~/.typosentinel/typosentinel
+            chmod +x ~/.typosentinel/typosentinel
+          fi
+          
+          ~/.typosentinel/typosentinel version
+
+      - name: Run comprehensive scan
+        id: scan
+        run: |
+          echo "🔍 Starting comprehensive security scan..."
+          
+          # Determine scan preset
+          if [ "${{ github.event.inputs.scan_type }}" = "enterprise" ]; then
+            PRESET="enterprise"
+          else
+            PRESET="thorough"
+          fi
+          
+          # Build scan command
+          SCAN_CMD="~/.typosentinel/typosentinel scan --preset $PRESET"
+          
+          if [ -n "${{ needs.detect-project.outputs.scan-args }}" ]; then
+            SCAN_CMD="$SCAN_CMD ${{ needs.detect-project.outputs.scan-args }}"
+          fi
+          
+          if [ -n "${{ needs.detect-project.outputs.exclude-patterns }}" ]; then
+            IFS=',' read -ra EXCLUDES <<< "${{ needs.detect-project.outputs.exclude-patterns }}"
+            for exclude in "${EXCLUDES[@]}"; do
+              SCAN_CMD="$SCAN_CMD --exclude $exclude"
+            done
+          fi
+          
+          # Add comprehensive scan options
+          SCAN_CMD="$SCAN_CMD --output json --output-file comprehensive-scan-results.json"
+          SCAN_CMD="$SCAN_CMD --output sarif --output-file comprehensive-scan.sarif"
+          SCAN_CMD="$SCAN_CMD --output table --output-file scan-report.txt"
+          SCAN_CMD="$SCAN_CMD --timeout 600s --concurrency 6"
+          SCAN_CMD="$SCAN_CMD --include-metadata --verbose"
+          
+          echo "🔧 Running: $SCAN_CMD"
+          
+          # Execute scan
+          eval $SCAN_CMD
+          
+          # Process results
+          if [ -f "comprehensive-scan-results.json" ]; then
+            TOTAL_PACKAGES=$(jq -r '.summary.total_packages // 0' comprehensive-scan-results.json)
+            THREATS_FOUND=$(jq -r '.summary.threats_found // 0' comprehensive-scan-results.json)
+            CRITICAL=$(jq -r '.summary.severity_breakdown.critical // 0' comprehensive-scan-results.json)
+            HIGH=$(jq -r '.summary.severity_breakdown.high // 0' comprehensive-scan-results.json)
+            
+            echo "total-packages=$TOTAL_PACKAGES" >> $GITHUB_OUTPUT
+            echo "threats-found=$THREATS_FOUND" >> $GITHUB_OUTPUT
+            echo "critical-severity=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "high-severity=$HIGH" >> $GITHUB_OUTPUT
+            
+            echo "📊 Comprehensive scan completed"
+            echo "📦 Total packages: $TOTAL_PACKAGES"
+            echo "⚠️ Threats found: $THREATS_FOUND"
+            echo "🔴 Critical: $CRITICAL"
+            echo "🟠 High: $HIGH"
+          else
+            echo "❌ Scan failed"
+            exit 1
+          fi
+
+      - name: Generate security report
+        run: |
+          echo "📊 Generating security report..."
+          
+          cat > security-report.md << EOF
+          # 🛡️ TypoSentinel Comprehensive Security Report
+          
+          **Repository:** ${{ github.repository }}  
+          **Branch:** ${{ github.ref_name }}  
+          **Commit:** ${{ github.sha }}  
+          **Project Type:** ${{ needs.detect-project.outputs.project-type }}  
+          **Scan Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")  
+          **Workflow:** ${{ github.workflow }} #${{ github.run_number }}
+          
+          ## 📊 Executive Summary
+          EOF
+          
+          if [ -f "comprehensive-scan-results.json" ]; then
+            TOTAL=$(jq -r '.summary.total_packages // 0' comprehensive-scan-results.json)
+            THREATS=$(jq -r '.summary.threats_found // 0' comprehensive-scan-results.json)
+            DURATION=$(jq -r '.metadata.duration // "N/A"' comprehensive-scan-results.json)
+            VERSION=$(jq -r '.metadata.version // "N/A"' comprehensive-scan-results.json)
+            
+            cat >> security-report.md << EOF
+          - **Total Packages Scanned:** $TOTAL
+          - **Security Threats Found:** $THREATS
+          - **Scan Duration:** $DURATION
+          - **Scanner Version:** $VERSION
+          
+          ## 🎯 Severity Breakdown
+          | Severity | Count |
+          |----------|-------|
+          | Critical | $(jq -r '.summary.severity_breakdown.critical // 0' comprehensive-scan-results.json) |
+          | High     | $(jq -r '.summary.severity_breakdown.high // 0' comprehensive-scan-results.json) |
+          | Medium   | $(jq -r '.summary.severity_breakdown.medium // 0' comprehensive-scan-results.json) |
+          | Low      | $(jq -r '.summary.severity_breakdown.low // 0' comprehensive-scan-results.json) |
+          
+          EOF
+            
+            # Add detailed threat analysis
+            if [ "$THREATS" -gt 0 ]; then
+              echo "## 🚨 Detailed Threat Analysis" >> security-report.md
+              jq -r '.threats[] | "### \(.package_name) (\(.version // "unknown"))\n- **Severity:** \(.severity)\n- **Confidence:** \(.confidence)\n- **Description:** \(.description)\n- **Recommendation:** \(.recommendation // "Review package authenticity")\n"' comprehensive-scan-results.json >> security-report.md
+            fi
+          fi
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always() && hashFiles('comprehensive-scan.sarif') != ''
+        with:
+          sarif_file: comprehensive-scan.sarif
+          category: typosentinel-comprehensive
+
+      - name: Upload scan artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: comprehensive-scan-results
+          path: |
+            comprehensive-scan-results.json
+            comprehensive-scan.sarif
+            scan-report.txt
+            security-report.md
+          retention-days: 30
+
+      - name: Create security issue on critical findings
+        if: steps.scan.outputs.critical-severity > 0
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const critical = ${{ steps.scan.outputs.critical-severity }};
+            const high = ${{ steps.scan.outputs.high-severity }};
+            
+            const title = `🚨 Critical Security Threats Detected - ${critical} Critical, ${high} High`;
+            const body = `
+            ## 🛡️ TypoSentinel Security Alert
+            
+            **Critical security threats have been detected in this repository.**
+            
+            ### 📊 Summary
+            - **Critical Threats:** ${critical}
+            - **High Threats:** ${high}
+            - **Scan Date:** ${new Date().toISOString()}
+            - **Commit:** ${{ github.sha }}
+            - **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ### 🔧 Next Steps
+            1. Review the detailed scan results in the workflow artifacts
+            2. Address critical and high severity threats immediately
+            3. Update dependencies and packages as needed
+            4. Re-run the security scan to verify fixes
+            
+            ### 📋 Resources
+            - [Security Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [TypoSentinel Documentation](https://github.com/typosentinel/typosentinel)
+            
+            ---
+            *This issue was automatically created by TypoSentinel security scanning.*
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['security', 'critical', 'typosentinel']
+            });
+
+  # Security notification job
+  notify-security:
+    name: 📢 Security Notifications
+    runs-on: ubuntu-latest
+    needs: [comprehensive-scan]
+    if: always() && needs.comprehensive-scan.outputs.critical-severity > 0
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "🚨 TypoSentinel Security Alert",
+              "attachments": [
+                {
+                  "color": "danger",
+                  "title": "Critical Security Threats Detected",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": "${{ github.repository }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Critical Threats",
+                      "value": "${{ needs.comprehensive-scan.outputs.critical-severity }}",
+                      "short": true
+                    },
+                    {
+                      "title": "High Threats",
+                      "value": "${{ needs.comprehensive-scan.outputs.high-severity }}",
+                      "short": true
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": "button",
+                      "text": "View Workflow",
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }' \
+            ${{ env.SLACK_WEBHOOK_URL }} +
+                  `   - Confidence: ${(threat.confidence * 100).toFixed(1)}%\n` +
+                  `   - Description: ${threat.description}\n`
+                ).join('\n') +
+                `\n\n**Action Required:** Immediate review and remediation needed.\n` +
+                `**Workflow Run:** ${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+              
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Critical Security Alert: ${criticalThreats.length} threats detected`,
+                body: issueBody,
+                labels: ['security', 'critical', 'typosentinel']
+              });
+            }
+          } catch (error) {
+            console.log('Error processing security notification:', error.message);
+          }

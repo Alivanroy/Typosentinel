@@ -1,0 +1,466 @@
+# Azure DevOps Platform Configuration Example
+# This file demonstrates comprehensive Azure DevOps integration for TypoSentinel
+
+# Azure DevOps Platform Configuration
+azuredevops:
+  # Azure DevOps API Configuration
+  api:
+    # Base URL for Azure DevOps (use https://dev.azure.com for Azure DevOps Services)
+    base_url: "https://dev.azure.com"
+    
+    # API version
+    version: "7.0"
+    
+    # Request timeout
+    timeout: "30s"
+    
+    # User agent for API requests
+    user_agent: "TypoSentinel/1.0"
+
+  # Authentication Configuration
+  authentication:
+    # Method 1: Personal Access Token (Recommended)
+    personal_token:
+      token: "${AZURE_DEVOPS_TOKEN}"
+      scopes:
+        - "vso.code"
+        - "vso.project"
+        - "vso.build"
+        - "vso.release"
+        - "vso.packaging"
+    
+    # Method 2: Service Principal (for enterprise scenarios)
+    service_principal:
+      tenant_id: "${AZURE_TENANT_ID}"
+      client_id: "${AZURE_CLIENT_ID}"
+      client_secret: "${AZURE_CLIENT_SECRET}"
+      scopes:
+        - "https://app.vssps.visualstudio.com/.default"
+    
+    # Method 3: Managed Identity (for Azure-hosted scenarios)
+    managed_identity:
+      enabled: false
+      client_id: "${AZURE_MANAGED_IDENTITY_CLIENT_ID}"
+
+  # Rate Limiting Configuration
+  rate_limit:
+    # Requests per hour (Azure DevOps default: 3600 for authenticated users)
+    requests_per_hour: 3600
+    
+    # Burst capacity for short-term spikes
+    burst: 100
+    
+    # Delay between retries when rate limited
+    retry_delay: "5s"
+    
+    # Maximum number of retries
+    max_retries: 3
+    
+    # Enable adaptive rate limiting
+    adaptive: true
+
+  # Repository Discovery Configuration
+  discovery:
+    # Organizations to scan
+    organizations:
+      - name: "myorganization"
+        # Organization-specific filters
+        filters:
+          include_private: true
+          include_disabled: false
+          projects: ["MyProject", "SecurityProject"]
+          exclude_patterns: ["test-*", "demo-*", "archived-*"]
+      
+      - name: "security-org"
+        filters:
+          include_private: true
+          projects: ["SecurityTools"]
+    
+    # Specific projects to scan
+    projects:
+      - organization: "myorganization"
+        name: "MyProject"
+        filters:
+          include_private: true
+          repository_types: ["Git", "Tfvc"]
+          exclude_patterns: ["temp-*"]
+      
+      - organization: "myorganization"
+        name: "SecurityProject"
+        filters:
+          repository_types: ["Git"]
+    
+    # Specific repositories to include
+    repositories:
+      - "myorganization/MyProject/main-app"
+      - "myorganization/SecurityProject/security-scanner"
+      - "security-org/SecurityTools/vulnerability-db"
+    
+    # Discovery scheduling
+    schedule:
+      # How often to run discovery
+      interval: "1h"
+      
+      # Maximum repositories to discover per run
+      max_repos_per_run: 1000
+      
+      # Timeout for discovery operations
+      timeout: "15m"
+
+  # Webhook Configuration (Service Hooks)
+  webhooks:
+    enabled: true
+    
+    # Webhook endpoint URL
+    endpoint: "https://typosentinel.example.com/webhooks/azuredevops"
+    
+    # Webhook secret for validation
+    secret: "${AZURE_DEVOPS_WEBHOOK_SECRET}"
+    
+    # Events to subscribe to
+    events:
+      - "git.push"
+      - "git.pullrequest.created"
+      - "git.pullrequest.updated"
+      - "git.pullrequest.merged"
+      - "build.complete"
+      - "release.deployment.completed"
+    
+    # Service hook configuration
+    service_hooks:
+      # Web Hooks service
+      web_hooks:
+        enabled: true
+        url: "https://typosentinel.example.com/webhooks/azuredevops"
+        resource_version: "1.0"
+        
+      # Azure Service Bus (for enterprise scenarios)
+      service_bus:
+        enabled: false
+        connection_string: "${AZURE_SERVICE_BUS_CONNECTION}"
+        topic_name: "typosentinel-events"
+    
+    # Webhook security settings
+    security:
+      # Validate webhook signatures
+      validate_signature: true
+      
+      # Basic authentication for webhooks
+      basic_auth:
+        username: "${WEBHOOK_USERNAME}"
+        password: "${WEBHOOK_PASSWORD}"
+      
+      # Rate limiting for webhooks
+      rate_limit: 100
+
+  # Azure DevOps Server Configuration (On-Premise)
+  server:
+    enabled: false
+    
+    # Azure DevOps Server URL
+    base_url: "https://tfs.company.com/DefaultCollection"
+    
+    # Server-specific settings
+    settings:
+      # Skip SSL verification (for self-signed certificates)
+      skip_ssl_verify: false
+      
+      # Custom CA certificate path
+      ca_cert_path: "/path/to/ca-cert.pem"
+      
+      # API version for Azure DevOps Server
+      api_version: "6.0"
+      
+      # Collection name
+      collection: "DefaultCollection"
+    
+    # Authentication for Azure DevOps Server
+    authentication:
+      # Windows Authentication
+      windows_auth:
+        username: "${TFS_USERNAME}"
+        password: "${TFS_PASSWORD}"
+        domain: "${TFS_DOMAIN}"
+      
+      # Personal Access Token (Azure DevOps Server 2019+)
+      personal_token:
+        token: "${TFS_TOKEN}"
+
+  # Azure Pipelines Integration
+  pipelines:
+    enabled: true
+    
+    # Pipeline triggers
+    triggers:
+      # Trigger scan on build completion
+      on_build_complete: true
+      
+      # Trigger scan on pull request
+      on_pull_request: true
+      
+      # Trigger scan on release
+      on_release: true
+    
+    # Pipeline variables to set
+    variables:
+      TYPOSENTINEL_SCAN: "true"
+      TYPOSENTINEL_ENDPOINT: "https://typosentinel.example.com"
+      TYPOSENTINEL_TOKEN: "$(TYPOSENTINEL_API_TOKEN)"
+    
+    # Pipeline task configuration
+    task_template:
+      displayName: "TypoSentinel Security Scan"
+      task: "CmdLine@2"
+      inputs:
+        script: |
+          echo "Running TypoSentinel security scan..."
+          typosentinel scan --format sarif --output $(Agent.TempDirectory)/security-report.sarif
+      publishTestResults:
+        testResultsFormat: "VSTest"
+        testResultsFiles: "$(Agent.TempDirectory)/security-report.sarif"
+        mergeTestResults: true
+
+  # Azure Artifacts Integration
+  artifacts:
+    enabled: true
+    
+    # Scan Azure Artifacts feeds
+    scan_feeds: true
+    
+    # Feeds to scan
+    feeds:
+      - organization: "myorganization"
+        project: "MyProject"
+        feed: "my-feed"
+        package_types: ["npm", "nuget", "maven", "pypi"]
+      
+      - organization: "myorganization"
+        feed: "organization-feed"
+        package_types: ["npm", "nuget"]
+    
+    # Package scanning configuration
+    package_scanning:
+      # Scan on package publish
+      on_package_publish: true
+      
+      # Scan on package promote
+      on_package_promote: true
+      
+      # Block malicious packages
+      block_malicious: true
+
+  # Scanning Configuration
+  scanning:
+    # Package managers to analyze
+    package_managers:
+      - "npm"
+      - "pip"
+      - "go"
+      - "maven"
+      - "nuget"
+      - "composer"
+      - "cargo"
+      - "rubygems"
+    
+    # File patterns to include
+    include_patterns:
+      - "**/package.json"
+      - "**/package-lock.json"
+      - "**/yarn.lock"
+      - "**/requirements.txt"
+      - "**/Pipfile"
+      - "**/go.mod"
+      - "**/go.sum"
+      - "**/pom.xml"
+      - "**/build.gradle"
+      - "**/Cargo.toml"
+      - "**/composer.json"
+      - "**/Gemfile"
+      - "**/*.csproj"
+      - "**/*.vbproj"
+      - "**/packages.config"
+    
+    # File patterns to exclude
+    exclude_patterns:
+      - "**/node_modules/**"
+      - "**/vendor/**"
+      - "**/.git/**"
+      - "**/test/**"
+      - "**/tests/**"
+      - "**/__pycache__/**"
+      - "**/target/**"
+      - "**/build/**"
+      - "**/dist/**"
+      - "**/bin/**"
+      - "**/obj/**"
+    
+    # Maximum file size to scan (in bytes)
+    max_file_size: 10485760  # 10MB
+    
+    # Scan timeout per repository
+    timeout: "30m"
+    
+    # Concurrent scans
+    concurrency: 5
+
+  # Pull Request Integration
+  pull_requests:
+    enabled: true
+    
+    # Automatic scanning on PR creation/update
+    auto_scan: true
+    
+    # Comment on PRs with scan results
+    comment_results: true
+    
+    # Block PRs with critical vulnerabilities
+    block_on_critical: true
+    
+    # PR status checks
+    status_checks:
+      enabled: true
+      context: "TypoSentinel Security Scan"
+      description: "Security scan completed"
+    
+    # PR comment template
+    comment_template: |
+      ## TypoSentinel Security Scan Results
+      
+      **Scan Status**: {{.Status}}
+      **Threats Found**: {{.ThreatsCount}}
+      **Risk Level**: {{.RiskLevel}}
+      
+      {{if .Threats}}
+      ### Detected Threats
+      {{range .Threats}}
+      - **{{.Type}}**: {{.Description}} (Severity: {{.Severity}})
+      {{end}}
+      {{end}}
+      
+      [View Full Report]({{.ReportURL}})
+
+  # Work Items Integration
+  work_items:
+    enabled: true
+    
+    # Create work items for security issues
+    create_on_threats: true
+    
+    # Work item type for security issues
+    work_item_type: "Bug"
+    
+    # Work item template
+    template:
+      title: "Security Threat: {{.ThreatType}} in {{.Package}}"
+      description: |
+        **Threat Type**: {{.ThreatType}}
+        **Package**: {{.Package}}
+        **Version**: {{.Version}}
+        **Severity**: {{.Severity}}
+        **Confidence**: {{.Confidence}}
+        
+        **Description**: {{.Description}}
+        
+        **Recommendation**: {{.Recommendation}}
+      area_path: "MyProject\\Security"
+      iteration_path: "MyProject\\Sprint 1"
+      assigned_to: "security-team@company.com"
+      tags: "security;vulnerability;typosentinel"
+
+  # Caching Configuration
+  cache:
+    enabled: true
+    
+    # Cache backend (redis, memory, file)
+    backend: "redis"
+    
+    # Cache TTL for different data types
+    ttl:
+      repositories: "24h"
+      organizations: "12h"
+      projects: "6h"
+      builds: "1h"
+      releases: "2h"
+      work_items: "30m"
+    
+    # Redis configuration (if using redis backend)
+    redis:
+      host: "localhost"
+      port: 6379
+      password: "${REDIS_PASSWORD}"
+      database: 3
+      pool_size: 10
+
+  # Monitoring and Metrics
+  monitoring:
+    enabled: true
+    
+    # Metrics to collect
+    metrics:
+      - "api_requests_total"
+      - "api_request_duration"
+      - "rate_limit_remaining"
+      - "repositories_discovered"
+      - "scan_duration"
+      - "webhook_events_received"
+      - "pipeline_triggers"
+      - "pull_request_scans"
+      - "work_items_created"
+    
+    # Health check configuration
+    health_check:
+      enabled: true
+      interval: "5m"
+      timeout: "30s"
+      endpoints:
+        - "https://dev.azure.com/_apis/profile/profiles/me"
+
+  # Logging Configuration
+  logging:
+    level: "info"
+    
+    # Log API requests and responses
+    log_requests: false
+    
+    # Log webhook events
+    log_webhooks: true
+    
+    # Log pipeline events
+    log_pipeline_events: true
+    
+    # Log work item events
+    log_work_item_events: true
+    
+    # Sensitive fields to redact from logs
+    redact_fields:
+      - "token"
+      - "password"
+      - "secret"
+      - "client_secret"
+      - "connection_string"
+
+# Integration with TypoSentinel Core
+integration:
+  # Enable Azure DevOps integration
+  enabled: true
+  
+  # Priority for this platform (higher = more priority)
+  priority: 4
+  
+  # Tags to apply to all Azure DevOps repositories
+  tags:
+    - "azuredevops"
+    - "git"
+    - "tfvc"
+    - "source-control"
+    - "microsoft"
+    - "devops"
+  
+  # Custom metadata to include
+  metadata:
+    platform: "azuredevops"
+    source: "api"
+    version: "v1"
+    supports_pipelines: true
+    supports_artifacts: true
+    supports_work_items: true

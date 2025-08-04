@@ -1,0 +1,283 @@
+# Example GitHub Actions workflow for integrating TypoSentinel
+# This workflow demonstrates how to use TypoSentinel in your CI/CD pipeline
+# for automated supply chain security scanning
+
+name: Supply Chain Security with TypoSentinel
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scan daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+env:
+  TYPOSENTINEL_VERSION: 'latest'
+  # Configure scan sensitivity (low, medium, high, critical)
+  SCAN_LEVEL: 'medium'
+  # Fail build on critical threats
+  FAIL_ON_CRITICAL: 'true'
+
+jobs:
+  # Basic dependency scanning
+  typosentinel-scan:
+    name: TypoSentinel Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download TypoSentinel
+        run: |
+          # Download the latest TypoSentinel binary
+          curl -L -o typosentinel https://github.com/Alivanroy/Typosentinel/releases/latest/download/typosentinel-linux-amd64
+          chmod +x typosentinel
+          ./typosentinel version
+
+      - name: Run TypoSentinel scan
+        id: scan
+        run: |
+          # Run scan with futuristic output for better visibility
+          ./typosentinel scan . --output futuristic --config-level ${{ env.SCAN_LEVEL }} > scan_results.txt 2>&1
+          
+          # Also generate JSON output for processing
+          ./typosentinel scan . --output json > scan_results.json 2>&1
+          
+          # Check exit code
+          SCAN_EXIT_CODE=$?
+          echo "scan_exit_code=$SCAN_EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          # Display results
+          cat scan_results.txt
+
+      - name: Parse scan results
+        id: parse
+        run: |
+          # Extract threat information from JSON results
+          if [ -f scan_results.json ]; then
+            CRITICAL_THREATS=$(jq -r '.threats[] | select(.severity == "critical") | length' scan_results.json 2>/dev/null || echo "0")
+            HIGH_THREATS=$(jq -r '.threats[] | select(.severity == "high") | length' scan_results.json 2>/dev/null || echo "0")
+            TOTAL_THREATS=$(jq -r '.threats | length' scan_results.json 2>/dev/null || echo "0")
+            
+            echo "critical_threats=$CRITICAL_THREATS" >> $GITHUB_OUTPUT
+            echo "high_threats=$HIGH_THREATS" >> $GITHUB_OUTPUT
+            echo "total_threats=$TOTAL_THREATS" >> $GITHUB_OUTPUT
+            
+            # Create summary
+            echo "## 🛡️ TypoSentinel Security Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical Threats:** $CRITICAL_THREATS" >> $GITHUB_STEP_SUMMARY
+            echo "- **High Threats:** $HIGH_THREATS" >> $GITHUB_STEP_SUMMARY
+            echo "- **Total Threats:** $TOTAL_THREATS" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: typosentinel-scan-results
+          path: |
+            scan_results.txt
+            scan_results.json
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let comment = '## 🛡️ TypoSentinel Security Scan Results\n\n';
+            
+            try {
+              const results = fs.readFileSync('scan_results.txt', 'utf8');
+              comment += '```\n' + results.substring(0, 2000) + '\n```\n';
+              
+              if (results.length > 2000) {
+                comment += '\n*Results truncated. See full results in artifacts.*\n';
+              }
+            } catch (error) {
+              comment += 'Could not read scan results.\n';
+            }
+            
+            comment += `\n**Scan Status:** ${steps.scan.outputs.scan_exit_code === '0' ? '✅ Passed' : '❌ Failed'}`;
+            comment += `\n**Critical Threats:** ${steps.parse.outputs.critical_threats || 'N/A'}`;
+            comment += `\n**High Threats:** ${steps.parse.outputs.high_threats || 'N/A'}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Fail on critical threats
+        if: env.FAIL_ON_CRITICAL == 'true' && steps.parse.outputs.critical_threats > 0
+        run: |
+          echo "❌ Critical security threats detected! Failing the build."
+          echo "Found ${{ steps.parse.outputs.critical_threats }} critical threats."
+          exit 1
+
+  # Advanced scanning with package analysis
+  typosentinel-analyze:
+    name: Package Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download TypoSentinel
+        run: |
+          curl -L -o typosentinel https://github.com/Alivanroy/Typosentinel/releases/latest/download/typosentinel-linux-amd64
+          chmod +x typosentinel
+
+      - name: Analyze suspicious packages
+        run: |
+          # Extract package names from dependency files and analyze suspicious ones
+          echo "## 🔍 Package Analysis Results" >> $GITHUB_STEP_SUMMARY
+          
+          # Analyze npm packages if package.json exists
+          if [ -f package.json ]; then
+            echo "### NPM Packages" >> $GITHUB_STEP_SUMMARY
+            jq -r '.dependencies // {} | keys[]' package.json | head -5 | while read package; do
+              echo "Analyzing: $package"
+              ./typosentinel analyze "$package" npm --output futuristic || true
+            done
+          fi
+          
+          # Analyze Python packages if requirements.txt exists
+          if [ -f requirements.txt ]; then
+            echo "### Python Packages" >> $GITHUB_STEP_SUMMARY
+            head -5 requirements.txt | cut -d'=' -f1 | while read package; do
+              echo "Analyzing: $package"
+              ./typosentinel analyze "$package" pypi --output futuristic || true
+            done
+          fi
+
+  # Integration with security tools
+  security-integration:
+    name: Security Integration
+    runs-on: ubuntu-latest
+    needs: [typosentinel-scan]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download scan results
+        uses: actions/download-artifact@v4
+        with:
+          name: typosentinel-scan-results
+
+      - name: Convert to SARIF format
+        run: |
+          # Convert TypoSentinel results to SARIF format for GitHub Security tab
+          cat > convert_to_sarif.py << 'EOF'
+          import json
+          import sys
+          from datetime import datetime
+          
+          def convert_to_sarif(typosentinel_results):
+              sarif = {
+                  "version": "2.1.0",
+                  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+                  "runs": [{
+                      "tool": {
+                          "driver": {
+                              "name": "TypoSentinel",
+                              "version": "1.0.0",
+                              "informationUri": "https://github.com/Alivanroy/Typosentinel"
+                          }
+                      },
+                      "results": []
+                  }]
+              }
+              
+              if 'threats' in typosentinel_results:
+                  for threat in typosentinel_results['threats']:
+                      result = {
+                          "ruleId": f"typosentinel-{threat.get('type', 'unknown')}",
+                          "message": {
+                              "text": threat.get('description', 'Security threat detected')
+                          },
+                          "level": "error" if threat.get('severity') == 'critical' else "warning",
+                          "locations": [{
+                              "physicalLocation": {
+                                  "artifactLocation": {
+                                      "uri": threat.get('package', 'unknown')
+                                  }
+                              }
+                          }]
+                      }
+                      sarif["runs"][0]["results"].append(result)
+              
+              return sarif
+          
+          try:
+              with open('scan_results.json', 'r') as f:
+                  results = json.load(f)
+              
+              sarif_output = convert_to_sarif(results)
+              
+              with open('typosentinel.sarif', 'w') as f:
+                  json.dump(sarif_output, f, indent=2)
+              
+              print("SARIF conversion completed")
+          except Exception as e:
+              print(f"SARIF conversion failed: {e}")
+              # Create empty SARIF file
+              with open('typosentinel.sarif', 'w') as f:
+                  json.dump({"version": "2.1.0", "runs": []}, f)
+          EOF
+          
+          python convert_to_sarif.py
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: typosentinel.sarif
+          category: typosentinel
+
+  # Notification and reporting
+  notify:
+    name: Security Notifications
+    runs-on: ubuntu-latest
+    needs: [typosentinel-scan, typosentinel-analyze]
+    if: always() && (needs.typosentinel-scan.result == 'failure' || needs.typosentinel-analyze.result == 'failure')
+    
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🚨 TypoSentinel detected security threats in ${{ github.repository }}!\nBranch: ${{ github.ref }}\nCommit: ${{ github.sha }}\nView details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}' \
+            ${{ env.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub issue
+        if: github.event_name == 'schedule' && env.CREATE_ISSUES == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security threats detected by TypoSentinel',
+              body: `TypoSentinel has detected security threats in the repository.
+              
+              **Scan Details:**
+              - Branch: ${{ github.ref }}
+              - Commit: ${{ github.sha }}
+              - Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              
+              Please review the scan results and take appropriate action.`,
+              labels: ['security', 'typosentinel']
+            });
+        env:
+          CREATE_ISSUES: ${{ secrets.CREATE_SECURITY_ISSUES }}

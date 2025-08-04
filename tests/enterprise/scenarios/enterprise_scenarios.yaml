@@ -1,0 +1,280 @@
+# Enterprise Attack Scenarios Configuration
+# Defines comprehensive attack scenarios for enterprise-level testing
+
+# Basic Typosquatting Attacks
+typosquatting:
+  basic_typos:
+    count: 100
+    severity: low
+    description: "Basic character substitution and omission attacks"
+    techniques:
+      - character_substitution
+      - character_omission
+      - character_insertion
+    
+  advanced_typos:
+    count: 50
+    severity: medium
+    description: "Advanced typosquatting with evasion techniques"
+    techniques:
+      - homoglyph_substitution
+      - combosquatting
+      - subdomain_squatting
+    
+  sophisticated_typos:
+    count: 25
+    severity: high
+    description: "AI-generated sophisticated typosquatting"
+    techniques:
+      - multiple_technique_combination
+      - ai_generated_variants
+      - steganographic_naming
+
+# Supply Chain Attacks
+supply_chain:
+  dependency_confusion:
+    count: 30
+    severity: high
+    description: "Dependency confusion attacks targeting internal packages"
+    environments:
+      - financial_services
+      - healthcare
+      - technology
+      - government
+    
+  malicious_updates:
+    count: 20
+    severity: critical
+    description: "Malicious updates to legitimate packages"
+    target_packages:
+      - high_popularity
+      - critical_dependencies
+      - security_libraries
+    
+  compromised_maintainers:
+    count: 15
+    severity: critical
+    description: "Attacks through compromised maintainer accounts"
+    compromise_vectors:
+      - credential_stuffing
+      - phishing_attacks
+      - social_engineering
+      - insider_threats
+
+# Nation-State Level Attacks
+nation_state:
+  apt_campaigns:
+    count: 15
+    severity: critical
+    description: "Advanced Persistent Threat group campaigns"
+    groups:
+      - APT28
+      - APT29
+      - APT40
+      - Lazarus
+      - Equation_Group
+    
+  zero_day_exploits:
+    count: 10
+    severity: critical
+    description: "Nation-state zero-day exploit scenarios"
+    categories:
+      - operating_system_kernel
+      - hypervisor_escape
+      - firmware_exploitation
+      - hardware_vulnerability
+    
+  infrastructure_targeting:
+    count: 12
+    severity: critical
+    description: "Critical infrastructure targeting attacks"
+    sectors:
+      - energy
+      - water
+      - transportation
+      - communications
+      - financial
+      - healthcare
+      - nuclear
+
+# Advanced Persistent Threats
+advanced_persistent:
+  long_term_campaigns:
+    count: 20
+    severity: high
+    description: "Long-term APT campaigns with multiple phases"
+    duration_range: "6-24 months"
+    phases:
+      - reconnaissance
+      - initial_access
+      - persistence
+      - lateral_movement
+      - data_collection
+      - exfiltration
+    
+  multi_stage_attacks:
+    count: 15
+    severity: critical
+    description: "Multi-stage attacks with complex payloads"
+    stages:
+      - dropper
+      - loader
+      - reconnaissance
+      - persistence
+      - privilege_escalation
+      - lateral_movement
+      - data_collection
+      - exfiltration
+    
+  ai_powered_attacks:
+    count: 10
+    severity: critical
+    description: "AI/ML powered sophisticated attacks"
+    techniques:
+      - adversarial_examples
+      - model_poisoning
+      - neural_backdoors
+      - deepfake_generation
+
+# Quantum-Era Attacks
+quantum_era:
+  quantum_cryptographic:
+    count: 8
+    severity: critical
+    description: "Quantum-era cryptographic attacks"
+    techniques:
+      - quantum_key_distribution_attack
+      - quantum_cryptanalysis
+      - post_quantum_crypto_bypass
+    
+  quantum_network:
+    count: 6
+    severity: critical
+    description: "Quantum network attacks"
+    targets:
+      - quantum_communication_channels
+      - quantum_key_distribution_networks
+
+# Mixed Attack Scenarios
+mixed_scenarios:
+  typo_supply_chain:
+    count: 15
+    severity: high
+    description: "Combined typosquatting and supply chain attacks"
+    
+  apt_nation_state:
+    count: 12
+    severity: critical
+    description: "Combined APT and nation-state techniques"
+    
+  ai_traditional:
+    count: 10
+    severity: high
+    description: "AI-enhanced traditional attack methods"
+
+# Enterprise Environment Specific
+enterprise_environments:
+  financial_services:
+    critical_packages:
+      - cryptography
+      - pycryptodome
+      - jwt
+      - oauth2
+      - banking-apis
+    compliance_requirements:
+      - PCI-DSS
+      - SOX
+      - GDPR
+      - Basel-III
+    risk_tolerance: very_low
+    
+  healthcare:
+    critical_packages:
+      - hl7
+      - dicom
+      - medical-imaging
+      - patient-data
+      - fhir
+    compliance_requirements:
+      - HIPAA
+      - FDA
+      - GDPR
+      - HITECH
+    risk_tolerance: very_low
+    
+  technology:
+    critical_packages:
+      - cloud-sdk
+      - kubernetes
+      - docker
+      - terraform
+      - ansible
+    compliance_requirements:
+      - SOC2
+      - ISO27001
+      - GDPR
+    risk_tolerance: medium
+    
+  government:
+    critical_packages:
+      - security-tools
+      - encryption
+      - audit-logging
+      - classified-systems
+    compliance_requirements:
+      - FedRAMP
+      - FISMA
+      - NIST
+      - FIPS-140
+    risk_tolerance: very_low
+
+# Attack Intensity Levels
+intensity_levels:
+  low:
+    concurrent_attacks: 5
+    delay_between_attacks: 5.0  # seconds
+    duration: "1 hour"
+    
+  medium:
+    concurrent_attacks: 15
+    delay_between_attacks: 2.0
+    duration: "4 hours"
+    
+  high:
+    concurrent_attacks: 30
+    delay_between_attacks: 0.5
+    duration: "8 hours"
+    
+  enterprise:
+    concurrent_attacks: 50
+    delay_between_attacks: 0.1
+    duration: "24 hours"
+
+# Performance Metrics
+performance_targets:
+  detection_rate_minimum: 0.95  # 95% minimum detection rate
+  false_positive_maximum: 0.05  # 5% maximum false positive rate
+  response_time_maximum: 5.0    # 5 seconds maximum response time
+  throughput_minimum: 1000      # 1000 packages per hour minimum
+
+# Reporting Configuration
+reporting:
+  formats:
+    - json
+    - yaml
+    - html
+    - pdf
+  
+  metrics:
+    - detection_rates_by_attack_type
+    - false_positive_rates
+    - response_times
+    - throughput_statistics
+    - evasion_success_rates
+    - enterprise_impact_assessment
+  
+  alerts:
+    - critical_detection_failures
+    - performance_degradation
+    - false_positive_spikes
+    - enterprise_compliance_violations

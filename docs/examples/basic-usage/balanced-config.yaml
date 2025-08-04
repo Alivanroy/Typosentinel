@@ -1,0 +1,144 @@
+# TypoSentinel Balanced Configuration
+# Optimized for most projects with good balance of security and performance
+
+# Scanner configuration
+scanner:
+  # Maximum time to spend scanning
+  timeout: "60s"
+  
+  # Number of concurrent workers
+  max_concurrency: 5
+  
+  # Directories and files to exclude from scanning
+  exclude_patterns:
+    - "node_modules"
+    - "vendor"
+    - ".git"
+    - "dist"
+    - "build"
+    - "*.log"
+    - "*.tmp"
+  
+  # Include development dependencies in scan
+  include_dev_deps: false
+  
+  # Scan depth: surface, medium, deep
+  scan_depth: "medium"
+
+# Threat detection configuration
+detector:
+  # Detection thresholds (0.0 = very sensitive, 1.0 = very strict)
+  thresholds:
+    # Typosquatting detection threshold
+    typosquatting: 0.8
+    
+    # Suspicious package name detection
+    suspicious_name: 0.7
+    
+    # Dependency confusion detection
+    dependency_confusion: 0.8
+    
+    # Malicious pattern detection
+    malicious_patterns: 0.9
+  
+  # Algorithms to use for detection
+  algorithms:
+    - "levenshtein"      # Edit distance
+    - "jaro_winkler"     # String similarity
+    - "phonetic"         # Sound-alike detection
+  
+  # Minimum package popularity threshold
+  min_popularity_threshold: 100
+  
+  # Enable heuristic analysis
+  enable_heuristics: true
+
+# Output configuration
+output:
+  # Output format: json, yaml, table, sarif
+  format: "json"
+  
+  # Include detailed package information
+  include_package_details: true
+  
+  # Include scan metadata
+  include_metadata: true
+  
+  # Pretty print JSON output
+  pretty_print: true
+  
+  # Include confidence scores
+  include_confidence: true
+
+# Registry configuration
+registries:
+  # Enable specific package registries
+  npm:
+    enabled: true
+    api_timeout: "30s"
+  
+  pypi:
+    enabled: true
+    api_timeout: "30s"
+  
+  maven:
+    enabled: true
+    api_timeout: "30s"
+  
+  nuget:
+    enabled: true
+    api_timeout: "30s"
+  
+  go:
+    enabled: true
+    api_timeout: "30s"
+
+# Logging configuration
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+  
+  # Enable structured logging
+  structured: true
+  
+  # Log file path (optional)
+  # file: "typosentinel.log"
+
+# Performance tuning
+performance:
+  # Cache detection results
+  enable_cache: true
+  
+  # Cache duration
+  cache_duration: "24h"
+  
+  # Memory limit for scanning
+  memory_limit: "512MB"
+  
+  # Enable parallel processing
+  parallel_processing: true
+
+# Security settings
+security:
+  # Verify package signatures when available
+  verify_signatures: true
+  
+  # Check for known vulnerabilities
+  check_vulnerabilities: true
+  
+  # Enable reputation checking
+  reputation_checking: true
+
+# Reporting configuration
+reporting:
+  # Generate summary report
+  generate_summary: true
+  
+  # Include recommendations
+  include_recommendations: true
+  
+  # Severity levels to report: low, medium, high, critical
+  severity_levels:
+    - "medium"
+    - "high"
+    - "critical"

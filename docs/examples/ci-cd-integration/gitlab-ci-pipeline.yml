@@ -1,0 +1,576 @@
+# GitLab CI/CD Pipeline for TypoSentinel Security Scanning
+# This pipeline provides comprehensive security scanning with TypoSentinel
+# across different stages of the development lifecycle.
+
+stages:
+  - validate
+  - security-scan
+  - report
+  - deploy
+
+variables:
+  TYPOSENTINEL_VERSION: "latest"
+  TYPOSENTINEL_CONFIG: "config/security.yaml"
+  SCAN_TIMEOUT: "300"
+  DOCKER_DRIVER: overlay2
+
+# Cache for TypoSentinel binary and dependencies
+cache:
+  key: typosentinel-cache
+  paths:
+    - .typosentinel/
+    - node_modules/
+    - vendor/
+
+# Validate project structure and dependencies
+validate:
+  stage: validate
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl jq
+  script:
+    - echo "🔍 Validating project structure..."
+    - |
+      if [ -f "package.json" ]; then
+        echo "✅ Node.js project detected"
+        export PROJECT_TYPE="nodejs"
+      elif [ -f "go.mod" ]; then
+        echo "✅ Go project detected"
+        export PROJECT_TYPE="go"
+      elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+        echo "✅ Python project detected"
+        export PROJECT_TYPE="python"
+      elif [ -f "pom.xml" ] || [ -f "build.gradle" ]; then
+        echo "✅ Java project detected"
+        export PROJECT_TYPE="java"
+      else
+        echo "⚠️ Unknown project type, using generic scanning"
+        export PROJECT_TYPE="generic"
+      fi
+    - echo "PROJECT_TYPE=$PROJECT_TYPE" >> validate.env
+  artifacts:
+    reports:
+      dotenv: validate.env
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Quick security scan for merge requests
+quick-scan:
+  stage: security-scan
+  image: ubuntu:22.04
+  needs: ["validate"]
+  before_script:
+    - apt-get update && apt-get install -y curl jq wget
+    - mkdir -p .typosentinel
+    # Download and verify TypoSentinel
+    - |
+      echo "📥 Downloading TypoSentinel..."
+      ARCH=$(uname -m)
+      if [ "$ARCH" = "x86_64" ]; then
+        ARCH="amd64"
+      elif [ "$ARCH" = "aarch64" ]; then
+        ARCH="arm64"
+      fi
+      
+      curl -L "https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-${ARCH}" \
+           -o .typosentinel/typosentinel
+      chmod +x .typosentinel/typosentinel
+      
+      # Verify installation
+      ./.typosentinel/typosentinel version
+  script:
+    - echo "🚀 Starting quick security scan..."
+    - |
+      # Configure scan based on project type
+      case "$PROJECT_TYPE" in
+        "nodejs")
+          SCAN_ARGS="--preset quick --project-type nodejs --exclude node_modules/"
+          ;;
+        "go")
+          SCAN_ARGS="--preset quick --project-type go --exclude vendor/"
+          ;;
+        "python")
+          SCAN_ARGS="--preset quick --project-type python --exclude __pycache__/"
+          ;;
+        "java")
+          SCAN_ARGS="--preset quick --project-type java --exclude target/"
+          ;;
+        *)
+          SCAN_ARGS="--preset quick"
+          ;;
+      esac
+      
+      # Run scan with timeout
+      timeout $SCAN_TIMEOUT ./.typosentinel/typosentinel scan $SCAN_ARGS \
+        --output json \
+        --output-file quick-scan-results.json \
+        --timeout 180s \
+        --concurrency 4 || SCAN_EXIT_CODE=$?
+      
+      # Handle scan results
+      if [ -f "quick-scan-results.json" ]; then
+        echo "📊 Scan completed successfully"
+        
+        # Extract key metrics
+        TOTAL_PACKAGES=$(jq -r '.summary.total_packages // 0' quick-scan-results.json)
+        THREATS_FOUND=$(jq -r '.summary.threats_found // 0' quick-scan-results.json)
+        HIGH_SEVERITY=$(jq -r '.summary.severity_breakdown.high // 0' quick-scan-results.json)
+        CRITICAL_SEVERITY=$(jq -r '.summary.severity_breakdown.critical // 0' quick-scan-results.json)
+        
+        echo "📦 Total packages scanned: $TOTAL_PACKAGES"
+        echo "⚠️ Threats found: $THREATS_FOUND"
+        echo "🔴 High severity: $HIGH_SEVERITY"
+        echo "💀 Critical severity: $CRITICAL_SEVERITY"
+        
+        # Create summary for MR comment
+        cat > scan-summary.md << EOF
+      ## 🛡️ TypoSentinel Security Scan Results
+      
+      **Scan Type:** Quick Scan (MR)  
+      **Project Type:** $PROJECT_TYPE  
+      **Scan Duration:** $(jq -r '.metadata.duration // "N/A"' quick-scan-results.json)
+      
+      ### 📊 Summary
+      - **Total Packages:** $TOTAL_PACKAGES
+      - **Threats Found:** $THREATS_FOUND
+      - **Critical:** $CRITICAL_SEVERITY
+      - **High:** $HIGH_SEVERITY
+      - **Medium:** $(jq -r '.summary.severity_breakdown.medium // 0' quick-scan-results.json)
+      - **Low:** $(jq -r '.summary.severity_breakdown.low // 0' quick-scan-results.json)
+      
+      EOF
+        
+        # Add threat details if any found
+        if [ "$THREATS_FOUND" -gt 0 ]; then
+          echo "### 🚨 Detected Threats" >> scan-summary.md
+          jq -r '.threats[] | "- **\(.package_name)** (\(.severity)): \(.description)"' quick-scan-results.json >> scan-summary.md
+          
+          # Fail pipeline if critical or high severity threats found
+          if [ "$CRITICAL_SEVERITY" -gt 0 ] || [ "$HIGH_SEVERITY" -gt 0 ]; then
+            echo "" >> scan-summary.md
+            echo "❌ **Pipeline failed due to high/critical severity threats**" >> scan-summary.md
+            echo "🔧 Please review and address the security issues before merging." >> scan-summary.md
+            exit 1
+          fi
+        else
+          echo "✅ No security threats detected!" >> scan-summary.md
+        fi
+      else
+        echo "❌ Scan failed or no results generated"
+        exit ${SCAN_EXIT_CODE:-1}
+      fi
+  artifacts:
+    reports:
+      junit: quick-scan-results.json
+    paths:
+      - quick-scan-results.json
+      - scan-summary.md
+    expire_in: 1 week
+    when: always
+  only:
+    - merge_requests
+
+# Comprehensive security scan for main branches
+comprehensive-scan:
+  stage: security-scan
+  image: ubuntu:22.04
+  needs: ["validate"]
+  before_script:
+    - apt-get update && apt-get install -y curl jq wget
+    - mkdir -p .typosentinel
+    # Download TypoSentinel
+    - |
+      echo "📥 Downloading TypoSentinel..."
+      ARCH=$(uname -m)
+      if [ "$ARCH" = "x86_64" ]; then
+        ARCH="amd64"
+      elif [ "$ARCH" = "aarch64" ]; then
+        ARCH="arm64"
+      fi
+      
+      curl -L "https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-${ARCH}" \
+           -o .typosentinel/typosentinel
+      chmod +x .typosentinel/typosentinel
+  script:
+    - echo "🔍 Starting comprehensive security scan..."
+    - |
+      # Use thorough preset for main branches
+      case "$PROJECT_TYPE" in
+        "nodejs")
+          SCAN_ARGS="--preset thorough --project-type nodejs"
+          ;;
+        "go")
+          SCAN_ARGS="--preset thorough --project-type go"
+          ;;
+        "python")
+          SCAN_ARGS="--preset thorough --project-type python"
+          ;;
+        "java")
+          SCAN_ARGS="--preset thorough --project-type java"
+          ;;
+        *)
+          SCAN_ARGS="--preset thorough"
+          ;;
+      esac
+      
+      # Run comprehensive scan
+      ./.typosentinel/typosentinel scan $SCAN_ARGS \
+        --output json \
+        --output-file comprehensive-scan-results.json \
+        --output sarif \
+        --output-file comprehensive-scan.sarif \
+        --timeout 600s \
+        --concurrency 6 \
+        --include-metadata \
+        --verbose
+      
+      # Generate additional reports
+      ./.typosentinel/typosentinel scan $SCAN_ARGS \
+        --output table \
+        --output-file scan-report.txt
+      
+      # Create detailed summary
+      TOTAL_PACKAGES=$(jq -r '.summary.total_packages // 0' comprehensive-scan-results.json)
+      THREATS_FOUND=$(jq -r '.summary.threats_found // 0' comprehensive-scan-results.json)
+      
+      echo "📊 Comprehensive scan completed"
+      echo "📦 Total packages: $TOTAL_PACKAGES"
+      echo "⚠️ Threats found: $THREATS_FOUND"
+      
+      # Generate security report
+      cat > security-report.md << EOF
+      # 🛡️ TypoSentinel Comprehensive Security Report
+      
+      **Branch:** $CI_COMMIT_REF_NAME  
+      **Commit:** $CI_COMMIT_SHA  
+      **Project Type:** $PROJECT_TYPE  
+      **Scan Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+      
+      ## 📊 Executive Summary
+      - **Total Packages Scanned:** $TOTAL_PACKAGES
+      - **Security Threats Found:** $THREATS_FOUND
+      - **Scan Duration:** $(jq -r '.metadata.duration // "N/A"' comprehensive-scan-results.json)
+      - **Scanner Version:** $(jq -r '.metadata.version // "N/A"' comprehensive-scan-results.json)
+      
+      ## 🎯 Severity Breakdown
+      | Severity | Count |
+      |----------|-------|
+      | Critical | $(jq -r '.summary.severity_breakdown.critical // 0' comprehensive-scan-results.json) |
+      | High     | $(jq -r '.summary.severity_breakdown.high // 0' comprehensive-scan-results.json) |
+      | Medium   | $(jq -r '.summary.severity_breakdown.medium // 0' comprehensive-scan-results.json) |
+      | Low      | $(jq -r '.summary.severity_breakdown.low // 0' comprehensive-scan-results.json) |
+      
+      EOF
+      
+      # Add detailed threat analysis
+      if [ "$THREATS_FOUND" -gt 0 ]; then
+        echo "## 🚨 Detailed Threat Analysis" >> security-report.md
+        jq -r '.threats[] | "### \(.package_name) (\(.version // "unknown"))\n- **Severity:** \(.severity)\n- **Confidence:** \(.confidence)\n- **Description:** \(.description)\n- **Recommendation:** \(.recommendation // "Review package authenticity")\n"' comprehensive-scan-results.json >> security-report.md
+      fi
+  artifacts:
+    reports:
+      junit: comprehensive-scan-results.json
+      sast: comprehensive-scan.sarif
+    paths:
+      - comprehensive-scan-results.json
+      - comprehensive-scan.sarif
+      - scan-report.txt
+      - security-report.md
+    expire_in: 30 days
+  only:
+    - main
+    - develop
+    - /^release\/.*$/
+
+# Enterprise compliance scan
+compliance-scan:
+  stage: security-scan
+  image: ubuntu:22.04
+  needs: ["validate"]
+  before_script:
+    - apt-get update && apt-get install -y curl jq wget
+    - mkdir -p .typosentinel
+    - |
+      echo "📥 Downloading TypoSentinel..."
+      ARCH=$(uname -m)
+      if [ "$ARCH" = "x86_64" ]; then
+        ARCH="amd64"
+      elif [ "$ARCH" = "aarch64" ]; then
+        ARCH="arm64"
+      fi
+      
+      curl -L "https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-${ARCH}" \
+           -o .typosentinel/typosentinel
+      chmod +x .typosentinel/typosentinel
+  script:
+    - echo "📋 Starting compliance security scan..."
+    - |
+      # Enterprise-grade scanning with compliance reporting
+      ./.typosentinel/typosentinel scan \
+        --preset enterprise \
+        --project-type $PROJECT_TYPE \
+        --output json \
+        --output-file compliance-scan-results.json \
+        --output sarif \
+        --output-file compliance-scan.sarif \
+        --compliance-mode \
+        --audit-trail \
+        --timeout 900s \
+        --concurrency 8
+      
+      # Generate compliance report
+      COMPLIANCE_SCORE=$(jq -r '.compliance.score // 0' compliance-scan-results.json)
+      POLICY_VIOLATIONS=$(jq -r '.compliance.violations // 0' compliance-scan-results.json)
+      
+      cat > compliance-report.md << EOF
+      # 📋 TypoSentinel Compliance Report
+      
+      **Compliance Framework:** Enterprise Security Standards  
+      **Scan Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")  
+      **Branch:** $CI_COMMIT_REF_NAME  
+      **Commit:** $CI_COMMIT_SHA
+      
+      ## 🎯 Compliance Score: $COMPLIANCE_SCORE/100
+      
+      ## 📊 Compliance Metrics
+      - **Policy Violations:** $POLICY_VIOLATIONS
+      - **Security Standards Met:** $(jq -r '.compliance.standards_met // 0' compliance-scan-results.json)
+      - **Risk Level:** $(jq -r '.compliance.risk_level // "Unknown"' compliance-scan-results.json)
+      
+      ## 🔍 Audit Trail
+      - **Scan ID:** $(jq -r '.metadata.scan_id // "N/A"' compliance-scan-results.json)
+      - **Scanner Version:** $(jq -r '.metadata.version // "N/A"' compliance-scan-results.json)
+      - **Configuration Hash:** $(jq -r '.metadata.config_hash // "N/A"' compliance-scan-results.json)
+      
+      EOF
+      
+      # Add policy violations if any
+      if [ "$POLICY_VIOLATIONS" -gt 0 ]; then
+        echo "## ⚠️ Policy Violations" >> compliance-report.md
+        jq -r '.compliance.violation_details[]? | "- **\(.policy):** \(.description)"' compliance-scan-results.json >> compliance-report.md
+      fi
+      
+      echo "📋 Compliance scan completed with score: $COMPLIANCE_SCORE"
+  artifacts:
+    reports:
+      sast: compliance-scan.sarif
+    paths:
+      - compliance-scan-results.json
+      - compliance-scan.sarif
+      - compliance-report.md
+    expire_in: 90 days
+  only:
+    - main
+    - /^release\/.*$/
+  when: manual
+
+# Generate and publish security reports
+security-report:
+  stage: report
+  image: alpine:latest
+  needs: 
+    - job: comprehensive-scan
+      artifacts: true
+  before_script:
+    - apk add --no-cache jq curl
+  script:
+    - echo "📊 Generating security dashboard..."
+    - |
+      # Create consolidated security dashboard
+      cat > security-dashboard.html << 'EOF'
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>TypoSentinel Security Dashboard</title>
+          <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
+              .metrics { display: flex; gap: 20px; margin: 20px 0; }
+              .metric { background: #ecf0f1; padding: 15px; border-radius: 5px; flex: 1; text-align: center; }
+              .critical { background: #e74c3c; color: white; }
+              .high { background: #f39c12; color: white; }
+              .medium { background: #f1c40f; }
+              .low { background: #27ae60; color: white; }
+              .threats { margin: 20px 0; }
+              .threat { background: #fff; border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }
+          </style>
+      </head>
+      <body>
+          <div class="header">
+              <h1>🛡️ TypoSentinel Security Dashboard</h1>
+              <p>Project: $CI_PROJECT_NAME | Branch: $CI_COMMIT_REF_NAME | Commit: $CI_COMMIT_SHORT_SHA</p>
+          </div>
+      EOF
+      
+      # Add metrics from scan results
+      if [ -f "comprehensive-scan-results.json" ]; then
+        TOTAL=$(jq -r '.summary.total_packages // 0' comprehensive-scan-results.json)
+        THREATS=$(jq -r '.summary.threats_found // 0' comprehensive-scan-results.json)
+        CRITICAL=$(jq -r '.summary.severity_breakdown.critical // 0' comprehensive-scan-results.json)
+        HIGH=$(jq -r '.summary.severity_breakdown.high // 0' comprehensive-scan-results.json)
+        MEDIUM=$(jq -r '.summary.severity_breakdown.medium // 0' comprehensive-scan-results.json)
+        LOW=$(jq -r '.summary.severity_breakdown.low // 0' comprehensive-scan-results.json)
+        
+        cat >> security-dashboard.html << EOF
+          <div class="metrics">
+              <div class="metric">
+                  <h3>$TOTAL</h3>
+                  <p>Packages Scanned</p>
+              </div>
+              <div class="metric">
+                  <h3>$THREATS</h3>
+                  <p>Threats Found</p>
+              </div>
+              <div class="metric critical">
+                  <h3>$CRITICAL</h3>
+                  <p>Critical</p>
+              </div>
+              <div class="metric high">
+                  <h3>$HIGH</h3>
+                  <p>High</p>
+              </div>
+              <div class="metric medium">
+                  <h3>$MEDIUM</h3>
+                  <p>Medium</p>
+              </div>
+              <div class="metric low">
+                  <h3>$LOW</h3>
+                  <p>Low</p>
+              </div>
+          </div>
+      EOF
+        
+        # Add threat details
+        if [ "$THREATS" -gt 0 ]; then
+          echo '<div class="threats"><h2>🚨 Detected Threats</h2>' >> security-dashboard.html
+          jq -r '.threats[] | "<div class=\"threat\"><h3>\(.package_name)</h3><p><strong>Severity:</strong> \(.severity) | <strong>Confidence:</strong> \(.confidence)</p><p>\(.description)</p></div>"' comprehensive-scan-results.json >> security-dashboard.html
+          echo '</div>' >> security-dashboard.html
+        fi
+      fi
+      
+      echo '</body></html>' >> security-dashboard.html
+      
+      echo "📊 Security dashboard generated"
+  artifacts:
+    paths:
+      - security-dashboard.html
+    expire_in: 30 days
+  only:
+    - main
+    - develop
+
+# Deploy security artifacts to GitLab Pages
+pages:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - job: security-report
+      artifacts: true
+  script:
+    - mkdir public
+    - cp security-dashboard.html public/index.html
+    - |
+      if [ -f "security-report.md" ]; then
+        cp security-report.md public/
+      fi
+    - |
+      if [ -f "compliance-report.md" ]; then
+        cp compliance-report.md public/
+      fi
+    - echo "🚀 Security reports deployed to GitLab Pages"
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  only:
+    - main
+
+# Notification job for critical findings
+notify-security-team:
+  stage: report
+  image: alpine:latest
+  needs:
+    - job: comprehensive-scan
+      artifacts: true
+  before_script:
+    - apk add --no-cache curl jq
+  script:
+    - |
+      if [ -f "comprehensive-scan-results.json" ]; then
+        CRITICAL=$(jq -r '.summary.severity_breakdown.critical // 0' comprehensive-scan-results.json)
+        HIGH=$(jq -r '.summary.severity_breakdown.high // 0' comprehensive-scan-results.json)
+        
+        if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+          echo "🚨 Critical or high severity threats detected, notifying security team..."
+          
+          # Create notification payload
+          cat > notification.json << EOF
+      {
+        "text": "🚨 TypoSentinel Security Alert",
+        "attachments": [
+          {
+            "color": "danger",
+            "title": "Critical Security Threats Detected",
+            "fields": [
+              {
+                "title": "Project",
+                "value": "$CI_PROJECT_NAME",
+                "short": true
+              },
+              {
+                "title": "Branch",
+                "value": "$CI_COMMIT_REF_NAME",
+                "short": true
+              },
+              {
+                "title": "Critical Threats",
+                "value": "$CRITICAL",
+                "short": true
+              },
+              {
+                "title": "High Threats",
+                "value": "$HIGH",
+                "short": true
+              }
+            ],
+            "actions": [
+              {
+                "type": "button",
+                "text": "View Pipeline",
+                "url": "$CI_PIPELINE_URL"
+              }
+            ]
+          }
+        ]
+      }
+      EOF
+          
+          # Send notification (replace with your webhook URL)
+          if [ -n "$SECURITY_WEBHOOK_URL" ]; then
+            curl -X POST -H "Content-Type: application/json" \
+                 -d @notification.json \
+                 "$SECURITY_WEBHOOK_URL"
+            echo "✅ Security team notified"
+          else
+            echo "⚠️ SECURITY_WEBHOOK_URL not configured"
+          fi
+        else
+          echo "✅ No critical or high severity threats found"
+        fi
+      fi
+  only:
+    - main
+    - develop
+  when: on_success
+
+# Cleanup job
+cleanup:
+  stage: .post
+  image: alpine:latest
+  script:
+    - echo "🧹 Cleaning up temporary files..."
+    - rm -rf .typosentinel/
+  when: always

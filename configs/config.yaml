@@ -1,0 +1,182 @@
+# Enhanced Typosentinel Configuration
+# This configuration enables all advanced detection features for maximum effectiveness
+
+# Core Configuration
+core:
+  log_level: "info"
+  max_workers: 10
+  timeout: "30m"
+  cache_enabled: true
+  cache_ttl: "24h"
+
+# Logging configuration
+logging:
+  level: "info"              # debug, info, warn, error
+  format: "text"             # text or json
+  output: "stdout"           # stdout, stderr, or file path
+  timestamp: true            # include timestamps
+  caller: false              # include caller information
+  prefix: "[TYPOSENTINEL]"   # log prefix
+  rotation:
+    enabled: false           # enable log rotation
+    max_size: 100           # maximum size in MB
+    max_backups: 3          # number of backup files
+    max_age: 28             # maximum age in days
+    compress: true          # compress rotated files
+
+# Static Analysis Configuration (Enhanced for Better Detection)
+static_analysis:
+  enabled: true
+  yara_rules_path: "./rules/enhanced_malware_detection.yara"
+  max_file_size: 10485760  # 10MB
+  scan_archives: true
+  deep_scan: true
+  sensitivity: "high"
+  timeout: "30s"
+  parallel_scanning: true
+  typo_detection:
+    enabled: true
+    threshold: 0.85
+    levenshtein_distance: 2
+    popular_packages_only: false
+  signature_updates:
+    auto_update: true
+    update_interval: "24h"
+
+# Dynamic Analysis Configuration
+dynamic_analysis:
+  enabled: true
+  sandbox_type: "docker"
+  sandbox_image: "ubuntu:20.04"
+  sandbox_timeout: "5m"
+  memory_limit: 512
+  network_isolation: true
+  file_system_monitoring: true
+
+# Machine Learning Configuration (Optimized for Threat Detection)
+ml_analysis:
+  enabled: true
+  model_path: "./ml/models/"
+  # Lowered similarity threshold to catch more potential typosquatting
+  similarity_threshold: 0.75
+  # Lowered malware threshold to increase detection sensitivity
+  malware_threshold: 0.65
+  # Lowered anomaly threshold to detect more unusual patterns
+  anomaly_threshold: 0.55
+  # Adjusted typo threshold for better detection
+  typo_threshold: 0.80
+  # Lowered reputation threshold to be more strict with unknown packages
+  reputation_threshold: 0.45
+  # Slightly lowered confidence threshold to include more borderline cases
+  confidence_threshold: 0.70
+  feature_extraction: true
+  # Rebalanced ensemble weights to prioritize malware and typo detection
+  ensemble_weights:
+    similarity: 0.25
+    malware: 0.30
+    anomaly: 0.20
+    typo: 0.20
+    reputation: 0.05
+
+# Behavioral Analysis Configuration (Tuned for Better Performance)
+behavioral_analysis:
+  enabled: true
+  monitor_network: true
+  monitor_filesystem: true
+  monitor_processes: true
+  anomaly_threshold: 0.65
+  sensitivity: "high"
+  false_positive_reduction: true
+  timeout: "10s"
+
+# Provenance Analysis Configuration
+provenance_analysis:
+  enabled: true
+  verify_signatures: true
+  check_supply_chain: true
+  trust_threshold: 0.9
+
+# Typo Detection Configuration
+typo_detection:
+  enabled: true
+  edit_distance_threshold: 2
+  phonetic_similarity: true
+  visual_similarity: true
+  popular_packages_only: false
+
+# Malware Detection Configuration
+malware_detection:
+  enabled: true
+  signature_scanning: true
+  heuristic_analysis: true
+  cloud_reputation: true
+
+# Sandbox Analysis Configuration
+sandbox_analysis:
+  enabled: true
+  execution_timeout: "3m"
+  resource_limits:
+    cpu_percent: 50
+    memory_mb: 256
+    disk_mb: 100
+
+# Cloud Scanning Configuration
+cloud_scanning:
+  enabled: true
+  providers:
+    - "virustotal"
+    - "hybrid_analysis"
+  api_timeout: "30s"
+
+# Real-time Protection Configuration
+real_time_protection:
+  enabled: true
+  monitor_installs: true
+  block_suspicious: true
+  quarantine_enabled: true
+
+# Vulnerability Scanning Configuration
+vulnerability_scanning:
+  enabled: true
+  databases:
+    - "nvd"
+    - "snyk"
+    - "github_advisory"
+  severity_threshold: "medium"
+
+# Reporting Configuration
+reporting:
+  enabled: true
+  format: "json"
+  include_details: true
+  export_metrics: true
+
+# Performance Configuration
+performance:
+  max_concurrent_scans: 5
+  scan_timeout: "10m"
+  memory_limit: "1GB"
+  cpu_limit: 80
+
+# Security Configuration
+security:
+  api_key_required: false
+  rate_limiting: true
+  audit_logging:
+    enabled: true
+    level: "info"
+    format: "json"
+    output: "./logs/audit.log"
+    rotation_enabled: true
+    max_size: "100MB"
+    max_age: "30d"
+    max_backups: 5
+    compression_enabled: true
+  secure_communication: true
+
+# Output Configuration
+output:
+  directory: "./test_results"
+  filename_template: "scan_report_{timestamp}"
+  compress_results: false
+  retention_days: 30

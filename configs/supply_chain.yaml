@@ -1,0 +1,372 @@
+# Supply Chain Security Configuration
+# This file contains configuration settings for supply chain security features
+
+# Supply Chain Detection Settings
+supply_chain:
+  # Enable/disable supply chain security features
+  enabled: true
+  
+  # Detection sensitivity levels
+  detection:
+    # Sensitivity level: low, medium, high, critical
+    sensitivity: "medium"
+    
+    # Enable specific detection modules
+    modules:
+      build_integrity: true
+      dependency_confusion: true
+      typosquatting: true
+      malicious_packages: true
+      suspicious_maintainers: true
+      outdated_dependencies: true
+      license_violations: false
+      supply_chain_attacks: true
+    
+    # Thresholds for different risk levels
+    thresholds:
+      critical: 9.0
+      high: 7.0
+      medium: 5.0
+      low: 3.0
+  
+  # Build Integrity Configuration
+  build_integrity:
+    # Enable build integrity checks
+    enabled: true
+    
+    # Verification methods
+    verification:
+      checksum_validation: true
+      signature_verification: true
+      reproducible_builds: true
+      build_provenance: true
+    
+    # Trusted build systems
+    trusted_builders:
+      - "github-actions"
+      - "gitlab-ci"
+      - "jenkins"
+      - "circleci"
+    
+    # Build artifact validation
+    artifacts:
+      max_size_mb: 100
+      allowed_extensions:
+        - ".tar.gz"
+        - ".zip"
+        - ".whl"
+        - ".gem"
+        - ".jar"
+      
+      # Hash algorithms for verification
+      hash_algorithms:
+        - "sha256"
+        - "sha512"
+  
+  # Threat Intelligence Configuration
+  threat_intel:
+    # Enable threat intelligence feeds
+    enabled: true
+    
+    # Intelligence sources
+    sources:
+      # OSV (Open Source Vulnerabilities)
+      osv:
+        enabled: true
+        api_url: "https://api.osv.dev"
+        cache_ttl: 3600  # 1 hour
+      
+      # National Vulnerability Database
+      nvd:
+        enabled: true
+        api_url: "https://services.nvd.nist.gov/rest/json"
+        api_key: ""  # Optional API key for higher rate limits
+        cache_ttl: 7200  # 2 hours
+      
+      # GitHub Security Advisories
+      github:
+        enabled: true
+        api_url: "https://api.github.com/graphql"
+        token: ""  # GitHub token for API access
+        cache_ttl: 1800  # 30 minutes
+      
+      # Custom threat feeds
+      custom_feeds:
+        enabled: false
+        urls: []
+        update_interval: 86400  # 24 hours
+    
+    # Intelligence processing
+    processing:
+      # Minimum severity to process
+      min_severity: "medium"
+      
+      # Age threshold for intelligence data (days)
+      max_age_days: 30
+      
+      # Enable ML-based threat scoring
+      ml_scoring: true
+  
+  # Dependency Graph Analysis
+  graph_analysis:
+    # Enable dependency graph analysis
+    enabled: true
+    
+    # Analysis depth
+    max_depth: 10
+    
+    # Graph algorithms
+    algorithms:
+      shortest_path: true
+      centrality_analysis: true
+      community_detection: true
+      anomaly_detection: true
+    
+    # Risk propagation settings
+    risk_propagation:
+      enabled: true
+      decay_factor: 0.8
+      max_hops: 5
+    
+    # Graph visualization
+    visualization:
+      enabled: true
+      max_nodes: 1000
+      layout_algorithm: "force_directed"
+  
+  # Advanced Scanning Configuration
+  advanced_scan:
+    # Enable advanced scanning features
+    enabled: true
+    
+    # Scan modes
+    modes:
+      deep_analysis: true
+      behavioral_analysis: true
+      static_analysis: true
+      dynamic_analysis: false  # Requires sandbox environment
+    
+    # Analysis timeouts (seconds)
+    timeouts:
+      package_analysis: 300
+      dependency_resolution: 180
+      vulnerability_check: 120
+      threat_intel_lookup: 60
+    
+    # Resource limits
+    limits:
+      max_concurrent_scans: 5
+      max_package_size_mb: 50
+      max_dependencies: 1000
+  
+  # Honeypot Detection
+  honeypots:
+    # Enable honeypot detection
+    enabled: false
+    
+    # Honeypot databases
+    databases:
+      - name: "typosquatting_honeypots"
+        url: "https://honeypots.example.com/typosquatting.json"
+        update_interval: 86400
+      
+      - name: "malicious_packages"
+        url: "https://honeypots.example.com/malicious.json"
+        update_interval: 43200
+    
+    # Detection algorithms
+    detection:
+      name_similarity: true
+      behavioral_patterns: true
+      metadata_analysis: true
+  
+  # Reporting and Alerting
+  reporting:
+    # Report formats
+    formats:
+      json: true
+      yaml: true
+      xml: false
+      csv: true
+      html: true
+    
+    # Report details
+    include_details:
+      vulnerability_info: true
+      dependency_tree: true
+      risk_assessment: true
+      remediation_advice: true
+      compliance_status: false
+    
+    # Alerting configuration
+    alerts:
+      enabled: true
+      
+      # Alert thresholds
+      thresholds:
+        critical: true
+        high: true
+        medium: false
+        low: false
+      
+      # Alert channels (configure in main config)
+      channels:
+        email: false
+        slack: false
+        webhook: false
+  
+  # Caching Configuration
+  cache:
+    # Enable caching for performance
+    enabled: true
+    
+    # Cache backend: memory, redis, file
+    backend: "memory"
+    
+    # Cache TTL settings (seconds)
+    ttl:
+      vulnerability_data: 3600
+      package_metadata: 1800
+      threat_intelligence: 7200
+      scan_results: 900
+    
+    # Cache size limits
+    limits:
+      max_entries: 10000
+      max_memory_mb: 256
+  
+  # Performance Tuning
+  performance:
+    # Worker pool settings
+    workers:
+      scan_workers: 4
+      analysis_workers: 2
+      intel_workers: 2
+    
+    # Batch processing
+    batch_size:
+      vulnerability_checks: 50
+      package_analysis: 10
+      threat_intel_queries: 25
+    
+    # Rate limiting
+    rate_limits:
+      api_requests_per_minute: 100
+      concurrent_scans: 3
+      intel_queries_per_hour: 1000
+  
+  # Compliance and Standards
+  compliance:
+    # Enable compliance checking
+    enabled: false
+    
+    # Supported standards
+    standards:
+      slsa: false      # Supply-chain Levels for Software Artifacts
+      nist_ssdf: false # NIST Secure Software Development Framework
+      iso_27001: false
+      sox: false
+    
+    # Compliance reporting
+    reporting:
+      generate_reports: false
+      report_format: "json"
+      include_evidence: false
+  
+  # Experimental Features
+  experimental:
+    # Enable experimental features (use with caution)
+    enabled: false
+    
+    # Feature flags
+    features:
+      ai_threat_detection: false
+      blockchain_verification: false
+      quantum_resistant_crypto: false
+      zero_trust_validation: false
+
+# Integration Settings
+integrations:
+  # Package managers
+  package_managers:
+    npm:
+      enabled: true
+      registry_url: "https://registry.npmjs.org"
+      check_integrity: true
+    
+    pypi:
+      enabled: true
+      registry_url: "https://pypi.org"
+      check_integrity: true
+    
+    rubygems:
+      enabled: true
+      registry_url: "https://rubygems.org"
+      check_integrity: true
+    
+    maven:
+      enabled: false
+      registry_url: "https://repo1.maven.org/maven2"
+      check_integrity: true
+  
+  # CI/CD Systems
+  cicd:
+    github_actions:
+      enabled: false
+      webhook_secret: ""
+    
+    gitlab_ci:
+      enabled: false
+      webhook_secret: ""
+    
+    jenkins:
+      enabled: false
+      api_token: ""
+  
+  # Security Tools
+  security_tools:
+    # SAST tools integration
+    sast:
+      enabled: false
+      tools: []
+    
+    # DAST tools integration
+    dast:
+      enabled: false
+      tools: []
+    
+    # Container scanning
+    container:
+      enabled: false
+      registries: []
+
+# Logging Configuration (Supply Chain Specific)
+logging:
+  # Log level for supply chain operations
+  level: "info"
+  
+  # Log format: json, text
+  format: "json"
+  
+  # Log outputs
+  outputs:
+    console: true
+    file: true
+    syslog: false
+  
+  # File logging settings
+  file:
+    path: "/var/log/typosentinel/supply_chain.log"
+    max_size_mb: 100
+    max_backups: 5
+    max_age_days: 30
+    compress: true
+  
+  # Structured logging fields
+  fields:
+    timestamp: true
+    level: true
+    component: true
+    operation: true
+    duration: true
+    error_details: true

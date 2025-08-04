@@ -1,0 +1,21 @@
+
+integrations:
+  enabled: true
+  connectors:
+    splunk_siem:
+      type: "splunk"
+      enabled: true
+      settings:
+        hec_url: "https://splunk.example.com:8088/services/collector/event"
+        hec_token: "YOUR_HEC_TOKEN"
+        index: "typosentinel"
+        source: "typosentinel_scanner"
+        sourcetype: "security_event"
+        verify_ssl: true
+        timeout: 30
+      retry:
+        enabled: true
+        max_attempts: 3
+        initial_delay: "1s"
+        max_delay: "30s"
+        backoff_factor: 2.0

@@ -1,0 +1,254 @@
+api:
+  cors_enabled: true
+  host: localhost
+  port: 8080
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+cache:
+  cache_dir: ./cache
+  cleanup_interval: 1h
+  compression: true
+  enabled: true
+  max_size: 1GB
+  ttl: 2h
+core:
+  debug: false
+  environment: production
+  max_concurrency: 8
+  retry_attempts: 3
+  retry_delay: 2s
+  timeout: 45s
+  verbose: true
+  version: 1.0.0
+database:
+  host: localhost
+  name: typosentinel
+  port: 5432
+  ssl_mode: disable
+  user: postgres
+debug: false
+detection:
+  algorithms:
+    homoglyph: true
+    lexical: true
+    ml: true
+  dependency_confusion: true
+  enabled: true
+  enhanced_typosquatting: true
+  homoglyph_detection: true
+  min_package_name_length: 2
+  reputation_scoring: true
+  thresholds:
+    confidence: 0.5
+    reputation: 0.40714285714285714
+    similarity: 0.6
+experimental:
+  enabled: true
+  features:
+  - advanced_ml_scoring
+  - behavioral_analysis
+  - reputation_learning
+  - adaptive_thresholds
+logging:
+  compress: true
+  file_output: ./logs/typosentinel.log
+  format: json
+  level: info
+  max_age: 30
+  max_backups: 5
+  max_file_size: 100MB
+  output: stdout
+  structured: true
+malware_detection:
+  behavioral_analysis: true
+  cloud_scanning: false
+  enabled: true
+  heuristic_analysis: true
+  max_scan_size: 100MB
+  real_time_protection: true
+  sandbox_analysis: false
+  scan_timeout: 30s
+  signature_database: ./data/signatures.db
+  update_interval: 12h
+ml_analysis:
+  batch_size: 15
+  cache_embeddings: true
+  embedding_dimensions: 384
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  enabled: true
+  feature_store:
+    backend: memory
+    cleanup_interval: 6h
+    compression_enabled: true
+    enabled: true
+    max_size: 10000
+    ttl: 24h
+  gpu_acceleration: false
+  malicious_threshold: 0.475
+  max_features: 1500
+  model_path: ./models
+  model_updates:
+    auto_update: false
+    backup_old_models: true
+    enabled: true
+    max_model_versions: 3
+    update_interval: 24h
+    verify_signatures: true
+  parallel_processing: true
+  reputation_threshold: 0.40714285714285714
+  similarity_threshold: 0.6
+ml_service:
+  batch_size: 15
+  connection_pool_size: 10
+  enabled: false
+  endpoint: http://localhost:8001
+  max_retries: 3
+  timeout: 45s
+monitoring:
+  alerts:
+    email_notifications: false
+    enabled: true
+    slack_notifications: false
+    webhook_url: ''
+  enabled: true
+  health_endpoint: /health
+  metrics_endpoint: /metrics
+  profiling_enabled: false
+output:
+  color_output: true
+  format: json
+  include_confidence_scores: true
+  include_metadata: true
+  include_recommendations: true
+  verbose_errors: true
+performance:
+  batch_size: 15
+  cpu_limit: '2'
+  max_concurrency: 8
+  memory_limit: 512MB
+  queue_size: 200
+  worker_pool_size: 6
+plugins:
+  auto_load: true
+  enabled: true
+  path: ./plugins
+  plugin_directory: ./plugins
+  plugins:
+  - config:
+      deep_scan: true
+      timeout: 30s
+    enabled: true
+    name: enhanced_scanner
+    path: ./plugins/enhanced_scanner.so
+policies:
+  enabled: true
+  fail_on_threats: false
+  min_threat_level: medium
+  rules:
+  - actions:
+    - block
+    - alert
+    conditions:
+    - threat_level >= critical
+    description: Block packages with critical threat level
+    enabled: true
+    name: block_critical_threats
+  - actions:
+    - warn
+    - log
+    conditions:
+    - threat_level >= high
+    description: Warn on high threat level packages
+    enabled: true
+    name: warn_high_threats
+  - actions:
+    - log
+    - monitor
+    conditions:
+    - threat_level >= medium
+    description: Monitor medium threat level packages
+    enabled: true
+    name: monitor_medium_threats
+  - actions:
+    - warn
+    - suggest_alternative
+    conditions:
+    - similarity_score >= 0.65
+    - is_typosquatting == true
+    description: Enhanced typosquatting protection
+    enabled: true
+    name: typosquatting_protection
+provenance_analysis:
+  enabled: true
+  require_transparency_log: false
+  retry_attempts: 2
+  sigstore_enabled: true
+  slsa_enabled: true
+  slsa_min_level: 2
+  timeout: 30s
+  verify_integrity: true
+  verify_provenance: true
+  verify_signatures: true
+registries:
+- base_url: https://registry.npmjs.org
+  enabled: true
+  name: npm
+  rate_limit:
+    burst: 20
+    enabled: true
+    rps: 10
+  timeout: 30s
+- base_url: https://pypi.org
+  enabled: true
+  name: pypi
+  rate_limit:
+    burst: 15
+    enabled: true
+    rps: 8
+  timeout: 30s
+scanner:
+  behavioral_analysis: true
+  concurrency: 6
+  deep_analysis: true
+  dynamic_analysis: false
+  enabled: true
+  enrich_metadata: true
+  include_dev_deps: true
+  max_file_size: 50MB
+  static_analysis: true
+  timeout: 60s
+security:
+  api_key_required: false
+  certificate_path: ''
+  cors_enabled: true
+  private_key_path: ''
+  rate_limiting: true
+  tls_enabled: false
+typo_detection:
+  algorithms:
+  - levenshtein
+  - jaro_winkler
+  - soundex
+  - metaphone
+  case_sensitive: false
+  check_common_typos: true
+  check_homoglyphs: true
+  check_keyboard_layout: true
+  check_similar_names: true
+  enabled: true
+  language_specific: true
+  max_distance: 3
+  threshold: 0.65
+verbose: true
+vulnerability_scanning:
+  cache_results: true
+  cache_ttl: 24h
+  databases:
+  - nvd
+  - osv
+  - github
+  enabled: true
+  include_dev_dependencies: true
+  severity_threshold: medium
+  update_interval: 6h

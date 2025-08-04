@@ -1,0 +1,188 @@
+# TypoSentinel Docker Compose Setup
+# Complete containerized deployment with web dashboard, monitoring, and persistence
+
+version: '3.8'
+
+services:
+  # Main TypoSentinel application
+  typosentinel:
+    image: typosentinel:latest
+    container_name: typosentinel-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Web dashboard
+      - "9090:9090"  # Metrics endpoint
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For container scanning
+    environment:
+      - TYPOSENTINEL_CONFIG_PATH=/app/config/typosentinel.yaml
+      - TYPOSENTINEL_LOG_LEVEL=info
+      - TYPOSENTINEL_WEB_HOST=0.0.0.0
+      - TYPOSENTINEL_WEB_PORT=8080
+      - TYPOSENTINEL_METRICS_PORT=9090
+      - TYPOSENTINEL_DATA_DIR=/app/data
+    networks:
+      - typosentinel-network
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: typosentinel-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - typosentinel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # PostgreSQL for persistent data storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: typosentinel-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=typosentinel
+      - POSTGRES_PASSWORD=secure_password_change_me
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - typosentinel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typosentinel -d typosentinel"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: typosentinel-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - typosentinel-network
+    depends_on:
+      - typosentinel
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: typosentinel-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin_change_me
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - typosentinel-network
+    depends_on:
+      - prometheus
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: typosentinel-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - typosentinel-network
+    depends_on:
+      - typosentinel
+      - grafana
+
+  # Log aggregation with Fluentd
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: typosentinel-fluentd
+    restart: unless-stopped
+    volumes:
+      - ./config/fluentd:/fluentd/etc:ro
+      - ./logs:/var/log/typosentinel
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    networks:
+      - typosentinel-network
+
+  # Backup service
+  backup:
+    image: postgres:15-alpine
+    container_name: typosentinel-backup
+    restart: "no"
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    environment:
+      - PGPASSWORD=secure_password_change_me
+    networks:
+      - typosentinel-network
+    depends_on:
+      - postgres
+    command: /bin/sh -c "chmod +x /backup.sh && /backup.sh"
+    profiles:
+      - backup
+
+networks:
+  typosentinel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

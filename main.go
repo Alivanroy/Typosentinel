@@ -23,6 +23,7 @@ func main() {
 		Short: "TypoSentinel - Advanced typosquatting detection tool",
 		Long: `TypoSentinel is a comprehensive security tool for detecting typosquatting attacks,
 malicious packages, and vulnerabilities in software dependencies across multiple package managers.`,
+		SilenceUsage: true,
 	}
 
 	// Global flags
@@ -39,7 +40,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 		Use:   "scan [path]",
 		Short: "Scan a project for typosquatting and malicious packages",
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			path := "."
 			if len(args) > 0 {
 				path = args[0]
@@ -58,7 +59,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			// Create analyzer
 			analyzerInstance, err := analyzer.New(cfg)
 			if err != nil {
-				log.Fatalf("Failed to create analyzer: %v", err)
+				return fmt.Errorf("failed to create analyzer: %v", err)
 			}
 
 			// Get scan options from flags
@@ -87,11 +88,12 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			// Perform scan
 			result, err := analyzerInstance.Scan(path, options)
 			if err != nil {
-				log.Fatalf("Scan failed: %v", err)
+				return fmt.Errorf("scan failed: %v", err)
 			}
 
 			// Output results
 			outputScanResult(result, outputFormat)
+			return nil
 		},
 	}
 
@@ -110,7 +112,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 		Use:   "analyze <package> [registry]",
 		Short: "Analyze a specific package for threats",
 		Args:  cobra.RangeArgs(1, 2),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			packageName := args[0]
 			registry := "npm" // default
 			if len(args) > 1 {
@@ -134,11 +136,12 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			ctx := context.Background()
 			result, err := engine.CheckPackage(ctx, packageName, registry)
 			if err != nil {
-				log.Fatalf("Analysis failed: %v", err)
+				return fmt.Errorf("analysis failed: %v", err)
 			}
 
 			// Output results
 			outputAnalysisResult(result, outputFormat)
+			return nil
 		},
 	}
 
@@ -408,7 +411,15 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 
 	// Execute
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		// Check if it's a flag parsing error or unknown command
+		if strings.Contains(err.Error(), "unknown flag") || 
+		   strings.Contains(err.Error(), "unknown command") ||
+		   strings.Contains(err.Error(), "flag provided but not defined") {
+			fmt.Fprintf(os.Stderr, "Error: %s\n\n", err.Error())
+			rootCmd.Help()
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		}
 		os.Exit(1)
 	}
 }

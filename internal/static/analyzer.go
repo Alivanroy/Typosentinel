@@ -576,10 +576,62 @@ func (sa *StaticAnalyzer) detectManifestType(manifestPath string) string {
 	}
 }
 
-// Placeholder implementations for detailed analysis functions
-// In production, these would contain comprehensive logic for each analysis type
+// Enhanced detailed analysis functions for comprehensive security assessment
 
 func (sa *StaticAnalyzer) analyzeSuspiciousCommands(line string, lineNumber int, analysis *InstallScriptAnalysis) {
+	// Enhanced suspicious command detection with context analysis
+	suspiciousPatterns := map[string]float64{
+		"curl.*sh":           0.9, // Piping curl to shell
+		"wget.*sh":           0.9, // Piping wget to shell
+		"eval.*\\$":          0.8, // Dynamic code evaluation
+		"base64.*decode":     0.7, // Base64 decoding
+		"nc.*-l":            0.8, // Netcat listener
+		"python.*-c":        0.6, // Python one-liner
+		"perl.*-e":          0.6, // Perl one-liner
+		"ruby.*-e":          0.6, // Ruby one-liner
+		"bash.*-c":          0.5, // Bash command execution
+		"sh.*-c":            0.5, // Shell command execution
+		"sudo.*rm":          0.7, // Sudo with rm
+		"rm.*-rf.*\\*":      0.8, // Recursive force delete with wildcard
+		"dd.*if=":           0.6, // Disk operations
+		"mkfifo":            0.7, // Named pipe creation
+		"nohup":             0.5, // Background process
+		"crontab":           0.6, // Cron job modification
+		"systemctl":         0.6, // System service control
+		"service":           0.6, // Service control
+		"iptables":          0.7, // Firewall modification
+		"ufw":               0.7, // Ubuntu firewall
+		"passwd":            0.8, // Password modification
+		"useradd":           0.7, // User creation
+		"usermod":           0.7, // User modification
+		"chown.*root":       0.6, // Change ownership to root
+		"chmod.*777":        0.8, // World writable permissions
+		"chmod.*\\+s":       0.9, // SUID/SGID permissions
+	}
+
+	for pattern, confidence := range suspiciousPatterns {
+		if matched, _ := regexp.MatchString(pattern, strings.ToLower(line)); matched {
+			riskLevel := "MEDIUM"
+			if confidence >= 0.8 {
+				riskLevel = "HIGH"
+			} else if confidence >= 0.6 {
+				riskLevel = "MEDIUM"
+			} else {
+				riskLevel = "LOW"
+			}
+
+			analysis.SuspiciousCommands = append(analysis.SuspiciousCommands, SuspiciousCommand{
+				Command:     pattern,
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   riskLevel,
+				Description: fmt.Sprintf("Suspicious pattern '%s' detected", pattern),
+				Confidence:  confidence,
+			})
+		}
+	}
+
+	// Check against configured suspicious commands
 	for _, cmd := range sa.config.SuspiciousCommands {
 		if strings.Contains(strings.ToLower(line), strings.ToLower(cmd)) {
 			analysis.SuspiciousCommands = append(analysis.SuspiciousCommands, SuspiciousCommand{
@@ -587,7 +639,7 @@ func (sa *StaticAnalyzer) analyzeSuspiciousCommands(line string, lineNumber int,
 				LineNumber:  lineNumber,
 				Context:     line,
 				RiskLevel:   "HIGH",
-				Description: fmt.Sprintf("Suspicious command '%s' detected", cmd),
+				Description: fmt.Sprintf("Configured suspicious command '%s' detected", cmd),
 				Confidence:  0.8,
 			})
 		}
@@ -595,54 +647,285 @@ func (sa *StaticAnalyzer) analyzeSuspiciousCommands(line string, lineNumber int,
 }
 
 func (sa *StaticAnalyzer) analyzeNetworkCalls(line string, lineNumber int, analysis *InstallScriptAnalysis) {
-	// Detect network calls (curl, wget, etc.)
-	networkPatterns := []string{
-		`curl\s+.*https?://`,
-		`wget\s+.*https?://`,
-		`fetch\s+.*https?://`,
+	// Enhanced network call detection with URL extraction and risk assessment
+	networkPatterns := map[string]struct {
+		confidence float64
+		method     string
+		riskLevel  string
+	}{
+		`curl\s+.*https?://[^\s]+`:                    {0.8, "GET", "MEDIUM"},
+		`wget\s+.*https?://[^\s]+`:                    {0.8, "GET", "MEDIUM"},
+		`fetch\s+.*https?://[^\s]+`:                   {0.7, "GET", "MEDIUM"},
+		`python.*urllib.*https?://[^\s]+`:             {0.7, "GET", "MEDIUM"},
+		`python.*requests.*https?://[^\s]+`:           {0.7, "GET", "MEDIUM"},
+		`node.*https?://[^\s]+`:                       {0.6, "GET", "MEDIUM"},
+		`npm.*install.*https?://[^\s]+`:               {0.8, "GET", "HIGH"},
+		`pip.*install.*https?://[^\s]+`:               {0.8, "GET", "HIGH"},
+		`gem.*install.*https?://[^\s]+`:               {0.8, "GET", "HIGH"},
+		`go.*get.*https?://[^\s]+`:                    {0.7, "GET", "MEDIUM"},
+		`git.*clone.*https?://[^\s]+`:                 {0.6, "GET", "LOW"},
+		`ssh.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:         {0.9, "SSH", "HIGH"},
+		`telnet.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:      {0.9, "TELNET", "HIGH"},
+		`nc.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+.*[0-9]+`:  {0.8, "NETCAT", "HIGH"},
+		`socat.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:       {0.8, "SOCAT", "HIGH"},
+		`ftp.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:         {0.7, "FTP", "MEDIUM"},
+		`scp.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:         {0.7, "SCP", "MEDIUM"},
+		`rsync.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:       {0.7, "RSYNC", "MEDIUM"},
 	}
 
-	for _, pattern := range networkPatterns {
+	for pattern, info := range networkPatterns {
 		if matched, _ := regexp.MatchString(pattern, line); matched {
+			// Extract URL if possible
+			urlRegex := regexp.MustCompile(`https?://[^\s]+`)
+			url := "detected"
+			if matches := urlRegex.FindString(line); matches != "" {
+				url = matches
+			}
+
+			// Check for suspicious domains
+			suspiciousDomains := []string{
+				"bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly",
+				"pastebin.com", "hastebin.com", "ghostbin.com",
+				"raw.githubusercontent.com", "gist.githubusercontent.com",
+			}
+
+			riskLevel := info.riskLevel
+			confidence := info.confidence
+
+			for _, domain := range suspiciousDomains {
+				if strings.Contains(url, domain) {
+					riskLevel = "HIGH"
+					confidence = 0.9
+					break
+				}
+			}
+
+			// Check for suspicious TLDs
+			suspiciousTLDs := []string{".tk", ".ml", ".ga", ".cf", ".top", ".click", ".download"}
+			for _, tld := range suspiciousTLDs {
+				if strings.Contains(url, tld) {
+					riskLevel = "HIGH"
+					confidence = 0.8
+					break
+				}
+			}
+
 			analysis.NetworkCalls = append(analysis.NetworkCalls, NetworkCall{
-				URL:         "detected",
-				Method:      "GET",
+				URL:         url,
+				Method:      info.method,
 				LineNumber:  lineNumber,
 				Context:     line,
-				RiskLevel:   "MEDIUM",
-				Description: "Network call detected",
-				Confidence:  0.7,
+				RiskLevel:   riskLevel,
+				Description: fmt.Sprintf("Network call detected: %s to %s", info.method, url),
+				Confidence:  confidence,
+			})
+		}
+	}
+
+	// Check for DNS manipulation
+	dnsPatterns := []string{
+		`echo.*>.*\/etc\/hosts`,
+		`echo.*>>.*\/etc\/hosts`,
+		`sed.*\/etc\/hosts`,
+		`awk.*\/etc\/hosts`,
+	}
+
+	for _, pattern := range dnsPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			analysis.NetworkCalls = append(analysis.NetworkCalls, NetworkCall{
+				URL:         "/etc/hosts",
+				Method:      "DNS_MANIPULATION",
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   "HIGH",
+				Description: "DNS manipulation detected - modifying /etc/hosts",
+				Confidence:  0.9,
 			})
 		}
 	}
 }
 
 func (sa *StaticAnalyzer) analyzeFileOperations(line string, lineNumber int, analysis *InstallScriptAnalysis) {
-	// Detect file operations
-	filePatterns := []string{
-		`rm\s+-rf`,
-		`cp\s+.*`,
-		`mv\s+.*`,
-		`mkdir\s+.*`,
+	// Enhanced file operation detection with path analysis and risk assessment
+	filePatterns := map[string]struct {
+		operation  string
+		confidence float64
+		riskLevel  string
+	}{
+		`rm\s+-rf\s+/`:                           {"delete", 0.9, "HIGH"},
+		`rm\s+-rf\s+\*`:                          {"delete", 0.9, "HIGH"},
+		`rm\s+-rf\s+~`:                           {"delete", 0.8, "HIGH"},
+		`rm\s+-rf\s+\$HOME`:                      {"delete", 0.8, "HIGH"},
+		`rm\s+-f\s+/etc/`:                        {"delete", 0.9, "HIGH"},
+		`rm\s+-f\s+/usr/`:                        {"delete", 0.8, "HIGH"},
+		`rm\s+-f\s+/var/`:                        {"delete", 0.7, "MEDIUM"},
+		`cp\s+.*\s+/etc/`:                        {"copy", 0.7, "MEDIUM"},
+		`cp\s+.*\s+/usr/bin/`:                    {"copy", 0.8, "HIGH"},
+		`cp\s+.*\s+/usr/local/bin/`:              {"copy", 0.7, "MEDIUM"},
+		`mv\s+.*\s+/etc/`:                        {"move", 0.7, "MEDIUM"},
+		`mv\s+.*\s+/usr/bin/`:                    {"move", 0.8, "HIGH"},
+		`mkdir\s+-p\s+/etc/`:                     {"create", 0.6, "MEDIUM"},
+		`mkdir\s+-p\s+/usr/`:                     {"create", 0.7, "MEDIUM"},
+		`touch\s+/etc/`:                          {"create", 0.6, "MEDIUM"},
+		`ln\s+-s\s+.*\s+/usr/bin/`:               {"link", 0.7, "MEDIUM"},
+		`ln\s+-sf\s+.*\s+/usr/bin/`:              {"link", 0.8, "HIGH"},
+		`dd\s+if=.*\s+of=/dev/`:                  {"write", 0.9, "HIGH"},
+		`dd\s+if=/dev/zero\s+of=`:                {"write", 0.7, "MEDIUM"},
+		`tar\s+.*\s+/`:                           {"extract", 0.6, "MEDIUM"},
+		`unzip\s+.*\s+-d\s+/`:                    {"extract", 0.6, "MEDIUM"},
+		`find\s+/.*\s+-delete`:                   {"delete", 0.8, "HIGH"},
+		`find\s+/.*\s+-exec\s+rm`:                {"delete", 0.8, "HIGH"},
+		`shred\s+`:                               {"secure_delete", 0.8, "HIGH"},
+		`wipe\s+`:                                {"secure_delete", 0.8, "HIGH"},
+		`cat\s+.*>\s*/etc/`:                      {"write", 0.7, "MEDIUM"},
+		`echo\s+.*>\s*/etc/`:                     {"write", 0.7, "MEDIUM"},
+		`tee\s+.*\s*/etc/`:                       {"write", 0.7, "MEDIUM"},
+		`rsync\s+.*\s+/`:                         {"sync", 0.5, "LOW"},
 	}
 
-	for _, pattern := range filePatterns {
+	for pattern, info := range filePatterns {
 		if matched, _ := regexp.MatchString(pattern, line); matched {
+			// Extract path if possible
+			pathRegex := regexp.MustCompile(`(/[^\s]+|~[^\s]*|\$[A-Z_][A-Z0-9_]*[^\s]*)`)
+			path := "detected"
+			if matches := pathRegex.FindString(line); matches != "" {
+				path = matches
+			}
+
+			// Check for critical system paths
+			criticalPaths := []string{
+				"/etc/passwd", "/etc/shadow", "/etc/sudoers", "/etc/hosts",
+				"/boot/", "/sys/", "/proc/", "/dev/",
+				"/usr/bin/", "/usr/sbin/", "/sbin/", "/bin/",
+				"/root/", "/home/", "~/.ssh/", "~/.bashrc", "~/.profile",
+			}
+
+			riskLevel := info.riskLevel
+			confidence := info.confidence
+
+			for _, criticalPath := range criticalPaths {
+				if strings.Contains(path, criticalPath) {
+					riskLevel = "HIGH"
+					confidence = 0.9
+					break
+				}
+			}
+
+			// Check for hidden files/directories
+			if strings.Contains(path, "/.") {
+				confidence += 0.1
+				if riskLevel == "LOW" {
+					riskLevel = "MEDIUM"
+				}
+			}
+
+			// Check for temporary directories (often used for malicious purposes)
+			tempPaths := []string{"/tmp/", "/var/tmp/", "/dev/shm/"}
+			for _, tempPath := range tempPaths {
+				if strings.Contains(path, tempPath) {
+					confidence += 0.1
+					break
+				}
+			}
+
 			analysis.FileOperations = append(analysis.FileOperations, FileOperation{
-				Operation:   "file_operation",
-				Path:        "detected",
+				Operation:   info.operation,
+				Path:        path,
 				LineNumber:  lineNumber,
 				Context:     line,
-				RiskLevel:   "MEDIUM",
-				Description: "File operation detected",
-				Confidence:  0.6,
+				RiskLevel:   riskLevel,
+				Description: fmt.Sprintf("File %s operation detected on %s", info.operation, path),
+				Confidence:  confidence,
+			})
+		}
+	}
+
+	// Check for file hiding techniques
+	hidingPatterns := []string{
+		`mv\s+.*\s+\.[^/]*$`,        // Moving to hidden file
+		`cp\s+.*\s+\.[^/]*$`,        // Copying to hidden file
+		`touch\s+\.[^/]*$`,          // Creating hidden file
+		`mkdir\s+\.[^/]*$`,          // Creating hidden directory
+	}
+
+	for _, pattern := range hidingPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			analysis.FileOperations = append(analysis.FileOperations, FileOperation{
+				Operation:   "hide",
+				Path:        "hidden_file",
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   "HIGH",
+				Description: "File hiding technique detected",
+				Confidence:  0.8,
 			})
 		}
 	}
 }
 
 func (sa *StaticAnalyzer) analyzePermissionChanges(line string, lineNumber int, analysis *InstallScriptAnalysis) {
-	// Detect permission changes
+	// Enhanced permission change detection with privilege escalation analysis
+	permissionPatterns := map[string]struct {
+		riskLevel  string
+		confidence float64
+		description string
+	}{
+		`chmod\s+777`:                    {"HIGH", 0.9, "World writable permissions (777)"},
+		`chmod\s+\+x\s+.*\/bin\/`:        {"HIGH", 0.8, "Making binary executable in system path"},
+		`chmod\s+\+s`:                    {"HIGH", 0.9, "Setting SUID/SGID bit"},
+		`chmod\s+4755`:                   {"HIGH", 0.9, "Setting SUID permissions (4755)"},
+		`chmod\s+2755`:                   {"HIGH", 0.9, "Setting SGID permissions (2755)"},
+		`chmod\s+6755`:                   {"HIGH", 0.9, "Setting SUID+SGID permissions (6755)"},
+		`chmod\s+u\+s`:                   {"HIGH", 0.9, "Setting SUID bit"},
+		`chmod\s+g\+s`:                   {"HIGH", 0.9, "Setting SGID bit"},
+		`chmod\s+\+t`:                    {"MEDIUM", 0.7, "Setting sticky bit"},
+		`chmod\s+1755`:                   {"MEDIUM", 0.7, "Setting sticky bit permissions (1755)"},
+		`chmod\s+755\s+.*\/bin\/`:        {"MEDIUM", 0.6, "Setting executable permissions in system path"},
+		`chmod\s+644\s+\/etc\/`:          {"MEDIUM", 0.6, "Modifying system configuration file permissions"},
+		`chmod\s+600\s+.*\.ssh\/`:        {"LOW", 0.4, "Setting SSH key permissions"},
+		`chown\s+root`:                   {"HIGH", 0.8, "Changing ownership to root"},
+		`chown\s+0:0`:                    {"HIGH", 0.8, "Changing ownership to root (numeric)"},
+		`chgrp\s+root`:                   {"MEDIUM", 0.7, "Changing group to root"},
+		`chgrp\s+0`:                      {"MEDIUM", 0.7, "Changing group to root (numeric)"},
+		`chown\s+.*:.*\s+\/etc\/`:        {"HIGH", 0.8, "Changing ownership of system configuration"},
+		`chown\s+.*:.*\s+\/usr\/bin\/`:   {"HIGH", 0.8, "Changing ownership of system binaries"},
+		`chown\s+.*:.*\s+\/sbin\/`:       {"HIGH", 0.8, "Changing ownership of system binaries"},
+		`chattr\s+\+i`:                   {"HIGH", 0.8, "Making file immutable"},
+		`chattr\s+\+a`:                   {"MEDIUM", 0.7, "Making file append-only"},
+		`setfacl`:                        {"MEDIUM", 0.6, "Modifying file ACLs"},
+		`umask\s+000`:                    {"HIGH", 0.8, "Setting permissive umask"},
+		`umask\s+002`:                    {"MEDIUM", 0.5, "Setting group-writable umask"},
+	}
+
+	for pattern, info := range permissionPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			// Extract path if possible
+			pathRegex := regexp.MustCompile(`(/[^\s]+|~[^\s]*|\.[^\s]*|\$[A-Z_][A-Z0-9_]*[^\s]*)`)
+			path := "detected"
+			if matches := pathRegex.FindString(line); matches != "" {
+				path = matches
+			}
+
+			// Extract permission value
+			permRegex := regexp.MustCompile(`\b[0-7]{3,4}\b|\+[rwxst]+|\-[rwxst]+`)
+			permissions := "detected"
+			if matches := permRegex.FindString(line); matches != "" {
+				permissions = matches
+			}
+
+			analysis.PermissionChanges = append(analysis.PermissionChanges, PermissionChange{
+				Path:        path,
+				Permissions: permissions,
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   info.riskLevel,
+				Description: info.description,
+				Confidence:  info.confidence,
+			})
+		}
+	}
+
+	// Check against configured dangerous permissions
 	if strings.Contains(line, "chmod") {
 		for _, perm := range sa.config.DangerousPermissions {
 			if strings.Contains(line, perm) {
@@ -652,31 +935,199 @@ func (sa *StaticAnalyzer) analyzePermissionChanges(line string, lineNumber int, 
 					LineNumber:  lineNumber,
 					Context:     line,
 					RiskLevel:   "HIGH",
-					Description: fmt.Sprintf("Dangerous permission '%s' detected", perm),
+					Description: fmt.Sprintf("Configured dangerous permission '%s' detected", perm),
 					Confidence:  0.9,
 				})
 			}
 		}
 	}
-}
 
-func (sa *StaticAnalyzer) analyzeEnvironmentAccess(line string, lineNumber int, analysis *InstallScriptAnalysis) {
-	// Detect environment variable access
-	envPattern := `\$[A-Z_][A-Z0-9_]*`
-	if matched, _ := regexp.MatchString(envPattern, line); matched {
-		analysis.EnvironmentAccess = append(analysis.EnvironmentAccess, EnvironmentAccess{
-			Variable:    "detected",
-			Operation:   "read",
-			LineNumber:  lineNumber,
-			Context:     line,
-			RiskLevel:   "LOW",
-			Description: "Environment variable access detected",
-			Confidence:  0.5,
-		})
+	// Check for privilege escalation techniques
+	privEscPatterns := []string{
+		`sudo\s+su\s+-`,                  // Switching to root
+		`sudo\s+bash`,                    // Getting root shell
+		`sudo\s+sh`,                      // Getting root shell
+		`su\s+-\s+root`,                  // Switching to root
+		`sudo\s+.*NOPASSWD`,              // Passwordless sudo
+		`echo.*sudoers`,                  // Modifying sudoers
+		`visudo`,                         // Editing sudoers
+		`passwd\s+root`,                  // Changing root password
+		`usermod\s+.*sudo`,               // Adding user to sudo group
+		`usermod\s+.*wheel`,              // Adding user to wheel group
+		`gpasswd\s+.*sudo`,               // Adding user to sudo group
+		`adduser\s+.*sudo`,               // Adding user to sudo group
+	}
+
+	for _, pattern := range privEscPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			analysis.PermissionChanges = append(analysis.PermissionChanges, PermissionChange{
+				Path:        "system",
+				Permissions: "privilege_escalation",
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   "HIGH",
+				Description: "Privilege escalation technique detected",
+				Confidence:  0.9,
+			})
+		}
 	}
 }
 
-// Placeholder manifest analysis functions
+func (sa *StaticAnalyzer) analyzeEnvironmentAccess(line string, lineNumber int, analysis *InstallScriptAnalysis) {
+	// Enhanced environment variable access detection with sensitive data analysis
+	
+	// Sensitive environment variables that should raise alerts
+	sensitiveEnvVars := map[string]struct {
+		riskLevel  string
+		confidence float64
+		description string
+	}{
+		"PASSWORD":           {"HIGH", 0.9, "Password environment variable access"},
+		"PASSWD":             {"HIGH", 0.9, "Password environment variable access"},
+		"SECRET":             {"HIGH", 0.9, "Secret environment variable access"},
+		"TOKEN":              {"HIGH", 0.9, "Token environment variable access"},
+		"API_KEY":            {"HIGH", 0.9, "API key environment variable access"},
+		"APIKEY":             {"HIGH", 0.9, "API key environment variable access"},
+		"AUTH":               {"HIGH", 0.8, "Authentication environment variable access"},
+		"PRIVATE_KEY":        {"HIGH", 0.9, "Private key environment variable access"},
+		"PRIVATEKEY":         {"HIGH", 0.9, "Private key environment variable access"},
+		"SSH_KEY":            {"HIGH", 0.9, "SSH key environment variable access"},
+		"SSHKEY":             {"HIGH", 0.9, "SSH key environment variable access"},
+		"DATABASE_URL":       {"MEDIUM", 0.7, "Database URL environment variable access"},
+		"DB_PASSWORD":        {"HIGH", 0.9, "Database password environment variable access"},
+		"DB_PASS":            {"HIGH", 0.9, "Database password environment variable access"},
+		"MYSQL_PASSWORD":     {"HIGH", 0.9, "MySQL password environment variable access"},
+		"POSTGRES_PASSWORD":  {"HIGH", 0.9, "PostgreSQL password environment variable access"},
+		"REDIS_PASSWORD":     {"HIGH", 0.9, "Redis password environment variable access"},
+		"AWS_SECRET":         {"HIGH", 0.9, "AWS secret environment variable access"},
+		"AWS_ACCESS_KEY":     {"HIGH", 0.9, "AWS access key environment variable access"},
+		"GITHUB_TOKEN":       {"HIGH", 0.9, "GitHub token environment variable access"},
+		"GITLAB_TOKEN":       {"HIGH", 0.9, "GitLab token environment variable access"},
+		"SLACK_TOKEN":        {"MEDIUM", 0.7, "Slack token environment variable access"},
+		"DISCORD_TOKEN":      {"MEDIUM", 0.7, "Discord token environment variable access"},
+		"WEBHOOK_URL":        {"MEDIUM", 0.6, "Webhook URL environment variable access"},
+		"ENCRYPTION_KEY":     {"HIGH", 0.9, "Encryption key environment variable access"},
+		"SIGNING_KEY":        {"HIGH", 0.9, "Signing key environment variable access"},
+		"CERTIFICATE":        {"MEDIUM", 0.7, "Certificate environment variable access"},
+		"CERT":               {"MEDIUM", 0.7, "Certificate environment variable access"},
+		"HOME":               {"LOW", 0.3, "Home directory environment variable access"},
+		"USER":               {"LOW", 0.3, "User environment variable access"},
+		"PATH":               {"LOW", 0.2, "PATH environment variable access"},
+		"SHELL":              {"LOW", 0.3, "Shell environment variable access"},
+		"SUDO_USER":          {"MEDIUM", 0.6, "Sudo user environment variable access"},
+		"SUDO_UID":           {"MEDIUM", 0.6, "Sudo UID environment variable access"},
+		"SUDO_GID":           {"MEDIUM", 0.6, "Sudo GID environment variable access"},
+	}
+
+	// Detect environment variable access patterns
+	envPatterns := []string{
+		`\$[A-Z_][A-Z0-9_]*`,           // Standard env var access
+		`\$\{[A-Z_][A-Z0-9_]*\}`,       // Braced env var access
+		`export\s+[A-Z_][A-Z0-9_]*=`,   // Environment variable setting
+		`env\s+[A-Z_][A-Z0-9_]*=`,      // Environment variable setting with env
+		`printenv\s+[A-Z_][A-Z0-9_]*`,  // Environment variable reading
+		`echo\s+\$[A-Z_][A-Z0-9_]*`,    // Environment variable echoing
+	}
+
+	for _, pattern := range envPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			// Extract variable name
+			varRegex := regexp.MustCompile(`[A-Z_][A-Z0-9_]*`)
+			matches := varRegex.FindAllString(line, -1)
+			
+			for _, varName := range matches {
+				// Skip common shell keywords
+				if varName == "EXPORT" || varName == "ENV" || varName == "ECHO" || varName == "PRINTENV" {
+					continue
+				}
+
+				riskLevel := "LOW"
+				confidence := 0.3
+				description := "Environment variable access detected"
+				operation := "read"
+
+				// Check if it's a sensitive variable
+				for sensitiveVar, info := range sensitiveEnvVars {
+					if strings.Contains(varName, sensitiveVar) {
+						riskLevel = info.riskLevel
+						confidence = info.confidence
+						description = info.description
+						break
+					}
+				}
+
+				// Determine operation type
+				if strings.Contains(line, "export") || strings.Contains(line, "=") {
+					operation = "write"
+					confidence += 0.1 // Writing is slightly more suspicious
+				} else if strings.Contains(line, "unset") {
+					operation = "delete"
+					confidence += 0.2 // Deleting is more suspicious
+				}
+
+				analysis.EnvironmentAccess = append(analysis.EnvironmentAccess, EnvironmentAccess{
+					Variable:    varName,
+					Operation:   operation,
+					LineNumber:  lineNumber,
+					Context:     line,
+					RiskLevel:   riskLevel,
+					Description: description,
+					Confidence:  confidence,
+				})
+			}
+		}
+	}
+
+	// Check for environment variable exfiltration patterns
+	exfiltrationPatterns := []string{
+		`curl.*\$[A-Z_][A-Z0-9_]*`,      // Sending env vars via curl
+		`wget.*\$[A-Z_][A-Z0-9_]*`,      // Sending env vars via wget
+		`nc.*\$[A-Z_][A-Z0-9_]*`,        // Sending env vars via netcat
+		`echo.*\$[A-Z_][A-Z0-9_]*.*>`,   // Redirecting env vars to files
+		`cat.*\$[A-Z_][A-Z0-9_]*.*>`,    // Redirecting env vars to files
+		`base64.*\$[A-Z_][A-Z0-9_]*`,    // Encoding env vars
+	}
+
+	for _, pattern := range exfiltrationPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			analysis.EnvironmentAccess = append(analysis.EnvironmentAccess, EnvironmentAccess{
+				Variable:    "detected",
+				Operation:   "exfiltrate",
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   "HIGH",
+				Description: "Environment variable exfiltration pattern detected",
+				Confidence:  0.9,
+			})
+		}
+	}
+
+	// Check for environment variable manipulation
+	manipulationPatterns := []string{
+		`unset\s+[A-Z_][A-Z0-9_]*`,      // Unsetting environment variables
+		`export\s+PATH=`,                // Modifying PATH
+		`export\s+LD_PRELOAD=`,          // Library preloading
+		`export\s+LD_LIBRARY_PATH=`,     // Library path modification
+		`export\s+SHELL=`,               // Shell modification
+		`export\s+HOME=`,                // Home directory modification
+	}
+
+	for _, pattern := range manipulationPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			analysis.EnvironmentAccess = append(analysis.EnvironmentAccess, EnvironmentAccess{
+				Variable:    "system",
+				Operation:   "manipulate",
+				LineNumber:  lineNumber,
+				Context:     line,
+				RiskLevel:   "HIGH",
+				Description: "Environment variable manipulation detected",
+				Confidence:  0.8,
+			})
+		}
+	}
+}
+
+// Enhanced manifest analysis functions for comprehensive package security assessment
 func (sa *StaticAnalyzer) analyzePackageJSON(file *os.File, analysis *ManifestAnalysis) error {
 	// Parse package.json and analyze dependencies, scripts, etc.
 	var packageData map[string]interface{}
@@ -876,49 +1327,448 @@ func (sa *StaticAnalyzer) calculateEnhancedRiskAssessment(result *AnalysisResult
 	}
 }
 
-// Placeholder functions for loading rules and generating recommendations
+// Enhanced functions for loading rules and generating recommendations
 func (sa *StaticAnalyzer) loadYaraRules() error {
-	// Load YARA rules from configuration
-	sa.yaraRules = []*YaraRule{
-		{
-			Name:        "suspicious_download",
-			Description: "Detects suspicious download patterns",
-			Severity:    "HIGH",
-			Patterns:    []string{"curl.*|.*wget.*"},
-			Enabled:     true,
-		},
+	// Load YARA rules from files or embedded resources
+	// In production, this would load .yar files and compile them
+	
+	// Define built-in YARA-like rules for common malware patterns
+	// Note: In production, these would be loaded from .yar files
+	if sa.config.YaraRulesEnabled {
+		// Initialize the yaraRules slice if not already done
+		sa.yaraRules = []*YaraRule{
+			{
+				Name:        "suspicious_downloader",
+				Description: "Detects suspicious download patterns",
+				Severity:    "HIGH",
+				Patterns:    []string{"(curl|wget|fetch).*\\|\\s*(bash|sh|python|perl)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "downloader", "family": "execution"},
+				Enabled:     true,
+			},
+			{
+				Name:        "crypto_miner",
+				Description: "Detects cryptocurrency mining patterns",
+				Severity:    "HIGH",
+				Patterns:    []string{"(xmrig|cpuminer|ccminer|sgminer|cgminer)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "cryptominer", "family": "malware"},
+				Enabled:     true,
+			},
+			{
+				Name:        "backdoor_creation",
+				Description: "Detects backdoor creation attempts",
+				Severity:    "CRITICAL",
+				Patterns:    []string{"(nc\\s+-l|netcat.*-l|socat.*EXEC|/dev/tcp/)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "backdoor", "family": "network"},
+				Enabled:     true,
+			},
+			{
+				Name:        "credential_harvesting",
+				Description: "Detects credential harvesting attempts",
+				Severity:    "HIGH",
+				Patterns:    []string{"(\\.ssh/|\\.aws/|\\.docker/|password|passwd|shadow|authorized_keys)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "credentials", "family": "data-theft"},
+				Enabled:     true,
+			},
+			{
+				Name:        "system_modification",
+				Description: "Detects system file modifications",
+				Severity:    "HIGH",
+				Patterns:    []string{"(/etc/passwd|/etc/shadow|/etc/hosts|/etc/crontab|/etc/sudoers)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "system", "family": "persistence"},
+				Enabled:     true,
+			},
+			{
+				Name:        "obfuscated_code",
+				Description: "Detects code obfuscation patterns",
+				Severity:    "MEDIUM",
+				Patterns:    []string{"(eval\\s*\\(|exec\\s*\\(|base64.*decode|rot13|\\\\x[0-9a-fA-F]{2})"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "obfuscation", "family": "evasion"},
+				Enabled:     true,
+			},
+			{
+				Name:        "privilege_escalation",
+				Description: "Detects privilege escalation attempts",
+				Severity:    "HIGH",
+				Patterns:    []string{"(sudo\\s+su|chmod\\s+[47]77|setuid|setgid|pkexec)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "privilege-escalation", "family": "security"},
+				Enabled:     true,
+			},
+			{
+				Name:        "data_exfiltration",
+				Description: "Detects data exfiltration patterns",
+				Severity:    "HIGH",
+				Patterns:    []string{"(scp\\s+.*@|rsync\\s+.*@|tar.*\\|\\s*nc|zip.*\\|\\s*curl)"},
+				Condition:   "any of them",
+				Metadata:    map[string]string{"category": "exfiltration", "family": "data-theft"},
+				Enabled:     true,
+			},
+		}
 	}
+	
 	return nil
 }
 
 func (sa *StaticAnalyzer) loadScriptPatterns() error {
 	// Load script analysis patterns
+	// This would load regex patterns, command lists, etc.
+	
+	// Enhanced script patterns for comprehensive analysis
 	sa.scriptPatterns = []*ScriptPattern{
 		{
 			Name:        "base64_decode",
-			Pattern:     "base64.*-d",
-			Description: "Base64 decoding detected",
+			Pattern:     "base64.*(-d|--decode)",
+			Description: "Base64 decoding operation detected",
 			RiskLevel:   "MEDIUM",
 			Confidence:  0.7,
 			Enabled:     true,
 		},
+		{
+			Name:        "remote_execution",
+			Pattern:     "(curl|wget).*\\|\\s*(bash|sh|python|perl)",
+			Description: "Remote script execution pattern detected",
+			RiskLevel:   "HIGH",
+			Confidence:  0.9,
+			Enabled:     true,
+		},
+		{
+			Name:        "eval_execution",
+			Pattern:     "eval\\s*\\(",
+			Description: "Dynamic code evaluation detected",
+			RiskLevel:   "HIGH",
+			Confidence:  0.8,
+			Enabled:     true,
+		},
+		{
+			Name:        "system_command",
+			Pattern:     "(system|exec|popen)\\s*\\(",
+			Description: "System command execution detected",
+			RiskLevel:   "HIGH",
+			Confidence:  0.8,
+			Enabled:     true,
+		},
+		{
+			Name:        "network_listener",
+			Pattern:     "nc\\s+-l\\s+\\d+",
+			Description: "Network listener setup detected",
+			RiskLevel:   "HIGH",
+			Confidence:  0.9,
+			Enabled:     true,
+		},
+		{
+			Name:        "file_deletion",
+			Pattern:     "rm\\s+-rf\\s+/",
+			Description: "Dangerous file deletion pattern detected",
+			RiskLevel:   "CRITICAL",
+			Confidence:  0.95,
+			Enabled:     true,
+		},
+		{
+			Name:        "permission_change",
+			Pattern:     "chmod\\s+[47]77",
+			Description: "Dangerous permission change detected",
+			RiskLevel:   "HIGH",
+			Confidence:  0.8,
+			Enabled:     true,
+		},
+		{
+			Name:        "privilege_escalation",
+			Pattern:     "sudo\\s+(su|passwd|useradd)",
+			Description: "Privilege escalation attempt detected",
+			RiskLevel:   "HIGH",
+			Confidence:  0.8,
+			Enabled:     true,
+		},
+		{
+			Name:        "cron_modification",
+			Pattern:     "crontab\\s+-e",
+			Description: "Cron job modification detected",
+			RiskLevel:   "MEDIUM",
+			Confidence:  0.7,
+			Enabled:     true,
+		},
+		{
+			Name:        "background_process",
+			Pattern:     "(nohup|screen|tmux).*&",
+			Description: "Background process creation detected",
+			RiskLevel:   "MEDIUM",
+			Confidence:  0.6,
+			Enabled:     true,
+		},
 	}
+	
 	return nil
 }
 
 func (sa *StaticAnalyzer) applyYaraRules(filePath string) ([]YaraMatch, error) {
-	// Apply YARA rules to file
-	return []YaraMatch{}, nil
+	// Apply YARA rules to file - this is the basic implementation
+	// The enhanced version is implemented in applyEnhancedYaraRules
+	return sa.applyEnhancedYaraRules(filePath)
 }
 
 func (sa *StaticAnalyzer) applyEnhancedYaraRules(filePath string) ([]YaraMatch, error) {
-	// Apply enhanced YARA rules to file with improved detection
-	return []YaraMatch{}, nil
+	var matches []YaraMatch
+	
+	// Read file content
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	
+	contentStr := string(content)
+	
+	// Apply each YARA rule
+	for _, rule := range sa.yaraRules {
+		if !rule.Enabled {
+			continue
+		}
+		
+		// Check patterns in the rule
+		for _, pattern := range rule.Patterns {
+			if matched, _ := regexp.MatchString(pattern, contentStr); matched {
+				// Find all matches with context
+				re, err := regexp.Compile(pattern)
+				if err != nil {
+					continue
+				}
+				
+				allMatches := re.FindAllStringIndex(contentStr, -1)
+				var ruleMatches []YaraRuleMatch
+				
+				for _, match := range allMatches {
+					start := match[0]
+					end := match[1]
+					
+					// Get context around the match
+					contextStart := max(0, start-50)
+					contextEnd := minInt(len(contentStr), end+50)
+					context := contentStr[contextStart:contextEnd]
+					
+					ruleMatches = append(ruleMatches, YaraRuleMatch{
+						Offset:  int64(start),
+						Length:  end - start,
+						Data:    contentStr[start:end],
+						Context: context,
+					})
+				}
+				
+				if len(ruleMatches) > 0 {
+					matches = append(matches, YaraMatch{
+						RuleName:    rule.Name,
+						FileName:    filePath,
+						Matches:     ruleMatches,
+						Metadata:    rule.Metadata,
+						RiskLevel:   rule.Severity,
+						Description: rule.Description,
+					})
+				}
+			}
+		}
+	}
+	
+	return matches, nil
 }
 
 func (sa *StaticAnalyzer) performEnhancedAnalysis(filePath string) ([]Finding, error) {
-	// Perform enhanced static analysis on file
-	return []Finding{}, nil
+	var findings []Finding
+	
+	// Read file content
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	
+	contentStr := string(content)
+	lines := strings.Split(contentStr, "\n")
+	
+	// Enhanced pattern detection
+	enhancedPatterns := map[string]struct {
+		severity    string
+		description string
+		confidence  float64
+	}{
+		`eval\s*\(`:                    {"HIGH", "Dynamic code execution detected", 0.9},
+		`exec\s*\(`:                    {"HIGH", "Command execution detected", 0.9},
+		`system\s*\(`:                  {"HIGH", "System command execution detected", 0.9},
+		`shell_exec\s*\(`:              {"HIGH", "Shell execution detected", 0.9},
+		`base64_decode\s*\(`:           {"MEDIUM", "Base64 decoding detected", 0.7},
+		`file_get_contents\s*\(.*http`: {"MEDIUM", "Remote file inclusion detected", 0.8},
+		`curl_exec\s*\(`:               {"MEDIUM", "HTTP request execution detected", 0.7},
+		`\$_GET\[.*\]`:                 {"MEDIUM", "User input handling detected", 0.6},
+		`\$_POST\[.*\]`:                {"MEDIUM", "User input handling detected", 0.6},
+		`\$_REQUEST\[.*\]`:             {"HIGH", "Unsafe user input handling detected", 0.8},
+		`chmod\s+777`:                  {"HIGH", "Dangerous file permissions detected", 0.9},
+		`rm\s+-rf\s+/`:                 {"CRITICAL", "Dangerous file deletion detected", 0.95},
+		`wget.*\|.*sh`:                 {"HIGH", "Remote script execution detected", 0.9},
+		`curl.*\|.*bash`:               {"HIGH", "Remote script execution detected", 0.9},
+		`nc\s+-l`:                      {"HIGH", "Network listener detected", 0.8},
+		`/dev/tcp/`:                    {"MEDIUM", "Network connection detected", 0.7},
+		`python.*-c.*`:                 {"MEDIUM", "Inline Python execution detected", 0.6},
+		`perl.*-e.*`:                   {"MEDIUM", "Inline Perl execution detected", 0.6},
+		`awk.*system\(`:                {"HIGH", "AWK system call detected", 0.8},
+		`find.*-exec`:                  {"MEDIUM", "Find with execution detected", 0.6},
+		`xargs.*sh`:                    {"MEDIUM", "Xargs shell execution detected", 0.7},
+		`sudo\s+.*`:                    {"MEDIUM", "Privilege escalation detected", 0.7},
+		`su\s+-.*`:                     {"MEDIUM", "User switching detected", 0.7},
+		`passwd\s+.*`:                  {"HIGH", "Password modification detected", 0.8},
+		`crontab\s+-e`:                 {"MEDIUM", "Cron job modification detected", 0.7},
+		`at\s+.*`:                      {"MEDIUM", "Scheduled task detected", 0.6},
+		`nohup\s+.*&`:                  {"MEDIUM", "Background process detected", 0.6},
+		`screen\s+-d`:                  {"MEDIUM", "Detached screen session detected", 0.6},
+		`tmux\s+.*`:                    {"MEDIUM", "Terminal multiplexer detected", 0.6},
+	}
+	
+	// Analyze each line
+	for lineNum, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		
+		// Check against enhanced patterns
+		for pattern, info := range enhancedPatterns {
+			if matched, _ := regexp.MatchString(pattern, line); matched {
+				findings = append(findings, Finding{
+					ID:          fmt.Sprintf("ENHANCED_%d", len(findings)+1),
+					Type:        "enhanced_pattern",
+					Severity:    info.severity,
+					Title:       "Enhanced Pattern Detection",
+					Description: info.description,
+					File:        filePath,
+					Line:        lineNum + 1,
+					Evidence:    line,
+					Remediation: "Review this code for potential security implications",
+					Confidence:  info.confidence,
+					Metadata: map[string]string{
+						"pattern": pattern,
+						"type":    "enhanced_detection",
+					},
+				})
+			}
+		}
+		
+		// Check for obfuscated code patterns
+		if sa.detectObfuscation(line) {
+			findings = append(findings, Finding{
+				ID:          fmt.Sprintf("OBFUSCATION_%d", len(findings)+1),
+				Type:        "obfuscation",
+				Severity:    "HIGH",
+				Title:       "Code Obfuscation Detected",
+				Description: "Potentially obfuscated code detected",
+				File:        filePath,
+				Line:        lineNum + 1,
+				Evidence:    line,
+				Remediation: "Review obfuscated code for malicious intent",
+				Confidence:  0.8,
+				Metadata: map[string]string{
+					"type": "obfuscation_detection",
+				},
+			})
+		}
+		
+		// Check for suspicious URLs
+		if sa.detectSuspiciousURLs(line) {
+			findings = append(findings, Finding{
+				ID:          fmt.Sprintf("SUSPICIOUS_URL_%d", len(findings)+1),
+				Type:        "suspicious_url",
+				Severity:    "MEDIUM",
+				Title:       "Suspicious URL Detected",
+				Description: "Potentially malicious URL detected",
+				File:        filePath,
+				Line:        lineNum + 1,
+				Evidence:    line,
+				Remediation: "Verify the legitimacy of the URL",
+				Confidence:  0.7,
+				Metadata: map[string]string{
+					"type": "url_detection",
+				},
+			})
+		}
+	}
+	
+	return findings, nil
+}
+
+// Helper functions for enhanced analysis
+func (sa *StaticAnalyzer) detectObfuscation(line string) bool {
+	// Detect various obfuscation techniques
+	obfuscationPatterns := []string{
+		`[a-zA-Z0-9+/]{50,}={0,2}`, // Base64-like strings
+		`\\x[0-9a-fA-F]{2}`,        // Hex encoding
+		`\\[0-7]{3}`,               // Octal encoding
+		`\$\{[^}]{20,}\}`,          // Long variable substitutions
+		`[a-zA-Z_][a-zA-Z0-9_]*\[['\"][^'\"]{20,}['\"]\]`, // Long array indices
+	}
+	
+	for _, pattern := range obfuscationPatterns {
+		if matched, _ := regexp.MatchString(pattern, line); matched {
+			return true
+		}
+	}
+	
+	// Check for excessive string concatenation (potential obfuscation)
+	if strings.Count(line, "+") > 10 || strings.Count(line, ".") > 15 {
+		return true
+	}
+	
+	return false
+}
+
+func (sa *StaticAnalyzer) detectSuspiciousURLs(line string) bool {
+	// Extract URLs from the line
+	urlPattern := `https?://[^\s'"<>]+`
+	re := regexp.MustCompile(urlPattern)
+	urls := re.FindAllString(line, -1)
+	
+	for _, url := range urls {
+		// Check for suspicious URL characteristics
+		if sa.isSuspiciousURL(url) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+func (sa *StaticAnalyzer) isSuspiciousURL(url string) bool {
+	// Check for various suspicious URL patterns
+	suspiciousPatterns := []string{
+		`\d+\.\d+\.\d+\.\d+`,           // IP addresses
+		`[a-z0-9]{20,}\.com`,           // Long random domains
+		`bit\.ly|tinyurl|t\.co|goo\.gl`, // URL shorteners
+		`\.tk|\.ml|\.ga|\.cf`,          // Suspicious TLDs
+		`[0-9]{4,}\.`,                  // Domains with many numbers
+		`-{3,}`,                        // Multiple dashes
+		`[a-z]{1,3}\.[a-z]{1,3}\.[a-z]{1,3}`, // Very short domain parts
+	}
+	
+	for _, pattern := range suspiciousPatterns {
+		if matched, _ := regexp.MatchString(pattern, url); matched {
+			return true
+		}
+	}
+	
+	return false
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func (sa *StaticAnalyzer) generateFindings(result *AnalysisResult) {

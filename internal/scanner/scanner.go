@@ -201,7 +201,7 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			_ = s.cache.SetCachedAnalysisResult(cacheKey, result)
+			_ = s.cache.CacheAnalysisResult(cacheKey, result, nil)
 		}
 	}
 
@@ -849,7 +849,18 @@ func (s *Scanner) generateCacheKey(projectPath string) (string, error) {
 		return "", fmt.Errorf("cache not initialized")
 	}
 
-	return s.cache.GenerateScanKey(projectPath)
+	// Get enabled analyzers
+	var enabledAnalyzers []string
+	for name := range s.analyzers {
+		enabledAnalyzers = append(enabledAnalyzers, name)
+	}
+
+	// Create config map
+	configMap := map[string]interface{}{
+		"scan_config": s.config,
+	}
+
+	return s.cache.GenerateScanKey(projectPath, enabledAnalyzers, configMap)
 }
 
 // GetCacheStats returns cache statistics
@@ -881,7 +892,7 @@ func (s *Scanner) SetCacheConfig(config *cache.CacheConfig) error {
 	if s.cache == nil {
 		return fmt.Errorf("cache not initialized")
 	}
-	return s.cache.SetCacheConfig(*config)
+	return s.cache.SetCacheConfig(config)
 }
 
 // IsCacheEnabled returns whether caching is enabled
@@ -1025,13 +1036,13 @@ func (s *Scanner) convertThreatTypeToEventType(threatType string) pkgevents.Even
 // convertSeverityToEventSeverity converts types.Severity to pkgevents.Severity
 func (s *Scanner) convertSeverityToEventSeverity(severity string) pkgevents.Severity {
 	switch severity {
-	case string(types.SeverityCritical):
+	case types.SeverityCritical.String():
 		return pkgevents.SeverityCritical
-	case string(types.SeverityHigh):
+	case types.SeverityHigh.String():
 		return pkgevents.SeverityHigh
-	case string(types.SeverityMedium):
+	case types.SeverityMedium.String():
 		return pkgevents.SeverityMedium
-	case string(types.SeverityLow):
+	case types.SeverityLow.String():
 		return pkgevents.SeverityLow
 	default:
 		return pkgevents.SeverityLow

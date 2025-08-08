@@ -424,12 +424,206 @@ func (h *WebhookHandler) handleGitLabWebhook(c *gin.Context) {
 
 // handleBitbucketWebhook handles Bitbucket webhook requests
 func (h *WebhookHandler) handleBitbucketWebhook(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "Bitbucket webhooks not yet implemented"})
+	providerConfig, exists := h.config.Providers["bitbucket"]
+	if !exists || !providerConfig.Enabled {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bitbucket webhooks not enabled"})
+		return
+	}
+
+	// Verify signature if secret is configured
+	if providerConfig.Secret != "" {
+		if !h.verifySignature(c, providerConfig.Secret, "X-Hub-Signature-256") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid signature"})
+			return
+		}
+	}
+
+	// Parse Bitbucket webhook payload
+	var payload struct {
+		Repository struct {
+			FullName string `json:"full_name"`
+			Name     string `json:"name"`
+			Links    struct {
+				HTML struct {
+					Href string `json:"href"`
+				} `json:"html"`
+			} `json:"links"`
+		} `json:"repository"`
+		Push struct {
+			Changes []struct {
+				New struct {
+					Name string `json:"name"`
+					Type string `json:"type"`
+				} `json:"new"`
+				Commits []struct {
+					Hash    string `json:"hash"`
+					Message string `json:"message"`
+				} `json:"commits"`
+			} `json:"changes"`
+		} `json:"push"`
+		Actor struct {
+			DisplayName string `json:"display_name"`
+			Username    string `json:"username"`
+		} `json:"actor"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
+		return
+	}
+
+	eventType := c.GetHeader("X-Event-Key")
+	if eventType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing X-Event-Key header"})
+		return
+	}
+
+	// Check if event should be processed
+	if !h.shouldProcessEvent(eventType, providerConfig.Events) {
+		c.JSON(http.StatusOK, gin.H{"message": "Event ignored"})
+		return
+	}
+
+	// Process push events
+	if eventType == "repo:push" && len(payload.Push.Changes) > 0 {
+		for _, change := range payload.Push.Changes {
+			if change.New.Type != "branch" {
+				continue
+			}
+
+			branch := change.New.Name
+			if !h.shouldProcessBranch(branch, providerConfig.Branches) {
+				continue
+			}
+
+			scanRequest := &ScanRequest{
+				ID:         h.generateScanID(),
+				Provider:   "bitbucket",
+				Event:      eventType,
+				Repository: payload.Repository.FullName,
+				Branch:     branch,
+				Commit:     "",
+				Trigger:    "webhook",
+				Metadata: map[string]interface{}{
+					"author": payload.Actor.Username,
+					"url":    payload.Repository.Links.HTML.Href,
+				},
+				Timeout:    30 * time.Second,
+			}
+
+			if len(change.Commits) > 0 {
+				scanRequest.Commit = change.Commits[0].Hash
+			}
+
+			h.processScanRequest(c, scanRequest)
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Webhook processed"})
 }
 
 // handleAzureWebhook handles Azure DevOps webhook requests
 func (h *WebhookHandler) handleAzureWebhook(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "Azure DevOps webhooks not yet implemented"})
+	providerConfig, exists := h.config.Providers["azure"]
+	if !exists || !providerConfig.Enabled {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Azure DevOps webhooks not enabled"})
+		return
+	}
+
+	// Verify signature if secret is configured
+	if providerConfig.Secret != "" {
+		if !h.verifySignature(c, providerConfig.Secret, "X-Hub-Signature-256") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid signature"})
+			return
+		}
+	}
+
+	// Parse Azure DevOps webhook payload
+	var payload struct {
+		EventType    string `json:"eventType"`
+		SubscriptionId string `json:"subscriptionId"`
+		Resource     struct {
+			Repository struct {
+				Name    string `json:"name"`
+				Project struct {
+					Name string `json:"name"`
+				} `json:"project"`
+				RemoteURL string `json:"remoteUrl"`
+				WebURL    string `json:"webUrl"`
+			} `json:"repository"`
+			RefUpdates []struct {
+				Name     string `json:"name"`
+				OldObjectId string `json:"oldObjectId"`
+				NewObjectId string `json:"newObjectId"`
+			} `json:"refUpdates"`
+			Commits []struct {
+				CommitId string `json:"commitId"`
+				Comment  string `json:"comment"`
+				Author   struct {
+					Name  string `json:"name"`
+					Email string `json:"email"`
+				} `json:"author"`
+			} `json:"commits"`
+			PushedBy struct {
+				DisplayName string `json:"displayName"`
+				UniqueName  string `json:"uniqueName"`
+			} `json:"pushedBy"`
+		} `json:"resource"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
+		return
+	}
+
+	eventType := payload.EventType
+	if eventType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing eventType in payload"})
+		return
+	}
+
+	// Check if event should be processed
+	if !h.shouldProcessEvent(eventType, providerConfig.Events) {
+		c.JSON(http.StatusOK, gin.H{"message": "Event ignored"})
+		return
+	}
+
+	// Process git.push events
+	if eventType == "git.push" && len(payload.Resource.RefUpdates) > 0 {
+		for _, refUpdate := range payload.Resource.RefUpdates {
+			// Extract branch name from ref (refs/heads/branch-name)
+			branch := strings.TrimPrefix(refUpdate.Name, "refs/heads/")
+			if !h.shouldProcessBranch(branch, providerConfig.Branches) {
+				continue
+			}
+
+			repositoryName := fmt.Sprintf("%s/%s", 
+				payload.Resource.Repository.Project.Name, 
+				payload.Resource.Repository.Name)
+
+			scanRequest := &ScanRequest{
+				ID:         h.generateScanID(),
+				Provider:   "azure",
+				Event:      eventType,
+				Repository: repositoryName,
+				Branch:     branch,
+				Commit:     refUpdate.NewObjectId,
+				Trigger:    "webhook",
+				Metadata: map[string]interface{}{
+					"pushedBy": payload.Resource.PushedBy.DisplayName,
+					"url":      payload.Resource.Repository.WebURL,
+					"project":  payload.Resource.Repository.Project.Name,
+				},
+				Timeout:    30 * time.Second,
+			}
+
+			h.processScanRequest(c, scanRequest)
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Webhook processed"})
 }
 
 // handleScanStatus returns the status of a scan

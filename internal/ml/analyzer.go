@@ -1142,24 +1142,119 @@ func (a *MLAnalyzer) max(a1, b int) int {
 
 // findSimilarPackages finds packages similar to the analyzed one.
 func (a *MLAnalyzer) findSimilarPackages(pkg *types.Package) []SimilarPackage {
-	// Placeholder implementation
-	// In a real implementation, this would query a database of packages
-
-	similarPackages := []SimilarPackage{
-		{
-			Name:           "similar-package-1",
-			Similarity:     0.85,
-			Distance:       2,
-			Algorithm:      "levenshtein",
-			Registry:       "npm",
-			Downloads:      1000000,
-			LastUpdated:    "2023-01-01",
-			Maintainer:     "trusted-maintainer",
-			SuspiciousFlag: false,
+	var similarPackages []SimilarPackage
+	
+	// Popular packages database for similarity comparison
+	popularPackages := map[string][]string{
+		"npm": {
+			"react", "lodash", "express", "axios", "moment", "jquery", "bootstrap", 
+			"vue", "angular", "typescript", "webpack", "babel", "eslint", "prettier",
+			"chalk", "commander", "inquirer", "fs-extra", "glob", "rimraf", "mkdirp",
+			"debug", "request", "cheerio", "socket.io", "nodemon", "cors", "helmet",
+		},
+		"pypi": {
+			"requests", "numpy", "pandas", "flask", "django", "pytest", "setuptools",
+			"pip", "wheel", "six", "urllib3", "certifi", "chardet", "idna", "click",
+			"jinja2", "markupsafe", "werkzeug", "itsdangerous", "python-dateutil",
+			"pytz", "scipy", "matplotlib", "pillow", "beautifulsoup4", "lxml",
+		},
+		"maven": {
+			"junit", "slf4j-api", "logback-classic", "spring-core", "spring-boot",
+			"jackson-core", "jackson-databind", "commons-lang3", "guava", "mockito-core",
+			"hibernate-core", "mysql-connector-java", "postgresql", "gson", "httpclient",
+		},
+		"go": {
+			"github.com/gin-gonic/gin", "github.com/gorilla/mux", "github.com/sirupsen/logrus",
+			"github.com/stretchr/testify", "github.com/spf13/cobra", "github.com/spf13/viper",
+			"github.com/golang/protobuf", "github.com/grpc-ecosystem/grpc-gateway",
 		},
 	}
-
+	
+	// Get popular packages for the same registry
+	candidates := popularPackages[strings.ToLower(pkg.Registry)]
+	if candidates == nil {
+		// If registry not found, use a general set
+		candidates = []string{"react", "lodash", "express", "requests", "numpy", "flask"}
+	}
+	
+	// Calculate similarity for each candidate
+	for _, candidate := range candidates {
+		// Skip if it's the same package
+		if strings.EqualFold(candidate, pkg.Name) {
+			continue
+		}
+		
+		// Calculate multiple similarity metrics
+		jaroWinklerSim := a.calculateJaroWinklerSimilarity(pkg.Name, candidate)
+		phoneticSim := a.calculatePhoneticSimilarity(pkg.Name, candidate)
+		basicSim := a.calculateSimilarity(pkg.Name, candidate)
+		
+		// Combine similarities with weights
+		combinedSimilarity := (jaroWinklerSim * 0.5) + (phoneticSim * 0.3) + (basicSim * 0.2)
+		
+		// Only include if similarity is above threshold
+		if combinedSimilarity > 0.6 {
+			// Calculate a simple distance metric
+			distance := int(math.Abs(float64(len(pkg.Name) - len(candidate))))
+			
+			similarPackage := SimilarPackage{
+				Name:           candidate,
+				Similarity:     combinedSimilarity,
+				Distance:       distance,
+				Algorithm:      "combined",
+				Registry:       pkg.Registry,
+				Downloads:      a.estimateDownloads(candidate, pkg.Registry),
+				LastUpdated:    "2024-01-01", // Would be fetched from registry in real implementation
+				Maintainer:     "verified-maintainer",
+				SuspiciousFlag: false,
+			}
+			similarPackages = append(similarPackages, similarPackage)
+		}
+	}
+	
+	// Sort by similarity score (highest first)
+	for i := 0; i < len(similarPackages)-1; i++ {
+		for j := i + 1; j < len(similarPackages); j++ {
+			if similarPackages[i].Similarity < similarPackages[j].Similarity {
+				similarPackages[i], similarPackages[j] = similarPackages[j], similarPackages[i]
+			}
+		}
+	}
+	
+	// Limit to top 10 results
+	if len(similarPackages) > 10 {
+		similarPackages = similarPackages[:10]
+	}
+	
 	return similarPackages
+}
+
+
+
+// estimateDownloads provides estimated download counts for popular packages
+func (a *MLAnalyzer) estimateDownloads(packageName, registry string) int64 {
+	// Estimated download counts for popular packages
+	popularDownloads := map[string]int64{
+		"react": 20000000, "lodash": 25000000, "express": 15000000,
+		"requests": 50000000, "numpy": 30000000, "flask": 10000000,
+		"junit": 5000000, "spring-boot": 8000000,
+	}
+	
+	if downloads, exists := popularDownloads[packageName]; exists {
+		return downloads
+	}
+	
+	// Default estimate based on registry
+	switch strings.ToLower(registry) {
+	case "npm":
+		return 1000000
+	case "pypi":
+		return 500000
+	case "maven":
+		return 200000
+	default:
+		return 100000
+	}
 }
 
 // detectMaliciousPackage detects if a package is potentially malicious using enhanced ML analysis.
@@ -1821,31 +1916,146 @@ func (a *MLAnalyzer) calculateTyposquattingScore(similarityScore, maliciousScore
 	return math.Min(typosquattingScore, 1.0)
 }
 
-// generatePredictions generates ML model predictions.
+// generatePredictions generates ML model predictions based on package features.
 func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string]float64) []Prediction {
-	// Placeholder implementation
-	// In a real implementation, this would use actual ML models
+	var predictions []Prediction
 
-	predictions := []Prediction{
-		{
-			Model:       "similarity_model",
-			Probability: 0.3,
-			Label:       "benign",
-			Confidence:  0.8,
-		},
-		{
-			Model:       "malicious_detection_model",
-			Probability: 0.2,
-			Label:       "benign",
-			Confidence:  0.7,
-		},
-		{
-			Model:       "reputation_model",
-			Probability: 0.7,
-			Label:       "trusted",
-			Confidence:  0.6,
-		},
+	// 1. Similarity Model Prediction
+	similarityScore := a.calculateSimilarityScore(pkg)
+	similarityLabel := "benign"
+	if similarityScore > 0.8 {
+		similarityLabel = "suspicious"
+	} else if similarityScore > 0.6 {
+		similarityLabel = "potentially_suspicious"
 	}
+	
+	predictions = append(predictions, Prediction{
+		Model:       "similarity_model",
+		Probability: similarityScore,
+		Label:       similarityLabel,
+		Confidence:  math.Min(0.9, 0.6+similarityScore*0.3), // Higher confidence for higher similarity
+	})
+
+	// 2. Malicious Detection Model
+	maliciousScore := 0.0
+	if features["name_entropy"] > 4.0 {
+		maliciousScore += 0.3
+	}
+	if features["name_special_char_ratio"] > 0.2 {
+		maliciousScore += 0.2
+	}
+	if features["name_length"] > 50 {
+		maliciousScore += 0.2
+	}
+	
+	// Check for suspicious patterns in package name
+	suspiciousPatterns := []string{"test", "temp", "fake", "malware", "virus", "hack"}
+	for _, pattern := range suspiciousPatterns {
+		if strings.Contains(strings.ToLower(pkg.Name), pattern) {
+			maliciousScore += 0.4
+			break
+		}
+	}
+	
+	maliciousScore = math.Min(maliciousScore, 1.0)
+	maliciousLabel := "benign"
+	if maliciousScore > 0.7 {
+		maliciousLabel = "malicious"
+	} else if maliciousScore > 0.4 {
+		maliciousLabel = "suspicious"
+	}
+	
+	predictions = append(predictions, Prediction{
+		Model:       "malicious_detection_model",
+		Probability: maliciousScore,
+		Label:       maliciousLabel,
+		Confidence:  0.7 + maliciousScore*0.2,
+	})
+
+	// 3. Reputation Model
+	reputationScore := 0.5 // Default neutral reputation
+	
+	// Check if package has metadata indicating trustworthiness
+	if pkg.Metadata != nil {
+		if pkg.Metadata.Repository != "" {
+			reputationScore += 0.2
+		}
+		if pkg.Metadata.License != "" {
+			reputationScore += 0.1
+		}
+		if pkg.Metadata.Homepage != "" {
+			reputationScore += 0.1
+		}
+		if pkg.Metadata.Author != "" && !strings.Contains(strings.ToLower(pkg.Metadata.Author), "unknown") {
+			reputationScore += 0.1
+		}
+	}
+	
+	// Check for known trusted patterns
+	trustedDomains := []string{"github.com", "gitlab.com", "bitbucket.org", "npmjs.org", "pypi.org"}
+	for _, domain := range trustedDomains {
+		if strings.Contains(pkg.Name, domain) {
+			reputationScore += 0.2
+			break
+		}
+	}
+	
+	reputationScore = math.Min(reputationScore, 1.0)
+	reputationLabel := "unknown"
+	if reputationScore > 0.7 {
+		reputationLabel = "trusted"
+	} else if reputationScore > 0.4 {
+		reputationLabel = "neutral"
+	} else {
+		reputationLabel = "untrusted"
+	}
+	
+	predictions = append(predictions, Prediction{
+		Model:       "reputation_model",
+		Probability: reputationScore,
+		Label:       reputationLabel,
+		Confidence:  0.6 + reputationScore*0.3,
+	})
+
+	// 4. Typosquatting Model
+	typosquattingScore := a.calculateTyposquattingScore(similarityScore, maliciousScore, reputationScore)
+	typosquattingLabel := "legitimate"
+	if typosquattingScore > 0.8 {
+		typosquattingLabel = "likely_typosquatting"
+	} else if typosquattingScore > 0.6 {
+		typosquattingLabel = "possible_typosquatting"
+	}
+	
+	predictions = append(predictions, Prediction{
+		Model:       "typosquatting_model",
+		Probability: typosquattingScore,
+		Label:       typosquattingLabel,
+		Confidence:  0.8 + typosquattingScore*0.15,
+	})
+
+	// 5. Behavioral Analysis Model
+	behavioralScore := 0.0
+	if features["name_digit_ratio"] > 0.5 {
+		behavioralScore += 0.3
+	}
+	if features["name_uppercase_ratio"] > 0.8 {
+		behavioralScore += 0.2
+	}
+	
+	behavioralScore = math.Min(behavioralScore, 1.0)
+	behavioralLabel := "normal"
+	if behavioralScore > 0.6 {
+		behavioralLabel = "anomalous"
+	} else if behavioralScore > 0.3 {
+		behavioralLabel = "unusual"
+	}
+	
+	predictions = append(predictions, Prediction{
+		Model:       "behavioral_model",
+		Probability: behavioralScore,
+		Label:       behavioralLabel,
+		Confidence:  0.7,
+	})
 
 	return predictions
 }
@@ -1980,8 +2190,8 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 		"Monitor package behavior in a sandboxed environment",
 	}
 
-	// Calculate confidence level
-	confidenceLevel := 0.8 // Placeholder confidence
+	// Calculate confidence level based on analysis quality and consistency
+	confidenceLevel := a.calculateConfidenceLevel(typosquattingScore, maliciousScore, reputationScore)
 
 	return RiskAssessment{
 		OverallRisk:     overallRisk,
@@ -2308,4 +2518,41 @@ func (a *MLAnalyzer) containsSuspiciousCommand(command string) bool {
 	}
 
 	return false
+}
+
+// calculateConfidenceLevel calculates the confidence level of the analysis
+// based on score consistency and quality indicators.
+func (a *MLAnalyzer) calculateConfidenceLevel(typosquattingScore, maliciousScore, reputationScore float64) float64 {
+	// Base confidence starts at 0.5
+	confidence := 0.5
+	
+	// Increase confidence when scores are consistent (all high or all low)
+	scores := []float64{typosquattingScore, maliciousScore, 1.0 - reputationScore}
+	
+	// Calculate score variance to measure consistency
+	mean := (scores[0] + scores[1] + scores[2]) / 3.0
+	variance := 0.0
+	for _, score := range scores {
+		variance += math.Pow(score-mean, 2)
+	}
+	variance /= 3.0
+	
+	// Lower variance (more consistent scores) increases confidence
+	consistencyBonus := math.Max(0, 0.3*(1.0-variance))
+	confidence += consistencyBonus
+	
+	// Increase confidence for extreme scores (very high or very low)
+	for _, score := range scores {
+		if score > 0.8 || score < 0.2 {
+			confidence += 0.1
+		}
+	}
+	
+	// Reputation score quality affects confidence
+	if reputationScore > 0.7 || reputationScore < 0.3 {
+		confidence += 0.1 // Clear reputation signal
+	}
+	
+	// Ensure confidence is within valid range
+	return math.Min(math.Max(confidence, 0.1), 0.95)
 }

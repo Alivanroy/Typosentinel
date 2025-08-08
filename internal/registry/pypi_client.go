@@ -3,7 +3,9 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -211,18 +213,152 @@ func (c *PyPIClient) EnrichPackage(pkg *types.Package) error {
 	return nil
 }
 
-// GetPopularPackages retrieves a list of popular packages (placeholder for future implementation)
+// GetPopularPackages retrieves a list of popular packages from PyPI stats
 func (c *PyPIClient) GetPopularPackages(limit int) ([]string, error) {
-	// This would require a different API or scraping PyPI's trending page
-	// For now, return a static list of well-known packages
-	popular := []string{
-		"requests", "numpy", "pandas", "django", "flask",
-		"tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow",
-		"beautifulsoup4", "selenium", "pytest", "black", "flake8",
+	logger.DebugWithContext("Fetching popular PyPI packages", map[string]interface{}{
+		"limit": limit,
+	})
+
+	// Use PyPI's stats API to get popular packages
+	// Note: PyPI doesn't have a direct "popular packages" endpoint, so we'll use a combination approach
+	
+	// First, try to get trending packages from PyPI's RSS feed
+	trendingPackages, err := c.getTrendingPackages()
+	if err != nil {
+		logger.DebugWithContext("Failed to get trending packages, using fallback", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// Fallback to a curated list of well-known popular packages
+		return c.getFallbackPopularPackages(limit), nil
 	}
+
+	// If we have trending packages, combine with known popular ones
+	popular := c.combineWithKnownPopular(trendingPackages)
 
 	if limit > 0 && limit < len(popular) {
 		return popular[:limit], nil
 	}
 	return popular, nil
+}
+
+// getTrendingPackages fetches trending packages from PyPI's RSS feed
+func (c *PyPIClient) getTrendingPackages() ([]string, error) {
+	// PyPI RSS feed for new releases
+	rssURL := "https://pypi.org/rss/updates.xml"
+	
+	resp, err := c.client.Get(rssURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch RSS feed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("RSS feed returned status %d", resp.StatusCode)
+	}
+
+	// Parse RSS feed to extract package names
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read RSS response: %w", err)
+	}
+
+	// Simple regex to extract package names from RSS titles
+	// RSS titles are typically in format "package-name version"
+	packageRegex := regexp.MustCompile(`<title>([a-zA-Z0-9\-_\.]+)\s+[\d\.]+`)
+	matches := packageRegex.FindAllStringSubmatch(string(body), -1)
+
+	var packages []string
+	seen := make(map[string]bool)
+	
+	for _, match := range matches {
+		if len(match) > 1 {
+			packageName := match[1]
+			if !seen[packageName] && isValidPackageName(packageName) {
+				packages = append(packages, packageName)
+				seen[packageName] = true
+			}
+		}
+	}
+
+	return packages, nil
+}
+
+// combineWithKnownPopular combines trending packages with known popular packages
+func (c *PyPIClient) combineWithKnownPopular(trending []string) []string {
+	// Known popular packages that should always be included
+	knownPopular := []string{
+		"requests", "numpy", "pandas", "django", "flask",
+		"tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow",
+		"beautifulsoup4", "selenium", "pytest", "black", "flake8",
+		"click", "jinja2", "sqlalchemy", "fastapi", "pydantic",
+		"boto3", "redis", "celery", "gunicorn", "uvicorn",
+	}
+
+	// Create a map to track unique packages
+	seen := make(map[string]bool)
+	var combined []string
+
+	// Add known popular packages first
+	for _, pkg := range knownPopular {
+		if !seen[pkg] {
+			combined = append(combined, pkg)
+			seen[pkg] = true
+		}
+	}
+
+	// Add trending packages that aren't already included
+	for _, pkg := range trending {
+		if !seen[pkg] && isValidPackageName(pkg) {
+			combined = append(combined, pkg)
+			seen[pkg] = true
+		}
+	}
+
+	return combined
+}
+
+// getFallbackPopularPackages returns a curated list when API calls fail
+func (c *PyPIClient) getFallbackPopularPackages(limit int) []string {
+	popular := []string{
+		"requests", "numpy", "pandas", "django", "flask",
+		"tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow",
+		"beautifulsoup4", "selenium", "pytest", "black", "flake8",
+		"click", "jinja2", "sqlalchemy", "fastapi", "pydantic",
+		"boto3", "redis", "celery", "gunicorn", "uvicorn",
+		"httpx", "aiohttp", "asyncio", "typing-extensions", "setuptools",
+		"wheel", "pip", "certifi", "urllib3", "charset-normalizer",
+	}
+
+	if limit > 0 && limit < len(popular) {
+		return popular[:limit]
+	}
+	return popular
+}
+
+// isValidPackageName checks if a package name is valid and not a common false positive
+func isValidPackageName(name string) bool {
+	// Filter out obviously invalid package names
+	if len(name) < 2 || len(name) > 100 {
+		return false
+	}
+	
+	// Check for valid characters (letters, numbers, hyphens, underscores, dots)
+	validName := regexp.MustCompile(`^[a-zA-Z0-9\-_\.]+$`)
+	if !validName.MatchString(name) {
+		return false
+	}
+	
+	// Filter out common false positives
+	invalidPatterns := []string{
+		"^test", "^example", "^demo", "^sample",
+		"^tmp", "^temp", "^debug", "^dev",
+	}
+	
+	for _, pattern := range invalidPatterns {
+		if matched, _ := regexp.MatchString(pattern, strings.ToLower(name)); matched {
+			return false
+		}
+	}
+	
+	return true
 }

@@ -1,0 +1,66 @@
+# TypoSentinel Enterprise Configuration
+# Minimal configuration for CLI demonstration
+
+# Security Configuration
+security:
+  encryption:
+    key: "demo-encryption-key-32-chars-long"
+  
+# Machine Learning Configuration
+ml:
+  enabled: false
+  model_config:
+    enabled: false
+    type: "tensorflow"
+    preprocessing:
+      scaling: "standard"
+
+# API Configuration
+api:
+  rest:
+    versioning:
+      strategy: "header"
+      default_version: "v1"
+      supported_versions: ["v1", "v2"]
+
+# Database Configuration
+database:
+  type: "sqlite"
+  connection_string: "./typosentinel.db"
+
+# Logging Configuration
+logging:
+  level: "info"
+  format: "text"
+
+# Core Configuration
+core:
+  max_workers: 4
+  timeout: "30m"
+
+# Platform Configurations
+platforms:
+  github:
+    enabled: true
+    api_url: "https://api.github.com"
+    rate_limit: 5000
+  gitlab:
+    enabled: true
+    api_url: "https://gitlab.com/api/v4"
+  bitbucket:
+    enabled: true
+    api_url: "https://api.bitbucket.org/2.0"
+  azuredevops:
+    enabled: true
+    api_url: "https://dev.azure.com"
+
+# Scanning Configuration
+scanning:
+  max_concurrent: 5
+  timeout: "10m"
+  include_dev_dependencies: false
+  
+# Output Configuration
+output:
+  default_format: "futuristic"
+  directory: "./scan_results"

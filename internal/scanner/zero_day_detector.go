@@ -2,7 +2,10 @@ package scanner
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -235,58 +238,299 @@ func (zd *ZeroDayDetectorImpl) detectSuspiciousNetworkActivity(ctx context.Conte
 
 func (zd *ZeroDayDetectorImpl) hasSuspiciousInstallScript(pkg *types.Package) bool {
 	// Check package metadata for install script indicators
-	if pkg.Metadata != nil && pkg.Metadata.HasInstallScript {
-		// Look for suspicious patterns in install scripts
-		return true // Simplified for demo
+	if pkg.Metadata == nil || !pkg.Metadata.HasInstallScript {
+		return false
 	}
+
+	// Check for suspicious patterns in install scripts
+	suspiciousPatterns := []string{
+		"curl", "wget", "eval", "exec", "system", "shell_exec",
+		"base64", "decode", "download", "http://", "https://",
+		"rm -rf", "chmod +x", "sudo", "su -", "/bin/sh",
+		"powershell", "cmd.exe", "registry", "regedit",
+	}
+
+	if scriptContent, exists := pkg.Metadata.Metadata["install_script"]; exists {
+		if script, ok := scriptContent.(string); ok {
+			scriptLower := strings.ToLower(script)
+			suspiciousCount := 0
+			
+			for _, pattern := range suspiciousPatterns {
+				if strings.Contains(scriptLower, pattern) {
+					suspiciousCount++
+				}
+			}
+			
+			// Consider suspicious if multiple patterns are found
+			return suspiciousCount >= 3
+		}
+	}
+
 	return false
 }
 
 func (zd *ZeroDayDetectorImpl) hasObfuscatedCode(pkg *types.Package) bool {
-	// Check for code obfuscation patterns
-	if pkg.Metadata != nil {
-		if metadata, ok := pkg.Metadata.Metadata["code_analysis"]; ok {
-			if analysis, ok := metadata.(map[string]interface{}); ok {
-				if obfuscated, exists := analysis["obfuscated"]; exists {
-					if isObfuscated, ok := obfuscated.(bool); ok {
-						return isObfuscated
-					}
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	// Check for explicit obfuscation markers
+	if metadata, ok := pkg.Metadata.Metadata["code_analysis"]; ok {
+		if analysis, ok := metadata.(map[string]interface{}); ok {
+			if obfuscated, exists := analysis["obfuscated"]; exists {
+				if isObfuscated, ok := obfuscated.(bool); ok && isObfuscated {
+					return true
 				}
+			}
+		}
+	}
+
+	// Check for obfuscation patterns in code content
+	obfuscationIndicators := []string{
+		"eval(", "Function(", "setTimeout(", "setInterval(",
+		"String.fromCharCode", "unescape(", "decodeURIComponent(",
+		"atob(", "btoa(", "\\x", "\\u00", "\\\\x", "\\\\u",
+		"_0x", "var _", "function _", "0x", "\\141\\142\\143",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			obfuscationCount := 0
+			
+			for _, indicator := range obfuscationIndicators {
+				if strings.Contains(codeLower, strings.ToLower(indicator)) {
+					obfuscationCount++
+				}
+			}
+			
+			// Check for high entropy strings (potential obfuscation)
+			if zd.hasHighEntropyStrings(code) {
+				obfuscationCount += 2
+			}
+			
+			// Consider obfuscated if multiple indicators are found
+			return obfuscationCount >= 3
+		}
+	}
+
+	return false
+}
+
+func (zd *ZeroDayDetectorImpl) hasHighEntropyStrings(code string) bool {
+	// Look for strings with high entropy (potential obfuscation)
+	lines := strings.Split(code, "\n")
+	for _, line := range lines {
+		// Check for long strings with high character variety
+		if len(line) > 50 {
+			entropy := zd.calculateStringEntropy(line)
+			if entropy > 4.5 { // High entropy threshold
+				return true
 			}
 		}
 	}
 	return false
 }
 
+func (zd *ZeroDayDetectorImpl) calculateStringEntropy(s string) float64 {
+	if len(s) == 0 {
+		return 0
+	}
+	
+	// Count character frequencies
+	freq := make(map[rune]int)
+	for _, char := range s {
+		freq[char]++
+	}
+	
+	// Calculate entropy
+	entropy := 0.0
+	length := float64(len(s))
+	for _, count := range freq {
+		p := float64(count) / length
+		if p > 0 {
+			entropy -= p * (math.Log2(p))
+		}
+	}
+	
+	return entropy
+}
+
 func (zd *ZeroDayDetectorImpl) hasSuspiciousNetworkActivity(pkg *types.Package) bool {
-	// Check for network activity patterns
-	if pkg.Metadata != nil {
-		if metadata, ok := pkg.Metadata.Metadata["network_analysis"]; ok {
-			if analysis, ok := metadata.(map[string]interface{}); ok {
-				if suspicious, exists := analysis["suspicious_network"]; exists {
-					if isSuspicious, ok := suspicious.(bool); ok {
-						return isSuspicious
-					}
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	// Check for explicit network analysis markers
+	if metadata, ok := pkg.Metadata.Metadata["network_analysis"]; ok {
+		if analysis, ok := metadata.(map[string]interface{}); ok {
+			if suspicious, exists := analysis["suspicious_network"]; exists {
+				if isSuspicious, ok := suspicious.(bool); ok && isSuspicious {
+					return true
 				}
 			}
 		}
 	}
+
+	// Check for suspicious network patterns in code
+	suspiciousNetworkPatterns := []string{
+		"http://", "https://", "ftp://", "tcp://", "udp://",
+		"XMLHttpRequest", "fetch(", "axios.", "request(",
+		"socket.", "connect(", "send(", "post(", "get(",
+		"websocket", "ws://", "wss://", "net.Dial",
+		"http.Get", "http.Post", "http.Client",
+	}
+
+	suspiciousHosts := []string{
+		"pastebin.com", "hastebin.com", "bit.ly", "tinyurl.com",
+		"discord.com/api/webhooks", "telegram.org/bot",
+		"raw.githubusercontent.com", "gist.github.com",
+		"dropbox.com", "drive.google.com", "onedrive.com",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			networkCount := 0
+			
+			// Check for network API usage
+			for _, pattern := range suspiciousNetworkPatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					networkCount++
+				}
+			}
+			
+			// Check for suspicious hosts
+			for _, host := range suspiciousHosts {
+				if strings.Contains(codeLower, strings.ToLower(host)) {
+					networkCount += 2 // Weight suspicious hosts more heavily
+				}
+			}
+			
+			// Check for base64 encoded URLs (common in malware)
+			if zd.hasEncodedURLs(code) {
+				networkCount += 3
+			}
+			
+			return networkCount >= 3
+		}
+	}
+
+	return false
+}
+
+func (zd *ZeroDayDetectorImpl) hasEncodedURLs(code string) bool {
+	// Look for base64 encoded URLs (common obfuscation technique)
+	
+	// Find potential base64 strings
+	base64Pattern := regexp.MustCompile(`[A-Za-z0-9+/]{20,}={0,2}`)
+	matches := base64Pattern.FindAllString(code, -1)
+	
+	for _, match := range matches {
+		// Try to decode and check if it contains URL patterns
+		if decoded, err := base64.StdEncoding.DecodeString(match); err == nil {
+			decodedStr := string(decoded)
+			if strings.Contains(decodedStr, "http") || 
+			   strings.Contains(decodedStr, "ftp") ||
+			   strings.Contains(decodedStr, "://") {
+				return true
+			}
+		}
+	}
+	
 	return false
 }
 
 func (zd *ZeroDayDetectorImpl) hasDataExfiltrationPatterns(pkg *types.Package) bool {
-	// Check for data exfiltration indicators
-	if pkg.Metadata != nil {
-		if metadata, ok := pkg.Metadata.Metadata["behavior_analysis"]; ok {
-			if analysis, ok := metadata.(map[string]interface{}); ok {
-				if exfiltration, exists := analysis["data_exfiltration"]; exists {
-					if hasExfiltration, ok := exfiltration.(bool); ok {
-						return hasExfiltration
-					}
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	// Check for explicit data exfiltration markers
+	if metadata, ok := pkg.Metadata.Metadata["behavior_analysis"]; ok {
+		if analysis, ok := metadata.(map[string]interface{}); ok {
+			if exfiltration, exists := analysis["data_exfiltration"]; exists {
+				if hasExfiltration, ok := exfiltration.(bool); ok && hasExfiltration {
+					return true
 				}
 			}
 		}
 	}
+
+	// Check for data exfiltration patterns in code
+	exfiltrationPatterns := []string{
+		// File system access
+		"fs.readFile", "readFileSync", "open(", "read(",
+		"os.environ", "process.env", "getenv(",
+		
+		// Credential harvesting
+		"password", "passwd", "secret", "token", "key",
+		"credential", "auth", "login", "session",
+		
+		// System information gathering
+		"os.platform", "os.hostname", "os.userInfo",
+		"process.platform", "navigator.userAgent",
+		"system(", "exec(", "spawn(", "shell_exec",
+		
+		// Network exfiltration
+		"POST", "PUT", "upload", "send", "transmit",
+		"webhook", "api/", "endpoint",
+		
+		// Data encoding/compression (for steganography)
+		"btoa(", "atob(", "base64", "compress", "zip",
+		"encrypt", "encode", "stringify",
+	}
+
+	sensitiveDataPatterns := []string{
+		// Common sensitive file patterns
+		".ssh/", ".aws/", ".docker/", ".kube/",
+		"id_rsa", "id_dsa", "private", "certificate",
+		"config", "credentials", "keychain",
+		
+		// Browser data
+		"cookies", "localStorage", "sessionStorage",
+		"history", "bookmarks", "saved_passwords",
+		
+		// System files
+		"/etc/passwd", "/etc/shadow", "hosts",
+		"registry", "SAM", "SYSTEM",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			exfiltrationScore := 0
+			
+			// Check for exfiltration patterns
+			for _, pattern := range exfiltrationPatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					exfiltrationScore++
+				}
+			}
+			
+			// Check for sensitive data access patterns
+			for _, pattern := range sensitiveDataPatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					exfiltrationScore += 2 // Weight sensitive data access more heavily
+				}
+			}
+			
+			// Check for combination of file access + network activity
+			hasFileAccess := strings.Contains(codeLower, "readfile") || 
+							strings.Contains(codeLower, "open(") ||
+							strings.Contains(codeLower, "read(")
+			hasNetworkActivity := strings.Contains(codeLower, "http") ||
+								strings.Contains(codeLower, "post") ||
+								strings.Contains(codeLower, "send")
+			
+			if hasFileAccess && hasNetworkActivity {
+				exfiltrationScore += 3
+			}
+			
+			return exfiltrationScore >= 4
+		}
+	}
+
 	return false
 }
 
@@ -295,10 +539,55 @@ func (zd *ZeroDayDetectorImpl) hasDataExfiltrationPatterns(pkg *types.Package) b
 func (zd *ZeroDayDetectorImpl) analyzeInstallationBehavior(pkg *types.Package) []BehaviorPattern {
 	var patterns []BehaviorPattern
 
-	if pkg.Metadata != nil && pkg.Metadata.HasInstallScript {
+	if pkg.Metadata == nil {
+		return patterns
+	}
+
+	// Check for suspicious installation scripts
+	if zd.hasSuspiciousInstallScript(pkg) {
 		patterns = append(patterns, BehaviorPattern{
-			Type:        "install_script",
-			Description: "Package has installation script",
+			Type:        "suspicious_install",
+			Description: "Package contains suspicious installation script with multiple dangerous commands",
+			Frequency:   1,
+			Confidence:  0.8,
+		})
+	}
+
+	// Check for privilege escalation attempts
+	if zd.hasPrivilegeEscalation(pkg) {
+		patterns = append(patterns, BehaviorPattern{
+			Type:        "privilege_escalation",
+			Description: "Installation script attempts privilege escalation",
+			Frequency:   1,
+			Confidence:  0.9,
+		})
+	}
+
+	// Check for persistence mechanisms
+	if zd.hasPersistenceMechanisms(pkg) {
+		patterns = append(patterns, BehaviorPattern{
+			Type:        "persistence",
+			Description: "Package attempts to establish persistence on the system",
+			Frequency:   1,
+			Confidence:  0.7,
+		})
+	}
+
+	// Check for system modification
+	if zd.hasSystemModification(pkg) {
+		patterns = append(patterns, BehaviorPattern{
+			Type:        "system_modification",
+			Description: "Package modifies critical system files or settings",
+			Frequency:   1,
+			Confidence:  0.6,
+		})
+	}
+
+	// Check for anti-analysis techniques
+	if zd.hasAntiAnalysisTechniques(pkg) {
+		patterns = append(patterns, BehaviorPattern{
+			Type:        "anti_analysis",
+			Description: "Package uses techniques to evade analysis",
 			Frequency:   1,
 			Confidence:  0.8,
 		})
@@ -503,4 +792,115 @@ func (zd *ZeroDayDetectorImpl) calculateRuntimeRiskScore(analysis *RuntimeAnalys
 	}
 
 	return score
+}
+
+func (zd *ZeroDayDetectorImpl) hasPrivilegeEscalation(pkg *types.Package) bool {
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	privilegeEscalationPatterns := []string{
+		"sudo", "su -", "chmod +s", "setuid", "setgid",
+		"passwd", "chown root", "usermod", "adduser",
+		"visudo", "/etc/sudoers", "pkexec", "gksudo",
+		"runas", "elevate", "UAC", "administrator",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			for _, pattern := range privilegeEscalationPatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func (zd *ZeroDayDetectorImpl) hasPersistenceMechanisms(pkg *types.Package) bool {
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	persistencePatterns := []string{
+		"crontab", "systemctl", "service", "daemon",
+		"startup", "autostart", "registry", "run key",
+		".bashrc", ".profile", ".zshrc", "init.d",
+		"systemd", "launchd", "plist", "scheduled task",
+		"wmi", "persistence", "backdoor", "implant",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			for _, pattern := range persistencePatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func (zd *ZeroDayDetectorImpl) hasSystemModification(pkg *types.Package) bool {
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	systemModificationPatterns := []string{
+		"/etc/", "/sys/", "/proc/", "/boot/",
+		"hosts", "resolv.conf", "fstab", "passwd",
+		"shadow", "group", "sudoers", "crontab",
+		"registry", "system32", "windows/system32",
+		"kernel", "driver", "module", "kext",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			for _, pattern := range systemModificationPatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func (zd *ZeroDayDetectorImpl) hasAntiAnalysisTechniques(pkg *types.Package) bool {
+	if pkg.Metadata == nil {
+		return false
+	}
+
+	antiAnalysisPatterns := []string{
+		"debugger", "vm", "virtual", "sandbox",
+		"analysis", "reverse", "disasm", "ida",
+		"ollydbg", "windbg", "gdb", "lldb",
+		"sleep", "delay", "timeout", "anti",
+		"evasion", "obfuscation", "packer", "crypter",
+		"isdebuggerpresent", "checkremotedebuggerpresent",
+	}
+
+	if codeContent, exists := pkg.Metadata.Metadata["source_code"]; exists {
+		if code, ok := codeContent.(string); ok {
+			codeLower := strings.ToLower(code)
+			antiAnalysisCount := 0
+			for _, pattern := range antiAnalysisPatterns {
+				if strings.Contains(codeLower, strings.ToLower(pattern)) {
+					antiAnalysisCount++
+				}
+			}
+			// Require multiple indicators for higher confidence
+			return antiAnalysisCount >= 2
+		}
+	}
+
+	return false
 }

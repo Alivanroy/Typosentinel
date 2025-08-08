@@ -1,0 +1,306 @@
+version: '3.8'
+
+services:
+  # TypoSentinel Scanner - Main detection engine
+  typosentinel-scanner:
+    build:
+      context: ../../
+      dockerfile: deployments/docker/Dockerfile
+    container_name: typosentinel-scanner
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=enterprise_test
+      - LOG_LEVEL=DEBUG
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_URL=postgresql://postgres:enterprise123@postgres:5432/typosentinel
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - redis
+      - postgres
+      - elasticsearch
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Attack Simulator - Generates realistic attack scenarios
+  attack-simulator:
+    build:
+      context: ../../tests/enterprise/attack-simulator
+      dockerfile: Dockerfile
+    container_name: attack-simulator
+    ports:
+      - "8000:8000"
+    environment:
+      - TYPOSENTINEL_URL=http://typosentinel-scanner:8080
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_URL=postgresql://postgres:enterprise123@postgres:5432/attacks
+      - C2_SIMULATOR_URL=http://malicious-c2:9999
+    volumes:
+      - attack_results:/app/results
+      - attack_logs:/app/logs
+      - ../../tests/enterprise/scenarios:/app/scenarios:ro
+    depends_on:
+      - typosentinel-scanner
+      - redis
+      - postgres
+    networks:
+      - enterprise-network
+
+  # Simulated Package Registries
+  pypi-simulator:
+    image: nginx:alpine
+    container_name: pypi-simulator
+    ports:
+      - "8081:80"
+    volumes:
+      - ./config/pypi-simulator.conf:/etc/nginx/nginx.conf:ro
+      - pypi_packages:/usr/share/nginx/html
+    networks:
+      - enterprise-network
+
+  npm-simulator:
+    image: nginx:alpine
+    container_name: npm-simulator
+    ports:
+      - "8082:80"
+    volumes:
+      - ./config/npm-simulator.conf:/etc/nginx/nginx.conf:ro
+      - npm_packages:/usr/share/nginx/html
+    networks:
+      - enterprise-network
+
+  maven-simulator:
+    image: nginx:alpine
+    container_name: maven-simulator
+    ports:
+      - "8083:80"
+    volumes:
+      - ./config/maven-simulator.conf:/etc/nginx/nginx.conf:ro
+      - maven_packages:/usr/share/nginx/html
+    networks:
+      - enterprise-network
+
+  # Malicious C2 Server Simulator (isolated)
+  malicious-c2:
+    image: python:3.11-slim
+    container_name: malicious-c2
+    ports:
+      - "9999:9999"
+    command: >
+      sh -c "
+        pip install flask requests &&
+        python -c \"
+        from flask import Flask, request, jsonify
+        import logging
+        app = Flask(__name__)
+        logging.basicConfig(level=logging.INFO)
+        
+        @app.route('/beacon', methods=['POST', 'GET'])
+        def beacon():
+            app.logger.info(f'C2 Beacon received from {request.remote_addr}')
+            return jsonify({'status': 'received', 'next_command': 'sleep'})
+        
+        @app.route('/collect', methods=['POST'])
+        def collect():
+            app.logger.info(f'Data collection from {request.remote_addr}')
+            return jsonify({'status': 'collected'})
+        
+        @app.route('/health')
+        def health():
+            return jsonify({'status': 'operational'})
+        
+        app.run(host='0.0.0.0', port=9999, debug=True)
+        \"
+      "
+    networks:
+      - enterprise-network
+    # Isolated from external networks for security
+
+  # Redis - Caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: enterprise-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass enterprise123
+    volumes:
+      - redis_data:/data
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL - Primary database
+  postgres:
+    image: postgres:15
+    container_name: enterprise-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=enterprise123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Elasticsearch - Search and analytics
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: enterprise-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana - Elasticsearch visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: enterprise-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    depends_on:
+      - elasticsearch
+    networks:
+      - enterprise-network
+
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: enterprise-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus-enterprise.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - enterprise-network
+
+  # Grafana - Monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: enterprise-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=enterprise123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana-datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - enterprise-network
+
+  # Network Traffic Analyzer
+  traffic-analyzer:
+    image: python:3.11-slim
+    container_name: traffic-analyzer
+    command: >
+      sh -c "
+        pip install scapy psutil flask &&
+        python -c \"
+        from flask import Flask, jsonify
+        import psutil
+        import time
+        app = Flask(__name__)
+        
+        @app.route('/network-stats')
+        def network_stats():
+            stats = psutil.net_io_counters()
+            return jsonify({
+                'bytes_sent': stats.bytes_sent,
+                'bytes_recv': stats.bytes_recv,
+                'packets_sent': stats.packets_sent,
+                'packets_recv': stats.packets_recv
+            })
+        
+        @app.route('/health')
+        def health():
+            return jsonify({'status': 'monitoring'})
+        
+        app.run(host='0.0.0.0', port=8888)
+        \"
+      "
+    ports:
+      - "8888:8888"
+    networks:
+      - enterprise-network
+    privileged: true
+
+  # Load Balancer (HAProxy)
+  load-balancer:
+    image: haproxy:2.8
+    container_name: enterprise-loadbalancer
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8404:8404"  # HAProxy stats
+    volumes:
+      - ./config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - typosentinel-scanner
+    networks:
+      - enterprise-network
+
+volumes:
+  attack_results:
+  attack_logs:
+  pypi_packages:
+  npm_packages:
+  maven_packages:
+  redis_data:
+  postgres_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  enterprise-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

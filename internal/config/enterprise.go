@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/internal/cache"
 	"github.com/Alivanroy/Typosentinel/internal/monitoring"
 )
 
@@ -12,7 +11,7 @@ import (
 type EnterpriseConfig struct {
 	Enabled    bool                        `yaml:"enabled" json:"enabled"`
 	License    LicenseConfig              `yaml:"license" json:"license"`
-	Cache      *cache.CacheConfig         `yaml:"cache" json:"cache"`
+	Cache      *CacheConfig               `yaml:"cache" json:"cache"`
 	Monitoring *monitoring.MonitoringConfig `yaml:"monitoring" json:"monitoring"`
 	EnterpriseSecurity   EnterpriseSecurityConfig             `yaml:"enterprise_security" json:"enterprise_security"`
 	Audit      AuditConfig                `yaml:"audit" json:"audit"`
@@ -368,12 +367,13 @@ func DefaultEnterpriseConfig() *EnterpriseConfig {
 			MaxScans: 100,
 			Features: []string{"basic_scanning"},
 		},
-		Cache: &cache.CacheConfig{
-			Type:           "memory",
-			DefaultTTL:     time.Hour,
-			MaxMemory:      100 * 1024 * 1024, // 100MB
-			EvictionPolicy: "lru",
-			Enabled:        true,
+		Cache: &CacheConfig{
+			Enabled:         true,
+			Provider:        "memory",
+			CacheDir:        "./cache",
+			TTL:             time.Hour,
+			MaxSize:         100 * 1024 * 1024, // 100MB
+			CleanupInterval: time.Minute * 10,
 		},
 		Monitoring: &monitoring.MonitoringConfig{
 			Enabled: false,
@@ -453,11 +453,11 @@ func (ec *EnterpriseConfig) Validate() error {
 
 	// Validate cache configuration
 	if ec.Cache != nil && ec.Cache.Enabled {
-		if ec.Cache.Type == "" {
-			ec.Cache.Type = "memory"
+		if ec.Cache.Provider == "" {
+			ec.Cache.Provider = "memory"
 		}
-		if ec.Cache.DefaultTTL == 0 {
-			ec.Cache.DefaultTTL = time.Hour
+		if ec.Cache.TTL == 0 {
+			ec.Cache.TTL = time.Hour
 		}
 	}
 

@@ -517,6 +517,9 @@ func (a *PythonAnalyzer) parsePyprojectToml(projectInfo *ProjectInfo) ([]*types.
 			Poetry struct {
 				Dependencies    map[string]interface{} `toml:"dependencies"`
 				DevDependencies map[string]interface{} `toml:"dev-dependencies"`
+				Group           map[string]struct {
+					Dependencies map[string]interface{} `toml:"dependencies"`
+				} `toml:"group"`
 			} `toml:"poetry"`
 		} `toml:"tool"`
 	}
@@ -606,6 +609,31 @@ func (a *PythonAnalyzer) parsePyprojectToml(projectInfo *ProjectInfo) ([]*types.
 		packages = append(packages, pkg)
 	}
 
+	// Parse Poetry group dependencies
+	for groupName, group := range pyproject.Tool.Poetry.Group {
+		for name, versionSpec := range group.Dependencies {
+			version := "*"
+			switch v := versionSpec.(type) {
+			case string:
+				version = v
+			case map[string]interface{}:
+				if ver, ok := v["version"]; ok {
+					if verStr, ok := ver.(string); ok {
+						version = verStr
+					}
+				}
+			}
+
+			pkg := &types.Package{
+				Name:     name,
+				Version:  version,
+				Registry: "pypi",
+				Type:     fmt.Sprintf("group-%s", groupName),
+			}
+			packages = append(packages, pkg)
+		}
+	}
+
 	return packages, nil
 }
 
@@ -645,34 +673,36 @@ func (a *PythonAnalyzer) parseSetupPy(projectInfo *ProjectInfo) ([]*types.Packag
 		}
 	}
 
-	// Extract extras_require for optional dependencies
-	extrasRequireRegex := regexp.MustCompile(`extras_require\s*=\s*\{([^}]+)\}`)
-	extrasMatches := extrasRequireRegex.FindStringSubmatch(content)
-	if len(extrasMatches) > 1 {
-		extrasStr := extrasMatches[1]
-		// Simple parsing of extras - this could be more sophisticated
-		lines := strings.Split(extrasStr, "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if strings.Contains(line, ":") {
-				parts := strings.Split(line, ":")
-				if len(parts) >= 2 {
-					requirementsStr := parts[1]
-					requirementsStr = strings.Trim(requirementsStr, " \t[],")
-					requirements := strings.Split(requirementsStr, ",")
-					for _, req := range requirements {
-						req = strings.TrimSpace(req)
-						req = strings.Trim(req, `"'`)
-						if req != "" {
-							name, version := a.parseRequirementString(req)
-							if name != "" {
-								pkg := &types.Package{
-									Name:     name,
-									Version:  version,
-									Registry: "pypi",
-									Type:     "optional",
+	// Extract extras_require for optional dependencies (only if IncludeDevDeps is true)
+	if a.config.Scanner.IncludeDevDeps {
+		extrasRequireRegex := regexp.MustCompile(`extras_require\s*=\s*\{([^}]+)\}`)
+		extrasMatches := extrasRequireRegex.FindStringSubmatch(content)
+		if len(extrasMatches) > 1 {
+			extrasStr := extrasMatches[1]
+			// Simple parsing of extras - this could be more sophisticated
+			lines := strings.Split(extrasStr, "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if strings.Contains(line, ":") {
+					parts := strings.Split(line, ":")
+					if len(parts) >= 2 {
+						requirementsStr := parts[1]
+						requirementsStr = strings.Trim(requirementsStr, " \t[],")
+						requirements := strings.Split(requirementsStr, ",")
+						for _, req := range requirements {
+							req = strings.TrimSpace(req)
+							req = strings.Trim(req, `"'`)
+							if req != "" {
+								name, version := a.parseRequirementString(req)
+								if name != "" {
+									pkg := &types.Package{
+										Name:     name,
+										Version:  version,
+										Registry: "pypi",
+										Type:     "optional",
+									}
+									packages = append(packages, pkg)
 								}
-								packages = append(packages, pkg)
 							}
 						}
 					}

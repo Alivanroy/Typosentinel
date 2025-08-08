@@ -462,3 +462,32 @@ func (rbac *RBACEngine) hasCircularDependency(roleName string, visited map[strin
 	delete(visited, roleName)
 	return false
 }
+
+// RemoveRole removes a role from the RBAC engine
+func (rbac *RBACEngine) RemoveRole(roleName string) error {
+	if roleName == "" {
+		return fmt.Errorf("role name cannot be empty")
+	}
+
+	rbac.mu.Lock()
+	defer rbac.mu.Unlock()
+
+	// Check if role exists
+	if _, exists := rbac.roles[roleName]; !exists {
+		return fmt.Errorf("role '%s' does not exist", roleName)
+	}
+
+	// Check if any other roles inherit from this role
+	for _, role := range rbac.roles {
+		for _, inheritedRole := range role.Inherits {
+			if inheritedRole == roleName {
+				return fmt.Errorf("cannot remove role '%s': it is inherited by role '%s'", roleName, role.Name)
+			}
+		}
+	}
+
+	// Remove the role
+	delete(rbac.roles, roleName)
+
+	return nil
+}

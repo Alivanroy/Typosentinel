@@ -764,6 +764,7 @@ func (m *Manager) setDefaults() {
 	viper.SetDefault("security.jwt.refresh_expiration", "24h")
 	viper.SetDefault("security.api_keys.enabled", false)
 	viper.SetDefault("security.encryption.algorithm", "aes-256-gcm")
+	viper.SetDefault("security.encryption.key", "default-encryption-key-32-chars-long")
 	viper.SetDefault("security.password_policy.min_length", 8)
 	viper.SetDefault("security.password_policy.require_upper", true)
 	viper.SetDefault("security.password_policy.require_lower", true)
@@ -780,6 +781,8 @@ func (m *Manager) setDefaults() {
 	viper.SetDefault("ml.timeout", "30s")
 	viper.SetDefault("ml.cache_size", 1000)
 	viper.SetDefault("ml.update_interval", "24h")
+	viper.SetDefault("ml.model_config.type", "tensorflow")
+	viper.SetDefault("ml.model_config.preprocessing.scaling", "standard")
 
 	// Scanner defaults
 	viper.SetDefault("scanner.max_concurrency", 10)
@@ -804,6 +807,9 @@ func (m *Manager) setDefaults() {
 	viper.SetDefault("api.documentation.path", "/docs")
 	viper.SetDefault("api.documentation.title", "Typosentinel API")
 	viper.SetDefault("api.documentation.version", "1.0.0")
+	viper.SetDefault("api.rest.versioning.strategy", "path")
+	viper.SetDefault("api.rest.versioning.default_version", "v1")
+	viper.SetDefault("api.rest.versioning.supported_versions", []string{"v1"})
 
 	// Rate limit defaults
 	viper.SetDefault("rate_limit.enabled", true)
@@ -826,6 +832,17 @@ func (m *Manager) setDefaults() {
 	// Policies defaults
 	viper.SetDefault("policies.fail_on_threats", false)
 	viper.SetDefault("policies.min_threat_level", "medium")
+
+	// Typo detection defaults
+	viper.SetDefault("typo_detection.max_distance", 2)
+
+	// ML analysis defaults
+	viper.SetDefault("ml_analysis.batch_size", 100)
+	viper.SetDefault("ml_analysis.max_features", 1000)
+	viper.SetDefault("ml_analysis.timeout", "30s")
+	viper.SetDefault("ml_analysis.feature_store.provider", "redis")
+	viper.SetDefault("ml_analysis.feature_store.ttl", "1h")
+	viper.SetDefault("ml_analysis.model_updates.interval", "24h")
 }
 
 // IntegrationsConfig contains integrations configuration

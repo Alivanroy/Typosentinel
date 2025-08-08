@@ -1,7 +1,9 @@
 package connectors
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -558,20 +560,158 @@ func (g *GitHubConnector) GetRepositoryCommits(ctx context.Context, repo *reposi
 
 // CreateWebhook creates a webhook for the repository
 func (g *GitHubConnector) CreateWebhook(ctx context.Context, repo *repository.Repository, webhookURL string, events []string) error {
-	// Implementation for webhook creation
-	return fmt.Errorf("webhook creation not implemented yet")
+	if repo == nil {
+		return fmt.Errorf("repository cannot be nil")
+	}
+	if webhookURL == "" {
+		return fmt.Errorf("webhook URL cannot be empty")
+	}
+	if len(events) == 0 {
+		events = []string{"push", "pull_request", "release"}
+	}
+
+	owner, name := g.parseFullName(repo.FullName)
+	if owner == "" || name == "" {
+		return fmt.Errorf("invalid repository full name: %s", repo.FullName)
+	}
+
+	// Prepare webhook payload
+	webhookConfig := map[string]interface{}{
+		"url":          webhookURL,
+		"content_type": "json",
+		"insecure_ssl": "0",
+	}
+
+	payload := map[string]interface{}{
+		"name":   "web",
+		"active": true,
+		"events": events,
+		"config": webhookConfig,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal webhook payload: %w", err)
+	}
+
+	endpoint := fmt.Sprintf("/repos/%s/%s/hooks", owner, name)
+	req, err := g.createRequest(ctx, "POST", endpoint, bytes.NewReader(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to create webhook: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failed to create webhook: %s", resp.Status)
+	}
+
+	return nil
 }
 
 // DeleteWebhook deletes a webhook
 func (g *GitHubConnector) DeleteWebhook(ctx context.Context, repo *repository.Repository, webhookID string) error {
-	// Implementation for webhook deletion
-	return fmt.Errorf("webhook deletion not implemented yet")
+	if repo == nil {
+		return fmt.Errorf("repository cannot be nil")
+	}
+	if webhookID == "" {
+		return fmt.Errorf("webhook ID cannot be empty")
+	}
+
+	owner, name := g.parseFullName(repo.FullName)
+	if owner == "" || name == "" {
+		return fmt.Errorf("invalid repository full name: %s", repo.FullName)
+	}
+
+	endpoint := fmt.Sprintf("/repos/%s/%s/hooks/%s", owner, name, webhookID)
+	req, err := g.createRequest(ctx, "DELETE", endpoint, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to delete webhook: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("failed to delete webhook: %s", resp.Status)
+	}
+
+	return nil
 }
 
 // ListWebhooks lists repository webhooks
 func (g *GitHubConnector) ListWebhooks(ctx context.Context, repo *repository.Repository) ([]repository.Webhook, error) {
-	// Implementation for listing webhooks
-	return nil, fmt.Errorf("webhook listing not implemented yet")
+	if repo == nil {
+		return nil, fmt.Errorf("repository cannot be nil")
+	}
+
+	owner, name := g.parseFullName(repo.FullName)
+	if owner == "" || name == "" {
+		return nil, fmt.Errorf("invalid repository full name: %s", repo.FullName)
+	}
+
+	endpoint := fmt.Sprintf("/repos/%s/%s/hooks", owner, name)
+	req, err := g.createRequest(ctx, "GET", endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list webhooks: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to list webhooks: %s", resp.Status)
+	}
+
+	var githubHooks []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&githubHooks); err != nil {
+		return nil, fmt.Errorf("failed to parse webhook response: %w", err)
+	}
+
+	webhooks := make([]repository.Webhook, 0, len(githubHooks))
+	for _, hook := range githubHooks {
+		webhook := repository.Webhook{
+			ID:     fmt.Sprintf("%v", hook["id"]),
+			Active: false,
+		}
+
+		// Extract URL from config
+		if config, ok := hook["config"].(map[string]interface{}); ok {
+			if url, ok := config["url"].(string); ok {
+				webhook.URL = url
+			}
+		}
+
+		// Extract events
+		if events, ok := hook["events"].([]interface{}); ok {
+			webhook.Events = make([]string, 0, len(events))
+			for _, event := range events {
+				if eventStr, ok := event.(string); ok {
+					webhook.Events = append(webhook.Events, eventStr)
+				}
+			}
+		}
+
+		// Extract active status
+		if active, ok := hook["active"].(bool); ok {
+			webhook.Active = active
+		}
+
+		webhooks = append(webhooks, webhook)
+	}
+
+	return webhooks, nil
 }
 
 // GetRateLimit gets current rate limit status
@@ -869,5 +1009,5 @@ func (g *GitHubConnector) decodeBase64Content(content string) ([]byte, error) {
 	content = strings.ReplaceAll(content, " ", "")
 	
 	// Decode base64
-	return json.RawMessage(content), nil
+	return base64.StdEncoding.DecodeString(content)
 }

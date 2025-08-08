@@ -71,7 +71,7 @@ func (tia *ThreatIntelAnalyzerImpl) CorrelateThreats(findings []ThreatIntelFindi
 	return &ThreatContext{
 		ThreatID:    primaryThreat.ID,
 		Description: primaryThreat.Description,
-		Severity:    string(primaryThreat.Severity),
+		Severity:    primaryThreat.Severity.String(),
 		References:  primaryThreat.References,
 	}, nil
 }

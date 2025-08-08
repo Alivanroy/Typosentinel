@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -574,20 +575,160 @@ func (g *GitLabConnector) GetRepositoryCommits(ctx context.Context, repo *reposi
 
 // CreateWebhook creates a webhook for the repository
 func (g *GitLabConnector) CreateWebhook(ctx context.Context, repo *repository.Repository, webhookURL string, events []string) error {
-	// Implementation for webhook creation
-	return fmt.Errorf("webhook creation not implemented yet")
+	if repo == nil {
+		return fmt.Errorf("repository cannot be nil")
+	}
+	if webhookURL == "" {
+		return fmt.Errorf("webhook URL cannot be empty")
+	}
+	if len(events) == 0 {
+		events = []string{"push_events", "merge_requests_events", "tag_push_events"}
+	}
+
+	// Convert events to GitLab format
+	gitlabEvents := make(map[string]bool)
+	for _, event := range events {
+		switch event {
+		case "push", "push_events":
+			gitlabEvents["push_events"] = true
+		case "pull_request", "merge_requests_events":
+			gitlabEvents["merge_requests_events"] = true
+		case "release", "tag_push_events":
+			gitlabEvents["tag_push_events"] = true
+		case "issues_events":
+			gitlabEvents["issues_events"] = true
+		case "wiki_page_events":
+			gitlabEvents["wiki_page_events"] = true
+		default:
+			gitlabEvents[event] = true
+		}
+	}
+
+	// Prepare webhook payload
+	payload := map[string]interface{}{
+		"url":                      webhookURL,
+		"push_events":              gitlabEvents["push_events"],
+		"merge_requests_events":    gitlabEvents["merge_requests_events"],
+		"tag_push_events":          gitlabEvents["tag_push_events"],
+		"issues_events":            gitlabEvents["issues_events"],
+		"wiki_page_events":         gitlabEvents["wiki_page_events"],
+		"enable_ssl_verification":  true,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal webhook payload: %w", err)
+	}
+
+	endpoint := fmt.Sprintf("/projects/%s/hooks", url.QueryEscape(repo.FullName))
+	req, err := g.createRequest(ctx, "POST", endpoint, bytes.NewReader(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to create webhook: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failed to create webhook: %s", resp.Status)
+	}
+
+	return nil
 }
 
 // DeleteWebhook deletes a webhook
 func (g *GitLabConnector) DeleteWebhook(ctx context.Context, repo *repository.Repository, webhookID string) error {
-	// Implementation for webhook deletion
-	return fmt.Errorf("webhook deletion not implemented yet")
+	if repo == nil {
+		return fmt.Errorf("repository cannot be nil")
+	}
+	if webhookID == "" {
+		return fmt.Errorf("webhook ID cannot be empty")
+	}
+
+	endpoint := fmt.Sprintf("/projects/%s/hooks/%s", url.QueryEscape(repo.FullName), webhookID)
+	req, err := g.createRequest(ctx, "DELETE", endpoint, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to delete webhook: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("failed to delete webhook: %s", resp.Status)
+	}
+
+	return nil
 }
 
 // ListWebhooks lists repository webhooks
 func (g *GitLabConnector) ListWebhooks(ctx context.Context, repo *repository.Repository) ([]repository.Webhook, error) {
-	// Implementation for listing webhooks
-	return nil, fmt.Errorf("webhook listing not implemented yet")
+	if repo == nil {
+		return nil, fmt.Errorf("repository cannot be nil")
+	}
+
+	endpoint := fmt.Sprintf("/projects/%s/hooks", url.QueryEscape(repo.FullName))
+	req, err := g.createRequest(ctx, "GET", endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := g.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list webhooks: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to list webhooks: %s", resp.Status)
+	}
+
+	var gitlabHooks []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&gitlabHooks); err != nil {
+		return nil, fmt.Errorf("failed to parse webhook response: %w", err)
+	}
+
+	webhooks := make([]repository.Webhook, 0, len(gitlabHooks))
+	for _, hook := range gitlabHooks {
+		webhook := repository.Webhook{
+			ID:     fmt.Sprintf("%v", hook["id"]),
+			Active: true, // GitLab webhooks are active by default
+		}
+
+		// Extract URL
+		if url, ok := hook["url"].(string); ok {
+			webhook.URL = url
+		}
+
+		// Extract events
+		var events []string
+		if pushEvents, ok := hook["push_events"].(bool); ok && pushEvents {
+			events = append(events, "push_events")
+		}
+		if mergeRequestEvents, ok := hook["merge_requests_events"].(bool); ok && mergeRequestEvents {
+			events = append(events, "merge_requests_events")
+		}
+		if tagPushEvents, ok := hook["tag_push_events"].(bool); ok && tagPushEvents {
+			events = append(events, "tag_push_events")
+		}
+		if issuesEvents, ok := hook["issues_events"].(bool); ok && issuesEvents {
+			events = append(events, "issues_events")
+		}
+		if wikiPageEvents, ok := hook["wiki_page_events"].(bool); ok && wikiPageEvents {
+			events = append(events, "wiki_page_events")
+		}
+		webhook.Events = events
+
+		webhooks = append(webhooks, webhook)
+	}
+
+	return webhooks, nil
 }
 
 // GetRateLimit gets current rate limit status (GitLab doesn't have a specific endpoint)

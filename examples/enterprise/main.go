@@ -11,6 +11,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/auth"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/internal/storage"
 )
 
 // Logger interface implementation for enterprise components
@@ -85,8 +86,11 @@ func main() {
 	// Initialize authorization middleware
 	authMiddleware := auth.NewAuthorizationMiddleware(rbacEngine, nil, true)
 
+	// Initialize violation store (minimal setup for example)
+	violationStore := &storage.ViolationStore{} // This would need proper initialization in real usage
+
 	// Initialize enterprise handlers
-	enterpriseHandlers := rest.NewEnterpriseHandlers(policyManager, rbacEngine, authMiddleware, logger)
+	enterpriseHandlers := rest.NewEnterpriseHandlers(policyManager, rbacEngine, authMiddleware, violationStore, logger)
 
 	// Initialize ML pipeline (minimal setup)
 	mlPipeline := &ml.MLPipeline{} // This would need proper initialization in real usage

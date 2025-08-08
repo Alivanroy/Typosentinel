@@ -492,28 +492,166 @@ func (d *DefaultDependencyUpdater) updateMavenDependencies(pkg *types.Package, n
 	// Update pom.xml
 	pomPath := "pom.xml"
 	if _, err := os.Stat(pomPath); err == nil {
-		// Note: Updating pom.xml requires XML parsing
-		// This is a placeholder for the actual implementation
+		err := d.updateMavenPomXML(pomPath, pkg.Name, newVersion)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update pom.xml: %w", err)
+		}
 		changedFiles = append(changedFiles, pomPath)
+	}
+	
+	// Look for other pom.xml files in subdirectories
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.Name() == "pom.xml" && path != pomPath {
+			err := d.updateMavenPomXML(path, pkg.Name, newVersion)
+			if err != nil {
+				return fmt.Errorf("failed to update %s: %w", path, err)
+			}
+			changedFiles = append(changedFiles, path)
+		}
+		return nil
+	})
+	
+	if err != nil {
+		return changedFiles, fmt.Errorf("error walking directory tree: %w", err)
 	}
 	
 	return changedFiles, nil
 }
 
+func (d *DefaultDependencyUpdater) updateMavenPomXML(filePath, packageName, newVersion string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	
+	content := string(data)
+	
+	// Parse Maven coordinates (groupId:artifactId)
+	parts := strings.Split(packageName, ":")
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid Maven package name format: %s (expected groupId:artifactId)", packageName)
+	}
+	groupId, artifactId := parts[0], parts[1]
+	
+	// Simple regex-based replacement for Maven dependencies
+	// This is a simplified approach - a production system would use proper XML parsing
+	dependencyPattern := fmt.Sprintf(`(<dependency>\s*<groupId>%s</groupId>\s*<artifactId>%s</artifactId>\s*<version>)[^<]+(</version>)`, 
+		regexp.QuoteMeta(groupId), regexp.QuoteMeta(artifactId))
+	
+	re := regexp.MustCompile(dependencyPattern)
+	updatedContent := re.ReplaceAllString(content, fmt.Sprintf("${1}%s${2}", newVersion))
+	
+	// Also handle property-based versions
+	propertyPattern := fmt.Sprintf(`(<properties>[\s\S]*<%s\.version>)[^<]+(</[^>]*\.version>[\s\S]*</properties>)`, 
+		regexp.QuoteMeta(artifactId))
+	
+	propertyRe := regexp.MustCompile(propertyPattern)
+	updatedContent = propertyRe.ReplaceAllString(updatedContent, fmt.Sprintf("${1}%s${2}", newVersion))
+	
+	// Write back to file if changes were made
+	if updatedContent != content {
+		return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
+	}
+	
+	return nil
+}
+
 func (d *DefaultDependencyUpdater) updateNugetDependencies(pkg *types.Package, newVersion string) ([]string, error) {
 	var changedFiles []string
 	
-	// Find .csproj files
-	matches, err := filepath.Glob("*.csproj")
+	// Find .csproj files recursively
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if strings.HasSuffix(info.Name(), ".csproj") {
+			err := d.updateNugetCsproj(path, pkg.Name, newVersion)
+			if err != nil {
+				return fmt.Errorf("failed to update %s: %w", path, err)
+			}
+			changedFiles = append(changedFiles, path)
+		}
+		return nil
+	})
+	
 	if err != nil {
-		return nil, err
+		return changedFiles, fmt.Errorf("error walking directory tree: %w", err)
 	}
 	
-	for _, csprojPath := range matches {
-		// Note: Updating .csproj files requires XML parsing
-		// This is a placeholder for the actual implementation
-		changedFiles = append(changedFiles, csprojPath)
+	// Also check for packages.config files (legacy NuGet format)
+	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.Name() == "packages.config" {
+			err := d.updateNugetPackagesConfig(path, pkg.Name, newVersion)
+			if err != nil {
+				return fmt.Errorf("failed to update %s: %w", path, err)
+			}
+			changedFiles = append(changedFiles, path)
+		}
+		return nil
+	})
+	
+	if err != nil {
+		return changedFiles, fmt.Errorf("error walking directory tree for packages.config: %w", err)
 	}
 	
 	return changedFiles, nil
+}
+
+func (d *DefaultDependencyUpdater) updateNugetCsproj(filePath, packageName, newVersion string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	
+	content := string(data)
+	
+	// Update PackageReference elements (modern .NET Core/.NET 5+ format)
+	packageRefPattern := fmt.Sprintf(`(<PackageReference\s+Include="%s"\s+Version=")[^"]+("[\s/>])`, 
+		regexp.QuoteMeta(packageName))
+	
+	re := regexp.MustCompile(packageRefPattern)
+	updatedContent := re.ReplaceAllString(content, fmt.Sprintf("${1}%s${2}", newVersion))
+	
+	// Also handle the format where Version is on a separate line
+	multiLinePattern := fmt.Sprintf(`(<PackageReference\s+Include="%s"[\s\S]*?<Version>)[^<]+(</Version>)`, 
+		regexp.QuoteMeta(packageName))
+	
+	multiLineRe := regexp.MustCompile(multiLinePattern)
+	updatedContent = multiLineRe.ReplaceAllString(updatedContent, fmt.Sprintf("${1}%s${2}", newVersion))
+	
+	// Write back to file if changes were made
+	if updatedContent != content {
+		return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
+	}
+	
+	return nil
+}
+
+func (d *DefaultDependencyUpdater) updateNugetPackagesConfig(filePath, packageName, newVersion string) error {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	
+	content := string(data)
+	
+	// Update package elements in packages.config (legacy format)
+	packagePattern := fmt.Sprintf(`(<package\s+id="%s"\s+version=")[^"]+("[\s/>])`, 
+		regexp.QuoteMeta(packageName))
+	
+	re := regexp.MustCompile(packagePattern)
+	updatedContent := re.ReplaceAllString(content, fmt.Sprintf("${1}%s${2}", newVersion))
+	
+	// Write back to file if changes were made
+	if updatedContent != content {
+		return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
+	}
+	
+	return nil
 }

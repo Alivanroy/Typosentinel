@@ -604,9 +604,9 @@ func (ed *EnterpriseDashboard) collectScanningMetrics(ctx context.Context) (*Sca
 			Language:     "",                                   // Language not available in scan jobs
 			Status:       scan.Status,
 			ThreatsFound: int(scan.ThreatCount),
-			Duration:     scan.Duration,
+			Duration:     time.Duration(scan.Duration),
 			StartTime:    scan.StartedAt,
-			EndTime:      scan.CompletedAt,
+			EndTime:      &scan.CompletedAt,
 		}
 	}
 
@@ -654,7 +654,7 @@ func (ed *EnterpriseDashboard) collectSecurityMetrics(ctx context.Context) (*Sec
 	threatsByTypeInt, err := ed.dbService.GetThreatsByType()
 	if err != nil {
 		ed.logger.Error("Failed to get threats by type", map[string]interface{}{"error": err})
-		threatsByTypeInt = make(map[string]int)
+		threatsByTypeInt = make(map[string]int64)
 	}
 
 	// Convert int map to int64 map
@@ -983,14 +983,14 @@ func (ed *EnterpriseDashboard) collectAlertsData() *AlertsData {
 // collectComplianceData collects compliance information
 func (ed *EnterpriseDashboard) collectComplianceData(ctx context.Context) (*ComplianceData, error) {
 	// Get overall compliance score from database
-	overallScore, err := ed.dbService.GetComplianceScore()
+	overallScore, err := ed.dbService.GetComplianceScore(ctx)
 	if err != nil {
 		ed.logger.Error("Failed to get compliance score", map[string]interface{}{"error": err})
 		overallScore = 87.5 // Default score
 	}
 
 	// Get compliance scores by standard from database
-	complianceByStandard, err := ed.dbService.GetComplianceByStandard()
+	complianceByStandard, err := ed.dbService.GetComplianceByStandard(ctx)
 	if err != nil {
 		ed.logger.Error("Failed to get compliance by standard", map[string]interface{}{"error": err})
 		complianceByStandard = map[string]float64{
@@ -1002,10 +1002,10 @@ func (ed *EnterpriseDashboard) collectComplianceData(ctx context.Context) (*Comp
 	}
 
 	// Get compliance violations from database
-	violations, err := ed.dbService.GetComplianceViolations(10)
+	violations, err := ed.dbService.GetComplianceViolations(ctx, 10)
 	if err != nil {
 		ed.logger.Error("Failed to get compliance violations", map[string]interface{}{"error": err})
-		violations = []*database.ComplianceViolation{}
+		violations = []database.ComplianceViolation{}
 	}
 
 	// Convert database violations to dashboard format
@@ -1024,10 +1024,10 @@ func (ed *EnterpriseDashboard) collectComplianceData(ctx context.Context) (*Comp
 	}
 
 	// Get recent audits from database
-	audits, err := ed.dbService.GetRecentAudits(10)
+	audits, err := ed.dbService.GetRecentAudits(ctx, 10)
 	if err != nil {
 		ed.logger.Error("Failed to get recent audits", map[string]interface{}{"error": err})
-		audits = []*database.AuditSummary{}
+		audits = []database.AuditSummary{}
 	}
 
 	// Convert database audits to dashboard format
@@ -1045,10 +1045,10 @@ func (ed *EnterpriseDashboard) collectComplianceData(ctx context.Context) (*Comp
 	}
 
 	// Get compliance trends from database
-	complianceTrends, err := ed.dbService.GetComplianceTrends(30)
+	complianceTrends, err := ed.dbService.GetComplianceTrends(ctx, 30)
 	if err != nil {
 		ed.logger.Error("Failed to get compliance trends", map[string]interface{}{"error": err})
-		complianceTrends = []*database.TrendDataPoint{}
+		complianceTrends = []database.TrendDataPoint{}
 	}
 
 	// Convert database trends to dashboard format

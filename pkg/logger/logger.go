@@ -444,3 +444,16 @@ func SetGlobalFormat(format string) {
 func GetGlobalLogger() *Logger {
 	return defaultLogger
 }
+
+// NewTestLogger creates a logger suitable for testing with minimal output
+func NewTestLogger() *Logger {
+	config := &Config{
+		Level:     DEBUG,
+		Format:    "text",
+		Output:    io.Discard, // Discard output during tests
+		Timestamp: false,
+		Caller:    false,
+		Prefix:    "[TEST]",
+	}
+	return NewWithConfig(config)
+}

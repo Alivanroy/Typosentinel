@@ -267,8 +267,15 @@ func (ih *IntegrationHub) routeToConnector(ctx context.Context, event *pkgevents
 		return fmt.Errorf("connector %s not found", connectorName)
 	}
 
-	// TODO: Apply connector-specific filters if configured
-	// Filter logic will be implemented later when filter types are aligned
+	// Apply connector-specific filters if configured
+	if !ih.shouldSendToConnector(event, connectorName) {
+		ih.logger.Debug("Event filtered out for connector", map[string]interface{}{
+			"event_type":  string(event.Type),
+			"event_id":    event.ID,
+			"connector":   connectorName,
+		})
+		return nil
+	}
 
 	// Send event with timeout
 	sendCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -348,4 +355,32 @@ func (ih *IntegrationHub) IsRunning() bool {
 	ih.mu.RLock()
 	defer ih.mu.RUnlock()
 	return ih.running
+}
+
+// shouldSendToConnector applies connector-specific filters to determine if an event should be sent
+func (ih *IntegrationHub) shouldSendToConnector(event *pkgevents.SecurityEvent, connectorName string) bool {
+	// For now, implement basic filtering based on event severity and type
+	// This can be extended with more sophisticated filtering rules
+	
+	// Example filters:
+	// 1. Critical events go to all connectors
+	if event.Severity == pkgevents.SeverityCritical {
+		return true
+	}
+	
+	// 2. Filter based on connector type (example logic)
+	switch connectorName {
+	case "slack", "teams":
+		// Chat connectors only get high severity events
+		return event.Severity >= pkgevents.SeverityHigh
+	case "email":
+		// Email gets medium and above
+		return event.Severity >= pkgevents.SeverityMedium
+	case "webhook", "siem":
+		// SIEM and webhook connectors get all events
+		return true
+	default:
+		// Unknown connectors get all events by default
+		return true
+	}
 }

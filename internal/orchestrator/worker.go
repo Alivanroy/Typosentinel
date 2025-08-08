@@ -608,7 +608,7 @@ func (w *Worker) scanRepository(job *ScanJob) (map[string]interface{}, error) {
 	}
 	
 	// Execute the repository scan using the manager
-	scanResult, err := w.manager.ScanRepository(w.ctx, scanRequest)
+	scanResult, err := w.manager.ScanRepositoryWithResult(w.ctx, scanRequest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan repository %s/%s: %w", owner, repo, err)
 	}
@@ -706,7 +706,7 @@ func (w *Worker) scanOrganization(job *ScanJob) (map[string]interface{}, error) 
 	}
 	
 	// Execute bulk scan using the repository manager
-	scanResults, err := w.manager.ScanRepositories(w.ctx, scanRequests)
+	scanResults, err := w.manager.ScanRepositoriesWithResults(w.ctx, scanRequests)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan repositories for organization %s: %w", job.Target, err)
 	}
@@ -918,7 +918,7 @@ func (w *Worker) scanBulk(job *ScanJob) (map[string]interface{}, error) {
 	}
 	
 	// Execute bulk scan using the repository manager
-	scanResults, err := w.manager.ScanRepositories(w.ctx, scanRequests)
+	scanResults, err := w.manager.ScanRepositoriesWithResults(w.ctx, scanRequests)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute bulk scan: %w", err)
 	}

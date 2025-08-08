@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -280,10 +281,15 @@ func (ae *DefaultActionExecutor) executeQuarantineAction(ctx context.Context, vi
 
 	ae.updateStepStatus(status, "update_access_controls", "running")
 
-	// Update access controls (placeholder - would integrate with actual access control system)
+	// Update access controls - integrate with actual access control system
 	if !ae.config.DryRun {
-		// This would integrate with actual access control systems
-		ae.logger.Info("Access controls updated for quarantined package")
+		if err := ae.updateAccessControls(quarantinePath, violation); err != nil {
+			ae.logger.Warn("Failed to update access controls", "error", err)
+		} else {
+			ae.logger.Info("Access controls updated for quarantined package", "path", quarantinePath)
+		}
+	} else {
+		ae.logger.Info("DRY RUN: Would update access controls for quarantined package")
 	}
 
 	ae.updateStepStatus(status, "update_access_controls", "completed")
@@ -345,20 +351,11 @@ func (ae *DefaultActionExecutor) executeGenerateSPDXAction(ctx context.Context, 
 		spdxPath = filepath.Join("/tmp", fmt.Sprintf("%s_spdx_%d.json", repoName, time.Now().Unix()))
 
 		if !ae.config.DryRun {
-			// Generate SPDX document (placeholder - would use actual SPDX generator)
-			spdxContent := fmt.Sprintf(`{
-  "spdxVersion": "SPDX-2.3",
-  "dataLicense": "CC0-1.0",
-  "SPDXID": "SPDXRef-DOCUMENT",
-  "name": "%s",
-  "documentNamespace": "https://typosentinel.com/spdx/%s",
-  "creationInfo": {
-    "created": "%s",
-    "creators": ["Tool: TypoSentinel"]
-  },
-  "packages": [],
-  "relationships": []
-}`, repoName, repoName, time.Now().Format(time.RFC3339))
+			// Generate comprehensive SPDX document
+			spdxContent, err := ae.generateSPDXDocument(violation, repoName)
+			if err != nil {
+				return nil, fmt.Errorf("failed to generate SPDX content: %w", err)
+			}
 
 			if err := os.WriteFile(spdxPath, []byte(spdxContent), 0644); err != nil {
 				return nil, fmt.Errorf("failed to write SPDX file: %w", err)
@@ -556,4 +553,132 @@ func (ae *DefaultActionExecutor) GetActionStatus(actionID string) (*ActionStatus
 	}
 
 	return status, nil
+}
+
+// updateAccessControls updates access controls for quarantined packages
+func (ae *DefaultActionExecutor) updateAccessControls(quarantinePath string, violation *auth.PolicyViolation) error {
+	// Set restrictive permissions on quarantine directory
+	if err := os.Chmod(quarantinePath, 0700); err != nil {
+		return fmt.Errorf("failed to set quarantine directory permissions: %w", err)
+	}
+
+	// Create access control metadata
+	aclMetadata := map[string]interface{}{
+		"quarantined_at": time.Now(),
+		"violation_id":   violation.ID,
+		"policy_name":    violation.PolicyName,
+		"severity":       violation.Severity,
+		"access_level":   "restricted",
+		"allowed_users":  []string{"admin", "security-team"},
+		"restrictions": map[string]bool{
+			"read_only":     true,
+			"no_execution":  true,
+			"no_network":    true,
+			"audit_access":  true,
+		},
+	}
+
+	aclData, err := json.MarshalIndent(aclMetadata, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal ACL metadata: %w", err)
+	}
+
+	aclPath := filepath.Join(quarantinePath, ".typosentinel_acl.json")
+	if err := os.WriteFile(aclPath, aclData, 0600); err != nil {
+		return fmt.Errorf("failed to write ACL metadata: %w", err)
+	}
+
+	ae.logger.Info("Access controls updated", 
+		"path", quarantinePath,
+		"permissions", "0700",
+		"acl_file", aclPath)
+
+	return nil
+}
+
+// generateSPDXDocument generates a comprehensive SPDX document
+func (ae *DefaultActionExecutor) generateSPDXDocument(violation *auth.PolicyViolation, repoName string) (string, error) {
+	now := time.Now()
+	
+	// Create SPDX document structure
+	spdxDoc := map[string]interface{}{
+		"spdxVersion":       "SPDX-2.3",
+		"dataLicense":       "CC0-1.0",
+		"SPDXID":           "SPDXRef-DOCUMENT",
+		"name":             repoName,
+		"documentNamespace": fmt.Sprintf("https://typosentinel.com/spdx/%s/%d", repoName, now.Unix()),
+		"creationInfo": map[string]interface{}{
+			"created":  now.Format(time.RFC3339),
+			"creators": []string{"Tool: TypoSentinel-v1.0"},
+			"licenseListVersion": "3.19",
+		},
+		"packages": ae.generateSPDXPackages(violation),
+		"relationships": ae.generateSPDXRelationships(violation),
+		"annotations": []map[string]interface{}{
+			{
+				"annotationType": "REVIEW",
+				"annotator":      "Tool: TypoSentinel",
+				"annotationDate": now.Format(time.RFC3339),
+				"annotationComment": fmt.Sprintf("Security violation detected: %s (Severity: %s)", 
+					violation.PolicyName, violation.Severity),
+			},
+		},
+	}
+
+	// Marshal to JSON with proper formatting
+	spdxData, err := json.MarshalIndent(spdxDoc, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal SPDX document: %w", err)
+	}
+
+	return string(spdxData), nil
+}
+
+// generateSPDXPackages generates package information for SPDX document
+func (ae *DefaultActionExecutor) generateSPDXPackages(violation *auth.PolicyViolation) []map[string]interface{} {
+	packages := []map[string]interface{}{}
+
+	// Add main package if available
+	if violation.Context != nil && violation.Context.Package != nil {
+		pkg := violation.Context.Package
+		spdxPkg := map[string]interface{}{
+			"SPDXID":           fmt.Sprintf("SPDXRef-Package-%s", strings.ReplaceAll(pkg.Name, "/", "-")),
+			"name":             pkg.Name,
+			"downloadLocation": "NOASSERTION",
+			"filesAnalyzed":    false,
+			"copyrightText":    "NOASSERTION",
+			"externalRefs": []map[string]interface{}{
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType":     "purl",
+					"referenceLocator":  fmt.Sprintf("pkg:%s/%s@%s", pkg.Type, pkg.Name, pkg.Version),
+				},
+			},
+		}
+
+		if pkg.Version != "" {
+			spdxPkg["versionInfo"] = pkg.Version
+		}
+
+		packages = append(packages, spdxPkg)
+	}
+
+	return packages
+}
+
+// generateSPDXRelationships generates relationship information for SPDX document
+func (ae *DefaultActionExecutor) generateSPDXRelationships(violation *auth.PolicyViolation) []map[string]interface{} {
+	relationships := []map[string]interface{}{}
+
+	// Add document relationship
+	if violation.Context != nil && violation.Context.Package != nil {
+		pkg := violation.Context.Package
+		relationships = append(relationships, map[string]interface{}{
+			"spdxElementId":      "SPDXRef-DOCUMENT",
+			"relationshipType":   "DESCRIBES",
+			"relatedSpdxElement": fmt.Sprintf("SPDXRef-Package-%s", strings.ReplaceAll(pkg.Name, "/", "-")),
+		})
+	}
+
+	return relationships
 }

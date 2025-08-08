@@ -261,23 +261,13 @@ build-backend = "poetry.core.masonry.api"
 		ManifestFile: "pyproject.toml",
 	}
 
-	// Extract packages - expect error since pyproject.toml parsing is not implemented
-	_, err = analyzer.ExtractPackages(projectInfo)
-	if err == nil {
-		t.Fatal("Expected error for unimplemented pyproject.toml parsing, got nil")
+	// Extract packages - pyproject.toml parsing is now implemented
+	packages, err := analyzer.ExtractPackages(projectInfo)
+	if err != nil {
+		t.Fatalf("Failed to extract packages: %v", err)
 	}
 
-	if !strings.Contains(err.Error(), "pyproject.toml parsing not implemented") {
-		t.Fatalf("Expected pyproject.toml parsing error, got: %v", err)
-	}
-
-	// Skip the rest of the test since parsing is not implemented
-	t.Skip("pyproject.toml parsing not implemented yet")
-
-	// Declare packages variable to avoid compilation errors (this code won't run due to Skip above)
-	var packages []*types.Package
-
-	// Verify results (this code won't run due to Skip above)
+	// Verify results
 	expectedProd := map[string]string{
 		"requests": "^2.28.0",
 		"numpy":    ">=1.21.0",
@@ -393,23 +383,13 @@ setup(
 		ManifestFile: "setup.py",
 	}
 
-	// Extract packages - expect error since setup.py parsing is not implemented
-	_, err = analyzer.ExtractPackages(projectInfo)
-	if err == nil {
-		t.Fatal("Expected error for unimplemented setup.py parsing, got nil")
+	// Extract packages - setup.py parsing is now implemented
+	packages, err := analyzer.ExtractPackages(projectInfo)
+	if err != nil {
+		t.Fatalf("Failed to extract packages: %v", err)
 	}
 
-	if !strings.Contains(err.Error(), "setup.py parsing not implemented") {
-		t.Fatalf("Expected setup.py parsing error, got: %v", err)
-	}
-
-	// Skip the rest of the test since parsing is not implemented
-	t.Skip("setup.py parsing not implemented yet")
-
-	// Declare packages variable to avoid compilation errors (this code won't run due to Skip above)
-	var packages []*types.Package
-
-	// Verify results (this code won't run due to Skip above)
+	// Verify results
 	expected := map[string]string{
 		"requests": "2.28.0",
 		"numpy":    "1.21.0",

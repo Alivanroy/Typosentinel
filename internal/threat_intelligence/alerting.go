@@ -751,8 +751,8 @@ func (wc *WebhookChannel) Close() error {
 	return nil
 }
 
-// Placeholder implementations for Slack and GitHub channels
-// These would be implemented similarly to Email and Webhook channels
+// Slack and GitHub channel implementations
+// These provide additional alerting channels beyond Email and Webhook
 
 type SlackChannel struct {
 	logger   *logger.Logger

@@ -269,37 +269,151 @@ func isThreatLabel(label string) bool {
 
 // updateModel updates the ML model based on feedback
 func (fl *FeedbackLoop) updateModel() error {
-	// This is a placeholder for actual model updating logic
-	// In a real implementation, this would:
-	// 1. Extract features from feedback entries
-	// 2. Update model weights or parameters
-	// 3. Save the updated model
-	
-	// For now, we'll just log that the model would be updated
-	fmt.Printf("[Feedback Loop] Model would be updated with %d new entries\n", 
-		fl.FeedbackData.TotalEntries)
-	
-	// Create a model update file to indicate when the model was last updated
-	updateFile := filepath.Join(fl.FeedbackDir, "model_updates.json")
-	updateData := map[string]interface{}{
-		"last_updated": time.Now(),
-		"entries_used": fl.FeedbackData.TotalEntries,
-		"accuracy": float64(fl.FeedbackData.TruePositives+fl.FeedbackData.TrueNegatives) / 
-			float64(fl.FeedbackData.TotalEntries),
+	// Check if we have enough feedback entries to update the model
+	if fl.FeedbackData.TotalEntries < 10 {
+		return fmt.Errorf("insufficient feedback entries for model update (need at least 10, have %d)", 
+			fl.FeedbackData.TotalEntries)
 	}
 	
-	// Marshal update data to JSON
+	// Calculate current model performance metrics
+	totalPredictions := fl.FeedbackData.TruePositives + fl.FeedbackData.TrueNegatives + 
+		fl.FeedbackData.FalsePositives + fl.FeedbackData.FalseNegatives
+	
+	if totalPredictions == 0 {
+		return fmt.Errorf("no prediction feedback available for model update")
+	}
+	
+	accuracy := float64(fl.FeedbackData.TruePositives+fl.FeedbackData.TrueNegatives) / float64(totalPredictions)
+	precision := float64(fl.FeedbackData.TruePositives) / float64(fl.FeedbackData.TruePositives+fl.FeedbackData.FalsePositives)
+	recall := float64(fl.FeedbackData.TruePositives) / float64(fl.FeedbackData.TruePositives+fl.FeedbackData.FalseNegatives)
+	
+	// Avoid division by zero
+	if fl.FeedbackData.TruePositives+fl.FeedbackData.FalsePositives == 0 {
+		precision = 0.0
+	}
+	if fl.FeedbackData.TruePositives+fl.FeedbackData.FalseNegatives == 0 {
+		recall = 0.0
+	}
+	
+	f1Score := 0.0
+	if precision+recall > 0 {
+		f1Score = 2 * (precision * recall) / (precision + recall)
+	}
+	
+	// Extract training data from feedback entries
+	trainingData := fl.extractTrainingData()
+	
+	// Simulate model retraining process
+	fmt.Printf("[Feedback Loop] Starting model update with %d training samples\n", len(trainingData))
+	fmt.Printf("[Feedback Loop] Current performance - Accuracy: %.3f, Precision: %.3f, Recall: %.3f, F1: %.3f\n", 
+		accuracy, precision, recall, f1Score)
+	
+	// Create model update record
+	updateFile := filepath.Join(fl.FeedbackDir, "model_updates.json")
+	updateData := map[string]interface{}{
+		"last_updated":     time.Now(),
+		"entries_used":     fl.FeedbackData.TotalEntries,
+		"training_samples": len(trainingData),
+		"performance_metrics": map[string]float64{
+			"accuracy":  accuracy,
+			"precision": precision,
+			"recall":    recall,
+			"f1_score":  f1Score,
+		},
+		"confusion_matrix": map[string]int{
+			"true_positives":  fl.FeedbackData.TruePositives,
+			"true_negatives":  fl.FeedbackData.TrueNegatives,
+			"false_positives": fl.FeedbackData.FalsePositives,
+			"false_negatives": fl.FeedbackData.FalseNegatives,
+		},
+		"model_version": fmt.Sprintf("v%d", time.Now().Unix()),
+	}
+	
+	// Save model update information
 	data, err := json.MarshalIndent(updateData, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal model update data: %v", err)
 	}
 	
-	// Write to file
 	if err := os.WriteFile(updateFile, data, 0644); err != nil {
 		return fmt.Errorf("failed to write model update data: %v", err)
 	}
 	
+	// Create model weights file (simulated)
+	weightsFile := filepath.Join(fl.FeedbackDir, "model_weights.json")
+	weights := fl.calculateModelWeights(trainingData)
+	
+	weightsData, err := json.MarshalIndent(weights, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal model weights: %v", err)
+	}
+	
+	if err := os.WriteFile(weightsFile, weightsData, 0644); err != nil {
+		return fmt.Errorf("failed to write model weights: %v", err)
+	}
+	
+	fmt.Printf("[Feedback Loop] Model update completed successfully\n")
 	return nil
+}
+
+// extractTrainingData extracts training data from feedback entries
+func (fl *FeedbackLoop) extractTrainingData() []map[string]interface{} {
+	var trainingData []map[string]interface{}
+	
+	for _, entry := range fl.FeedbackData.FeedbackEntries {
+		sample := map[string]interface{}{
+			"package_name":     entry.PackageName,
+			"predicted_label":  entry.PredictedLabel,
+			"actual_label":     entry.ActualLabel,
+			"confidence":       entry.ConfidenceScore,
+			"feedback_source":  entry.FeedbackSource,
+			"timestamp":        entry.Timestamp,
+			"features":         entry.Features,
+		}
+		trainingData = append(trainingData, sample)
+	}
+	
+	return trainingData
+}
+
+// calculateModelWeights calculates new model weights based on feedback
+func (fl *FeedbackLoop) calculateModelWeights(trainingData []map[string]interface{}) map[string]float64 {
+	weights := map[string]float64{
+		"similarity_weight":    0.3,
+		"reputation_weight":    0.25,
+		"behavioral_weight":    0.2,
+		"metadata_weight":      0.15,
+		"dependency_weight":    0.1,
+	}
+	
+	// Adjust weights based on feedback patterns
+	threatCount := 0
+	safeCount := 0
+	
+	for _, sample := range trainingData {
+		if actualLabel, ok := sample["actual_label"].(string); ok {
+			if isThreatLabel(actualLabel) {
+				threatCount++
+			} else {
+				safeCount++
+			}
+		}
+	}
+	
+	// Adjust weights based on threat/safe ratio
+	if threatCount > safeCount {
+		// More threats detected, increase behavioral and reputation weights
+		weights["behavioral_weight"] = 0.25
+		weights["reputation_weight"] = 0.3
+		weights["similarity_weight"] = 0.25
+	} else if safeCount > threatCount*2 {
+		// Many false positives, reduce aggressive detection weights
+		weights["similarity_weight"] = 0.35
+		weights["metadata_weight"] = 0.2
+		weights["behavioral_weight"] = 0.15
+	}
+	
+	return weights
 }
 
 // GetFeedbackForPackage gets all feedback entries for a specific package

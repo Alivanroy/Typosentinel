@@ -375,20 +375,94 @@ func authenticateBasic(c *gin.Context, authConfig *config.APIAuthentication) (bo
 		return false, ""
 	}
 
-	// Placeholder basic auth validation
-	// In a real implementation, this would check against a user database
-	validUsers := map[string]string{
-		"admin":    "password123",
-		"user":     "userpass",
-		"demo":     "demo",
-		"readonly": "readonly",
-	}
-
-	if validPassword, exists := validUsers[username]; exists && validPassword == password {
+	// Check if basic auth is disabled for development
+	if os.Getenv("TYPOSENTINEL_DISABLE_AUTH") == "true" {
 		return true, username
 	}
 
+	// Get user credentials from environment or configuration
+	validUsers := getBasicAuthUsers()
+	if len(validUsers) == 0 {
+		// Fallback to default admin user if no users configured
+		adminPassword := os.Getenv("TYPOSENTINEL_ADMIN_PASSWORD")
+		if adminPassword == "" {
+			adminPassword = "admin123" // Default password for development
+		}
+		validUsers = map[string]string{
+			"admin": hashPassword(adminPassword),
+		}
+	}
+
+	// Validate username and password
+	if hashedPassword, exists := validUsers[username]; exists {
+		if verifyPassword(password, hashedPassword) {
+			logger.DebugWithContext("Basic auth successful", map[string]interface{}{
+				"username": username,
+			})
+			return true, username
+		}
+	}
+
+	logger.DebugWithContext("Basic auth failed", map[string]interface{}{
+		"username": username,
+	})
 	return false, ""
+}
+
+// getBasicAuthUsers retrieves basic auth users from configuration
+func getBasicAuthUsers() map[string]string {
+	users := make(map[string]string)
+
+	// Load users from environment variables
+	// Format: TYPOSENTINEL_BASIC_USERS="user1:hashedpass1,user2:hashedpass2"
+	usersEnv := os.Getenv("TYPOSENTINEL_BASIC_USERS")
+	if usersEnv != "" {
+		userPairs := strings.Split(usersEnv, ",")
+		for _, pair := range userPairs {
+			parts := strings.SplitN(strings.TrimSpace(pair), ":", 2)
+			if len(parts) == 2 {
+				username := strings.TrimSpace(parts[0])
+				hashedPassword := strings.TrimSpace(parts[1])
+				if username != "" && hashedPassword != "" {
+					users[username] = hashedPassword
+				}
+			}
+		}
+	}
+
+	// Load individual user environment variables
+	// Format: TYPOSENTINEL_USER_<USERNAME>=<password>
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, "TYPOSENTINEL_USER_") {
+			parts := strings.SplitN(env, "=", 2)
+			if len(parts) == 2 {
+				userKey := parts[0]
+				password := parts[1]
+				
+				// Extract username from environment variable name
+				username := strings.ToLower(strings.TrimPrefix(userKey, "TYPOSENTINEL_USER_"))
+				if username != "" && password != "" {
+					users[username] = hashPassword(password)
+				}
+			}
+		}
+	}
+
+	return users
+}
+
+// hashPassword creates a hash of the password using SHA-256 with salt
+func hashPassword(password string) string {
+	// Use a fixed salt for simplicity (in production, use random salts per user)
+	salt := "typosentinel_salt_2024"
+	hasher := sha256.New()
+	hasher.Write([]byte(password + salt))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+// verifyPassword verifies a password against its hash
+func verifyPassword(password, hashedPassword string) bool {
+	return hashPassword(password) == hashedPassword
 }
 
 // securityHeadersMiddleware adds security headers

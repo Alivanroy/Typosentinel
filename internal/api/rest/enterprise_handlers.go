@@ -8,14 +8,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/Alivanroy/Typosentinel/internal/auth"
+	"github.com/Alivanroy/Typosentinel/internal/storage"
 )
 
 // EnterpriseHandlers provides HTTP handlers for enterprise features
 type EnterpriseHandlers struct {
-	policyManager *auth.EnterprisePolicyManager
-	rbacEngine    *auth.RBACEngine
+	policyManager  *auth.EnterprisePolicyManager
+	rbacEngine     *auth.RBACEngine
 	authMiddleware *auth.AuthorizationMiddleware
-	logger        Logger
+	violationStore *storage.ViolationStore
+	logger         Logger
 }
 
 // Logger interface for handlers
@@ -27,11 +29,12 @@ type Logger interface {
 }
 
 // NewEnterpriseHandlers creates new enterprise handlers
-func NewEnterpriseHandlers(policyManager *auth.EnterprisePolicyManager, rbacEngine *auth.RBACEngine, authMiddleware *auth.AuthorizationMiddleware, logger Logger) *EnterpriseHandlers {
+func NewEnterpriseHandlers(policyManager *auth.EnterprisePolicyManager, rbacEngine *auth.RBACEngine, authMiddleware *auth.AuthorizationMiddleware, violationStore *storage.ViolationStore, logger Logger) *EnterpriseHandlers {
 	return &EnterpriseHandlers{
 		policyManager:  policyManager,
 		rbacEngine:     rbacEngine,
 		authMiddleware: authMiddleware,
+		violationStore: violationStore,
 		logger:         logger,
 	}
 }
@@ -112,7 +115,7 @@ func (eh *EnterpriseHandlers) CreatePolicy(c *gin.Context) {
 	// Set creation metadata
 	policy.CreatedAt = time.Now()
 	policy.UpdatedAt = time.Now()
-	// TODO: Set CreatedBy from authenticated user context
+	policy.CreatedBy = eh.getCurrentUser(c)
 
 	eh.policyManager.AddPolicy(&policy)
 	eh.logger.Info("Policy created successfully", "policy_id", policy.ID)
@@ -310,11 +313,29 @@ func (eh *EnterpriseHandlers) UpdateRole(c *gin.Context) {
 
 // DeleteRole handles DELETE /api/v1/enterprise/rbac/roles/{id}
 func (eh *EnterpriseHandlers) DeleteRole(c *gin.Context) {
-	_ = c.Param("id")
+	roleID := c.Param("id")
+	if roleID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Role ID is required"})
+		return
+	}
 
-	// Note: RBACEngine doesn't have a RemoveRole method, would need to be added
-	// For now, return method not implemented
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "Method not implemented"})
+	// Check if RBAC engine is available
+	if eh.rbacEngine == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "RBAC engine not available"})
+		return
+	}
+
+	// Remove the role
+	err := eh.rbacEngine.RemoveRole(roleID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Role '%s' deleted successfully", roleID),
+		"timestamp": time.Now().UTC(),
+	})
 }
 
 // GetUserPermissions handles GET /api/v1/enterprise/rbac/users/{userId}/permissions
@@ -403,50 +424,73 @@ func (eh *EnterpriseHandlers) EvaluateAndEnforce(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// Approval Workflow Handlers (Placeholder implementations)
+// Approval Workflow Handlers
 
 // ListViolations handles GET /api/v1/enterprise/approvals/violations
 func (eh *EnterpriseHandlers) ListViolations(c *gin.Context) {
 	// Parse query parameters
 	status := c.Query("status")
-	limitStr := c.Query("limit")
-	offsetStr := c.Query("offset")
+	policyName := c.Query("policy_name")
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
 
-	limit := 50 // default
-	if limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil {
-			limit = l
-		}
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
 	}
 
-	offset := 0 // default
-	if offsetStr != "" {
-		if o, err := strconv.Atoi(offsetStr); err == nil {
-			offset = o
-		}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 || limit > 100 {
+		limit = 10
 	}
 
-	// TODO: Implement actual violation storage and retrieval
-	// For now, return empty list
-	response := map[string]interface{}{
-		"violations": []auth.PolicyViolation{},
-		"total":      0,
-		"limit":      limit,
-		"offset":     offset,
-		"status":     status,
+	offset := (page - 1) * limit
+
+	// Create filter
+	filter := storage.ListViolationsOptions{
+		Status:    status,
+		PolicyID:  policyName, // Using PolicyID field instead of PolicyName
+		Limit:     limit,
+		Offset:    offset,
+		SortBy:    "created_at",
+		SortOrder: "desc",
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Get violations from store
+	violations, total, err := eh.violationStore.ListViolations(c.Request.Context(), filter)
+	if err != nil {
+		eh.logger.Error("Failed to list violations", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve violations",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"violations": violations,
+		"total":      total,
+		"page":       page,
+		"per_page":   limit,
+	})
 }
 
 // GetViolation handles GET /api/v1/enterprise/approvals/violations/{id}
 func (eh *EnterpriseHandlers) GetViolation(c *gin.Context) {
 	violationID := c.Param("id")
 
-	// TODO: Implement actual violation retrieval
-	// For now, return not found
-	eh.logger.Debug("Violation lookup requested", "violation_id", violationID)
-	c.JSON(http.StatusNotFound, gin.H{"error": "Violation not found"})
+	// Get violation from store
+	violation, err := eh.violationStore.GetViolation(c.Request.Context(), violationID)
+	if err != nil {
+		if err == storage.ErrViolationNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Violation not found"})
+			return
+		}
+		eh.logger.Error("Failed to get violation", "violation_id", violationID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve violation"})
+		return
+	}
+
+	c.JSON(http.StatusOK, violation)
 }
 
 // ApproveViolation handles POST /api/v1/enterprise/approvals/violations/{id}/approve
@@ -462,14 +506,26 @@ func (eh *EnterpriseHandlers) ApproveViolation(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement actual approval logic
-	// For now, return success
+	currentUser := eh.getCurrentUser(c)
+
+	// Update violation status
+	err := eh.violationStore.UpdateViolationStatus(c.Request.Context(), violationID, storage.ViolationStatusApproved, currentUser, request.Reason)
+	if err != nil {
+		if err == storage.ErrViolationNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Violation not found"})
+			return
+		}
+		eh.logger.Error("Failed to approve violation", "violation_id", violationID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to approve violation"})
+		return
+	}
+
 	response := map[string]interface{}{
 		"violation_id": violationID,
 		"status":       "approved",
 		"reason":       request.Reason,
 		"approved_at":  time.Now(),
-		"approved_by":  "current_user", // TODO: Get from auth context
+		"approved_by":  currentUser,
 	}
 
 	eh.logger.Info("Violation approved", "violation_id", violationID, "reason", request.Reason)
@@ -490,17 +546,57 @@ func (eh *EnterpriseHandlers) RejectViolation(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement actual rejection logic
-	// For now, return success
+	currentUser := eh.getCurrentUser(c)
+
+	// Update violation status
+	err := eh.violationStore.UpdateViolationStatus(c.Request.Context(), violationID, storage.ViolationStatusRejected, currentUser, request.Reason)
+	if err != nil {
+		if err == storage.ErrViolationNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Violation not found"})
+			return
+		}
+		eh.logger.Error("Failed to reject violation", "violation_id", violationID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reject violation"})
+		return
+	}
+
 	response := map[string]interface{}{
 		"violation_id": violationID,
 		"status":       "rejected",
 		"reason":       request.Reason,
 		"rejected_at":  time.Now(),
-		"rejected_by":  "current_user", // TODO: Get from auth context
+		"rejected_by":  currentUser,
 	}
 
 	eh.logger.Info("Violation rejected", "violation_id", violationID, "reason", request.Reason)
 
 	c.JSON(http.StatusOK, response)
+}
+
+// Helper Methods
+
+// getCurrentUser extracts the current user from the authentication context
+func (eh *EnterpriseHandlers) getCurrentUser(c *gin.Context) string {
+	// Try to get user from JWT token or session
+	if userID, exists := c.Get("user_id"); exists {
+		if userStr, ok := userID.(string); ok {
+			return userStr
+		}
+	}
+	
+	// Try to get from Authorization header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		// Extract user from token (simplified implementation)
+		// In a real implementation, you would decode the JWT token
+		return "authenticated_user"
+	}
+	
+	// Try to get from X-User-ID header (for service-to-service calls)
+	if userID := c.GetHeader("X-User-ID"); userID != "" {
+		return userID
+	}
+	
+	// Default fallback
+	return "system"
 }

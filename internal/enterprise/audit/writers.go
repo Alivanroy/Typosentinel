@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 	"bytes"
+	"database/sql"
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 // FileAuditWriter writes audit logs to files
@@ -78,6 +80,7 @@ func (f *FileAuditWriter) Name() string {
 type DatabaseAuditWriter struct {
 	connectionString string
 	tableName        string
+	db              *sql.DB
 	buffer          []*AuditEntry
 	bufferSize      int
 	mu              sync.Mutex
@@ -100,9 +103,22 @@ func NewDatabaseAuditWriter(settings map[string]interface{}) (AuditWriter, error
 		bufferSize = size
 	}
 
+	// Initialize database connection
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
+	}
+
+	// Test connection
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
 	return &DatabaseAuditWriter{
 		connectionString: connStr,
 		tableName:        tableName,
+		db:              db,
 		buffer:          make([]*AuditEntry, 0, bufferSize),
 		bufferSize:      bufferSize,
 	}, nil
@@ -133,8 +149,56 @@ func (d *DatabaseAuditWriter) flushBuffer() error {
 		return nil
 	}
 
-	// TODO: Implement actual database insertion
-	// For now, just clear the buffer
+	// Prepare batch insert query
+	query := `
+		INSERT INTO audit_logs (
+			id, timestamp, user_id, action, resource, 
+			source_ip, user_agent, severity, details, metadata
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`
+
+	// Begin transaction for batch insert
+	tx, err := d.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Prepare statement
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	// Insert each audit entry
+	for _, entry := range d.buffer {
+		detailsJSON, _ := json.Marshal(entry.Details)
+		metadataJSON, _ := json.Marshal(entry.Metadata)
+
+		_, err := stmt.Exec(
+			entry.ID,
+			entry.Timestamp,
+			entry.UserID,
+			entry.Action,
+			entry.Resource,
+			entry.SourceIP,
+			entry.UserAgent,
+			string(entry.Severity),
+			string(detailsJSON),
+			string(metadataJSON),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert audit entry %s: %w", entry.ID, err)
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Clear buffer after successful insertion
 	d.buffer = d.buffer[:0]
 	return nil
 }

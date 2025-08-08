@@ -9,6 +9,7 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/cache"
 	"github.com/Alivanroy/Typosentinel/internal/database"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // CacheManager provides comprehensive caching strategies
@@ -517,8 +518,10 @@ func (l2 *L2Cache) set(key string, value interface{}, ttl time.Duration) {
 	l2.mu.Lock()
 	defer l2.mu.Unlock()
 
-	// For now, we'll use the Set method with basic serialization
-	l2.fileCache.Set(key, value, nil, nil)
+	// Type assert value to *types.DependencyTree for file cache
+	if tree, ok := value.(*types.DependencyTree); ok {
+		l2.fileCache.Set(key, tree, nil, nil)
+	}
 }
 
 func (l2 *L2Cache) delete(key string) {

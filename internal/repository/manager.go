@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
@@ -18,10 +21,11 @@ import (
 
 // Manager implements the RepositoryManager interface
 type Manager struct {
-	connectors map[string]Connector
-	config     *ManagerConfig
-	logger     *logrus.Logger
-	mu         sync.RWMutex
+	connectors        map[string]Connector
+	config           *ManagerConfig
+	platformConfigs  map[string]PlatformConfig
+	logger           *logrus.Logger
+	mu               sync.RWMutex
 }
 
 // ManagerConfig contains configuration for the repository manager
@@ -59,9 +63,10 @@ func NewManager(config *ManagerConfig) *Manager {
 	}
 	
 	return &Manager{
-		connectors: make(map[string]Connector),
-		config:     config,
-		logger:     logrus.New(),
+		connectors:       make(map[string]Connector),
+		config:          config,
+		platformConfigs: make(map[string]PlatformConfig),
+		logger:          logrus.New(),
 	}
 }
 
@@ -92,8 +97,40 @@ func (m *Manager) GetConnector(platform string) (Connector, error) {
 	return connector, nil
 }
 
-// ListConnectors returns all registered connectors
-func (m *Manager) ListConnectors() map[string]Connector {
+// AddConnector adds a platform connector (alias for RegisterConnector)
+func (m *Manager) AddConnector(name string, connector Connector) error {
+	return m.RegisterConnector(name, connector)
+}
+
+// RemoveConnector removes a platform connector
+func (m *Manager) RemoveConnector(name string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	if _, exists := m.connectors[name]; !exists {
+		return fmt.Errorf("connector not found for platform: %s", name)
+	}
+	
+	delete(m.connectors, name)
+	m.logger.Infof("Removed connector for platform: %s", name)
+	return nil
+}
+
+// ListConnectors returns all registered connector names
+func (m *Manager) ListConnectors() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	names := make([]string, 0, len(m.connectors))
+	for name := range m.connectors {
+		names = append(names, name)
+	}
+	
+	return names
+}
+
+// ListConnectorsMap returns all registered connectors (for internal use)
+func (m *Manager) ListConnectorsMap() map[string]Connector {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	
@@ -105,8 +142,8 @@ func (m *Manager) ListConnectors() map[string]Connector {
 	return connectors
 }
 
-// DiscoverRepositories discovers repositories across all platforms
-func (m *Manager) DiscoverRepositories(ctx context.Context, configs map[string]*PlatformConfig, filter *RepositoryFilter) ([]*Repository, error) {
+// DiscoverRepositories discovers repositories across specified platforms
+func (m *Manager) DiscoverRepositories(ctx context.Context, platforms []string, filter *RepositoryFilter) ([]*Repository, error) {
 	if filter == nil {
 		filter = m.config.DefaultFilters
 	}
@@ -114,29 +151,31 @@ func (m *Manager) DiscoverRepositories(ctx context.Context, configs map[string]*
 	var allRepos []*Repository
 	var mu sync.Mutex
 	var wg sync.WaitGroup
-	errorChan := make(chan error, len(configs))
+	errorChan := make(chan error, len(platforms))
 	
-	for platform, config := range configs {
+	for _, platform := range platforms {
 		wg.Add(1)
-		go func(platform string, config *PlatformConfig) {
+		go func(platformName string) {
 			defer wg.Done()
 			
-			connector, err := m.GetConnector(platform)
+			connector, err := m.GetConnector(platformName)
 			if err != nil {
-				errorChan <- fmt.Errorf("failed to get connector for %s: %w", platform, err)
+				errorChan <- fmt.Errorf("failed to get connector for %s: %w", platformName, err)
 				return
 			}
 			
-			repos, err := m.discoverRepositoriesForPlatform(ctx, connector, config, filter)
+			// For now, just list repositories without specific configuration
+			// This is a simplified implementation that can be enhanced later
+			repos, err := connector.ListRepositories(ctx, "", filter)
 			if err != nil {
-				errorChan <- fmt.Errorf("failed to discover repositories for %s: %w", platform, err)
+				errorChan <- fmt.Errorf("failed to discover repositories for %s: %w", platformName, err)
 				return
 			}
 			
 			mu.Lock()
 			allRepos = append(allRepos, repos...)
 			mu.Unlock()
-		}(platform, config)
+		}(platform)
 	}
 	
 	wg.Wait()
@@ -155,7 +194,7 @@ func (m *Manager) DiscoverRepositories(ctx context.Context, configs map[string]*
 		}
 	}
 	
-	m.logger.Infof("Discovered %d repositories across %d platforms", len(allRepos), len(configs))
+	m.logger.Infof("Discovered %d repositories across %d platforms", len(allRepos), len(platforms))
 	return allRepos, nil
 }
 
@@ -218,7 +257,13 @@ func (m *Manager) ScanRepositories(ctx context.Context, requests []*ScanRequest)
 }
 
 // ScanRepository scans a single repository
-func (m *Manager) ScanRepository(ctx context.Context, request *ScanRequest) (*ScanResult, error) {
+func (m *Manager) ScanRepository(ctx context.Context, request *ScanRequest) error {
+	_, err := m.scanSingleRepository(ctx, request)
+	return err
+}
+
+// ScanRepositoryWithResult performs a repository scan and returns the full result
+func (m *Manager) ScanRepositoryWithResult(ctx context.Context, request *ScanRequest) (*ScanResult, error) {
 	return m.scanSingleRepository(ctx, request)
 }
 
@@ -526,6 +571,197 @@ func (m *Manager) matchesPattern(name, pattern string) bool {
 	// For now, just check if the pattern is contained in the name
 	// This could be enhanced with proper regex or glob matching
 	return len(name) >= len(pattern) && name[:len(pattern)] == pattern
+}
+
+// BulkScan scans multiple repositories (alias for ScanRepositories)
+func (m *Manager) BulkScan(ctx context.Context, requests []*ScanRequest) error {
+	_, err := m.ScanRepositories(ctx, requests)
+	return err
+}
+
+// ScanRepositoriesWithResults scans multiple repositories and returns the full results
+func (m *Manager) ScanRepositoriesWithResults(ctx context.Context, requests []*ScanRequest) ([]*ScanResult, error) {
+	return m.ScanRepositories(ctx, requests)
+}
+
+// LoadConfig loads configuration from a file
+func (m *Manager) LoadConfig(configPath string) error {
+	m.logger.Infof("Loading configuration from: %s", configPath)
+	
+	// Check if config file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return fmt.Errorf("configuration file not found: %s", configPath)
+	}
+	
+	// Read configuration file
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read configuration file: %w", err)
+	}
+	
+	// Parse configuration based on file extension
+	var platformConfigs map[string]PlatformConfig
+	ext := filepath.Ext(configPath)
+	
+	switch ext {
+	case ".json":
+		if err := json.Unmarshal(data, &platformConfigs); err != nil {
+			return fmt.Errorf("failed to parse JSON configuration: %w", err)
+		}
+	case ".yaml", ".yml":
+		if err := yaml.Unmarshal(data, &platformConfigs); err != nil {
+			return fmt.Errorf("failed to parse YAML configuration: %w", err)
+		}
+	default:
+		return fmt.Errorf("unsupported configuration file format: %s", ext)
+	}
+	
+	// Store configuration
+	m.mu.Lock()
+	m.platformConfigs = platformConfigs
+	m.mu.Unlock()
+	
+	m.logger.Infof("Successfully loaded configuration with %d platforms", len(platformConfigs))
+	return nil
+}
+
+// ValidateConfiguration validates the current configuration
+func (m *Manager) ValidateConfiguration() error {
+	m.logger.Info("Validating configuration")
+	
+	m.mu.RLock()
+	platformConfigs := m.platformConfigs
+	m.mu.RUnlock()
+	
+	if len(platformConfigs) == 0 {
+		return fmt.Errorf("no platform configurations found")
+	}
+	
+	// Validate each platform configuration
+	for platform, platformConfig := range platformConfigs {
+		if err := m.validatePlatformConfig(platform, platformConfig); err != nil {
+			return fmt.Errorf("invalid configuration for platform %s: %w", platform, err)
+		}
+	}
+	
+	// Validate connector availability
+	for platform := range platformConfigs {
+		if _, exists := m.connectors[platform]; !exists {
+			m.logger.Warnf("No connector registered for configured platform: %s", platform)
+		}
+	}
+	
+	m.logger.Info("Configuration validation completed successfully")
+	return nil
+}
+
+// validatePlatformConfig validates a single platform configuration
+func (m *Manager) validatePlatformConfig(platform string, config PlatformConfig) error {
+	// Check required fields
+	if config.BaseURL == "" {
+		return fmt.Errorf("base_url is required")
+	}
+	
+	// Validate URL format
+	if _, err := url.Parse(config.BaseURL); err != nil {
+		return fmt.Errorf("invalid base_url format: %w", err)
+	}
+	
+	// Check authentication configuration
+	if config.Auth.Token == "" && config.Auth.Username == "" {
+		return fmt.Errorf("either token or username must be provided for authentication")
+	}
+	
+	// Validate rate limiting configuration
+	if config.RateLimit.RequestsPerHour < 0 {
+		return fmt.Errorf("requests_per_hour cannot be negative")
+	}
+	
+	if config.RateLimit.BurstLimit < 0 {
+		return fmt.Errorf("burst_limit cannot be negative")
+	}
+	
+	// Validate timeout values
+	if config.Timeout < 0 {
+		return fmt.Errorf("timeout cannot be negative")
+	}
+	
+	return nil
+}
+
+// GetConfiguration returns the current configuration
+func (m *Manager) GetConfiguration() map[string]PlatformConfig {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	// Return a copy to prevent external modification
+	configCopy := make(map[string]PlatformConfig)
+	for platform, config := range m.platformConfigs {
+		// Create a copy of the config to avoid sharing references
+		authCopy := AuthConfig{
+			Type:         config.Auth.Type,
+			Token:        "***", // Mask sensitive data
+			Username:     config.Auth.Username,
+			Password:     "***", // Mask sensitive data
+			ClientID:     config.Auth.ClientID,
+			ClientSecret: "***", // Mask sensitive data
+			SSHKey:       "***", // Mask sensitive data
+			SSHKeyPath:   config.Auth.SSHKeyPath,
+			Metadata:     config.Auth.Metadata,
+		}
+		
+		configCopy[platform] = PlatformConfig{
+			Name:          config.Name,
+			BaseURL:       config.BaseURL,
+			APIVersion:    config.APIVersion,
+			Auth:          authCopy,
+			RateLimit:     config.RateLimit,
+			Timeout:       config.Timeout,
+			Retries:       config.Retries,
+			Organizations: config.Organizations,
+			Repositories:  config.Repositories,
+			Metadata:      config.Metadata,
+		}
+	}
+	
+	return configCopy
+}
+
+// HealthCheck performs health checks on all connectors
+func (m *Manager) HealthCheck(ctx context.Context) map[string]error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	results := make(map[string]error)
+	for name, connector := range m.connectors {
+		if err := connector.HealthCheck(ctx); err != nil {
+			results[name] = err
+		} else {
+			results[name] = nil
+		}
+	}
+	
+	return results
+}
+
+// GetMetrics returns metrics for all connectors
+func (m *Manager) GetMetrics(ctx context.Context) map[string]interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	metrics := make(map[string]interface{})
+	metrics["total_connectors"] = len(m.connectors)
+	metrics["connector_names"] = m.ListConnectors()
+	
+	// Add connector-specific metrics
+	for name, connector := range m.connectors {
+		rateLimit, err := connector.GetRateLimit(ctx)
+		if err == nil {
+			metrics[name+"_rate_limit"] = rateLimit
+		}
+	}
+	
+	return metrics
 }
 
 // InitializeDefaultConnectors initializes connectors for common platforms

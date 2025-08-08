@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/internal/metrics"
+	"github.com/Alivanroy/Typosentinel/internal/interfaces"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
@@ -17,7 +17,7 @@ import (
 type MonitoringService struct {
 	config       *MonitoringConfig
 	logger       logger.Logger
-	metrics      *metrics.Metrics
+	metrics      interfaces.Metrics
 	alertManager *AlertManager
 	healthChecks map[string]HealthCheck
 	stopChan     chan struct{}
@@ -79,7 +79,6 @@ type HealthStatus struct {
 type SystemHealth struct {
 	OverallStatus string                    `json:"overall_status"`
 	Checks        map[string]HealthStatus   `json:"checks"`
-	Metrics       metrics.MetricSnapshot    `json:"metrics"`
 	Timestamp     time.Time                 `json:"timestamp"`
 }
 
@@ -123,11 +122,11 @@ type AlertNotifier interface {
 }
 
 // NewMonitoringService creates a new monitoring service
-func NewMonitoringService(config *MonitoringConfig, logger logger.Logger) *MonitoringService {
+func NewMonitoringService(config *MonitoringConfig, logger logger.Logger, metrics interfaces.Metrics) *MonitoringService {
 	return &MonitoringService{
 		config:       config,
 		logger:       logger,
-		metrics:      metrics.NewMetrics(),
+		metrics:      metrics,
 		alertManager: NewAlertManager(config, logger),
 		healthChecks: make(map[string]HealthCheck),
 		stopChan:     make(chan struct{}),
@@ -194,27 +193,23 @@ func (ms *MonitoringService) GetSystemHealth() SystemHealth {
 	return SystemHealth{
 		OverallStatus: overallStatus,
 		Checks:        checks,
-		Metrics:       ms.metrics.Snapshot(),
 		Timestamp:     time.Now(),
 	}
 }
 
-// GetMetrics returns current metrics snapshot
-func (ms *MonitoringService) GetMetrics() metrics.MetricSnapshot {
-	return ms.metrics.Snapshot()
-}
-
 // RecordMetric records a custom metric
 func (ms *MonitoringService) RecordMetric(name, metricType string, value float64) {
+	tags := make(interfaces.MetricTags)
+	
 	switch metricType {
 	case "counter":
-		ms.metrics.Counter(name).Inc()
+		ms.metrics.IncrementCounter(name, tags)
 	case "gauge":
-		ms.metrics.Gauge(name).Set(value)
+		ms.metrics.SetGauge(name, value, tags)
 	case "histogram":
-		ms.metrics.Histogram(name).Observe(value)
+		ms.metrics.RecordHistogram(name, value, tags)
 	case "timer":
-		ms.metrics.Timer(name).Record(time.Duration(value*float64(time.Millisecond)))
+		ms.metrics.RecordDuration(name, time.Duration(value*float64(time.Millisecond)), tags)
 	}
 
 	// Check for threshold alerts
@@ -274,18 +269,20 @@ func (ms *MonitoringService) collectSystemMetrics() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	ms.metrics.Gauge("memory.alloc").Set(float64(m.Alloc))
-	ms.metrics.Gauge("memory.total_alloc").Set(float64(m.TotalAlloc))
-	ms.metrics.Gauge("memory.sys").Set(float64(m.Sys))
-	ms.metrics.Gauge("memory.heap_alloc").Set(float64(m.HeapAlloc))
-	ms.metrics.Gauge("memory.heap_sys").Set(float64(m.HeapSys))
+	tags := make(interfaces.MetricTags)
+	
+	ms.metrics.SetGauge("memory.alloc", float64(m.Alloc), tags)
+	ms.metrics.SetGauge("memory.total_alloc", float64(m.TotalAlloc), tags)
+	ms.metrics.SetGauge("memory.sys", float64(m.Sys), tags)
+	ms.metrics.SetGauge("memory.heap_alloc", float64(m.HeapAlloc), tags)
+	ms.metrics.SetGauge("memory.heap_sys", float64(m.HeapSys), tags)
 
 	// Goroutine metrics
-	ms.metrics.Gauge("goroutines.count").Set(float64(runtime.NumGoroutine()))
+	ms.metrics.SetGauge("goroutines.count", float64(runtime.NumGoroutine()), tags)
 
 	// GC metrics
-	ms.metrics.Counter("gc.runs").Add(int64(m.NumGC))
-	ms.metrics.Gauge("gc.pause_total").Set(float64(m.PauseTotalNs))
+	ms.metrics.IncrementCounter("gc.runs", tags)
+	ms.metrics.SetGauge("gc.pause_total", float64(m.PauseTotalNs), tags)
 }
 
 // runAllHealthChecks runs all registered health checks
@@ -334,10 +331,9 @@ func (ms *MonitoringService) HTTPHandler() http.Handler {
 	})
 
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		metrics := ms.GetMetrics()
 		w.Header().Set("Content-Type", "application/json")
 		// Note: JSON encoding would be added here in a real implementation
-		fmt.Fprintf(w, `{"timestamp":"%s"}`, metrics.Timestamp.Format(time.RFC3339))
+		fmt.Fprintf(w, `{"timestamp":"%s"}`, time.Now().Format(time.RFC3339))
 	})
 
 	return mux

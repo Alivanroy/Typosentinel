@@ -1,26 +1,52 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/ratelimit"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
+// rateLimitEntry stores rate limiting data for a client
+type rateLimitEntry struct {
+	requests   []time.Time
+	lastAccess time.Time
+}
+
 // SupplyChainMiddleware provides middleware for supply chain security endpoints
 type SupplyChainMiddleware struct {
-	config *config.Config
-	logger *logger.Logger
+	config         *config.Config
+	logger         *logger.Logger
+	rateLimiter    ratelimit.RateLimiter
+	rateLimitStore map[string]*rateLimitEntry
+	rateLimitMu    sync.RWMutex
 }
 
 // NewSupplyChainMiddleware creates a new supply chain middleware instance
 func NewSupplyChainMiddleware(cfg *config.Config, log *logger.Logger) *SupplyChainMiddleware {
+	// Initialize rate limiter with Redis URL from config or fallback to memory
+	var redisURL string
+	if cfg.Redis.Enabled && cfg.Redis.Host != "" {
+		redisURL = fmt.Sprintf("redis://%s:%d", cfg.Redis.Host, cfg.Redis.Port)
+		if cfg.Redis.Password != "" {
+			redisURL = fmt.Sprintf("redis://:%s@%s:%d", cfg.Redis.Password, cfg.Redis.Host, cfg.Redis.Port)
+		}
+	}
+	
+	rateLimiter := ratelimit.NewFallbackRateLimiter(redisURL)
+	
 	return &SupplyChainMiddleware{
-		config: cfg,
-		logger: log,
+		config:         cfg,
+		logger:         log,
+		rateLimiter:    rateLimiter,
+		rateLimitStore: make(map[string]*rateLimitEntry),
 	}
 }
 
@@ -82,35 +108,81 @@ func (m *SupplyChainMiddleware) SupplyChainAuth() gin.HandlerFunc {
 	}
 }
 
+// cleanupOldEntries removes old rate limit entries to prevent memory leaks
+func (m *SupplyChainMiddleware) cleanupOldEntries(now time.Time) {
+	m.rateLimitMu.Lock()
+	defer m.rateLimitMu.Unlock()
+	
+	// Clean up entries older than 1 hour
+	cutoff := now.Add(-time.Hour)
+	
+	for key, entry := range m.rateLimitStore {
+		if entry.lastAccess.Before(cutoff) {
+			delete(m.rateLimitStore, key)
+		}
+	}
+}
+
 // SupplyChainRateLimit implements rate limiting for supply chain endpoints
 func (m *SupplyChainMiddleware) SupplyChainRateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientIP := c.ClientIP()
-		endpoint := c.Request.URL.Path
-
-		// Check rate limits based on endpoint type
-		if m.isHighCostEndpoint(endpoint) {
-			if !m.checkRateLimit(clientIP, "high_cost", 5, time.Minute) {
-				c.JSON(http.StatusTooManyRequests, gin.H{
-					"error": "Rate limit exceeded for high-cost supply chain operations",
-					"code":  "SC_RATE_LIMIT_HIGH",
-					"retry_after": 60,
-				})
-				c.Abort()
-				return
-			}
-		} else {
-			if !m.checkRateLimit(clientIP, "standard", 30, time.Minute) {
-				c.JSON(http.StatusTooManyRequests, gin.H{
-					"error": "Rate limit exceeded for supply chain operations",
-					"code":  "SC_RATE_LIMIT_STANDARD",
-					"retry_after": 60,
-				})
-				c.Abort()
-				return
-			}
+		// Skip rate limiting for public endpoints
+		if m.isPublicEndpoint(c.Request.URL.Path) {
+			c.Next()
+			return
 		}
-
+		
+		// Get client identifier (IP address or user ID if authenticated)
+		clientID := m.getClientIdentifier(c)
+		
+		// Define rate limits based on endpoint type
+		limit, window := m.getRateLimitForEndpoint(c.Request.URL.Path)
+		
+		// Check rate limit
+		ctx := context.Background()
+		allowed, err := m.rateLimiter.Allow(ctx, clientID, limit, window)
+		if err != nil {
+			m.logger.Error("Rate limiter error", map[string]interface{}{
+				"error":     err.Error(),
+				"client_id": clientID,
+				"path":      c.Request.URL.Path,
+			})
+			// On error, allow the request but log the issue
+			c.Next()
+			return
+		}
+		
+		if !allowed {
+			m.logger.Warn("Rate limit exceeded", map[string]interface{}{
+				"client_id": clientID,
+				"path":      c.Request.URL.Path,
+				"method":    c.Request.Method,
+				"limit":     limit,
+				"window":    window,
+			})
+			
+			c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", limit))
+			c.Header("X-RateLimit-Window", window.String())
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":   "Rate limit exceeded",
+				"message": fmt.Sprintf("Too many requests. Limit: %d per %s", limit, window),
+			})
+			c.Abort()
+			return
+		}
+		
+		// Add rate limit headers
+		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", limit))
+		c.Header("X-RateLimit-Window", window.String())
+		
+		m.logger.Debug("Rate limiting check passed", map[string]interface{}{
+			"client_id": clientID,
+			"path":      c.Request.URL.Path,
+			"method":    c.Request.Method,
+			"limit":     limit,
+			"window":    window,
+		})
+		
 		c.Next()
 	}
 }
@@ -186,6 +258,38 @@ func (m *SupplyChainMiddleware) SupplyChainHeaders() gin.HandlerFunc {
 
 // Helper methods
 
+// getClientIdentifier returns a unique identifier for the client
+func (m *SupplyChainMiddleware) getClientIdentifier(c *gin.Context) string {
+	// Try to get user ID from authentication context first
+	if userID, exists := c.Get("user_id"); exists {
+		return fmt.Sprintf("user:%s", userID)
+	}
+	
+	// Fall back to IP address
+	return fmt.Sprintf("ip:%s", c.ClientIP())
+}
+
+// getRateLimitForEndpoint returns the rate limit and window for a specific endpoint
+func (m *SupplyChainMiddleware) getRateLimitForEndpoint(path string) (int, time.Duration) {
+	// High-cost endpoints have stricter limits
+	if m.isHighCostEndpoint(path) {
+		return 5, time.Minute // 5 requests per minute
+	}
+	
+	// Scan endpoints
+	if strings.Contains(path, "/scan") {
+		return 10, time.Minute // 10 scans per minute
+	}
+	
+	// Analysis endpoints
+	if strings.Contains(path, "/analyze") {
+		return 15, time.Minute // 15 analyses per minute
+	}
+	
+	// Default rate limit for other endpoints
+	return 100, time.Minute // 100 requests per minute
+}
+
 // isPublicEndpoint checks if an endpoint allows unauthenticated access
 func (m *SupplyChainMiddleware) isPublicEndpoint(path string) bool {
 	publicEndpoints := []string{
@@ -233,9 +337,45 @@ func (m *SupplyChainMiddleware) validateSupplyChainToken(token string) bool {
 
 // checkRateLimit checks if the client has exceeded rate limits
 func (m *SupplyChainMiddleware) checkRateLimit(clientIP, limitType string, maxRequests int, window time.Duration) bool {
-	// In a real implementation, this would use Redis or another store
-	// For now, we'll always allow requests
-	// TODO: Implement proper rate limiting with Redis/memory store
+	// Use a simple in-memory sliding window rate limiter
+	key := fmt.Sprintf("%s:%s", clientIP, limitType)
+	now := time.Now()
+	
+	// Clean up old entries periodically
+	m.cleanupOldEntries(now)
+	
+	m.rateLimitMu.Lock()
+	defer m.rateLimitMu.Unlock()
+	
+	// Get or create rate limit entry
+	if entry, exists := m.rateLimitStore[key]; exists {
+		// Filter out requests outside the current window
+		var validRequests []time.Time
+		cutoff := now.Add(-window)
+		
+		for _, reqTime := range entry.requests {
+			if reqTime.After(cutoff) {
+				validRequests = append(validRequests, reqTime)
+			}
+		}
+		
+		// Check if we're within limits
+		if len(validRequests) >= maxRequests {
+			return false
+		}
+		
+		// Add current request
+		validRequests = append(validRequests, now)
+		entry.requests = validRequests
+		entry.lastAccess = now
+	} else {
+		// First request for this key
+		m.rateLimitStore[key] = &rateLimitEntry{
+			requests:   []time.Time{now},
+			lastAccess: now,
+		}
+	}
+	
 	return true
 }
 

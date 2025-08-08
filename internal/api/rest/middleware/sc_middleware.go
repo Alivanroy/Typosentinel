@@ -2,6 +2,10 @@ package middleware
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -324,15 +328,106 @@ func (m *SupplyChainMiddleware) isHighCostEndpoint(path string) bool {
 
 // validateSupplyChainToken validates the supply chain authentication token
 func (m *SupplyChainMiddleware) validateSupplyChainToken(token string) bool {
-	// In a real implementation, this would validate against a token store
-	// For now, we'll accept any non-empty token
-	if len(token) < 10 {
+	// Validate JWT-like token
+	claims, err := m.validateJWTLikeToken(token)
+	if err != nil {
+		m.logger.Warn("Token validation failed", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return false
 	}
 
-	// Basic token validation
-	// In production, this should validate JWT tokens or API keys
+	// Check token expiration
+	if claims.ExpiresAt > 0 && claims.ExpiresAt < time.Now().Unix() {
+		m.logger.Warn("Token expired", map[string]interface{}{
+			"expires_at": time.Unix(claims.ExpiresAt, 0),
+		})
+		return false
+	}
+
+	// Check if token is revoked (check against revocation list)
+	if m.isTokenRevoked(claims.ID) {
+		m.logger.Warn("Token revoked", map[string]interface{}{
+			"token_id": claims.ID,
+		})
+		return false
+	}
+
 	return true
+}
+
+// TokenClaims represents token claims
+type TokenClaims struct {
+	UserID    string `json:"user_id"`
+	Username  string `json:"username"`
+	Role      string `json:"role"`
+	TokenType string `json:"token_type"`
+	ExpiresAt int64  `json:"exp"`
+	IssuedAt  int64  `json:"iat"`
+	ID        string `json:"jti"`
+}
+
+// validateJWTLikeToken validates and parses a JWT-like token
+func (m *SupplyChainMiddleware) validateJWTLikeToken(tokenString string) (*TokenClaims, error) {
+	// Get JWT secret from config
+	jwtSecret := m.config.Security.JWT.Secret
+	if jwtSecret == "" {
+		return nil, fmt.Errorf("JWT secret not configured")
+	}
+
+	// Split token into parts (header.payload.signature)
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid token format")
+	}
+
+	// Decode payload
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode token payload: %w", err)
+	}
+
+	// Parse claims
+	var claims TokenClaims
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse token claims: %w", err)
+	}
+
+	// Verify signature
+	expectedSignature := m.generateTokenSignature(parts[0], parts[1], jwtSecret)
+	if !hmac.Equal([]byte(parts[2]), []byte(expectedSignature)) {
+		return nil, fmt.Errorf("invalid token signature")
+	}
+
+	return &claims, nil
+}
+
+// generateTokenSignature generates HMAC signature for token
+func (m *SupplyChainMiddleware) generateTokenSignature(header, payload, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(header + "." + payload))
+	return base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+}
+
+// isTokenRevoked checks if a token is in the revocation list
+func (m *SupplyChainMiddleware) isTokenRevoked(tokenID string) bool {
+	// In production, this would check against a Redis cache or database
+	// Check against revocation list (this would be stored in Redis/DB in production)
+	revokedTokens := m.getRevokedTokens()
+	for _, revokedID := range revokedTokens {
+		if tokenID == revokedID {
+			return true
+		}
+	}
+
+	return false
+}
+
+// getRevokedTokens retrieves the list of revoked token IDs
+func (m *SupplyChainMiddleware) getRevokedTokens() []string {
+	// In production, this would fetch from Redis or database
+	// For now, return empty list
+	return []string{}
 }
 
 // checkRateLimit checks if the client has exceeded rate limits

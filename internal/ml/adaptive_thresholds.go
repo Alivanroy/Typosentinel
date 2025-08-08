@@ -71,6 +71,7 @@ type TrainingMetrics struct {
 	Precision      float64       `json:"precision"`
 	Recall         float64       `json:"recall"`
 	F1Score        float64       `json:"f1_score"`
+	AUC            float64       `json:"auc"`
 	TrainingLoss   float64       `json:"training_loss"`
 	ValidationLoss float64       `json:"validation_loss"`
 	TrainingTime   time.Duration `json:"training_time"`

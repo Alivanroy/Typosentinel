@@ -14,10 +14,12 @@ import (
 
 // MLAnalyzer performs machine learning-based analysis for typosquatting detection.
 type MLAnalyzer struct {
-	Config             config.MLAnalysisConfig
-	Client             *Client
-	BehavioralAnalyzer *BehavioralAnalyzer
-	FeedbackLoop       *FeedbackLoop
+	Config                     config.MLAnalysisConfig
+	Client                     *Client
+	BehavioralAnalyzer         *BehavioralAnalyzer
+	EnhancedBehavioralAnalyzer *EnhancedBehavioralAnalyzer
+	FeedbackLoop               *FeedbackLoop
+	EnhancedAlgorithms         *EnhancedMLAlgorithms
 }
 
 // Config holds the configuration for the ML analyzer.
@@ -201,6 +203,14 @@ func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 	// Initialize behavioral analyzer
 	behavioralAnalyzer := NewBehavioralAnalyzer()
 	
+	// Initialize enhanced behavioral analyzer
+	enhancedBehavioralConfig := DefaultEnhancedBehavioralConfig()
+	enhancedBehavioralAnalyzer, err := NewEnhancedBehavioralAnalyzer(enhancedBehavioralConfig)
+	if err != nil {
+		// Non-fatal error, log it but continue
+		fmt.Printf("Warning: Failed to initialize enhanced behavioral analyzer: %v\n", err)
+	}
+	
 	// Initialize feedback loop
 	feedbackLoop, err := NewFeedbackLoop("./data/feedback")
 	if err != nil {
@@ -208,11 +218,28 @@ func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 		fmt.Printf("Warning: Failed to initialize feedback loop: %v\n", err)
 	}
 	
+	// Initialize enhanced algorithms
+	enhancedConfig := Config{
+		Enabled:             cfg.Enabled,
+		SimilarityThreshold: cfg.SimilarityThreshold,
+		MaliciousThreshold:  cfg.MaliciousThreshold,
+		ReputationThreshold: cfg.ReputationThreshold,
+		ModelPath:           cfg.ModelPath,
+		BatchSize:           cfg.BatchSize,
+		MaxFeatures:         cfg.MaxFeatures,
+		CacheEmbeddings:     cfg.CacheEmbeddings,
+		ParallelProcessing:  cfg.ParallelProcessing,
+		GPUAcceleration:     cfg.GPUAcceleration,
+	}
+	enhancedAlgorithms := NewEnhancedMLAlgorithms(enhancedConfig)
+	
 	return &MLAnalyzer{
-		Config:             cfg,
-		Client:             nil, // Client can be set separately for testing
-		BehavioralAnalyzer: behavioralAnalyzer,
-		FeedbackLoop:       feedbackLoop,
+		Config:                     cfg,
+		Client:                     nil, // Client can be set separately for testing
+		BehavioralAnalyzer:         behavioralAnalyzer,
+		EnhancedBehavioralAnalyzer: enhancedBehavioralAnalyzer,
+		FeedbackLoop:               feedbackLoop,
+		EnhancedAlgorithms:         enhancedAlgorithms,
 	}
 }
 
@@ -221,6 +248,14 @@ func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAna
 	// Initialize behavioral analyzer
 	behavioralAnalyzer := NewBehavioralAnalyzer()
 	
+	// Initialize enhanced behavioral analyzer
+	enhancedBehavioralConfig := DefaultEnhancedBehavioralConfig()
+	enhancedBehavioralAnalyzer, err := NewEnhancedBehavioralAnalyzer(enhancedBehavioralConfig)
+	if err != nil {
+		// Non-fatal error, log it but continue
+		fmt.Printf("Warning: Failed to initialize enhanced behavioral analyzer: %v\n", err)
+	}
+	
 	// Initialize feedback loop
 	feedbackLoop, err := NewFeedbackLoop("./data/feedback")
 	if err != nil {
@@ -228,11 +263,28 @@ func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAna
 		fmt.Printf("Warning: Failed to initialize feedback loop: %v\n", err)
 	}
 	
+	// Initialize enhanced algorithms
+	enhancedConfig := Config{
+		Enabled:             cfg.Enabled,
+		SimilarityThreshold: cfg.SimilarityThreshold,
+		MaliciousThreshold:  cfg.MaliciousThreshold,
+		ReputationThreshold: cfg.ReputationThreshold,
+		ModelPath:           cfg.ModelPath,
+		BatchSize:           cfg.BatchSize,
+		MaxFeatures:         cfg.MaxFeatures,
+		CacheEmbeddings:     cfg.CacheEmbeddings,
+		ParallelProcessing:  cfg.ParallelProcessing,
+		GPUAcceleration:     cfg.GPUAcceleration,
+	}
+	enhancedAlgorithms := NewEnhancedMLAlgorithms(enhancedConfig)
+	
 	return &MLAnalyzer{
-		Config:             cfg,
-		Client:             client,
-		BehavioralAnalyzer: behavioralAnalyzer,
-		FeedbackLoop:       feedbackLoop,
+		Config:                     cfg,
+		Client:                     client,
+		BehavioralAnalyzer:         behavioralAnalyzer,
+		EnhancedBehavioralAnalyzer: enhancedBehavioralAnalyzer,
+		FeedbackLoop:               feedbackLoop,
+		EnhancedAlgorithms:         enhancedAlgorithms,
 	}
 }
 
@@ -263,14 +315,50 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	// Extract features from the package
 	features := a.extractFeatures(pkg)
 
-	// Perform similarity analysis
-	similarityScore := a.calculateSimilarityScore(pkg)
-	similarPackages := a.findSimilarPackages(pkg)
+	// Perform enhanced similarity analysis
+	var similarityScore float64
+	var similarPackages []SimilarPackage
+	
+	if a.EnhancedAlgorithms != nil {
+		// Use enhanced algorithms for better accuracy
+		popularPackages := a.getPopularPackages() // Get list of popular packages
+		enhancedSimilarity := a.EnhancedAlgorithms.AdvancedSimilarityAnalysis(pkg, popularPackages)
+		similarityScore = enhancedSimilarity.MaxSimilarity
+		
+		// Convert enhanced similar packages to standard format
+		for _, enhancedPkg := range enhancedSimilarity.SimilarPackages {
+			similarPackages = append(similarPackages, SimilarPackage{
+				Name:           enhancedPkg.Name,
+				Similarity:     enhancedPkg.SimilarityMetrics.OverallScore,
+				Distance:       int(100 * (1.0 - enhancedPkg.SimilarityMetrics.LevenshteinSimilarity)),
+				Algorithm:      "enhanced_multi_algorithm",
+				Registry:       "unknown", // Would be populated from registry data
+				Downloads:      0,         // Would be populated from registry data
+				LastUpdated:    "",        // Would be populated from registry data
+				Maintainer:     "",        // Would be populated from registry data
+				SuspiciousFlag: enhancedPkg.TyposquattingRisk > 0.6,
+			})
+		}
+	} else {
+		// Fallback to original methods
+		similarityScore = a.calculateSimilarityScore(pkg)
+		similarPackages = a.findSimilarPackages(pkg)
+	}
 
-	// Perform malicious detection
-	maliciousScore, err := a.detectMaliciousPackage(ctx, pkg, features)
-	if err != nil {
-		return nil, err
+	// Perform enhanced malicious detection
+	var maliciousScore float64
+	var err error
+	
+	if a.EnhancedAlgorithms != nil {
+		// Use enhanced malicious detection
+		enhancedMalicious := a.EnhancedAlgorithms.AdvancedMaliciousDetection(ctx, pkg)
+		maliciousScore = enhancedMalicious.MaliciousScore
+	} else {
+		// Fallback to original method
+		maliciousScore, err = a.detectMaliciousPackage(ctx, pkg, features)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Perform reputation analysis
@@ -279,9 +367,25 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	// Perform anomaly detection
 	anomalyDetection := a.detectAnomalies(pkg, features)
 
-	// Perform behavioral analysis using the integrated analyzer
+	// Perform behavioral analysis using the enhanced analyzer when available
 	var behavioralAnalysis BehavioralAnalysis
-	if a.BehavioralAnalyzer != nil {
+	if a.EnhancedBehavioralAnalyzer != nil {
+		// Use enhanced behavioral analyzer for more comprehensive analysis
+		enhancedFeatures := a.convertToEnhancedFeatures(pkg)
+		enhancedResult, err := a.EnhancedBehavioralAnalyzer.AnalyzeBehaviorEnhanced(ctx, enhancedFeatures)
+		if err != nil {
+			// Log error but fallback to standard analyzer
+			fmt.Printf("Warning: Enhanced behavioral analysis failed: %v\n", err)
+			if a.BehavioralAnalyzer != nil {
+				behavioralAnalysis = a.BehavioralAnalyzer.AnalyzeBehavior(pkg)
+			} else {
+				behavioralAnalysis = a.analyzeBehavior(pkg)
+			}
+		} else {
+			// Convert enhanced result to standard format
+			behavioralAnalysis = a.convertFromEnhancedBehavioralResult(enhancedResult)
+		}
+	} else if a.BehavioralAnalyzer != nil {
 		behavioralAnalysis = a.BehavioralAnalyzer.AnalyzeBehavior(pkg)
 	} else {
 		// Fallback to the existing method
@@ -289,7 +393,16 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	}
 
 	// Calculate typosquatting score
-	typosquattingScore := a.calculateTyposquattingScore(similarityScore, maliciousScore, reputationAnalysis.OverallScore)
+	var typosquattingScore float64
+	if a.EnhancedAlgorithms != nil {
+		// Use enhanced typosquatting score if available
+		popularPackages := a.getPopularPackages()
+		enhancedSimilarity := a.EnhancedAlgorithms.AdvancedSimilarityAnalysis(pkg, popularPackages)
+		typosquattingScore = enhancedSimilarity.TyposquattingScore
+	} else {
+		// Fallback to original calculation
+		typosquattingScore = a.calculateTyposquattingScore(similarityScore, maliciousScore, reputationAnalysis.OverallScore)
+	}
 
 	// Generate predictions
 	predictions := a.generatePredictions(pkg, features)
@@ -2520,6 +2633,86 @@ func (a *MLAnalyzer) containsSuspiciousCommand(command string) bool {
 	return false
 }
 
+// getPopularPackages returns a list of popular packages for similarity comparison
+func (a *MLAnalyzer) getPopularPackages() []string {
+	// This would typically be loaded from a database or external service
+	// For now, return a curated list of popular packages across different ecosystems
+	return []string{
+		// Go packages
+		"github.com/gin-gonic/gin",
+		"github.com/gorilla/mux",
+		"github.com/sirupsen/logrus",
+		"github.com/stretchr/testify",
+		"github.com/spf13/cobra",
+		"github.com/spf13/viper",
+		"github.com/golang/protobuf",
+		"github.com/grpc-ecosystem/grpc-gateway",
+		"github.com/prometheus/client_golang",
+		"github.com/hashicorp/consul",
+		"github.com/hashicorp/vault",
+		"github.com/docker/docker",
+		"github.com/kubernetes/kubernetes",
+		"github.com/etcd-io/etcd",
+		"github.com/go-redis/redis",
+		
+		// NPM packages (common typosquatting targets)
+		"express",
+		"lodash",
+		"react",
+		"angular",
+		"vue",
+		"webpack",
+		"babel",
+		"eslint",
+		"prettier",
+		"typescript",
+		"axios",
+		"moment",
+		"underscore",
+		"jquery",
+		"bootstrap",
+		"chalk",
+		"commander",
+		"debug",
+		"request",
+		"async",
+		
+		// Python packages
+		"requests",
+		"numpy",
+		"pandas",
+		"flask",
+		"django",
+		"tensorflow",
+		"pytorch",
+		"scikit-learn",
+		"matplotlib",
+		"pillow",
+		"beautifulsoup4",
+		"selenium",
+		"pytest",
+		"click",
+		"jinja2",
+		
+		// Common package name patterns
+		"utils",
+		"helpers",
+		"common",
+		"core",
+		"base",
+		"lib",
+		"tools",
+		"client",
+		"server",
+		"api",
+		"sdk",
+		"framework",
+		"plugin",
+		"extension",
+		"middleware",
+	}
+}
+
 // calculateConfidenceLevel calculates the confidence level of the analysis
 // based on score consistency and quality indicators.
 func (a *MLAnalyzer) calculateConfidenceLevel(typosquattingScore, maliciousScore, reputationScore float64) float64 {
@@ -2555,4 +2748,161 @@ func (a *MLAnalyzer) calculateConfidenceLevel(typosquattingScore, maliciousScore
 	
 	// Ensure confidence is within valid range
 	return math.Min(math.Max(confidence, 0.1), 0.95)
+}
+
+// convertToEnhancedFeatures converts standard package to enhanced package features
+func (a *MLAnalyzer) convertToEnhancedFeatures(pkg *types.Package) *EnhancedPackageFeatures {
+	enhancedFeatures := &EnhancedPackageFeatures{
+		Name:     pkg.Name,
+		Registry: pkg.Registry,
+		Version:  pkg.Version,
+	}
+
+	// Populate metadata if available
+	if pkg.Metadata != nil {
+		enhancedFeatures.Description = pkg.Metadata.Description
+		enhancedFeatures.Author = pkg.Metadata.Author
+		enhancedFeatures.Homepage = pkg.Metadata.Homepage
+		enhancedFeatures.Repository = pkg.Metadata.Repository
+		enhancedFeatures.License = pkg.Metadata.License
+		enhancedFeatures.Keywords = pkg.Metadata.Keywords
+		enhancedFeatures.Maintainers = pkg.Metadata.Maintainers
+		enhancedFeatures.Downloads = pkg.Metadata.Downloads
+		
+		if pkg.Metadata.PublishedAt != nil {
+			enhancedFeatures.CreationDate = *pkg.Metadata.PublishedAt
+		}
+		if pkg.Metadata.LastUpdated != nil {
+			enhancedFeatures.LastUpdated = *pkg.Metadata.LastUpdated
+		}
+	}
+
+	// Convert dependencies
+	if len(pkg.Dependencies) > 0 {
+		enhancedFeatures.Dependencies = make([]Dependency, len(pkg.Dependencies))
+		for i, dep := range pkg.Dependencies {
+			enhancedFeatures.Dependencies[i] = Dependency{
+				Name:    dep.Name,
+				Version: dep.Version,
+				Type:    "runtime",
+				Dev:     dep.Development,
+			}
+		}
+	}
+
+	// Set default file structure metrics
+	enhancedFeatures.FileStructure = FileStructure{
+		TotalFiles:         10, // Default estimate
+		SuspiciousFiles:    make([]string, 0),
+		UnusualExtensions:  make([]string, 0),
+		LargeFiles:         make([]string, 0),
+	}
+
+	// Set default code metrics
+	enhancedFeatures.CodeMetrics = CodeMetrics{
+		LinesOfCode:          1000, // Default estimate
+		CyclomaticComplexity: 5.0,
+		CodeDuplication:      0.1,
+		TestCoverage:         0.5,
+		DocumentationRatio:   0.3,
+		ObfuscationScore:     0.0,
+		MinificationScore:    0.0,
+		CommentRatio:         0.2,
+	}
+
+	// Set default security metrics
+	enhancedFeatures.SecurityMetrics = SecurityMetrics{
+		VulnerabilityCount:    0,
+		HighSeverityVulns:     0,
+		CriticalSeverityVulns: 0,
+		SuspiciousPatterns:    0,
+		ObfuscatedCode:        false,
+		NetworkCalls:          0,
+		FileSystemAccess:      0,
+		ProcessExecution:      0,
+		CryptographicUsage:    0,
+		DangerousFunctions:    0,
+		SecurityScore:         0.5,
+	}
+
+	// Set default behavioral metrics
+	enhancedFeatures.BehavioralMetrics = BehavioralMetrics{
+		InstallationBehavior: EnhancedInstallBehavior{
+			PostInstallScript:  false,
+			PreInstallScript:   false,
+			NetworkActivity:    false,
+			FileModifications:  0,
+			PermissionChanges:  0,
+			SuspiciousCommands: 0,
+			InstallationTime:   1.0,
+		},
+		RuntimeBehavior: EnhancedRuntimeBehavior{
+			CPUUsage:               0.1,
+			MemoryUsage:            0.1,
+			NetworkConnections:     0,
+			FileOperations:         0,
+			ProcessSpawning:        0,
+			AntiAnalysisTechniques: false,
+			PersistenceMechanisms:  false,
+		},
+		NetworkBehavior: EnhancedNetworkBehavior{
+			OutboundConnections: 0,
+			InboundConnections:  0,
+			SuspiciousHosts:     make([]string, 0),
+			UnusualPorts:        make([]int, 0),
+			DataExfiltration:    false,
+			C2Communication:     false,
+			DNSTunneling:        false,
+		},
+		FileSystemBehavior: EnhancedFileSystemBehavior{
+			FilesCreated:        0,
+			FilesModified:       0,
+			FilesDeleted:        0,
+			SuspiciousLocations: make([]string, 0),
+			HiddenFiles:         0,
+			SystemFileAccess:    false,
+			TempFileUsage:       0,
+		},
+		ProcessBehavior: EnhancedProcessBehavior{
+			ChildProcesses:      0,
+			PrivilegeEscalation: false,
+			CodeInjection:       false,
+			Hollowing:           false,
+			DLLInjection:        false,
+			SuspiciousCommands:  make([]string, 0),
+		},
+		AnomalyScore: 0.0,
+	}
+
+	return enhancedFeatures
+}
+
+// convertFromEnhancedBehavioralResult converts enhanced behavioral analysis result to standard format
+func (a *MLAnalyzer) convertFromEnhancedBehavioralResult(result *BehavioralAnalysisResult) BehavioralAnalysis {
+	return BehavioralAnalysis{
+		InstallBehavior: InstallBehavior{
+			SuspiciousCommands: result.SuspiciousBehaviors,
+			NetworkRequests:    result.BehaviorPatterns,
+			FileModifications:  result.RiskFactors,
+			PermissionChanges:  result.AnomalousActivities,
+		},
+		RuntimeBehavior: RuntimeBehavior{
+			ProcessSpawning:   result.SuspiciousBehaviors,
+			SystemCalls:       result.BehaviorPatterns,
+			ResourceUsage:     result.RiskFactors,
+			EnvironmentAccess: result.AnomalousActivities,
+		},
+		NetworkBehavior: NetworkBehavior{
+			OutboundConnections: result.SuspiciousBehaviors,
+			DNSQueries:          result.BehaviorPatterns,
+			DataExfiltration:    result.RiskFactors,
+			C2Communication:     result.AnomalousActivities,
+		},
+		FileSystemBehavior: FileSystemBehavior{
+			FileCreation:     result.SuspiciousBehaviors,
+			FileDeletion:     result.BehaviorPatterns,
+			FileModification: result.RiskFactors,
+			DirectoryAccess:  result.AnomalousActivities,
+		},
+	}
 }

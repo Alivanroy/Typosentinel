@@ -327,7 +327,7 @@ type RuntimeAnalysisResult struct {
 	PerformanceMetrics      *PerformanceMetrics     `json:"performance_metrics"`
 	ResourceUsagePatterns   []ResourceUsagePattern  `json:"resource_usage_patterns"`
 	ExecutionAnomalies      []ExecutionAnomaly      `json:"execution_anomalies"`
-	SecurityEvents          []SecurityEvent         `json:"security_events"`
+	SecurityEvents          []BehavioralSecurityEvent         `json:"security_events"`
 }
 
 // RuntimeBehavior represents runtime behaviors
@@ -376,8 +376,8 @@ type ExecutionAnomaly struct {
 	Evidence        []string  `json:"evidence"`
 }
 
-// SecurityEvent represents security events
-type SecurityEvent struct {
+// BehavioralSecurityEvent represents security events from behavioral analysis
+type BehavioralSecurityEvent struct {
 	EventID         string    `json:"event_id"`
 	EventType       string    `json:"event_type"`
 	Timestamp       time.Time `json:"timestamp"`
@@ -1273,7 +1273,7 @@ type SecurityRule struct {
 }
 
 type EventCollector struct {
-	events          []SecurityEvent
+	events          []BehavioralSecurityEvent
 	eventFilters    []EventFilter
 	eventProcessors []EventProcessor
 }

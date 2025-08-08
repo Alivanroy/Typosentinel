@@ -383,10 +383,11 @@ func authenticateBasic(c *gin.Context, authConfig *config.APIAuthentication) (bo
 	// Get user credentials from environment or configuration
 	validUsers := getBasicAuthUsers()
 	if len(validUsers) == 0 {
-		// Fallback to default admin user if no users configured
+		// Require admin password to be explicitly set - NO DEFAULT PASSWORD
 		adminPassword := os.Getenv("TYPOSENTINEL_ADMIN_PASSWORD")
 		if adminPassword == "" {
-			adminPassword = "admin123" // Default password for development
+			log.Printf("ERROR: Admin password not configured - TYPOSENTINEL_ADMIN_PASSWORD environment variable is required")
+			return false, ""
 		}
 		validUsers = map[string]string{
 			"admin": hashPassword(adminPassword),

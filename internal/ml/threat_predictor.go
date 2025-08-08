@@ -176,14 +176,7 @@ type CachedPrediction struct {
 	HitCount  int               `json:"hit_count"`
 }
 
-// ModelPerformanceMonitor tracks model performance metrics
-type ModelPerformanceMonitor struct {
-	metrics        map[string]*PerformanceMetrics
-	alerts         []PerformanceAlert
-	thresholds     map[string]float64
-	monitoringInterval time.Duration
-	mu             sync.RWMutex
-}
+// Note: ModelPerformanceMonitor is defined in auto_retrain.go
 
 // PerformanceMetrics contains model performance data
 type PerformanceMetrics struct {
@@ -332,7 +325,7 @@ func NewThreatPredictor(config *PredictorConfig) *ThreatPredictor {
 		featureDriftDetector: NewFeatureDriftDetector(0.1, 50),
 		modelExplainer:       NewModelExplainer(),
 		predictionCache:      NewPredictionCache(10*time.Minute, 1000),
-		performanceMonitor:   NewModelPerformanceMonitor(1*time.Minute),
+		performanceMonitor:   NewModelPerformanceMonitor(),
 	}
 }
 
@@ -1354,77 +1347,4 @@ func (pc *PredictionCache) GetStats() (hitRate float64, size int) {
 	return float64(pc.hitCount) / float64(total), len(pc.cache)
 }
 
-// NewModelPerformanceMonitor creates a new performance monitor
-func NewModelPerformanceMonitor(monitoringInterval time.Duration) *ModelPerformanceMonitor {
-	return &ModelPerformanceMonitor{
-		metrics:            make(map[string]*PerformanceMetrics),
-		alerts:             make([]PerformanceAlert, 0),
-		thresholds:         make(map[string]float64),
-		monitoringInterval: monitoringInterval,
-	}
-}
-
-// UpdateMetrics updates performance metrics for a model
-func (mpm *ModelPerformanceMonitor) UpdateMetrics(modelID string, metrics *PerformanceMetrics) {
-	mpm.mu.Lock()
-	defer mpm.mu.Unlock()
-
-	mpm.metrics[modelID] = metrics
-
-	// Check for alerts
-	mpm.checkAlerts(modelID, metrics)
-}
-
-// checkAlerts checks if any thresholds are violated
-func (mpm *ModelPerformanceMonitor) checkAlerts(modelID string, metrics *PerformanceMetrics) {
-	// Check accuracy threshold
-	if threshold, exists := mpm.thresholds["accuracy"]; exists && metrics.Accuracy < threshold {
-		alert := PerformanceAlert{
-			ModelID:   modelID,
-			Metric:    "accuracy",
-			Value:     metrics.Accuracy,
-			Threshold: threshold,
-			Timestamp: time.Now(),
-			Severity:  AlertSeverityHigh,
-		}
-		mpm.alerts = append(mpm.alerts, alert)
-	}
-
-	// Check latency threshold
-	if threshold, exists := mpm.thresholds["latency"]; exists && metrics.Latency.Seconds() > threshold {
-		alert := PerformanceAlert{
-			ModelID:   modelID,
-			Metric:    "latency",
-			Value:     metrics.Latency.Seconds(),
-			Threshold: threshold,
-			Timestamp: time.Now(),
-			Severity:  AlertSeverityMedium,
-		}
-		mpm.alerts = append(mpm.alerts, alert)
-	}
-}
-
-// GetAlerts returns current alerts
-func (mpm *ModelPerformanceMonitor) GetAlerts() []PerformanceAlert {
-	mpm.mu.RLock()
-	defer mpm.mu.RUnlock()
-
-	// Return copy of alerts
-	alerts := make([]PerformanceAlert, len(mpm.alerts))
-	copy(alerts, mpm.alerts)
-	return alerts
-}
-
-// SetThreshold sets a performance threshold
-func (mpm *ModelPerformanceMonitor) SetThreshold(metric string, threshold float64) {
-	mpm.mu.Lock()
-	defer mpm.mu.Unlock()
-	mpm.thresholds[metric] = threshold
-}
-
-// GetMetrics returns performance metrics for a model
-func (mpm *ModelPerformanceMonitor) GetMetrics(modelID string) *PerformanceMetrics {
-	mpm.mu.RLock()
-	defer mpm.mu.RUnlock()
-	return mpm.metrics[modelID]
-}
+// Note: ModelPerformanceMonitor methods are defined in auto_retrain.go

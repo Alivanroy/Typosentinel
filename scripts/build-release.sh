@@ -49,7 +49,11 @@ for platform in "${PLATFORMS[@]}"; do
     
     # Create checksum
     cd "${DIST_DIR}"
-    sha256sum "${BINARY_NAME}" > "${BINARY_NAME}.sha256"
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "${BINARY_NAME}" > "${BINARY_NAME}.sha256"
+    else
+        shasum -a 256 "${BINARY_NAME}" > "${BINARY_NAME}.sha256"
+    fi
     
     # Create archive
     if [ "$GOOS" = "windows" ]; then

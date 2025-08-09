@@ -1,0 +1,18 @@
+{
+  "time": 1754732832,
+  "host": "typosentinel-ci",
+  "source": "typosentinel:test",
+  "sourcetype": "typosentinel:result",
+  "event": {
+    "name": "typosquatting_pypi_requests_vs_reqeusts",
+    "suite": "core",
+    "risk_score": 0.96,
+    "decision": "block",
+    "signals": [
+      "levenshtein",
+      "keyboard",
+      "reputation"
+    ],
+    "latency_sec": 1.42
+  }
+}

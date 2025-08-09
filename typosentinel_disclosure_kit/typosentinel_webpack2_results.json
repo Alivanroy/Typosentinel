@@ -1,0 +1,86 @@
+{
+  "package": "webpack2",
+  "registry": "npm",
+  "analysis_timestamp": "2025-08-09T23:06:10.14259+02:00",
+  "overall_risk_score": 0.975,
+  "threats": [
+    {
+      "id": "threat_1754773570142742000",
+      "package": "webpack2",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 2,
+      "confidence": 0.975,
+      "description": "Package name 'webpack2' is very similar to 'webpack' (97.5% similarity). Character deletion detected (1 deletions), indicating potential typosquatting attack.",
+      "similar_to": "webpack",
+      "recommendation": "Verify that 'webpack2' is the intended package. Consider using 'webpack' instead if that was the intention. WARNING: Character insertion/deletion pattern detected.",
+      "evidence": [
+        {
+          "type": "edit_distance",
+          "description": "Levenshtein edit distance",
+          "value": 1,
+          "score": 0.975
+        }
+      ],
+      "detected_at": "2025-08-09T23:06:10.14259+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1754773570142742000",
+      "package": "webpack2",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 2,
+      "confidence": 0.8749999999999999,
+      "description": "Package name 'webpack2' is very similar to 'webpack' (87.5% similarity). Character deletion detected (1 deletions), indicating potential typosquatting attack.",
+      "similar_to": "webpack",
+      "recommendation": "Verify that 'webpack2' is the intended package. Consider using 'webpack' instead if that was the intention. WARNING: Character insertion/deletion pattern detected.",
+      "evidence": [
+        {
+          "type": "edit_distance",
+          "description": "Levenshtein edit distance",
+          "value": 1,
+          "score": 0.875
+        },
+        {
+          "type": "visual_similarity",
+          "description": "Visual character similarity score",
+          "value": 0.875,
+          "score": 0.875
+        },
+        {
+          "type": "phonetic_similarity",
+          "description": "Phonetic similarity score",
+          "value": 0.875,
+          "score": 0.875
+        }
+      ],
+      "detected_at": "2025-08-09T23:06:10.142746+02:00",
+      "detection_method": "enhanced_typosquatting"
+    }
+  ],
+  "warnings": [
+    {
+      "id": "warning_1754773570142839000",
+      "package": "webpack2",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-09T23:06:10.142839+02:00"
+    }
+  ],
+  "similar_packages": [
+    "webpack",
+    "webpack"
+  ],
+  "details": {
+    "analysis_duration": "258.375µs",
+    "checks_performed": [
+      "lexical_similarity",
+      "homoglyph_detection",
+      "reputation_analysis"
+    ],
+    "package_length": 8
+  }
+}

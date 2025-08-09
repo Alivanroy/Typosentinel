@@ -186,20 +186,31 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 	return result, nil
 }
 
-// Scan performs a security scan on a single package (for integration tests)
-func (a *Analyzer) Scan(ctx context.Context, pkg *types.Package) (*types.ScanResult, error) {
+// ScanPackage performs a security scan on a single package (for integration tests)
+func (a *Analyzer) ScanPackage(ctx context.Context, pkg *types.Package) (*types.ScanResult, error) {
 	start := time.Now()
 	scanID := generateScanID()
 
 	logrus.Infof("Starting package scan %s for package: %s@%s", scanID, pkg.Name, pkg.Version)
 
 	// Create dependency from package
+	var metadata types.PackageMetadata
+	if pkg.Metadata != nil {
+		metadata = *pkg.Metadata
+	} else {
+		metadata = types.PackageMetadata{
+			Name:     pkg.Name,
+			Version:  pkg.Version,
+			Registry: pkg.Registry,
+		}
+	}
+
 	dep := types.Dependency{
 		Name:     pkg.Name,
 		Version:  pkg.Version,
 		Registry: pkg.Registry,
 		Direct:   true,
-		Metadata: *pkg.Metadata,
+		Metadata: metadata,
 	}
 
 	// Perform threat detection on single package
@@ -208,6 +219,7 @@ func (a *Analyzer) Scan(ctx context.Context, pkg *types.Package) (*types.ScanRes
 		IncludeDevDependencies: false,
 		SimilarityThreshold:    0.8,
 		CheckVulnerabilities:   true,
+		VulnerabilityDBs:       []string{"osv"}, // Use OSV database for testing
 	})
 	if err != nil {
 		return nil, fmt.Errorf("threat detection failed: %w", err)
@@ -230,6 +242,7 @@ func (a *Analyzer) Scan(ctx context.Context, pkg *types.Package) (*types.ScanRes
 		TotalThreats:    len(threats),
 		TotalWarnings:   len(warnings),
 		ThreatsFound:    len(threats),
+		EnginesUsed:     enginesUsed,
 	}
 
 	if len(threats) == 0 {
@@ -250,18 +263,29 @@ func (a *Analyzer) Scan(ctx context.Context, pkg *types.Package) (*types.ScanRes
 		}
 	}
 
+	// Generate recommendations based on threats
+	recommendations := []string{}
+	if len(threats) > 0 {
+		recommendations = append(recommendations, "Consider using alternative packages with better security reputation")
+		recommendations = append(recommendations, "Review package dependencies for potential security issues")
+		if riskScore > 0.7 {
+			recommendations = append(recommendations, "Avoid using this package in production environments")
+		}
+	}
+
 	// Create scan result
 	result := &types.ScanResult{
-		ID:          scanID,
-		Target:      pkg.Name,
-		Type:        "package",
-		Status:      "completed",
-		OverallRisk: overallRisk,
-		RiskScore:   riskScore,
-		Packages:    []*types.Package{pkg},
-		Summary:     summary,
-		Duration:    time.Since(start),
-		CreatedAt:   start,
+		ID:              scanID,
+		Target:          pkg.Name,
+		Type:            "package",
+		Status:          "completed",
+		OverallRisk:     overallRisk,
+		RiskScore:       riskScore,
+		Packages:        []*types.Package{pkg},
+		Summary:         summary,
+		Duration:        time.Since(start),
+		Recommendations: recommendations,
+		CreatedAt:       start,
 	}
 
 	logrus.Infof("Package scan %s completed in %v. Found %d threats, %d warnings",

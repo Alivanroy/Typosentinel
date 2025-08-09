@@ -316,7 +316,7 @@ func BenchmarkSinglePackageAnalysis(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		_, err := suite.scanner.Scan(ctx, testPkg)
+		_, err := suite.scanner.ScanPackage(ctx, testPkg)
 		if err != nil {
 			b.Fatalf("Scan failed: %v", err)
 		}
@@ -366,7 +366,7 @@ func BenchmarkPackagesByCategory(b *testing.B) {
 					},
 				}
 
-				_, err := suite.scanner.Scan(ctx, testPkg)
+				_, err := suite.scanner.ScanPackage(ctx, testPkg)
 				if err != nil {
 					b.Fatalf("Scan failed for %s: %v", pkg.Name, err)
 				}
@@ -415,7 +415,7 @@ func BenchmarkConcurrentAnalysis(b *testing.B) {
 							},
 						}
 
-						_, err := suite.scanner.Scan(ctx, testPkg)
+						_, err := suite.scanner.ScanPackage(ctx, testPkg)
 						if err != nil {
 							b.Errorf("Scan failed for %s: %v", testPkg.Name, err)
 						}
@@ -455,9 +455,9 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	runtime.ReadMemStats(&m1)
 
 	for i := 0; i < b.N; i++ {
-		_, err := suite.scanner.Scan(ctx, testPkg)
+		_, err := suite.scanner.ScanPackage(ctx, testPkg)
 		if err != nil {
-			b.Fatalf("Scan failed: %v", err)
+			b.Fatalf("Memory benchmark failed: %v", err)
 		}
 	}
 
@@ -529,7 +529,7 @@ func (suite *BenchmarkSuite) runPerformanceTest(ctx context.Context, benchPkg Be
 		},
 	}
 
-	scanResult, err := suite.scanner.Scan(ctx, testPkg)
+	scanResult, err := suite.scanner.ScanPackage(ctx, testPkg)
 	processingTime := time.Since(startTime)
 
 	runtime.GC()
@@ -765,7 +765,7 @@ func TestThroughputUnderLoad(t *testing.T) {
 					},
 				}
 
-				_, err := suite.scanner.Scan(ctx, testPkg)
+				_, err := suite.scanner.ScanPackage(ctx, testPkg)
 				if err != nil {
 					failedScans++
 				} else {

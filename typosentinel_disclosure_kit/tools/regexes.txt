@@ -1,0 +1,12 @@
+Function\(
+child_process
+exec\(
+system\(
+XMLHttpRequest
+fetch\(
+atob\(
+btoa\(
+new\s+WebSocket
+eval\(
+process\.env
+\\u[0-9a-fA-F]{4}

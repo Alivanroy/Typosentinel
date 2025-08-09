@@ -1,0 +1,643 @@
+[
+  {
+    "package_name": "@types/eslint-scope",
+    "ecosystem": "npm",
+    "cve_likelihood_score": 100,
+    "reasons": [
+      "3 code_injection vulnerabilities found",
+      "Moderately popular package (11 versions)",
+      "1 suspicious files"
+    ],
+    "metadata": {
+      "name": "@types/eslint-scope",
+      "version": "8.3.2",
+      "description": "TypeScript definitions for eslint-scope",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/eslint-scope",
+      "repository": {
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "type": "git",
+        "directory": "types/eslint-scope"
+      },
+      "maintainers": [
+        {
+          "name": "types",
+          "email": "ts-npm-types@microsoft.com"
+        }
+      ],
+      "scripts": {},
+      "dependencies": {
+        "@types/eslint": "*",
+        "@types/estree": "*",
+        "@types/esrecurse": "*",
+        "eslint-visitor-keys": "*"
+      },
+      "devDependencies": {},
+      "created": "2018-02-18T01:54:10.733Z",
+      "modified": "2025-08-07T02:19:49.215Z",
+      "versions_count": 11,
+      "dist": {
+        "shasum": "c7f9205b80c1b01411b38a38240fb001d6d0bfd9",
+        "tarball": "https://registry.npmjs.org/@types/eslint-scope/-/eslint-scope-8.3.2.tgz",
+        "fileCount": 7,
+        "integrity": "sha512-ygPtnKRQjbXB6LKQ+m6SLyZDMgFeQFVNCkjUK/HivS58Ce6JBjxpVzHbE1+RS6pC5fP4FQg4qh8lvVSm2oxYZw==",
+        "signatures": [
+          {
+            "sig": "MEYCIQCZ4ibWOWjfkPkGsY3aXQWYZSd4ysAIvNX2RCHR3EAGsQIhALNpmf8fvD/Jo5SXl7ujR4TTW326pu+kiAonaumDMCu9",
+            "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+          }
+        ],
+        "unpackedSize": 18286
+      },
+      "keywords": []
+    },
+    "risk_factors": [],
+    "analysis_results": {
+      "package_name": "@types/eslint-scope",
+      "ecosystem": "npm",
+      "vulnerabilities": [
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp6285ujsd/eslint-scope/index.d.cts",
+          "line": 11,
+          "pattern": "eval\\s*\\(",
+          "match": "eval(",
+          "context": "AnalyzeOptions {\n    /**\n     * Whether to ignore eval() calls, which normally create scopes.\n     * @def"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp6285ujsd/eslint-scope/index.d.cts",
+          "line": 227,
+          "pattern": "eval\\s*\\(",
+          "match": "eval(",
+          "context": " dynamic: boolean;\n\n    /**\n     * Direct call to eval() flag.\n     */\n    directCallToEvalScope: boolean"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp6285ujsd/eslint-scope/index.d.cts",
+          "line": 295,
+          "pattern": "new\\s+Function",
+          "match": "new Function",
+          "context": "ionScope extends Scope {\n    /**\n     * Creates a new FunctionScope instance.\n     * @param scopeManager The sco"
+        }
+      ],
+      "suspicious_files": [
+        "Multiple eval calls: /var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp6285ujsd/eslint-scope/index.d.cts"
+      ],
+      "security_issues": []
+    },
+    "analysis_timestamp": "2025-08-09T21:54:23.370736"
+  },
+  {
+    "package_name": "@types/k6",
+    "ecosystem": "npm",
+    "cve_likelihood_score": 100,
+    "reasons": [
+      "17 code_injection vulnerabilities found",
+      "1 path_traversal vulnerabilities found",
+      "5 crypto_issues issues found",
+      "Popular package (83 versions)",
+      "2 suspicious files"
+    ],
+    "metadata": {
+      "name": "@types/k6",
+      "version": "1.1.1",
+      "description": "TypeScript definitions for k6",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/k6",
+      "repository": {
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "type": "git",
+        "directory": "types/k6"
+      },
+      "maintainers": [
+        {
+          "name": "types",
+          "email": "ts-npm-types@microsoft.com"
+        }
+      ],
+      "scripts": {},
+      "dependencies": {},
+      "devDependencies": {},
+      "created": "2018-09-18T20:29:44.167Z",
+      "modified": "2025-08-03T07:07:06.345Z",
+      "versions_count": 83,
+      "dist": {
+        "shasum": "a2490ace7e44025499e92d15b7846b1982dd97a7",
+        "tarball": "https://registry.npmjs.org/@types/k6/-/k6-1.1.1.tgz",
+        "fileCount": 44,
+        "integrity": "sha512-ioNtKGb59VEBfmM8iJIRp1OpE4y8sfEBHBy55VXYzoicIQAWWVae+RYDstCoVAIqyFA1bfaLwAWKKEUxp0SwnA==",
+        "signatures": [
+          {
+            "sig": "MEQCIBr2krhS2THXI5y+pn5S3MYQg5I6G+edjHcWor9cAUmNAiB/G4Wlo4RQ30UghWetWzOOcUWLWWeyN9iMffPOAwt4XQ==",
+            "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+          }
+        ],
+        "unpackedSize": 301386
+      },
+      "keywords": []
+    },
+    "risk_factors": [],
+    "analysis_results": {
+      "package_name": "@types/k6",
+      "ecosystem": "npm",
+      "vulnerabilities": [
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/global.d.ts",
+          "line": 23,
+          "pattern": "Function\\s*\\(",
+          "match": "function (",
+          "context": "('/path/to/file.bin', 'b');\n     * export default function () {\n     * var data = {\n     *    field: 'this is "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/global.d.ts",
+          "line": 41,
+          "pattern": "Function\\s*\\(",
+          "match": "function (",
+          "context": "('/path/to/file.bin', 'b');\n     * export default function () {\n     * var data = {\n     *    field: 'this is "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/index.d.ts",
+          "line": 58,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "value of `fn`.\n * @example\n * group(\"group name\", function() {\n *  ..\n * });\n */\nexport function group<RT>(na"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/metrics/index.d.ts",
+          "line": 36,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "er = new Counter('metricName');\n * export default function() {\n *   myCounter.add(1);\n * }\n */\nexport class C"
+        },
+        {
+          "type": "path_traversal",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/experimental/websockets/index.d.ts",
+          "line": 1,
+          "pattern": "\\.\\./\\.\\.",
+          "match": "../..",
+          "context": "import { CookieJar } from \"../../http/index.js\";\nimport { ReadableStream } from \"."
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/experimental/fs/index.d.ts",
+          "line": 14,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "*\n * Example:\n * ```\n * let fileHandle;\n * (async function() {\n *   fileHandle = await open(\"example.txt\");\n "
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/crypto/index.d.ts",
+          "line": 48,
+          "pattern": "md5\\s*\\(",
+          "match": "md5(",
+          "context": "ng.\n * @returns MD5 digest.\n * @example\n * crypto.md5(\"hello world!\", \"hex\")\n */\nexport function md5<OE "
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/crypto/index.d.ts",
+          "line": 59,
+          "pattern": "sha1\\s*\\(",
+          "match": "sha1(",
+          "context": ".\n * @returns SHA-1 digest.\n * @example\n * crypto.sha1('hello world!', 'hex')\n */\nexport function sha1<OE"
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/html/index.d.ts",
+          "line": 461,
+          "pattern": "DES\\s*\\(",
+          "match": "des(",
+          "context": "nt(): number;\n\n    /** Child nodes. */\n    childNodes(): Element[];\n\n    /** Child elements. */\n    chil"
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/html/index.d.ts",
+          "line": 527,
+          "pattern": "DES\\s*\\(",
+          "match": "des(",
+          "context": "/** Whether has any child nodes. */\n    hasChildNodes(): boolean;\n\n    /** Identifier value. */\n    id()"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/browser/index.d.ts",
+          "line": 679,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "await browserContext.addInitScript(\"Math.random = function(){return 0}\");\n     *\n     * const page = await br"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/http/index.d.ts",
+          "line": 192,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "n('/path/to/file.bin', 'b');\n *\n * export default function() {\n *   let f = http.file(binFile, 'test.bin');\n "
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/http/index.d.ts",
+          "line": 194,
+          "pattern": "md5\\s*\\(",
+          "match": "md5(",
+          "context": " http.file(binFile, 'test.bin');\n *   console.log(md5(f.data, 'hex'));\n *   console.log(f.filename);\n * "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 10,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "request.\n * @example\n * let res = ws.connect(url, function(socket) {\n *   socket.on('open', function() {\n *  "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 11,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "ct(url, function(socket) {\n *   socket.on('open', function() {\n *     console.log('WebSocket connection estab"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 27,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "le\n * let res = ws.connect(url, { param1: true }, function(socket) {\n *   socket.on('open', function() {\n *  "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 28,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "true }, function(socket) {\n *   socket.on('open', function() {\n *     console.log('WebSocket connection estab"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 118,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "dler.\n     * @example\n     * socket.on('message', function(message) {\n     *   console.log(`Received message:"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 121,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "{message}`);\n     * });\n     * socket.on('close', function() {\n     *   console.log('disconnected');\n     * }"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 149,
+          "pattern": "Function\\s*\\(",
+          "match": "function (",
+          "context": " = open('./file.pdf', 'b');\n     * export default function () {\n     *   ws.connect('http://wshost/', function"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 150,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "nction () {\n     *   ws.connect('http://wshost/', function(socket) {\n     *     socket.on('open', function() "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 151,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": ", function(socket) {\n     *     socket.on('open', function() {\n     *       socket.sendBinary(binFile);\n     "
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/ws/index.d.ts",
+          "line": 154,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "  *     });\n     *     socket.on('binaryMessage', function(msg) {\n     *       // msg is an ArrayBuffer, so w"
+        }
+      ],
+      "suspicious_files": [
+        "Large file: /var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/browser/index.d.ts (135100 chars)",
+        "Multiple eval calls: /var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp5ks_kgb4/k6/browser/index.d.ts"
+      ],
+      "security_issues": []
+    },
+    "analysis_timestamp": "2025-08-09T21:54:32.641308"
+  },
+  {
+    "package_name": "@types/d3-selection",
+    "ecosystem": "npm",
+    "cve_likelihood_score": 100,
+    "reasons": [
+      "2 code_injection vulnerabilities found",
+      "2 crypto_issues issues found",
+      "Moderately popular package (48 versions)",
+      "1 suspicious files"
+    ],
+    "metadata": {
+      "name": "@types/d3-selection",
+      "version": "3.0.11",
+      "description": "TypeScript definitions for d3-selection",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-selection",
+      "repository": {
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "type": "git",
+        "directory": "types/d3-selection"
+      },
+      "maintainers": [
+        {
+          "name": "types",
+          "email": "ts-npm-types@microsoft.com"
+        }
+      ],
+      "scripts": {},
+      "dependencies": {},
+      "devDependencies": {},
+      "created": "2016-08-08T20:35:56.105Z",
+      "modified": "2025-08-03T08:03:22.775Z",
+      "versions_count": 48,
+      "dist": {
+        "shasum": "bd7a45fc0a8c3167a631675e61bc2ca2b058d4a3",
+        "tarball": "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.11.tgz",
+        "fileCount": 5,
+        "integrity": "sha512-bhAXu23DJWsrI45xafYpkQ4NtcKMwWnAC/vKrd2l+nxMFuvOT3XMYTIj2opv8vq8AO5Yh7Qac/nSeP/3zjTK0w==",
+        "signatures": [
+          {
+            "sig": "MEUCIQCALhShqu49jebtxOH9Lyjj4tFW+55JvzM7K5FOTq1e8gIgB+DtcLdMCFPAU9CA5UQanxAkmOuWVNWe+iGb1omy/gM=",
+            "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+          }
+        ],
+        "unpackedSize": 66002
+      },
+      "keywords": []
+    },
+    "risk_factors": [],
+    "analysis_results": {
+      "package_name": "@types/d3-selection",
+      "ecosystem": "npm",
+      "vulnerabilities": [
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmppsmg3ydd/d3-selection/index.d.ts",
+          "line": 515,
+          "pattern": "Function\\s*\\(",
+          "match": "function (",
+          "context": "ble.\n     * This is equivalent to `selection.each(function (d, i, g) { name.set(this, value.call(this, d, i, g"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmppsmg3ydd/d3-selection/index.d.ts",
+          "line": 523,
+          "pattern": "Function\\s*\\(",
+          "match": "function (",
+          "context": "ion.\n     * This is equivalent to `selection.each(function () { name.set(this, value); })` but more concise.\n "
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmppsmg3ydd/d3-selection/index.d.ts",
+          "line": 738,
+          "pattern": "DES\\s*\\(",
+          "match": "des (",
+          "context": "the group index (i), and the selection\u2019s parent nodes (nodes),\n     * with this as the group\u2019s parent ele"
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmppsmg3ydd/d3-selection/index.d.ts",
+          "line": 928,
+          "pattern": "DES\\s*\\(",
+          "match": "des(",
+          "context": "n-null) elements in this selection.\n     */\n    nodes(): GElement[];\n\n    /**\n     * Return the first (n"
+        }
+      ],
+      "suspicious_files": [
+        "Multiple eval calls: /var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmppsmg3ydd/d3-selection/index.d.ts"
+      ],
+      "security_issues": []
+    },
+    "analysis_timestamp": "2025-08-09T21:54:35.455772"
+  },
+  {
+    "package_name": "@types/jest",
+    "ecosystem": "npm",
+    "cve_likelihood_score": 95,
+    "reasons": [
+      "2 code_injection vulnerabilities found",
+      "1 crypto_issues issues found",
+      "Popular package (210 versions)"
+    ],
+    "metadata": {
+      "name": "@types/jest",
+      "version": "30.0.0",
+      "description": "TypeScript definitions for jest",
+      "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/jest",
+      "repository": {
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "type": "git",
+        "directory": "types/jest"
+      },
+      "maintainers": [
+        {
+          "name": "types",
+          "email": "ts-npm-types@microsoft.com"
+        }
+      ],
+      "scripts": {},
+      "dependencies": {
+        "expect": "^30.0.0",
+        "pretty-format": "^30.0.0"
+      },
+      "devDependencies": {},
+      "created": "2016-05-17T05:15:55.334Z",
+      "modified": "2025-08-03T07:02:46.002Z",
+      "versions_count": 210,
+      "dist": {
+        "shasum": "5e85ae568006712e4ad66f25433e9bdac8801f1d",
+        "tarball": "https://registry.npmjs.org/@types/jest/-/jest-30.0.0.tgz",
+        "fileCount": 5,
+        "integrity": "sha512-XTYugzhuwqWjws0CVz8QpM36+T+Dz5mTEBKhNs/esGLnCIlGdRy+Dq78NRjd7ls7r8BC8ZRMOrKlkO1hU0JOwA==",
+        "signatures": [
+          {
+            "sig": "MEQCIH91t8TRoTfy+GJcD25h/orAJkIwWeCqkzdOG6EoZmwZAiBVTQ+GAgHsCGSMCOpBv0reQcTDmo5xX4KYvdFUk5OWlw==",
+            "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+          }
+        ],
+        "unpackedSize": 76018
+      },
+      "keywords": []
+    },
+    "risk_factors": [],
+    "analysis_results": {
+      "package_name": "@types/jest",
+      "ecosystem": "npm",
+      "vulnerabilities": [
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp9p8kfiqq/jest/index.d.ts",
+          "line": 266,
+          "pattern": "Function\\s*\\(",
+          "match": "Function(",
+          "context": "on is a mock function.\n     */\n    function isMockFunction(fn: any): fn is Mock;\n    /**\n     * Mocks a modul"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp9p8kfiqq/jest/index.d.ts",
+          "line": 1345,
+          "pattern": "Function\\s*\\(",
+          "match": "function(",
+          "context": "       * @example\n         *\n         *   jest.fn(function() {\n         *     return this;\n         *   });\n "
+        },
+        {
+          "type": "crypto_issues",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmp9p8kfiqq/jest/index.d.ts",
+          "line": 739,
+          "pattern": "Math\\.random\\(\\)",
+          "match": "Math.random()",
+          "context": "randocall(fn) {\n         *   return fn(Math.floor(Math.random() * 6 + 1));\n         * }\n         *\n         * tes"
+        }
+      ],
+      "suspicious_files": [],
+      "security_issues": []
+    },
+    "analysis_timestamp": "2025-08-09T21:54:28.420955"
+  },
+  {
+    "package_name": "runestone",
+    "ecosystem": "pypi",
+    "cve_likelihood_score": 73,
+    "reasons": [
+      "1 command_injection vulnerabilities found",
+      "1 code_injection vulnerabilities found",
+      "2 suspicious files",
+      "1 metadata risk factors"
+    ],
+    "metadata": {
+      "name": "runestone",
+      "version": "7.9.6",
+      "description": "Sphinx extensions for writing interactive documents.",
+      "homepage": "https://github.com/RunestoneInteractive/rs",
+      "author": "Brad Miller",
+      "maintainer": null,
+      "keywords": "runestone, sphinx, ebook, oer, education",
+      "classifiers": [
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Environment :: Plugins",
+        "Environment :: Web Environment",
+        "Framework :: Sphinx :: Extension",
+        "Intended Audience :: Education",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "License :: Other/Proprietary License",
+        "Operating System :: MacOS",
+        "Operating System :: Unix",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Education",
+        "Topic :: Text Processing :: Markup"
+      ],
+      "requires_dist": [
+        "cogapp>=2.5",
+        "click<9,>=8",
+        "CodeChat==1.9.3",
+        "jinja2<4.0.0,>=3.1.0",
+        "Paver>=1.2.4",
+        "six>1.12",
+        "Sphinx<6.0.0,>=5.0.0",
+        "sphinxcontrib-paverutils>=1.18.1",
+        "SQLAlchemy<3.0.0,>=2.0.0",
+        "toml<0.11.0,>=0.10.2",
+        "json2xml<4.0.0,>=3.21.0",
+        "sphinx-reredirects<0.2.0,>=0.1.2",
+        "psycopg2-binary<3.0.0,>=2.9.6",
+        "lxml<6.0,>=5.0",
+        "myst-parser<2.0.0,>=1.0.0",
+        "pretext<3.0.0,>=2.7.0",
+        "jupyter-sphinx<0.5",
+        "jupyterlab<5.0.0,>=4.2.4",
+        "scikit-learn<2.0.0,>=1.5.1",
+        "ipyleaflet<0.20.0,>=0.19.2",
+        "aiosqlite>=0.18.0",
+        "cryptography<4.0.0,>=3.0.0",
+        "python-dotenv<2.0.0,>=1.0.0",
+        "pydantic<3.0.0,>=2.0.0",
+        "fastapi<0.104.0,>=0.103.0",
+        "asyncpg<0.31.0,>=0.30.0",
+        "greenlet<4.0.0,>=3.0.0",
+        "dateutils<0.7.0,>=0.6.12",
+        "pyhumps<4.0.0,>=3.8.0",
+        "pydal>=20230521.1",
+        "pydantic-settings<3.0.0,>=2.0.3",
+        "jupyterlite-sphinx<0.10.0,>=0.9.3"
+      ],
+      "urls": [
+        {
+          "comment_text": "",
+          "digests": {
+            "blake2b_256": "501b12280432e0089b76d174e03cbe07173e3481a4c27d4350c4b903209ed959",
+            "md5": "e9a03dfc8c17de2e734d774aaa73c69a",
+            "sha256": "cd8d7e53d6051bae8ceb633e825e651f2ed6b6c3f9338e57d57984635baa9e15"
+          },
+          "downloads": -1,
+          "filename": "runestone-7.9.6-py3-none-any.whl",
+          "has_sig": false,
+          "md5_digest": "e9a03dfc8c17de2e734d774aaa73c69a",
+          "packagetype": "bdist_wheel",
+          "python_version": "py3",
+          "requires_python": "<4.0.0,>=3.10.0",
+          "size": 29981703,
+          "upload_time": "2025-08-09T19:53:46",
+          "upload_time_iso_8601": "2025-08-09T19:53:46.501984Z",
+          "url": "https://files.pythonhosted.org/packages/50/1b/12280432e0089b76d174e03cbe07173e3481a4c27d4350c4b903209ed959/runestone-7.9.6-py3-none-any.whl",
+          "yanked": false,
+          "yanked_reason": null
+        }
+      ]
+    },
+    "risk_factors": [
+      "Missing repository information"
+    ],
+    "analysis_results": {
+      "package_name": "runestone",
+      "ecosystem": "pypi",
+      "vulnerabilities": [
+        {
+          "type": "command_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmpqxkjgmnv/runestone-7.9.6.tar.gz",
+          "line": 213678,
+          "pattern": "exec\\s*\\(",
+          "match": "exEc(",
+          "context": "|M`\u001f~Oy+J\n{}\u0012\u007fhe#|/E~+\u060d2'Zd\u0018m,P:\" [\u0012\u0005\u0005\u001fzy\bG3Sx\u07afs%rexEc(6.]-(6UR^CD\u0387\u001b\u482ax$\u001f9]\u0006\u0006K[[\u000bSv|\u0520\u0003<?{ \u0019AC\u00b7N\u0019\u0000=H=p`(g=^"
+        },
+        {
+          "type": "code_injection",
+          "file": "/var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmpqxkjgmnv/runestone-7.9.6.tar.gz",
+          "line": 213678,
+          "pattern": "exec\\s*\\(",
+          "match": "exEc(",
+          "context": "|M`\u001f~Oy+J\n{}\u0012\u007fhe#|/E~+\u060d2'Zd\u0018m,P:\" [\u0012\u0005\u0005\u001fzy\bG3Sx\u07afs%rexEc(6.]-(6UR^CD\u0387\u001b\u482ax$\u001f9]\u0006\u0006K[[\u000bSv|\u0520\u0003<?{ \u0019AC\u00b7N\u0019\u0000=H=p`(g=^"
+        }
+      ],
+      "suspicious_files": [
+        "Large file: /var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmpqxkjgmnv/runestone-7.9.6.tar.gz (15850628 chars)",
+        "Hex-encoded content: /var/folders/34/q_sfll_j6nng2myc0v31qkh80000gn/T/tmpqxkjgmnv/runestone-7.9.6.tar.gz"
+      ],
+      "security_issues": []
+    },
+    "analysis_timestamp": "2025-08-09T21:54:48.249625"
+  }
+]

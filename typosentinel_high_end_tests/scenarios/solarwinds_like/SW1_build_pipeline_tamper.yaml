@@ -1,0 +1,12 @@
+name: solarwinds_like_build_pipeline_tamper
+suite: solarwinds_like
+cli_args:
+- analyze
+- corp/observability-agent
+- go
+- --output
+- json
+- --supply-chain
+expect:
+  expect_rc: 0
+  latency_p95_sec: 3.0

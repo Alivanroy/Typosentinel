@@ -1,0 +1,17 @@
+name: typosquatting_pypi_requests_vs_reqeusts
+suite: core
+cli_args:
+- analyze
+- reqeusts
+- pypi
+- --output
+- json
+expect:
+  expect_rc: 0
+  min_score: 0.75
+  decision_contains: critical
+  latency_p95_sec: 3.0
+  signals_contains:
+  - levenshtein
+  - jaro_winkler
+  - typosquatting

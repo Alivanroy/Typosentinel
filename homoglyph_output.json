@@ -1,0 +1,100 @@
+time="2025-08-09T20:20:05+02:00" level=info msg="Checking package reqυests from pypi registry"
+time="2025-08-09T20:20:05+02:00" level=info msg="Package check completed in 847µs. Threat level: high, Confidence: 0.92"
+{
+  "package": "reqυests",
+  "registry": "pypi",
+  "threat_level": "high",
+  "confidence": 0.9189814814814814,
+  "threats": [
+    {
+      "id": "threat_1754763605670534000",
+      "package": "reqυests",
+      "registry": "pypi",
+      "type": "typosquatting",
+      "severity": 2,
+      "confidence": 0.9189814814814814,
+      "description": "Package name 'reqυests' is very similar to 'requests' (91.9% similarity)",
+      "similar_to": "requests",
+      "recommendation": "Verify that 'reqυests' is the intended package. Consider using 'requests' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.7777777777777778,
+          "score": 0.7777777777777778
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.9189814814814814,
+          "score": 0.9189814814814814
+        }
+      ],
+      "detected_at": "2025-08-09T20:20:05.670544+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1754763605671026000",
+      "package": "reqυests",
+      "registry": "pypi",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8632478632478632,
+      "description": "Package name 'reqυests' is very similar to 'requests' (88.9% similarity). Detected 1 potential keyboard errors, suggesting possible typosquatting attack.",
+      "similar_to": "requests",
+      "recommendation": "Verify that 'reqυests' is the intended package. Consider using 'requests' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "edit_distance",
+          "description": "Levenshtein edit distance",
+          "value": 2,
+          "score": 0.7777777777777778
+        },
+        {
+          "type": "visual_similarity",
+          "description": "Visual character similarity score",
+          "value": 0.8888888888888888,
+          "score": 0.8888888888888888
+        },
+        {
+          "type": "phonetic_similarity",
+          "description": "Phonetic similarity score",
+          "value": 0.8888888888888888,
+          "score": 0.8888888888888888
+        },
+        {
+          "type": "keyboard_errors",
+          "description": "Number of potential keyboard proximity errors",
+          "value": 1,
+          "score": 0.1111111111111111
+        }
+      ],
+      "detected_at": "2025-08-09T20:20:05.671031+02:00",
+      "detection_method": "enhanced_typosquatting"
+    }
+  ],
+  "warnings": [
+    {
+      "id": "warning_1754763605671347000",
+      "package": "reqυests",
+      "registry": "pypi",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-09T20:20:05.671349+02:00"
+    }
+  ],
+  "similar_packages": [
+    "requests",
+    "requests"
+  ],
+  "details": {
+    "analysis_duration": "845.125µs",
+    "checks_performed": [
+      "lexical_similarity",
+      "homoglyph_detection",
+      "reputation_analysis"
+    ],
+    "package_length": 9
+  }
+}

@@ -1,0 +1,11 @@
+name: maintainer_change_trust_breach_fastapi_utils
+suite: core
+cli_args:
+- analyze
+- fastapi-utils
+- pypi
+- --output
+- json
+expect:
+  expect_rc: 0
+  latency_p95_sec: 3.0

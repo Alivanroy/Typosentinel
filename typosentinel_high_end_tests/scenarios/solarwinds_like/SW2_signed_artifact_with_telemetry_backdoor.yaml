@@ -1,0 +1,12 @@
+name: solarwinds_like_signed_artifact_telemetry_backdoor
+suite: solarwinds_like
+cli_args:
+- analyze
+- corp/observability-agent@1.4.2
+- go
+- --output
+- json
+- --supply-chain
+expect:
+  expect_rc: 0
+  latency_p95_sec: 3.0

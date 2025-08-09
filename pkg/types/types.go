@@ -252,6 +252,7 @@ type ScanSummary struct {
 	HighestSeverity  Severity       `json:"highest_severity"`
 	ThreatsFound     int            `json:"threats_found"`
 	RiskDistribution map[string]int `json:"risk_distribution"`
+	EnginesUsed      []string       `json:"engines_used,omitempty"`
 }
 
 // Policy represents a security policy
@@ -416,6 +417,7 @@ type ScanResult struct {
 	Summary        *ScanSummary           `json:"summary"`
 	Duration       time.Duration          `json:"duration"`
 	ScanDurationMs int64                  `json:"scan_duration_ms,omitempty"`
+	Recommendations []string              `json:"recommendations,omitempty"`
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 	CreatedAt      time.Time              `json:"created_at"`
 	Error          string                 `json:"error,omitempty"`

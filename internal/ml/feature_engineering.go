@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -258,8 +259,8 @@ func (tfe *TyposquattingFeatureExtractor) ExtractFeatures(pkg *types.Package) ([
 	features = append(features, float64(strings.Count(pkg.Name, "-")))     // hyphen_count
 	features = append(features, float64(strings.Count(pkg.Name, "_")))     // underscore_count
 	features = append(features, float64(strings.Count(pkg.Name, ".")))     // dot_count
-	features = append(features, calculateDigitRatioFeature(pkg.Name))             // digit_ratio
-	features = append(features, calculateVowelRatioFeature(pkg.Name))             // vowel_ratio
+	features = append(features, calculateDigitRatio(pkg.Name))             // digit_ratio
+	features = append(features, calculateVowelRatio(pkg.Name))             // vowel_ratio
 	features = append(features, calculateConsonantClusters(pkg.Name))      // consonant_clusters
 
 	// Similarity features
@@ -272,7 +273,7 @@ func (tfe *TyposquattingFeatureExtractor) ExtractFeatures(pkg *types.Package) ([
 	features = append(features, calculateSpecialPatterns(pkg.Name))        // special_patterns
 
 	// Entropy and randomness
-	features = append(features, calculateEntropyFeature(pkg.Name))                // entropy
+	features = append(features, calculateEntropyFeature(pkg.Name))         // entropy
 	features = append(features, calculateRandomness(pkg.Name))             // randomness
 
 	// Metadata features
@@ -767,36 +768,67 @@ func minThree(a, b, c int) int {
 	return c
 }
 
-// Additional placeholder implementations for remaining feature calculations
+// Enhanced feature calculation implementations
 func calculateDescriptionQuality(description string) float64 {
 	if len(description) == 0 {
 		return 0.0
 	}
 	
-	// Simple quality score based on length and content
 	score := 0.0
+	words := strings.Fields(description)
 	
 	// Length score (optimal around 100-500 characters)
 	length := float64(len(description))
 	if length >= 50 && length <= 500 {
-		score += 0.3
+		score += 0.25
+	} else if length >= 20 && length < 50 {
+		score += 0.15
+	} else if length > 500 && length <= 1000 {
+		score += 0.15
 	}
 	
-	// Word count score
-	words := strings.Fields(description)
-	if len(words) >= 10 && len(words) <= 100 {
-		score += 0.3
+	// Word count score (optimal 10-100 words)
+	wordCount := len(words)
+	if wordCount >= 10 && wordCount <= 100 {
+		score += 0.25
+	} else if wordCount >= 5 && wordCount < 10 {
+		score += 0.15
 	}
 	
 	// Sentence structure score
 	sentences := strings.Split(description, ".")
-	if len(sentences) >= 2 {
+	if len(sentences) >= 2 && len(sentences) <= 10 {
 		score += 0.2
 	}
 	
-	// Capitalization score
+	// Capitalization and grammar indicators
 	if len(description) > 0 && unicode.IsUpper(rune(description[0])) {
-		score += 0.2
+		score += 0.1
+	}
+	
+	// Check for meaningful content (not just repeated characters)
+	uniqueChars := make(map[rune]bool)
+	for _, char := range description {
+		uniqueChars[char] = true
+	}
+	if len(uniqueChars) > 10 {
+		score += 0.1
+	}
+	
+	// Check for technical keywords that indicate quality
+	technicalKeywords := []string{"api", "library", "framework", "tool", "utility", "package", "module"}
+	for _, keyword := range technicalKeywords {
+		if strings.Contains(strings.ToLower(description), keyword) {
+			score += 0.05
+			break
+		}
+	}
+	
+	// Penalize very short or very long descriptions
+	if length < 10 {
+		score *= 0.5
+	} else if length > 2000 {
+		score *= 0.7
 	}
 	
 	return score
@@ -974,61 +1006,477 @@ func (rfe *ReputationFeatureExtractor) calculateDomainTrust(pkg *types.Package) 
 
 // Anomaly detection feature calculation functions
 func calculateDownloadAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual download patterns
-	return 0.0
+	// Analyze package name patterns that might indicate fake popularity
+	score := 0.0
+	
+	// Check for suspicious download-boosting patterns
+	suspiciousPatterns := []string{"popular", "trending", "viral", "hot", "top"}
+	for _, pattern := range suspiciousPatterns {
+		if strings.Contains(strings.ToLower(pkg.Name), pattern) {
+			score += 0.3
+			break
+		}
+	}
+	
+	// Very short names might be trying to get accidental downloads
+	if len(pkg.Name) < 3 {
+		score += 0.4
+	}
+	
+	// Names with excessive numbers might be suspicious
+	digitCount := 0
+	for _, char := range pkg.Name {
+		if unicode.IsDigit(char) {
+			digitCount++
+		}
+	}
+	if digitCount > len(pkg.Name)/2 {
+		score += 0.3
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateUpdateAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual update patterns
-	return 0.0
+	// Analyze version patterns for unusual update behavior
+	version := pkg.Version
+	if version == "" {
+		return 0.5 // Missing version is anomalous
+	}
+	
+	score := 0.0
+	
+	// Check for unusual version patterns
+	if strings.Contains(version, "999") || strings.Contains(version, "000") {
+		score += 0.4 // Suspicious version numbers
+	}
+	
+	// Check for very high version numbers (might indicate version spam)
+	parts := strings.Split(version, ".")
+	for _, part := range parts {
+		if num, err := strconv.Atoi(part); err == nil && num > 100 {
+			score += 0.3
+			break
+		}
+	}
+	
+	// Check for non-standard version formats
+	semverPattern := `^\d+\.\d+\.\d+`
+	if matched, _ := regexp.MatchString(semverPattern, version); !matched {
+		score += 0.2
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateSizeAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual package sizes
-	return 0.0
+	// Estimate size anomalies based on name and dependency patterns
+	score := 0.0
+	
+	// Packages with many dependencies might be unusually large
+	depCount := len(pkg.Dependencies)
+	if depCount > 50 {
+		score += 0.4
+	} else if depCount > 20 {
+		score += 0.2
+	}
+	
+	// Very short names might indicate minimal packages
+	if len(pkg.Name) < 4 {
+		score += 0.2
+	}
+	
+	// Names suggesting size issues
+	sizeKeywords := []string{"tiny", "micro", "mini", "huge", "massive", "bloated"}
+	for _, keyword := range sizeKeywords {
+		if strings.Contains(strings.ToLower(pkg.Name), keyword) {
+			score += 0.3
+			break
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateDescriptionAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual descriptions
-	return 0.0
+	description := ""
+	if pkg.Metadata != nil {
+		description = pkg.Metadata.Description
+	}
+	
+	if description == "" {
+		return 0.6 // Missing description is anomalous
+	}
+	
+	score := 0.0
+	
+	// Check for very short or very long descriptions
+	descLen := len(description)
+	if descLen < 10 {
+		score += 0.4
+	} else if descLen > 500 {
+		score += 0.3
+	}
+	
+	// Check for suspicious content
+	suspiciousWords := []string{"hack", "crack", "exploit", "malware", "virus"}
+	for _, word := range suspiciousWords {
+		if strings.Contains(strings.ToLower(description), word) {
+			score += 0.8
+			break
+		}
+	}
+	
+	// Check for excessive repetition
+	words := strings.Fields(description)
+	if len(words) > 0 {
+		wordCount := make(map[string]int)
+		for _, word := range words {
+			wordCount[strings.ToLower(word)]++
+		}
+		
+		maxRepeat := 0
+		for _, count := range wordCount {
+			if count > maxRepeat {
+				maxRepeat = count
+			}
+		}
+		
+		if maxRepeat > len(words)/3 {
+			score += 0.3 // Too much repetition
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateVersionAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual version patterns
-	return 0.0
+	version := pkg.Version
+	if version == "" {
+		return 0.7 // Missing version is highly anomalous
+	}
+	
+	score := 0.0
+	
+	// Check for suspicious version patterns
+	suspiciousPatterns := []string{
+		`0\.0\.0`,     // Null version
+		`999\.`,       // Suspicious high numbers
+		`\.999`,       // Suspicious high numbers
+		`[a-zA-Z]{5,}`, // Long alphabetic strings
+	}
+	
+	for _, pattern := range suspiciousPatterns {
+		if matched, _ := regexp.MatchString(pattern, version); matched {
+			score += 0.4
+			break
+		}
+	}
+	
+	// Check for unusual characters
+	allowedChars := regexp.MustCompile(`^[0-9a-zA-Z.\-+]+$`)
+	if !allowedChars.MatchString(version) {
+		score += 0.3
+	}
+	
+	// Check for excessive length
+	if len(version) > 20 {
+		score += 0.2
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateMaintainerAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual maintainer patterns
-	return 0.0
+	if pkg.Metadata == nil || pkg.Metadata.Maintainers == nil {
+		return 0.5 // No maintainer info is somewhat anomalous
+	}
+	
+	maintainerCount := len(pkg.Metadata.Maintainers)
+	score := 0.0
+	
+	// No maintainers is highly anomalous
+	if maintainerCount == 0 {
+		return 0.8
+	}
+	
+	// Too many maintainers might be suspicious
+	if maintainerCount > 10 {
+		score += 0.3
+	}
+	
+	// Check for suspicious maintainer patterns
+	for _, maintainer := range pkg.Metadata.Maintainers {
+		maintainerLower := strings.ToLower(maintainer)
+		
+		// Very short maintainer names
+		if len(maintainer) < 3 {
+			score += 0.2
+		}
+		
+		// Suspicious keywords
+		suspiciousKeywords := []string{"admin", "root", "test", "fake", "temp"}
+		for _, keyword := range suspiciousKeywords {
+			if strings.Contains(maintainerLower, keyword) {
+				score += 0.4
+				break
+			}
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateDependencyAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual dependency patterns
-	return 0.0
+	depCount := len(pkg.Dependencies)
+	score := 0.0
+	
+	// Excessive dependencies
+	if depCount > 100 {
+		score += 0.6
+	} else if depCount > 50 {
+		score += 0.4
+	} else if depCount > 20 {
+		score += 0.2
+	}
+	
+	// No dependencies for non-utility packages might be suspicious
+	if depCount == 0 {
+		utilityKeywords := []string{"util", "helper", "tool", "lib", "core"}
+		isUtility := false
+		for _, keyword := range utilityKeywords {
+			if strings.Contains(strings.ToLower(pkg.Name), keyword) {
+				isUtility = true
+				break
+			}
+		}
+		if !isUtility {
+			score += 0.3
+		}
+	}
+	
+	// Check for suspicious dependency patterns
+	for _, dep := range pkg.Dependencies {
+		// Dependencies with very short names
+		if len(dep.Name) < 3 {
+			score += 0.1
+		}
+		
+		// Self-referential dependencies
+		if dep.Name == pkg.Name {
+			score += 0.5
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateCircularDependency(pkg *types.Package) float64 {
-	// Placeholder: detect circular dependencies
-	return 0.0
+	// Simple circular dependency detection
+	score := 0.0
+	
+	// Check if package depends on itself
+	for _, dep := range pkg.Dependencies {
+		if dep.Name == pkg.Name {
+			return 1.0 // Direct self-dependency
+		}
+		
+		// Check for similar names (potential circular dependencies)
+		if calculateLevenshteinDistance(dep.Name, pkg.Name) <= 2 && len(dep.Name) > 3 {
+			score += 0.3
+		}
+	}
+	
+	return math.Min(score, 1.0)
+}
+
+// calculateLevenshteinDistance calculates the Levenshtein distance between two strings
+func calculateLevenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+	}
+
+	for i := 0; i <= len(s1); i++ {
+		matrix[i][0] = i
+	}
+	for j := 0; j <= len(s2); j++ {
+		matrix[0][j] = j
+	}
+
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+			matrix[i][j] = min3(
+				matrix[i-1][j]+1,      // deletion
+				matrix[i][j-1]+1,      // insertion
+				matrix[i-1][j-1]+cost, // substitution
+			)
+		}
+	}
+
+	return matrix[len(s1)][len(s2)]
+}
+
+// min3 returns the minimum of three integers
+func min3(a, b, c int) int {
+	if a < b {
+		if a < c {
+			return a
+		}
+		return c
+	}
+	if b < c {
+		return b
+	}
+	return c
 }
 
 func calculateTemporalAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect temporal anomalies
-	return 0.0
+	// Analyze temporal patterns based on version and naming
+	score := 0.0
+	
+	// Check for time-related keywords that might indicate temporal manipulation
+	timeKeywords := []string{"time", "date", "clock", "schedule", "cron", "timer"}
+	for _, keyword := range timeKeywords {
+		if strings.Contains(strings.ToLower(pkg.Name), keyword) {
+			// These packages might legitimately have temporal features
+			return 0.1
+		}
+	}
+	
+	// Check for suspicious version timing patterns
+	version := pkg.Version
+	if version != "" {
+		// Multiple zeros might indicate timestamp manipulation
+		if strings.Count(version, "0") > len(version)/2 {
+			score += 0.3
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateActivityAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual activity patterns
-	return 0.0
+	// Analyze activity patterns based on available data
+	score := 0.0
+	
+	// Check for activity-related keywords
+	activityKeywords := []string{"active", "busy", "idle", "dormant", "dead"}
+	for _, keyword := range activityKeywords {
+		if strings.Contains(strings.ToLower(pkg.Name), keyword) {
+			score += 0.2
+			break
+		}
+	}
+	
+	// Packages with no dependencies might be inactive
+	if len(pkg.Dependencies) == 0 {
+		score += 0.1
+	}
+	
+	// Very simple version numbers might indicate low activity
+	if pkg.Version == "1.0.0" || pkg.Version == "0.1.0" {
+		score += 0.2
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateContentAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual content patterns
-	return 0.0
+	// Analyze content patterns for anomalies
+	score := 0.0
+	
+	// Check package name for content-related anomalies
+	name := pkg.Name
+	
+	// Names with mixed case might be suspicious
+	hasUpper := false
+	hasLower := false
+	for _, char := range name {
+		if unicode.IsUpper(char) {
+			hasUpper = true
+		}
+		if unicode.IsLower(char) {
+			hasLower = true
+		}
+	}
+	if hasUpper && hasLower {
+		score += 0.2
+	}
+	
+	// Check for content-related suspicious keywords
+	suspiciousContent := []string{"content", "data", "payload", "binary", "encoded"}
+	for _, keyword := range suspiciousContent {
+		if strings.Contains(strings.ToLower(name), keyword) {
+			score += 0.3
+			break
+		}
+	}
+	
+	// Check description for content anomalies
+	if pkg.Metadata != nil && pkg.Metadata.Description != "" {
+		desc := strings.ToLower(pkg.Metadata.Description)
+		if strings.Contains(desc, "binary") || strings.Contains(desc, "encoded") {
+			score += 0.4
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }
 
 func calculateStructureAnomaly(pkg *types.Package) float64 {
-	// Placeholder: detect unusual package structure
-	return 0.0
+	// Analyze package structure for anomalies
+	score := 0.0
+	
+	// Check for structural keywords in name
+	structureKeywords := []string{"struct", "schema", "format", "layout", "template"}
+	for _, keyword := range structureKeywords {
+		if strings.Contains(strings.ToLower(pkg.Name), keyword) {
+			// These might legitimately have structural features
+			return 0.1
+		}
+	}
+	
+	// Check for unusual naming structure
+	name := pkg.Name
+	
+	// Names with many separators might be suspicious
+	separatorCount := strings.Count(name, "-") + strings.Count(name, "_") + strings.Count(name, ".")
+	if separatorCount > len(name)/3 {
+		score += 0.3
+	}
+	
+	// Names starting or ending with separators
+	if strings.HasPrefix(name, "-") || strings.HasPrefix(name, "_") ||
+	   strings.HasSuffix(name, "-") || strings.HasSuffix(name, "_") {
+		score += 0.4
+	}
+	
+	// Check dependency structure
+	depCount := len(pkg.Dependencies)
+	if depCount > 0 {
+		// All dependencies being very short might indicate structural issues
+		shortDeps := 0
+		for _, dep := range pkg.Dependencies {
+			if len(dep.Name) < 4 {
+				shortDeps++
+			}
+		}
+		if shortDeps > depCount/2 {
+			score += 0.3
+		}
+	}
+	
+	return math.Min(score, 1.0)
 }

@@ -2,10 +2,13 @@ package security
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -17,6 +20,7 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/auth"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/google/uuid"
 )
 
 // AuthService provides enhanced authentication services
@@ -28,6 +32,7 @@ type AuthService struct {
 	sessionsMu     sync.RWMutex
 	passwordPolicy *PasswordPolicy
 	userRepository UserRepository
+	tokenStore     TokenStore
 }
 
 // Session represents a user session
@@ -82,13 +87,14 @@ type PasswordChangeRequest struct {
 }
 
 // NewAuthService creates a new authentication service
-func NewAuthService(config *SecurityConfig, logger *logger.Logger, rbacEngine *auth.RBACEngine, userRepository UserRepository) *AuthService {
+func NewAuthService(config *SecurityConfig, logger *logger.Logger, rbacEngine *auth.RBACEngine, userRepository UserRepository, tokenStore TokenStore) *AuthService {
 	as := &AuthService{
 		config:         config,
 		logger:         logger,
 		rbacEngine:     rbacEngine,
 		sessions:       make(map[string]*Session),
 		userRepository: userRepository,
+		tokenStore:     tokenStore,
 		passwordPolicy: &PasswordPolicy{
 			MinLength:        config.Authentication.PasswordMinLength,
 			RequireUppercase: config.Authentication.RequireUppercase,
@@ -332,6 +338,56 @@ func (as *AuthService) InvalidateSession(sessionID string) {
 	as.invalidateSession(sessionID)
 }
 
+// RevokeRefreshToken revokes a specific refresh token
+func (as *AuthService) RevokeRefreshToken(ctx context.Context, refreshToken string) error {
+	if as.tokenStore == nil {
+		return fmt.Errorf("token store not available")
+	}
+
+	// Validate refresh token first
+	refreshClaims, err := as.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		return fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	// Revoke the token
+	if err := as.tokenStore.RevokeRefreshToken(ctx, refreshClaims.TokenID, "system", "manual_revocation"); err != nil {
+		as.logger.Error("Failed to revoke refresh token", map[string]interface{}{
+			"token_id": refreshClaims.TokenID,
+			"error":    err.Error(),
+		})
+		return fmt.Errorf("failed to revoke token: %w", err)
+	}
+
+	as.logger.Info("Refresh token revoked", map[string]interface{}{
+		"token_id": refreshClaims.TokenID,
+		"user_id":  refreshClaims.Subject,
+	})
+
+	return nil
+}
+
+// RevokeAllUserTokens revokes all refresh tokens for a specific user
+func (as *AuthService) RevokeAllUserTokens(ctx context.Context, userID string) error {
+	if as.tokenStore == nil {
+		return fmt.Errorf("token store not available")
+	}
+
+	if err := as.tokenStore.RevokeAllUserTokens(ctx, userID, "system", "user_logout"); err != nil {
+		as.logger.Error("Failed to revoke all user tokens", map[string]interface{}{
+			"user_id": userID,
+			"error":   err.Error(),
+		})
+		return fmt.Errorf("failed to revoke user tokens: %w", err)
+	}
+
+	as.logger.Info("All user tokens revoked", map[string]interface{}{
+		"user_id": userID,
+	})
+
+	return nil
+}
+
 // GetActiveSessions returns active sessions for a user
 func (as *AuthService) GetActiveSessions(userID string) []*Session {
 	as.sessionsMu.RLock()
@@ -483,6 +539,16 @@ func (as *AuthService) invalidateSession(sessionID string) {
 	as.sessionsMu.Lock()
 	if session, exists := as.sessions[sessionID]; exists {
 		session.IsActive = false
+		// Revoke refresh tokens for this session if token store is available
+		if as.tokenStore != nil {
+			ctx := context.Background()
+			if err := as.tokenStore.RevokeTokensBySession(ctx, sessionID, "system", "session_invalidated"); err != nil {
+				as.logger.Warn("Failed to revoke refresh tokens for session", map[string]interface{}{
+					"session_id": sessionID,
+					"error":      err.Error(),
+				})
+			}
+		}
 	}
 	as.sessionsMu.Unlock()
 }
@@ -492,6 +558,16 @@ func (as *AuthService) invalidateUserSessions(userID string) {
 	for _, session := range as.sessions {
 		if session.UserID == userID {
 			session.IsActive = false
+			// Revoke refresh tokens for this session if token store is available
+			if as.tokenStore != nil {
+				ctx := context.Background()
+				if err := as.tokenStore.RevokeTokensBySession(ctx, session.ID, "system", "session_invalidated"); err != nil {
+					as.logger.Warn("Failed to revoke refresh tokens for session", map[string]interface{}{
+						"session_id": session.ID,
+						"error":      err.Error(),
+					})
+				}
+			}
 		}
 	}
 	as.sessionsMu.Unlock()
@@ -579,12 +655,415 @@ func (as *AuthService) updateLastLogin(ctx context.Context, userID, clientIP str
 	as.userRepository.UpdateLastLogin(ctx, userID, clientIP)
 }
 
+// JWTHeader represents the header of a JWT token
+type JWTHeader struct {
+	Algorithm string `json:"alg"`
+	Type      string `json:"typ"`
+}
+
+// JWTClaims represents the claims in a JWT token
+type JWTClaims struct {
+	Subject   string `json:"sub"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+	SessionID string `json:"sid"`
+	TokenID   string `json:"jti"`
+	IssuedAt  int64  `json:"iat"`
+	ExpiresAt int64  `json:"exp"`
+	Issuer    string `json:"iss"`
+	Audience  string `json:"aud"`
+}
+
+// RefreshTokenClaims represents the claims in a refresh token
+type RefreshTokenClaims struct {
+	Subject   string `json:"sub"`
+	SessionID string `json:"sid"`
+	TokenID   string `json:"jti"`
+	IssuedAt  int64  `json:"iat"`
+	ExpiresAt int64  `json:"exp"`
+	Issuer    string `json:"iss"`
+	Audience  string `json:"aud"`
+	Type      string `json:"typ"` // "refresh"
+}
+
 func (as *AuthService) generateJWTToken(user *User, sessionID string) (string, error) {
-	// Placeholder - would implement actual JWT generation
-	return "jwt_token", nil
+	// Create JWT header
+	header := JWTHeader{
+		Algorithm: as.config.JWT.Algorithm,
+		Type:      "JWT",
+	}
+
+	// Create JWT claims
+	now := time.Now()
+	claims := JWTClaims{
+		Subject:   user.ID,
+		Name:      user.Username,
+		Role:      user.PrimaryRole(),
+		SessionID: sessionID,
+		TokenID:   uuid.New().String(),
+		IssuedAt:  now.Unix(),
+		ExpiresAt: now.Add(as.config.JWT.AccessTokenExpiration).Unix(),
+		Issuer:    as.config.JWT.Issuer,
+		Audience:  as.config.JWT.Audience,
+	}
+
+	// Marshal header and claims
+	headerBytes, err := json.Marshal(header)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JWT header: %w", err)
+	}
+
+	claimsBytes, err := json.Marshal(claims)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JWT claims: %w", err)
+	}
+
+	// Base64 encode header and claims
+	headerEncoded := base64.RawURLEncoding.EncodeToString(headerBytes)
+	claimsEncoded := base64.RawURLEncoding.EncodeToString(claimsBytes)
+
+	// Create payload
+	payload := headerEncoded + "." + claimsEncoded
+
+	// Generate signature
+	signature := as.generateJWTSignature(payload)
+
+	// Combine to create final token
+	token := payload + "." + signature
+
+	as.logger.Debug("JWT token generated successfully", map[string]interface{}{
+		"user_id":    user.ID,
+		"username":   user.Username,
+		"session_id": sessionID,
+		"token_id":   claims.TokenID,
+		"expires_at": time.Unix(claims.ExpiresAt, 0).Format(time.RFC3339),
+	})
+
+	return token, nil
 }
 
 func (as *AuthService) generateRefreshToken(userID, sessionID string) (string, error) {
-	// Placeholder - would implement actual refresh token generation
-	return "refresh_token", nil
+	// Create JWT header for refresh token
+	header := JWTHeader{
+		Algorithm: as.config.JWT.Algorithm,
+		Type:      "JWT",
+	}
+
+	// Create refresh token claims
+	now := time.Now()
+	tokenID := uuid.New().String()
+	expiresAt := now.Add(as.config.JWT.RefreshTokenExpiration)
+	
+	claims := RefreshTokenClaims{
+		Subject:   userID,
+		SessionID: sessionID,
+		TokenID:   tokenID,
+		IssuedAt:  now.Unix(),
+		ExpiresAt: expiresAt.Unix(),
+		Issuer:    as.config.JWT.Issuer,
+		Audience:  as.config.JWT.Audience,
+		Type:      "refresh",
+	}
+
+	// Marshal header and claims
+	headerBytes, err := json.Marshal(header)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal refresh token header: %w", err)
+	}
+
+	claimsBytes, err := json.Marshal(claims)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal refresh token claims: %w", err)
+	}
+
+	// Base64 encode header and claims
+	headerEncoded := base64.RawURLEncoding.EncodeToString(headerBytes)
+	claimsEncoded := base64.RawURLEncoding.EncodeToString(claimsBytes)
+
+	// Create payload
+	payload := headerEncoded + "." + claimsEncoded
+
+	// Generate signature
+	signature := as.generateJWTSignature(payload)
+
+	// Combine to create final token
+	token := payload + "." + signature
+
+	// Store refresh token in database if token store is available
+	if as.tokenStore != nil {
+		// Hash the token for storage
+		hash := sha256.Sum256([]byte(token))
+		tokenHash := hex.EncodeToString(hash[:])
+		
+		tokenInfo := &RefreshTokenInfo{
+			TokenID:   tokenID,
+			TokenHash: tokenHash,
+			UserID:    userID,
+			SessionID: sessionID,
+			IsActive:  true,
+			ExpiresAt: expiresAt,
+		}
+		
+		ctx := context.Background()
+		if err := as.tokenStore.StoreRefreshToken(ctx, tokenInfo); err != nil {
+			as.logger.Error("Failed to store refresh token in database", map[string]interface{}{
+				"user_id":  userID,
+				"token_id": tokenID,
+				"error":    err.Error(),
+			})
+			// Continue without failing - token is still valid even if not stored
+		}
+	}
+
+	as.logger.Debug("Refresh token generated successfully", map[string]interface{}{
+		"user_id":    userID,
+		"session_id": sessionID,
+		"token_id":   tokenID,
+		"expires_at": expiresAt.Format(time.RFC3339),
+	})
+
+	return token, nil
+}
+
+// generateJWTSignature generates HMAC-SHA256 signature for JWT payload
+func (as *AuthService) generateJWTSignature(payload string) string {
+	h := hmac.New(sha256.New, []byte(as.config.JWT.SecretKey))
+	h.Write([]byte(payload))
+	return base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+}
+
+// ValidateJWTToken validates a JWT token and returns the claims
+func (as *AuthService) ValidateJWTToken(tokenString string) (*JWTClaims, error) {
+	// Split the token into parts
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid token format")
+	}
+
+	// Decode and validate header
+	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode header: %w", err)
+	}
+
+	var header JWTHeader
+	if err := json.Unmarshal(headerBytes, &header); err != nil {
+		return nil, fmt.Errorf("failed to parse header: %w", err)
+	}
+
+	// Check algorithm
+	if header.Algorithm != as.config.JWT.Algorithm {
+		return nil, fmt.Errorf("unsupported algorithm: %s", header.Algorithm)
+	}
+
+	// Verify signature
+	payload := parts[0] + "." + parts[1]
+	expectedSignature := as.generateJWTSignature(payload)
+	if !hmac.Equal([]byte(parts[2]), []byte(expectedSignature)) {
+		return nil, fmt.Errorf("invalid signature")
+	}
+
+	// Decode payload
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode payload: %w", err)
+	}
+
+	var claims JWTClaims
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
+	}
+
+	// Check expiration
+	if claims.ExpiresAt > 0 && time.Now().Unix() > claims.ExpiresAt {
+		return nil, fmt.Errorf("token expired")
+	}
+
+	// Check issuer
+	if as.config.JWT.Issuer != "" && claims.Issuer != as.config.JWT.Issuer {
+		return nil, fmt.Errorf("invalid issuer")
+	}
+
+	// Check audience
+	if as.config.JWT.Audience != "" && claims.Audience != as.config.JWT.Audience {
+		return nil, fmt.Errorf("invalid audience")
+	}
+
+	return &claims, nil
+}
+
+// ValidateRefreshToken validates a refresh token and returns the claims
+func (as *AuthService) ValidateRefreshToken(tokenString string) (*RefreshTokenClaims, error) {
+	// Split the token into parts
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid token format")
+	}
+
+	// Decode and validate header
+	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode header: %w", err)
+	}
+
+	var header JWTHeader
+	if err := json.Unmarshal(headerBytes, &header); err != nil {
+		return nil, fmt.Errorf("failed to parse header: %w", err)
+	}
+
+	// Check algorithm
+	if header.Algorithm != as.config.JWT.Algorithm {
+		return nil, fmt.Errorf("unsupported algorithm: %s", header.Algorithm)
+	}
+
+	// Verify signature
+	payload := parts[0] + "." + parts[1]
+	expectedSignature := as.generateJWTSignature(payload)
+	if !hmac.Equal([]byte(parts[2]), []byte(expectedSignature)) {
+		return nil, fmt.Errorf("invalid signature")
+	}
+
+	// Decode payload
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode payload: %w", err)
+	}
+
+	var claims RefreshTokenClaims
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
+	}
+
+	// Check expiration
+	if claims.ExpiresAt > 0 && time.Now().Unix() > claims.ExpiresAt {
+		return nil, fmt.Errorf("token expired")
+	}
+
+	// Check issuer
+	if as.config.JWT.Issuer != "" && claims.Issuer != as.config.JWT.Issuer {
+		return nil, fmt.Errorf("invalid issuer")
+	}
+
+	// Check audience
+	if as.config.JWT.Audience != "" && claims.Audience != as.config.JWT.Audience {
+		return nil, fmt.Errorf("invalid audience")
+	}
+
+	// Check token type
+	if claims.Type != "refresh" {
+		return nil, fmt.Errorf("invalid token type")
+	}
+
+	return &claims, nil
+}
+
+// RefreshAccessToken generates a new access token using a valid refresh token
+func (as *AuthService) RefreshAccessToken(ctx context.Context, refreshToken string) (*AuthResponse, error) {
+	// Validate refresh token
+	refreshClaims, err := as.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		as.logger.Warn("Refresh token validation failed", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return &AuthResponse{
+			Success: false,
+			Message: "Invalid refresh token",
+		}, err
+	}
+
+	// Check if token is revoked (if token store is available)
+	if as.tokenStore != nil {
+		isRevoked, err := as.tokenStore.IsTokenRevoked(ctx, refreshClaims.TokenID)
+		if err != nil {
+			as.logger.Error("Failed to check token revocation", map[string]interface{}{
+				"token_id": refreshClaims.TokenID,
+				"error":    err.Error(),
+			})
+		} else if isRevoked {
+			as.logger.Warn("Refresh token is revoked", map[string]interface{}{
+				"token_id": refreshClaims.TokenID,
+				"user_id":  refreshClaims.Subject,
+			})
+			return &AuthResponse{
+				Success: false,
+				Message: "Token has been revoked",
+			}, fmt.Errorf("token revoked")
+		}
+
+		// Validate refresh token in database
+		hash := sha256.Sum256([]byte(refreshToken))
+		tokenHash := hex.EncodeToString(hash[:])
+		
+		_, err = as.tokenStore.ValidateRefreshToken(ctx, tokenHash)
+		if err != nil {
+			as.logger.Warn("Refresh token not found in database", map[string]interface{}{
+				"token_id": refreshClaims.TokenID,
+				"error":    err.Error(),
+			})
+			return &AuthResponse{
+				Success: false,
+				Message: "Invalid refresh token",
+			}, err
+		}
+
+		// Update last used timestamp
+		if err := as.tokenStore.UpdateRefreshTokenLastUsed(ctx, refreshClaims.TokenID); err != nil {
+			as.logger.Warn("Failed to update refresh token last used", map[string]interface{}{
+				"token_id": refreshClaims.TokenID,
+				"error":    err.Error(),
+			})
+		}
+	}
+
+	// Get user by ID
+	user, err := as.getUserByID(ctx, refreshClaims.Subject)
+	if err != nil {
+		as.logger.Warn("User not found during token refresh", map[string]interface{}{
+			"user_id": refreshClaims.Subject,
+		})
+		return &AuthResponse{
+			Success: false,
+			Message: "User not found",
+		}, err
+	}
+
+	// Check if user is still active
+	if !user.IsActive {
+		as.logger.Warn("Token refresh failed - user inactive", map[string]interface{}{
+			"user_id": user.ID,
+		})
+		return &AuthResponse{
+			Success: false,
+			Message: "Account is disabled",
+		}, fmt.Errorf("account disabled")
+	}
+
+	// Generate new access token
+	newAccessToken, err := as.generateJWTToken(user, refreshClaims.SessionID)
+	if err != nil {
+		as.logger.Error("Failed to generate new access token", map[string]interface{}{
+			"user_id": user.ID,
+			"error":   err.Error(),
+		})
+		return &AuthResponse{
+			Success: false,
+			Message: "Failed to generate token",
+		}, err
+	}
+
+	as.logger.Info("Access token refreshed successfully", map[string]interface{}{
+		"user_id":    user.ID,
+		"username":   user.Username,
+		"session_id": refreshClaims.SessionID,
+	})
+
+	return &AuthResponse{
+		Success:   true,
+		Token:     newAccessToken,
+		ExpiresIn: int64(as.config.JWT.AccessTokenExpiration.Seconds()),
+		UserID:    user.ID,
+		Username:  user.Username,
+		Role:      user.PrimaryRole(),
+		Message:   "Token refreshed successfully",
+	}, nil
 }

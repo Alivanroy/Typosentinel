@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/Alivanroy/Typosentinel/internal/auth"
@@ -446,14 +447,47 @@ func (eh *EnterpriseHandlers) ListViolations(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
+	// Validate sorting parameters
+	sortBy := c.DefaultQuery("sort_by", "created_at")
+	sortOrder := c.DefaultQuery("sort_order", "desc")
+
+	allowedSortColumns := map[string]bool{
+		"created_at":  true,
+		"severity":    true,
+		"status":      true,
+		"policy_id":   true,
+		"policy_name": true,
+		"resolved_at": true,
+	}
+
+	sb := strings.ToLower(sortBy)
+	if sb != "" && !allowedSortColumns[sb] {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":        "invalid sort_by",
+			"allowed":      []string{"created_at", "severity", "status", "policy_id", "policy_name", "resolved_at"},
+			"received":     sortBy,
+		})
+		return
+	}
+
+	so := strings.ToLower(sortOrder)
+	if so != "asc" && so != "desc" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":    "invalid sort_order",
+			"allowed":  []string{"asc", "desc"},
+			"received": sortOrder,
+		})
+		return
+	}
+
 	// Create filter
 	filter := storage.ListViolationsOptions{
 		Status:    status,
 		PolicyID:  policyName, // Using PolicyID field instead of PolicyName
 		Limit:     limit,
 		Offset:    offset,
-		SortBy:    "created_at",
-		SortOrder: "desc",
+		SortBy:    sb,
+		SortOrder: so,
 	}
 
 	// Get violations from store

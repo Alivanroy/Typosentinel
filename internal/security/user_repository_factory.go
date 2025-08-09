@@ -31,3 +31,23 @@ func NewUserRepositoryWithDB(db *sql.DB, logger *logger.Logger) UserRepository {
 		db: db,
 	}
 }
+
+// NewUserRepositoryWithService creates a new user repository with a database service
+func NewUserRepositoryWithService(dbService interface{}, logger *logger.Logger) (UserRepository, error) {
+	// Check if the service has a GetDB method
+	type DBProvider interface {
+		GetDB() *sql.DB
+	}
+	
+	if provider, ok := dbService.(DBProvider); ok {
+		db := provider.GetDB()
+		if db == nil {
+			return nil, fmt.Errorf("database connection is nil")
+		}
+		return &PostgreSQLUserRepository{
+			db: db,
+		}, nil
+	}
+	
+	return nil, fmt.Errorf("database service does not provide GetDB method")
+}

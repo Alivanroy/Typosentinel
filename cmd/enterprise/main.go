@@ -32,6 +32,8 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/orchestrator"
 	"github.com/Alivanroy/Typosentinel/internal/repository"
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
+	"github.com/Alivanroy/Typosentinel/internal/security"
+	"github.com/Alivanroy/Typosentinel/internal/storage"
 	"github.com/Alivanroy/Typosentinel/internal/testing"
 	pkglogger "github.com/Alivanroy/Typosentinel/pkg/logger"
 
@@ -774,7 +776,7 @@ func runServer(cmd *cobra.Command, args []string) {
 					Type:    enterpriseConfig.Audit.Destination,
 					Enabled: true,
 					Settings: map[string]interface{}{
-						"path": "/var/log/typosentinel/audit.log",
+						"path": "./logs/audit.log",
 					},
 				},
 			},
@@ -860,12 +862,59 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 	if dbService != nil {
 		defer dbService.Close()
+		
+		// Initialize database schema and run migrations
+		schemaManager := database.NewSchemaManager(dbService.GetDB(), pkgLogger)
+		if err := schemaManager.Initialize(ctx); err != nil {
+			log.Printf("Warning: Failed to initialize database schema: %v", err)
+		} else {
+			log.Printf("Database schema initialized successfully")
+		}
 	}
 
-	// Initialize policy manager
+	// Initialize policy manager with database-backed violation store
 	policyEngine := auth.NewPolicyEngine(authLoggerAdapter)
 	rbacEngine := auth.NewRBACEngine(&config.AuthzConfig{})
-	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, authLoggerAdapter)
+	
+	// Use database-backed violation store if database is available
+	var violationStore auth.ViolationStore
+	var dbViolationStore *storage.ViolationStore
+	if dbService != nil {
+		dbViolationStore = storage.NewViolationStore(dbService.GetDB(), pkgLogger)
+		violationStore = dbViolationStore
+		log.Printf("Using database-backed violation store")
+	} else {
+		violationStore = auth.NewMemoryViolationStore()
+		log.Printf("Using memory-backed violation store (database not available)")
+	}
+	
+	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, violationStore, authLoggerAdapter)
+
+	// Initialize security manager with database connection
+	var securityManager *security.SecurityManager
+	if dbService != nil {
+		userRepository, err := security.NewUserRepositoryWithService(dbService, pkgLogger)
+		if err != nil {
+			log.Printf("Warning: Failed to create user repository: %v", err)
+		} else {
+			securityManager, err = security.NewSecurityManagerWithUserRepository(pkgLogger, rbacEngine, userRepository)
+			if err != nil {
+				log.Printf("Warning: Failed to initialize security manager: %v", err)
+			} else {
+				log.Printf("Security manager initialized with database connection")
+			}
+		}
+	}
+	
+	// Fallback to security manager without database if needed
+	if securityManager == nil {
+		securityManager, err = security.NewSecurityManager(pkgLogger, rbacEngine)
+		if err != nil {
+			log.Printf("Warning: Failed to initialize fallback security manager: %v", err)
+		} else {
+			log.Printf("Security manager initialized without database connection")
+		}
+	}
 
 	// Initialize dashboard with start time
 	dashboardConfig := &dashboard.DashboardConfig{
@@ -902,8 +951,31 @@ func runServer(cmd *cobra.Command, args []string) {
 
 		// Register API routes
 			if enableAPI {
+				// Repository scanning handler
 				enterpriseHandler := rest.NewEnterpriseHandler(repoManager, scheduler)
 				enterpriseHandler.RegisterRoutes(router)
+				
+				// Enterprise policy and violation handlers (if database is available)
+				if dbViolationStore != nil {
+					// Create auth middleware (simplified for now)
+					authMiddleware := &auth.AuthorizationMiddleware{}
+					
+					// Create enterprise handlers with database violation store
+					enterpriseHandlers := rest.NewEnterpriseHandlers(
+						policyManager,
+						rbacEngine,
+						authMiddleware,
+						dbViolationStore,
+						authLoggerAdapter,
+					)
+					
+					// Register enterprise API routes
+					apiGroup := router.Group("/api/v1/enterprise")
+					enterpriseHandlers.RegisterRoutes(apiGroup)
+					
+					log.Printf("Enterprise policy and violation handlers registered with database backend")
+				}
+				
 				dashboardInstance.RegisterRoutes(router)
 			}
 
@@ -1883,7 +1955,7 @@ func runAuditLogs(cmd *cobra.Command, args []string) {
 	cfg := cfgManager.Get()
 	
 	// Check for audit log file
-	auditLogPath := "/var/log/typosentinel/audit.log"
+	auditLogPath := "./logs/audit.log"
 	if cfg.App.DataDir != "" {
 		auditLogPath = filepath.Join(cfg.App.DataDir, "audit.log")
 	}
@@ -2070,7 +2142,7 @@ func runAuditReport(cmd *cobra.Command, args []string) {
 	cfg := cfgManager.Get()
 	
 	// Check for audit log file
-	auditLogPath := "/var/log/typosentinel/audit.log"
+	auditLogPath := "./logs/audit.log"
 	if cfg.App.DataDir != "" {
 		auditLogPath = filepath.Join(cfg.App.DataDir, "audit.log")
 	}

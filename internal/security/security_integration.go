@@ -65,7 +65,10 @@ func NewSecurityManagerWithUserRepository(logger *logger.Logger, rbacEngine *aut
 
 	// Create security components
 	middleware := NewSecurityMiddleware(config, logger, rbacEngine)
-	authService := NewAuthService(config, logger, rbacEngine, userRepository)
+	
+	// Create a default in-memory token store (this should be injected in real usage)
+	tokenStore := NewInMemoryTokenStore()
+	authService := NewAuthService(config, logger, rbacEngine, userRepository, tokenStore)
 
 	sm := &SecurityManager{
 		config:      config,

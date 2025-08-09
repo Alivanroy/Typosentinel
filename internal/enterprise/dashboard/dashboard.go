@@ -1199,73 +1199,78 @@ func (ed *EnterpriseDashboard) collectVulnerabilityTrends(ctx context.Context, s
 	return trends
 }
 
-// collectScanTrends collects scan trend data
+// collectScanTrends collects scan trend data from database
 func (ed *EnterpriseDashboard) collectScanTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
-	trends := make([]*TrendDataPoint, 0, numPoints)
-
-	for i := 0; i < numPoints; i++ {
-		timestamp := startTime.Add(time.Duration(i) * interval)
-
-		// Simulate scan trend data - higher during business hours
-		hour := timestamp.Hour()
-		baseValue := 25.0
-		if hour >= 9 && hour <= 17 {
-			baseValue = 45.0
-		}
-		randomVariation := (rand.Float64() - 0.5) * 10
-		value := baseValue + randomVariation
-
-		trends = append(trends, &TrendDataPoint{
-			Timestamp: timestamp,
-			Value:     math.Max(0, value),
+	duration := time.Duration(numPoints) * interval
+	
+	// Get real scan trends from database
+	dbTrends, err := ed.dbService.GetScanTrends(ctx, duration, numPoints)
+	if err != nil {
+		ed.logger.Error("Failed to get scan trends", map[string]interface{}{"error": err})
+		return []*TrendDataPoint{} // Return empty slice on error
+	}
+	
+	// Convert database trends to dashboard format
+	trends := make([]*TrendDataPoint, len(dbTrends))
+	for i, trend := range dbTrends {
+		trends[i] = &TrendDataPoint{
+			Timestamp: trend.Timestamp,
+			Value:     trend.Value,
 			Label:     "Scans",
-		})
-	}
-
-	return trends
-}
-
-// collectThreatTrends collects threat trend data
-func (ed *EnterpriseDashboard) collectThreatTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
-	trends := make([]*TrendDataPoint, 0, numPoints)
-
-	for i := 0; i < numPoints; i++ {
-		timestamp := startTime.Add(time.Duration(i) * interval)
-
-		// Simulate threat trend data with occasional spikes
-		baseValue := 12.0
-		spikeChance := rand.Float64()
-		if spikeChance < 0.05 { // 5% chance of spike
-			baseValue *= 3
 		}
-		randomVariation := (rand.Float64() - 0.5) * 5
-		value := baseValue + randomVariation
-
-		trends = append(trends, &TrendDataPoint{
-			Timestamp: timestamp,
-			Value:     math.Max(0, value),
-			Label:     "Threats",
-		})
 	}
-
+	
 	return trends
 }
 
-// collectRepositoryTrends collects repository trend data
+// collectThreatTrends collects threat trend data from database
+func (ed *EnterpriseDashboard) collectThreatTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
+	duration := time.Duration(numPoints) * interval
+	
+	// Get real security trends from database (which includes threat data)
+	// Convert duration to days for the database call
+	days := int(duration.Hours() / 24)
+	if days < 1 {
+		days = 1
+	}
+	dbTrends, err := ed.dbService.GetSecurityTrends(days)
+	if err != nil {
+		ed.logger.Error("Failed to get threat trends", map[string]interface{}{"error": err})
+		return []*TrendDataPoint{} // Return empty slice on error
+	}
+	
+	// Convert database trends to dashboard format
+	trends := make([]*TrendDataPoint, len(dbTrends))
+	for i, trend := range dbTrends {
+		trends[i] = &TrendDataPoint{
+			Timestamp: trend.Timestamp,
+			Value:     trend.Value,
+			Label:     "Threats",
+		}
+	}
+	
+	return trends
+}
+
+// collectRepositoryTrends collects repository trend data from database
 func (ed *EnterpriseDashboard) collectRepositoryTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
 	trends := make([]*TrendDataPoint, 0, numPoints)
-
-	baseRepos := 500.0
+	
+	// Get current repository count as baseline
+	totalRepos, err := ed.dbService.GetRepositoryCount(ctx)
+	if err != nil {
+		ed.logger.Error("Failed to get repository count", map[string]interface{}{"error": err})
+		return []*TrendDataPoint{} // Return empty slice on error
+	}
+	
+	// Since we don't have historical repository data, create a trend based on current count
+	// This shows the current state across the time period
 	for i := 0; i < numPoints; i++ {
 		timestamp := startTime.Add(time.Duration(i) * interval)
-
-		// Simulate gradual repository growth
-		growthRate := 0.1 // Small growth over time
-		value := baseRepos + float64(i)*growthRate + (rand.Float64()-0.5)*2
-
+		
 		trends = append(trends, &TrendDataPoint{
 			Timestamp: timestamp,
-			Value:     math.Max(0, value),
+			Value:     float64(totalRepos),
 			Label:     "Repositories",
 		})
 	}
@@ -1273,22 +1278,23 @@ func (ed *EnterpriseDashboard) collectRepositoryTrends(ctx context.Context, star
 	return trends
 }
 
-// collectPerformanceTrends collects performance trend data
+// collectPerformanceTrends collects performance trend data from system metrics
 func (ed *EnterpriseDashboard) collectPerformanceTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
 	trends := make([]*TrendDataPoint, 0, numPoints)
-
+	
+	// Get current system metrics for baseline
+	resourceUsage := collectResourceUsage()
+	
 	for i := 0; i < numPoints; i++ {
 		timestamp := startTime.Add(time.Duration(i) * interval)
-
-		// Simulate performance metrics (response time in ms)
-		baseValue := 250.0
-		loadVariation := math.Sin(float64(i)*0.2) * 50 // Load-based variation
-		randomVariation := (rand.Float64() - 0.5) * 30
-		value := baseValue + loadVariation + randomVariation
-
+		
+		// Use actual CPU usage as performance metric
+		// Convert CPU usage percentage to response time approximation
+		cpuBasedResponseTime := resourceUsage.CPUUsage * 5.0 // Scale CPU % to response time
+		
 		trends = append(trends, &TrendDataPoint{
 			Timestamp: timestamp,
-			Value:     math.Max(50, value), // Minimum 50ms
+			Value:     math.Max(50, cpuBasedResponseTime), // Minimum 50ms
 			Label:     "Response Time (ms)",
 		})
 	}
@@ -1296,26 +1302,31 @@ func (ed *EnterpriseDashboard) collectPerformanceTrends(ctx context.Context, sta
 	return trends
 }
 
-// collectComplianceTrends collects compliance trend data
+// collectComplianceTrends collects compliance trend data from database
 func (ed *EnterpriseDashboard) collectComplianceTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
-	trends := make([]*TrendDataPoint, 0, numPoints)
-
-	for i := 0; i < numPoints; i++ {
-		timestamp := startTime.Add(time.Duration(i) * interval)
-
-		// Simulate compliance score (0-100)
-		baseValue := 85.0
-		trend := float64(i) * 0.05 // Slight improvement over time
-		randomVariation := (rand.Float64() - 0.5) * 3
-		value := baseValue + trend + randomVariation
-
-		trends = append(trends, &TrendDataPoint{
-			Timestamp: timestamp,
-			Value:     math.Min(100, math.Max(0, value)),
-			Label:     "Compliance Score",
-		})
+	duration := time.Duration(numPoints) * interval
+	days := int(duration.Hours() / 24)
+	if days < 1 {
+		days = 1
 	}
-
+	
+	// Get real compliance trends from database
+	dbTrends, err := ed.dbService.GetComplianceTrends(ctx, days)
+	if err != nil {
+		ed.logger.Error("Failed to get compliance trends", map[string]interface{}{"error": err})
+		return []*TrendDataPoint{} // Return empty slice on error
+	}
+	
+	// Convert database trends to dashboard format
+	trends := make([]*TrendDataPoint, len(dbTrends))
+	for i, trend := range dbTrends {
+		trends[i] = &TrendDataPoint{
+			Timestamp: trend.Timestamp,
+			Value:     math.Min(100, math.Max(0, trend.Value)), // Ensure 0-100 range
+			Label:     "Compliance Score",
+		}
+	}
+	
 	return trends
 }
 

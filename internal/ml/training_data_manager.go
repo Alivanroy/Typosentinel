@@ -306,13 +306,17 @@ func (tdm *TrainingDataManager) HasSufficientData(modelType string) bool {
 	dataset, exists := tdm.datasets[modelType]
 	if !exists {
 		// Try to load from disk
-		dataset, err := tdm.loadDatasetFromDisk(modelType)
+		var err error
+		dataset, err = tdm.loadDatasetFromDisk(modelType)
 		if err != nil {
 			return false
 		}
 		tdm.datasets[modelType] = dataset
 	}
 
+	if dataset == nil {
+		return false
+	}
 	return len(dataset.Samples) >= minRequired
 }
 

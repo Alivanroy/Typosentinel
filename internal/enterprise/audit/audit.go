@@ -111,7 +111,7 @@ func NewAuditLogger(config *AuditConfig, logger logger.Logger) (*AuditLogger, er
 					Type:    "file",
 					Enabled: true,
 					Settings: map[string]interface{}{
-						"path": "/var/log/typosentinel/audit.log",
+						"path": "./logs/audit.log",
 					},
 				},
 			},
@@ -152,10 +152,17 @@ func (al *AuditLogger) Start(ctx context.Context) error {
 	al.wg.Add(1)
 	go al.flushWorker()
 
+	// Start cleanup worker if retention period is configured
+	if al.config.RetentionPeriod > 0 {
+		al.wg.Add(1)
+		go al.cleanupWorker()
+	}
+
 	al.logger.Info("Audit logger started", map[string]interface{}{
-		"writers":        len(al.writers),
-		"buffer_size":    al.config.BufferSize,
-		"flush_interval": al.config.FlushInterval,
+		"writers":         len(al.writers),
+		"buffer_size":     al.config.BufferSize,
+		"flush_interval":  al.config.FlushInterval,
+		"retention_period": al.config.RetentionPeriod,
 	})
 
 	return nil
@@ -485,5 +492,54 @@ func createAuditWriter(dest AuditDestination) (AuditWriter, error) {
 		return NewWebhookAuditWriter(dest.Settings)
 	default:
 		return nil, fmt.Errorf("unsupported audit writer type: %s", dest.Type)
+	}
+}
+
+// cleanupWorker periodically cleans up expired audit logs
+func (al *AuditLogger) cleanupWorker() {
+	defer al.wg.Done()
+
+	// Run cleanup every 24 hours
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	// Run initial cleanup after 1 hour
+	initialTimer := time.NewTimer(1 * time.Hour)
+	defer initialTimer.Stop()
+
+	for {
+		select {
+		case <-initialTimer.C:
+			al.cleanupExpiredLogs()
+			initialTimer.Stop() // Prevent further triggers
+		case <-ticker.C:
+			al.cleanupExpiredLogs()
+		case <-al.stopChan:
+			return
+		}
+	}
+}
+
+// cleanupExpiredLogs removes audit logs older than the retention period
+func (al *AuditLogger) cleanupExpiredLogs() {
+	if al.config.RetentionPeriod <= 0 {
+		return
+	}
+
+	for _, writer := range al.writers {
+		if dbWriter, ok := writer.(*DatabaseAuditWriter); ok {
+			if err := dbWriter.CleanupExpiredLogs(al.config.RetentionPeriod); err != nil {
+				al.logger.Error("Failed to cleanup expired audit logs", map[string]interface{}{
+					"writer":           writer.Name(),
+					"error":            err,
+					"retention_period": al.config.RetentionPeriod,
+				})
+			} else {
+				al.logger.Info("Successfully cleaned up expired audit logs", map[string]interface{}{
+					"writer":           writer.Name(),
+					"retention_period": al.config.RetentionPeriod,
+				})
+			}
+		}
 	}
 }

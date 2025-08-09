@@ -152,6 +152,11 @@ func NewDatabaseService(config *DatabaseConfig) (*DatabaseService, error) {
 	}, nil
 }
 
+// GetDB returns the underlying database connection
+func (ds *DatabaseService) GetDB() *sql.DB {
+	return ds.db
+}
+
 // Close closes the database connection
 func (ds *DatabaseService) Close() error {
 	return ds.db.Close()
@@ -658,7 +663,7 @@ type ThreatSummary struct {
 
 // GetRepositoryLanguageStats returns language statistics for repositories
 func (ds *DatabaseService) GetRepositoryLanguageStats(ctx context.Context) (map[string]int64, error) {
-	query := `SELECT language, COUNT(*) FROM repositories WHERE language IS NOT NULL AND language != '' GROUP BY language`
+	query := `SELECT language, COUNT(*) FROM repositories WHERE language IS NOT NULL AND language != '' GROUP BY language ORDER BY COUNT(*) DESC`
 	rows, err := ds.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -673,17 +678,6 @@ func (ds *DatabaseService) GetRepositoryLanguageStats(ctx context.Context) (map[
 			return nil, err
 		}
 		stats[language] = count
-	}
-	
-	// Add some mock data if no languages found
-	if len(stats) == 0 {
-		stats = map[string]int64{
-			"JavaScript": 45,
-			"Python":     32,
-			"Go":         18,
-			"Java":       25,
-			"TypeScript": 38,
-		}
 	}
 	
 	return stats, rows.Err()
@@ -762,41 +756,107 @@ func (ds *DatabaseService) GetScanTrends(ctx context.Context, duration time.Dura
 		})
 	}
 	
-	// If no data, generate mock trend data
-	if len(trends) == 0 {
-		interval := duration / time.Duration(points)
-		for i := 0; i < points; i++ {
-			trends = append(trends, &TrendDataPoint{
-				Timestamp: startTime.Add(time.Duration(i) * interval),
-				Value:     float64(5 + i%3),
-				Label:     fmt.Sprintf("Point %d", i),
-			})
-		}
-	}
+	// If no data found, return empty slice instead of mock data
+	// This allows the dashboard to handle empty data gracefully
 	
 	return trends, rows.Err()
 }
 
-// GetTopThreats returns top threats
+// GetTopThreats returns top threats based on scan job data
 func (ds *DatabaseService) GetTopThreats(limit int) ([]ThreatSummary, error) {
-	// Mock implementation since we don't have a detailed threats table
-	return []ThreatSummary{
-		{Type: "typosquatting", Count: 15, Severity: "high", Description: "Package name similarity attacks"},
-		{Type: "dependency_confusion", Count: 8, Severity: "critical", Description: "Internal package confusion"},
-		{Type: "malicious_package", Count: 5, Severity: "critical", Description: "Known malicious packages"},
-		{Type: "vulnerable_dependency", Count: 12, Severity: "medium", Description: "Dependencies with known vulnerabilities"},
-		{Type: "license_violation", Count: 3, Severity: "low", Description: "License compliance issues"},
-	}, nil
+	// Query to get threat distribution from scan jobs
+	query := `
+		SELECT 
+			'critical' as type, 
+			SUM(critical_threats) as count,
+			'critical' as severity,
+			'Critical security threats requiring immediate attention' as description
+		FROM scan_jobs 
+		WHERE status = 'completed' AND critical_threats > 0
+		UNION ALL
+		SELECT 
+			'high' as type, 
+			SUM(high_threats) as count,
+			'high' as severity,
+			'High-priority security threats' as description
+		FROM scan_jobs 
+		WHERE status = 'completed' AND high_threats > 0
+		UNION ALL
+		SELECT 
+			'medium' as type, 
+			SUM(medium_threats) as count,
+			'medium' as severity,
+			'Medium-priority security threats' as description
+		FROM scan_jobs 
+		WHERE status = 'completed' AND medium_threats > 0
+		UNION ALL
+		SELECT 
+			'low' as type, 
+			SUM(low_threats) as count,
+			'low' as severity,
+			'Low-priority security threats' as description
+		FROM scan_jobs 
+		WHERE status = 'completed' AND low_threats > 0
+		ORDER BY count DESC
+		LIMIT $1
+	`
+	
+	rows, err := ds.db.QueryContext(context.Background(), query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var threats []ThreatSummary
+	for rows.Next() {
+		var threat ThreatSummary
+		if err := rows.Scan(&threat.Type, &threat.Count, &threat.Severity, &threat.Description); err != nil {
+			return nil, err
+		}
+		threats = append(threats, threat)
+	}
+	
+	// If no data found, return empty slice instead of mock data
+	return threats, rows.Err()
 }
 
-// GetMitigationStatus returns mitigation status statistics
+// GetMitigationStatus returns mitigation status statistics from policy violations
 func (ds *DatabaseService) GetMitigationStatus() (map[string]int, error) {
-	// Mock implementation - in a real system this would track threat mitigation status
-	return map[string]int{
-		"resolved":    25,
-		"in_progress": 8,
-		"open":        5,
-	}, nil
+	// Query policy violations to get real mitigation status
+	query := `
+		SELECT status, COUNT(*) as count
+		FROM policy_violations 
+		GROUP BY status
+	`
+	
+	rows, err := ds.db.QueryContext(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	status := make(map[string]int)
+	for rows.Next() {
+		var statusName string
+		var count int
+		if err := rows.Scan(&statusName, &count); err != nil {
+			return nil, err
+		}
+		status[statusName] = count
+	}
+	
+	// Ensure all expected statuses are present
+	if _, exists := status["open"]; !exists {
+		status["open"] = 0
+	}
+	if _, exists := status["in_progress"]; !exists {
+		status["in_progress"] = 0
+	}
+	if _, exists := status["resolved"]; !exists {
+		status["resolved"] = 0
+	}
+	
+	return status, rows.Err()
 }
 
 // GetSecurityTrends returns security trend data
@@ -834,16 +894,7 @@ func (ds *DatabaseService) GetSecurityTrends(days int) ([]TrendDataPoint, error)
 		})
 	}
 	
-	// If no data, generate mock trend data
-	if len(trends) == 0 {
-		for i := 0; i < days; i++ {
-			trends = append(trends, TrendDataPoint{
-				Timestamp: startTime.AddDate(0, 0, i),
-				Value:     float64(20 + i%10),
-				Label:     fmt.Sprintf("Day %d", i),
-			})
-		}
-	}
+	// Return actual data only - no mock data fallback
 	
 	return trends, nil
 }

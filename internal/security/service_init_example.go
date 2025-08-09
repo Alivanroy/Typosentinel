@@ -21,8 +21,11 @@ func InitializeAuthService(
 		return nil, fmt.Errorf("failed to create user repository: %w", err)
 	}
 
+	// Create token store
+	tokenStore := NewDatabaseTokenStore(dbManager.GetDB(), logger)
+	
 	// Create authentication service
-	authService := NewAuthService(config, logger, rbacEngine, userRepository)
+	authService := NewAuthService(config, logger, rbacEngine, userRepository, tokenStore)
 
 	return authService, nil
 }

@@ -83,6 +83,8 @@ type DatabaseAuditWriter struct {
 	db              *sql.DB
 	buffer          []*AuditEntry
 	bufferSize      int
+	maxRetries      int
+	retryDelay      time.Duration
 	mu              sync.Mutex
 }
 
@@ -103,6 +105,18 @@ func NewDatabaseAuditWriter(settings map[string]interface{}) (AuditWriter, error
 		bufferSize = size
 	}
 
+	maxRetries := 3
+	if retries, ok := settings["max_retries"].(int); ok {
+		maxRetries = retries
+	}
+
+	retryDelay := 1 * time.Second
+	if delay, ok := settings["retry_delay"].(string); ok {
+		if parsed, err := time.ParseDuration(delay); err == nil {
+			retryDelay = parsed
+		}
+	}
+
 	// Initialize database connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -121,6 +135,8 @@ func NewDatabaseAuditWriter(settings map[string]interface{}) (AuditWriter, error
 		db:              db,
 		buffer:          make([]*AuditEntry, 0, bufferSize),
 		bufferSize:      bufferSize,
+		maxRetries:      maxRetries,
+		retryDelay:      retryDelay,
 	}, nil
 }
 
@@ -149,6 +165,40 @@ func (d *DatabaseAuditWriter) flushBuffer() error {
 		return nil
 	}
 
+	var lastErr error
+	
+	// Retry logic for database operations
+	for attempt := 0; attempt <= d.maxRetries; attempt++ {
+		if attempt > 0 {
+			// Wait before retrying
+			time.Sleep(d.retryDelay * time.Duration(attempt))
+			
+			// Test connection before retry
+			if err := d.db.Ping(); err != nil {
+				lastErr = fmt.Errorf("database connection lost: %w", err)
+				continue
+			}
+		}
+
+		err := d.attemptFlush()
+		if err == nil {
+			// Success - clear buffer and return
+			d.buffer = d.buffer[:0]
+			return nil
+		}
+
+		lastErr = err
+		
+		// Check if error is retryable
+		if !d.isRetryableError(err) {
+			break
+		}
+	}
+
+	return fmt.Errorf("failed to flush audit logs after %d attempts: %w", d.maxRetries+1, lastErr)
+}
+
+func (d *DatabaseAuditWriter) attemptFlush() error {
 	// Prepare batch insert query
 	query := `
 		INSERT INTO audit_logs (
@@ -198,9 +248,36 @@ func (d *DatabaseAuditWriter) flushBuffer() error {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// Clear buffer after successful insertion
-	d.buffer = d.buffer[:0]
 	return nil
+}
+
+func (d *DatabaseAuditWriter) isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	
+	errStr := strings.ToLower(err.Error())
+	
+	// Common retryable database errors
+	retryableErrors := []string{
+		"connection refused",
+		"connection reset",
+		"connection lost",
+		"timeout",
+		"temporary failure",
+		"deadlock",
+		"lock wait timeout",
+		"server shutdown",
+		"too many connections",
+	}
+	
+	for _, retryable := range retryableErrors {
+		if strings.Contains(errStr, retryable) {
+			return true
+		}
+	}
+	
+	return false
 }
 
 func (d *DatabaseAuditWriter) Close() error {
@@ -209,6 +286,30 @@ func (d *DatabaseAuditWriter) Close() error {
 
 func (d *DatabaseAuditWriter) Name() string {
 	return "database"
+}
+
+// CleanupExpiredLogs removes audit logs older than the specified retention period
+func (d *DatabaseAuditWriter) CleanupExpiredLogs(retentionPeriod time.Duration) error {
+	cutoffTime := time.Now().Add(-retentionPeriod)
+	
+	query := `DELETE FROM audit_logs WHERE timestamp < $1`
+	
+	result, err := d.db.Exec(query, cutoffTime)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup expired audit logs: %w", err)
+	}
+	
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get cleanup result: %w", err)
+	}
+	
+	if rowsAffected > 0 {
+		// Log the cleanup operation (but avoid infinite recursion)
+		fmt.Printf("Cleaned up %d expired audit log entries older than %v\n", rowsAffected, retentionPeriod)
+	}
+	
+	return nil
 }
 
 // SyslogAuditWriter writes audit logs to syslog

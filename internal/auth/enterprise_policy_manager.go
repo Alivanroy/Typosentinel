@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+// ViolationStore interface for persisting policy violations
+type ViolationStore interface {
+	CreateViolation(ctx context.Context, violation *PolicyViolation) error
+	GetViolation(ctx context.Context, id string) (*PolicyViolation, error)
+	UpdateViolationStatus(ctx context.Context, id string, status ViolationStatus, userID string, reason string) error
+}
+
 // EnterprisePolicyManager manages enterprise-level security policies
 type EnterprisePolicyManager struct {
 	policyEngine *PolicyEngine
@@ -19,6 +26,9 @@ type EnterprisePolicyManager struct {
 
 	// Active enforcement rules
 	enforcement *PolicyEnforcement
+
+	// Violation store for persisting violations
+	violationStore ViolationStore
 }
 
 // PolicyEnforcement manages policy enforcement settings
@@ -111,12 +121,13 @@ type RemediationAction struct {
 }
 
 // NewEnterprisePolicyManager creates a new enterprise policy manager
-func NewEnterprisePolicyManager(policyEngine *PolicyEngine, rbacEngine *RBACEngine, logger Logger) *EnterprisePolicyManager {
+func NewEnterprisePolicyManager(policyEngine *PolicyEngine, rbacEngine *RBACEngine, violationStore ViolationStore, logger Logger) *EnterprisePolicyManager {
 	epm := &EnterprisePolicyManager{
-		policyEngine: policyEngine,
-		rbacEngine:   rbacEngine,
-		logger:       logger,
-		templates:    make(map[string]*SecurityPolicy),
+		policyEngine:   policyEngine,
+		rbacEngine:     rbacEngine,
+		violationStore: violationStore,
+		logger:         logger,
+		templates:      make(map[string]*SecurityPolicy),
 		enforcement: &PolicyEnforcement{
 			Enabled:              true,
 			StrictMode:           false,
@@ -369,6 +380,25 @@ func (epm *EnterprisePolicyManager) createViolation(result *PolicyEvaluationResu
 		Description: fmt.Sprintf("Remediation required for policy violation: %s", result.PolicyName),
 		Actions:     []string{string(result.Action)},
 		Metadata:    make(map[string]interface{}),
+	}
+
+	// Store the violation in the database if violation store is available
+	if epm.violationStore != nil {
+		ctx := context.Background()
+		if err := epm.violationStore.CreateViolation(ctx, violation); err != nil {
+			if epm.logger != nil {
+				epm.logger.Error("Failed to store policy violation", 
+					"violation_id", violation.ID,
+					"error", err.Error())
+			}
+		} else {
+			if epm.logger != nil {
+				epm.logger.Info("Policy violation stored successfully", 
+					"violation_id", violation.ID,
+					"policy_id", violation.PolicyID,
+					"severity", violation.Severity)
+			}
+		}
 	}
 
 	return violation

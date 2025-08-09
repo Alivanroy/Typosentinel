@@ -186,6 +186,133 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 	return result, nil
 }
 
+// Scan performs a security scan on a single package (for integration tests)
+func (a *Analyzer) Scan(ctx context.Context, pkg *types.Package) (*types.ScanResult, error) {
+	start := time.Now()
+	scanID := generateScanID()
+
+	logrus.Infof("Starting package scan %s for package: %s@%s", scanID, pkg.Name, pkg.Version)
+
+	// Create dependency from package
+	dep := types.Dependency{
+		Name:     pkg.Name,
+		Version:  pkg.Version,
+		Registry: pkg.Registry,
+		Direct:   true,
+		Metadata: *pkg.Metadata,
+	}
+
+	// Perform threat detection on single package
+	threats, warnings, err := a.detectThreats(ctx, []types.Dependency{dep}, &ScanOptions{
+		DeepAnalysis:           true,
+		IncludeDevDependencies: false,
+		SimilarityThreshold:    0.8,
+		CheckVulnerabilities:   true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("threat detection failed: %w", err)
+	}
+
+	// Calculate risk score
+	riskScore := a.calculateRiskScore(threats, 1)
+	overallRisk := a.determineOverallRisk(riskScore)
+
+	// Create summary with engines used
+	enginesUsed := []string{"typosquatting", "homoglyph", "semantic"}
+	if len(threats) > 0 {
+		enginesUsed = append(enginesUsed, "vulnerability")
+	}
+
+	summary := &types.ScanSummary{
+		TotalPackages:   1,
+		ScannedPackages: 1,
+		CleanPackages:   0,
+		TotalThreats:    len(threats),
+		TotalWarnings:   len(warnings),
+		ThreatsFound:    len(threats),
+	}
+
+	if len(threats) == 0 {
+		summary.CleanPackages = 1
+	}
+
+	// Count threats by severity
+	for _, threat := range threats {
+		switch threat.Severity {
+		case types.SeverityCritical:
+			summary.CriticalThreats++
+		case types.SeverityHigh:
+			summary.HighThreats++
+		case types.SeverityMedium:
+			summary.MediumThreats++
+		case types.SeverityLow:
+			summary.LowThreats++
+		}
+	}
+
+	// Create scan result
+	result := &types.ScanResult{
+		ID:          scanID,
+		Target:      pkg.Name,
+		Type:        "package",
+		Status:      "completed",
+		OverallRisk: overallRisk,
+		RiskScore:   riskScore,
+		Packages:    []*types.Package{pkg},
+		Summary:     summary,
+		Duration:    time.Since(start),
+		CreatedAt:   start,
+	}
+
+	logrus.Infof("Package scan %s completed in %v. Found %d threats, %d warnings",
+		scanID, result.Duration, len(threats), len(warnings))
+
+	return result, nil
+}
+
+// calculateRiskScore calculates a risk score based on threats
+func (a *Analyzer) calculateRiskScore(threats []types.Threat, packageCount int) float64 {
+	if len(threats) == 0 {
+		return 0.0
+	}
+
+	totalScore := 0.0
+	for _, threat := range threats {
+		switch threat.Severity {
+		case types.SeverityCritical:
+			totalScore += 1.0
+		case types.SeverityHigh:
+			totalScore += 0.8
+		case types.SeverityMedium:
+			totalScore += 0.5
+		case types.SeverityLow:
+			totalScore += 0.2
+		}
+	}
+
+	// Normalize by package count and cap at 1.0
+	score := totalScore / float64(packageCount)
+	if score > 1.0 {
+		score = 1.0
+	}
+
+	return score
+}
+
+// determineOverallRisk determines overall risk level from score
+func (a *Analyzer) determineOverallRisk(score float64) string {
+	if score >= 0.8 {
+		return "critical"
+	} else if score >= 0.6 {
+		return "high"
+	} else if score >= 0.4 {
+		return "medium"
+	} else if score > 0.0 {
+		return "low"
+	}
+	return "minimal"
+}
+
 // discoverDependencyFiles finds all dependency files in the given path
 func (a *Analyzer) discoverDependencyFiles(path string, options *ScanOptions) ([]string, error) {
 	if options.SpecificFile != "" {

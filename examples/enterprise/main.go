@@ -2,16 +2,21 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"log/slog"
 	"os"
+	"strconv"
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/auth"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/internal/storage"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
 // Logger interface implementation for enterprise components
@@ -37,9 +42,19 @@ func (l *SimpleLogger) Error(msg string, args ...interface{}) {
 
 func main() {
 	// Initialize logger
-	logger := &SimpleLogger{
+	simpleLogger := &SimpleLogger{
 		logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
+	
+	// Initialize proper logger for database components
+	pkgLogger := logger.NewWithConfig(&logger.Config{
+		Level:     logger.INFO,
+		Format:    "text",
+		Output:    os.Stdout,
+		Timestamp: true,
+		Caller:    true,
+		Prefix:    "[TYPOSENTINEL]",
+	})
 
 	// Initialize RBAC engine with minimal config
 	rbacEngine := auth.NewRBACEngine(nil)
@@ -78,19 +93,73 @@ func main() {
 	rbacEngine.AddRole(analystRole)
 
 	// Initialize policy engine
-	policyEngine := auth.NewPolicyEngine(logger)
-
-	// Initialize enterprise policy manager
-	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, logger)
+	policyEngine := auth.NewPolicyEngine(simpleLogger)
 
 	// Initialize authorization middleware
 	authMiddleware := auth.NewAuthorizationMiddleware(rbacEngine, nil, true)
 
-	// Initialize violation store (minimal setup for example)
-	violationStore := &storage.ViolationStore{} // This would need proper initialization in real usage
+	// Initialize database connection (using SQLite for example)
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	// Initialize schema manager and create tables
+	schemaManager := database.NewSchemaManager(db, pkgLogger)
+	if err := schemaManager.Initialize(context.Background()); err != nil {
+		log.Printf("Warning: Failed to initialize schema: %v", err)
+	}
+
+	// Create required tables manually for this example
+	createPolicyViolationsSQL := `
+		CREATE TABLE IF NOT EXISTS policy_violations (
+			id TEXT PRIMARY KEY,
+			policy_id TEXT NOT NULL,
+			policy_name TEXT NOT NULL,
+			severity TEXT NOT NULL,
+			description TEXT NOT NULL,
+			context TEXT,
+			result TEXT,
+			status TEXT NOT NULL DEFAULT 'open',
+			approval_required BOOLEAN NOT NULL DEFAULT FALSE,
+			approvals TEXT,
+			remediation TEXT,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			resolved_at DATETIME,
+			metadata TEXT
+		);
+	`
+	if _, err := db.Exec(createPolicyViolationsSQL); err != nil {
+		log.Printf("Warning: Failed to create policy_violations table: %v", err)
+	}
+
+	createAuditLogsSQL := `
+		CREATE TABLE IF NOT EXISTS audit_logs (
+			id TEXT PRIMARY KEY,
+			timestamp DATETIME NOT NULL,
+			user_id TEXT,
+			action TEXT NOT NULL,
+			resource TEXT NOT NULL,
+			source_ip TEXT,
+			user_agent TEXT,
+			severity TEXT NOT NULL,
+			details TEXT,
+			metadata TEXT
+		);
+	`
+	if _, err := db.Exec(createAuditLogsSQL); err != nil {
+		log.Printf("Warning: Failed to create audit_logs table: %v", err)
+	}
+
+	// Initialize violation store with proper database connection
+	violationStore := storage.NewViolationStore(db, pkgLogger)
+
+	// Initialize enterprise policy manager
+	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, violationStore, simpleLogger)
 
 	// Initialize enterprise handlers
-	enterpriseHandlers := rest.NewEnterpriseHandlers(policyManager, rbacEngine, authMiddleware, violationStore, logger)
+	enterpriseHandlers := rest.NewEnterpriseHandlers(policyManager, rbacEngine, authMiddleware, violationStore, simpleLogger)
 
 	// Initialize ML pipeline (minimal setup)
 	mlPipeline := &ml.MLPipeline{} // This would need proper initialization in real usage
@@ -98,11 +167,19 @@ func main() {
 	// Initialize analyzer (minimal setup)
 	analyzer := &analyzer.Analyzer{} // This would need proper initialization in real usage
 
+	// Get port from environment variable or use default
+	port := 8080
+	if portStr := os.Getenv("PORT"); portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil {
+			port = p
+		}
+	}
+
 	// Configure REST API
 	apiConfig := config.RESTAPIConfig{
 		Enabled:  true,
 		Host:     "localhost",
-		Port:     8080,
+		Port:     port,
 		BasePath: "/api",
 		Versioning: config.APIVersioning{
 			Enabled: true,
@@ -114,10 +191,10 @@ func main() {
 
 	log.Println("Starting TypoSentinel server with enterprise features...")
 	log.Println("Enterprise API endpoints available at:")
-	log.Println("  - Policy Management: http://localhost:8080/api/v1/enterprise/policies")
-	log.Println("  - RBAC Management: http://localhost:8080/api/v1/enterprise/rbac")
-	log.Println("  - Policy Enforcement: http://localhost:8080/api/v1/enterprise/enforcement")
-	log.Println("  - Approval Workflows: http://localhost:8080/api/v1/enterprise/approvals")
+	log.Printf("  - Policy Management: http://localhost:%d/api/v1/enterprise/policies", port)
+	log.Printf("  - RBAC Management: http://localhost:%d/api/v1/enterprise/rbac", port)
+	log.Printf("  - Policy Enforcement: http://localhost:%d/api/v1/enterprise/enforcement", port)
+	log.Printf("  - Approval Workflows: http://localhost:%d/api/v1/enterprise/approvals", port)
 
 	// Start server
 	if err := server.Start(context.Background()); err != nil {

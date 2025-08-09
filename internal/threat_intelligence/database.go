@@ -69,9 +69,6 @@ func NewThreatDatabase(logger *logger.Logger) *ThreatDatabase {
 
 // Initialize sets up the threat database
 func (td *ThreatDatabase) Initialize(ctx context.Context) error {
-	td.mu.Lock()
-	defer td.mu.Unlock()
-
 	td.logger.Info("Initializing threat database")
 
 	// Open SQLite database
@@ -80,7 +77,10 @@ func (td *ThreatDatabase) Initialize(ctx context.Context) error {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 
+	// Assign db with minimal locking
+	td.mu.Lock()
 	td.db = db
+	td.mu.Unlock()
 
 	// Configure database
 	if err := td.configureDatabase(ctx); err != nil {
@@ -144,7 +144,7 @@ func (td *ThreatDatabase) StoreThreat(ctx context.Context, threat *ThreatIntelli
 	query := `
 		INSERT OR REPLACE INTO threats (
 			id, source, type, severity, package_name, ecosystem, description,
-			indicators, references, tags, confidence_level, first_seen, last_seen,
+			indicators, "references", tags, confidence_level, first_seen, last_seen,
 			expires_at, metadata, created_at, updated_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
@@ -175,7 +175,7 @@ func (td *ThreatDatabase) GetThreat(ctx context.Context, threatID string) (*Thre
 
 	query := `
 		SELECT id, source, type, severity, package_name, ecosystem, description,
-		       indicators, references, tags, confidence_level, first_seen, last_seen,
+		       indicators, "references", tags, confidence_level, first_seen, last_seen,
 		       expires_at, metadata
 		FROM threats
 		WHERE id = ? AND (expires_at IS NULL OR expires_at > ?)
@@ -205,12 +205,29 @@ func (td *ThreatDatabase) SearchThreats(ctx context.Context, query *ThreatQuery)
 	sqlQuery, args := td.buildSearchQuery(query)
 
 	// Execute count query
-	countQuery := strings.Replace(sqlQuery, "SELECT id, source, type, severity, package_name, ecosystem, description, indicators, references, tags, confidence_level, first_seen, last_seen, expires_at, metadata", "SELECT COUNT(*)", 1)
-	countQuery = strings.Split(countQuery, "ORDER BY")[0] // Remove ORDER BY and LIMIT
-	countQuery = strings.Split(countQuery, "LIMIT")[0]
+	// Derive a robust COUNT query by taking the portion from FROM ... and stripping ORDER BY/LIMIT
+	countQueryBase := sqlQuery
+	// Strip ORDER BY (case-insensitive)
+	if idx := strings.Index(strings.ToUpper(countQueryBase), "ORDER BY"); idx != -1 {
+		countQueryBase = countQueryBase[:idx]
+	}
+	// Strip LIMIT (case-insensitive)
+	if idx := strings.Index(strings.ToUpper(countQueryBase), "LIMIT"); idx != -1 {
+		countQueryBase = countQueryBase[:idx]
+	}
+	// Find FROM clause (case-insensitive)
+	fromIdx := strings.Index(strings.ToUpper(countQueryBase), "FROM ")
+	if fromIdx == -1 {
+		return nil, fmt.Errorf("invalid search query: missing FROM")
+	}
+	countQuery := "SELECT COUNT(*) " + countQueryBase[fromIdx:]
 
 	var total int64
-	err := td.db.QueryRowContext(ctx, countQuery, args[:len(args)-2]...).Scan(&total) // Remove LIMIT and OFFSET args
+	argsNoPag := args
+	if len(argsNoPag) >= 2 {
+		argsNoPag = argsNoPag[:len(argsNoPag)-2] // Remove LIMIT and OFFSET args
+	}
+	err := td.db.QueryRowContext(ctx, countQuery, argsNoPag...).Scan(&total)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count threats: %w", err)
 	}
@@ -371,7 +388,7 @@ func (td *ThreatDatabase) createTables(ctx context.Context) error {
 			ecosystem TEXT NOT NULL,
 			description TEXT,
 			indicators TEXT, -- JSON
-			references TEXT, -- JSON
+			"references" TEXT, -- JSON
 			tags TEXT, -- JSON
 			confidence_level REAL NOT NULL,
 			first_seen DATETIME NOT NULL,
@@ -414,7 +431,7 @@ func (td *ThreatDatabase) createIndexes(ctx context.Context) error {
 func (td *ThreatDatabase) buildSearchQuery(query *ThreatQuery) (string, []interface{}) {
 	sql := `
 		SELECT id, source, type, severity, package_name, ecosystem, description,
-		       indicators, references, tags, confidence_level, first_seen, last_seen,
+		       indicators, "references", tags, confidence_level, first_seen, last_seen,
 		       expires_at, metadata
 		FROM threats
 		WHERE 1=1

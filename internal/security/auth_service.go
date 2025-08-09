@@ -27,6 +27,7 @@ type AuthService struct {
 	sessions       map[string]*Session
 	sessionsMu     sync.RWMutex
 	passwordPolicy *PasswordPolicy
+	userRepository UserRepository
 }
 
 // Session represents a user session
@@ -81,12 +82,13 @@ type PasswordChangeRequest struct {
 }
 
 // NewAuthService creates a new authentication service
-func NewAuthService(config *SecurityConfig, logger *logger.Logger, rbacEngine *auth.RBACEngine) *AuthService {
+func NewAuthService(config *SecurityConfig, logger *logger.Logger, rbacEngine *auth.RBACEngine, userRepository UserRepository) *AuthService {
 	as := &AuthService{
-		config:     config,
-		logger:     logger,
-		rbacEngine: rbacEngine,
-		sessions:   make(map[string]*Session),
+		config:         config,
+		logger:         logger,
+		rbacEngine:     rbacEngine,
+		sessions:       make(map[string]*Session),
+		userRepository: userRepository,
 		passwordPolicy: &PasswordPolicy{
 			MinLength:        config.Authentication.PasswordMinLength,
 			RequireUppercase: config.Authentication.RequireUppercase,
@@ -533,20 +535,25 @@ func (as *AuthService) sessionCleanupRoutine() {
 	}
 }
 
-// Placeholder methods for user management (would integrate with actual user store)
-
+// User represents a user in the system
 type User struct {
-	ID                string
-	Username          string
-	PasswordHash      string
-	PasswordChangedAt time.Time
-	PasswordHistory   []string
-	IsActive          bool
-	MFAEnabled        bool
-	MFASecret         string
-	Roles             []string
-	LastLoginAt       time.Time
-	LastLoginIP       string
+	ID                   string     `json:"id"`
+	Username             string     `json:"username"`
+	Email                string     `json:"email"`
+	PasswordHash         string     `json:"-"` // Never serialize password hash
+	PasswordChangedAt    time.Time  `json:"password_changed_at"`
+	PasswordHistory      []string   `json:"-"` // Never serialize password history
+	IsActive             bool       `json:"is_active"`
+	IsVerified           bool       `json:"is_verified"`
+	MFAEnabled           bool       `json:"mfa_enabled"`
+	MFASecret            string     `json:"-"` // Never serialize MFA secret
+	Roles                []string   `json:"roles"`
+	LastLoginAt          time.Time  `json:"last_login_at"`
+	LastLoginIP          string     `json:"last_login_ip"`
+	FailedLoginAttempts  int        `json:"failed_login_attempts"`
+	LockedUntil          *time.Time `json:"locked_until,omitempty"`
+	CreatedAt            time.Time  `json:"created_at"`
+	UpdatedAt            time.Time  `json:"updated_at"`
 }
 
 func (u *User) PrimaryRole() string {
@@ -557,22 +564,19 @@ func (u *User) PrimaryRole() string {
 }
 
 func (as *AuthService) getUserByUsername(ctx context.Context, username string) (*User, error) {
-	// Placeholder - would integrate with actual user store
-	return nil, fmt.Errorf("not implemented")
+	return as.userRepository.GetUserByUsername(ctx, username)
 }
 
 func (as *AuthService) getUserByID(ctx context.Context, userID string) (*User, error) {
-	// Placeholder - would integrate with actual user store
-	return nil, fmt.Errorf("not implemented")
+	return as.userRepository.GetUserByID(ctx, userID)
 }
 
 func (as *AuthService) updateUserPassword(ctx context.Context, userID, hashedPassword string) error {
-	// Placeholder - would integrate with actual user store
-	return fmt.Errorf("not implemented")
+	return as.userRepository.UpdateUserPassword(ctx, userID, hashedPassword)
 }
 
 func (as *AuthService) updateLastLogin(ctx context.Context, userID, clientIP string) {
-	// Placeholder - would integrate with actual user store
+	as.userRepository.UpdateLastLogin(ctx, userID, clientIP)
 }
 
 func (as *AuthService) generateJWTToken(user *User, sessionID string) (string, error) {

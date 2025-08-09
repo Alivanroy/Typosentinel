@@ -31,8 +31,13 @@ type SecurityManager struct {
 	authService *AuthService
 }
 
-// NewSecurityManager creates a new security manager instance
+// NewSecurityManager creates a new security manager instance with a nil user repository (for backward compatibility)
 func NewSecurityManager(logger *logger.Logger, rbacEngine *auth.RBACEngine) (*SecurityManager, error) {
+	return NewSecurityManagerWithUserRepository(logger, rbacEngine, nil)
+}
+
+// NewSecurityManagerWithUserRepository creates a new security manager instance with a user repository
+func NewSecurityManagerWithUserRepository(logger *logger.Logger, rbacEngine *auth.RBACEngine, userRepository UserRepository) (*SecurityManager, error) {
 	// Load security configuration
 	config, err := LoadSecurityConfig()
 	if err != nil {
@@ -60,7 +65,7 @@ func NewSecurityManager(logger *logger.Logger, rbacEngine *auth.RBACEngine) (*Se
 
 	// Create security components
 	middleware := NewSecurityMiddleware(config, logger, rbacEngine)
-	authService := NewAuthService(config, logger, rbacEngine)
+	authService := NewAuthService(config, logger, rbacEngine, userRepository)
 
 	sm := &SecurityManager{
 		config:      config,

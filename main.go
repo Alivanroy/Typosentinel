@@ -232,9 +232,9 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 		Run: func(cmd *cobra.Command, args []string) {
 			if outputFormat == "futuristic" || outputFormat == "" {
 				formatter := output.NewFuturisticFormatter(true, false)
-				formatter.PrintVersion("1.0.0")
+				formatter.PrintVersion("1.1.0")
 			} else {
-				fmt.Println("TypoSentinel v1.0.0")
+				fmt.Println("TypoSentinel v1.1.0")
 			}
 		},
 	}

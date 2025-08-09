@@ -344,7 +344,7 @@ func Load() (*Config, error) {
 
 	config := &Config{
 		Environment: getEnv("ENVIRONMENT", "development"),
-		Version:     getEnv("VERSION", "1.0.0"),
+		Version:     getEnv("VERSION", "1.1.0"),
 		LogLevel:    getEnv("LOG_LEVEL", "info"),
 	}
 

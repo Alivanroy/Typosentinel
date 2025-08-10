@@ -48,11 +48,39 @@ make build
 # Binary will be created as ./typosentinel
 ```
 
-### Docker
+### Docker Deployment
+
+PlanFinale provides complete Docker deployment with web interface and API server:
 
 ```bash
-docker pull typosentinel:latest
-docker run --rm -v $(pwd):/workspace typosentinel:latest scan /workspace
+# Quick production deployment
+./deploy.sh start
+
+# Development with hot reloading
+./deploy.sh dev
+
+# Production with monitoring (Prometheus + Grafana)
+./deploy.sh start-monitoring
+```
+
+**Access Points:**
+- Web Interface: http://localhost:3000
+- API Server: http://localhost:8080
+- API Playground: http://localhost:8080/api
+
+For detailed Docker deployment instructions, see [DOCKER.md](DOCKER.md).
+
+#### Manual Docker Commands
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
 ## 🔧 Quick Start
@@ -413,6 +441,7 @@ curl http://localhost:8080/api/v1/results/{scan_id}
 ## 📖 Documentation
 
 - [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
+- [Docker Deployment Guide](DOCKER.md) - Complete Docker deployment instructions
 - [API Documentation](docs/API_DOCUMENTATION.md) - REST API reference
 - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [Plugin Development](docs/plugin_development_guide.md) - Creating custom analyzers

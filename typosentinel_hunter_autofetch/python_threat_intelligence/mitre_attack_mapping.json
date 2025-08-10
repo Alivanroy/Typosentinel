@@ -1,0 +1,43 @@
+{
+  "framework": "MITRE ATT&CK",
+  "version": "v13",
+  "techniques": [
+    {
+      "technique_id": "T1059.006",
+      "technique_name": "Dynamic Code Compilation",
+      "tactic": "Execution",
+      "description": "Malware uses compile() function to execute dynamically generated code",
+      "examples": [
+        "compile() usage in BeautifulSoup"
+      ]
+    },
+    {
+      "technique_id": "T1552.001",
+      "technique_name": "Credential Harvesting",
+      "tactic": "Credential Access",
+      "description": "Malware searches for and exfiltrates credentials",
+      "examples": [
+        "AWS credential patterns in pandas3"
+      ]
+    },
+    {
+      "technique_id": "T1082",
+      "technique_name": "System Information Discovery",
+      "tactic": "Discovery",
+      "description": "Malware accesses system arguments and environment",
+      "examples": [
+        "sys.argv usage in django-dev"
+      ]
+    },
+    {
+      "technique_id": "T1027",
+      "technique_name": "Code Obfuscation",
+      "tactic": "Defense Evasion",
+      "description": "Malware uses various obfuscation techniques",
+      "examples": [
+        "getattr() dynamic calls",
+        "Hexadecimal encoding"
+      ]
+    }
+  ]
+}

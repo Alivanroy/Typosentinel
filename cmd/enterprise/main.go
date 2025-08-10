@@ -12,12 +12,14 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/auth"
 	"github.com/Alivanroy/Typosentinel/internal/config"
@@ -191,13 +193,13 @@ func outputScanResult(result *repository.ScanResult) error {
 
 func initializeGitHubConnector(cfg *config.Config) (repository.Connector, error) {
 	factory := connectors.NewFactory()
-	
+
 	// Get GitHub token from environment variable
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		return nil, fmt.Errorf("GITHUB_TOKEN environment variable is required")
 	}
-	
+
 	platformConfig := repository.PlatformConfig{
 		BaseURL: "https://api.github.com",
 		Auth: repository.AuthConfig{
@@ -206,30 +208,30 @@ func initializeGitHubConnector(cfg *config.Config) (repository.Connector, error)
 		},
 		Timeout: 30 * time.Second,
 	}
-	
+
 	connector, err := factory.CreateConnector("github", platformConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GitHub connector: %w", err)
 	}
-	
+
 	return connector, nil
 }
 
 func initializeGitLabConnector(cfg *config.Config) (repository.Connector, error) {
 	factory := connectors.NewFactory()
-	
+
 	// Get GitLab token from environment
 	gitlabToken := os.Getenv("GITLAB_TOKEN")
 	if gitlabToken == "" {
 		return nil, fmt.Errorf("GITLAB_TOKEN environment variable is required")
 	}
-	
+
 	// Get GitLab URL (default to gitlab.com)
 	gitlabURL := os.Getenv("GITLAB_URL")
 	if gitlabURL == "" {
 		gitlabURL = "https://gitlab.com/api/v4"
 	}
-	
+
 	// Create platform config
 	platformConfig := repository.PlatformConfig{
 		BaseURL: gitlabURL,
@@ -239,21 +241,21 @@ func initializeGitLabConnector(cfg *config.Config) (repository.Connector, error)
 		},
 		Timeout: 30 * time.Second,
 	}
-	
+
 	// Create GitLab connector
 	return factory.CreateConnector("gitlab", platformConfig)
 }
 
 func initializeBitbucketConnector(cfg *config.Config) (repository.Connector, error) {
 	factory := connectors.NewFactory()
-	
+
 	// Get Bitbucket credentials from environment
 	bitbucketUsername := os.Getenv("BITBUCKET_USERNAME")
 	bitbucketPassword := os.Getenv("BITBUCKET_APP_PASSWORD")
 	if bitbucketUsername == "" || bitbucketPassword == "" {
 		return nil, fmt.Errorf("BITBUCKET_USERNAME and BITBUCKET_APP_PASSWORD environment variables are required")
 	}
-	
+
 	// Create platform config
 	platformConfig := repository.PlatformConfig{
 		BaseURL: "https://api.bitbucket.org/2.0",
@@ -264,21 +266,21 @@ func initializeBitbucketConnector(cfg *config.Config) (repository.Connector, err
 		},
 		Timeout: 30 * time.Second,
 	}
-	
+
 	// Create Bitbucket connector
 	return factory.CreateConnector("bitbucket", platformConfig)
 }
 
 func initializeAzureDevOpsConnector(cfg *config.Config) (repository.Connector, error) {
 	factory := connectors.NewFactory()
-	
+
 	// Get Azure DevOps credentials from environment
 	azureToken := os.Getenv("AZURE_DEVOPS_TOKEN")
 	azureOrg := os.Getenv("AZURE_DEVOPS_ORG")
 	if azureToken == "" || azureOrg == "" {
 		return nil, fmt.Errorf("AZURE_DEVOPS_TOKEN and AZURE_DEVOPS_ORG environment variables are required")
 	}
-	
+
 	// Create platform config
 	platformConfig := repository.PlatformConfig{
 		BaseURL: fmt.Sprintf("https://dev.azure.com/%s", azureOrg),
@@ -288,7 +290,7 @@ func initializeAzureDevOpsConnector(cfg *config.Config) (repository.Connector, e
 		},
 		Timeout: 30 * time.Second,
 	}
-	
+
 	// Create Azure DevOps connector
 	return factory.CreateConnector("azuredevops", platformConfig)
 }
@@ -314,7 +316,7 @@ for enterprise environments with advanced features including:
 	}
 
 	// Global flags
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.typosentinel-enterprise.yaml)")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.planfinale-enterprise.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "log level (debug, info, warn, error)")
 
@@ -718,7 +720,7 @@ func integrationCmd() *cobra.Command {
 func runServer(cmd *cobra.Command, args []string) {
 	// Record application start time for uptime calculation
 	startTime = time.Now()
-	
+
 	bind, _ := cmd.Flags().GetString("bind")
 	enableUI, _ := cmd.Flags().GetBool("enable-ui")
 	enableAPI, _ := cmd.Flags().GetBool("enable-api")
@@ -813,15 +815,15 @@ func runServer(cmd *cobra.Command, args []string) {
 	if enableScheduler {
 		// Initialize in-memory scan queue for scheduled scans
 		scanQueue := orchestrator.NewInMemoryScanQueue()
-		
+
 		// Initialize scheduler with correct parameters
 		scheduler = orchestrator.NewScanScheduler(scanQueue, repoManager, log.New(os.Stderr, "[SCHEDULER] ", log.LstdFlags))
-		
+
 		// Start the scheduler with context
 		ctx := context.Background()
 		scheduler.Start(ctx)
 		fmt.Println("✅ Scan scheduler initialized and started")
-		
+
 		// Load existing schedules if they exist
 		schedulesFile := "./schedules.yaml"
 		configData, err := os.ReadFile(schedulesFile)
@@ -834,7 +836,7 @@ func runServer(cmd *cobra.Command, args []string) {
 				fmt.Println("✅ Existing schedules loaded")
 			}
 		}
-		
+
 		// Ensure scheduler is stopped on shutdown
 		defer func() {
 			if scheduler != nil {
@@ -862,7 +864,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 	if dbService != nil {
 		defer dbService.Close()
-		
+
 		// Initialize database schema and run migrations
 		schemaManager := database.NewSchemaManager(dbService.GetDB(), pkgLogger)
 		if err := schemaManager.Initialize(ctx); err != nil {
@@ -875,7 +877,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	// Initialize policy manager with database-backed violation store
 	policyEngine := auth.NewPolicyEngine(authLoggerAdapter)
 	rbacEngine := auth.NewRBACEngine(&config.AuthzConfig{})
-	
+
 	// Use database-backed violation store if database is available
 	var violationStore auth.ViolationStore
 	var dbViolationStore *storage.ViolationStore
@@ -887,7 +889,7 @@ func runServer(cmd *cobra.Command, args []string) {
 		violationStore = auth.NewMemoryViolationStore()
 		log.Printf("Using memory-backed violation store (database not available)")
 	}
-	
+
 	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, violationStore, authLoggerAdapter)
 
 	// Initialize security manager with database connection
@@ -905,7 +907,7 @@ func runServer(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	// Fallback to security manager without database if needed
 	if securityManager == nil {
 		securityManager, err = security.NewSecurityManager(pkgLogger, rbacEngine)
@@ -941,62 +943,99 @@ func runServer(cmd *cobra.Command, args []string) {
 	integrationHub.Initialize(ctx)
 	defer integrationHub.Stop(ctx)
 
-	// Setup HTTP server
-	if enableAPI || enableUI {
-		router := gin.Default()
-
-		// Add middleware
-		router.Use(gin.Logger())
-		router.Use(gin.Recovery())
-
-		// Register API routes
-			if enableAPI {
-				// Repository scanning handler
-				enterpriseHandler := rest.NewEnterpriseHandler(repoManager, scheduler)
-				enterpriseHandler.RegisterRoutes(router)
-				
-				// Enterprise policy and violation handlers (if database is available)
-				if dbViolationStore != nil {
-					// Create auth middleware (simplified for now)
-					authMiddleware := &auth.AuthorizationMiddleware{}
-					
-					// Create enterprise handlers with database violation store
-					enterpriseHandlers := rest.NewEnterpriseHandlers(
-						policyManager,
-						rbacEngine,
-						authMiddleware,
-						dbViolationStore,
-						authLoggerAdapter,
-					)
-					
-					// Register enterprise API routes
-					apiGroup := router.Group("/api/v1/enterprise")
-					enterpriseHandlers.RegisterRoutes(apiGroup)
-					
-					log.Printf("Enterprise policy and violation handlers registered with database backend")
-				}
-				
-				dashboardInstance.RegisterRoutes(router)
+	// Setup REST API server
+	if enableAPI {
+		// Parse bind address
+		parts := strings.Split(bind, ":")
+		host := parts[0]
+		port := 8080
+		if len(parts) > 1 {
+			if p, err := strconv.Atoi(parts[1]); err == nil {
+				port = p
 			}
-
-		// Serve static files for UI
-		if enableUI {
-			router.Static("/static", "./web/static")
-			router.LoadHTMLGlob("./web/templates/*")
-			router.GET("/", func(c *gin.Context) {
-				c.HTML(200, "dashboard.html", gin.H{
-					"title": "TypoSentinel Enterprise Dashboard",
-				})
-			})
 		}
 
-		// Start server
+		// Create REST API config
+		restConfig := config.RESTAPIConfig{
+			Enabled: true,
+			Host:    host,
+			Port:    port,
+		}
+
+		// Create analyzer instance
+		analyzer, err := analyzer.New(cfg)
+		if err != nil {
+			log.Printf("Warning: Failed to create analyzer: %v", err)
+		}
+
+		// Create enterprise handlers if database is available
+		var enterpriseHandlers *rest.EnterpriseHandlers
+		if dbViolationStore != nil {
+			// Create auth middleware
+			authMiddleware := &auth.AuthorizationMiddleware{}
+
+			// Create enterprise handlers with database violation store
+			enterpriseHandlers = rest.NewEnterpriseHandlers(
+				policyManager,
+				rbacEngine,
+				authMiddleware,
+				dbViolationStore,
+				authLoggerAdapter,
+			)
+
+			log.Printf("Enterprise handlers initialized with database backend")
+		}
+
+		// Create and start REST server with enterprise features
+		server := rest.NewServerWithEnterprise(restConfig, nil, analyzer, enterpriseHandlers)
+
+		// Start server in a goroutine
 		go func() {
-			if err := router.Run(bind); err != nil {
-				log.Printf("Server failed to start: %v", err)
+			if err := server.Start(ctx); err != nil {
+				log.Printf("REST API server failed to start: %v", err)
 				cancel()
 			}
 		}()
+
+		log.Printf("REST API server started on %s:%d", host, port)
+	}
+
+	// Setup additional UI server if needed
+	if enableUI {
+		// Create a separate Gin router for UI
+		uiRouter := gin.Default()
+
+		// Serve static files for UI
+		uiRouter.Static("/static", "./web/static")
+		uiRouter.LoadHTMLGlob("./web/templates/*")
+		uiRouter.GET("/", func(c *gin.Context) {
+			c.HTML(200, "dashboard.html", gin.H{
+				"title": "TypoSentinel Enterprise Dashboard",
+			})
+		})
+
+		// Register dashboard routes
+		dashboardInstance.RegisterRoutes(uiRouter)
+
+		// Start UI server on a different port if API is also enabled
+		uiPort := "3000"
+		if !enableAPI {
+			// Use the same port if API is not enabled
+			parts := strings.Split(bind, ":")
+			if len(parts) > 1 {
+				uiPort = parts[1]
+			}
+		}
+
+		go func() {
+			uiAddr := fmt.Sprintf("0.0.0.0:%s", uiPort)
+			if err := uiRouter.Run(uiAddr); err != nil {
+				log.Printf("UI server failed to start: %v", err)
+				cancel()
+			}
+		}()
+
+		log.Printf("UI server started on port %s", uiPort)
 	}
 
 	fmt.Printf("TypoSentinel Enterprise Server started successfully\n")
@@ -1024,48 +1063,48 @@ func runScanRepository(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: scan repository <platform> <owner/repo>")
 		os.Exit(1)
 	}
-	
+
 	platform := args[0]
 	repo := args[1]
 	fmt.Printf("Scanning repository: %s on %s\n", repo, platform)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Parse repository identifier
 	parts := strings.Split(repo, "/")
 	if len(parts) != 2 {
 		log.Fatalf("Invalid repository format. Expected: owner/repo")
 	}
-	
+
 	owner := parts[0]
 	repoName := parts[1]
-	
+
 	fmt.Printf("Repository: %s\n", repo)
 	fmt.Printf("Platform: %s\n", platform)
 	fmt.Printf("Owner: %s\n", owner)
 	fmt.Printf("Name: %s\n", repoName)
 	fmt.Printf("Configuration loaded: %s environment\n", cfg.App.Environment)
-	
+
 	// Get command flags
 	branch, _ := cmd.Flags().GetString("branch")
 	outputFormat, _ := cmd.Flags().GetString("output")
 	_, _ = cmd.Flags().GetString("output-file") // outputFile for future use
 	includeDev, _ := cmd.Flags().GetBool("include-dev")
-	
+
 	ctx := context.Background()
-	
+
 	// Initialize repository manager
 	repoManager := repository.NewManager(repository.DefaultManagerConfig())
-	
+
 	// Initialize connector based on platform
 	var connector repository.Connector
 	var err error
-	
+
 	switch platform {
 	case "github":
 		connector, err = initializeGitHubConnector(cfg)
@@ -1078,32 +1117,32 @@ func runScanRepository(cmd *cobra.Command, args []string) {
 	default:
 		log.Fatalf("Platform %s not supported. Supported platforms: github, gitlab, bitbucket, azuredevops", platform)
 	}
-	
+
 	if err != nil {
 		log.Fatalf("Failed to initialize %s connector: %v", platform, err)
 	}
-	
+
 	// Register connector with manager
 	if err := repoManager.RegisterConnector(platform, connector); err != nil {
 		log.Fatalf("Failed to register %s connector: %v", platform, err)
 	}
-	
+
 	// Get connector
 	connector, err = repoManager.GetConnector(platform)
 	if err != nil {
 		log.Fatalf("Failed to get connector for platform %s: %v", platform, err)
 	}
-	
+
 	// Get repository information
 	repoInfo, err := connector.GetRepository(ctx, owner, repoName)
 	if err != nil {
 		log.Fatalf("Failed to get repository information: %v", err)
 	}
-	
+
 	fmt.Printf("Found repository: %s\n", repoInfo.FullName)
 	fmt.Printf("Language: %s\n", repoInfo.Language)
 	fmt.Printf("Stars: %d\n", repoInfo.StarCount)
-	
+
 	// Create scan request
 	scanRequest := &repository.ScanRequest{
 		Repository:  repoInfo,
@@ -1117,20 +1156,20 @@ func runScanRepository(cmd *cobra.Command, args []string) {
 		},
 		CreatedAt: time.Now(),
 	}
-	
+
 	fmt.Println("Starting repository scan...")
-	
+
 	// Perform scan
 	result, err := repoManager.ScanRepositoryWithResult(ctx, scanRequest)
 	if err != nil {
 		log.Fatalf("Scan failed: %v", err)
 	}
-	
+
 	// Output results
 	if err := outputScanResult(result); err != nil {
 		log.Fatalf("Failed to output results: %v", err)
 	}
-	
+
 	fmt.Println("Scan completed successfully!")
 }
 
@@ -1139,22 +1178,22 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: scan organization <platform> <org>")
 		os.Exit(1)
 	}
-	
+
 	platform := args[0]
 	org := args[1]
 	fmt.Printf("Scanning organization: %s on %s\n", org, platform)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 	cfg := cfgManager.Get()
-	
+
 	fmt.Printf("Organization: %s\n", org)
 	fmt.Printf("Platform: %s\n", platform)
 	fmt.Printf("Configuration loaded: %s environment\n", cfg.App.Environment)
-	
+
 	// Get command flags
 	maxRepos, _ := cmd.Flags().GetInt("max-repos")
 	includePrivate, _ := cmd.Flags().GetBool("include-private")
@@ -1163,16 +1202,16 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 	languages, _ := cmd.Flags().GetStringSlice("languages")
 	outputFormat, _ := cmd.Flags().GetString("output")
 	reportFile, _ := cmd.Flags().GetString("report-file")
-	
+
 	ctx := context.Background()
-	
+
 	// Initialize repository manager
 	repoManager := repository.NewManager(repository.DefaultManagerConfig())
-	
+
 	// Initialize connector based on platform
 	var connector repository.Connector
 	var err error
-	
+
 	switch platform {
 	case "github":
 		connector, err = initializeGitHubConnector(cfg)
@@ -1185,30 +1224,30 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 	default:
 		log.Fatalf("Platform %s not supported. Supported platforms: github, gitlab, bitbucket, azuredevops", platform)
 	}
-	
+
 	if err != nil {
 		log.Fatalf("Failed to initialize %s connector: %v", platform, err)
 	}
-	
+
 	// Register connector with manager
 	if err := repoManager.RegisterConnector(platform, connector); err != nil {
 		log.Fatalf("Failed to register %s connector: %v", platform, err)
 	}
-	
+
 	// Get connector
 	connector, err = repoManager.GetConnector(platform)
 	if err != nil {
 		log.Fatalf("Failed to get connector for platform %s: %v", platform, err)
 	}
-	
+
 	// Get organization
 	orgInfo, err := connector.GetOrganization(ctx, org)
 	if err != nil {
 		log.Fatalf("Failed to get organization: %v", err)
 	}
-	
+
 	fmt.Printf("Found organization: %s\n", orgInfo.Login)
-	
+
 	// List repositories with filters
 	repos, err := connector.ListOrgRepositories(ctx, org, &repository.RepositoryFilter{
 		IncludePrivate:  includePrivate,
@@ -1219,23 +1258,23 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("Failed to list repositories: %v", err)
 	}
-	
+
 	// Limit results if maxRepos is specified
 	if maxRepos > 0 && len(repos) > maxRepos {
 		repos = repos[:maxRepos]
 	}
-	
+
 	fmt.Printf("Found %d repositories\n", len(repos))
-	
+
 	// Track scan results for reporting
 	var allResults []*repository.ScanResult
 	successCount := 0
 	errorCount := 0
-	
+
 	// Scan each repository
 	for i, repo := range repos {
 		fmt.Printf("\nScanning repository %d/%d: %s\n", i+1, len(repos), repo.FullName)
-		
+
 		// Create scan request
 		scanRequest := &repository.ScanRequest{
 			Repository:  repo,
@@ -1269,14 +1308,14 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 			errorCount++
 		}
 	}
-	
+
 	// Generate consolidated report if requested
 	if reportFile != "" {
 		fmt.Printf("\nGenerating consolidated report: %s\n", reportFile)
-		
+
 		// Calculate statistics from scan results
 		totalDependencyFiles := 0
-		
+
 		// Process all results to calculate statistics
 		for _, result := range allResults {
 			if result != nil {
@@ -1285,26 +1324,26 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 				// For now, we'll provide basic statistics
 			}
 		}
-		
+
 		// Generate consolidated report
 		report := map[string]interface{}{
 			"scan_summary": map[string]interface{}{
 				"total_repositories": len(repos),
 				"successful_scans":   successCount,
-				"failed_scans":      errorCount,
-				"scan_date":         time.Now().Format(time.RFC3339),
-				"organization":      org,
-				"provider":          platform,
+				"failed_scans":       errorCount,
+				"scan_date":          time.Now().Format(time.RFC3339),
+				"organization":       org,
+				"provider":           platform,
 			},
 			"repository_results": allResults,
 			"overall_statistics": map[string]interface{}{
 				"total_dependency_files": totalDependencyFiles,
 				"successful_scans":       successCount,
-				"failed_scans":          errorCount,
+				"failed_scans":           errorCount,
 				"scan_completion_rate":   float64(successCount) / float64(len(repos)) * 100,
 			},
 		}
-		
+
 		// Write report to file
 		reportData, err := json.MarshalIndent(report, "", "  ")
 		if err != nil {
@@ -1317,7 +1356,7 @@ func runScanOrganization(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	fmt.Printf("\nOrganization scan completed!\n")
 	fmt.Printf("Successful scans: %d\n", successCount)
 	fmt.Printf("Failed scans: %d\n", errorCount)
@@ -1330,41 +1369,41 @@ func runScanConfig(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise scan config <config-file>")
 		return
 	}
-	
+
 	configFile := args[0]
 	fmt.Printf("Scanning from config: %s\n", configFile)
-	
+
 	// Check if config file exists
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		fmt.Printf("Error: Config file not found: %s\n", configFile)
 		return
 	}
-	
+
 	// Read config file
 	configData, err := os.ReadFile(configFile)
 	if err != nil {
 		fmt.Printf("Error reading config file: %v\n", err)
 		return
 	}
-	
+
 	// Parse config (assuming YAML format)
 	var scanConfig map[string]interface{}
 	if err := yaml.Unmarshal(configData, &scanConfig); err != nil {
 		fmt.Printf("Error parsing config file: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("✅ Config loaded successfully\n")
-	
+
 	// Extract scan targets from config
 	targets, ok := scanConfig["targets"].([]interface{})
 	if !ok {
 		fmt.Println("Error: No 'targets' section found in config")
 		return
 	}
-	
+
 	fmt.Printf("Found %d scan targets in config\n", len(targets))
-	
+
 	// Load application configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -1372,13 +1411,13 @@ func runScanConfig(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	ctx := context.Background()
 	repoManager := repository.NewManager(repository.DefaultManagerConfig())
-	
+
 	successCount := 0
 	errorCount := 0
-	
+
 	// Process each target
 	for i, target := range targets {
 		targetMap, ok := target.(map[interface{}]interface{})
@@ -1387,17 +1426,17 @@ func runScanConfig(cmd *cobra.Command, args []string) {
 			errorCount++
 			continue
 		}
-		
+
 		// Extract target details
 		targetType := getConfigValue(targetMap, "type", "repository")
 		provider := getConfigValue(targetMap, "provider", "github")
 		organization := getConfigValue(targetMap, "organization", "")
 		repository := getConfigValue(targetMap, "repository", "")
-		
+
 		fmt.Printf("\nProcessing target %d/%d:\n", i+1, len(targets))
 		fmt.Printf("  Type: %s\n", targetType)
 		fmt.Printf("  Provider: %s\n", provider)
-		
+
 		if targetType == "organization" && organization != "" {
 			fmt.Printf("  Organization: %s\n", organization)
 			// Scan organization (similar to runScan but simplified)
@@ -1423,7 +1462,7 @@ func runScanConfig(cmd *cobra.Command, args []string) {
 			errorCount++
 		}
 	}
-	
+
 	fmt.Printf("\nConfig-based scan completed!\n")
 	fmt.Printf("Successful scans: %d\n", successCount)
 	fmt.Printf("Failed scans: %d\n", errorCount)
@@ -1432,7 +1471,7 @@ func runScanConfig(cmd *cobra.Command, args []string) {
 
 func runScheduleList(cmd *cobra.Command, args []string) {
 	fmt.Println("Listing scheduled scans...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -1440,13 +1479,13 @@ func runScheduleList(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Display scheduler status
 	fmt.Printf("📅 Scheduler Status:\n")
 	fmt.Printf("  Application: %s v%s\n", cfg.App.Name, cfg.App.Version)
 	fmt.Printf("  Environment: %s\n", cfg.App.Environment)
 	fmt.Printf("  Max Workers: %d\n", cfg.App.MaxWorkers)
-	
+
 	// Check for schedule configuration file
 	scheduleFile := "./schedules.yaml"
 	if _, err := os.Stat(scheduleFile); os.IsNotExist(err) {
@@ -1465,29 +1504,29 @@ func runScheduleList(cmd *cobra.Command, args []string) {
 		fmt.Println("```")
 		return
 	}
-	
+
 	// Read schedule file
 	scheduleData, err := os.ReadFile(scheduleFile)
 	if err != nil {
 		fmt.Printf("Error reading schedule file: %v\n", err)
 		return
 	}
-	
+
 	// Parse schedule data (simplified YAML parsing)
 	fmt.Printf("\n📋 Schedule Configuration:\n")
 	fmt.Printf("  File: %s\n", scheduleFile)
 	fmt.Printf("  Size: %d bytes\n", len(scheduleData))
-	
+
 	// Display basic schedule information
 	lines := strings.Split(string(scheduleData), "\n")
 	scheduleCount := 0
 	inSchedule := false
 	currentSchedule := ""
-	
+
 	fmt.Printf("\n📋 Scheduled Jobs:\n")
 	fmt.Printf("%-20s %-20s %-15s %-10s\n", "Name", "Schedule", "Type", "Status")
 	fmt.Println(strings.Repeat("-", 65))
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "- name:") {
@@ -1501,13 +1540,13 @@ func runScheduleList(cmd *cobra.Command, args []string) {
 			inSchedule = false
 		}
 	}
-	
+
 	if scheduleCount == 0 {
 		fmt.Println("No scheduled jobs found in configuration")
 	} else {
 		fmt.Printf("\nTotal scheduled jobs: %d\n", scheduleCount)
 	}
-	
+
 	// Display scheduler service status
 	fmt.Printf("\n📊 Scheduler Service:\n")
 	fmt.Println("  Status: Not running (use 'typosentinel-enterprise server' to start)")
@@ -1520,37 +1559,37 @@ func runScheduleCreate(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise schedule create <name> --cron <expression> --type <type> --target <target>")
 		return
 	}
-	
+
 	scheduleName := args[0]
 	cronExpr, _ := cmd.Flags().GetString("cron")
 	scheduleType, _ := cmd.Flags().GetString("type")
 	target, _ := cmd.Flags().GetString("target")
 	enabled, _ := cmd.Flags().GetBool("enabled")
-	
+
 	fmt.Printf("Creating schedule: %s\n", scheduleName)
-	
+
 	// Validate required parameters
 	if cronExpr == "" {
 		fmt.Println("Error: --cron flag is required (e.g., '0 2 * * *' for daily at 2 AM)")
 		return
 	}
-	
+
 	if scheduleType == "" {
 		scheduleType = "organization" // Default type
 	}
-	
+
 	if target == "" {
 		fmt.Println("Error: --target flag is required (e.g., 'myorg' for organization scans)")
 		return
 	}
-	
+
 	// Create schedule configuration
 	scheduleConfig := map[string]interface{}{
-		"name":        scheduleName,
-		"schedule":    cronExpr,
-		"type":        scheduleType,
-		"enabled":     enabled,
-		"created_at":  time.Now().Format(time.RFC3339),
+		"name":       scheduleName,
+		"schedule":   cronExpr,
+		"type":       scheduleType,
+		"enabled":    enabled,
+		"created_at": time.Now().Format(time.RFC3339),
 		"targets": []map[string]interface{}{
 			{
 				"organization": target,
@@ -1558,16 +1597,16 @@ func runScheduleCreate(cmd *cobra.Command, args []string) {
 			},
 		},
 		"options": map[string]interface{}{
-			"scan_depth":     "full",
-			"include_forks":  false,
+			"scan_depth":       "full",
+			"include_forks":    false,
 			"include_archived": false,
 		},
 	}
-	
+
 	// Load existing schedules or create new file
 	scheduleFile := "./schedules.yaml"
 	var schedules []map[string]interface{}
-	
+
 	if data, err := os.ReadFile(scheduleFile); err == nil {
 		// Parse existing schedules
 		if err := yaml.Unmarshal(data, &schedules); err != nil {
@@ -1575,7 +1614,7 @@ func runScheduleCreate(cmd *cobra.Command, args []string) {
 			return
 		}
 	}
-	
+
 	// Check for duplicate names
 	for _, schedule := range schedules {
 		if name, ok := schedule["name"].(string); ok && name == scheduleName {
@@ -1583,22 +1622,22 @@ func runScheduleCreate(cmd *cobra.Command, args []string) {
 			return
 		}
 	}
-	
+
 	// Add new schedule
 	schedules = append(schedules, scheduleConfig)
-	
+
 	// Save updated schedules
 	data, err := yaml.Marshal(schedules)
 	if err != nil {
 		fmt.Printf("Error marshaling schedules: %v\n", err)
 		return
 	}
-	
+
 	if err := os.WriteFile(scheduleFile, data, 0644); err != nil {
 		fmt.Printf("Error saving schedules: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("✅ Schedule created successfully:\n")
 	fmt.Printf("  Name: %s\n", scheduleName)
 	fmt.Printf("  Schedule: %s\n", cronExpr)
@@ -1606,7 +1645,7 @@ func runScheduleCreate(cmd *cobra.Command, args []string) {
 	fmt.Printf("  Target: %s\n", target)
 	fmt.Printf("  Enabled: %t\n", enabled)
 	fmt.Printf("  File: %s\n", scheduleFile)
-	
+
 	fmt.Println("\nTo start the scheduler, run:")
 	fmt.Println("  typosentinel-enterprise server --enable-scheduler")
 }
@@ -1617,14 +1656,14 @@ func runScheduleUpdate(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise schedule update <name> [--cron <expression>] [--enabled <true/false>] [--target <target>]")
 		return
 	}
-	
+
 	scheduleName := args[0]
 	cronExpr, _ := cmd.Flags().GetString("cron")
 	target, _ := cmd.Flags().GetString("target")
 	enabled, _ := cmd.Flags().GetBool("enabled")
-	
+
 	fmt.Printf("Updating schedule: %s\n", scheduleName)
-	
+
 	// Load existing schedules
 	scheduleFile := "./schedules.yaml"
 	if _, err := os.Stat(scheduleFile); os.IsNotExist(err) {
@@ -1632,31 +1671,31 @@ func runScheduleUpdate(cmd *cobra.Command, args []string) {
 		fmt.Println("No schedules exist yet. Use 'schedule create' to create a new schedule.")
 		return
 	}
-	
+
 	data, err := os.ReadFile(scheduleFile)
 	if err != nil {
 		fmt.Printf("Error reading schedule file: %v\n", err)
 		return
 	}
-	
+
 	var schedules []map[string]interface{}
 	if err := yaml.Unmarshal(data, &schedules); err != nil {
 		fmt.Printf("Error parsing schedules: %v\n", err)
 		return
 	}
-	
+
 	// Find and update the schedule
 	found := false
 	for i, schedule := range schedules {
 		if name, ok := schedule["name"].(string); ok && name == scheduleName {
 			found = true
-			
+
 			// Update fields if provided
 			if cronExpr != "" {
 				schedules[i]["schedule"] = cronExpr
 				fmt.Printf("  Updated schedule: %s\n", cronExpr)
 			}
-			
+
 			if target != "" {
 				// Update target in the targets array
 				if targets, ok := schedules[i]["targets"].([]interface{}); ok && len(targets) > 0 {
@@ -1666,17 +1705,17 @@ func runScheduleUpdate(cmd *cobra.Command, args []string) {
 					}
 				}
 			}
-			
+
 			if cmd.Flags().Changed("enabled") {
 				schedules[i]["enabled"] = enabled
 				fmt.Printf("  Updated enabled: %t\n", enabled)
 			}
-			
+
 			schedules[i]["updated_at"] = time.Now().Format(time.RFC3339)
 			break
 		}
 	}
-	
+
 	if !found {
 		fmt.Printf("Error: Schedule '%s' not found\n", scheduleName)
 		fmt.Println("Available schedules:")
@@ -1687,19 +1726,19 @@ func runScheduleUpdate(cmd *cobra.Command, args []string) {
 		}
 		return
 	}
-	
+
 	// Save updated schedules
 	updatedData, err := yaml.Marshal(schedules)
 	if err != nil {
 		fmt.Printf("Error marshaling schedules: %v\n", err)
 		return
 	}
-	
+
 	if err := os.WriteFile(scheduleFile, updatedData, 0644); err != nil {
 		fmt.Printf("Error saving schedules: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("✅ Schedule '%s' updated successfully\n", scheduleName)
 }
 
@@ -1709,10 +1748,10 @@ func runScheduleDelete(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise schedule delete <name>")
 		return
 	}
-	
+
 	scheduleName := args[0]
 	fmt.Printf("Deleting schedule: %s\n", scheduleName)
-	
+
 	// Load existing schedules
 	scheduleFile := "./schedules.yaml"
 	if _, err := os.Stat(scheduleFile); os.IsNotExist(err) {
@@ -1720,23 +1759,23 @@ func runScheduleDelete(cmd *cobra.Command, args []string) {
 		fmt.Println("No schedules exist yet.")
 		return
 	}
-	
+
 	data, err := os.ReadFile(scheduleFile)
 	if err != nil {
 		fmt.Printf("Error reading schedule file: %v\n", err)
 		return
 	}
-	
+
 	var schedules []map[string]interface{}
 	if err := yaml.Unmarshal(data, &schedules); err != nil {
 		fmt.Printf("Error parsing schedules: %v\n", err)
 		return
 	}
-	
+
 	// Find and remove the schedule
 	found := false
 	var updatedSchedules []map[string]interface{}
-	
+
 	for _, schedule := range schedules {
 		if name, ok := schedule["name"].(string); ok && name == scheduleName {
 			found = true
@@ -1746,7 +1785,7 @@ func runScheduleDelete(cmd *cobra.Command, args []string) {
 			updatedSchedules = append(updatedSchedules, schedule)
 		}
 	}
-	
+
 	if !found {
 		fmt.Printf("Error: Schedule '%s' not found\n", scheduleName)
 		fmt.Println("Available schedules:")
@@ -1757,7 +1796,7 @@ func runScheduleDelete(cmd *cobra.Command, args []string) {
 		}
 		return
 	}
-	
+
 	// Save updated schedules
 	if len(updatedSchedules) == 0 {
 		// If no schedules left, remove the file or write empty array
@@ -1771,13 +1810,13 @@ func runScheduleDelete(cmd *cobra.Command, args []string) {
 			fmt.Printf("Error marshaling schedules: %v\n", err)
 			return
 		}
-		
+
 		if err := os.WriteFile(scheduleFile, updatedData, 0644); err != nil {
 			fmt.Printf("Error saving schedules: %v\n", err)
 			return
 		}
 	}
-	
+
 	fmt.Printf("✅ Schedule '%s' deleted successfully\n", scheduleName)
 	fmt.Printf("Remaining schedules: %d\n", len(updatedSchedules))
 }
@@ -1788,10 +1827,10 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise schedule trigger <name>")
 		return
 	}
-	
+
 	scheduleName := args[0]
 	fmt.Printf("Triggering schedule: %s\n", scheduleName)
-	
+
 	// Load existing schedules
 	scheduleFile := "./schedules.yaml"
 	if _, err := os.Stat(scheduleFile); os.IsNotExist(err) {
@@ -1799,23 +1838,23 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 		fmt.Println("No schedules exist yet.")
 		return
 	}
-	
+
 	data, err := os.ReadFile(scheduleFile)
 	if err != nil {
 		fmt.Printf("Error reading schedule file: %v\n", err)
 		return
 	}
-	
+
 	var schedules []map[string]interface{}
 	if err := yaml.Unmarshal(data, &schedules); err != nil {
 		fmt.Printf("Error parsing schedules: %v\n", err)
 		return
 	}
-	
+
 	// Find the schedule
 	var targetSchedule map[string]interface{}
 	found := false
-	
+
 	for _, schedule := range schedules {
 		if name, ok := schedule["name"].(string); ok && name == scheduleName {
 			targetSchedule = schedule
@@ -1823,7 +1862,7 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 			break
 		}
 	}
-	
+
 	if !found {
 		fmt.Printf("Error: Schedule '%s' not found\n", scheduleName)
 		fmt.Println("Available schedules:")
@@ -1834,23 +1873,23 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 		}
 		return
 	}
-	
+
 	// Check if schedule is enabled
 	enabled, _ := targetSchedule["enabled"].(bool)
 	if !enabled {
 		fmt.Printf("Warning: Schedule '%s' is disabled\n", scheduleName)
 		fmt.Println("Enable the schedule first with: schedule update <name> --enabled true")
 	}
-	
+
 	// Extract schedule details
 	scheduleType := getScheduleValue(targetSchedule, "type", "organization")
-	
+
 	fmt.Printf("📋 Schedule Details:\n")
 	fmt.Printf("  Name: %s\n", scheduleName)
 	fmt.Printf("  Type: %s\n", scheduleType)
 	fmt.Printf("  Schedule: %s\n", getScheduleValue(targetSchedule, "schedule", ""))
 	fmt.Printf("  Enabled: %t\n", enabled)
-	
+
 	// Load application configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -1858,22 +1897,22 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	ctx := context.Background()
 	repoManager := repository.NewManager(repository.DefaultManagerConfig())
-	
+
 	// Extract targets
 	targets, ok := targetSchedule["targets"].([]interface{})
 	if !ok || len(targets) == 0 {
 		fmt.Println("Error: No targets found in schedule")
 		return
 	}
-	
+
 	fmt.Printf("\n🚀 Triggering scan for %d targets...\n", len(targets))
-	
+
 	successCount := 0
 	errorCount := 0
-	
+
 	// Process each target
 	for i, target := range targets {
 		targetMap, ok := target.(map[interface{}]interface{})
@@ -1882,18 +1921,18 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 			errorCount++
 			continue
 		}
-		
+
 		organization := getScheduleConfigValue(targetMap, "organization", "")
 		provider := getScheduleConfigValue(targetMap, "provider", "github")
-		
+
 		if organization == "" {
 			fmt.Printf("Error: No organization specified for target %d\n", i)
 			errorCount++
 			continue
 		}
-		
+
 		fmt.Printf("\nTarget %d/%d: %s (%s)\n", i+1, len(targets), organization, provider)
-		
+
 		// Trigger scan based on schedule type
 		if scheduleType == "organization" {
 			if err := scanOrganizationFromConfig(ctx, repoManager, cfg, provider, organization); err != nil {
@@ -1908,7 +1947,7 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 			errorCount++
 		}
 	}
-	
+
 	// Update last run time in schedule
 	for i, schedule := range schedules {
 		if name, ok := schedule["name"].(string); ok && name == scheduleName {
@@ -1917,7 +1956,7 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 			break
 		}
 	}
-	
+
 	// Save updated schedules
 	updatedData, err := yaml.Marshal(schedules)
 	if err != nil {
@@ -1925,7 +1964,7 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 	} else {
 		os.WriteFile(scheduleFile, updatedData, 0644)
 	}
-	
+
 	fmt.Printf("\n📊 Trigger Summary:\n")
 	fmt.Printf("  Schedule: %s\n", scheduleName)
 	fmt.Printf("  Successful scans: %d\n", successCount)
@@ -1936,16 +1975,16 @@ func runScheduleTrigger(cmd *cobra.Command, args []string) {
 
 func runAuditLogs(cmd *cobra.Command, args []string) {
 	fmt.Println("Viewing audit logs...")
-	
+
 	// Get command flags
 	limit, _ := cmd.Flags().GetInt("limit")
 	filter, _ := cmd.Flags().GetString("filter")
 	since, _ := cmd.Flags().GetString("since")
-	
+
 	if limit <= 0 {
 		limit = 50 // Default limit
 	}
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -1953,13 +1992,13 @@ func runAuditLogs(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Check for audit log file
 	auditLogPath := "./logs/audit.log"
 	if cfg.App.DataDir != "" {
 		auditLogPath = filepath.Join(cfg.App.DataDir, "audit.log")
 	}
-	
+
 	// Check if audit log exists
 	if _, err := os.Stat(auditLogPath); os.IsNotExist(err) {
 		fmt.Printf("❌ Audit log not found at %s\n", auditLogPath)
@@ -1967,47 +2006,47 @@ func runAuditLogs(cmd *cobra.Command, args []string) {
 		fmt.Println("To enable audit logging, start the server with --enable-audit flag")
 		return
 	}
-	
+
 	// Read audit log file
 	data, err := os.ReadFile(auditLogPath)
 	if err != nil {
 		fmt.Printf("Error reading audit log: %v\n", err)
 		return
 	}
-	
+
 	if len(data) == 0 {
 		fmt.Println("Audit log is empty")
 		return
 	}
-	
+
 	// Parse audit log entries
 	lines := strings.Split(string(data), "\n")
 	var auditEntries []map[string]interface{}
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		var entry map[string]interface{}
 		if err := json.Unmarshal([]byte(line), &entry); err != nil {
 			// Skip non-JSON lines
 			continue
 		}
-		
+
 		// Apply filters
 		if filter != "" && !matchesAuditFilter(entry, filter) {
 			continue
 		}
-		
+
 		if since != "" && !isAfterTime(entry, since) {
 			continue
 		}
-		
+
 		auditEntries = append(auditEntries, entry)
 	}
-	
+
 	// Sort by timestamp (most recent first)
 	// Simple sort by comparing timestamp strings
 	for i := 0; i < len(auditEntries)-1; i++ {
@@ -2019,12 +2058,12 @@ func runAuditLogs(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	// Apply limit
 	if len(auditEntries) > limit {
 		auditEntries = auditEntries[:limit]
 	}
-	
+
 	// Display audit log summary
 	fmt.Printf("📋 Audit Log Summary:\n")
 	fmt.Printf("  Log file: %s\n", auditLogPath)
@@ -2036,39 +2075,39 @@ func runAuditLogs(cmd *cobra.Command, args []string) {
 	if since != "" {
 		fmt.Printf("  Since: %s\n", since)
 	}
-	
+
 	// Display audit entries
 	fmt.Printf("\n📊 Audit Entries:\n")
-	fmt.Printf("%-20s %-15s %-20s %-30s %-20s\n", 
+	fmt.Printf("%-20s %-15s %-20s %-30s %-20s\n",
 		"Timestamp", "Event Type", "User", "Resource", "Action")
 	fmt.Println(strings.Repeat("-", 105))
-	
+
 	for _, entry := range auditEntries {
 		timestamp := getStringValue(entry, "timestamp")
 		if len(timestamp) > 19 {
 			timestamp = timestamp[:19] // Truncate to YYYY-MM-DD HH:MM:SS
 		}
-		
+
 		eventType := getStringValue(entry, "event_type")
 		if eventType == "" {
 			eventType = getStringValue(entry, "type")
 		}
-		
+
 		user := getStringValue(entry, "user")
 		if user == "" {
 			user = getStringValue(entry, "actor")
 		}
-		
+
 		resource := getStringValue(entry, "resource")
 		if resource == "" {
 			resource = getStringValue(entry, "target")
 		}
-		
+
 		action := getStringValue(entry, "action")
 		if action == "" {
 			action = getStringValue(entry, "operation")
 		}
-		
+
 		fmt.Printf("%-20s %-15s %-20s %-30s %-20s\n",
 			timestamp,
 			truncateString(eventType, 15),
@@ -2076,18 +2115,18 @@ func runAuditLogs(cmd *cobra.Command, args []string) {
 			truncateString(resource, 30),
 			truncateString(action, 20))
 	}
-	
+
 	if len(auditEntries) == 0 {
 		fmt.Println("No audit entries found matching the criteria")
 	}
-	
+
 	fmt.Printf("\nUse --limit to show more entries, --filter to filter by content, --since to filter by time\n")
 }
 
 // Helper function to check if audit entry matches filter
 func matchesAuditFilter(entry map[string]interface{}, filter string) bool {
 	filterLower := strings.ToLower(filter)
-	
+
 	// Check common fields
 	fields := []string{"event_type", "type", "user", "actor", "resource", "target", "action", "operation", "message"}
 	for _, field := range fields {
@@ -2097,7 +2136,7 @@ func matchesAuditFilter(entry map[string]interface{}, filter string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -2107,7 +2146,7 @@ func isAfterTime(entry map[string]interface{}, since string) bool {
 	if timestamp == "" {
 		return false
 	}
-	
+
 	// Simple string comparison for ISO timestamps
 	return timestamp >= since
 }
@@ -2122,17 +2161,17 @@ func truncateString(s string, maxLen int) string {
 
 func runAuditReport(cmd *cobra.Command, args []string) {
 	fmt.Println("Generating compliance report...")
-	
+
 	// Get command flags
 	format, _ := cmd.Flags().GetString("format")
 	output, _ := cmd.Flags().GetString("output")
 	since, _ := cmd.Flags().GetString("since")
 	until, _ := cmd.Flags().GetString("until")
-	
+
 	if format == "" {
 		format = "json"
 	}
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -2140,41 +2179,41 @@ func runAuditReport(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Check for audit log file
 	auditLogPath := "./logs/audit.log"
 	if cfg.App.DataDir != "" {
 		auditLogPath = filepath.Join(cfg.App.DataDir, "audit.log")
 	}
-	
+
 	// Check if audit log exists
 	if _, err := os.Stat(auditLogPath); os.IsNotExist(err) {
 		fmt.Printf("❌ Audit log not found at %s\n", auditLogPath)
 		fmt.Println("Cannot generate compliance report without audit logs")
 		return
 	}
-	
+
 	// Read and parse audit log
 	data, err := os.ReadFile(auditLogPath)
 	if err != nil {
 		fmt.Printf("Error reading audit log: %v\n", err)
 		return
 	}
-	
+
 	lines := strings.Split(string(data), "\n")
 	var auditEntries []map[string]interface{}
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		var entry map[string]interface{}
 		if err := json.Unmarshal([]byte(line), &entry); err != nil {
 			continue
 		}
-		
+
 		// Apply time filters
 		timestamp := getStringValue(entry, "timestamp")
 		if since != "" && timestamp < since {
@@ -2183,13 +2222,13 @@ func runAuditReport(cmd *cobra.Command, args []string) {
 		if until != "" && timestamp > until {
 			continue
 		}
-		
+
 		auditEntries = append(auditEntries, entry)
 	}
-	
+
 	// Generate compliance report
 	report := generateComplianceReport(auditEntries, since, until)
-	
+
 	// Format and output report
 	var reportData []byte
 	switch format {
@@ -2203,12 +2242,12 @@ func runAuditReport(cmd *cobra.Command, args []string) {
 		fmt.Printf("Unsupported format: %s. Supported formats: json, csv, html\n", format)
 		return
 	}
-	
+
 	if err != nil {
 		fmt.Printf("Error formatting report: %v\n", err)
 		return
 	}
-	
+
 	// Output to file or stdout
 	if output != "" {
 		if err := os.WriteFile(output, reportData, 0644); err != nil {
@@ -2223,12 +2262,12 @@ func runAuditReport(cmd *cobra.Command, args []string) {
 
 func runConfigValidate(cmd *cobra.Command, args []string) {
 	fmt.Println("Validating configuration...")
-	
+
 	configPath := "."
 	if len(args) > 0 {
 		configPath = args[0]
 	}
-	
+
 	// Load and validate configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load(configPath); err != nil {
@@ -2236,13 +2275,13 @@ func runConfigValidate(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 		return
 	}
-	
+
 	cfg := cfgManager.Get()
 	fmt.Println("✅ Configuration loaded successfully")
-	
+
 	// Validate specific sections
 	validationErrors := []string{}
-	
+
 	// Validate database configuration
 	if cfg.Database.Type == "" {
 		validationErrors = append(validationErrors, "Database type is required")
@@ -2254,12 +2293,12 @@ func runConfigValidate(cmd *cobra.Command, args []string) {
 			validationErrors = append(validationErrors, "Database username is required for non-sqlite databases")
 		}
 	}
-	
+
 	// Validate server configuration
 	if cfg.Server.Port < 1 || cfg.Server.Port > 65535 {
 		validationErrors = append(validationErrors, "Server port must be between 1 and 65535")
 	}
-	
+
 	// Validate ML configuration
 	if cfg.ML.Enabled {
 		if cfg.ML.ModelPath == "" {
@@ -2269,7 +2308,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) {
 			validationErrors = append(validationErrors, "ML threshold must be between 0 and 1")
 		}
 	}
-	
+
 	// Validate Redis configuration
 	if cfg.Redis.Enabled {
 		if cfg.Redis.Host == "" {
@@ -2279,13 +2318,13 @@ func runConfigValidate(cmd *cobra.Command, args []string) {
 			validationErrors = append(validationErrors, "Redis port must be between 1 and 65535")
 		}
 	}
-	
+
 	// Validate integrations
 	if cfg.Integrations != nil && cfg.Integrations.Enabled {
 		if len(cfg.Integrations.Connectors) == 0 {
 			validationErrors = append(validationErrors, "At least one connector must be configured when integrations are enabled")
 		}
-		
+
 		for name, connector := range cfg.Integrations.Connectors {
 			if connector.Type == "" {
 				validationErrors = append(validationErrors, fmt.Sprintf("Connector %s must have a type", name))
@@ -2295,7 +2334,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	// Report validation results
 	if len(validationErrors) > 0 {
 		fmt.Printf("❌ Configuration validation failed with %d errors:\n", len(validationErrors))
@@ -2318,12 +2357,12 @@ func runConfigValidate(cmd *cobra.Command, args []string) {
 
 func runConfigGenerate(cmd *cobra.Command, args []string) {
 	fmt.Println("Generating configuration template...")
-	
+
 	outputFile := "config.yaml"
 	if len(args) > 0 {
 		outputFile = args[0]
 	}
-	
+
 	// Generate a comprehensive configuration template
 	configTemplate := `# Typosentinel Enterprise Configuration
 # This is a comprehensive configuration template with all available options
@@ -2545,14 +2584,14 @@ supply_chain:
       high: 0.8
       critical: 0.9
 `
-	
+
 	// Write configuration to file
 	if err := os.WriteFile(outputFile, []byte(configTemplate), 0644); err != nil {
 		fmt.Printf("❌ Failed to write configuration file: %v\n", err)
 		os.Exit(1)
 		return
 	}
-	
+
 	fmt.Printf("✅ Configuration template generated: %s\n", outputFile)
 	fmt.Println("📝 Please review and customize the configuration for your environment")
 	fmt.Println("🔧 Key sections to configure:")
@@ -2565,7 +2604,7 @@ supply_chain:
 
 func runHealthCheck(cmd *cobra.Command, args []string) {
 	fmt.Println("Performing health check...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -2574,7 +2613,7 @@ func runHealthCheck(cmd *cobra.Command, args []string) {
 	}
 	cfg := cfgManager.Get()
 	fmt.Println("✅ Configuration: Loaded successfully")
-	
+
 	// Check database connectivity
 	if cfg.Database.Type != "" {
 		dbConfig := &database.DatabaseConfig{
@@ -2587,7 +2626,7 @@ func runHealthCheck(cmd *cobra.Command, args []string) {
 			MaxConns: cfg.Database.MaxOpenConns,
 			MaxIdle:  cfg.Database.MaxIdleConns,
 		}
-		
+
 		dbService, err := database.NewDatabaseService(dbConfig)
 		if err != nil {
 			fmt.Printf("❌ Database: Connection failed - %v\n", err)
@@ -2598,14 +2637,14 @@ func runHealthCheck(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Println("⚠️  Database: No database type configured")
 	}
-	
+
 	// Check Redis connectivity
 	if cfg.Redis.Enabled {
 		fmt.Printf("✅ Redis: Configuration found (Host: %s:%d)\n", cfg.Redis.Host, cfg.Redis.Port)
 	} else {
 		fmt.Println("⚠️  Redis: Disabled in configuration")
 	}
-	
+
 	// Check ML models
 	if cfg.ML.Enabled {
 		if cfg.ML.ModelPath != "" {
@@ -2616,7 +2655,7 @@ func runHealthCheck(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Println("⚠️  ML Models: Disabled in configuration")
 	}
-	
+
 	// Check integrations
 	integrationCount := 0
 	if cfg.Integrations != nil && cfg.Integrations.Enabled {
@@ -2627,18 +2666,18 @@ func runHealthCheck(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	fmt.Printf("✅ Integrations: %d configured\n", integrationCount)
-	
+
 	// Check features
 	fmt.Printf("✅ Features: Enterprise mode enabled\n")
-	
+
 	fmt.Println("\n🏥 Health check completed")
 }
 
 func runHealthMetrics(cmd *cobra.Command, args []string) {
 	fmt.Println("Collecting health metrics...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -2646,7 +2685,7 @@ func runHealthMetrics(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Initialize database service
 	dbConfig := &database.DatabaseConfig{
 		Host:     cfg.Database.Host,
@@ -2658,14 +2697,14 @@ func runHealthMetrics(cmd *cobra.Command, args []string) {
 		MaxConns: cfg.Database.MaxOpenConns,
 		MaxIdle:  cfg.Database.MaxIdleConns,
 	}
-	
+
 	dbService, err := database.NewDatabaseService(dbConfig)
 	if err != nil {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
 	defer dbService.Close()
-	
+
 	// Collect metrics
 	metrics := map[string]interface{}{
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
@@ -2673,9 +2712,9 @@ func runHealthMetrics(cmd *cobra.Command, args []string) {
 			"uptime":     time.Since(time.Now().Add(-time.Hour)).String(), // Placeholder
 			"goroutines": runtime.NumGoroutine(),
 			"memory": map[string]interface{}{
-				"alloc":      runtime.MemStats{}.Alloc,
+				"alloc":       runtime.MemStats{}.Alloc,
 				"total_alloc": runtime.MemStats{}.TotalAlloc,
-				"sys":        runtime.MemStats{}.Sys,
+				"sys":         runtime.MemStats{}.Sys,
 			},
 		},
 		"database": map[string]interface{}{
@@ -2688,16 +2727,16 @@ func runHealthMetrics(cmd *cobra.Command, args []string) {
 			"integrations_enabled": cfg.Integrations != nil && cfg.Integrations.Enabled,
 		},
 	}
-	
+
 	// Add scan statistics if available
 	// This would typically query the database for scan counts, etc.
 	metrics["scans"] = map[string]interface{}{
-		"total_scans":      0, // Would query from database
-		"recent_scans":     0, // Scans in last 24h
-		"failed_scans":     0, // Failed scans count
+		"total_scans":      0,    // Would query from database
+		"recent_scans":     0,    // Scans in last 24h
+		"failed_scans":     0,    // Failed scans count
 		"average_duration": "0s", // Average scan duration
 	}
-	
+
 	// Add threat detection statistics
 	metrics["threats"] = map[string]interface{}{
 		"total_threats":    0, // Would query from database
@@ -2705,14 +2744,14 @@ func runHealthMetrics(cmd *cobra.Command, args []string) {
 		"critical_threats": 0, // Critical severity threats
 		"resolved_threats": 0, // Resolved threats count
 	}
-	
+
 	// Output metrics as JSON
 	output, err := json.MarshalIndent(metrics, "", "  ")
 	if err != nil {
 		fmt.Printf("Error marshaling metrics: %v\n", err)
 		return
 	}
-	
+
 	fmt.Println(string(output))
 }
 
@@ -2722,18 +2761,18 @@ func runExportScans(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise export scans <output-file> [--format json|csv|sarif] [--filter <filter>]")
 		return
 	}
-	
+
 	outputFile := args[0]
 	format, _ := cmd.Flags().GetString("format")
 	filter, _ := cmd.Flags().GetString("filter")
-	
+
 	if format == "" {
 		format = "json" // Default format
 	}
-	
+
 	fmt.Printf("Exporting scan results to: %s\n", outputFile)
 	fmt.Printf("Format: %s\n", format)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -2741,7 +2780,7 @@ func runExportScans(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Check for scan results directory
 	resultsDir := filepath.Join(cfg.App.DataDir, "scan_results")
 	if _, err := os.Stat(resultsDir); os.IsNotExist(err) {
@@ -2749,7 +2788,7 @@ func runExportScans(cmd *cobra.Command, args []string) {
 		fmt.Println("Run some scans first to generate results")
 		return
 	}
-	
+
 	// Collect scan result files
 	var scanFiles []string
 	walkErr := filepath.Walk(resultsDir, func(path string, info os.FileInfo, err error) error {
@@ -2761,94 +2800,94 @@ func runExportScans(cmd *cobra.Command, args []string) {
 		}
 		return nil
 	})
-	
+
 	if walkErr != nil {
 		fmt.Printf("Error scanning results directory: %v\n", walkErr)
 		return
 	}
-	
+
 	if len(scanFiles) == 0 {
 		fmt.Println("❌ No scan result files found")
 		return
 	}
-	
+
 	fmt.Printf("Found %d scan result files\n", len(scanFiles))
-	
+
 	// Aggregate scan results
 	var allResults []map[string]interface{}
 	totalThreats := 0
-	
+
 	for _, file := range scanFiles {
 		data, err := os.ReadFile(file)
 		if err != nil {
 			fmt.Printf("Warning: Failed to read %s: %v\n", file, err)
 			continue
 		}
-		
+
 		var result map[string]interface{}
 		if err := json.Unmarshal(data, &result); err != nil {
 			fmt.Printf("Warning: Failed to parse %s: %v\n", file, err)
 			continue
 		}
-		
+
 		// Apply filter if specified
 		if filter != "" && !matchesFilter(result, filter) {
 			continue
 		}
-		
+
 		// Add metadata
 		result["source_file"] = file
 		result["exported_at"] = time.Now().Format(time.RFC3339)
-		
+
 		allResults = append(allResults, result)
-		
+
 		// Count threats
 		if threats, ok := result["threats"].([]interface{}); ok {
 			totalThreats += len(threats)
 		}
 	}
-	
+
 	fmt.Printf("Collected %d scan results with %d total threats\n", len(allResults), totalThreats)
-	
+
 	// Export based on format
 	var exportData []byte
 	var exportErr error
-	
+
 	switch format {
 	case "json":
 		exportData, exportErr = json.MarshalIndent(map[string]interface{}{
 			"export_info": map[string]interface{}{
-				"exported_at":    time.Now().Format(time.RFC3339),
-				"total_scans":    len(allResults),
-				"total_threats":  totalThreats,
-				"format":         format,
-				"filter":         filter,
+				"exported_at":   time.Now().Format(time.RFC3339),
+				"total_scans":   len(allResults),
+				"total_threats": totalThreats,
+				"format":        format,
+				"filter":        filter,
 			},
 			"scan_results": allResults,
 		}, "", "  ")
-		
+
 	case "csv":
 		exportData, exportErr = exportToCSV(allResults)
-		
+
 	case "sarif":
 		exportData, exportErr = exportToSARIF(allResults)
-		
+
 	default:
 		fmt.Printf("Error: Unsupported format '%s'. Supported formats: json, csv, sarif\n", format)
 		return
 	}
-	
+
 	if exportErr != nil {
 		fmt.Printf("Error formatting export data: %v\n", exportErr)
 		return
 	}
-	
+
 	// Write export file
 	if err := os.WriteFile(outputFile, exportData, 0644); err != nil {
 		fmt.Printf("Error writing export file: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("✅ Export completed successfully:\n")
 	fmt.Printf("  Output file: %s\n", outputFile)
 	fmt.Printf("  Format: %s\n", format)
@@ -2861,13 +2900,13 @@ func runExportScans(cmd *cobra.Command, args []string) {
 func matchesFilter(result map[string]interface{}, filter string) bool {
 	// Simple filter implementation - check if filter string exists in repository name or threats
 	filterLower := strings.ToLower(filter)
-	
+
 	if repo, ok := result["repository"].(string); ok {
 		if strings.Contains(strings.ToLower(repo), filterLower) {
 			return true
 		}
 	}
-	
+
 	if threats, ok := result["threats"].([]interface{}); ok {
 		for _, threat := range threats {
 			if threatMap, ok := threat.(map[string]interface{}); ok {
@@ -2879,7 +2918,7 @@ func matchesFilter(result map[string]interface{}, filter string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -2887,11 +2926,11 @@ func matchesFilter(result map[string]interface{}, filter string) bool {
 func exportToCSV(results []map[string]interface{}) ([]byte, error) {
 	var buffer bytes.Buffer
 	writer := csv.NewWriter(&buffer)
-	
+
 	// Write header
 	header := []string{"Repository", "Scan Date", "Threats Count", "Status", "Duration"}
 	writer.Write(header)
-	
+
 	// Write data rows
 	for _, result := range results {
 		row := []string{
@@ -2903,7 +2942,7 @@ func exportToCSV(results []map[string]interface{}) ([]byte, error) {
 		}
 		writer.Write(row)
 	}
-	
+
 	writer.Flush()
 	return buffer.Bytes(), writer.Error()
 }
@@ -2925,21 +2964,21 @@ func exportToSARIF(results []map[string]interface{}) ([]byte, error) {
 			},
 		},
 	}
-	
+
 	return json.MarshalIndent(sarif, "", "  ")
 }
 
 // Helper function to convert results to SARIF format
 func convertToSARIFResults(results []map[string]interface{}) []map[string]interface{} {
 	var sarifResults []map[string]interface{}
-	
+
 	for _, result := range results {
 		if threats, ok := result["threats"].([]interface{}); ok {
 			for _, threat := range threats {
 				if threatMap, ok := threat.(map[string]interface{}); ok {
 					sarifResult := map[string]interface{}{
-						"ruleId":  "typo-detection",
-						"level":   "warning",
+						"ruleId": "typo-detection",
+						"level":  "warning",
 						"message": map[string]interface{}{
 							"text": fmt.Sprintf("Potential typosquatting detected: %s", getStringValue(threatMap, "package")),
 						},
@@ -2958,7 +2997,7 @@ func convertToSARIFResults(results []map[string]interface{}) []map[string]interf
 			}
 		}
 	}
-	
+
 	return sarifResults
 }
 
@@ -2986,17 +3025,17 @@ func runExportDashboard(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise export dashboard <output-file> [--format html|json|pdf] [--include-charts]")
 		return
 	}
-	
+
 	outputFile := args[0]
 	format, _ := cmd.Flags().GetString("format")
 	includeCharts, _ := cmd.Flags().GetBool("include-charts")
-	
+
 	if format == "" {
 		format = "html"
 	}
-	
+
 	fmt.Printf("Exporting dashboard to: %s (format: %s)\n", outputFile, format)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3004,7 +3043,7 @@ func runExportDashboard(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Initialize database connection
 	dbConfig := &database.DatabaseConfig{
 		Host:     cfg.Database.Host,
@@ -3016,21 +3055,21 @@ func runExportDashboard(cmd *cobra.Command, args []string) {
 		MaxConns: cfg.Database.MaxOpenConns,
 		MaxIdle:  cfg.Database.MaxIdleConns,
 	}
-	
+
 	dbService, err := database.NewDatabaseService(dbConfig)
 	if err != nil {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
 	defer dbService.Close()
-	
+
 	// Collect dashboard data
 	dashboardData := collectDashboardData(dbService)
-	
+
 	// Generate dashboard export based on format
 	var content []byte
 	var fileExt string
-	
+
 	switch format {
 	case "html":
 		content, err = generateDashboardHTML(dashboardData, includeCharts)
@@ -3046,23 +3085,23 @@ func runExportDashboard(cmd *cobra.Command, args []string) {
 		fmt.Printf("Error: Unsupported format '%s'. Supported formats: html, json, pdf\n", format)
 		return
 	}
-	
+
 	if err != nil {
 		fmt.Printf("Error generating dashboard export: %v\n", err)
 		return
 	}
-	
+
 	// Ensure output file has correct extension
 	if !strings.HasSuffix(outputFile, fileExt) {
 		outputFile += fileExt
 	}
-	
+
 	// Write to file
 	if err := os.WriteFile(outputFile, content, 0644); err != nil {
 		fmt.Printf("Error writing dashboard export: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("✅ Dashboard exported successfully to: %s\n", outputFile)
 	fmt.Printf("📊 Export includes:\n")
 	fmt.Printf("  - System overview\n")
@@ -3077,7 +3116,7 @@ func runExportDashboard(cmd *cobra.Command, args []string) {
 
 func runUserList(cmd *cobra.Command, args []string) {
 	fmt.Println("Listing users...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3085,57 +3124,57 @@ func runUserList(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Initialize database connection directly
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username, 
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username,
 		cfg.Database.Password, cfg.Database.Database, cfg.Database.SSLMode)
-	
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
 	defer db.Close()
-	
+
 	// Test connection
 	if err := db.Ping(); err != nil {
 		fmt.Printf("Error pinging database: %v\n", err)
 		return
 	}
-	
+
 	// Query users directly from database
 	// This is a simplified implementation - in a real system you'd use the auth service
 	query := `SELECT id, username, email, role, created_at, active FROM users ORDER BY created_at DESC`
-	
+
 	rows, err := db.Query(query)
 	if err != nil {
 		fmt.Printf("Error querying users: %v\n", err)
 		return
 	}
 	defer rows.Close()
-	
+
 	// Display users in a table format
-	fmt.Printf("%-10s %-20s %-30s %-15s %-20s %-10s\n", 
+	fmt.Printf("%-10s %-20s %-30s %-15s %-20s %-10s\n",
 		"ID", "Username", "Email", "Role", "Created", "Active")
 	fmt.Println(strings.Repeat("-", 105))
-	
+
 	userCount := 0
 	for rows.Next() {
 		var id, username, email, role string
 		var createdAt time.Time
 		var active bool
-		
+
 		if err := rows.Scan(&id, &username, &email, &role, &createdAt, &active); err != nil {
 			fmt.Printf("Error scanning user row: %v\n", err)
 			continue
 		}
-		
+
 		status := "Yes"
 		if !active {
 			status = "No"
 		}
-		
+
 		fmt.Printf("%-10s %-20s %-30s %-15s %-20s %-10s\n",
 			id,
 			username,
@@ -3143,10 +3182,10 @@ func runUserList(cmd *cobra.Command, args []string) {
 			role,
 			createdAt.Format("2006-01-02 15:04"),
 			status)
-		
+
 		userCount++
 	}
-	
+
 	if userCount == 0 {
 		fmt.Println("No users found")
 		fmt.Println("Note: Users table may not exist yet. Run database migrations first.")
@@ -3161,22 +3200,22 @@ func runUserCreate(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise user create <username> --email <email> --role <role>")
 		return
 	}
-	
+
 	username := args[0]
 	email, _ := cmd.Flags().GetString("email")
 	role, _ := cmd.Flags().GetString("role")
-	
+
 	if email == "" {
 		fmt.Println("Error: email is required")
 		return
 	}
-	
+
 	if role == "" {
 		role = "user" // Default role
 	}
-	
+
 	fmt.Printf("Creating user: %s\n", username)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3184,40 +3223,40 @@ func runUserCreate(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Initialize database connection
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username, 
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username,
 		cfg.Database.Password, cfg.Database.Database, cfg.Database.SSLMode)
-	
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
 	defer db.Close()
-	
+
 	// Test connection
 	if err := db.Ping(); err != nil {
 		fmt.Printf("Error pinging database: %v\n", err)
 		return
 	}
-	
+
 	// Create user
 	query := `
 		INSERT INTO users (id, username, email, role, created_at, updated_at, active)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	
+
 	userID := fmt.Sprintf("user_%d", time.Now().Unix())
 	now := time.Now()
-	
+
 	_, err = db.Exec(query, userID, username, email, role, now, now, true)
 	if err != nil {
 		fmt.Printf("Error creating user: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("User created successfully:\n")
 	fmt.Printf("  ID: %s\n", userID)
 	fmt.Printf("  Username: %s\n", username)
@@ -3232,14 +3271,14 @@ func runUserUpdate(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise user update <username> [--email <email>] [--role <role>] [--enabled <true/false>]")
 		return
 	}
-	
+
 	username := args[0]
 	email, _ := cmd.Flags().GetString("email")
 	role, _ := cmd.Flags().GetString("role")
 	enabled, _ := cmd.Flags().GetBool("enabled")
-	
+
 	fmt.Printf("Updating user: %s\n", username)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3247,25 +3286,25 @@ func runUserUpdate(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Initialize database connection
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username, 
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username,
 		cfg.Database.Password, cfg.Database.Database, cfg.Database.SSLMode)
-	
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
 	defer db.Close()
-	
+
 	// Test connection
 	if err := db.Ping(); err != nil {
 		fmt.Printf("Error pinging database: %v\n", err)
 		return
 	}
-	
+
 	// Check if user exists
 	var userID string
 	checkQuery := `SELECT id FROM users WHERE username = $1`
@@ -3278,66 +3317,66 @@ func runUserUpdate(cmd *cobra.Command, args []string) {
 		fmt.Printf("Error checking user: %v\n", err)
 		return
 	}
-	
+
 	// Build update query dynamically based on provided flags
 	var setParts []string
 	var updateArgs []interface{}
 	argIndex := 1
-	
+
 	if email != "" {
 		setParts = append(setParts, fmt.Sprintf("email = $%d", argIndex))
 		updateArgs = append(updateArgs, email)
 		argIndex++
 	}
-	
+
 	if role != "" {
 		setParts = append(setParts, fmt.Sprintf("role = $%d", argIndex))
 		updateArgs = append(updateArgs, role)
 		argIndex++
 	}
-	
+
 	if cmd.Flags().Changed("enabled") {
 		setParts = append(setParts, fmt.Sprintf("active = $%d", argIndex))
 		updateArgs = append(updateArgs, enabled)
 		argIndex++
 	}
-	
+
 	if len(setParts) == 0 {
 		fmt.Println("No updates specified. Use --email, --role, or --enabled flags.")
 		return
 	}
-	
+
 	// Add updated_at timestamp
 	setParts = append(setParts, fmt.Sprintf("updated_at = $%d", argIndex))
 	updateArgs = append(updateArgs, time.Now())
 	argIndex++
-	
+
 	// Add username for WHERE clause
 	updateArgs = append(updateArgs, username)
-	
-	updateQuery := fmt.Sprintf("UPDATE users SET %s WHERE username = $%d", 
+
+	updateQuery := fmt.Sprintf("UPDATE users SET %s WHERE username = $%d",
 		strings.Join(setParts, ", "), argIndex)
-	
+
 	_, err = db.Exec(updateQuery, updateArgs...)
 	if err != nil {
 		fmt.Printf("Error updating user: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("User '%s' updated successfully\n", username)
-	
+
 	// Show updated user info
 	var updatedEmail, updatedRole string
 	var updatedActive bool
 	var updatedAt time.Time
-	
+
 	selectQuery := `SELECT email, role, active, updated_at FROM users WHERE username = $1`
 	err = db.QueryRow(selectQuery, username).Scan(&updatedEmail, &updatedRole, &updatedActive, &updatedAt)
 	if err != nil {
 		fmt.Printf("Error retrieving updated user info: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("Updated information:\n")
 	fmt.Printf("  Username: %s\n", username)
 	fmt.Printf("  Email: %s\n", updatedEmail)
@@ -3352,10 +3391,10 @@ func runUserDelete(cmd *cobra.Command, args []string) {
 		fmt.Println("Usage: typosentinel-enterprise user delete <username>")
 		return
 	}
-	
+
 	username := args[0]
 	fmt.Printf("Deleting user: %s\n", username)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3363,30 +3402,30 @@ func runUserDelete(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Initialize database connection
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username, 
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username,
 		cfg.Database.Password, cfg.Database.Database, cfg.Database.SSLMode)
-	
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
 	defer db.Close()
-	
+
 	// Test connection
 	if err := db.Ping(); err != nil {
 		fmt.Printf("Error pinging database: %v\n", err)
 		return
 	}
-	
+
 	// Check if user exists and get user info
 	var userID, email, role string
 	var active bool
 	var createdAt time.Time
-	
+
 	checkQuery := `SELECT id, email, role, active, created_at FROM users WHERE username = $1`
 	err = db.QueryRow(checkQuery, username).Scan(&userID, &email, &role, &active, &createdAt)
 	if err != nil {
@@ -3397,7 +3436,7 @@ func runUserDelete(cmd *cobra.Command, args []string) {
 		fmt.Printf("Error checking user: %v\n", err)
 		return
 	}
-	
+
 	// Show user info before deletion
 	fmt.Printf("User to be deleted:\n")
 	fmt.Printf("  ID: %s\n", userID)
@@ -3406,17 +3445,17 @@ func runUserDelete(cmd *cobra.Command, args []string) {
 	fmt.Printf("  Role: %s\n", role)
 	fmt.Printf("  Active: %v\n", active)
 	fmt.Printf("  Created: %s\n", createdAt.Format("2006-01-02 15:04:05"))
-	
+
 	// Confirm deletion
 	fmt.Print("\nAre you sure you want to delete this user? (y/N): ")
 	var confirmation string
 	fmt.Scanln(&confirmation)
-	
+
 	if strings.ToLower(confirmation) != "y" && strings.ToLower(confirmation) != "yes" {
 		fmt.Println("User deletion cancelled")
 		return
 	}
-	
+
 	// Delete user
 	deleteQuery := `DELETE FROM users WHERE username = $1`
 	result, err := db.Exec(deleteQuery, username)
@@ -3424,24 +3463,24 @@ func runUserDelete(cmd *cobra.Command, args []string) {
 		fmt.Printf("Error deleting user: %v\n", err)
 		return
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		fmt.Printf("Error getting affected rows: %v\n", err)
 		return
 	}
-	
+
 	if rowsAffected == 0 {
 		fmt.Printf("No user was deleted (user may not exist)\n")
 		return
 	}
-	
+
 	fmt.Printf("User '%s' deleted successfully\n", username)
 }
 
 func runPolicyList(cmd *cobra.Command, args []string) {
 	fmt.Println("Listing security policies...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3449,58 +3488,58 @@ func runPolicyList(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Display configured policies from config
 	fmt.Printf("\n%-20s %-15s %-50s %-15s\n", "Policy Name", "Type", "Description", "Configuration")
 	fmt.Println(strings.Repeat("-", 100))
-	
+
 	policyCount := 0
-	
+
 	// Main threat detection policy
-	fmt.Printf("%-20s %-15s %-50s %-15s\n", 
-		"threat-detection", "Security", "Main threat detection and response policy", 
+	fmt.Printf("%-20s %-15s %-50s %-15s\n",
+		"threat-detection", "Security", "Main threat detection and response policy",
 		fmt.Sprintf("Fail: %v", cfg.Policies.FailOnThreats))
 	policyCount++
-	
+
 	// Minimum threat level policy
-	fmt.Printf("%-20s %-15s %-50s %-15s\n", 
-		"threat-threshold", "Security", "Minimum threat level for action", 
+	fmt.Printf("%-20s %-15s %-50s %-15s\n",
+		"threat-threshold", "Security", "Minimum threat level for action",
 		fmt.Sprintf("Level: %s", cfg.Policies.MinThreatLevel))
 	policyCount++
-	
+
 	// Additional policies from other config sections
 	if cfg.TypoDetection.Enabled {
-		fmt.Printf("%-20s %-15s %-50s %-15s\n", 
-			"typo-detection", "Detection", "Typosquatting detection rules", 
+		fmt.Printf("%-20s %-15s %-50s %-15s\n",
+			"typo-detection", "Detection", "Typosquatting detection rules",
 			fmt.Sprintf("Threshold: %.2f", cfg.TypoDetection.Threshold))
 		policyCount++
 	}
-	
+
 	if cfg.SupplyChain.Enabled {
-		fmt.Printf("%-20s %-15s %-50s %-15s\n", 
-			"supply-chain", "Security", "Supply chain security monitoring", 
+		fmt.Printf("%-20s %-15s %-50s %-15s\n",
+			"supply-chain", "Security", "Supply chain security monitoring",
 			"Enabled")
 		policyCount++
 	}
-	
+
 	if cfg.MLAnalysis.Enabled {
-		fmt.Printf("%-20s %-15s %-50s %-15s\n", 
-			"ml-analysis", "Detection", "Machine learning threat analysis", 
+		fmt.Printf("%-20s %-15s %-50s %-15s\n",
+			"ml-analysis", "Detection", "Machine learning threat analysis",
 			fmt.Sprintf("Threshold: %.2f", cfg.MLAnalysis.Threshold))
 		policyCount++
 	}
-	
+
 	fmt.Printf("\nTotal policies: %d\n", policyCount)
-	
+
 	// Show policy details
 	fmt.Println("\nPolicy Details:")
 	fmt.Println("===============")
-	
+
 	fmt.Printf("\nThreat Detection Policy:\n")
 	fmt.Printf("  Fail on Threats: %v\n", cfg.Policies.FailOnThreats)
 	fmt.Printf("  Minimum Threat Level: %s\n", cfg.Policies.MinThreatLevel)
 	fmt.Printf("  Description: %s\n", "Controls how the system responds to detected threats")
-	
+
 	if cfg.TypoDetection.Enabled {
 		fmt.Printf("\nTypo Detection Policy:\n")
 		fmt.Printf("  Enabled: %v\n", cfg.TypoDetection.Enabled)
@@ -3514,7 +3553,7 @@ func runPolicyList(cmd *cobra.Command, args []string) {
 			fmt.Printf("  Dictionary Path: %s\n", cfg.TypoDetection.DictionaryPath)
 		}
 	}
-	
+
 	if cfg.SupplyChain.Enabled {
 		fmt.Printf("\nSupply Chain Policy:\n")
 		fmt.Printf("  Enabled: %v\n", cfg.SupplyChain.Enabled)
@@ -3524,7 +3563,7 @@ func runPolicyList(cmd *cobra.Command, args []string) {
 		fmt.Printf("  Threat Intelligence: %v\n", cfg.SupplyChain.ThreatIntelligence.Enabled)
 		fmt.Printf("  Honeypot Detection: %v\n", cfg.SupplyChain.HoneypotDetection.Enabled)
 	}
-	
+
 	if cfg.MLAnalysis.Enabled {
 		fmt.Printf("\nML Analysis Policy:\n")
 		fmt.Printf("  Enabled: %v\n", cfg.MLAnalysis.Enabled)
@@ -3540,10 +3579,10 @@ func runPolicyCreate(cmd *cobra.Command, args []string) {
 		fmt.Println("Available policies: threat-detection, typo-detection, supply-chain, ml-analysis")
 		return
 	}
-	
+
 	policyName := args[0]
 	fmt.Printf("Creating policy: %s\n", policyName)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3551,13 +3590,13 @@ func runPolicyCreate(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Get flag values
 	enabled, _ := cmd.Flags().GetBool("enabled")
 	threshold, _ := cmd.Flags().GetFloat64("threshold")
 	failOnThreats, _ := cmd.Flags().GetBool("fail-on-threats")
 	threatLevel, _ := cmd.Flags().GetString("threat-level")
-	
+
 	// Create/update policy based on name
 	switch policyName {
 	case "threat-detection":
@@ -3574,7 +3613,7 @@ func runPolicyCreate(cmd *cobra.Command, args []string) {
 		fmt.Printf("  Threat detection policy created:\n")
 		fmt.Printf("    Fail on threats: %v\n", cfg.Policies.FailOnThreats)
 		fmt.Printf("    Minimum threat level: %s\n", cfg.Policies.MinThreatLevel)
-		
+
 	case "typo-detection":
 		if cmd.Flags().Changed("enabled") {
 			cfg.TypoDetection.Enabled = enabled
@@ -3592,12 +3631,12 @@ func runPolicyCreate(cmd *cobra.Command, args []string) {
 		cfg.TypoDetection.PhoneticMatching = true
 		cfg.TypoDetection.CheckSimilarNames = true
 		cfg.TypoDetection.CheckHomoglyphs = true
-		
+
 		fmt.Printf("  Typo detection policy created:\n")
 		fmt.Printf("    Enabled: %v\n", cfg.TypoDetection.Enabled)
 		fmt.Printf("    Threshold: %.2f\n", cfg.TypoDetection.Threshold)
 		fmt.Printf("    Similarity threshold: %.2f\n", cfg.TypoDetection.SimilarityThreshold)
-		
+
 	case "supply-chain":
 		if cmd.Flags().Changed("enabled") {
 			cfg.SupplyChain.Enabled = enabled
@@ -3610,12 +3649,12 @@ func runPolicyCreate(cmd *cobra.Command, args []string) {
 		cfg.SupplyChain.DependencyGraph.Enabled = true
 		cfg.SupplyChain.ThreatIntelligence.Enabled = true
 		cfg.SupplyChain.HoneypotDetection.Enabled = true
-		
+
 		fmt.Printf("  Supply chain policy created:\n")
 		fmt.Printf("    Enabled: %v\n", cfg.SupplyChain.Enabled)
 		fmt.Printf("    Build integrity: %v\n", cfg.SupplyChain.BuildIntegrity.Enabled)
 		fmt.Printf("    Threat intelligence: %v\n", cfg.SupplyChain.ThreatIntelligence.Enabled)
-		
+
 	case "ml-analysis":
 		if cmd.Flags().Changed("enabled") {
 			cfg.MLAnalysis.Enabled = enabled
@@ -3631,37 +3670,37 @@ func runPolicyCreate(cmd *cobra.Command, args []string) {
 		if cfg.MLAnalysis.ModelPath == "" {
 			cfg.MLAnalysis.ModelPath = "./ml/models/default.model"
 		}
-		
+
 		fmt.Printf("  ML analysis policy created:\n")
 		fmt.Printf("    Enabled: %v\n", cfg.MLAnalysis.Enabled)
 		fmt.Printf("    Threshold: %.2f\n", cfg.MLAnalysis.Threshold)
 		fmt.Printf("    Model path: %s\n", cfg.MLAnalysis.ModelPath)
-		
+
 	default:
 		fmt.Printf("Error: Unknown policy '%s'\n", policyName)
 		fmt.Println("Available policies: threat-detection, typo-detection, supply-chain, ml-analysis")
 		return
 	}
-	
+
 	// Save configuration to file
 	configData, err := yaml.Marshal(cfg)
 	if err != nil {
 		fmt.Printf("Error marshaling configuration: %v\n", err)
 		return
 	}
-	
+
 	configFile := "./config.yaml"
 	if err := os.WriteFile(configFile, configData, 0644); err != nil {
 		fmt.Printf("Error saving configuration to %s: %v\n", configFile, err)
 		return
 	}
-	
+
 	fmt.Printf("Policy '%s' created successfully\n", policyName)
 }
 
 func runPolicyValidate(cmd *cobra.Command, args []string) {
 	fmt.Println("Validating security policies...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3669,13 +3708,13 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	validationErrors := 0
 	warnings := 0
-	
+
 	fmt.Println("\n🔍 Policy Validation Report")
 	fmt.Println("==========================")
-	
+
 	// Validate threat detection policy
 	fmt.Printf("\n📋 Threat Detection Policy:\n")
 	if cfg.Policies.MinThreatLevel == "" {
@@ -3698,7 +3737,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 		}
 	}
 	fmt.Printf("  ✅ Fail on threats: %v\n", cfg.Policies.FailOnThreats)
-	
+
 	// Validate typo detection policy
 	fmt.Printf("\n📋 Typo Detection Policy:\n")
 	if cfg.TypoDetection.Enabled {
@@ -3708,21 +3747,21 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 		} else {
 			fmt.Printf("  ✅ Threshold: %.2f\n", cfg.TypoDetection.Threshold)
 		}
-		
+
 		if cfg.TypoDetection.SimilarityThreshold < 0 || cfg.TypoDetection.SimilarityThreshold > 1 {
 			fmt.Printf("  ❌ Error: Similarity threshold %.2f is out of range [0.0, 1.0]\n", cfg.TypoDetection.SimilarityThreshold)
 			validationErrors++
 		} else {
 			fmt.Printf("  ✅ Similarity threshold: %.2f\n", cfg.TypoDetection.SimilarityThreshold)
 		}
-		
+
 		if cfg.TypoDetection.EditDistanceThreshold < 1 {
 			fmt.Printf("  ❌ Error: Edit distance threshold %d must be >= 1\n", cfg.TypoDetection.EditDistanceThreshold)
 			validationErrors++
 		} else {
 			fmt.Printf("  ✅ Edit distance threshold: %d\n", cfg.TypoDetection.EditDistanceThreshold)
 		}
-		
+
 		if cfg.TypoDetection.DictionaryPath != "" {
 			if _, err := os.Stat(cfg.TypoDetection.DictionaryPath); os.IsNotExist(err) {
 				fmt.Printf("  ⚠️  Warning: Dictionary file not found: %s\n", cfg.TypoDetection.DictionaryPath)
@@ -3734,7 +3773,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Printf("  ℹ️  Typo detection is disabled\n")
 	}
-	
+
 	// Validate supply chain policy
 	fmt.Printf("\n📋 Supply Chain Policy:\n")
 	if cfg.SupplyChain.Enabled {
@@ -3747,7 +3786,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Printf("  ℹ️  Supply chain analysis is disabled\n")
 	}
-	
+
 	// Validate ML analysis policy
 	fmt.Printf("\n📋 ML Analysis Policy:\n")
 	if cfg.MLAnalysis.Enabled {
@@ -3757,7 +3796,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 		} else {
 			fmt.Printf("  ✅ ML threshold: %.2f\n", cfg.MLAnalysis.Threshold)
 		}
-		
+
 		if cfg.MLAnalysis.ModelPath == "" {
 			fmt.Printf("  ⚠️  Warning: ML model path is not set\n")
 			warnings++
@@ -3772,7 +3811,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Printf("  ℹ️  ML analysis is disabled\n")
 	}
-	
+
 	// Summary
 	fmt.Printf("\n📊 Validation Summary:\n")
 	fmt.Printf("===================\n")
@@ -3785,7 +3824,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 		if warnings > 0 {
 			fmt.Printf("⚠️  Found %d warning(s)\n", warnings)
 		}
-		
+
 		if validationErrors > 0 {
 			fmt.Printf("\n💡 Please fix the validation errors before using the policies.\n")
 		}
@@ -3797,7 +3836,7 @@ func runPolicyValidate(cmd *cobra.Command, args []string) {
 
 func runIntegrationList(cmd *cobra.Command, args []string) {
 	fmt.Println("Listing available integrations...")
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3805,19 +3844,19 @@ func runIntegrationList(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	fmt.Printf("\n%-20s %-15s %-40s %-10s\n", "Integration", "Type", "Description", "Status")
 	fmt.Println(strings.Repeat("-", 85))
-	
+
 	integrationCount := 0
-	
+
 	// Check if integrations are enabled globally
 	if !cfg.Integrations.Enabled {
 		fmt.Println("Integrations are globally disabled")
 		fmt.Println("Enable integrations in configuration to use them")
 		return
 	}
-	
+
 	// List configured connectors
 	for connectorName, connector := range cfg.Integrations.Connectors {
 		status := "Disabled"
@@ -3825,11 +3864,11 @@ func runIntegrationList(cmd *cobra.Command, args []string) {
 			status = "Enabled"
 			integrationCount++
 		}
-		
+
 		// Determine integration type based on connector name
 		integrationType := "Unknown"
 		description := fmt.Sprintf("%s connector", connectorName)
-		
+
 		switch connectorName {
 		case "github", "gitlab", "bitbucket":
 			integrationType = "Repository"
@@ -3847,11 +3886,11 @@ func runIntegrationList(cmd *cobra.Command, args []string) {
 			integrationType = "Ticketing"
 			description = fmt.Sprintf("%s ticketing integration", strings.Title(connectorName))
 		}
-		
-		fmt.Printf("%-20s %-15s %-40s %-10s\n", 
+
+		fmt.Printf("%-20s %-15s %-40s %-10s\n",
 			connectorName, integrationType, description, status)
 	}
-	
+
 	// Show event routing information
 	showAll, _ := cmd.Flags().GetBool("all")
 	if showAll && len(cfg.Integrations.EventRouting) > 0 {
@@ -3861,7 +3900,7 @@ func runIntegrationList(cmd *cobra.Command, args []string) {
 			fmt.Printf("%-20s -> %s\n", eventType, strings.Join(connectors, ", "))
 		}
 	}
-	
+
 	// Show filters if any
 	if showAll && len(cfg.Integrations.Filters) > 0 {
 		fmt.Printf("\nActive Filters:\n")
@@ -3873,14 +3912,14 @@ func runIntegrationList(cmd *cobra.Command, args []string) {
 			fmt.Printf("  Value: %v\n", filter.Value)
 		}
 	}
-	
+
 	if integrationCount == 0 {
 		fmt.Println("No integrations are currently enabled")
 		fmt.Println("Configure connectors in the integrations section to enable them")
 	} else {
 		fmt.Printf("\nTotal enabled integrations: %d\n", integrationCount)
 	}
-	
+
 	fmt.Println("\nTo test an integration, use:")
 	fmt.Println("  typosentinel-enterprise integration test <integration-name>")
 }
@@ -3894,7 +3933,7 @@ func runIntegrationTest(cmd *cobra.Command, args []string) {
 
 	integrationName := args[0]
 	fmt.Printf("Testing integration: %s\n", integrationName)
-	
+
 	// Load configuration
 	cfgManager := config.NewManager()
 	if err := cfgManager.Load("."); err != nil {
@@ -3902,14 +3941,14 @@ func runIntegrationTest(cmd *cobra.Command, args []string) {
 		return
 	}
 	cfg := cfgManager.Get()
-	
+
 	// Check if integrations are enabled globally
 	if !cfg.Integrations.Enabled {
 		fmt.Println("❌ Integrations are globally disabled")
 		fmt.Println("Enable integrations in configuration first")
 		return
 	}
-	
+
 	// Find the connector
 	connector, exists := cfg.Integrations.Connectors[integrationName]
 	if !exists {
@@ -3920,20 +3959,20 @@ func runIntegrationTest(cmd *cobra.Command, args []string) {
 		}
 		return
 	}
-	
+
 	// Check if connector is enabled
 	if !connector.Enabled {
 		fmt.Printf("❌ Integration '%s' is disabled\n", integrationName)
 		fmt.Println("Enable the integration in configuration to test it")
 		return
 	}
-	
+
 	fmt.Printf("✅ Integration '%s' is enabled\n", integrationName)
 	fmt.Printf("📋 Type: %s\n", connector.Type)
-	
+
 	// Perform basic connectivity tests based on connector type
 	fmt.Println("\n🔍 Running connectivity tests...")
-	
+
 	switch connector.Type {
 	case "slack":
 		testSlackConnectivity(connector.Settings)
@@ -3947,24 +3986,24 @@ func runIntegrationTest(cmd *cobra.Command, args []string) {
 		fmt.Printf("⚠️  No specific test available for connector type '%s'\n", connector.Type)
 		fmt.Println("✅ Configuration validation passed")
 	}
-	
+
 	// Test retry configuration
 	if connector.Retry.Enabled && connector.Retry.MaxAttempts > 0 {
-		fmt.Printf("🔄 Retry configuration: %d max attempts, %v initial delay, %v max delay\n", 
+		fmt.Printf("🔄 Retry configuration: %d max attempts, %v initial delay, %v max delay\n",
 			connector.Retry.MaxAttempts, connector.Retry.InitialDelay, connector.Retry.MaxDelay)
 	}
-	
+
 	// Test filters
 	if len(connector.Filters) > 0 {
 		fmt.Printf("🔍 Active filters: %s\n", strings.Join(connector.Filters, ", "))
 	}
-	
+
 	fmt.Println("\n✅ Integration test completed")
 }
 
 func testSlackConnectivity(settings map[string]interface{}) {
 	fmt.Println("🔗 Testing Slack connectivity...")
-	
+
 	// Check required settings
 	if token, ok := settings["token"].(string); ok && token != "" {
 		fmt.Println("✅ Slack token configured")
@@ -3972,21 +4011,21 @@ func testSlackConnectivity(settings map[string]interface{}) {
 		fmt.Println("❌ Slack token missing or invalid")
 		return
 	}
-	
+
 	if channel, ok := settings["channel"].(string); ok && channel != "" {
 		fmt.Printf("✅ Target channel: %s\n", channel)
 	} else {
 		fmt.Println("❌ Slack channel missing")
 		return
 	}
-	
+
 	fmt.Println("✅ Slack configuration appears valid")
 	fmt.Println("💡 Note: Actual API connectivity test requires live credentials")
 }
 
 func testEmailConnectivity(settings map[string]interface{}) {
 	fmt.Println("📧 Testing Email connectivity...")
-	
+
 	// Check SMTP settings
 	if host, ok := settings["smtp_host"].(string); ok && host != "" {
 		fmt.Printf("✅ SMTP host: %s\n", host)
@@ -3994,31 +4033,31 @@ func testEmailConnectivity(settings map[string]interface{}) {
 		fmt.Println("❌ SMTP host missing")
 		return
 	}
-	
+
 	if port, ok := settings["smtp_port"]; ok {
 		fmt.Printf("✅ SMTP port: %v\n", port)
 	} else {
 		fmt.Println("❌ SMTP port missing")
 		return
 	}
-	
+
 	if from, ok := settings["from"].(string); ok && from != "" {
 		fmt.Printf("✅ From address: %s\n", from)
 	} else {
 		fmt.Println("❌ From address missing")
 		return
 	}
-	
+
 	fmt.Println("✅ Email configuration appears valid")
 	fmt.Println("💡 Note: Actual SMTP connectivity test requires live credentials")
 }
 
 func testWebhookConnectivity(settings map[string]interface{}) {
 	fmt.Println("🌐 Testing Webhook connectivity...")
-	
+
 	if url, ok := settings["url"].(string); ok && url != "" {
 		fmt.Printf("✅ Webhook URL: %s\n", url)
-		
+
 		// Basic URL validation
 		if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
 			fmt.Println("✅ URL format appears valid")
@@ -4029,60 +4068,60 @@ func testWebhookConnectivity(settings map[string]interface{}) {
 		fmt.Println("❌ Webhook URL missing")
 		return
 	}
-	
+
 	if method, ok := settings["method"].(string); ok && method != "" {
 		fmt.Printf("✅ HTTP method: %s\n", method)
 	} else {
 		fmt.Println("✅ HTTP method: POST (default)")
 	}
-	
+
 	fmt.Println("✅ Webhook configuration appears valid")
 	fmt.Println("💡 Note: Actual HTTP connectivity test requires live endpoint")
 }
 
 func testSplunkConnectivity(settings map[string]interface{}) {
 	fmt.Println("📊 Testing Splunk connectivity...")
-	
+
 	if host, ok := settings["host"].(string); ok && host != "" {
 		fmt.Printf("✅ Splunk host: %s\n", host)
 	} else {
 		fmt.Println("❌ Splunk host missing")
 		return
 	}
-	
+
 	if port, ok := settings["port"]; ok {
 		fmt.Printf("✅ Splunk port: %v\n", port)
 	} else {
 		fmt.Println("❌ Splunk port missing")
 		return
 	}
-	
+
 	if token, ok := settings["token"].(string); ok && token != "" {
 		fmt.Println("✅ Splunk HEC token configured")
 	} else {
 		fmt.Println("❌ Splunk HEC token missing")
 		return
 	}
-	
+
 	if index, ok := settings["index"].(string); ok && index != "" {
 		fmt.Printf("✅ Target index: %s\n", index)
 	} else {
 		fmt.Println("⚠️  No target index specified (will use default)")
 	}
-	
+
 	fmt.Println("✅ Splunk configuration appears valid")
 	fmt.Println("💡 Note: Actual HEC connectivity test requires live credentials")
 }
 
 // ComplianceReport represents a compliance audit report
 type ComplianceReport struct {
-	GeneratedAt      string                 `json:"generated_at"`
-	Period           string                 `json:"period"`
-	Summary          ComplianceSummary      `json:"summary"`
-	UserActivity     []UserActivitySummary  `json:"user_activity"`
-	SecurityEvents   []SecurityEvent        `json:"security_events"`
-	PolicyViolations []PolicyViolation      `json:"policy_violations"`
-	SystemChanges    []SystemChange         `json:"system_changes"`
+	GeneratedAt      string                `json:"generated_at"`
+	Period           string                `json:"period"`
+	Summary          ComplianceSummary     `json:"summary"`
+	UserActivity     []UserActivitySummary `json:"user_activity"`
+	SecurityEvents   []SecurityEvent       `json:"security_events"`
+	PolicyViolations []PolicyViolation     `json:"policy_violations"`
+	SystemChanges    []SystemChange        `json:"system_changes"`
 }
 
 type ComplianceSummary struct {
@@ -4130,26 +4169,26 @@ func generateComplianceReport(entries []map[string]interface{}, since, until str
 		Period:      fmt.Sprintf("%s to %s", since, until),
 		Summary:     ComplianceSummary{},
 	}
-	
+
 	if since == "" {
 		report.Period = "All time"
 	}
-	
+
 	userActivity := make(map[string]*UserActivitySummary)
-	
+
 	for _, entry := range entries {
 		report.Summary.TotalEvents++
-		
+
 		user := getStringValue(entry, "user")
 		if user == "" {
 			user = getStringValue(entry, "actor")
 		}
-		
+
 		timestamp := getStringValue(entry, "timestamp")
 		eventType := getStringValue(entry, "event_type")
 		resource := getStringValue(entry, "resource")
 		action := getStringValue(entry, "action")
-		
+
 		// Track user activity
 		if user != "" {
 			if _, exists := userActivity[user]; !exists {
@@ -4165,12 +4204,12 @@ func generateComplianceReport(entries []map[string]interface{}, since, until str
 				userActivity[user].Actions = append(userActivity[user].Actions, action)
 			}
 		}
-		
+
 		// Categorize events
 		switch {
 		case strings.Contains(strings.ToLower(eventType), "security") ||
-			 strings.Contains(strings.ToLower(action), "login") ||
-			 strings.Contains(strings.ToLower(action), "auth"):
+			strings.Contains(strings.ToLower(action), "login") ||
+			strings.Contains(strings.ToLower(action), "auth"):
 			report.Summary.SecurityEvents++
 			report.SecurityEvents = append(report.SecurityEvents, SecurityEvent{
 				Timestamp: timestamp,
@@ -4179,9 +4218,9 @@ func generateComplianceReport(entries []map[string]interface{}, since, until str
 				Resource:  resource,
 				Severity:  determineSeverity(eventType, action),
 			})
-			
+
 		case strings.Contains(strings.ToLower(eventType), "violation") ||
-			 strings.Contains(strings.ToLower(action), "denied"):
+			strings.Contains(strings.ToLower(action), "denied"):
 			report.Summary.PolicyViolations++
 			report.PolicyViolations = append(report.PolicyViolations, PolicyViolation{
 				Timestamp: timestamp,
@@ -4190,11 +4229,11 @@ func generateComplianceReport(entries []map[string]interface{}, since, until str
 				Resource:  resource,
 				Action:    action,
 			})
-			
+
 		case strings.Contains(strings.ToLower(action), "create") ||
-			 strings.Contains(strings.ToLower(action), "update") ||
-			 strings.Contains(strings.ToLower(action), "delete") ||
-			 strings.Contains(strings.ToLower(action), "config"):
+			strings.Contains(strings.ToLower(action), "update") ||
+			strings.Contains(strings.ToLower(action), "delete") ||
+			strings.Contains(strings.ToLower(action), "config"):
 			report.Summary.SystemChanges++
 			report.SystemChanges = append(report.SystemChanges, SystemChange{
 				Timestamp: timestamp,
@@ -4204,32 +4243,32 @@ func generateComplianceReport(entries []map[string]interface{}, since, until str
 			})
 		}
 	}
-	
+
 	// Convert user activity map to slice
 	for _, activity := range userActivity {
 		report.UserActivity = append(report.UserActivity, *activity)
 	}
-	
+
 	report.Summary.UniqueUsers = len(userActivity)
-	
+
 	return report
 }
 
 // Helper function to determine event severity
 func determineSeverity(eventType, action string) string {
 	eventLower := strings.ToLower(eventType + " " + action)
-	
-	if strings.Contains(eventLower, "failed") || 
-	   strings.Contains(eventLower, "denied") ||
-	   strings.Contains(eventLower, "violation") {
+
+	if strings.Contains(eventLower, "failed") ||
+		strings.Contains(eventLower, "denied") ||
+		strings.Contains(eventLower, "violation") {
 		return "high"
 	}
-	
+
 	if strings.Contains(eventLower, "warning") ||
-	   strings.Contains(eventLower, "suspicious") {
+		strings.Contains(eventLower, "suspicious") {
 		return "medium"
 	}
-	
+
 	return "low"
 }
 
@@ -4247,7 +4286,7 @@ func contains(slice []string, item string) bool {
 func generateComplianceCSV(report ComplianceReport) ([]byte, error) {
 	var buf bytes.Buffer
 	writer := csv.NewWriter(&buf)
-	
+
 	// Write summary
 	writer.Write([]string{"Compliance Report Summary"})
 	writer.Write([]string{"Generated At", report.GeneratedAt})
@@ -4258,14 +4297,14 @@ func generateComplianceCSV(report ComplianceReport) ([]byte, error) {
 	writer.Write([]string{"Policy Violations", fmt.Sprintf("%d", report.Summary.PolicyViolations)})
 	writer.Write([]string{"System Changes", fmt.Sprintf("%d", report.Summary.SystemChanges)})
 	writer.Write([]string{""}) // Empty row
-	
+
 	// Write security events
 	writer.Write([]string{"Security Events"})
 	writer.Write([]string{"Timestamp", "User", "Event", "Resource", "Severity"})
 	for _, event := range report.SecurityEvents {
 		writer.Write([]string{event.Timestamp, event.User, event.Event, event.Resource, event.Severity})
 	}
-	
+
 	writer.Flush()
 	return buf.Bytes(), writer.Error()
 }
@@ -4308,7 +4347,7 @@ func generateComplianceHTML(report ComplianceReport) ([]byte, error) {
 		report.Summary.TotalEvents, report.Summary.UniqueUsers,
 		report.Summary.SecurityEvents, report.Summary.PolicyViolations,
 		report.Summary.SystemChanges)
-	
+
 	for _, event := range report.SecurityEvents {
 		html += fmt.Sprintf(`
         <tr>
@@ -4320,12 +4359,12 @@ func generateComplianceHTML(report ComplianceReport) ([]byte, error) {
         </tr>`,
 			event.Timestamp, event.User, event.Event, event.Resource, event.Severity, event.Severity)
 	}
-	
+
 	html += `
     </table>
 </body>
 </html>`
-	
+
 	return []byte(html), nil
 }
 
@@ -4344,7 +4383,7 @@ func scanOrganizationFromConfig(ctx context.Context, repoManager *repository.Man
 	// Initialize connector based on provider
 	var connector repository.Connector
 	var err error
-	
+
 	switch provider {
 	case "github":
 		connector, err = initializeGitHubConnector(cfg)
@@ -4357,22 +4396,22 @@ func scanOrganizationFromConfig(ctx context.Context, repoManager *repository.Man
 	default:
 		return fmt.Errorf("unsupported provider: %s", provider)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to initialize %s connector: %v", provider, err)
 	}
-	
+
 	// Register connector
 	if err := repoManager.RegisterConnector(provider, connector); err != nil {
 		return fmt.Errorf("failed to register connector: %v", err)
 	}
-	
+
 	// Get connector
 	connector, err = repoManager.GetConnector(provider)
 	if err != nil {
 		return fmt.Errorf("failed to get connector: %v", err)
 	}
-	
+
 	// List repositories
 	repos, err := connector.ListOrgRepositories(ctx, organization, &repository.RepositoryFilter{
 		IncludePrivate:  false,
@@ -4382,16 +4421,16 @@ func scanOrganizationFromConfig(ctx context.Context, repoManager *repository.Man
 	if err != nil {
 		return fmt.Errorf("failed to list repositories: %v", err)
 	}
-	
+
 	fmt.Printf("    Found %d repositories\n", len(repos))
-	
+
 	// Scan first few repositories (limit for config-based scans)
 	maxRepos := 5
 	if len(repos) > maxRepos {
 		repos = repos[:maxRepos]
 		fmt.Printf("    Limiting to %d repositories\n", maxRepos)
 	}
-	
+
 	// Scan each repository
 	for _, repo := range repos {
 		scanRequest := &repository.ScanRequest{
@@ -4405,13 +4444,13 @@ func scanOrganizationFromConfig(ctx context.Context, repoManager *repository.Man
 			},
 			CreatedAt: time.Now(),
 		}
-		
+
 		_, err := repoManager.ScanRepositoryWithResult(ctx, scanRequest)
 		if err != nil {
 			fmt.Printf("    Warning: Failed to scan %s: %v\n", repo.FullName, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -4420,7 +4459,7 @@ func scanRepositoryFromConfig(ctx context.Context, repoManager *repository.Manag
 	// Initialize connector based on provider
 	var connector repository.Connector
 	var err error
-	
+
 	switch provider {
 	case "github":
 		connector, err = initializeGitHubConnector(cfg)
@@ -4433,27 +4472,27 @@ func scanRepositoryFromConfig(ctx context.Context, repoManager *repository.Manag
 	default:
 		return fmt.Errorf("unsupported provider: %s", provider)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to initialize %s connector: %v", provider, err)
 	}
-	
+
 	// Register connector
 	if err := repoManager.RegisterConnector(provider, connector); err != nil {
 		return fmt.Errorf("failed to register connector: %v", err)
 	}
-	
+
 	// Get repository info
 	parts := strings.Split(repoName, "/")
 	if len(parts) != 2 {
 		return fmt.Errorf("invalid repository format, expected 'owner/repo'")
 	}
-	
+
 	repo, err := connector.GetRepository(ctx, parts[0], parts[1])
 	if err != nil {
 		return fmt.Errorf("failed to get repository: %v", err)
 	}
-	
+
 	// Scan repository
 	scanRequest := &repository.ScanRequest{
 		Repository:  repo,
@@ -4466,21 +4505,21 @@ func scanRepositoryFromConfig(ctx context.Context, repoManager *repository.Manag
 		},
 		CreatedAt: time.Now(),
 	}
-	
+
 	_, err = repoManager.ScanRepositoryWithResult(ctx, scanRequest)
 	if err != nil {
 		return fmt.Errorf("failed to scan repository: %v", err)
 	}
-	
+
 	return nil
 }
 
 // Dashboard data structure
 type DashboardData struct {
-	GeneratedAt    string                 `json:"generated_at"`
-	SystemOverview map[string]interface{} `json:"system_overview"`
-	ScanStats      map[string]interface{} `json:"scan_statistics"`
-	ThreatSummary  map[string]interface{} `json:"threat_summary"`
+	GeneratedAt    string                   `json:"generated_at"`
+	SystemOverview map[string]interface{}   `json:"system_overview"`
+	ScanStats      map[string]interface{}   `json:"scan_statistics"`
+	ThreatSummary  map[string]interface{}   `json:"threat_summary"`
 	RecentActivity []map[string]interface{} `json:"recent_activity"`
 }
 
@@ -4489,10 +4528,10 @@ func collectDashboardData(dbService *database.DatabaseService) DashboardData {
 	data := DashboardData{
 		GeneratedAt: time.Now().Format(time.RFC3339),
 		SystemOverview: map[string]interface{}{
-			"uptime":           "24h 30m", // Placeholder
-			"active_scans":     0,
+			"uptime":             "24h 30m", // Placeholder
+			"active_scans":       0,
 			"total_repositories": 0,
-			"system_health":    "healthy",
+			"system_health":      "healthy",
 		},
 		ScanStats: map[string]interface{}{
 			"total_scans":      0,
@@ -4517,17 +4556,17 @@ func collectDashboardData(dbService *database.DatabaseService) DashboardData {
 				"status":    "success",
 			},
 			{
-				"timestamp": time.Now().Add(-2*time.Hour).Format("2006-01-02 15:04:05"),
+				"timestamp": time.Now().Add(-2 * time.Hour).Format("2006-01-02 15:04:05"),
 				"type":      "threat_detected",
 				"message":   "High severity threat detected in package xyz",
 				"status":    "warning",
 			},
 		},
 	}
-	
+
 	// In a real implementation, you would query the database here
 	// For now, we'll use placeholder data
-	
+
 	return data
 }
 
@@ -4545,23 +4584,23 @@ func generateDashboardHTML(data DashboardData, includeCharts bool) ([]byte, erro
 				data: {
 					labels: ['Critical', 'High', 'Medium', 'Low'],
 					datasets: [{
-						data: [` + fmt.Sprintf("%v, %v, %v, %v", 
-							data.ThreatSummary["critical_threats"],
-							data.ThreatSummary["high_threats"],
-							data.ThreatSummary["medium_threats"],
-							data.ThreatSummary["low_threats"]) + `],
+						data: [` + fmt.Sprintf("%v, %v, %v, %v",
+			data.ThreatSummary["critical_threats"],
+			data.ThreatSummary["high_threats"],
+			data.ThreatSummary["medium_threats"],
+			data.ThreatSummary["low_threats"]) + `],
 						backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
 					}]
 				}
 			});
 		</script>`
 	}
-	
+
 	chartCanvas := ""
 	if includeCharts {
 		chartCanvas = `<canvas id="threatChart" width="400" height="200"></canvas>`
 	}
-	
+
 	html := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
@@ -4675,7 +4714,7 @@ func generateDashboardHTML(data DashboardData, includeCharts bool) ([]byte, erro
 		data.ThreatSummary["medium_threats"],
 		data.ThreatSummary["low_threats"],
 		chartCanvas)
-	
+
 	for _, activity := range data.RecentActivity {
 		statusClass := fmt.Sprintf("status-%s", activity["status"])
 		html += fmt.Sprintf(`
@@ -4685,14 +4724,14 @@ func generateDashboardHTML(data DashboardData, includeCharts bool) ([]byte, erro
             </div>`,
 			statusClass, activity["type"], activity["message"], activity["timestamp"])
 	}
-	
+
 	html += `
         </div>
     </div>
     ` + chartsScript + `
 </body>
 </html>`
-	
+
 	return []byte(html), nil
 }
 
@@ -4724,7 +4763,7 @@ func initConfig() {
 	} else {
 		viper.AddConfigPath("$HOME")
 		viper.AddConfigPath(".")
-		viper.SetConfigName(".typosentinel-enterprise")
+		viper.SetConfigName(".planfinale-enterprise")
 		viper.SetConfigType("yaml")
 	}
 

@@ -2,42 +2,49 @@ version: '3.8'
 
 services:
   # Web Frontend
-  web:
+  planfinale-web:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: typosentinel-web
+    container_name: planfinale-web
     ports:
       - "3000:80"
     restart: unless-stopped
+    depends_on:
+      - planfinale-api
     networks:
-      - typosentinel-network
+      - planfinale-network
 
   # API Backend
-  api:
+  planfinale-api:
     build:
-      context: ./api
+      context: .
       dockerfile: Dockerfile
-    container_name: typosentinel-api
+    container_name: planfinale-api
     ports:
       - "8080:8080"
     restart: unless-stopped
     environment:
       - PORT=8080
       - ENV=production
+      - PLANFINALE_JWT_SECRET=${PLANFINALE_JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - PLANFINALE_DB_PATH=/app/data/planfinale.db
+    volumes:
+      - planfinale_data:/app/data
+      - planfinale_logs:/app/logs
     networks:
-      - typosentinel-network
+      - planfinale-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  # Prometheus for metrics collection
+  # Prometheus for metrics collection (optional)
   prometheus:
     image: prom/prometheus:latest
-    container_name: typosentinel-prometheus
+    container_name: planfinale-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -52,27 +59,31 @@ services:
       - '--web.enable-lifecycle'
     restart: unless-stopped
     networks:
-      - typosentinel-network
+      - planfinale-network
+    profiles:
+      - monitoring
 
-  # Grafana for monitoring dashboards
+  # Grafana for monitoring dashboards (optional)
   grafana:
     image: grafana/grafana:latest
-    container_name: typosentinel-grafana
+    container_name: planfinale-grafana
     ports:
       - "3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
     networks:
-      - typosentinel-network
+      - planfinale-network
+    profiles:
+      - monitoring
 
-  # Node Exporter for system metrics
+  # Node Exporter for system metrics (optional)
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: typosentinel-node-exporter
+    container_name: planfinale-node-exporter
     ports:
       - "9100:9100"
     volumes:
@@ -86,12 +97,20 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     restart: unless-stopped
     networks:
-      - typosentinel-network
+      - planfinale-network
+    profiles:
+      - monitoring
 
 volumes:
+  planfinale_data:
+    driver: local
+  planfinale_logs:
+    driver: local
   prometheus_data:
+    driver: local
   grafana_data:
+    driver: local
 
 networks:
-  typosentinel-network:
+  planfinale-network:
     driver: bridge

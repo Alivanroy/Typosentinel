@@ -591,7 +591,7 @@ func (ed *EnterpriseDashboard) collectScanningMetrics(ctx context.Context) (*Sca
 	recentScans, err := ed.dbService.GetRecentScans(ctx, 10)
 	if err != nil {
 		ed.logger.Error("Failed to get recent scans", map[string]interface{}{"error": err})
-		recentScans = []*database.ScanSummary{}
+		recentScans = []*database.EnterpriseScanSummary{}
 	}
 
 	// Convert database scan summaries to dashboard format

@@ -1,4 +1,4 @@
-# Multi-stage build for TypoSentinel Production Demo
+# Multi-stage build for PlanFinale Production
 
 # Stage 1: Build the Go application
 FROM golang:1.23-alpine AS go-builder
@@ -22,7 +22,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' \
     -a -installsuffix cgo \
-    -o typosentinel .
+    -o planfinale .
 
 # Stage 2: Final runtime image
 FROM alpine:latest
@@ -42,10 +42,11 @@ RUN addgroup -g 1001 -S appgroup && \
 WORKDIR /app
 
 # Copy Go binary from builder
-COPY --from=go-builder /app/typosentinel ./
+COPY --from=go-builder /app/planfinale ./
 
 # Copy configuration files
 COPY config/ ./config/
+COPY dictionaries/ ./dictionaries/
 
 # Create necessary directories
 RUN mkdir -p /app/data /app/logs && \
@@ -54,8 +55,12 @@ RUN mkdir -p /app/data /app/logs && \
 # Switch to non-root user
 USER appuser
 
-# Expose port (for future server implementation)
+# Expose port
 EXPOSE 8080
 
-# Default command - show help since there's no serve command
-CMD ["./typosentinel", "--help"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Default command - start the server
+CMD ["./planfinale", "server", "--port", "8080"]

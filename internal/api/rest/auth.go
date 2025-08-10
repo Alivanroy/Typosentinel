@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -144,20 +145,38 @@ func (v *JWTValidator) generateSignature(payload string) string {
 }
 
 // GetTestTokens returns a map of test tokens for development/testing
+// WARNING: This function should ONLY be used in development/testing environments
 func GetTestTokens() map[string]string {
-	validator := NewJWTValidator("test-secret-key", "typosentinel")
+	// Only allow test tokens in development environment
+	if os.Getenv("TYPOSENTINEL_ENVIRONMENT") == "production" {
+		logger.Warn("Test tokens disabled in production environment")
+		return make(map[string]string)
+	}
 
-	// Generate test tokens
-	adminToken, _ := validator.GenerateToken("admin", "Administrator", "admin", 24)
-	userToken, _ := validator.GenerateToken("user", "Regular User", "user", 24)
-	readonlyToken, _ := validator.GenerateToken("readonly", "Read Only User", "readonly", 24)
+	// Require explicit enabling of test tokens
+	if os.Getenv("TYPOSENTINEL_ENABLE_TEST_TOKENS") != "true" {
+		return make(map[string]string)
+	}
+
+	// Use environment-provided secret or generate a random one for testing
+	secretKey := os.Getenv("TYPOSENTINEL_JWT_SECRET")
+	if secretKey == "" {
+		secretKey = "development-only-secret-key-not-for-production-use"
+		logger.Warn("Using development JWT secret - not suitable for production")
+	}
+
+	validator := NewJWTValidator(secretKey, "typosentinel")
+
+	// Generate test tokens with short expiration
+	adminToken, _ := validator.GenerateToken("admin", "Administrator", "admin", 1) // 1 hour only
+	userToken, _ := validator.GenerateToken("user", "Regular User", "user", 1)
+	readonlyToken, _ := validator.GenerateToken("readonly", "Read Only User", "readonly", 1)
+
+	logger.Info("Generated test tokens for development environment")
 
 	return map[string]string{
 		adminToken:    "admin",
 		userToken:     "user",
 		readonlyToken: "readonly",
-		// Legacy tokens for backward compatibility
-		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c": "admin",
-		"valid-jwt-token": "jwt_user",
 	}
 }

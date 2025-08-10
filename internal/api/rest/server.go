@@ -16,7 +16,10 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/internal/api/rest/handlers"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/database"
+	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -32,6 +35,8 @@ type Server struct {
 	running    bool
 	// Enterprise components
 	enterpriseHandlers *EnterpriseHandlers
+	// OSS scan handlers
+	scanHandlers *handlers.ScanHandlers
 }
 
 // NewServer creates a new REST API server
@@ -70,12 +75,35 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 	}
 	// Timeout middleware removed - not available in RESTAPIConfig
 
+	// Initialize OSS database service
+	ossDB, err := database.NewOSSService("./data/typosentinel.db")
+	if err != nil {
+		log.Printf("Failed to initialize OSS database: %v", err)
+		// Continue without database for now
+	}
+
+	// Initialize detector engine with default config
+	detectorEngine := detector.New(&config.Config{
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:     true,
+			Threshold:   0.8,
+			MaxDistance: 3,
+		},
+	})
+
+	// Initialize scan handlers
+	var scanHandlers *handlers.ScanHandlers
+	if ossDB != nil {
+		scanHandlers = handlers.NewScanHandlers(ossDB, detectorEngine)
+	}
+
 	server := &Server{
 		config:             cfg,
 		gin:                r,
 		mlPipeline:         mlPipeline,
 		analyzer:           analyzer,
 		enterpriseHandlers: enterpriseHandlers,
+		scanHandlers:       scanHandlers,
 	}
 
 	// Setup routes
@@ -162,6 +190,15 @@ func (s *Server) setupRoutes() {
 			v1.POST("/vulnerabilities/batch-scan", s.batchScanVulnerabilities)
 			v1.GET("/vulnerabilities/scan/:id/status", s.getVulnerabilityScanStatus)
 			v1.GET("/vulnerabilities/database/status", s.getVulnerabilityDatabaseStatus)
+
+			// Package scanning endpoints (OSS)
+			if s.scanHandlers != nil {
+				v1.POST("/scan/package", s.scanHandlers.StartScan)
+				v1.GET("/scan/results", s.scanHandlers.GetScanResults)
+				v1.GET("/scan/:id", s.scanHandlers.GetScanByID)
+				v1.GET("/scan/search", s.scanHandlers.SearchPackages)
+				v1.GET("/scan/stats", s.scanHandlers.GetScanStats)
+			}
 
 			// System endpoints
 			v1.GET("/system/status", s.getSystemStatus)

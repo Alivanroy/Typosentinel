@@ -1,63 +1,69 @@
-# Web UI Directory
+# React + TypeScript + Vite
 
-This directory contains the web user interface components for TypoSentinel Enterprise.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Structure
+Currently, two official plugins are available:
 
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-web/
-├── static/         # Static assets (CSS, JS, images)
-├── templates/      # HTML templates
-├── assets/         # Build artifacts and bundled assets
-└── README.md       # This file
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-## Components
-
-### Static Assets (`static/`)
-- CSS stylesheets
-- JavaScript files
-- Images and icons
-- Fonts and other static resources
-
-### Templates (`templates/`)
-- HTML templates for web pages
-- Partial templates and components
-- Layout templates
-
-### Assets (`assets/`)
-- Compiled/bundled CSS and JS
-- Optimized images
-- Generated assets from build process
-
-## Web Server Configuration
-
-The web UI is served by the enterprise server:
-
-```go
-router.Static("/static", "./web/static")
-router.LoadHTMLGlob("./web/templates/*")
-```
-
-## Development
-
-When developing the web UI:
-
-1. Place static files in `static/`
-2. Create HTML templates in `templates/`
-3. Use the build process to generate optimized assets in `assets/`
-
-## Security
-
-- Static files are served with appropriate security headers
-- Templates are protected against XSS attacks
-- Assets are served with proper caching headers
-
-## Enterprise Features
-
-The web UI provides access to:
-- Dashboard and metrics
-- Scan results and reports
-- Policy management
-- User administration
-- Integration configuration

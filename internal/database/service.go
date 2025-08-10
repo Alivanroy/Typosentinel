@@ -635,8 +635,8 @@ func (ds *DatabaseService) GetThreatsByType() (map[string]int64, error) {
 	return threatsByType, nil
 }
 
-// ScanSummary represents a summary of a scan
-type ScanSummary struct {
+// EnterpriseScanSummary represents a summary of an enterprise scan
+type EnterpriseScanSummary struct {
 	ID          string    `json:"id"`
 	JobType     string    `json:"job_type"`
 	Status      string    `json:"status"`
@@ -684,7 +684,7 @@ func (ds *DatabaseService) GetRepositoryLanguageStats(ctx context.Context) (map[
 }
 
 // GetRecentScans returns recent scan summaries
-func (ds *DatabaseService) GetRecentScans(ctx context.Context, limit int) ([]*ScanSummary, error) {
+func (ds *DatabaseService) GetRecentScans(ctx context.Context, limit int) ([]*EnterpriseScanSummary, error) {
 	query := `
 		SELECT id, job_type, status, total_threats, 
 		       EXTRACT(EPOCH FROM (completed_at - started_at)) as duration,
@@ -701,9 +701,9 @@ func (ds *DatabaseService) GetRecentScans(ctx context.Context, limit int) ([]*Sc
 	}
 	defer rows.Close()
 	
-	var scans []*ScanSummary
+	var scans []*EnterpriseScanSummary
 	for rows.Next() {
-		scan := &ScanSummary{}
+		scan := &EnterpriseScanSummary{}
 		var duration *float64
 		
 		err := rows.Scan(&scan.ID, &scan.JobType, &scan.Status, &scan.ThreatCount, 

@@ -1,0 +1,41 @@
+[
+  {
+    "alert_id": "CRIT-BEAUTIFULSOUP-20250810",
+    "timestamp": "2025-08-10T01:25:13.096606",
+    "severity": "CRITICAL",
+    "package_name": "beautifulsoup",
+    "threat_type": "MALWARE_DETECTED",
+    "action_required": "IMMEDIATE_BLOCK",
+    "description": "Critical malware detected in beautifulsoup package",
+    "findings_count": 16,
+    "total_findings": 444,
+    "recommendation": "BLOCK beautifulsoup immediately. Scan all environments for this package.",
+    "impact": "HIGH - Potential system compromise, data theft, or credential harvesting"
+  },
+  {
+    "alert_id": "HIGH-DJANGO-DEV-20250810",
+    "timestamp": "2025-08-10T01:25:13.096957",
+    "severity": "HIGH",
+    "package_name": "django-dev",
+    "threat_type": "SUSPICIOUS_PATTERNS",
+    "action_required": "REVIEW_AND_ASSESS",
+    "description": "High-risk patterns detected in django-dev package",
+    "findings_count": 2,
+    "total_findings": 5,
+    "recommendation": "Review django-dev usage and consider blocking if not essential.",
+    "impact": "MEDIUM - Potential security risks requiring investigation"
+  },
+  {
+    "alert_id": "HIGH-PY-TEST-20250810",
+    "timestamp": "2025-08-10T01:25:13.097007",
+    "severity": "HIGH",
+    "package_name": "py-test",
+    "threat_type": "SUSPICIOUS_PATTERNS",
+    "action_required": "REVIEW_AND_ASSESS",
+    "description": "High-risk patterns detected in py-test package",
+    "findings_count": 1,
+    "total_findings": 2,
+    "recommendation": "Review py-test usage and consider blocking if not essential.",
+    "impact": "MEDIUM - Potential security risks requiring investigation"
+  }
+]

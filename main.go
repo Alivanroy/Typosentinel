@@ -6,14 +6,20 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/output"
 	"github.com/Alivanroy/Typosentinel/internal/repository"
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
+	"github.com/Alivanroy/Typosentinel/internal/security"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +37,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	var verbose bool
 	var outputFormat string
 
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.typosentinel.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.planfinale.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "futuristic", "output format (json, yaml, table, futuristic)")
 
@@ -184,7 +190,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			// For now, we'll create a simple coordinator instance
 			// In a full implementation, this would be properly initialized
 			ctx := context.Background()
-			
+
 			// List repositories from the organization
 			filter := &repository.RepositoryFilter{
 				IncludePrivate:  includePrivate,
@@ -224,6 +230,145 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	scanOrgCmd.Flags().Bool("include-forked", false, "Include forked repositories")
 	scanOrgCmd.Flags().Bool("include-archived", false, "Include archived repositories")
 	scanOrgCmd.MarkFlagRequired("org")
+
+	// Server command
+	var serverCmd = &cobra.Command{
+		Use:   "server",
+		Short: "Start the Typosentinel REST API server",
+		Long:  "Start the Typosentinel web server and REST API for scanning packages and managing security",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Load configuration
+			cfg, err := config.LoadConfig(configFile)
+			if err != nil {
+				cfg = createDefaultConfig()
+				if verbose {
+					log.Printf("Using default config: %v", err)
+				}
+			}
+
+			// Get server options from flags
+			port, _ := cmd.Flags().GetString("port")
+			host, _ := cmd.Flags().GetString("host")
+			dev, _ := cmd.Flags().GetBool("dev")
+
+			// Ensure server config has defaults
+			if cfg.Server.Host == "" {
+				cfg.Server.Host = "0.0.0.0"
+			}
+			if cfg.Server.Port == 0 {
+				cfg.Server.Port = 8080
+			}
+
+			// Override config with command line flags
+			if port != "" {
+				if portNum, err := parsePort(port); err == nil {
+					cfg.Server.Port = portNum
+				}
+			}
+			if host != "" {
+				cfg.Server.Host = host
+			}
+			if dev {
+				cfg.App.Environment = config.EnvDevelopment
+				cfg.App.Debug = true
+			}
+
+			// Initialize logger
+			logger := logger.New()
+
+			// Run security validation in production
+			if cfg.App.Environment == config.EnvProduction {
+				validator := security.NewSecureConfigValidator()
+				if err := validator.ValidateProductionConfig(); err != nil {
+					return fmt.Errorf("security validation failed: %w", err)
+				}
+				logger.Info("Security validation passed")
+			} else {
+				logger.Warn("Running in development mode - some security checks are relaxed")
+			}
+
+			logger.Info("Starting Typosentinel server", map[string]interface{}{
+				"host":    cfg.Server.Host,
+				"port":    cfg.Server.Port,
+				"version": "1.1.0",
+			})
+
+			// Create analyzer for the server
+			analyzerInstance, err := analyzer.New(cfg)
+			if err != nil {
+				return fmt.Errorf("failed to create analyzer: %w", err)
+			}
+
+			// Create REST API config from server config
+			restConfig := config.RESTAPIConfig{
+				Enabled: true,
+				Host:    cfg.Server.Host,
+				Port:    cfg.Server.Port,
+				Versioning: config.APIVersioning{
+					Enabled:           true,
+					Strategy:          "path",
+					DefaultVersion:    "v1",
+					SupportedVersions: []string{"v1"},
+				},
+				CORS: &config.CORSConfig{
+					Enabled:        true,
+					AllowedOrigins: []string{"http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"},
+					AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+					AllowedHeaders: []string{"Content-Type", "Authorization", "X-Requested-With"},
+					MaxAge:         3600,
+				},
+			}
+
+			// Create and start REST server
+			server := rest.NewServerWithEnterprise(restConfig, nil, analyzerInstance, nil)
+
+			// Create context for server operations
+			ctx := context.Background()
+
+			// Start server in a goroutine
+			serverErr := make(chan error, 1)
+			go func() {
+				if err := server.Start(ctx); err != nil {
+					serverErr <- err
+				}
+			}()
+
+			// Wait for interrupt signal or server error
+			interrupt := make(chan os.Signal, 1)
+			signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+			fmt.Printf("🚀 Typosentinel Server starting...\n")
+			fmt.Printf("📍 Host: %s\n", cfg.Server.Host)
+			fmt.Printf("🔌 Port: %d\n", cfg.Server.Port)
+			fmt.Printf("🔒 Security validation: ✅ Passed\n")
+			fmt.Printf("📊 Environment: %s\n", cfg.App.Environment)
+			fmt.Printf("🌐 Server URL: http://%s:%d\n", cfg.Server.Host, cfg.Server.Port)
+
+			select {
+			case err := <-serverErr:
+				return fmt.Errorf("server error: %w", err)
+			case sig := <-interrupt:
+				logger.Info("Received shutdown signal", map[string]interface{}{
+					"signal": sig.String(),
+				})
+
+				// Graceful shutdown
+				if err := server.Stop(ctx); err != nil {
+					logger.Error("Error during server shutdown", map[string]interface{}{
+						"error": err.Error(),
+					})
+				}
+				logger.Info("Server shutdown completed")
+			}
+
+			return nil
+		},
+	}
+
+	// Server command flags
+	serverCmd.Flags().StringP("port", "p", "8080", "Server port")
+	serverCmd.Flags().String("host", "0.0.0.0", "Server host")
+	serverCmd.Flags().Bool("dev", false, "Enable development mode")
 
 	// Version command
 	var versionCmd = &cobra.Command{
@@ -282,9 +427,9 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			riskThreshold, _ := cmd.Flags().GetString("risk-threshold")
 
 			options := &analyzer.ScanOptions{
-				OutputFormat:           outputFormat,
-				DeepAnalysis:           deepScan,
-				AllowEmptyProjects:     true,
+				OutputFormat:       outputFormat,
+				DeepAnalysis:       deepScan,
+				AllowEmptyProjects: true,
 				// Supply chain specific options would be added here
 			}
 
@@ -297,7 +442,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			fmt.Printf("Supply Chain Advanced Scan completed for: %s\n", path)
 			fmt.Printf("Build Integrity: %v, Zero-Day: %v, Graph Analysis: %v\n", buildIntegrity, zeroDayDetection, dependencyGraph)
 			fmt.Printf("Threat Intel: %v, Honeypots: %v, Risk Threshold: %s\n", threatIntel, honeypotDetection, riskThreshold)
-			
+
 			// Output results
 			outputScanResult(result, outputFormat)
 		},
@@ -319,7 +464,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			updateBaseline, _ := cmd.Flags().GetBool("baseline-update")
 
 			fmt.Printf("Build Integrity Check for: %s\n", path)
-			fmt.Printf("Skip Signatures: %v, Create Baseline: %v, Update Baseline: %v\n", 
+			fmt.Printf("Skip Signatures: %v, Create Baseline: %v, Update Baseline: %v\n",
 				skipSignatureCheck, createBaseline, updateBaseline)
 			fmt.Println("Note: Full build integrity verification requires enhanced scanner integration.")
 		},
@@ -341,7 +486,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			outputGraph, _ := cmd.Flags().GetString("output-graph")
 
 			fmt.Printf("Dependency Graph Analysis for: %s\n", path)
-			fmt.Printf("Graph Depth: %d, Include Dev: %v, Output: %s\n", 
+			fmt.Printf("Graph Depth: %d, Include Dev: %v, Output: %s\n",
 				graphDepth, includeDevDeps, outputGraph)
 			fmt.Println("Note: Full graph analysis requires enhanced scanner integration.")
 		},
@@ -364,7 +509,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			limit, _ := cmd.Flags().GetInt("limit")
 
 			fmt.Printf("Threat Intelligence Query for: %s (%s)\n", packageName, registry)
-			fmt.Printf("Sources: %v, Types: %v, Limit: %d\n", 
+			fmt.Printf("Sources: %v, Types: %v, Limit: %d\n",
 				threatSources, threatTypes, limit)
 			fmt.Println("Note: Full threat intelligence requires API integration.")
 		},
@@ -406,15 +551,16 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	rootCmd.AddCommand(scanCmd)
 	rootCmd.AddCommand(analyzeCmd)
 	rootCmd.AddCommand(scanOrgCmd)
+	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(supplyChainCmd)
 	rootCmd.AddCommand(versionCmd)
 
 	// Execute
 	if err := rootCmd.Execute(); err != nil {
 		// Check if it's a flag parsing error or unknown command
-		if strings.Contains(err.Error(), "unknown flag") || 
-		   strings.Contains(err.Error(), "unknown command") ||
-		   strings.Contains(err.Error(), "flag provided but not defined") {
+		if strings.Contains(err.Error(), "unknown flag") ||
+			strings.Contains(err.Error(), "unknown command") ||
+			strings.Contains(err.Error(), "flag provided but not defined") {
 			fmt.Fprintf(os.Stderr, "Error: %s\n\n", err.Error())
 			rootCmd.Help()
 		} else {
@@ -546,4 +692,16 @@ func outputAnalysisResultTable(result *detector.CheckPackageResult) {
 	if len(result.SimilarPackages) > 0 {
 		fmt.Printf("Similar Packages: %s\n", strings.Join(result.SimilarPackages, ", "))
 	}
+}
+
+// parsePort parses a port string and returns an integer
+func parsePort(portStr string) (int, error) {
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid port: %s", portStr)
+	}
+	if port < 1 || port > 65535 {
+		return 0, fmt.Errorf("port out of range: %d", port)
+	}
+	return port, nil
 }

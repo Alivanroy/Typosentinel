@@ -384,11 +384,20 @@ func authenticateBasic(c *gin.Context, authConfig *config.APIAuthentication) (bo
 	validUsers := getBasicAuthUsers()
 	if len(validUsers) == 0 {
 		// Require admin password to be explicitly set - NO DEFAULT PASSWORD
-		adminPassword := os.Getenv("TYPOSENTINEL_ADMIN_PASSWORD")
-		if adminPassword == "" {
-			log.Printf("ERROR: Admin password not configured - TYPOSENTINEL_ADMIN_PASSWORD environment variable is required")
+	adminPassword := os.Getenv("TYPOSENTINEL_ADMIN_PASSWORD")
+	if adminPassword == "" {
+		log.Printf("ERROR: Admin password not configured - TYPOSENTINEL_ADMIN_PASSWORD environment variable is required")
+		log.Printf("SECURITY: Set a strong admin password with: export TYPOSENTINEL_ADMIN_PASSWORD='YourSecurePassword123!'")
+		return false, ""
+	}
+
+	// Validate password strength in production
+	if os.Getenv("TYPOSENTINEL_ENVIRONMENT") == "production" {
+		if len(adminPassword) < 12 {
+			log.Printf("ERROR: Admin password too weak - must be at least 12 characters in production")
 			return false, ""
 		}
+	}
 		validUsers = map[string]string{
 			"admin": hashPassword(adminPassword),
 		}

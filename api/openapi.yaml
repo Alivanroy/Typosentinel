@@ -1701,24 +1701,7 @@ components:
           default: false
           description: Include development dependencies in analysis
 
-    PackageInfo:
-      type: object
-      required:
-        - name
-        - version
-      properties:
-        name:
-          type: string
-          description: Package name
-          example: "express"
-        version:
-          type: string
-          description: Package version
-          example: "4.18.2"
-        registry:
-          type: string
-          description: Package registry
-          example: "npm"
+
 
     GraphAnalysisResponse:
       type: object
@@ -1812,11 +1795,7 @@ components:
           type: string
           format: date-time
 
-    Severity:
-      type: string
-      enum: ["low", "medium", "high", "critical"]
-      description: Severity level
-      example: "medium"
+
 
 tags:
   - name: Health

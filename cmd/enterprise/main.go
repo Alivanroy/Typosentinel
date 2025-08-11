@@ -957,9 +957,10 @@ func runServer(cmd *cobra.Command, args []string) {
 
 		// Create REST API config
 		restConfig := config.RESTAPIConfig{
-			Enabled: true,
-			Host:    host,
-			Port:    port,
+			Enabled:  true,
+			Host:     host,
+			Port:     port,
+			BasePath: "/api",
 		}
 
 		// Create analyzer instance

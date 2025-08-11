@@ -728,3 +728,7 @@ dev-debug.log
 .idea
 .vscode
 # OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

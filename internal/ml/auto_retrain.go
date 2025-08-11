@@ -520,20 +520,14 @@ func (ar *AutoRetrainer) recordRetrainingMetrics(result *RetrainingResult) {
 	}
 
 	// Record retraining event
-	ar.metrics.RecordEvent("model_retrain", map[string]interface{}{
-		"model_type":  result.ModelType,
-		"trigger":     result.Trigger.Type,
-		"success":     result.Success,
-		"duration":    result.Duration.Seconds(),
-		"improvement": result.Improvement,
-	})
+	metrics.GetGlobalCounter("model_retrain").Inc()
 
 	// Record performance metrics
 	if result.NewPerformance != nil {
-		ar.metrics.RecordGauge(fmt.Sprintf("model_accuracy_%s", result.ModelType), result.NewPerformance.Accuracy)
-		ar.metrics.RecordGauge(fmt.Sprintf("model_precision_%s", result.ModelType), result.NewPerformance.Precision)
-		ar.metrics.RecordGauge(fmt.Sprintf("model_recall_%s", result.ModelType), result.NewPerformance.Recall)
-		ar.metrics.RecordGauge(fmt.Sprintf("model_f1_score_%s", result.ModelType), result.NewPerformance.F1Score)
+		metrics.GetGlobalGauge(fmt.Sprintf("model_accuracy_%s", result.ModelType)).Set(result.NewPerformance.Accuracy)
+		metrics.GetGlobalGauge(fmt.Sprintf("model_precision_%s", result.ModelType)).Set(result.NewPerformance.Precision)
+		metrics.GetGlobalGauge(fmt.Sprintf("model_recall_%s", result.ModelType)).Set(result.NewPerformance.Recall)
+		metrics.GetGlobalGauge(fmt.Sprintf("model_f1_score_%s", result.ModelType)).Set(result.NewPerformance.F1Score)
 	}
 }
 

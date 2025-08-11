@@ -102,7 +102,21 @@ func New(cfg *config.Config) (*Scanner, error) {
 
 	// Initialize cache if enabled
 	if cfg.Cache != nil && cfg.Cache.Enabled {
-		cacheIntegration := cache.NewCacheIntegration(cfg.Cache.CacheDir, cfg.Cache.Enabled, cfg.Cache.TTL)
+		// Convert config.CacheConfig to cache.CacheConfig
+		cacheConfig := &cache.CacheConfig{
+			Enabled:     cfg.Cache.Enabled,
+			Type:        cfg.Cache.Provider,
+			TTL:         cfg.Cache.TTL,
+			MaxSize:     int64(cfg.Cache.MaxSize),
+			CacheDir:    cfg.Cache.CacheDir,
+			RedisURL:    "", // Not available in config.CacheConfig
+			Compression: false, // Default value
+			Encryption:  false, // Default value
+		}
+		cacheIntegration, err := cache.NewCacheIntegration(cacheConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize cache: %w", err)
+		}
 		s.cache = cacheIntegration
 	}
 
@@ -138,7 +152,7 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			if cachedResult, found, err := s.cache.GetCachedAnalysisResult(cacheKey); err == nil && found {
+			if cachedResult, found, err := s.cache.GetCachedScanResult(cacheKey); err == nil && found {
 				// Update scan duration to reflect cache hit
 				cachedResult.Duration = time.Since(start)
 				if cachedResult.Metadata == nil {
@@ -201,7 +215,7 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	if s.cache != nil {
 		cacheKey, err := s.generateCacheKey(projectPath)
 		if err == nil {
-			_ = s.cache.CacheAnalysisResult(cacheKey, result, nil)
+			_ = s.cache.CacheScanResult(cacheKey, result, nil)
 		}
 	}
 

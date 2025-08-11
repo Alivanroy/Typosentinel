@@ -18,8 +18,10 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/output"
 	"github.com/Alivanroy/Typosentinel/internal/repository"
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
 	"github.com/Alivanroy/Typosentinel/internal/security"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -77,6 +79,8 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			checkVulnerabilities, _ := cmd.Flags().GetBool("check-vulnerabilities")
 			vulnerabilityDBs, _ := cmd.Flags().GetStringSlice("vulnerability-db")
 			vulnConfig, _ := cmd.Flags().GetString("vuln-config")
+			sbomFormat, _ := cmd.Flags().GetString("sbom-format")
+			sbomOutput, _ := cmd.Flags().GetString("sbom-output")
 
 			options := &analyzer.ScanOptions{
 				OutputFormat:           outputFormat,
@@ -97,6 +101,12 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 				return fmt.Errorf("scan failed: %v", err)
 			}
 
+			// Handle SBOM generation if requested
+			if sbomFormat != "" {
+				outputSBOMWithFile(result, sbomFormat, sbomOutput)
+				return nil
+			}
+
 			// Output results
 			outputScanResult(result, outputFormat)
 			return nil
@@ -112,6 +122,9 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	scanCmd.Flags().Bool("check-vulnerabilities", false, "Enable vulnerability checking")
 	scanCmd.Flags().StringSlice("vulnerability-db", []string{"osv", "nvd"}, "Vulnerability databases to use (osv, github, nvd)")
 	scanCmd.Flags().String("vuln-config", "config/vulnerability_databases.yaml", "Path to vulnerability database configuration")
+	// SBOM generation flags
+	scanCmd.Flags().String("sbom-format", "", "Generate SBOM in specified format (spdx, cyclonedx)")
+	scanCmd.Flags().String("sbom-output", "", "Output file path for SBOM (if not specified, prints to stdout)")
 
 	// Analyze command
 	var analyzeCmd = &cobra.Command{
@@ -591,6 +604,10 @@ func outputScanResult(result *analyzer.ScanResult, format string) {
 		fmt.Println(string(data))
 	case "table":
 		outputScanResultTable(result)
+	case "spdx":
+		outputSBOM(result, "spdx")
+	case "cyclonedx":
+		outputSBOM(result, "cyclonedx")
 	case "futuristic":
 		formatter := output.NewFuturisticFormatter(true, false)
 		formatter.PrintBanner()
@@ -691,6 +708,159 @@ func outputAnalysisResultTable(result *detector.CheckPackageResult) {
 
 	if len(result.SimilarPackages) > 0 {
 		fmt.Printf("Similar Packages: %s\n", strings.Join(result.SimilarPackages, ", "))
+	}
+}
+
+// outputSBOM outputs scan results in SBOM format (SPDX or CycloneDX)
+func outputSBOM(result *analyzer.ScanResult, format string) {
+	// Convert analyzer.ScanResult to scanner.ScanResults
+	scanResults := convertToScannerResults(result)
+	
+	// Create formatter options
+	options := output.FormatterOptions{
+		Format:      output.OutputFormat(format),
+		ColorOutput: false,
+		Quiet:       false,
+		Verbose:     false,
+		Indent:      "  ",
+	}
+	
+	var sbomData []byte
+	var err error
+	
+	switch format {
+	case "spdx":
+		formatter := output.NewSPDXFormatter()
+		sbomData, err = formatter.Format(scanResults, options)
+	case "cyclonedx":
+		formatter := output.NewCycloneDXFormatter()
+		sbomData, err = formatter.Format(scanResults, &options)
+	default:
+		fmt.Printf("Unsupported SBOM format: %s\n", format)
+		return
+	}
+	
+	if err != nil {
+		fmt.Printf("Error generating %s SBOM: %v\n", format, err)
+		return
+	}
+	
+	fmt.Println(string(sbomData))
+}
+
+// outputSBOMWithFile outputs scan results in SBOM format with optional file output
+func outputSBOMWithFile(result *analyzer.ScanResult, format, outputFile string) {
+	// Convert analyzer.ScanResult to scanner.ScanResults
+	scanResults := convertToScannerResults(result)
+	
+	// Create formatter options
+	options := output.FormatterOptions{
+		Format:      output.OutputFormat(format),
+		ColorOutput: false,
+		Quiet:       false,
+		Verbose:     false,
+		Indent:      "  ",
+	}
+	
+	var sbomData []byte
+	var err error
+	
+	switch format {
+	case "spdx":
+		formatter := output.NewSPDXFormatter()
+		sbomData, err = formatter.Format(scanResults, options)
+	case "cyclonedx":
+		formatter := output.NewCycloneDXFormatter()
+		sbomData, err = formatter.Format(scanResults, &options)
+	default:
+		fmt.Printf("Unsupported SBOM format: %s\n", format)
+		return
+	}
+	
+	if err != nil {
+		fmt.Printf("Error generating %s SBOM: %v\n", format, err)
+		return
+	}
+	
+	if outputFile != "" {
+		err = os.WriteFile(outputFile, sbomData, 0644)
+		if err != nil {
+			fmt.Printf("Error writing SBOM to file %s: %v\n", outputFile, err)
+			return
+		}
+		fmt.Printf("SBOM written to: %s\n", outputFile)
+	} else {
+		fmt.Println(string(sbomData))
+	}
+}
+
+// convertToScannerResults converts analyzer.ScanResult to scanner.ScanResults
+func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
+	var scanResults []scanner.ScanResult
+	
+	// Group threats by package
+	packageThreats := make(map[string][]scanner.Threat)
+	packageMap := make(map[string]*types.Package)
+	
+	for _, threat := range result.Threats {
+		packageName := threat.Package
+		
+		// Create a basic package if we don't have one
+		if _, exists := packageMap[packageName]; !exists {
+			packageMap[packageName] = &types.Package{
+				Name:     packageName,
+				Version:  threat.Version,
+				Registry: threat.Registry,
+				Metadata: &types.PackageMetadata{
+					Name:     packageName,
+					Version:  threat.Version,
+					Registry: threat.Registry,
+				},
+			}
+		}
+		
+		// Convert analyzer threat to scanner threat
+		scannerThreat := scanner.Threat{
+			Type:           string(threat.Type),
+			Severity:       string(threat.Severity),
+			Score:          threat.Confidence,
+			Description:    threat.Description,
+			Recommendation: threat.Recommendation,
+			Evidence:       threat.SimilarTo, // Use SimilarTo as evidence
+			Source:         threat.DetectionMethod,
+			Confidence:     threat.Confidence,
+		}
+		
+		packageThreats[packageName] = append(packageThreats[packageName], scannerThreat)
+	}
+	
+	// Create scan results for each package
+	for packageName, threats := range packageThreats {
+		scanResult := scanner.ScanResult{
+			Package: packageMap[packageName],
+			Threats: threats,
+		}
+		scanResults = append(scanResults, scanResult)
+	}
+	
+	// If no threats found, create a result for the scanned path
+	if len(scanResults) == 0 {
+		scanResult := scanner.ScanResult{
+			Package: &types.Package{
+				Name:    result.Path,
+				Version: "unknown",
+				Metadata: &types.PackageMetadata{
+					Name:    result.Path,
+					Version: "unknown",
+				},
+			},
+			Threats: []scanner.Threat{},
+		}
+		scanResults = append(scanResults, scanResult)
+	}
+	
+	return &scanner.ScanResults{
+		Results: scanResults,
 	}
 }
 

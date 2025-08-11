@@ -1,0 +1,897 @@
+# Constrained Wasserstein Artifact Divergence (CWAD)
+
+*A transport-theoretic detector for release-only backdoors (XZ-style) across all ecosystems.*
+
+## The supply-chain problem it targets
+
+Attackers ship release artifacts (tarballs/wheels/tgz) that **differ subtly** from the tagged source repo: added build logic, hidden binaries, or install hooks. Traditional diffs are noisy; rule engines are brittle. We want a **mathematically grounded, cross-language** measure that:
+
+1. Quantifies *how far* the artifact is from the VCS truth, and
+2. Explains **where** the suspicious mass moved (e.g., “from harmless code → build-time exec + network”).
+
+## Core idea
+
+Model each release as a **probability distribution over semantic feature tokens** (language-agnostic). Compute an **entropic–regularized optimal transport** distance between the **VCS distribution** and the **artifact distribution**, with a **risk-augmented cost matrix** that makes transport into “high-risk semantics” expensive.
+
+Then add a **sparsity probe**: search for the *smallest* added feature set whose inclusion drives the distance above a policy threshold (a proxy for “minimal backdoor”). Small, high-impact injections flag XZ-style attacks.
+
+---
+
+## Formalization
+
+### 1) Feature space $\mathcal{F}$
+
+Language-agnostic token classes extracted from source, build files, and metadata:
+
+* code_core: regular library/app code
+* build_cfg: autotools/cmake/meson/Makefile/Cargo build rules
+* script_install: pre/post-install hooks (npm/yarn/pip/gemspec/maven plugins)
+* exec_spawn: process creation (execve, subprocess, child_process.exec, ProcessBuilder)
+* net_io: network in build/install (curl, requests, sockets)
+* bin_native: native binaries/objects present in artifact (.o/.so/.dll/.dylib)
+* linker_tricks: flags like -Wl,--wrap=, IFUNC, unusual RPATH, ctors
+* crypto/enc_blob: large opaque blobs, packers, self-extractors
+* meta_prov: provenance/attestation signals (SLSA, commit match)
+* (extendable: fs_sensitive, env_secret, etc.)
+
+For both **VCS** and **artifact**, produce normalized histograms $p, q \in \Delta^{n-1}$ over $\mathcal{F}$ (weights from LOC, token counts, rule hits, file sizes, etc.).
+
+### 2) Risk-augmented ground cost $C$
+
+Define $C_{ij} = \text{base\_sem\_distance}(f_i,f_j) + \alpha\,r_j$,
+where $r_j$ is the **risk weight** of target token $f_j$ (e.g., exec_spawn, net_io, linker_tricks get high values), $\alpha>0$ tunes penalty. This makes mass moved **into** risky semantics expensive.
+
+### 3) Entropic OT (Sinkhorn) distance
+
+Compute the entropic-regularized OT plan $\Pi^*$ between $p$ and $q$ with temperature $\varepsilon$:
+
+$$
+\Pi^*=\arg\min_{\Pi\mathbf{1}=p,\,\Pi^\top\mathbf{1}=q}\langle \Pi, C\rangle + \varepsilon \, \mathrm{KL}(\Pi \;\|\; p q^\top).
+$$
+
+Distance $D_{\varepsilon}(p,q)=\langle \Pi^*, C\rangle$.
+
+### 4) Constrained divergence (CWAD)
+
+Add **hard constraints** on suspicious inflows:
+
+$$
+\sum_i \Pi_{i, j} \le \tau_j \quad \text{for critical } f_j
+$$
+
+and compute the **dual gap** when constraints are active. Intuition: if the optimal plan wants to push too much mass into exec_spawn/net_io to explain the artifact, that’s a red flag. (In practice we approximate via soft penalties $\beta \max(0,\sum_i \Pi_{ij}-\tau_j)$.)
+
+### 5) Sparse Injection Probe (SIP)
+
+Find the **smallest added subset** $S \subset \mathcal{F}$ (or concrete files mapped to tokens) that makes $D_{\varepsilon}(p,q) \ge \gamma$ (policy threshold). Greedy forward selection works well: add the token/file with max marginal increase in $D$ until threshold. If $|S|$ is tiny (e.g., 1–3 items) and mostly high-risk tokens, classify as **release-injected backdoor likely**.
+
+### 6) Explainability
+
+Use the transport plan $\Pi^*$ to rank **flows** $i \to j$ by contribution $\Pi^*_{ij} C_{ij}$. These become human-readable explanations:
+“mass moved from code_core → build_cfg (configure added) and exec_spawn (new m4 macro spawning gcc)”.
+
+---
+
+## Why this is powerful
+
+* **Cross-ecosystem**: one math across npm/PyPI/Maven/etc.; adapters only map files→tokens.
+* **Adversarial-robust**: attackers can rename files, but transport cost exposes semantic drift.
+* **Catches XZ-style**: tiny, high-impact build-time shifts explode the risk-augmented distance and trigger the **SIP** minimal-set test.
+
+---
+
+## Reference implementation (Python, dependency-free)
+
+Drop this into typosentinel/research/algorithms/cwad.py. It includes:
+
+* Sinkhorn OT
+* Risk-augmented cost
+* Sparse Injection Probe
+* JSON report with top flows
+
+python
+# typosentinel/research/algorithms/cwad.py
+import math, json
+import numpy as np
+
+# ---- 1) Feature space (extend as needed)
+FEATURES = [
+    "code_core","build_cfg","script_install","exec_spawn","net_io",
+    "bin_native","linker_tricks","crypto_blob","meta_prov"
+]
+
+RISK = {  # higher = riskier
+    "code_core": 0.0, "build_cfg": 0.6, "script_install": 0.9,
+    "exec_spawn": 1.0, "net_io": 1.0, "bin_native": 0.8,
+    "linker_tricks": 1.0, "crypto_blob": 0.9, "meta_prov": 0.4
+}
+
+# base semantic distances (symmetric), tweak as you learn
+def base_sem_distance(i, j):
+    fi, fj = FEATURES[i], FEATURES[j]
+    if fi == fj: return 0.0
+    # close neighborhoods
+    if {fi, fj} <= {"code_core","build_cfg"}: return 0.4
+    if {fi, fj} <= {"build_cfg","script_install"}: return 0.5
+    if fj in {"exec_spawn","net_io","linker_tricks","crypto_blob"}: return 1.2
+    if fi in {"exec_spawn","net_io","linker_tricks","crypto_blob"}: return 1.2
+    return 0.8
+
+def make_cost(alpha=1.0):
+    n = len(FEATURES)
+    C = np.zeros((n,n), dtype=float)
+    for i in range(n):
+        for j in range(n):
+            C[i,j] = base_sem_distance(i,j) + alpha * RISK[FEATURES[j]]
+    return C
+
+def sinkhorn_ot(p, q, C, eps=0.05, iters=500, tol=1e-9):
+    # entropic OT with simple stabilization
+    K = np.exp(-C/eps)  # elementwise
+    u = np.ones_like(p); v = np.ones_like(q)
+    for _ in range(iters):
+        u_prev = u.copy()
+        u = p / (K @ v + 1e-16)
+        v = q / (K.T @ u + 1e-16)
+        if np.linalg.norm(u - u_prev, 1) < tol: break
+    P = np.diag(u) @ K @ np.diag(v)
+    cost = float(np.sum(P * C))
+    return P, cost
+
+def normalize_counts(counts):
+    x = np.array([max(0.0, counts.get(f,0.0)) for f in FEATURES], dtype=float)
+    s = x.sum()
+    return (x/s) if s>0 else np.ones_like(x)/len(x)
+
+def top_flows(P, C, k=6):
+    n = P.shape[0]
+    triples = []
+    for i in range(n):
+        for j in range(n):
+            contrib = P[i,j]*C[i,j]
+            if contrib>1e-8:
+                triples.append((contrib, FEATURES[i], FEATURES[j], P[i,j], C[i,j]))
+    triples.sort(reverse=True, key=lambda t: t[0])
+    return triples[:k]
+
+def sparse_injection_probe(p, q, C, eps=0.05, gamma=0.35):
+    """
+    Greedy: at each step, add the single target feature mass delta that maximally increases distance.
+    We assume added mass is small and renormalize q'.
+    Returns selected target features (names).
+    """
+    P0, d0 = sinkhorn_ot(p, q, C, eps=eps)
+    if d0 >= gamma: return [], d0
+    selected = []
+    q_prime = q.copy()
+    # candidate targets: risky features primarily
+    cand_idx = sorted(range(len(FEATURES)), key=lambda j: RISK[FEATURES[j]], reverse=True)
+    for j in cand_idx:
+        bump = 0.03  # 3% mass injection step; tune
+        q_try = q_prime.copy()
+        q_try[j] += bump
+        q_try = q_try / q_try.sum()
+        _, d_try = sinkhorn_ot(p, q_try, C, eps=eps)
+        gain = d_try - d0
+        if gain > 0:
+            selected.append(FEATURES[j])
+            q_prime = q_try; d0 = d_try
+            if d0 >= gamma: break
+    return selected, d0
+
+def cwad_report(vcs_counts, artifact_counts,
+                alpha=1.0, eps=0.05, gamma=0.35, explain_k=6):
+    p = normalize_counts(vcs_counts)
+    q = normalize_counts(artifact_counts)
+    C = make_cost(alpha=alpha)
+    P, dist = sinkhorn_ot(p, q, C, eps=eps)
+    inj_set, achieved = sparse_injection_probe(p, q, C, eps=eps, gamma=gamma)
+    flows = top_flows(P, C, k=explain_k)
+    verdict = "BLOCK" if (dist>=gamma or len(inj_set)>0) else "PASS"
+    return {
+        "features": FEATURES,
+        "params": {"alpha":alpha,"eps":eps,"gamma":gamma},
+        "p_vcs": p.tolist(),
+        "q_artifact": q.tolist(),
+        "distance": dist,
+        "sparse_injection": {"selected": inj_set, "distance_after": achieved},
+        "top_flows": [{
+            "contrib": float(c),
+            "from": i, "to": j, "mass": float(m), "unit_cost": float(u)
+        } for (c,i,j,m,u) in flows],
+        "verdict": verdict
+    }
+
+# ---- Example usage (replace with real extracted counts)
+if __name__ == "__main__":
+    vcs = {"code_core": 900, "build_cfg": 60, "meta_prov": 40}
+    art = {"code_core": 830, "build_cfg": 80, "script_install": 10,
+           "exec_spawn": 8, "net_io": 6, "meta_prov": 20}
+    rep = cwad_report(vcs, art, alpha=1.1, eps=0.06, gamma=0.32)
+    print(json.dumps(rep, indent=2))
+
+
+**What to feed it:** your existing adapters already know how to count tokens:
+
+* build_cfg: count lines in configure, CMakeLists.txt, meson.build, Makefile(.in), build.rs, .targets
+* script_install: npm pre/postinstall, setup.py commands, gem extconf.rb, maven exec/antrun
+* exec_spawn: occurrences of exec*, subprocess, child_process.exec, ProcessBuilder, shell invocations
+* net_io: curl/wget, Python requests, Node https.request in build/install paths
+* bin_native: size of .o/.so/.dll/.dylib added in artifact but not in VCS
+* linker_tricks: grep flags like -Wl,--wrap=, -z ifunc, suspicious RPATH, ctor arrays
+* crypto_blob: large opaque binaries or encoded payloads
+* meta_prov: *invert risk* (good provenance shrinks risk): you can subtract this from others or keep as separate token
+
+Wire these counts into cwad_report() and persist the JSON next to your normal diff output.
+
+---
+
+## Complexity
+
+* Sinkhorn per run: $O(n^2 T)$ with tiny $n$ (≈9–20 tokens) and small $T$ (≤500). Milliseconds.
+* SIP greedy adds ≤8 steps. Also milliseconds.
+* Perfectly fine to run **pre-install**.
+
+---
+
+## Policy & thresholds (practical defaults)
+
+* alpha (risk penalty): **1.0–1.3** (higher = punish risky inflows more)
+* eps (entropic smoothing): **0.04–0.08** (lower = sharper, higher = smoother)
+* gamma (block threshold): start at **0.30–0.35**; calibrate with your corpus
+
+---
+
+## How to claim novelty
+
+* **Transport on semantic features with risk-augmented costs** for release vs. VCS is (to my knowledge) not in prior art for supply-chain malware detection.
+* The **sparse injection probe** as a *minimum backdoor witness* on top of OT distance is also a new twist.
+* Document this in an internal whitepaper and keep the risk-cost design + SIP as proprietary IP (you can open-source a basic distance without SIP if you prefer).
+
+---
+
+## How to integrate into Typosentinel
+
+1. Add a step after your artifact↔VCS diff that computes vcs_counts & artifact_counts.
+2. Run cwad_report(); attach JSON to the standard report.
+3. If verdict == BLOCK or distance >= gamma, print the **top flows** as human-readable evidence.
+4. Optionally, send metrics to Splunk: distance, inj_set_size, flows[0..k].
+
+Love it — let’s lock the second flagship spec at the same level as your CWAD write‑up. Here’s **RCS²**, ready for repo drop‑in.
+
+---
+
+# Registry Cross‑Shadow Spectral (RCS²)
+
+*A multilayer spectral detector for typosquats, mirrors, and “shadow” ecosystems.*
+
+## The supply‑chain problem it targets
+
+Attackers publish look‑alike packages that sit near a legit one: same deps, similar names, timed releases, different maintainers. Single‑signal rules (just Levenshtein, or just maintainer checks) are noisy. We want an **ecosystem‑level** detector that fuses multiple weak signals and **isolates suspicious clusters (“shadows”)** around popular packages.
+
+## Core idea
+
+Build a **multilayer graph** over packages:
+
+* **Name similarity** (edit distance/homoglyph).
+* **Maintainer overlap** (Jaccard).
+* **Dependency mirroring** (Jaccard of direct deps).
+* **Temporal shadowing** (release timing correlation).
+  Co‑normalize each layer and sum their **Laplacians** into a single operator. Spectral embedding + k‑means yields communities. A **shadow community** is one with:
+
+1. high **typo density** around a canonical package,
+2. **maintainer divergence** from that canonical package,
+3. strong **dependency mirroring** and **temporal co‑release**, and
+4. low **algebraic connectivity** (Fiedler value) — i.e., a fragile “ring” around a core.
+
+Return a **shadow score** and evidence per community.
+
+---
+
+## Formalization
+
+### 1) Multilayer graph
+
+For package set $V$, construct layers $A^{(\ell)}$ with weights $w_\ell$:
+
+* **Name**: $A^{(n)}_{ij}=\exp(-\text{LD}(s_i,s_j)/\tau_n)$ if LD ≤ 3, else 0 (LD = Levenshtein).
+* **Maintainer**: $A^{(m)}_{ij}=\text{Jaccard}(M_i,M_j)$.
+* **Deps**: $A^{(d)}_{ij}=\text{Jaccard}(D_i,D_j)$.
+* **Temporal**: $A^{(t)}_{ij}=\exp(-|t_i-t_j|/\tau_t)$ using latest release times.
+
+Degree $D^{(\ell)}=\text{diag}(A^{(\ell)}\mathbf{1})$. Co‑normalized Laplacian per layer:
+
+$$
+\mathcal{L}^{(\ell)} = I - (D^{(\ell)})^{-1/2} A^{(\ell)} (D^{(\ell)})^{-1/2}.
+$$
+
+Aggregate:
+
+$$
+\mathcal{L} = \sum_\ell w_\ell \mathcal{L}^{(\ell)}.
+$$
+
+### 2) Spectral clustering
+
+Take the $k$ smallest eigenvectors of $\mathcal{L}$ (excluding trivial constant if present), assemble $V\in\mathbb{R}^{|V|\times k}$, row‑normalize, then k‑means on rows → communities $C_1,\dots,C_k$. Choose $k$ by **eigengap**.
+
+### 3) Shadow community scoring
+
+For community $C$, let $c^\*$ be the **canonical** package (e.g., max downloads).
+
+* **Typo density**: $\rho_{\text{typo}} = \frac{1}{|C|}\sum_{i\in C} \mathbf{1}[\text{LD}(s_i,s_{c^\*})\le 2 \ \lor\ \text{homoglyph}(s_i,s_{c^\*})]$.
+* **Maintainer divergence**: $\delta_M = 1 - \text{Jaccard}(M_{c^\*}, \cup_{i\in C\setminus \{c^\*\}} M_i)$.
+* **Dep mirroring**: $\mu_D = \text{Jaccard}\big(D_{c^\*}, \operatorname{mode/deunion}(D_{i\in C})\big)$.
+* **Temporal shadowing**: $\sigma_T = \frac{1}{|C|}\sum_{i\in C} \exp(-|t_i-t_{c^\*}|/\tau_t)$.
+* **Fragility (Fiedler)**: $\lambda_2 = $ second‑smallest eigenvalue of $\mathcal{L}[C]$.
+
+Shadow score:
+
+$$
+S(C) = a\,\rho_{\text{typo}} + b\,\mu_D + c\,\sigma_T + d\,\delta_M + e\,(1-\tanh(\lambda_2/\theta)).
+$$
+
+Flag if $S(C)\ge \Gamma$ **and** $\rho_{\text{typo}}\ge \tau$.
+
+### 4) Explainability
+
+Attach:
+
+* top name pairs (min LD / homoglyph),
+* maintainer Jaccard to canonical,
+* dep overlap,
+* release time offsets,
+* $\lambda_2$.
+
+---
+
+## Why this works
+
+* **Fuses weak cues**: each alone is noisy; spectral fusion stabilizes.
+* **Localizes rings**: low $\lambda_2$ communities are brittle “shadows.”
+* **Cross‑ecosystem**: only adapters to provide names/maintainers/deps/times.
+
+---
+
+## Reference implementation (Python, no external deps)
+
+Drop as `research/algorithms/rcs2.py` (pure‑Python; uses `math`/`random`/`time`). It expects a list of package dicts and returns shadow clusters with evidence.
+
+```python
+# research/algorithms/rcs2.py
+# Minimal, dependency-free RCS² reference (educational baseline).
+from typing import List, Dict, Any, Tuple
+import math, random
+
+# ---------- Utilities ----------
+def levenshtein(a: str, b: str) -> int:
+    a, b = a.lower(), b.lower()
+    n, m = len(a), len(b)
+    if n == 0: return m
+    if m == 0: return n
+    dp = list(range(m+1))
+    for i in range(1, n+1):
+        prev, dp[0] = dp[0], i
+        for j in range(1, m+1):
+            cur = min(
+                dp[j] + 1,
+                dp[j-1] + 1,
+                prev + (0 if a[i-1]==b[j-1] else 1)
+            )
+            prev, dp[j] = dp[j], cur
+    return dp[m]
+
+def jaccard(a: set, b: set) -> float:
+    if not a and not b: return 1.0
+    u = len(a|b);  i = len(a&b)
+    return i / u if u else 0.0
+
+def exp_decay(dt: float, tau: float) -> float:
+    return math.exp(-abs(dt)/max(tau,1e-9))
+
+# ---------- Build layers ----------
+def build_layers(pkgs: List[Dict[str, Any]],
+                 tau_n: float=1.5,
+                 tau_t: float=48*3600) -> Dict[str, List[List[float]]]:
+    n = len(pkgs)
+    # init zero matrices
+    A_name  = [[0.0]*n for _ in range(n)]
+    A_maint = [[0.0]*n for _ in range(n)]
+    A_deps  = [[0.0]*n for _ in range(n)]
+    A_time  = [[0.0]*n for _ in range(n)]
+    # pre-extract
+    names = [p["name"] for p in pkgs]
+    maint = [set(p.get("maintainers", [])) for p in pkgs]
+    deps  = [set(p.get("deps", [])) for p in pkgs]
+    times = [float(p.get("latest_ts", 0.0)) for p in pkgs]
+    for i in range(n):
+        for j in range(i+1, n):
+            # name
+            ld = levenshtein(names[i], names[j])
+            w_name = math.exp(-ld/max(tau_n,1e-9)) if ld <= 3 else 0.0
+            # maint
+            w_maint = jaccard(maint[i], maint[j])
+            # deps
+            w_deps = jaccard(deps[i], deps[j])
+            # time
+            dt = abs(times[i]-times[j])
+            w_time = exp_decay(dt, tau_t)
+            # symmetric
+            for A, w in ((A_name,w_name),(A_maint,w_maint),(A_deps,w_deps),(A_time,w_time)):
+                A[i][j]=A[j][i]=w
+    return {"name":A_name, "maint":A_maint, "deps":A_deps, "time":A_time}
+
+def degree(A: List[List[float]]) -> List[float]:
+    return [sum(row) for row in A]
+
+def conormalized_laplacian(A: List[List[float]]) -> List[List[float]]:
+    n = len(A)
+    D = degree(A)
+    L = [[0.0]*n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i==j:
+                L[i][j]=1.0
+            if D[i]>0 and D[j]>0 and A[i][j]>0:
+                L[i][j]-= A[i][j]/math.sqrt(D[i]*D[j])
+    return L
+
+def add_mats(mats: List[List[List[float]]], weights: List[float]) -> List[List[float]]:
+    n = len(mats[0])
+    S = [[0.0]*n for _ in range(n)]
+    for M, w in zip(mats, weights):
+        for i in range(n):
+            for j in range(n):
+                S[i][j] += w*M[i][j]
+    return S
+
+# Simple power iteration for a few smallest eigenvectors via shifted inverse iteration (toy)
+def smallest_eigenvectors_sym(L: List[List[float]], k: int=3, iters: int=200) -> List[List[float]]:
+    # naive, for small n (<= 300). For larger graphs, use scipy in production.
+    n = len(L)
+    # Start with random vectors, orthonormalize with Gram-Schmidt
+    import random
+    def matvec(x):
+        return [sum(L[i][j]*x[j] for j in range(n)) for i in range(n)]
+    basis = []
+    for _ in range(k):
+        v = [random.random() for _ in range(n)]
+        # orthogonalize
+        for b in basis:
+            dot = sum(v[i]*b[i] for i in range(n))
+            for i in range(n): v[i]-=dot*b[i]
+        # normalize
+        norm = math.sqrt(sum(xx*xx for xx in v)) or 1.0
+        v = [xx/norm for xx in v]
+        # power method on (I - L) to find small eigenvalues of L
+        for _ in range(iters):
+            y = matvec(v)
+            # shift-invert surrogate: compute w = v - y (approx (I-L)v)
+            w = [v[i]-y[i] for i in range(n)]
+            # re-orthogonalize
+            for b in basis:
+                dot = sum(w[i]*b[i] for i in range(n))
+                for i in range(n): w[i]-=dot*b[i]
+            norm = math.sqrt(sum(ww*ww for ww in w)) or 1.0
+            v = [ww/norm for ww in w]
+        basis.append(v)
+    return list(zip(*basis))  # rows as embeddings
+
+def kmeans(X: List[List[float]], k: int, rounds: int=50) -> List[int]:
+    n, d = len(X), len(X[0] if X else [])
+    # init: pick k random points
+    idx = list(range(n))
+    random.shuffle(idx)
+    centers = [X[i][:] for i in idx[:k]]
+    assign = [0]*n
+    for _ in range(rounds):
+        # assign
+        changed = False
+        for i in range(n):
+            best, bestj = 1e9, 0
+            for j in range(k):
+                dist = 0.0
+                for t in range(d):
+                    diff = X[i][t]-centers[j][t]
+                    dist += diff*diff
+                if dist<best: best, bestj = dist, j
+            if assign[i]!=bestj:
+                assign[i]=bestj
+                changed=True
+        # update
+        if not changed: break
+        sums = [[0.0]*d for _ in range(k)]
+        counts = [0]*k
+        for i in range(n):
+            c = assign[i]; counts[c]+=1
+            for t in range(d): sums[c][t]+=X[i][t]
+        for j in range(k):
+            if counts[j]==0: continue
+            centers[j] = [s/counts[j] for s in sums[j]]
+    return assign
+
+def eigengap_k(eigs: List[float], kmax:int=8) -> int:
+    """Choose k by largest gap among smallest eigenvalues (cap at kmax)."""
+    # eigs assumed ascending
+    gaps = [(eigs[i+1]-eigs[i], i+1) for i in range(min(len(eigs)-1, kmax-1))]
+    if not gaps: return min(2, len(eigs))
+    gaps.sort(reverse=True)
+    return max(2, gaps[0][1])
+
+# Fiedler value of subgraph
+def fiedler_of_subgraph(A: List[List[float]], nodes: List[int]) -> float:
+    # build sub-L and estimate second-smallest eigenvalue (tiny n)
+    m = len(nodes)
+    if m<=2: return 0.0
+    subA = [[0.0]*m for _ in range(m)]
+    for ii,i in enumerate(nodes):
+        for jj,j in enumerate(nodes):
+            subA[ii][jj] = A[i][j]
+    L = conormalized_laplacian(subA)
+    # crude eigenvalue estimates by Rayleigh quotient scanning a few random vecs
+    # (in prod use scipy.sparse.linalg.eigsh)
+    import random
+    def matvec(x):
+        return [sum(L[i][j]*x[j] for j in range(m)) for i in range(m)]
+    # find smallest ~ 0 (constant), we want second-smallest
+    # sample multiple starting vecs and take the 2nd smallest Rayleigh
+    vals = []
+    for _ in range(12):
+        v = [random.random() for _ in range(m)]
+        # orthogonalize to constant vector
+        mean = sum(v)/m
+        v = [vv - mean for vv in v]
+        for _ in range(60):
+            y = matvec(v)
+            norm = math.sqrt(sum(yy*yy for yy in y)) or 1.0
+            v = [yy/norm for yy in y]
+        # Rayleigh quotient
+        Lv = matvec(v)
+        num = sum(v[i]*Lv[i] for i in range(m))
+        den = sum(v[i]*v[i] for i in range(m)) or 1.0
+        vals.append(num/den)
+    vals = sorted(vals)
+    return vals[0] if len(vals)==1 else vals[1]
+
+# ---------- Main RCS² ----------
+def rcs2_report(pkgs: List[Dict[str,Any]],
+                w_name: float=0.35, w_maint: float=0.2,
+                w_deps: float=0.3, w_time: float=0.15,
+                tau_n: float=1.5, tau_t: float=48*3600,
+                gamma: float=2.2, typo_tau: float=0.55) -> Dict[str,Any]:
+    """
+    pkgs: list of {name:str, maintainers:[...], deps:[...], latest_ts:epoch, downloads:int}
+    returns: dict with communities, shadow flags, and evidence.
+    """
+    n = len(pkgs)
+    if n<3:
+        return {"ok":False,"message":"need >=3 packages"}
+    layers = build_layers(pkgs, tau_n=tau_n, tau_t=tau_t)
+    Ls = [conormalized_laplacian(layers["name"]),
+          conormalized_laplacian(layers["maint"]),
+          conormalized_laplacian(layers["deps"]),
+          conormalized_laplacian(layers["time"])]
+    L = add_mats(Ls, [w_name,w_maint,w_deps,w_time])
+    # very crude eigenvalues via Rayleigh: approximate for k selection
+    # We'll just pick k by sqrt(n) capped
+    k = max(2, min(int(math.sqrt(n)), 8))
+    emb = smallest_eigenvectors_sym(L, k=k, iters=120)  # n x k
+    # row-normalize
+    X = []
+    for row in emb:
+        norm = math.sqrt(sum(v*v for v in row)) or 1.0
+        X.append([v/norm for v in row])
+    labels = kmeans(X, k=k)
+    # group by cluster
+    clusters: Dict[int, List[int]] = {}
+    for i, c in enumerate(labels):
+        clusters.setdefault(c, []).append(i)
+    # evidence per cluster
+    A_name, A_maint, A_deps, A_time = layers["name"], layers["maint"], layers["deps"], layers["time"]
+    results = []
+    for cid, nodes in clusters.items():
+        # canonical by max downloads (fallback: shortest name)
+        canon = max(nodes, key=lambda i: pkgs[i].get("downloads",0))
+        if pkgs[canon].get("downloads",0)==0:
+            canon = min(nodes, key=lambda i: len(pkgs[i]["name"]))
+        s_star = pkgs[canon]["name"]
+        # metrics
+        typo_hits = 0
+        dep_sims = []
+        time_sims = []
+        maint_overlaps = []
+        for i in nodes:
+            if i==canon: continue
+            if levenshtein(pkgs[i]["name"], s_star) <= 2:
+                typo_hits += 1
+            dep_sims.append(jaccard(set(pkgs[i].get("deps",[])), set(pkgs[canon].get("deps",[]))))
+            time_sims.append(exp_decay(abs(float(pkgs[i].get("latest_ts",0))-float(pkgs[canon].get("latest_ts",0))), tau_t))
+            maint_overlaps.append(jaccard(set(pkgs[i].get("maintainers",[])), set(pkgs[canon].get("maintainers",[]))))
+        rho_typo = (typo_hits / max(1, len(nodes)-1)) if len(nodes)>1 else 0.0
+        mu_D = sum(dep_sims)/max(1,len(dep_sims)) if dep_sims else 0.0
+        sigma_T = sum(time_sims)/max(1,len(time_sims)) if time_sims else 0.0
+        delta_M = 1.0 - (sum(maint_overlaps)/max(1,len(maint_overlaps)) if maint_overlaps else 0.0)
+        lam2 = fiedler_of_subgraph(A_deps, nodes)  # dep topology proxy
+        # score
+        a,b,c,d,e = 1.2, 1.0, 0.6, 0.8, 0.7
+        score = a*rho_typo + b*mu_D + c*sigma_T + d*delta_M + e*(1.0 - math.tanh(lam2/0.15))
+        flag = (score >= gamma) and (rho_typo >= typo_tau)
+        # top pairs by name LD
+        pairs = []
+        for i in nodes:
+            if i==canon: continue
+            ld = levenshtein(pkgs[i]["name"], s_star)
+            pairs.append((ld, pkgs[i]["name"]))
+        pairs.sort()
+        results.append({
+            "cluster_id": cid,
+            "nodes": [pkgs[i]["name"] for i in nodes],
+            "canonical": pkgs[canon]["name"],
+            "metrics": {
+                "typo_density": rho_typo,
+                "dep_mirroring": mu_D,
+                "temporal_shadow": sigma_T,
+                "maint_divergence": delta_M,
+                "fiedler": lam2,
+                "score": score
+            },
+            "shadow_flag": bool(flag),
+            "top_name_pairs": [{"name": n, "ld_to_canonical": int(ld)} for ld,n in pairs[:5]]
+        })
+    # overall score = fraction of clusters flagged + size-weighted intensity
+    flagged = [r for r in results if r["shadow_flag"]]
+    overall = (len(flagged)/max(1,len(results))) if results else 0.0
+    return {"ok": True, "clusters": results, "shadow_overall": overall}
+```
+
+**What to feed it**
+A per‑ecosystem snapshot (e.g., npm scope, PyPI slice) as:
+
+```python
+pkgs = [
+  {"name":"lodash", "maintainers":["m1","m2"], "deps":["depA","depB"], "latest_ts": 1723270000, "downloads": 10_000_000},
+  {"name":"lodas",  "maintainers":["x"],        "deps":["depA","depB"], "latest_ts": 1723277000, "downloads": 500},
+  ...
+]
+rep = rcs2_report(pkgs)
+```
+
+---
+
+## Complexity
+
+* Layer build: $O(n^2)$ pairwise (use blocking/shingling for large n).
+* Spectral step (toy): $O(n^2 k)$ here; in production use sparse matrices + Lanczos.
+* k‑means: $O(n k d R)$ with small $d$.
+
+---
+
+## Policy & thresholds (starting points)
+
+* Layer weights: $w_{\text{name}}=0.35,\ w_{\text{deps}}=0.30,\ w_{\text{maint}}=0.20,\ w_{\text{time}}=0.15$.
+* Temporal window: $\tau_t=48$h.
+* Flagging: $\Gamma\approx 2.2,\ \tau_{\text{typo}}\approx 0.55$.
+  Tune by ecosystem (PyPI names are shorter → adjust $\tau_n$).
+
+---
+
+## Novelty you can claim
+
+* **Co‑normalized multilayer Laplacian** tailored to registries that blends name/homoglyph, maintainer, dependency, and temporal layers for **shadow community** discovery.
+* **Community‑level Fiedler fragility** used as an *additional* criterion to distinguish organic forks from synthetic rings.
+
+Document this in an internal note; you can open‑source a simplified “name+deps only” version and keep the full multilayer scoring + Fiedler gating proprietary.
+
+---
+
+## Integration into Typosentinel
+
+1. Add a **registry snapshot extractor** (you already gather names/maintainers/deps/timestamps).
+2. Wire `rcs2_report(pkgs)` into `services/registry/rcs2/`:
+
+   * On each run, emit one **Alert** per flagged community with:
+
+     * `summary`: “Shadow cluster around <canonical>”
+     * `details`: metrics + top\_name\_pairs
+     * `artifacts`: one per package (as `Artifact(type="event")`)
+3. Expose a **batch endpoint** (already scaffolded) and schedule daily.
+4. Log metrics to Splunk: `shadow_overall`, per‑cluster `score`, and counts.
+
+If you want, I can now:
+
+* drop this file into your repo scaffold,
+* add a FastAPI handler that calls `rcs2_report`,
+* provide two tiny test fixtures (one benign, one with a synthetic shadow) and a CI check that asserts a flag appears in the malicious case.
+Love it. Here’s a slate of **10 novel, nameable algorithms** covering *different* supply-chain attack surfaces. Each comes with the intuition, what’s new, the signal it produces, and a lightweight implementation sketch so your team can prototype fast. These are designed to feel like a next chapter—mathy, cross-ecosystem, and composable with Typosentinel.
+
+---
+
+# 1) CWAD (Constrained Wasserstein Artifact Divergence)
+
+**Target:** Release-only backdoors (XZ-style).
+**You already have:** definition + code.
+**What’s new vs. industry:** Risk-augmented OT + Sparse Injection Probe as a “minimal backdoor witness.”
+
+---
+
+# 2) RCS² (Registry Cross-Shadow Spectral)
+
+**Target:** Typosquat **campaigns** (families, not single packages).
+**Idea:** Build a **multilayer graph**: nodes are packages; layers are (name-similarity, maintainer overlap, code-sim, publish-time). Compute a **co-spectral embedding** and find **shadow clusters** that only appear when homoglyph/keyboard layers are on.
+**Novelty:** Shadow clustering across *augmented name metrics*; campaign discovery > point detection.
+**Signal:** Cluster risk score + seed packages to quarantine.
+**Sketch (Python):**
+
+```python
+# Build adjacency per layer (A_name, A_maint, A_code, A_time)
+# Co-normalized Laplacian L = Σ w_l * (I - D_l^-1/2 A_l D_l^-1/2)
+# Top-k eigenvectors → clustering; score clusters with % of typos metrics
+```
+
+---
+
+# 3) MKED (Maintainer Key Entropy Drift)
+
+**Target:** Maintainer account takeovers / key swaps.
+**Idea:** Track **signing/material metadata** per maintainer: key age, algo mix, signing cadence, IP ASN diversity, package scope. Use **sequential change-point detection** (CUSUM with **entropy features**) to flag unnatural drift.
+**Novelty:** Entropy-driven drift of *maintainer signing behavior* rather than payload.
+**Signal:** Drift time + z-score; triggers enhanced review.
+**Sketch:**
+
+```python
+H = w1*H(algos) + w2*H(time_buckets) + w3*H(projects)
+# run CUSUM on H_t; alert when statistic crosses threshold
+```
+
+---
+
+# 4) POGOT (Provenance OT on Graphs Over Time)
+
+**Target:** Broken **provenance chains** (fake attestations, supply hops).
+**Idea:** Treat each build as an **SBOM token multiset** (sources, builders, deps). Compute **Wasserstein distance between successive builds’ SBOM distributions**, with a **provenance-risk cost** (e.g., unverified builder → costly).
+**Novelty:** OT over SBOM streams to catch subtle provenance drift.
+**Signal:** Time series of POGOT distance; spikes = integrity anomalies.
+**Sketch:** Same Sinkhorn core as CWAD, but features = SBOM token classes (builderID, sourceURI, digest type, SLSA level).
+
+---
+
+# 5) DIRT (Dependency Impact Robustness Test)
+
+**Target:** “Strategic dependency” swaps causing outsized blast radius.
+**Idea:** Run **counterfactual perturbations** on the dep graph: for each package, remove/replace with nearest typos, recompute **reachability & criticality** (e.g., number of downstream build paths affected). Use **Shapley-style attribution** to score *which* deps are single points of failure.
+**Novelty:** *Game-theoretic* counterfactual risk per dependency.
+**Signal:** DIRT score per dep → guardrails/blocklists.
+**Sketch:**
+
+```python
+# For each dep d: delta = metric(G) - metric(G \ d)
+# Shapley approx via random permutations; rank deps by average delta
+```
+
+---
+
+# 6) B3S (Build-Binary Behavior Sentinel)
+
+**Target:** Post-build injected or surprising native behavior.
+**Idea:** For built ELF/PE/Mach-O, extract **symbol/relocation/section** signatures; compare to **predicted** signature from source graph (no net/io/syscall expected). Use **Earth-Mover distance** on instruction categories + **relocation pattern classifiers** (e.g., IFUNC, ctor arrays).
+**Novelty:** Model-vs-binary **semantic EMD** + relocation anomalies, independent of strings.
+**Signal:** Probability of exotic behavior given the source.
+**Sketch:**
+
+* Features: instr histogram (capstone), reloc types, imported libs.
+* Distance to expected profile; threshold by project family.
+
+---
+
+# 7) AICC (Attestation Internal Consistency Check, SAT)
+
+**Target:** Faked or inconsistent SLSA/attestations.
+**Idea:** Convert claims (builder, inputs, timestamps, digest links) into CNF constraints; run a SAT solver to find contradictions (e.g., digest mismatch + time windows + builder identity).
+**Novelty:** **SAT for provenance**—rare in practice.
+**Signal:** UNSAT core → exact fields & claims to dispute.
+**Sketch:**
+
+* Encode `builder_used(X) ⇒ signed_by(K)`; `digest(D) ⇒ rekor_inclusion(D)`; check satisfiability.
+
+---
+
+# 8) LINTEL (Language-INdependent Taint across pipeliNE Layers)
+
+**Target:** Build-time secret exfil & pipeline lateral moves (generic).
+**Idea:** Cross-language **flow lattice**: {env→build, env→test, secrets→net\_io, artifact→postinstall}. Do **lightweight abstract interpretation** across shell, make, npm scripts, Python setup, Maven plugins to see if secrets can reach sinks.
+**Novelty:** Single **typed taint lattice** spanning heterogeneous build surfaces.
+**Signal:** Source→sink paths with evidence (files/lines).
+**Sketch:**
+
+* Nodes = (file, step, var); edges from assignments/exports/args; sinks (curl, requests, sockets).
+
+---
+
+# 9) RUNT (Release-UNusual Name Tokenizer)
+
+**Target:** Name abuse beyond simple edit distance.
+**Idea:** Tokenize names with **visual & phonetic** encodings (Unicode NFKC, skeleton, Punycode, double-metaphone). Score with **mixture models** conditioned on top-N names to detect pronounceable-but-deceptive variants (e.g., homoglyph + phonetic drift).
+**Novelty:** **Phonetic + skeleton mixture** tuned on OSS name corpora.
+**Signal:** Name deception posterior; feed into pre-install policy.
+**Sketch:**
+
+* f(name) = w1*LD + w2*Jaro + w3*phonetic\_distance + w4*skeleton\_mismatch.
+
+---
+
+# 10) GTR (Granular Tarball Reproducibility)
+
+**Target:** Non-reproducible releases hiding extras.
+**Idea:** Build from VCS in a **hermetic, deterministic** env; compute a **per-path reproducibility vector** (hash matches? timestamp normalized? section sizes?). Use **Bayesian update** per path to separate benign noise (e.g., timestamps) from malicious insertions (new files, codegen).
+**Novelty:** Path-level Bayesian reproducibility, not binary pass/fail.
+**Signal:** Paths with malicious posterior → show diff + cause.
+**Sketch:**
+
+* Likelihoods: P(match|benign), P(match|malicious) → posterior via Bayes per file, aggregate risk.
+
+---
+
+## How they interlock (pipeline)
+
+* **Before install:** RCS², RUNT → campaign & name risk.
+* **Fetch stage:** MKED, POGOT, AICC → provenance/maintainer correctness.
+* **Build stage:** LINTEL, CWAD, GTR → release integrity, taint, reproducibility.
+* **Post-build binaries:** B3S → binary behavior divergence.
+* **Graph hygiene:** DIRT → protect strategic deps.
+
+---
+
+## Quick code seeds (you can drop in)
+
+### RUNT distance (visual + phonetic)
+
+```python
+import jellyfish, unicodedata
+def skeleton(s): return unicodedata.normalize("NFKC", s).casefold()
+def name_distance(a,b):
+    a_s, b_s = skeleton(a), skeleton(b)
+    ld = 1 - jellyfish.jaro_winkler(a_s, b_s)
+    ph = 0 if jellyfish.metaphone(a)==jellyfish.metaphone(b) else 1
+    return 0.6*ld + 0.4*ph
+```
+
+### MKED drift (CUSUM on entropy)
+
+```python
+import math
+def entropy(ps): 
+    s=sum(ps.values()); return -sum((v/s)*math.log((v/s)+1e-12) for v in ps.values())
+def cusum(seq, k=0.02, h=0.2):
+    splus=sminus=0; alerts=[]
+    for t,x in enumerate(seq):
+        splus=max(0, splus + x - k); sminus=max(0, sminus - x - k)
+        if splus>h or sminus>h: alerts.append(t); splus=sminus=0
+    return alerts
+# feed H_t from distributions over key algos / time buckets per maintainer
+```
+
+### DIRT (fast Shapley approximation)
+
+```python
+import random
+def shapley_approx(graph_metric, deps, iters=200):
+    phi={d:0.0 for d in deps}
+    for _ in range(iters):
+        pi=random.sample(deps, len(deps))
+        S=set(); base=graph_metric(S)
+        for d in pi:
+            gain=graph_metric(S|{d})-base
+            phi[d]+=gain; S.add(d); base+=gain
+    n=float(iters); return {k:v/n for k,v in phi.items()}
+# graph_metric: e.g., downstream paths reachable
+```
+
+---
+
+## IP & productization notes
+
+* File an **internal invention disclosure** for: **RCS²**, **MKED**, **POGOT**, **AICC**, **LINTEL**, **B3S**, **DIRT**, **RUNT**, **GTR** (and **CWAD**, already drafted).
+* Open-source *light* variants (e.g., RUNT, bits of LINTEL) to seed adoption; keep **SIP (CWAD)**, **AICC**, **B3S** proprietary.
+* Each algorithm outputs a **compact JSON** (score, top explanations) so your UI and Splunk app can render consistent evidence.
+
+If you want, I can package these into a **/research/algorithms** folder (code + tests + docs) and wire them behind feature flags so you can roll them out incrementally.

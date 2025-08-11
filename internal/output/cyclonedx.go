@@ -237,6 +237,11 @@ func (f *CycloneDXFormatter) createComponents(results *scanner.ScanResults) []Cy
 	var components []CycloneDXComponent
 
 	for _, result := range results.Results {
+		// Skip if package or metadata is nil
+		if result.Package == nil || result.Package.Metadata == nil {
+			continue
+		}
+		
 		component := CycloneDXComponent{
 			Type:    "library",
 			BOMRef:  f.createBOMRef(result.Package.Metadata.Name, result.Package.Metadata.Version),

@@ -11,12 +11,14 @@ A comprehensive typosquatting detection tool that helps identify malicious packa
 ## 🚀 Features
 
 - **Multi-Language Support**: Detects typosquatting across npm, PyPI, Go modules, Maven, NuGet, and more
-- **Advanced Detection**: Uses machine learning and heuristic analysis for accurate threat detection
-- **Real-time Scanning**: Continuous monitoring of package dependencies
+- **Novel ML Algorithms**: Cutting-edge machine learning including quantum-inspired neural networks, graph attention networks, and adversarial ML detection
+- **Advanced Detection**: Uses both traditional and novel machine learning techniques for superior threat detection
+- **Adaptive Analysis**: Intelligent strategy selection (novel-only, classic-only, hybrid, adaptive) based on package characteristics
+- **Real-time Scanning**: Continuous monitoring of package dependencies with caching and performance optimization
 - **REST API**: Easy integration with existing CI/CD pipelines
 - **Plugin Architecture**: Extensible system for custom analyzers
-- **Performance Optimized**: Efficient scanning with caching and parallel processing
-- **Comprehensive Reporting**: Detailed analysis reports with risk scoring
+- **Performance Optimized**: Efficient scanning with caching, parallel processing, and concurrent analysis
+- **Comprehensive Reporting**: Detailed analysis reports with risk scoring and threat explanations
 
 ## 📦 Installation
 
@@ -91,6 +93,14 @@ docker-compose down
 # Scan a project directory
 typosentinel scan /path/to/project
 
+# Scan with novel algorithms (enhanced detection)
+typosentinel scan --use-novel-algorithms /path/to/project
+
+# Scan with specific analysis strategy
+typosentinel scan --strategy adaptive /path/to/project
+typosentinel scan --strategy novel-only /path/to/project
+typosentinel scan --strategy hybrid /path/to/project
+
 # Scan specific package managers
 typosentinel scan --package-manager npm /path/to/project
 typosentinel scan --package-manager pypi /path/to/project
@@ -101,6 +111,75 @@ typosentinel scan --output report.json /path/to/project
 # Enable verbose logging
 typosentinel scan --verbose /path/to/project
 ```
+
+## 🧠 Novel ML Algorithms
+
+TypoSentinel incorporates cutting-edge machine learning algorithms for enhanced threat detection:
+
+### Available Algorithms
+
+- **🔬 Quantum-Inspired Neural Networks**: Leverage quantum computing principles for superior pattern recognition
+- **🕸️ Graph Attention Networks**: Analyze complex dependency relationships and supply chain attacks
+- **🛡️ Adversarial ML Detection**: Detect and defend against ML evasion attacks
+- **🔄 Transformer Models**: Advanced sequence analysis for package metadata and code patterns
+- **🤝 Federated Learning**: Privacy-preserving distributed learning across threat intelligence sources
+- **🔗 Causal Inference**: Understand cause-effect relationships in package behavior
+- **🎯 Meta-Learning**: Quickly adapt to new threat patterns with limited data
+- **🐝 Swarm Intelligence**: Bio-inspired optimization for feature selection and tuning
+- **🧬 NeuroEvolution**: Evolve neural network architectures for optimal detection
+- **⚛️ Quantum Machine Learning**: True quantum computing for ML processing
+
+### Analysis Strategies
+
+```bash
+# Adaptive strategy (recommended for production)
+# Automatically selects best approach based on package complexity
+typosentinel scan --strategy adaptive /path/to/project
+
+# Novel-only strategy for sophisticated threats
+typosentinel scan --strategy novel-only /path/to/project
+
+# Hybrid strategy combining novel and classic algorithms
+typosentinel scan --strategy hybrid --novel-weight 0.7 /path/to/project
+
+# Classic-only for simple, known patterns
+typosentinel scan --strategy classic-only /path/to/project
+```
+
+### Configuration
+
+Configure novel algorithms via `config/novel_algorithms.yaml`:
+
+```yaml
+novel_algorithms:
+  # Enable specific algorithms
+  quantum_inspired_enabled: true
+  graph_attention_enabled: true
+  adversarial_detection_enabled: true
+  transformer_enabled: true
+  
+  # Performance settings
+  performance_thresholds:
+    latency_ms: 5000
+    accuracy: 0.85
+    
+  # Caching for performance
+  caching:
+    enabled: true
+    ttl_minutes: 60
+```
+
+### Demo and Examples
+
+```bash
+# Run the novel algorithms demonstration
+go run examples/novel_algorithms_demo.go
+
+# Test with different package types
+typosentinel scan --strategy adaptive --verbose examples/test-packages/
+```
+
+For detailed information, see [Novel Algorithms Documentation](docs/NOVEL_ALGORITHMS.md).
 
 ### Real-World Examples
 

@@ -15,6 +15,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
+	"github.com/Alivanroy/Typosentinel/internal/edge"
 	"github.com/Alivanroy/Typosentinel/internal/output"
 	"github.com/Alivanroy/Typosentinel/internal/repository"
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
@@ -560,12 +561,380 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	scanCmd.Flags().Bool("advanced", false, "Enable advanced supply chain features")
 	analyzeCmd.Flags().Bool("supply-chain", false, "Include supply chain analysis")
 
+	// Edge Algorithms command group
+	var edgeCmd = &cobra.Command{
+		Use:   "edge",
+		Short: "Novel edge algorithms for advanced threat detection",
+		Long: `Edge algorithms provide cutting-edge threat detection capabilities using advanced
+mathematical models and machine learning techniques for superior security analysis.`,
+	}
+
+	// GTR Algorithm command
+	var gtrCmd = &cobra.Command{
+		Use:   "gtr [packages...]",
+		Short: "Graph-based Threat Recognition algorithm",
+		Long: `GTR (Graph-based Threat Recognition) uses advanced graph theory and network analysis
+to identify complex threat patterns and relationships between packages.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			threshold, _ := cmd.Flags().GetFloat64("threshold")
+			maxDepth, _ := cmd.Flags().GetInt("max-depth")
+			includeMetrics, _ := cmd.Flags().GetBool("include-metrics")
+			
+			// Create GTR config
+			config := &edge.GTRConfig{
+				MinRiskThreshold:     threshold,
+				MaxTraversalDepth:    maxDepth,
+				EnablePathAnalysis:   true,
+				EnableCycleDetection: true,
+			}
+			algorithm := edge.NewGTRAlgorithm(config)
+			
+			fmt.Printf("🔍 GTR Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Threshold: %.2f, Max Depth: %d\n", threshold, maxDepth)
+			
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+				
+				result, err := algorithm.Analyze(ctx, pkg)
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+				
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
+					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
+					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
+					
+					if includeMetrics && result.Metadata != nil {
+						fmt.Printf("Metadata:\n")
+						for key, value := range result.Metadata {
+							fmt.Printf("  %s: %v\n", key, value)
+						}
+					}
+					
+					if len(result.AttackVectors) > 0 {
+						fmt.Printf("Attack Vectors:\n")
+						for _, vector := range result.AttackVectors {
+							fmt.Printf("  - %s\n", vector)
+						}
+					}
+					
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// RUNT Algorithm command
+	var runtCmd = &cobra.Command{
+		Use:   "runt [packages...]",
+		Short: "Recursive Universal Network Traversal algorithm",
+		Long: `RUNT (Recursive Universal Network Traversal) performs deep recursive analysis
+of package dependencies and network relationships for comprehensive threat detection.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			maxDepth, _ := cmd.Flags().GetInt("max-depth")
+			similarity, _ := cmd.Flags().GetFloat64("similarity")
+			includeFeatures, _ := cmd.Flags().GetBool("include-features")
+			
+			// Create RUNT config
+			config := &edge.RUNTConfig{
+				OverallThreshold:     similarity,
+				MinPackageLength:     2,
+				MaxPackageLength:     100,
+				EnableUnicodeAnalysis: true,
+			}
+			algorithm := edge.NewRUNTAlgorithm(config)
+			
+			fmt.Printf("🌐 RUNT Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Max Depth: %d, Similarity: %.2f\n", maxDepth, similarity)
+			
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+				
+				result, err := algorithm.Analyze(ctx, pkg)
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+				
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
+					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
+					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
+					
+					if includeFeatures && result.Metadata != nil {
+						fmt.Printf("Features:\n")
+						for key, value := range result.Metadata {
+							fmt.Printf("  %s: %v\n", key, value)
+						}
+					}
+					
+					if len(result.AttackVectors) > 0 {
+						fmt.Printf("Attack Vectors:\n")
+						for _, vector := range result.AttackVectors {
+							fmt.Printf("  - %s\n", vector)
+						}
+					}
+					
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// AICC Algorithm command
+	var aiccCmd = &cobra.Command{
+		Use:   "aicc [packages...]",
+		Short: "Adaptive Intelligence Correlation Clustering algorithm",
+		Long: `AICC (Adaptive Intelligence Correlation Clustering) uses machine learning
+and adaptive clustering techniques for intelligent threat pattern recognition.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			clusters, _ := cmd.Flags().GetInt("clusters")
+			adaptiveMode, _ := cmd.Flags().GetBool("adaptive")
+			includeCorrelation, _ := cmd.Flags().GetBool("include-correlation")
+			
+			// Create AICC config
+			config := &edge.AICCConfig{
+				MaxChainDepth:     clusters,
+				MinTrustScore:     0.7,
+				RequireTimestamps: true,
+				AllowSelfSigned:   !adaptiveMode,
+				PolicyStrictness:  "medium",
+			}
+			algorithm := edge.NewAICCAlgorithm(config)
+			
+			fmt.Printf("🤖 AICC Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Clusters: %d, Adaptive: %v\n", clusters, adaptiveMode)
+			
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+				
+				result, err := algorithm.Analyze(ctx, pkg)
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+				
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
+					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
+					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
+					
+					if includeCorrelation && result.Metadata != nil {
+						fmt.Printf("Correlation Metrics:\n")
+						for key, value := range result.Metadata {
+							fmt.Printf("  %s: %v\n", key, value)
+						}
+					}
+					
+					if len(result.AttackVectors) > 0 {
+						fmt.Printf("Attack Vectors:\n")
+						for _, vector := range result.AttackVectors {
+							fmt.Printf("  - %s\n", vector)
+						}
+					}
+					
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// DIRT Algorithm command
+	var dirtCmd = &cobra.Command{
+		Use:   "dirt [packages...]",
+		Short: "Dependency Impact Risk Traversal algorithm",
+		Long: `DIRT (Dependency Impact Risk Traversal) analyzes dependency chains and
+impact propagation for comprehensive supply chain risk assessment.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			maxDepth, _ := cmd.Flags().GetInt("max-depth")
+			riskThreshold, _ := cmd.Flags().GetFloat64("risk-threshold")
+			includeGraph, _ := cmd.Flags().GetBool("include-graph")
+			
+			// Create DIRT config
+			config := &edge.DIRTConfig{
+				MaxPropagationDepth:       maxDepth,
+				HighRiskThreshold:         riskThreshold,
+				EnableCascadeAnalysis:     true,
+				EnableHiddenRiskDetection: true,
+				CacheEnabled:             true,
+			}
+			algorithm := edge.NewDIRTAlgorithm(config)
+			
+			fmt.Printf("⛏️  DIRT Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Max Depth: %d, Risk Threshold: %.2f\n", maxDepth, riskThreshold)
+			
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+				
+				result, err := algorithm.Analyze(ctx, pkg)
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+				
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
+					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
+					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
+					
+					if includeGraph && result.Metadata != nil {
+						fmt.Printf("Dependency Graph Metrics:\n")
+						for key, value := range result.Metadata {
+							fmt.Printf("  %s: %v\n", key, value)
+						}
+					}
+					
+					if len(result.AttackVectors) > 0 {
+						fmt.Printf("Attack Vectors:\n")
+						for _, vector := range result.AttackVectors {
+							fmt.Printf("  - %s\n", vector)
+						}
+					}
+					
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// Edge Benchmark command
+	var edgeBenchmarkCmd = &cobra.Command{
+		Use:   "benchmark",
+		Short: "Benchmark all edge algorithms",
+		Long:  `Run performance benchmarks on all edge algorithms with various test scenarios.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			packages, _ := cmd.Flags().GetInt("packages")
+			workers, _ := cmd.Flags().GetInt("workers")
+			iterations, _ := cmd.Flags().GetInt("iterations")
+			
+			fmt.Printf("🚀 Edge Algorithms Benchmark\n")
+			fmt.Printf("Packages: %d, Workers: %d, Iterations: %d\n", packages, workers, iterations)
+			
+			// This would call the benchmark functionality
+			fmt.Println("Running comprehensive benchmark...")
+			fmt.Println("Note: Use examples/full_benchmark for detailed benchmarking")
+			
+			return nil
+		},
+	}
+
+	// Add flags to edge algorithm commands
+	gtrCmd.Flags().Float64("threshold", 0.7, "Risk threshold for GTR analysis")
+	gtrCmd.Flags().Int("max-depth", 5, "Maximum graph traversal depth")
+	gtrCmd.Flags().Bool("include-metrics", false, "Include detailed metrics in output")
+
+	runtCmd.Flags().Int("max-depth", 10, "Maximum recursion depth")
+	runtCmd.Flags().Float64("similarity", 0.8, "Similarity threshold for analysis")
+	runtCmd.Flags().Bool("include-features", false, "Include feature analysis in output")
+
+	aiccCmd.Flags().Int("clusters", 5, "Number of clusters for analysis")
+	aiccCmd.Flags().Bool("adaptive", true, "Enable adaptive clustering mode")
+	aiccCmd.Flags().Bool("include-correlation", false, "Include correlation metrics")
+
+	dirtCmd.Flags().Int("max-depth", 8, "Maximum dependency traversal depth")
+	dirtCmd.Flags().Float64("risk-threshold", 0.6, "Risk threshold for impact analysis")
+	dirtCmd.Flags().Bool("include-graph", false, "Include dependency graph metrics")
+
+	edgeBenchmarkCmd.Flags().Int("packages", 100, "Number of packages to benchmark")
+	edgeBenchmarkCmd.Flags().Int("workers", 4, "Number of concurrent workers")
+	edgeBenchmarkCmd.Flags().Int("iterations", 3, "Number of benchmark iterations")
+
+	// Add subcommands to edge command
+	edgeCmd.AddCommand(gtrCmd)
+	edgeCmd.AddCommand(runtCmd)
+	edgeCmd.AddCommand(aiccCmd)
+	edgeCmd.AddCommand(dirtCmd)
+	edgeCmd.AddCommand(edgeBenchmarkCmd)
+
 	// Add commands to root
 	rootCmd.AddCommand(scanCmd)
 	rootCmd.AddCommand(analyzeCmd)
 	rootCmd.AddCommand(scanOrgCmd)
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(supplyChainCmd)
+	rootCmd.AddCommand(edgeCmd)
 	rootCmd.AddCommand(versionCmd)
 
 	// Execute

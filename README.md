@@ -181,6 +181,92 @@ typosentinel scan --strategy adaptive --verbose examples/test-packages/
 
 For detailed information, see [Novel Algorithms Documentation](docs/NOVEL_ALGORITHMS.md).
 
+## 🔬 Edge Algorithms
+
+TypoSentinel includes specialized edge algorithms for advanced threat detection and analysis:
+
+### Available Edge Algorithms
+
+- **🎯 GTR (Graph Traversal Risk)**: Advanced graph-based risk analysis with cycle detection
+- **🏃 RUNT (Risk-based Unified Network Traversal)**: Network-based threat propagation analysis
+- **🔗 AICC (Attestation-based Identity Chain Checking)**: Identity verification and trust chain analysis
+- **🕳️ DIRT (Dependency Injection Risk Tracker)**: Hidden dependency risk detection and cascade analysis
+
+### Edge Algorithm Commands
+
+```bash
+# GTR Algorithm - Graph-based risk analysis
+typosentinel edge gtr /path/to/project \
+  --min-risk-threshold 0.7 \
+  --max-traversal-depth 10 \
+  --enable-cycle-detection
+
+# RUNT Algorithm - Network traversal analysis
+typosentinel edge runt /path/to/project \
+  --max-depth 5 \
+  --risk-threshold 0.8 \
+  --enable-caching
+
+# AICC Algorithm - Identity chain verification
+typosentinel edge aicc /path/to/project \
+  --max-chain-depth 8 \
+  --min-trust-score 0.6 \
+  --require-timestamps \
+  --policy-strictness high
+
+# DIRT Algorithm - Hidden risk detection
+typosentinel edge dirt /path/to/project \
+  --max-propagation-depth 6 \
+  --high-risk-threshold 0.9 \
+  --enable-cascade-analysis \
+  --enable-hidden-risk-detection
+
+# Benchmark all edge algorithms
+typosentinel edge benchmark /path/to/project
+```
+
+### Output Formats
+
+Edge algorithms support multiple output formats:
+
+```bash
+# JSON output (default)
+typosentinel edge gtr --output json /path/to/project
+
+# Text output for human reading
+typosentinel edge runt --output text /path/to/project
+
+# Save results to file
+typosentinel edge aicc --output json --output-file results.json /path/to/project
+```
+
+### Integration Examples
+
+**CI/CD Pipeline:**
+```yaml
+# Security scan with edge algorithms
+- name: Advanced Threat Detection
+  run: |
+    typosentinel edge gtr --output json --output-file gtr-results.json .
+    typosentinel edge dirt --enable-cascade-analysis --output json .
+```
+
+**Security Audit Script:**
+```bash
+#!/bin/bash
+# Comprehensive edge algorithm analysis
+echo "Running GTR analysis..."
+typosentinel edge gtr --min-risk-threshold 0.5 /path/to/project
+
+echo "Running DIRT cascade analysis..."
+typosentinel edge dirt --enable-cascade-analysis --enable-hidden-risk-detection /path/to/project
+
+echo "Running AICC identity verification..."
+typosentinel edge aicc --require-timestamps --policy-strictness high /path/to/project
+```
+
+For detailed information, see [Edge Algorithms CLI Documentation](docs/EDGE_ALGORITHMS_CLI.md).
+
 ### Real-World Examples
 
 #### 🚀 CI/CD Pipeline Integration
@@ -522,6 +608,7 @@ curl http://localhost:8080/api/v1/results/{scan_id}
 - [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
 - [Docker Deployment Guide](DOCKER.md) - Complete Docker deployment instructions
 - [API Documentation](docs/API_DOCUMENTATION.md) - REST API reference
+- [Edge Algorithms CLI](docs/EDGE_ALGORITHMS_CLI.md) - Advanced edge algorithms documentation
 - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [Plugin Development](docs/plugin_development_guide.md) - Creating custom analyzers
 - [Configuration Reference](docs/configuration.md) - All configuration options

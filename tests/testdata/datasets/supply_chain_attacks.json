@@ -1,8 +1,0 @@
-{
-  "attacks": [],
-  "metadata": {
-    "description": "Dataset of known supply chain attacks for testing",
-    "version": "1.0",
-    "last_updated": "2024-01-01"
-  }
-}

@@ -58,15 +58,9 @@
     },
     "class_balance": 1,
     "data_quality": 1,
-<<<<<<< Updated upstream
-    "last_validated": "2025-08-11T10:54:41.9416184+02:00"
+    "last_validated": "2025-08-11T20:09:55.606207+02:00"
   },
-  "last_updated": "2025-08-11T10:54:41.9416184+02:00",
-=======
-    "last_validated": "2025-08-11T00:18:29.490539+02:00"
-  },
-  "last_updated": "2025-08-11T00:18:29.490538+02:00",
->>>>>>> Stashed changes
+  "last_updated": "2025-08-11T20:09:55.606206+02:00",
   "version": "",
   "metadata": {}
 }

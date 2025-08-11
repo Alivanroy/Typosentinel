@@ -6,6 +6,11 @@
 *.dylib
 bin/
 dist/
+typosentinel
+typosentinel.exe
+
+# Trae AI configuration
+.trae/
 
 # Test binary, built with `go test -c`
 *.test
@@ -731,4 +736,4 @@ dev-debug.log
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/

@@ -716,9 +716,9 @@ func (m *Manager) setDefaults() {
 	viper.SetDefault("server.shutdown_timeout", "30s")
 	viper.SetDefault("server.tls.enabled", false)
 	viper.SetDefault("server.cors.enabled", true)
-	viper.SetDefault("server.cors.allowed_origins", []string{"*"})
+	viper.SetDefault("server.cors.allowed_origins", []string{"http://localhost:3000", "http://localhost:8080"})
 	viper.SetDefault("server.cors.allowed_methods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
-	viper.SetDefault("server.cors.allowed_headers", []string{"*"})
+	viper.SetDefault("server.cors.allowed_headers", []string{"Origin", "Content-Type", "Authorization", "X-API-Key"})
 	viper.SetDefault("server.cors.max_age", 3600)
 
 	// Database defaults

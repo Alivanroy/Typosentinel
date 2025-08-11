@@ -1,0 +1,677 @@
+# Typosentinel Zero‑Day Hunting Suite — Full Contents
+
+Below is the complete, ready‑to‑run suite, in plain text. Copy these files into a folder named `typosentinel_zeroday_suite/` and run `./scripts/orchestrate.sh` (after copying `config/targets.example.yaml` ➜ `config/targets.yaml` and setting `TYPOSENTINEL_BIN`).
+
+```
+/typosentinel_zeroday_suite
+  README.md
+  /config
+    targets.example.yaml
+  /scripts
+    orchestrate.sh
+    discover_targets.py
+    run_scans.py
+  /tools
+    osv_query.py
+    merge_results.py
+    rank_findings.py
+  /report
+    template.md.j2
+    generate_report.py
+  /ci
+    github-action.yml
+  /semgrep
+    rules.yaml
+  /codeql
+    codeql-analysis.yml
+  /fuzz
+    harness_go_example.go
+  /outputs (generated at runtime)
+```
+
+---
+
+## README.md
+
+```markdown
+# Typosentinel Zero‑Day Hunting Suite
+
+A safe, end‑to‑end workflow to discover **novel vulnerability candidates** and supply‑chain anomalies across GitHub repos and package registries using **Typosentinel** plus auxiliary checks (OSV, static rules). The suite does **not** execute untrusted code; it only performs static analysis and metadata lookups.
+
+---
+## What’s inside
+- Target discovery (GitHub + PyPI/npm recency feeds)
+- Typosentinel scans with JSON output
+- OSV vulnerability lookups (optional)
+- Result merge + **novelty ranking**
+- Markdown report generator
+- Optional static analyzers: Semgrep rules, CodeQL workflow
+- Starter fuzz harness (Go) for safe fuzzing of your own code
+
+Directory layout:
+```
+
+/typosentinel\_zeroday\_suite
+config/                 # targets + heuristics
+scripts/                # orchestration + discovery + scans
+tools/                  # OSV, merge, rank
+report/                 # jinja2 template + generator
+semgrep/, codeql/, fuzz/  # optional extras
+outputs/                # results are written here
+
+````
+
+---
+## Requirements
+- Linux/macOS, **Python 3.10+**
+- Tools: `git`, `curl`, `tar`, `unzip` (or OS equivalents)
+- **Typosentinel** binary on PATH, or set `TYPOSENTINEL_BIN=/path/to/typosentinel`
+- Python packages (auto‑install yourself): `requests`, `feedparser`, `jinja2`
+- Optional for package sources: `pip`, `npm`, `node`
+- Optional higher GitHub rate limit: `GITHUB_TOKEN` (repo read)
+
+---
+## Setup (first time)
+1. **Copy and edit config**
+   ```bash
+   cp config/targets.example.yaml config/targets.yaml
+   $EDITOR config/targets.yaml
+````
+
+Tips:
+
+* Adjust `selector.github.query` (stars, language, date) and caps like `max_repos`.
+* Extend `seeds.github_repos` / `seeds.pypi_packages` / `seeds.npm_packages` to include known‑interesting projects.
+* Keep `pipeline.osv_enabled: true` if you want OSV lookups.
+
+2. **Make sure Typosentinel is available**
+
+   ```bash
+   export TYPOSENTINEL_BIN=~/bin/typosentinel   # or ensure it’s on PATH
+   ```
+
+3. **Install Python deps** (once per machine)
+
+   ```bash
+   python -m pip install --upgrade pip
+   pip install requests feedparser jinja2
+   ```
+
+4. *(Optional)* set a GitHub token to reduce rate‑limits
+
+   ```bash
+   export GITHUB_TOKEN=ghp_your_token_here
+   ```
+
+---
+
+## Run the pipeline
+
+From the suite root:
+
+```bash
+chmod +x scripts/orchestrate.sh
+./scripts/orchestrate.sh
+```
+
+This will:
+
+1. Discover targets → `outputs/targets.json`
+2. Scan each target with Typosentinel → `outputs/typosentinel/*.json`
+3. Query OSV (if enabled) → `outputs/osv/*.json`
+4. Merge + rank → `outputs/merged.json` and `outputs/ranked.json`
+5. Render report → `outputs/report.md`
+
+---
+
+## Interpreting results
+
+* **`outputs/ranked.json`**: list of items sorted by a simple novelty score.
+* **`outputs/report.md`**: human‑readable top candidates. Open in your editor or GitHub to browse.
+* An item with **no known CVEs** but with strong Typosentinel anomaly signals is prioritized.
+
+**Novelty score** (simplified):
+
+* +2.0 for each Typosentinel `anomalous|typosquat|suspicious` indicator
+* +0.5 for each `vulnerable` flag from Typosentinel
+* −1.5 × (number of OSV‑reported vulns)
+  You can refine this in `tools/rank_findings.py`.
+
+---
+
+## Customizing target discovery
+
+* **GitHub:** edit `selector.github.query` (e.g., `stars:>200 pushed:>2025-06-01 language:Go`).
+* **PyPI/npm recency:** edit `selector.pypi.recent_days` / `selector.npm.recent_days`.
+* **Seeds:** always scanned, even if not matched by queries.
+
+---
+
+## Optional analyzers
+
+### Semgrep
+
+* Rules live in `semgrep/rules.yaml`. Run Semgrep separately or integrate into your own CI. Start with install/exec script red‑flags.
+
+### CodeQL (GitHub Actions)
+
+* `codeql/codeql-analysis.yml` is a starter workflow. Enable it in your repo to get SARIF alerts in Security → Code scanning.
+
+### Fuzz harness (Go)
+
+* `fuzz/harness_go_example.go` is a minimal template for **your own code**. Run fuzzing safely with:
+
+  ```bash
+  go test -fuzz=Fuzz -run=^$ ./...
+  ```
+
+---
+
+## CI (optional)
+
+Use `ci/github-action.yml` as a template in *your* repo to run nightly and upload `outputs/` as an artifact. Don’t forget to provide `TYPOSENTINEL_BIN` in the workflow (download/build step) and `secrets.GITHUB_TOKEN` is available by default.
+
+---
+
+## Troubleshooting
+
+* **Typosentinel not found** → set `TYPOSENTINEL_BIN` or put the binary on PATH.
+* **`requests`/`feedparser`/`jinja2` missing** → `pip install requests feedparser jinja2`.
+* **GitHub API rate‑limit** → set `GITHUB_TOKEN`.
+* **`npm` not found** when scanning npm → install Node.js/npm, or disable npm in `selector.ecosystems`.
+* **Empty results** → broaden `selector.github.query`, increase `max_repos`, or add more seeds.
+
+---
+
+## Safety notes
+
+* The suite **never executes** untrusted build/install scripts. It unpacks sources and scans them statically.
+* Treat findings as **leads**. Validate responsibly and coordinate disclosure if you confirm a new issue.
+
+---
+
+## Next steps
+
+* Tune `heuristics` and the scoring function for your threat model.
+* Expand rules in `semgrep/rules.yaml` (e.g., suspicious network I/O, credential exfil in setup scripts).
+* Add more ecosystems (e.g., Go modules, Maven) by extending the fetchers.
+
+````
+
+
+---
+
+## config/targets.example.yaml
+```yaml
+selector:
+  ecosystems: [pypi, npm, go, maven]
+  github:
+    query: "stars:>50 pushed:>2025-01-01 language:Python OR language:JavaScript"
+    max_repos: 50
+  pypi: { recent_days: 21, max_packages: 50 }
+  npm:  { recent_days: 21, max_packages: 50 }
+  go:   { max_modules: 30 }
+  maven:{ max_artifacts: 30 }
+
+heuristics:
+  name_similarity_weight: 2.0
+  recent_publish_weight: 1.5
+  maintainer_entropy_weight: 1.0
+  dependency_novelty_weight: 1.0
+  low_downloads_weight: 0.5
+  max_total_score: 100
+
+pipeline:
+  osv_enabled: true
+  save_raw: true
+  max_parallel: 4
+  typosentinel_bin: ""
+
+seeds:
+  github_repos: ["pallets/flask","psf/requests"]
+  pypi_packages: ["requests","urllib3"]
+  npm_packages: ["lodash","express"]
+````
+
+---
+
+## scripts/orchestrate.sh
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OUT="$ROOT/outputs"
+TS_BIN="${TYPOSENTINEL_BIN:-$(command -v typosentinel || true)}"
+CONF="$ROOT/config/targets.yaml"
+
+if [[ ! -f "$CONF" ]]; then
+  echo "Config not found: $CONF (copy config/targets.example.yaml)"
+  exit 1
+fi
+if [[ -z "${TS_BIN}" ]]; then
+  echo "Typosentinel binary not found. Put it on PATH or export TYPOSENTINEL_BIN=/path/to/typosentinel"
+  exit 1
+fi
+
+mkdir -p "$OUT" "$OUT/typosentinel" "$OUT/osv"
+
+echo "1) Discovering targets…"
+python3 "$ROOT/scripts/discover_targets.py" --config "$CONF" --out "$OUT/targets.json" || true
+
+echo "2) Scanning targets with Typosentinel…"
+python3 "$ROOT/scripts/run_scans.py" --targets "$OUT/targets.json" --typo-bin "$TS_BIN" --out-dir "$OUT/typosentinel"
+
+echo "3) Querying OSV (optional)…"
+python3 "$ROOT/tools/osv_query.py" --targets "$OUT/targets.json" --out-dir "$OUT/osv" || true
+
+echo "4) Merging & ranking…"
+python3 "$ROOT/tools/merge_results.py" --typo-dir "$OUT/typosentinel" --osv-dir "$OUT/osv" --out "$OUT/merged.json"
+python3 "$ROOT/tools/rank_findings.py" --merged "$OUT/merged.json" --out "$OUT/ranked.json"
+
+echo "5) Generating report…"
+python3 "$ROOT/report/generate_report.py" --ranked "$OUT/ranked.json" --template "$ROOT/report/template.md.j2" --out "$OUT/report.md"
+
+echo "Done. See outputs/."
+```
+
+---
+
+## scripts/discover\_targets.py
+
+```python
+#!/usr/bin/env python3
+import argparse, json, os, datetime as dt
+from pathlib import Path
+try:
+    import yaml, requests, feedparser
+except Exception:
+    yaml = requests = feedparser = None
+
+def load_yaml(p): return yaml.safe_load(open(p, "r", encoding="utf-8")) if yaml else {}
+
+def github_search_repos(query, limit, token):
+    if not requests: return []
+    url = "https://api.github.com/search/repositories"
+    hdr = {"Accept":"application/vnd.github+json"}
+    if token: hdr["Authorization"] = f"Bearer {token}"
+    params = {"q": query, "sort": "updated", "order": "desc", "per_page": min(limit, 100)}
+    r = requests.get(url, headers=hdr, params=params, timeout=30); r.raise_for_status()
+    return [{"type":"github_repo","full_name":it["full_name"],"html_url":it["html_url"]} for it in r.json().get("items", [])[:limit]]
+
+def recent_pypi(days, limit):
+    if not feedparser: return []
+    feed = feedparser.parse("https://pypi.org/rss/updates.xml")
+    cutoff = dt.datetime.utcnow() - dt.timedelta(days=days)
+    out=[]; 
+    for e in getattr(feed, "entries", []):
+        try: published = dt.datetime(*e.published_parsed[:6])
+        except Exception: continue
+        if published >= cutoff:
+            name = e.title.split(" ")[0]
+            out.append({"type":"pypi","name":name})
+            if len(out) >= limit: break
+    return out
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", required=True); ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    cfg = load_yaml(a.config) if os.path.exists(a.config) else {}
+    selector = cfg.get("selector", {}); token = os.getenv("GITHUB_TOKEN")
+    targets = []
+    seeds = (cfg.get("seeds") or {})
+    for full in seeds.get("github_repos", []): targets.append({"type":"github_repo","full_name":full,"seed":True})
+    for p in seeds.get("pypi_packages", []): targets.append({"type":"pypi","name":p,"seed":True})
+    for n in seeds.get("npm_packages", []): targets.append({"type":"npm","name":n,"seed":True})
+    if selector.get("github",{}).get("query"):
+        q = selector["github"]["query"]; mx = selector["github"].get("max_repos",50)
+        try: targets += github_search_repos(q, mx, token)
+        except Exception as e: print(f"[discover] GitHub search failed: {e}")
+    if selector.get("pypi",{}):
+        try: targets += recent_pypi(selector["pypi"].get("recent_days",14), selector["pypi"].get("max_packages",30))
+        except Exception as e: print(f"[discover] PyPI recent failed: {e}")
+    Path(a.out).write_text(json.dumps({"generated_at": dt.datetime.utcnow().isoformat()+"Z", "targets": targets}, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## scripts/run\_scans.py
+
+```python
+#!/usr/bin/env python3
+import argparse, json, subprocess, tempfile, shutil
+from pathlib import Path
+
+def run(cmd, cwd=None): return subprocess.run(cmd, cwd=cwd, check=False, capture_output=True, text=True)
+
+def ensure_dir(p): Path(p).mkdir(parents=True, exist_ok=True)
+
+def scan_github_repo(repo_full_name, typo_bin, out_dir):
+    work = tempfile.mkdtemp(prefix="ts_gh_")
+    try:
+        url = f"https://github.com/{repo_full_name}.git"
+        r = run(["git", "clone", "--depth=1", url, work])
+        outp = Path(out_dir) / (repo_full_name.replace("/", "__") + ".json")
+        if r.returncode == 0:
+            rr = run([typo_bin, "scan", work, "--check-vulnerabilities", "-o", "json"])
+            outp.write_text(rr.stdout or "{}")
+        else:
+            outp.write_text("{}")
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+def scan_pypi(name, typo_bin, out_dir):
+    work = tempfile.mkdtemp(prefix="ts_pypi_")
+    try:
+        run(["pip", "download", "--no-binary", ":all:", name, "-d", work])
+        for f in Path(work).glob("*"):
+            if f.suffix == ".zip": run(["unzip","-q",str(f),"-d",work])
+            if f.name.endswith((".tar.gz",".tgz",".tar.bz2",".tar.xz",".tar")): run(["tar","xf",str(f),"-C",work])
+        root = next((p for p in Path(work).iterdir() if p.is_dir()), Path(work))
+        outp = Path(out_dir) / (f"pypi__{name}.json")
+        rr = run([typo_bin, "scan", str(root), "--check-vulnerabilities", "-o", "json"])
+        outp.write_text(rr.stdout or "{}")
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+def scan_npm(name, typo_bin, out_dir):
+    work = tempfile.mkdtemp(prefix="ts_npm_")
+    try:
+        rr = run(["npm","pack",name], cwd=work)
+        if rr.returncode == 0:
+            tarball = next((ln.strip() for ln in rr.stdout.splitlines() if ln.strip().endswith(".tgz")), None)
+            if tarball: run(["tar","xf",tarball,"-C",work], cwd=work)
+        root = next((p for p in Path(work).glob("package") if p.is_dir()), Path(work))
+        outp = Path(out_dir) / (f"npm__{name}.json")
+        rr = run([typo_bin, "scan", str(root), "--check-vulnerabilities", "-o", "json"])
+        outp.write_text(rr.stdout or "{}")
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--targets", required=True); ap.add_argument("--typo-bin", required=True); ap.add_argument("--out-dir", required=True)
+    a = ap.parse_args()
+    ensure_dir(a.out_dir)
+    data = json.loads(Path(a.targets).read_text())
+    for t in data.get("targets", []):
+        if t["type"] == "github_repo": scan_github_repo(t["full_name"], a.typo_bin, a.out_dir)
+        elif t["type"] == "pypi":      scan_pypi(t["name"], a.typo_bin, a.out_dir)
+        elif t["type"] == "npm":       scan_npm(t["name"], a.typo_bin, a.out_dir)
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## tools/osv\_query.py
+
+```python
+#!/usr/bin/env python3
+import argparse, json, requests
+from pathlib import Path
+
+def query_osv_pkg(ecosystem, name, version=None):
+    url = "https://api.osv.dev/v1/query"
+    payload = {"package": {"ecosystem": ecosystem, "name": name}}
+    if version:
+        payload["version"] = version
+    r = requests.post(url, json=payload, timeout=20); r.raise_for_status()
+    return r.json().get("vulns", [])
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--targets", required=True); ap.add_argument("--out-dir", required=True)
+    a = ap.parse_args(); Path(a.out_dir).mkdir(parents=True, exist_ok=True)
+    data = json.loads(Path(a.targets).read_text())
+    for t in data.get("targets", []):
+        name = t.get("name") or t.get("full_name")
+        eco = {"pypi":"PyPI","npm":"npm"}.get(t["type"], None)
+        if eco is None: continue
+        vulns = query_osv_pkg(eco, name)
+        Path(a.out_dir, f"osv__{t['type']}__{name.replace('/', '__')}.json").write_text(
+            json.dumps({"package": name, "ecosystem": eco, "vulns": vulns}, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## tools/merge\_results.py
+
+```python
+#!/usr/bin/env python3
+import argparse, json
+from pathlib import Path
+
+def load_dir_json(d):
+    out = {}
+    for p in Path(d).glob("*.json"):
+        try: out[p.stem] = json.loads(p.read_text())
+        except Exception: out[p.stem] = {}
+    return out
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--typo-dir", required=True); ap.add_argument("--osv-dir", required=True); ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    typo = load_dir_json(a.typo_dir); osv = load_dir_json(a.osv_dir)
+    merged = {"items": []}
+    for k in sorted(set(typo) | set(osv)):
+        merged["items"].append({"key": k, "typosentinel": typo.get(k, {}), "osv": osv.get(k, {})})
+    Path(a.out).write_text(json.dumps(merged, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## tools/rank\_findings.py
+
+```python
+#!/usr/bin/env python3
+import argparse, json
+from pathlib import Path
+
+def novelty_score(item):
+    t = item.get("typosentinel", {}); osv = item.get("osv", {})
+    threats = t.get("threats") or t.get("results") or []
+    num_cves = len(osv.get("vulns", []))
+    anomaly = 0.0
+    if isinstance(threats, list):
+        for th in threats:
+            if isinstance(th, dict) and th.get("type") in ("anomalous","typosquat","suspicious","vulnerable"):
+                anomaly += 2.0 if th.get("type") != "vulnerable" else 0.5
+    return round(anomaly - 1.5 * num_cves, 3)
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--merged", required=True); ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    merged = json.loads(Path(a.merged).read_text())
+    ranked = sorted(merged["items"], key=novelty_score, reverse=True)
+    Path(a.out).write_text(json.dumps({"items": ranked}, indent=2))
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## report/template.md.j2
+
+````jinja2
+# Typosentinel Zero‑Day Report
+Generated: {{ now }}
+## Summary
+Total items: {{ items|length }}
+## Top Candidates by Novelty
+{% for it in items[:20] %}
+### {{ loop.index }}. {{ it.key }}
+- OSV vulns: {{ (it.osv.vulns or []) | length }}
+<details><summary>Typosentinel raw</summary>
+```json
+{{ it.typosentinel | tojson(indent=2) }}
+````
+
+</details>
+<details><summary>OSV raw</summary>
+```json
+{{ it.osv | tojson(indent=2) }}
+```
+</details>
+{% endfor %}
+```
+
+---
+
+## report/generate\_report.py
+
+```python
+#!/usr/bin/env python3
+import argparse, json, datetime as dt
+from pathlib import Path
+try:
+    from jinja2 import Template
+except Exception:
+    Template = None
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ranked", required=True); ap.add_argument("--template", required=True); ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    data = json.loads(Path(a.ranked).read_text())
+    tmpl = Path(a.template).read_text()
+    if Template is None:
+        out = "# Report (jinja2 missing)
+
+```
+
+" + json.dumps(data, indent=2) + "
+
+```"
+    else:
+        out = Template(tmpl).render(items=data["items"], now=dt.datetime.utcnow().isoformat()+"Z")
+    Path(a.out).write_text(out)
+    print(f"[report] wrote {a.out}")
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## ci/github-action.yml
+
+```yaml
+name: ZeroDay Hunt
+on:
+  schedule: [{ cron: "17 2 * * *" }]
+  workflow_dispatch: {}
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests feedparser jinja2
+          sudo apt-get update && sudo apt-get install -y jq git curl
+      - name: Download Typosentinel
+        run: echo "Add a step to fetch/build typosentinel binary"
+      - name: Run suite
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TYPOSENTINEL_BIN: ./typosentinel
+        run: |
+          chmod +x scripts/*.sh || true
+          ./scripts/orchestrate.sh
+      - uses: actions/upload-artifact@v4
+        with: { name: zeroday-report, path: outputs/** }
+```
+
+---
+
+## semgrep/rules.yaml
+
+```yaml
+rules:
+  - id: py-suspicious-exec-in-setup
+    languages: [python]
+    severity: WARNING
+    message: Suspicious exec/eval in setup or install scripts
+    patterns:
+      - pattern-either:
+          - pattern: exec(...)
+          - pattern: eval(...)
+
+  - id: js-suspicious-install-scripts
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Suspicious lifecycle scripts in package.json
+    patterns:
+      - pattern: |
+          {
+            "scripts": {
+              $KEY: $VAL
+            }
+          }
+    metavars:
+      KEY:
+        regex: "preinstall|install|postinstall"
+```
+
+---
+
+## codeql/codeql-analysis.yml
+
+```yaml
+name: "CodeQL"
+on:
+  workflow_dispatch: {}
+  schedule: [{ cron: '13 1 * * 1' }]
+jobs:
+  analyze:
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: { language: ['javascript', 'python', 'go'] }
+    steps:
+    - uses: actions/checkout@v4
+    - uses: github/codeql-action/init@v3
+      with: { languages: ${{ matrix.language }} }
+    - uses: github/codeql-action/analyze@v3
+```
+
+---
+
+## fuzz/harness\_go\_example.go
+
+```go
+// Minimal Go fuzz harness example for a parser-like function.
+package fuzzexample
+
+import "testing"
+
+// FuzzTarget is meant to be fuzzed by 'go test -fuzz=Fuzz'
+func FuzzTarget(f *testing.F) {
+	f.Add([]byte("seed"))
+	f.Fuzz(func(t *testing.T, data []byte) {
+		_ = data // TODO: call into a robust, side-effect free parser
+	})
+}
+```

@@ -55,7 +55,7 @@ type TrustValidationResult struct {
 	OverallTrustScore     float64                    `json:"overall_trust_score"`
 	SuspicionScore        float64                    `json:"suspicion_score"`
 	TrustLevel            string                     `json:"trust_level"`
-	ValidationResults     map[string]ValidationResult `json:"validation_results"`
+	ValidationResults     map[string]TrustValidationDetail `json:"validation_results"`
 	SocialEngineeringRisk *SocialEngineeringRisk     `json:"social_engineering_risk"`
 	TrustFactors          []TrustFactor              `json:"trust_factors"`
 	RedFlags              []RedFlag                  `json:"red_flags"`
@@ -63,8 +63,8 @@ type TrustValidationResult struct {
 	Metadata              map[string]interface{}     `json:"metadata"`
 }
 
-// ValidationResult represents individual validation results
-type ValidationResult struct {
+// TrustValidationDetail represents individual validation results
+type TrustValidationDetail struct {
 	ValidationType string    `json:"validation_type"`
 	Score          float64   `json:"score"`
 	Confidence     float64   `json:"confidence"`
@@ -281,7 +281,7 @@ func (tv *TrustValidator) ValidateTrust(ctx context.Context, pkg *types.Package)
 
 	result := &TrustValidationResult{
 		PackageName:       pkg.Name,
-		ValidationResults: make(map[string]ValidationResult),
+		ValidationResults: make(map[string]TrustValidationDetail),
 		TrustFactors:      []TrustFactor{},
 		RedFlags:          []RedFlag{},
 		Recommendations:   []string{},
@@ -351,8 +351,8 @@ func (tv *TrustValidator) ValidateTrust(ctx context.Context, pkg *types.Package)
 }
 
 // validateAuthority validates authority claims
-func (tv *TrustValidator) validateAuthority(ctx context.Context, pkg *types.Package) ValidationResult {
-	result := ValidationResult{
+func (tv *TrustValidator) validateAuthority(ctx context.Context, pkg *types.Package) TrustValidationDetail {
+	result := TrustValidationDetail{
 		ValidationType: "authority",
 		Evidence:       []string{},
 		Warnings:       []string{},
@@ -398,8 +398,8 @@ func (tv *TrustValidator) validateAuthority(ctx context.Context, pkg *types.Pack
 }
 
 // validateMaintainer validates maintainer reputation
-func (tv *TrustValidator) validateMaintainer(ctx context.Context, pkg *types.Package) ValidationResult {
-	result := ValidationResult{
+func (tv *TrustValidator) validateMaintainer(ctx context.Context, pkg *types.Package) TrustValidationDetail {
+	result := TrustValidationDetail{
 		ValidationType: "maintainer",
 		Evidence:       []string{},
 		Warnings:       []string{},
@@ -435,8 +435,8 @@ func (tv *TrustValidator) validateMaintainer(ctx context.Context, pkg *types.Pac
 }
 
 // validateCorporate validates corporate backing claims
-func (tv *TrustValidator) validateCorporate(ctx context.Context, pkg *types.Package) ValidationResult {
-	result := ValidationResult{
+func (tv *TrustValidator) validateCorporate(ctx context.Context, pkg *types.Package) TrustValidationDetail {
+	result := TrustValidationDetail{
 		ValidationType: "corporate",
 		Evidence:       []string{},
 		Warnings:       []string{},
@@ -482,8 +482,8 @@ func (tv *TrustValidator) validateCorporate(ctx context.Context, pkg *types.Pack
 }
 
 // validateResearcher validates security researcher claims
-func (tv *TrustValidator) validateResearcher(ctx context.Context, pkg *types.Package) ValidationResult {
-	result := ValidationResult{
+func (tv *TrustValidator) validateResearcher(ctx context.Context, pkg *types.Package) TrustValidationDetail {
+	result := TrustValidationDetail{
 		ValidationType: "researcher",
 		Evidence:       []string{},
 		Warnings:       []string{},
@@ -528,8 +528,8 @@ func (tv *TrustValidator) validateResearcher(ctx context.Context, pkg *types.Pac
 }
 
 // validateCompliance validates compliance certification claims
-func (tv *TrustValidator) validateCompliance(ctx context.Context, pkg *types.Package) ValidationResult {
-	result := ValidationResult{
+func (tv *TrustValidator) validateCompliance(ctx context.Context, pkg *types.Package) TrustValidationDetail {
+	result := TrustValidationDetail{
 		ValidationType: "compliance",
 		Evidence:       []string{},
 		Warnings:       []string{},
@@ -574,8 +574,8 @@ func (tv *TrustValidator) validateCompliance(ctx context.Context, pkg *types.Pac
 }
 
 // validateCommunity validates community endorsement
-func (tv *TrustValidator) validateCommunity(ctx context.Context, pkg *types.Package) ValidationResult {
-	result := ValidationResult{
+func (tv *TrustValidator) validateCommunity(ctx context.Context, pkg *types.Package) TrustValidationDetail {
+	result := TrustValidationDetail{
 		ValidationType: "community",
 		Evidence:       []string{},
 		Warnings:       []string{},

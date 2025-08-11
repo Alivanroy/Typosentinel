@@ -1,0 +1,235 @@
+# TypoSentinel Security Configuration
+# This file contains security-focused configuration settings
+# All sensitive values should be set via environment variables
+
+security:
+  # Authentication Configuration
+  authentication:
+    # JWT Configuration
+    jwt:
+      secret_key: "${JWT_SECRET}"  # REQUIRED: Set via environment variable
+      expiration: "24h"
+      refresh_expiration: "168h"  # 7 days
+      issuer: "typosentinel"
+      algorithm: "HS256"
+    
+    # API Key Configuration
+    api_keys:
+      enabled: true
+      rotation_enabled: true
+      rotation_interval: "30d"
+      key_length: 32
+      hash_algorithm: "sha256"
+    
+    # Session Configuration
+    session:
+      secure: true
+      http_only: true
+      same_site: "strict"
+      max_age: 86400  # 24 hours
+      
+  # Authorization Configuration
+  authorization:
+    rbac:
+      enabled: true
+      default_role: "viewer"
+      admin_role: "admin"
+    
+    # Rate Limiting
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 100
+      burst_size: 10
+      cleanup_interval: "1m"
+      
+  # Password Policy
+  password_policy:
+    min_length: 12
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+    require_special_chars: true
+    max_age_days: 90
+    history_count: 5
+    lockout_attempts: 5
+    lockout_duration: "15m"
+    
+  # Encryption Configuration
+  encryption:
+    # Data at Rest
+    at_rest:
+      enabled: true
+      algorithm: "AES-256-GCM"
+      key: "${ENCRYPTION_KEY}"  # REQUIRED: Set via environment variable
+      key_rotation_enabled: true
+      key_rotation_interval: "90d"
+    
+    # Data in Transit
+    in_transit:
+      tls_enabled: true
+      min_tls_version: "1.2"
+      cipher_suites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+      
+  # CORS Configuration
+  cors:
+    enabled: true
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:8080"
+      # Add production domains via environment variable
+      # - "${FRONTEND_URL}"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Origin"
+      - "Content-Type"
+      - "Authorization"
+      - "X-API-Key"
+      - "X-Request-ID"
+    exposed_headers:
+      - "X-Request-ID"
+      - "X-Rate-Limit-Remaining"
+    allow_credentials: true
+    max_age: 3600
+    
+  # Input Validation
+  input_validation:
+    enabled: true
+    max_request_size: "10MB"
+    max_json_depth: 10
+    sanitize_html: true
+    validate_json_schema: true
+    
+  # Security Headers
+  security_headers:
+    enabled: true
+    headers:
+      X-Content-Type-Options: "nosniff"
+      X-Frame-Options: "DENY"
+      X-XSS-Protection: "1; mode=block"
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      
+  # Audit Logging
+  audit:
+    enabled: true
+    log_level: "info"
+    log_format: "json"
+    include_request_body: false  # Security: Don't log sensitive data
+    include_response_body: false
+    retention_days: 90
+    
+  # Secrets Management
+  secrets:
+    provider: "env"  # Options: env, vault, aws_secrets_manager, azure_key_vault
+    vault:
+      address: "${VAULT_ADDR}"
+      token: "${VAULT_TOKEN}"
+      mount_path: "secret"
+    aws:
+      region: "${AWS_REGION}"
+      secret_name: "typosentinel/secrets"
+    azure:
+      vault_url: "${AZURE_VAULT_URL}"
+      tenant_id: "${AZURE_TENANT_ID}"
+      client_id: "${AZURE_CLIENT_ID}"
+      
+  # Intrusion Detection
+  intrusion_detection:
+    enabled: true
+    failed_login_threshold: 5
+    failed_login_window: "5m"
+    suspicious_activity_threshold: 10
+    block_duration: "1h"
+    
+  # Data Classification
+  data_classification:
+    enabled: true
+    levels:
+      public: 0
+      internal: 1
+      confidential: 2
+      restricted: 3
+    default_level: "internal"
+    
+# Database Security
+database:
+  encryption:
+    enabled: true
+    key: "${DB_ENCRYPTION_KEY}"
+  ssl:
+    enabled: true
+    mode: "require"
+    cert_file: "${DB_SSL_CERT}"
+    key_file: "${DB_SSL_KEY}"
+    ca_file: "${DB_SSL_CA}"
+    
+# Monitoring & Alerting
+monitoring:
+  security_events:
+    enabled: true
+    alert_on:
+      - "failed_authentication"
+      - "privilege_escalation"
+      - "data_access_violation"
+      - "suspicious_activity"
+      - "configuration_change"
+    
+  metrics:
+    enabled: true
+    endpoint: "/metrics"
+    authentication_required: true
+    
+# Compliance
+compliance:
+  gdpr:
+    enabled: true
+    data_retention_days: 365
+    anonymization_enabled: true
+    
+  soc2:
+    enabled: false  # Enable for SOC2 compliance
+    audit_trail_enabled: true
+    
+  hipaa:
+    enabled: false  # Enable for HIPAA compliance
+    encryption_required: true
+    
+# Development vs Production Settings
+environment:
+  development:
+    debug_mode: true
+    detailed_errors: true
+    cors_relaxed: true
+    
+  production:
+    debug_mode: false
+    detailed_errors: false
+    cors_strict: true
+    force_https: true
+    
+# Security Scanning
+security_scanning:
+  enabled: true
+  scan_interval: "24h"
+  vulnerability_db_update: "6h"
+  threat_intelligence_update: "1h"
+  
+# Backup Security
+backup:
+  encryption:
+    enabled: true
+    key: "${BACKUP_ENCRYPTION_KEY}"
+  retention:
+    daily: 7
+    weekly: 4
+    monthly: 12
+    yearly: 7

@@ -110,7 +110,7 @@ enterprise:
     port: 5432
     name: "typosentinel_enterprise"
     user: "postgres"
-    password: "password"
+    password: "${POSTGRES_PASSWORD}"  # Set via environment variable
     
   # ML configuration
   ml:

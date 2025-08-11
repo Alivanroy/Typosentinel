@@ -24,7 +24,7 @@ type MLHardeningSystem struct {
 	config                    *MLHardeningConfig
 	adversarialDetector       *AdversarialDetector
 	featurePoisoningDetector  *FeaturePoisoningDetector
-	inputValidator            *InputValidator
+	inputValidator           *MLInputValidator
 	modelRobustnessValidator  *ModelRobustnessValidator
 	gradientAnalyzer          *GradientAnalyzer
 	ensembleDefense           *EnsembleDefense
@@ -279,7 +279,7 @@ type PoisoningPattern struct {
 	Severity    string
 }
 
-type InputValidator struct {
+type MLInputValidator struct {
 	validationRules   []ValidationRule
 	sanitizationRules []SanitizationRule
 	anomalyDetector   *AnomalyDetector
@@ -352,12 +352,66 @@ func NewMLHardeningSystem(config *MLHardeningConfig, logger logger.Logger) *MLHa
 		config:                   config,
 		adversarialDetector:      NewAdversarialDetector(),
 		featurePoisoningDetector: NewFeaturePoisoningDetector(),
-		inputValidator:           NewInputValidator(),
+		inputValidator:           NewMLInputValidator(),
 		modelRobustnessValidator: NewModelRobustnessValidator(),
 		gradientAnalyzer:         NewGradientAnalyzer(),
 		ensembleDefense:          NewEnsembleDefense(),
 		logger:                   logger,
 	}
+}
+
+// AnalyzeMLSecurity performs comprehensive ML security analysis
+func (mh *MLHardeningSystem) AnalyzeMLSecurity(ctx context.Context, pkg *types.Package) (*MLHardeningResult, error) {
+	result := &MLHardeningResult{
+		PackageName: pkg.Name,
+	}
+
+	// Perform adversarial attack detection
+	adversarialResult, err := mh.detectAdversarialAttacks(ctx, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("adversarial detection failed: %w", err)
+	}
+	result.AdversarialRisk = adversarialResult
+
+	// Perform feature poisoning detection
+	poisoningResult, err := mh.detectFeaturePoisoning(ctx, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("feature poisoning detection failed: %w", err)
+	}
+	result.FeaturePoisoningRisk = poisoningResult
+
+	// Perform input validation
+	inputResult, err := mh.validateInputs(ctx, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("input validation failed: %w", err)
+	}
+	result.InputValidationResult = inputResult
+
+	// Perform model robustness validation
+	robustnessResult, err := mh.validateModelRobustness(ctx, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("robustness validation failed: %w", err)
+	}
+	result.RobustnessValidation = robustnessResult
+
+	// Perform gradient analysis
+	gradientResult, err := mh.analyzeGradients(ctx, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("gradient analysis failed: %w", err)
+	}
+	result.GradientAnalysis = gradientResult
+
+	// Perform ensemble defense
+	ensembleResult, err := mh.performEnsembleDefense(ctx, pkg)
+	if err != nil {
+		return nil, fmt.Errorf("ensemble defense failed: %w", err)
+	}
+	result.EnsembleDefenseResult = ensembleResult
+
+	// Calculate overall security score
+	result.OverallSecurityScore = mh.calculateOverallSecurityScore(result)
+
+	return result, nil
 }
 
 // DefaultMLHardeningConfig returns default configuration
@@ -398,37 +452,55 @@ func (mh *MLHardeningSystem) HardenMLModel(ctx context.Context, pkg *types.Packa
 
 	// 1. Adversarial detection
 	if mh.config.EnableAdversarialDetection {
-		adversarialRisk := mh.detectAdversarialAttacks(ctx, pkg, features)
+		adversarialRisk, err := mh.detectAdversarialAttacks(ctx, pkg, features)
+		if err != nil {
+			return nil, fmt.Errorf("adversarial detection failed: %w", err)
+		}
 		result.AdversarialRisk = adversarialRisk
 	}
 
 	// 2. Feature poisoning detection
 	if mh.config.EnableFeaturePoisoningCheck {
-		poisoningRisk := mh.detectFeaturePoisoning(ctx, pkg, features)
+		poisoningRisk, err := mh.detectFeaturePoisoning(ctx, pkg, features)
+		if err != nil {
+			return nil, fmt.Errorf("feature poisoning detection failed: %w", err)
+		}
 		result.FeaturePoisoningRisk = poisoningRisk
 	}
 
 	// 3. Input validation
 	if mh.config.EnableInputValidation {
-		inputValidation := mh.validateInputs(ctx, pkg, features)
+		inputValidation, err := mh.validateInputs(ctx, pkg, features)
+		if err != nil {
+			return nil, fmt.Errorf("input validation failed: %w", err)
+		}
 		result.InputValidationResult = inputValidation
 	}
 
 	// 4. Robustness validation
 	if mh.config.EnableRobustnessValidation {
-		robustnessValidation := mh.validateModelRobustness(ctx, pkg, features)
+		robustnessValidation, err := mh.validateModelRobustness(ctx, pkg, features)
+		if err != nil {
+			return nil, fmt.Errorf("robustness validation failed: %w", err)
+		}
 		result.RobustnessValidation = robustnessValidation
 	}
 
 	// 5. Gradient analysis
 	if mh.config.EnableGradientAnalysis {
-		gradientAnalysis := mh.analyzeGradients(ctx, pkg, features)
+		gradientAnalysis, err := mh.analyzeGradients(ctx, pkg, features)
+		if err != nil {
+			return nil, fmt.Errorf("gradient analysis failed: %w", err)
+		}
 		result.GradientAnalysis = gradientAnalysis
 	}
 
 	// 6. Ensemble defense
 	if mh.config.EnableEnsembleDefense {
-		ensembleDefense := mh.performEnsembleDefense(ctx, pkg, features)
+		ensembleDefense, err := mh.performEnsembleDefense(ctx, pkg, features)
+		if err != nil {
+			return nil, fmt.Errorf("ensemble defense failed: %w", err)
+		}
 		result.EnsembleDefenseResult = ensembleDefense
 	}
 
@@ -449,14 +521,20 @@ func (mh *MLHardeningSystem) HardenMLModel(ctx context.Context, pkg *types.Packa
 }
 
 // detectAdversarialAttacks detects adversarial attacks
-func (mh *MLHardeningSystem) detectAdversarialAttacks(ctx context.Context, pkg *types.Package, features map[string]float64) *AdversarialRisk {
+func (mh *MLHardeningSystem) detectAdversarialAttacks(ctx context.Context, pkg *types.Package, features ...map[string]float64) (*AdversarialRisk, error) {
+	var featureMap map[string]float64
+	if len(features) > 0 {
+		featureMap = features[0]
+	} else {
+		featureMap = make(map[string]float64)
+	}
 	risk := &AdversarialRisk{
 		DetectedAttackVectors:  []AdversarialAttackVector{},
 		DefenseRecommendations: []string{},
 	}
 
 	// Detect perturbation-based attacks
-	perturbationMagnitude := mh.calculatePerturbationMagnitude(features)
+	perturbationMagnitude := mh.calculatePerturbationMagnitude(featureMap)
 	risk.PerturbationMagnitude = perturbationMagnitude
 
 	if perturbationMagnitude > mh.config.MaxPerturbationMagnitude {
@@ -472,7 +550,7 @@ func (mh *MLHardeningSystem) detectAdversarialAttacks(ctx context.Context, pkg *
 	}
 
 	// Detect evasion attacks
-	evasionProbability := mh.calculateEvasionProbability(features)
+	evasionProbability := mh.calculateEvasionProbability(featureMap)
 	risk.EvasionProbability = evasionProbability
 
 	if evasionProbability > 0.7 {
@@ -501,11 +579,17 @@ func (mh *MLHardeningSystem) detectAdversarialAttacks(ctx context.Context, pkg *
 		risk.RiskLevel = "low"
 	}
 
-	return risk
+	return risk, nil
 }
 
 // detectFeaturePoisoning detects feature poisoning attacks
-func (mh *MLHardeningSystem) detectFeaturePoisoning(ctx context.Context, pkg *types.Package, features map[string]float64) *FeaturePoisoningRisk {
+func (mh *MLHardeningSystem) detectFeaturePoisoning(ctx context.Context, pkg *types.Package, features ...map[string]float64) (*FeaturePoisoningRisk, error) {
+	var featureMap map[string]float64
+	if len(features) > 0 {
+		featureMap = features[0]
+	} else {
+		featureMap = make(map[string]float64)
+	}
 	risk := &FeaturePoisoningRisk{
 		PoisonedFeatures:    []PoisonedFeature{},
 		PoisoningTechniques: []PoisoningTechnique{},
@@ -513,7 +597,7 @@ func (mh *MLHardeningSystem) detectFeaturePoisoning(ctx context.Context, pkg *ty
 	}
 
 	// Analyze each feature for poisoning
-	for featureName, featureValue := range features {
+	for featureName, featureValue := range featureMap {
 		if baseline, exists := mh.featurePoisoningDetector.baselineFeatures[featureName]; exists {
 			deviation := math.Abs(featureValue - baseline)
 			if deviation > mh.featurePoisoningDetector.anomalyThreshold {
@@ -531,7 +615,7 @@ func (mh *MLHardeningSystem) detectFeaturePoisoning(ctx context.Context, pkg *ty
 	}
 
 	// Calculate overall poisoning risk
-	poisoningScore := float64(len(risk.PoisonedFeatures)) / float64(len(features))
+	poisoningScore := float64(len(risk.PoisonedFeatures)) / float64(len(featureMap))
 	risk.ConfidenceScore = poisoningScore
 
 	if poisoningScore > 0.7 {
@@ -544,15 +628,21 @@ func (mh *MLHardeningSystem) detectFeaturePoisoning(ctx context.Context, pkg *ty
 		risk.RiskLevel = "low"
 	}
 
-	return risk
+	return risk, nil
 }
 
 // validateInputs validates model inputs
-func (mh *MLHardeningSystem) validateInputs(ctx context.Context, pkg *types.Package, features map[string]float64) *InputValidationResult {
+func (mh *MLHardeningSystem) validateInputs(ctx context.Context, pkg *types.Package, features ...map[string]float64) (*InputValidationResult, error) {
+	var featureMap map[string]float64
+	if len(features) > 0 {
+		featureMap = features[0]
+	} else {
+		featureMap = make(map[string]float64)
+	}
 	result := &InputValidationResult{
 		AnomalousInputs: []AnomalousInput{},
 		ValidationMetrics: &ValidationMetrics{
-			TotalInputs: len(features),
+			TotalInputs: len(featureMap),
 		},
 	}
 
@@ -560,7 +650,7 @@ func (mh *MLHardeningSystem) validateInputs(ctx context.Context, pkg *types.Pack
 	anomalousInputs := 0
 
 	// Validate each input feature
-	for featureName, featureValue := range features {
+	for featureName, featureValue := range featureMap {
 		anomalyScore := mh.inputValidator.anomalyDetector.detectAnomaly(featureValue)
 		
 		if anomalyScore > 0.7 {
@@ -580,8 +670,8 @@ func (mh *MLHardeningSystem) validateInputs(ctx context.Context, pkg *types.Pack
 
 	result.ValidationMetrics.ValidInputs = validInputs
 	result.ValidationMetrics.AnomalousInputs = anomalousInputs
-	result.ValidationMetrics.ValidationRate = float64(validInputs) / float64(len(features))
-	result.ValidationMetrics.AnomalyRate = float64(anomalousInputs) / float64(len(features))
+	result.ValidationMetrics.ValidationRate = float64(validInputs) / float64(len(featureMap))
+	result.ValidationMetrics.AnomalyRate = float64(anomalousInputs) / float64(len(featureMap))
 
 	if result.ValidationMetrics.AnomalyRate > 0.3 {
 		result.ValidationStatus = "failed"
@@ -591,11 +681,17 @@ func (mh *MLHardeningSystem) validateInputs(ctx context.Context, pkg *types.Pack
 		result.ValidationStatus = "passed"
 	}
 
-	return result
+	return result, nil
 }
 
 // validateModelRobustness validates model robustness
-func (mh *MLHardeningSystem) validateModelRobustness(ctx context.Context, pkg *types.Package, features map[string]float64) *RobustnessValidationResult {
+func (mh *MLHardeningSystem) validateModelRobustness(ctx context.Context, pkg *types.Package, features ...map[string]float64) (*RobustnessValidationResult, error) {
+	var featureMap map[string]float64
+	if len(features) > 0 {
+		featureMap = features[0]
+	} else {
+		featureMap = make(map[string]float64)
+	}
 	result := &RobustnessValidationResult{
 		StabilityMetrics:  &StabilityMetrics{},
 		PerturbationTests: []PerturbationTest{},
@@ -604,31 +700,37 @@ func (mh *MLHardeningSystem) validateModelRobustness(ctx context.Context, pkg *t
 
 	// Perform perturbation tests
 	for _, testConfig := range mh.modelRobustnessValidator.perturbationTests {
-		perturbationTest := mh.performPerturbationTest(features, testConfig)
+		perturbationTest := mh.performPerturbationTest(featureMap, testConfig)
 		result.PerturbationTests = append(result.PerturbationTests, perturbationTest)
 	}
 
 	// Calculate stability metrics
-	result.StabilityMetrics = mh.calculateStabilityMetrics(features, result.PerturbationTests)
+	result.StabilityMetrics = mh.calculateStabilityMetrics(featureMap, result.PerturbationTests)
 
 	// Calculate overall robustness score
 	result.RobustnessScore = mh.calculateRobustnessScore(result.StabilityMetrics, result.PerturbationTests)
 
-	return result
+	return result, nil
 }
 
 // analyzeGradients analyzes model gradients
-func (mh *MLHardeningSystem) analyzeGradients(ctx context.Context, pkg *types.Package, features map[string]float64) *GradientAnalysisResult {
+func (mh *MLHardeningSystem) analyzeGradients(ctx context.Context, pkg *types.Package, features ...map[string]float64) (*GradientAnalysisResult, error) {
+	var featureMap map[string]float64
+	if len(features) > 0 {
+		featureMap = features[0]
+	} else {
+		featureMap = make(map[string]float64)
+	}
 	result := &GradientAnalysisResult{
 		SuspiciousGradients: []SuspiciousGradient{},
 		GradientAttacks:     []GradientAttack{},
 	}
 
 	// Simulate gradient analysis (in real implementation, this would analyze actual gradients)
-	gradientMagnitude := mh.calculateGradientMagnitude(features)
+	gradientMagnitude := mh.calculateGradientMagnitude(featureMap)
 	result.GradientMagnitude = gradientMagnitude
 
-	gradientStability := mh.calculateGradientStability(features)
+	gradientStability := mh.calculateGradientStability(featureMap)
 	result.GradientStability = gradientStability
 
 	// Detect suspicious gradients
@@ -642,17 +744,23 @@ func (mh *MLHardeningSystem) analyzeGradients(ctx context.Context, pkg *types.Pa
 		result.SuspiciousGradients = append(result.SuspiciousGradients, suspiciousGradient)
 	}
 
-	return result
+	return result, nil
 }
 
 // performEnsembleDefense performs ensemble defense
-func (mh *MLHardeningSystem) performEnsembleDefense(ctx context.Context, pkg *types.Package, features map[string]float64) *EnsembleDefenseResult {
+func (mh *MLHardeningSystem) performEnsembleDefense(ctx context.Context, pkg *types.Package, features ...map[string]float64) (*EnsembleDefenseResult, error) {
+	var featureMap map[string]float64
+	if len(features) > 0 {
+		featureMap = features[0]
+	} else {
+		featureMap = make(map[string]float64)
+	}
 	result := &EnsembleDefenseResult{
 		ModelDiscrepancies: []ModelDiscrepancy{},
 	}
 
 	// Simulate ensemble predictions (in real implementation, this would use actual models)
-	predictions := mh.generateEnsemblePredictions(features)
+	predictions := mh.generateEnsemblePredictions(featureMap)
 	
 	// Calculate ensemble agreement
 	result.EnsembleAgreement = mh.calculateEnsembleAgreement(predictions)
@@ -665,13 +773,16 @@ func (mh *MLHardeningSystem) performEnsembleDefense(ctx context.Context, pkg *ty
 	// Calculate defense effectiveness
 	result.DefenseEffectiveness = mh.calculateDefenseEffectiveness(result)
 
-	return result
+	return result, nil
 }
 
 // Helper functions
 
 func (mh *MLHardeningSystem) calculatePerturbationMagnitude(features map[string]float64) float64 {
 	// Calculate perturbation magnitude based on feature analysis
+	if len(features) == 0 {
+		return 0.0
+	}
 	totalMagnitude := 0.0
 	for _, value := range features {
 		totalMagnitude += math.Abs(value)
@@ -682,6 +793,10 @@ func (mh *MLHardeningSystem) calculatePerturbationMagnitude(features map[string]
 func (mh *MLHardeningSystem) calculateEvasionProbability(features map[string]float64) float64 {
 	// Calculate evasion probability based on feature patterns
 	// Higher variance in features indicates potential evasion attempts
+	if len(features) == 0 {
+		return 0.0
+	}
+	
 	variance := 0.0
 	mean := 0.0
 	count := 0
@@ -689,10 +804,6 @@ func (mh *MLHardeningSystem) calculateEvasionProbability(features map[string]flo
 	for _, value := range features {
 		mean += value
 		count++
-	}
-	
-	if count == 0 {
-		return 0.0
 	}
 	
 	mean /= float64(count)
@@ -1061,8 +1172,8 @@ func NewFeaturePoisoningDetector() *FeaturePoisoningDetector {
 	}
 }
 
-func NewInputValidator() *InputValidator {
-	return &InputValidator{
+func NewMLInputValidator() *MLInputValidator {
+	return &MLInputValidator{
 		validationRules:   []ValidationRule{},
 		sanitizationRules: []SanitizationRule{},
 		anomalyDetector:   &AnomalyDetector{threshold: 0.7, sensitivity: 0.8},
@@ -1124,4 +1235,96 @@ func (mh *MLHardeningSystem) getExpectedRange(featureName string) string {
 	default:
 		return "-∞-∞" // Unknown feature type
 	}
+}
+
+// Mathematical calculation methods - Helper functions
+
+func (mh *MLHardeningSystem) isFeatureAnomalous(featureName string, value float64) bool {
+	// Simple anomaly detection based on feature type and value ranges
+	switch {
+	case strings.Contains(strings.ToLower(featureName), "probability"),
+		 strings.Contains(strings.ToLower(featureName), "score"),
+		 strings.Contains(strings.ToLower(featureName), "confidence"),
+		 strings.Contains(strings.ToLower(featureName), "ratio"),
+		 strings.Contains(strings.ToLower(featureName), "similarity"):
+		return value < 0.0 || value > 1.0
+	case strings.Contains(strings.ToLower(featureName), "percentage"):
+		return value < 0.0 || value > 100.0
+	case strings.Contains(strings.ToLower(featureName), "entropy"):
+		return value < 0.0 || value > 8.0
+	case strings.Contains(strings.ToLower(featureName), "count"),
+		 strings.Contains(strings.ToLower(featureName), "length"),
+		 strings.Contains(strings.ToLower(featureName), "size"):
+		return value < 0.0
+	default:
+		// For unknown types, check for extreme values
+		return math.Abs(value) > 1000.0 || math.IsNaN(value) || math.IsInf(value, 0)
+	}
+}
+
+func (mh *MLHardeningSystem) generateGaussianNoise(mean, stddev float64) float64 {
+	// Box-Muller transform for Gaussian noise
+	u1 := math.Max(1e-10, math.Sin(float64(time.Now().UnixNano()%1000000)/1000000.0*2*math.Pi))
+	u2 := math.Max(1e-10, math.Cos(float64(time.Now().UnixNano()%1000000)/1000000.0*2*math.Pi))
+	
+	z0 := math.Sqrt(-2.0*math.Log(u1)) * math.Cos(2.0*math.Pi*u2)
+	return mean + stddev*z0
+}
+
+func (mh *MLHardeningSystem) generateUniformNoise(min, max float64) float64 {
+	// Simple uniform noise generation
+	rand := float64(time.Now().UnixNano()%1000000) / 1000000.0
+	return min + rand*(max-min)
+}
+
+func (mh *MLHardeningSystem) calculateVariance(values []float64) float64 {
+	if len(values) == 0 {
+		return 0.0
+	}
+	
+	// Calculate mean
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+	mean := sum / float64(len(values))
+	
+	// Calculate variance
+	sumSquaredDiff := 0.0
+	for _, v := range values {
+		diff := v - mean
+		sumSquaredDiff += diff * diff
+	}
+	
+	return sumSquaredDiff / float64(len(values))
+}
+
+func (mh *MLHardeningSystem) calculateFeatureSensitivity(features map[string]float64) float64 {
+	if len(features) == 0 {
+		return 0.0
+	}
+	
+	// Calculate sensitivity as the standard deviation of feature values
+	values := make([]float64, 0, len(features))
+	for _, value := range features {
+		values = append(values, value)
+	}
+	
+	variance := mh.calculateVariance(values)
+	return math.Sqrt(variance)
+}
+
+func (mh *MLHardeningSystem) calculateNoiseResistance(perturbationTests []PerturbationTest) float64 {
+	if len(perturbationTests) == 0 {
+		return 1.0
+	}
+	
+	// Calculate noise resistance as inverse of average success rate
+	totalSuccessRate := 0.0
+	for _, test := range perturbationTests {
+		totalSuccessRate += test.SuccessRate
+	}
+	
+	avgSuccessRate := totalSuccessRate / float64(len(perturbationTests))
+	return 1.0 - avgSuccessRate
 }

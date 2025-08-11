@@ -7,12 +7,16 @@ A comprehensive guide to using Typosentinel for package security scanning and th
 1. [Getting Started](#getting-started)
 2. [Basic Usage](#basic-usage)
 3. [Advanced Features](#advanced-features)
-4. [Performance Testing](#performance-testing)
-5. [Configuration Guide](#configuration-guide)
-6. [Language-Specific Guides](#language-specific-guides)
-7. [Integration Examples](#integration-examples)
-8. [Troubleshooting](#troubleshooting)
-9. [FAQ](#faq)
+4. [Supply Chain Security](#supply-chain-security)
+5. [Edge Algorithms](#edge-algorithms)
+6. [Web Interface](#web-interface)
+7. [Organization Scanning](#organization-scanning)
+8. [Performance Testing](#performance-testing)
+9. [Configuration Guide](#configuration-guide)
+10. [Language-Specific Guides](#language-specific-guides)
+11. [Integration Examples](#integration-examples)
+12. [Troubleshooting](#troubleshooting)
+13. [FAQ](#faq)
 
 ## Getting Started
 
@@ -432,6 +436,423 @@ go test -bench=BenchmarkMemoryUsage -memprofile=mem.prof ./internal/benchmark/
 - **Memory Usage**: Allocation patterns and garbage collection
 - **Memory Efficiency**: Memory per operation metrics
 - **Memory Leaks**: Long-running process stability
+
+## Supply Chain Security
+
+Typosentinel provides comprehensive supply chain security analysis with advanced threat detection capabilities.
+
+### Advanced Supply Chain Scanning
+
+The `supply-chain scan-advanced` command performs comprehensive security analysis:
+
+```bash
+# Comprehensive supply chain scan
+typosentinel supply-chain scan-advanced /path/to/project \
+  --build-integrity \
+  --zero-day \
+  --graph-analysis \
+  --threat-intel \
+  --honeypots \
+  --deep-scan \
+  --risk-threshold high
+```
+
+#### Features Included:
+
+**Build Integrity Verification:**
+- Package signature verification
+- Behavioral baseline creation and monitoring
+- Build artifact validation
+- Supply chain attack detection
+
+**Zero-Day Detection:**
+- Novel threat pattern recognition
+- Behavioral anomaly detection
+- Machine learning-based threat prediction
+- Honeypot and trap detection
+
+**Graph Analysis:**
+- Dependency relationship mapping
+- Risk propagation analysis
+- Circular dependency detection
+- Impact assessment
+
+**Threat Intelligence:**
+- Real-time threat feed integration
+- Historical attack pattern analysis
+- Community-driven threat sharing
+- Automated threat correlation
+
+### Build Integrity Verification
+
+Verify the integrity of your build process and packages:
+
+```bash
+# Create security baseline
+typosentinel supply-chain build-integrity /path/to/project \
+  --baseline-create \
+  --output baseline.json
+
+# Verify against baseline
+typosentinel supply-chain build-integrity /path/to/project \
+  --baseline baseline.json \
+  --fail-on-violations
+
+# Skip signature verification (for testing)
+typosentinel supply-chain build-integrity /path/to/project \
+  --skip-signature-check
+```
+
+Example output:
+```
+🔒 Build Integrity Verification
+📦 Analyzing 45 packages...
+✅ Signatures verified: 43/45
+⚠️  Baseline violations: 2
+❌ Failed signature checks: 2
+
+=== INTEGRITY ISSUES ===
+
+🚨 CRITICAL - Unsigned Package
+Package: suspicious-lib@1.2.3
+Issue: No valid signature found
+Risk: High - Package could be compromised
+
+⚠️  WARNING - Baseline Violation
+Package: lodash@4.17.21
+Issue: Behavioral pattern changed
+Previous: Network access: None
+Current: Network access: HTTP requests to unknown domains
+```
+
+### Dependency Graph Analysis
+
+Analyze your dependency relationships and identify risks:
+
+```bash
+# Basic graph analysis
+typosentinel supply-chain graph-analyze /path/to/project
+
+# Include development dependencies
+typosentinel supply-chain graph-analyze /path/to/project \
+  --include-dev \
+  --graph-depth 10
+
+# Generate visual graph
+typosentinel supply-chain graph-analyze /path/to/project \
+  --output-graph dependency-graph.svg \
+  --graph-depth 5
+```
+
+Features:
+- **Risk Propagation**: Identify how vulnerabilities spread through dependencies
+- **Critical Paths**: Find the most important dependency chains
+- **Circular Dependencies**: Detect problematic circular references
+- **Orphaned Dependencies**: Find unused or unnecessary packages
+
+### Threat Intelligence
+
+Query threat intelligence databases for package information:
+
+```bash
+# Check specific package
+typosentinel supply-chain threat-intel express npm \
+  --threat-sources typosentinel,osv,nvd \
+  --threat-types malware,typosquatting,backdoor
+
+# Batch check multiple packages
+typosentinel supply-chain threat-intel \
+  --package-file packages.txt \
+  --threat-sources all \
+  --limit 50
+```
+
+Supported threat sources:
+- **TypoSentinel**: Internal threat database
+- **OSV**: Open Source Vulnerabilities database
+- **NVD**: National Vulnerability Database
+- **Custom**: Your organization's threat feeds
+
+### SBOM Generation
+
+Generate Software Bill of Materials for compliance and security:
+
+```bash
+# Generate SPDX SBOM
+typosentinel scan /path/to/project \
+  --sbom-format spdx \
+  --sbom-output project-sbom.spdx.json \
+  --include-vulnerabilities
+
+# Generate CycloneDX SBOM
+typosentinel scan /path/to/project \
+  --sbom-format cyclonedx \
+  --sbom-output project-sbom.json \
+  --include-licenses
+
+# Include vulnerability data
+typosentinel scan /path/to/project \
+  --sbom-format spdx \
+  --check-vulnerabilities \
+  --vulnerability-db osv,nvd \
+  --sbom-output secure-sbom.json
+```
+
+SBOM features:
+- **SPDX 2.3** and **CycloneDX 1.4** format support
+- **Vulnerability integration** from multiple databases
+- **License information** extraction
+- **Cryptographic hashes** for package verification
+- **Dependency relationships** mapping
+
+## Edge Algorithms
+
+TypoSentinel includes cutting-edge algorithms for advanced threat detection.
+
+### Graph-based Threat Recognition (GTR)
+
+Advanced graph analysis for threat detection:
+
+```bash
+# Basic GTR analysis
+typosentinel edge gtr /path/to/project
+
+# Custom threshold and depth
+typosentinel edge gtr /path/to/project \
+  --threshold 0.8 \
+  --max-depth 5 \
+  --include-metrics
+
+# Analyze specific packages
+typosentinel edge gtr \
+  --packages express,lodash,axios \
+  --threshold 0.9
+```
+
+GTR analyzes:
+- **Package relationships** in dependency graphs
+- **Behavioral patterns** across related packages
+- **Anomaly detection** in package ecosystems
+- **Threat propagation** through dependency chains
+
+### Recursive Universal Network Traversal (RUNT)
+
+Deep network analysis for comprehensive threat detection:
+
+```bash
+# RUNT analysis
+typosentinel edge runt /path/to/project \
+  --max-depth 10 \
+  --similarity 0.75 \
+  --include-features
+
+# Target specific package
+typosentinel edge runt \
+  --target-package express \
+  --max-depth 15
+```
+
+RUNT features:
+- **Recursive traversal** of package networks
+- **Similarity analysis** across package ecosystems
+- **Feature extraction** for ML models
+- **Universal compatibility** across package managers
+
+### Adaptive Intelligence Correlation Clustering (AICC)
+
+Machine learning-based clustering for threat correlation:
+
+```bash
+# AICC clustering
+typosentinel edge aicc /path/to/project \
+  --clusters 5 \
+  --adaptive-mode \
+  --include-correlation
+
+# Analyze package groups
+typosentinel edge aicc \
+  --packages react,vue,angular,svelte \
+  --clusters 2
+```
+
+AICC capabilities:
+- **Adaptive clustering** based on package characteristics
+- **Intelligence correlation** across threat indicators
+- **Dynamic cluster adjustment** based on new data
+- **Cross-ecosystem analysis** for comprehensive coverage
+
+### Dependency Impact Risk Traversal (DIRT)
+
+Analyze the impact and risk of dependencies:
+
+```bash
+# DIRT analysis
+typosentinel edge dirt /path/to/project \
+  --max-depth 8 \
+  --risk-threshold 0.6 \
+  --include-graph
+
+# Focus on high-risk dependencies
+typosentinel edge dirt /path/to/project \
+  --risk-threshold 0.8 \
+  --output-format json
+```
+
+DIRT analysis includes:
+- **Impact assessment** of each dependency
+- **Risk traversal** through dependency trees
+- **Critical path identification** for security focus
+- **Mitigation recommendations** for high-risk dependencies
+
+### Edge Algorithm Benchmarking
+
+Test the performance of edge algorithms:
+
+```bash
+# Benchmark all algorithms
+typosentinel edge benchmark \
+  --packages 100 \
+  --workers 4 \
+  --iterations 10
+
+# Benchmark specific algorithm
+typosentinel edge benchmark \
+  --algorithm gtr \
+  --packages 50 \
+  --workers 8
+```
+
+## Web Interface
+
+TypoSentinel includes a modern web interface for interactive security analysis.
+
+### Starting the Web Server
+
+```bash
+# Start with default settings
+typosentinel server
+
+# Custom host and port
+typosentinel server --host 0.0.0.0 --port 8080
+
+# Development mode with hot reload
+typosentinel server --dev-mode
+
+# Production mode with optimizations
+typosentinel server --config production.yaml
+```
+
+### Web Interface Features
+
+#### Dashboard
+- **Real-time metrics** and system status
+- **Recent scan results** and threat summaries
+- **Performance graphs** and resource usage
+- **Quick action buttons** for common tasks
+
+#### Package Scanner
+- **Interactive package scanning** with real-time results
+- **Drag-and-drop** project upload
+- **Multiple output formats** (JSON, CSV, PDF)
+- **Detailed threat analysis** with remediation suggestions
+
+#### Analytics
+- **Threat trend analysis** over time
+- **Package ecosystem insights** and statistics
+- **Risk assessment reports** and compliance tracking
+- **Custom dashboard creation** and sharing
+
+#### Configuration Management
+- **Visual configuration editor** with validation
+- **Template management** for different environments
+- **Backup and restore** functionality
+- **Real-time configuration updates**
+
+### API Integration
+
+The web interface provides a full REST API:
+
+```bash
+# Health check
+curl http://localhost:8080/health
+
+# Scan packages via API
+curl -X POST http://localhost:8080/api/v1/scan \
+  -H "Content-Type: application/json" \
+  -d '{"packages": ["express", "lodash"], "package_manager": "npm"}'
+
+# Get scan results
+curl http://localhost:8080/api/v1/results/{scan_id}
+```
+
+## Organization Scanning
+
+Scan entire organizations across multiple platforms.
+
+### GitHub Organization Scanning
+
+```bash
+# Scan GitHub organization
+typosentinel scan-org github \
+  --org company-name \
+  --token $GITHUB_TOKEN \
+  --max-repos 100 \
+  --include-private \
+  --include-forked
+
+# Exclude archived repositories
+typosentinel scan-org github \
+  --org company-name \
+  --token $GITHUB_TOKEN \
+  --exclude-archived
+
+# Focus on specific languages
+typosentinel scan-org github \
+  --org company-name \
+  --token $GITHUB_TOKEN \
+  --languages javascript,python,go
+```
+
+### GitLab Organization Scanning
+
+```bash
+# Scan GitLab group
+typosentinel scan-org gitlab \
+  --org group-name \
+  --token $GITLAB_TOKEN \
+  --include-subgroups
+
+# Scan specific GitLab instance
+typosentinel scan-org gitlab \
+  --org group-name \
+  --token $GITLAB_TOKEN \
+  --gitlab-url https://gitlab.company.com
+```
+
+### Bitbucket Workspace Scanning
+
+```bash
+# Scan Bitbucket workspace
+typosentinel scan-org bitbucket \
+  --org workspace-name \
+  --token $BITBUCKET_TOKEN \
+  --include-private
+
+# Scan specific projects
+typosentinel scan-org bitbucket \
+  --org workspace-name \
+  --token $BITBUCKET_TOKEN \
+  --projects project1,project2
+```
+
+### Organization Scan Features
+
+- **Multi-platform support**: GitHub, GitLab, Bitbucket
+- **Bulk repository processing** with parallel scanning
+- **Comprehensive reporting** across all repositories
+- **Risk aggregation** and organization-wide metrics
+- **Compliance tracking** and audit trails
+- **Integration with CI/CD** pipelines
 
 #### ML Performance
 - **ML Analysis**: Machine learning detection speed

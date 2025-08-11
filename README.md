@@ -10,15 +10,34 @@ A comprehensive typosquatting detection tool that helps identify malicious packa
 
 ## 🚀 Features
 
+### Core Security Features
 - **Multi-Language Support**: Detects typosquatting across npm, PyPI, Go modules, Maven, NuGet, and more
 - **Novel ML Algorithms**: Cutting-edge machine learning including quantum-inspired neural networks, graph attention networks, and adversarial ML detection
-- **Advanced Detection**: Uses both traditional and novel machine learning techniques for superior threat detection
+- **Edge Algorithms**: Advanced threat detection with GTR, RUNT, AICC, and DIRT algorithms
+- **Supply Chain Security**: Comprehensive supply chain analysis with build integrity verification
+- **Vulnerability Scanning**: Integration with multiple vulnerability databases (OSV, NVD, GitHub)
+- **Real-time Monitoring**: Continuous dependency monitoring with intelligent caching
+
+### Advanced Analysis
 - **Adaptive Analysis**: Intelligent strategy selection (novel-only, classic-only, hybrid, adaptive) based on package characteristics
-- **Real-time Scanning**: Continuous monitoring of package dependencies with caching and performance optimization
-- **REST API**: Easy integration with existing CI/CD pipelines
+- **Graph Analysis**: Dependency graph traversal and risk propagation analysis
+- **Threat Intelligence**: Integration with threat intelligence feeds and honeypot detection
+- **Zero-Day Detection**: Advanced algorithms for detecting unknown threats
+- **Behavioral Analysis**: Package behavior monitoring and anomaly detection
+
+### Integration & Deployment
+- **Web Interface**: Modern React-based dashboard for security monitoring
+- **REST API**: Comprehensive API for CI/CD pipeline integration
+- **Organization Scanning**: Multi-platform repository scanning (GitHub, GitLab, Bitbucket)
+- **SBOM Generation**: SPDX and CycloneDX software bill of materials support
+- **Docker Deployment**: Complete containerized deployment with monitoring
 - **Plugin Architecture**: Extensible system for custom analyzers
+
+### Performance & Reliability
 - **Performance Optimized**: Efficient scanning with caching, parallel processing, and concurrent analysis
+- **Enterprise Ready**: Authentication, RBAC, audit logging, and compliance features
 - **Comprehensive Reporting**: Detailed analysis reports with risk scoring and threat explanations
+- **Multi-format Output**: JSON, YAML, SARIF, table, and futuristic terminal output
 
 ## 📦 Installation
 
@@ -266,6 +285,228 @@ typosentinel edge aicc --require-timestamps --policy-strictness high /path/to/pr
 ```
 
 For detailed information, see [Edge Algorithms CLI Documentation](docs/EDGE_ALGORITHMS_CLI.md).
+
+## 🌐 Web Interface & Server
+
+TypoSentinel includes a modern web interface and comprehensive REST API server for enterprise deployment.
+
+### Starting the Web Server
+
+```bash
+# Start the server with default settings
+typosentinel server
+
+# Start with custom configuration
+typosentinel server --port 8080 --host 0.0.0.0
+
+# Development mode with enhanced logging
+typosentinel server --dev --verbose
+
+# Production mode with security validation
+typosentinel server --config production.yaml
+```
+
+### Web Interface Features
+
+- **📊 Dashboard**: Real-time security metrics and threat overview
+- **🔍 Package Scanner**: Interactive package analysis with live results
+- **📈 Analytics**: Historical data and trend analysis
+- **⚙️ Configuration**: Web-based configuration management
+- **👥 Organization Scanning**: Multi-repository security assessment
+- **📋 Reports**: Downloadable security reports and SBOM generation
+
+### API Endpoints
+
+**Core Analysis:**
+```bash
+# Analyze a single package
+POST /api/v1/analyze
+{
+  "ecosystem": "npm",
+  "name": "package-name",
+  "version": "1.0.0"
+}
+
+# Batch analysis
+POST /api/v1/batch-analyze
+{
+  "packages": [
+    {"ecosystem": "npm", "name": "express"},
+    {"ecosystem": "pypi", "name": "requests"}
+  ]
+}
+
+# Organization scan
+POST /api/v1/scan/organization
+{
+  "platform": "github",
+  "organization": "company-name",
+  "token": "github_token"
+}
+```
+
+**System Management:**
+```bash
+# System health
+GET /api/v1/health
+
+# System metrics
+GET /api/v1/metrics
+
+# Configuration
+GET /api/v1/config
+PUT /api/v1/config
+```
+
+### Docker Deployment
+
+**Quick Start:**
+```bash
+# Start all services
+docker-compose up -d
+
+# Access points:
+# Web Interface: http://localhost:3000
+# API Server: http://localhost:8080
+# Monitoring: http://localhost:9090 (Prometheus)
+```
+
+**Production Deployment:**
+```bash
+# Production deployment with monitoring
+./deploy.sh start-monitoring
+
+# Scale services
+docker-compose up -d --scale api=3 --scale worker=5
+
+# View logs
+docker-compose logs -f api web
+```
+
+### Integration Examples
+
+**CI/CD Integration:**
+```yaml
+# GitHub Actions
+- name: Security Scan
+  run: |
+    curl -X POST http://typosentinel:8080/api/v1/analyze \
+      -H "Content-Type: application/json" \
+      -d '{"ecosystem": "npm", "name": "${{ matrix.package }}"}'
+```
+
+**Monitoring Integration:**
+```bash
+# Prometheus metrics endpoint
+curl http://localhost:8080/metrics
+
+# Health check for load balancer
+curl http://localhost:8080/health
+```
+
+## 🔗 Supply Chain Security
+
+TypoSentinel provides comprehensive supply chain security analysis with advanced threat detection capabilities.
+
+### Supply Chain Commands
+
+```bash
+# Comprehensive supply chain scan
+typosentinel supply-chain scan-advanced /path/to/project \
+  --build-integrity \
+  --zero-day \
+  --graph-analysis \
+  --threat-intel \
+  --honeypots \
+  --risk-threshold high
+
+# Build integrity verification
+typosentinel supply-chain build-integrity /path/to/project \
+  --baseline-create \
+  --skip-signature-check
+
+# Dependency graph analysis
+typosentinel supply-chain graph-analyze /path/to/project \
+  --graph-depth 10 \
+  --include-dev \
+  --output-graph svg
+
+# Threat intelligence lookup
+typosentinel supply-chain threat-intel package-name npm \
+  --threat-sources typosentinel,osv \
+  --threat-types malware,typosquatting \
+  --limit 20
+```
+
+### Advanced Features
+
+**Build Integrity:**
+- Signature verification for packages
+- Behavioral baseline creation and monitoring
+- Build artifact validation
+- Supply chain attack detection
+
+**Zero-Day Detection:**
+- Novel threat pattern recognition
+- Behavioral anomaly detection
+- Machine learning-based threat prediction
+- Honeypot and trap detection
+
+**Graph Analysis:**
+- Dependency relationship mapping
+- Risk propagation analysis
+- Circular dependency detection
+- Impact assessment
+
+**Threat Intelligence:**
+- Real-time threat feed integration
+- Historical attack pattern analysis
+- Community-driven threat sharing
+- Automated threat correlation
+
+### Organization Scanning
+
+```bash
+# Scan GitHub organization
+typosentinel scan-org github \
+  --org company-name \
+  --token $GITHUB_TOKEN \
+  --max-repos 100 \
+  --include-private \
+  --include-forked
+
+# Scan GitLab organization
+typosentinel scan-org gitlab \
+  --org company-name \
+  --token $GITLAB_TOKEN \
+  --include-archived
+
+# Scan Bitbucket workspace
+typosentinel scan-org bitbucket \
+  --org workspace-name \
+  --token $BITBUCKET_TOKEN
+```
+
+### SBOM Generation
+
+```bash
+# Generate SPDX SBOM
+typosentinel scan /path/to/project \
+  --sbom-format spdx \
+  --sbom-output project-sbom.spdx.json
+
+# Generate CycloneDX SBOM
+typosentinel scan /path/to/project \
+  --sbom-format cyclonedx \
+  --sbom-output project-sbom.json
+
+# Include vulnerability data in SBOM
+typosentinel scan /path/to/project \
+  --sbom-format spdx \
+  --check-vulnerabilities \
+  --vulnerability-db osv,nvd \
+  --sbom-output secure-sbom.json
+```
 
 ### Real-World Examples
 
@@ -605,13 +846,25 @@ curl http://localhost:8080/api/v1/results/{scan_id}
 
 ## 📖 Documentation
 
+### Core Documentation
 - [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
-- [Docker Deployment Guide](DOCKER.md) - Complete Docker deployment instructions
 - [API Documentation](docs/API_DOCUMENTATION.md) - REST API reference
-- [Edge Algorithms CLI](docs/EDGE_ALGORITHMS_CLI.md) - Advanced edge algorithms documentation
-- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [Plugin Development](docs/plugin_development_guide.md) - Creating custom analyzers
 - [Configuration Reference](docs/configuration.md) - All configuration options
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
+
+### Advanced Features
+- [Edge Algorithms CLI](docs/EDGE_ALGORITHMS_CLI.md) - Advanced edge algorithms documentation
+- [Zero-Day Attack Examples](docs/ZERO_DAY_ATTACK_EXAMPLES.md) - Real-world attack patterns and detection
+- [Supply Chain Security Guide](docs/SUPPLY_CHAIN_SECURITY.md) - Comprehensive supply chain protection
+
+### Development & Deployment
+- [Docker Deployment Guide](DOCKER.md) - Complete Docker deployment instructions
+- [Plugin Development](docs/plugin_development_guide.md) - Creating custom analyzers
+- [Project Documentation](PROJECT_DOCUMENTATION.md) - Complete project overview
+
+### Security & Compliance
+- [Security Policy](SECURITY.md) - Security vulnerability reporting
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
 
 ## 🛠️ Development
 

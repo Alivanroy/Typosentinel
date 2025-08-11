@@ -52,6 +52,32 @@ api/openapi.yaml
 - `POST /api/v1/batch-analyze` - Batch analyze packages
 - `GET /api/v1/package/{ecosystem}/{name}` - Analyze package by name
 
+### Supply Chain Security
+- `POST /api/v1/supply-chain/scan-advanced` - Comprehensive supply chain scan
+- `POST /api/v1/supply-chain/build-integrity` - Verify build integrity
+- `POST /api/v1/supply-chain/graph-analyze` - Analyze dependency graphs
+- `POST /api/v1/supply-chain/threat-intel` - Query threat intelligence
+- `GET /api/v1/supply-chain/threats/{id}` - Get threat details
+- `POST /api/v1/supply-chain/honeypots/detect` - Detect honeypot packages
+
+### Organization Scanning
+- `POST /api/v1/scan-org/github` - Scan GitHub organization
+- `POST /api/v1/scan-org/gitlab` - Scan GitLab organization
+- `POST /api/v1/scan-org/bitbucket` - Scan Bitbucket workspace
+- `GET /api/v1/scan-org/results/{id}` - Get organization scan results
+
+### Edge Algorithms
+- `POST /api/v1/edge/gtr` - Graph-based Threat Recognition
+- `POST /api/v1/edge/runt` - Recursive Universal Network Traversal
+- `POST /api/v1/edge/aicc` - Adaptive Intelligence Correlation Clustering
+- `POST /api/v1/edge/dirt` - Dependency Impact Risk Traversal
+- `POST /api/v1/edge/benchmark` - Run edge algorithm benchmarks
+
+### SBOM Generation
+- `POST /api/v1/sbom/generate` - Generate Software Bill of Materials
+- `GET /api/v1/sbom/{id}` - Download generated SBOM
+- `POST /api/v1/sbom/validate` - Validate SBOM integrity
+
 ### ML Predictions
 - `POST /api/v1/ml/predict/typosquatting` - Predict typosquatting
 - `POST /api/v1/ml/predict/reputation` - Predict package reputation
@@ -1490,4 +1516,277 @@ func validatePackage(pkg *types.Package) error {
 }
 ```
 
-This comprehensive API documentation provides detailed examples and best practices for using Typosentinel effectively in various scenarios, from simple scans to complex enterprise integrations.
+## Supply Chain Security API Examples
+
+### Advanced Supply Chain Scanning
+
+```bash
+# Comprehensive supply chain scan
+curl -X POST http://localhost:8080/api/v1/supply-chain/scan-advanced \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_path": "/path/to/project",
+    "build_integrity": true,
+    "zero_day_detection": true,
+    "graph_analysis": true,
+    "threat_intelligence": true,
+    "honeypot_detection": true,
+    "deep_scan": true,
+    "risk_threshold": "high"
+  }'
+```
+
+Response:
+```json
+{
+  "scan_id": "sc_12345",
+  "status": "completed",
+  "timestamp": "2024-12-19T10:30:00Z",
+  "results": {
+    "build_integrity": {
+      "status": "verified",
+      "signatures_checked": 45,
+      "signatures_valid": 43,
+      "baseline_violations": 2
+    },
+    "zero_day_threats": [
+      {
+        "package": "suspicious-lib",
+        "threat_type": "behavioral_anomaly",
+        "confidence": 0.89,
+        "description": "Package exhibits unusual network behavior"
+      }
+    ],
+    "dependency_graph": {
+      "total_dependencies": 156,
+      "risk_score": 0.34,
+      "critical_paths": 3,
+      "circular_dependencies": 1
+    },
+    "threat_intelligence": {
+      "known_threats": 2,
+      "suspicious_packages": 5,
+      "honeypots_detected": 1
+    }
+  }
+}
+```
+
+### Build Integrity Verification
+
+```bash
+# Verify build integrity
+curl -X POST http://localhost:8080/api/v1/supply-chain/build-integrity \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_path": "/path/to/project",
+    "skip_signature_check": false,
+    "create_baseline": true,
+    "update_baseline": false
+  }'
+```
+
+### Dependency Graph Analysis
+
+```bash
+# Analyze dependency graph
+curl -X POST http://localhost:8080/api/v1/supply-chain/graph-analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_path": "/path/to/project",
+    "graph_depth": 10,
+    "include_dev_dependencies": true,
+    "output_format": "svg"
+  }'
+```
+
+### Threat Intelligence Query
+
+```bash
+# Query threat intelligence
+curl -X POST http://localhost:8080/api/v1/supply-chain/threat-intel \
+  -H "Content-Type: application/json" \
+  -d '{
+    "package_name": "express",
+    "package_manager": "npm",
+    "threat_sources": ["typosentinel", "osv", "nvd"],
+    "threat_types": ["malware", "typosquatting", "backdoor"],
+    "limit": 20
+  }'
+```
+
+### Organization Scanning
+
+```bash
+# Scan GitHub organization
+curl -X POST http://localhost:8080/api/v1/scan-org/github \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -d '{
+    "organization": "company-name",
+    "max_repositories": 100,
+    "include_private": true,
+    "include_forked": false,
+    "include_archived": false
+  }'
+```
+
+### Edge Algorithms
+
+```bash
+# Graph-based Threat Recognition (GTR)
+curl -X POST http://localhost:8080/api/v1/edge/gtr \
+  -H "Content-Type: application/json" \
+  -d '{
+    "packages": ["express", "lodash", "axios"],
+    "threshold": 0.8,
+    "max_depth": 5,
+    "include_metrics": true
+  }'
+
+# Recursive Universal Network Traversal (RUNT)
+curl -X POST http://localhost:8080/api/v1/edge/runt \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target_package": "express",
+    "max_depth": 10,
+    "similarity_threshold": 0.75,
+    "include_features": true
+  }'
+
+# Adaptive Intelligence Correlation Clustering (AICC)
+curl -X POST http://localhost:8080/api/v1/edge/aicc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "packages": ["react", "vue", "angular"],
+    "num_clusters": 3,
+    "adaptive_mode": true,
+    "include_correlation": true
+  }'
+
+# Dependency Impact Risk Traversal (DIRT)
+curl -X POST http://localhost:8080/api/v1/edge/dirt \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_path": "/path/to/project",
+    "max_depth": 8,
+    "risk_threshold": 0.6,
+    "include_graph": true
+  }'
+```
+
+### SBOM Generation
+
+```bash
+# Generate SPDX SBOM
+curl -X POST http://localhost:8080/api/v1/sbom/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_path": "/path/to/project",
+    "format": "spdx",
+    "include_vulnerabilities": true,
+    "include_licenses": true,
+    "include_checksums": true
+  }'
+
+# Generate CycloneDX SBOM
+curl -X POST http://localhost:8080/api/v1/sbom/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_path": "/path/to/project",
+    "format": "cyclonedx",
+    "include_vulnerabilities": true,
+    "include_dependencies": true
+  }'
+```
+
+### Programmatic Supply Chain Security
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    
+    "typosentinel/internal/supplychain"
+    "typosentinel/internal/config"
+)
+
+func main() {
+    // Configure supply chain scanner
+    cfg := &config.Config{
+        SupplyChain: config.SupplyChainConfig{
+            BuildIntegrity:    true,
+            ZeroDayDetection: true,
+            GraphAnalysis:    true,
+            ThreatIntel:      true,
+            HoneypotDetection: true,
+            RiskThreshold:    "high",
+        },
+    }
+    
+    // Create supply chain scanner
+    scanner := supplychain.NewScanner(cfg)
+    
+    // Perform advanced scan
+    ctx := context.Background()
+    result, err := scanner.ScanAdvanced(ctx, "/path/to/project")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Process results
+    fmt.Printf("Build Integrity: %s\n", result.BuildIntegrity.Status)
+    fmt.Printf("Zero-day threats: %d\n", len(result.ZeroDayThreats))
+    fmt.Printf("Dependency risk score: %.2f\n", result.DependencyGraph.RiskScore)
+    
+    // Check for critical issues
+    if result.HasCriticalIssues() {
+        fmt.Println("CRITICAL: Supply chain security issues detected!")
+        for _, threat := range result.CriticalThreats {
+            fmt.Printf("- %s: %s\n", threat.Type, threat.Description)
+        }
+    }
+}
+```
+
+### Edge Algorithm Integration
+
+```go
+// Use GTR algorithm for threat detection
+gtr := edge.NewGTR(&edge.GTRConfig{
+    Threshold:      0.8,
+    MaxDepth:       5,
+    IncludeMetrics: true,
+})
+
+packages := []string{"express", "lodash", "axios"}
+result, err := gtr.Analyze(ctx, packages)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("GTR Analysis: %d threats detected\n", len(result.Threats))
+for _, threat := range result.Threats {
+    fmt.Printf("- %s (confidence: %.2f)\n", threat.Description, threat.Confidence)
+}
+
+// Use DIRT for dependency impact analysis
+dirt := edge.NewDIRT(&edge.DIRTConfig{
+    MaxDepth:       8,
+    RiskThreshold:  0.6,
+    IncludeGraph:   true,
+})
+
+impact, err := dirt.AnalyzeImpact(ctx, "/path/to/project")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Dependency Impact: Risk Score %.2f\n", impact.RiskScore)
+fmt.Printf("Critical dependencies: %d\n", len(impact.CriticalDependencies))
+```
+
+This comprehensive API documentation provides detailed examples and best practices for using Typosentinel effectively in various scenarios, from simple scans to complex enterprise integrations with advanced supply chain security features.

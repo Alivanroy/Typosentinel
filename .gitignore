@@ -8,6 +8,9 @@ bin/
 dist/
 typosentinel
 typosentinel.exe
+enterprise
+planfinale
+planfinale-enterprise
 
 # Trae AI configuration
 .trae/

@@ -7,13 +7,16 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/edge"
 	"github.com/Alivanroy/Typosentinel/internal/output"
@@ -21,9 +24,11 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
 	"github.com/Alivanroy/Typosentinel/internal/security"
+	"github.com/Alivanroy/Typosentinel/internal/visualization"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func main() {
@@ -47,7 +52,12 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	// Scan command
 	var scanCmd = &cobra.Command{
 		Use:   "scan [path]",
-		Short: "Scan a project for typosquatting and malicious packages",
+		Short: "Scan a project for typosquatting and malicious packages (auto-detects project types)",
+		Long: `Scan a project directory for typosquatting and malicious packages.
+
+TypoSentinel automatically detects project types (Node.js, Python, Go, Rust, Java, .NET, PHP, Ruby)
+based on manifest files and creates appropriate registry connectors. Use --recursive for monorepos
+and multi-project directories. Specify --package-manager to limit scanning to specific ecosystems.`,
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := "."
@@ -82,6 +92,14 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			vulnConfig, _ := cmd.Flags().GetString("vuln-config")
 			sbomFormat, _ := cmd.Flags().GetString("sbom-format")
 			sbomOutput, _ := cmd.Flags().GetString("sbom-output")
+			// Recursive scanning options
+			recursive, _ := cmd.Flags().GetBool("recursive")
+			workspaceAware, _ := cmd.Flags().GetBool("workspace-aware")
+			consolidateReport, _ := cmd.Flags().GetBool("consolidate-report")
+			packageManagers, _ := cmd.Flags().GetStringSlice("package-manager")
+			// Enhanced supply chain analysis options
+			enableSupplyChain, _ := cmd.Flags().GetBool("supply-chain")
+			advancedAnalysis, _ := cmd.Flags().GetBool("advanced")
 
 			options := &analyzer.ScanOptions{
 				OutputFormat:           outputFormat,
@@ -94,12 +112,52 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 				CheckVulnerabilities:   checkVulnerabilities,
 				VulnerabilityDBs:       vulnerabilityDBs,
 				VulnConfigPath:         vulnConfig,
+				// Recursive scanning options
+				Recursive:              recursive,
+				WorkspaceAware:         workspaceAware,
+				ConsolidateReport:      consolidateReport,
+				PackageManagers:        packageManagers,
+				// Enhanced supply chain analysis options
+				EnableSupplyChain:      enableSupplyChain,
+				AdvancedAnalysis:       advancedAnalysis,
 			}
 
 			// Perform scan
+			// Write to log file for debugging
+			if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+				logFile.WriteString("=== BEFORE SCAN ===\n")
+				logFile.Close()
+			}
 			result, err := analyzerInstance.Scan(path, options)
 			if err != nil {
 				return fmt.Errorf("scan failed: %v", err)
+			}
+			if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+				logFile.WriteString("=== AFTER SCAN ===\n")
+				logFile.Close()
+			}
+
+			// Save scan results to database if database is configured
+			if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+				logFile.WriteString("=== DATABASE SAVE OPERATION START ===\n")
+				logFile.Close()
+			}
+			if dbErr := saveScanToDatabase(result, path); dbErr != nil {
+				if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+					logFile.WriteString(fmt.Sprintf("=== DATABASE SAVE FAILED: %v ===\n", dbErr))
+					logFile.Close()
+				}
+				// Don't fail the entire scan if database save fails
+				log.Printf("Warning: Failed to save scan to database: %v", dbErr)
+			} else {
+				if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+					logFile.WriteString("=== DATABASE SAVE SUCCESS ===\n")
+					logFile.Close()
+				}
+			}
+			if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+				logFile.WriteString("=== DATABASE SAVE OPERATION END ===\n")
+				logFile.Close()
 			}
 
 			// Handle SBOM generation if requested
@@ -123,9 +181,17 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	scanCmd.Flags().Bool("check-vulnerabilities", false, "Enable vulnerability checking")
 	scanCmd.Flags().StringSlice("vulnerability-db", []string{"osv", "nvd"}, "Vulnerability databases to use (osv, github, nvd)")
 	scanCmd.Flags().String("vuln-config", "config/vulnerability_databases.yaml", "Path to vulnerability database configuration")
+	// Recursive scanning flags
+	scanCmd.Flags().Bool("recursive", false, "Enable recursive scanning for monorepos and multi-project directories")
+	scanCmd.Flags().Bool("workspace-aware", false, "Enable workspace-aware scanning for monorepos")
+	scanCmd.Flags().Bool("consolidate-report", false, "Generate consolidated report for multi-project scans")
+	scanCmd.Flags().StringSlice("package-manager", []string{}, "Specific package managers to scan (npm, pypi, maven, nuget, rubygems, go, cargo, composer). Auto-detects if not specified")
 	// SBOM generation flags
 	scanCmd.Flags().String("sbom-format", "", "Generate SBOM in specified format (spdx, cyclonedx)")
 	scanCmd.Flags().String("sbom-output", "", "Output file path for SBOM (if not specified, prints to stdout)")
+	// Enhanced supply chain analysis flags
+	scanCmd.Flags().Bool("supply-chain", false, "Enable enhanced supply chain analysis")
+	scanCmd.Flags().Bool("advanced", false, "Enable advanced analysis features")
 
 	// Analyze command
 	var analyzeCmd = &cobra.Command{
@@ -314,23 +380,35 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			}
 
 			// Create REST API config from server config
+			log.Printf("[MAIN DEBUG] ===== ENHANCED CORS CONFIGURATION DEBUG =====")
+			log.Printf("[MAIN DEBUG] CORS config from environment: Enabled=%v, AllowedOrigins=%v", cfg.Server.CORS.Enabled, cfg.Server.CORS.AllowedOrigins)
+			log.Printf("[MAIN DEBUG] CORS AllowedMethods=%v", cfg.Server.CORS.AllowedMethods)
+			log.Printf("[MAIN DEBUG] CORS AllowedHeaders=%v", cfg.Server.CORS.AllowedHeaders)
+			
+			// Debug viper values directly
+			log.Printf("[VIPER DEBUG] server.cors.enabled: %v", viper.Get("server.cors.enabled"))
+			log.Printf("[VIPER DEBUG] server.cors.allowed_origins: %v", viper.Get("server.cors.allowed_origins"))
+			log.Printf("[VIPER DEBUG] server.cors.allowed_methods: %v", viper.Get("server.cors.allowed_methods"))
+			log.Printf("[VIPER DEBUG] server.cors.allowed_headers: %v", viper.Get("server.cors.allowed_headers"))
+			
+			// Debug environment detection
+			log.Printf("[ENV DEBUG] Environment detected: '%s'", cfg.App.Environment)
+			log.Printf("[ENV DEBUG] app.environment from viper: '%s'", viper.GetString("app.environment"))
+			log.Printf("[ENV DEBUG] TYPOSENTINEL_APP_ENVIRONMENT env var: '%s'", os.Getenv("TYPOSENTINEL_APP_ENVIRONMENT"))
+			log.Printf("[MAIN DEBUG] ===== END CORS CONFIGURATION DEBUG =====")
+			
 			restConfig := config.RESTAPIConfig{
-				Enabled: true,
-				Host:    cfg.Server.Host,
-				Port:    cfg.Server.Port,
+				Enabled:  true,
+				Host:     cfg.Server.Host,
+				Port:     cfg.Server.Port,
+				BasePath: "/api",
 				Versioning: config.APIVersioning{
 					Enabled:           true,
 					Strategy:          "path",
 					DefaultVersion:    "v1",
 					SupportedVersions: []string{"v1"},
 				},
-				CORS: &config.CORSConfig{
-					Enabled:        true,
-					AllowedOrigins: []string{"http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"},
-					AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-					AllowedHeaders: []string{"Content-Type", "Authorization", "X-Requested-With"},
-					MaxAge:         3600,
-				},
+				CORS: &cfg.Server.CORS,
 			}
 
 			// Create and start REST server
@@ -498,11 +576,13 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 			graphDepth, _ := cmd.Flags().GetInt("graph-depth")
 			includeDevDeps, _ := cmd.Flags().GetBool("include-dev")
 			outputGraph, _ := cmd.Flags().GetString("output-graph")
+			verbose, _ := cmd.Flags().GetBool("verbose")
 
-			fmt.Printf("Dependency Graph Analysis for: %s\n", path)
-			fmt.Printf("Graph Depth: %d, Include Dev: %v, Output: %s\n",
-				graphDepth, includeDevDeps, outputGraph)
-			fmt.Println("Note: Full graph analysis requires enhanced scanner integration.")
+			// Perform dependency graph analysis
+			if err := performDependencyGraphAnalysis(path, graphDepth, includeDevDeps, outputGraph, verbose); err != nil {
+				fmt.Printf("Error performing dependency graph analysis: %v\n", err)
+				os.Exit(1)
+			}
 		},
 	}
 
@@ -557,8 +637,6 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 	supplyChainCmd.AddCommand(threatIntelCmd)
 
 	// Enhanced existing commands with supply chain flags
-	scanCmd.Flags().Bool("supply-chain", false, "Enable supply chain security analysis")
-	scanCmd.Flags().Bool("advanced", false, "Enable advanced supply chain features")
 	analyzeCmd.Flags().Bool("supply-chain", false, "Include supply chain analysis")
 
 	// Edge Algorithms command group
@@ -928,6 +1006,122 @@ impact propagation for comprehensive supply chain risk assessment.`,
 	edgeCmd.AddCommand(dirtCmd)
 	edgeCmd.AddCommand(edgeBenchmarkCmd)
 
+	// Dependency Graph command group
+	var graphCmd = &cobra.Command{
+		Use:   "graph",
+		Short: "Dependency graph generation and analysis commands",
+		Long:  `Generate, analyze, and export dependency graphs with various visualization options.`,
+	}
+
+	// Graph Generate command
+	var graphGenerateCmd = &cobra.Command{
+		Use:   "generate [path]",
+		Short: "Generate dependency graph from project",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path := "."
+			if len(args) > 0 {
+				path = args[0]
+			}
+
+			maxDepth, _ := cmd.Flags().GetInt("max-depth")
+			includeDev, _ := cmd.Flags().GetBool("include-dev")
+			outputFormat, _ := cmd.Flags().GetString("format")
+
+			return performDependencyGraphAnalysis(path, maxDepth, includeDev, outputFormat, verbose)
+		},
+	}
+
+
+
+	// Graph Export command
+	var graphExportCmd = &cobra.Command{
+		Use:   "export [path]",
+		Short: "Export dependency graph in various formats",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path := "."
+			if len(args) > 0 {
+				path = args[0]
+			}
+
+			exportFormat, _ := cmd.Flags().GetString("format")
+			outputFile, _ := cmd.Flags().GetString("output")
+			includeDev, _ := cmd.Flags().GetBool("include-dev")
+
+			// Load configuration
+			cfg, err := config.LoadConfig(configFile)
+			if err != nil {
+				cfg = createDefaultConfig()
+				if verbose {
+					log.Printf("Using default config: %v", err)
+				}
+			}
+
+			// Create analyzer
+			analyzerInstance, err := analyzer.New(cfg)
+			if err != nil {
+				return fmt.Errorf("failed to create analyzer: %w", err)
+			}
+
+			// Scan options
+			options := &analyzer.ScanOptions{
+				OutputFormat:           "json",
+				DeepAnalysis:           true,
+				IncludeDevDependencies: includeDev,
+				AllowEmptyProjects:     true,
+			}
+
+			// Perform scan
+			result, err := analyzerInstance.Scan(path, options)
+			if err != nil {
+				return fmt.Errorf("scan failed: %v", err)
+			}
+
+			// Export based on format
+			switch exportFormat {
+			case "json":
+				if outputFile != "" {
+					data, err := json.MarshalIndent(result, "", "  ")
+					if err != nil {
+						return fmt.Errorf("failed to marshal JSON: %v", err)
+					}
+					return os.WriteFile(outputFile, data, 0644)
+				}
+				return outputDependencyGraphJSON(result, verbose)
+			case "dot":
+				if outputFile != "" {
+					// Generate DOT content and save to file
+					dotContent := generateDOTContentFromResult(result)
+					return os.WriteFile(outputFile, []byte(dotContent), 0644)
+				}
+				return outputDependencyGraphDOT(result, verbose)
+			case "svg":
+				if outputFile != "" {
+					// Generate SVG and save to file
+					return generateAndSaveSVGToFile(result, outputFile, verbose)
+				}
+				return outputDependencyGraphSVG(result, verbose)
+			default:
+				return fmt.Errorf("unsupported export format: %s. Supported formats: json, dot, svg", exportFormat)
+			}
+		},
+	}
+
+	// Add flags to graph commands
+	graphCmd.PersistentFlags().Bool("include-dev", false, "Include development dependencies")
+	
+	graphGenerateCmd.Flags().Int("max-depth", 10, "Maximum dependency depth to analyze")
+	graphGenerateCmd.Flags().String("format", "table", "Output format (table, json, dot, svg)")
+
+	graphExportCmd.Flags().String("format", "json", "Export format (json, dot, svg)")
+	graphExportCmd.Flags().String("output", "", "Output file path (if not specified, prints to stdout)")
+
+	// Add subcommands to graph command
+	graphCmd.AddCommand(graphGenerateCmd)
+	graphCmd.AddCommand(graphAnalyzeCmd)
+	graphCmd.AddCommand(graphExportCmd)
+
 	// Add commands to root
 	rootCmd.AddCommand(scanCmd)
 	rootCmd.AddCommand(analyzeCmd)
@@ -935,6 +1129,7 @@ impact propagation for comprehensive supply chain risk assessment.`,
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(supplyChainCmd)
 	rootCmd.AddCommand(edgeCmd)
+	rootCmd.AddCommand(graphCmd)
 	rootCmd.AddCommand(versionCmd)
 
 	// Execute
@@ -1191,7 +1386,7 @@ func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
 		// Convert analyzer threat to scanner threat
 		scannerThreat := scanner.Threat{
 			Type:           string(threat.Type),
-			Severity:       string(threat.Severity),
+			Severity:       threat.Severity.String(),
 			Score:          threat.Confidence,
 			Description:    threat.Description,
 			Recommendation: threat.Recommendation,
@@ -1239,8 +1434,761 @@ func parsePort(portStr string) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("invalid port: %s", portStr)
 	}
-	if port < 1 || port > 65535 {
-		return 0, fmt.Errorf("port out of range: %d", port)
-	}
 	return port, nil
+}
+
+// saveScanToDatabase saves scan results to the database
+func saveScanToDatabase(result *analyzer.ScanResult, scanPath string) error {
+	// Initialize database service from environment variables (same as server)
+	dbConfig := &config.DatabaseConfig{
+		Type:     getEnvOrDefault("TYPOSENTINEL_DB_TYPE", "sqlite"),
+		Host:     getEnvOrDefault("TYPOSENTINEL_DB_HOST", "localhost"),
+		Port:     getEnvIntOrDefault("TYPOSENTINEL_DB_PORT", 5432),
+		Username: getEnvOrDefault("TYPOSENTINEL_DB_USER", "typosentinel"),
+		Password: getEnvOrDefault("TYPOSENTINEL_DB_PASSWORD", ""),
+		Database: getEnvOrDefault("TYPOSENTINEL_DB_NAME", "./data/typosentinel.db"),
+		SSLMode:  getEnvOrDefault("TYPOSENTINEL_DB_SSLMODE", "disable"),
+	}
+
+	// Debug logging
+	if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+		logFile.WriteString(fmt.Sprintf("=== DB CONFIG: Type=%s, Host=%s, Port=%d, Database=%s ===\n", 
+			dbConfig.Type, dbConfig.Host, dbConfig.Port, dbConfig.Database))
+		logFile.WriteString(fmt.Sprintf("=== SCAN RESULT: Threats=%d, TotalPackages=%d ===\n", 
+			len(result.Threats), result.TotalPackages))
+		logFile.Close()
+	}
+
+	// Check if database is configured
+	if dbConfig.Type == "" {
+		return fmt.Errorf("database not configured")
+	}
+
+	// Initialize OSS service
+	ossService, err := database.NewOSSService(dbConfig)
+	if err != nil {
+		if logFile, logErr := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); logErr == nil {
+			logFile.WriteString(fmt.Sprintf("=== OSS SERVICE INIT FAILED: %v ===\n", err))
+			logFile.Close()
+		}
+		return fmt.Errorf("failed to initialize OSS service: %v", err)
+	}
+	defer ossService.Close()
+
+	// Convert analyzer.ScanResult to database.PackageScan
+	packageScan := &database.PackageScan{
+		ID:          result.ScanID,
+		PackageName: extractPackageNameFromPath(scanPath),
+		Version:     "unknown", // Could be extracted from package.json or similar
+		Registry:    "npm",     // Default registry
+		StartedAt:   result.Timestamp,
+		Status:      "completed",
+		Threats:     convertThreatsToDatabase(result.Threats),
+		Duration:    int64(result.Duration.Seconds()),
+		Metadata: map[string]interface{}{
+			"path":          scanPath,
+			"total_packages": result.TotalPackages,
+			"warnings":      len(result.Warnings),
+		},
+	}
+
+	// Set completion time
+	completedAt := result.Timestamp.Add(result.Duration)
+	packageScan.CompletedAt = &completedAt
+
+	// Create scan in database
+	ctx := context.Background()
+	if logFile, logErr := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); logErr == nil {
+		logFile.WriteString(fmt.Sprintf("=== CREATING SCAN: ID=%s, Package=%s, Threats=%d ===\n", 
+			packageScan.ID, packageScan.PackageName, len(packageScan.Threats)))
+		logFile.Close()
+	}
+	if err := ossService.CreateScan(ctx, packageScan); err != nil {
+		if logFile, logErr := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); logErr == nil {
+			logFile.WriteString(fmt.Sprintf("=== CREATE SCAN FAILED: %v ===\n", err))
+			logFile.Close()
+		}
+		return fmt.Errorf("failed to save scan to database: %v", err)
+	}
+
+	if logFile, logErr := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); logErr == nil {
+		logFile.WriteString("=== CREATE SCAN SUCCESS ===\n")
+		logFile.Close()
+	}
+	return nil
+}
+
+// generateDOTContentFromResult generates DOT format content from scan result
+func generateDOTContentFromResult(result *analyzer.ScanResult) string {
+	var content strings.Builder
+	content.WriteString("digraph DependencyGraph {\n")
+	content.WriteString("  rankdir=TB;\n")
+	content.WriteString("  node [shape=box, style=filled];\n\n")
+	
+	// Add root node
+	content.WriteString(fmt.Sprintf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n", 
+		result.Path, result.Path, result.TotalPackages))
+	
+	// Add threat nodes
+	for i, threat := range result.Threats {
+		color := "lightcoral"
+		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+			color = "red"
+		}
+		content.WriteString(fmt.Sprintf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n", 
+			i, color, threat.Package, threat.Type))
+		content.WriteString(fmt.Sprintf("  \"%s\" -> \"threat_%d\";\n", result.Path, i))
+	}
+	
+	content.WriteString("}\n")
+	return content.String()
+}
+
+// generateAndSaveSVGToFile generates SVG content and saves to file
+func generateAndSaveSVGToFile(result *analyzer.ScanResult, outputFile string, verbose bool) error {
+	var content strings.Builder
+	content.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	content.WriteString("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\">\n")
+	content.WriteString("  <title>Dependency Graph Analysis</title>\n")
+	
+	// Background
+	content.WriteString("  <rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>\n")
+	
+	// Title
+	content.WriteString(fmt.Sprintf("  <text x=\"400\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path))
+	
+	// Root node
+	content.WriteString("  <circle cx=\"400\" cy=\"100\" r=\"30\" fill=\"#007bff\" stroke=\"#0056b3\" stroke-width=\"2\"/>\n")
+	content.WriteString(fmt.Sprintf("  <text x=\"400\" y=\"105\" text-anchor=\"middle\" fill=\"white\" font-size=\"12\">%d pkg</text>\n", result.TotalPackages))
+	
+	// Threat nodes
+	y := 200
+	for i, threat := range result.Threats {
+		x := 200 + (i%3)*200
+		if i > 0 && i%3 == 0 {
+			y += 100
+		}
+		
+		color := "#ffc107" // warning
+		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+			color = "#dc3545" // danger
+		}
+		
+		content.WriteString(fmt.Sprintf("  <circle cx=\"%d\" cy=\"%d\" r=\"20\" fill=\"%s\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y, color))
+		content.WriteString(fmt.Sprintf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\">%s</text>\n", x, y+5, threat.Package[:min(len(threat.Package), 8)]))
+		
+		// Connection line
+		content.WriteString(fmt.Sprintf("  <line x1=\"400\" y1=\"130\" x2=\"%d\" y2=\"%d\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y-20))
+	}
+	
+	content.WriteString("</svg>\n")
+	
+	return os.WriteFile(outputFile, []byte(content.String()), 0644)
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// outputInteractiveGraph generates an interactive HTML dependency graph
+func outputInteractiveGraph(result *analyzer.ScanResult, scanPath string, verbose bool) error {
+	// Create visualization config
+	config := &visualization.VisualizationConfig{
+		Interactive:     true,
+		ShowRiskScores:  verbose,
+		ShowMetadata:    verbose,
+		ColorScheme:     "risk",
+		Layout:          "force",
+		MaxNodes:        500,
+		MinRiskScore:    0.0,
+		OutputDirectory: "./output",
+	}
+	
+	// Create visualizer
+	visualizer := visualization.NewGraphVisualizer(config)
+	
+	// Generate output filename
+	baseName := filepath.Base(scanPath)
+	if baseName == "." {
+		baseName = "dependency-graph"
+	}
+	timestamp := time.Now().Format("20060102-150405")
+	outputPath := filepath.Join("./output", fmt.Sprintf("%s-interactive-%s.html", baseName, timestamp))
+	
+	// Generate interactive graph
+	return visualizer.GenerateInteractiveGraph(result, outputPath)
+}
+
+// outputAdvancedSVG generates an advanced SVG dependency graph
+func outputAdvancedSVG(result *analyzer.ScanResult, scanPath string, verbose bool) error {
+	// Create visualization config
+	config := &visualization.VisualizationConfig{
+		Interactive:     false,
+		ShowRiskScores:  verbose,
+		ShowMetadata:    verbose,
+		ColorScheme:     "risk",
+		Layout:          "force",
+		MaxNodes:        500,
+		MinRiskScore:    0.0,
+		OutputDirectory: "./output",
+	}
+	
+	// Create visualizer
+	visualizer := visualization.NewGraphVisualizer(config)
+	
+	// Generate output filename
+	baseName := filepath.Base(scanPath)
+	if baseName == "." {
+		baseName = "dependency-graph"
+	}
+	timestamp := time.Now().Format("20060102-150405")
+	outputPath := filepath.Join("./output", fmt.Sprintf("%s-advanced-%s.svg", baseName, timestamp))
+	
+	// Generate advanced SVG
+	return visualizer.GenerateAdvancedSVG(result, outputPath)
+}
+
+// extractPackageNameFromPath extracts package name from scan path
+func extractPackageNameFromPath(path string) string {
+	if path == "." {
+		return "local-project"
+	}
+	// Extract last directory name as package name
+	parts := strings.Split(strings.TrimSuffix(path, "/"), "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return "unknown"
+}
+
+// convertThreatsToDatabase converts analyzer threats to database format
+func convertThreatsToDatabase(threats []types.Threat) []database.ThreatResult {
+	var dbThreats []database.ThreatResult
+	for _, threat := range threats {
+		dbThreat := database.ThreatResult{
+			Type:        string(threat.Type),
+			Severity:    threat.Severity.String(),
+			Confidence:  threat.Confidence,
+			Description: threat.Description,
+			Source:      threat.DetectionMethod,
+		}
+		dbThreats = append(dbThreats, dbThreat)
+	}
+	return dbThreats
+}
+
+// Helper functions for environment variable parsing
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvIntOrDefault(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}
+
+// performDepthAnalysis performs comprehensive dependency depth analysis
+func performDepthAnalysis(result *analyzer.ScanResult, scanPath string, verbose bool) error {
+	if result == nil {
+		return fmt.Errorf("no scan result available")
+	}
+
+	// Build dependency graph from scan result
+	depGraph, err := buildDependencyGraphFromScanResult(result)
+	if err != nil {
+		return fmt.Errorf("failed to build dependency graph: %w", err)
+	}
+
+	// Initialize depth analyzer with default config
+	cfg := createDefaultConfig()
+	loggerInstance := logger.New()
+	depthAnalyzer := scanner.NewDependencyDepthAnalyzer(&cfg.SupplyChain.DependencyGraph, loggerInstance)
+
+	// Perform depth analysis
+	ctx := context.Background()
+	depthResult, err := depthAnalyzer.AnalyzeDependencyDepth(ctx, depGraph)
+	if err != nil {
+		return fmt.Errorf("failed to analyze dependency depth: %w", err)
+	}
+
+	// Output results
+	return outputDepthAnalysisResults(depthResult, scanPath, verbose)
+}
+
+// buildDependencyGraphFromScanResult converts scan result to dependency graph
+func buildDependencyGraphFromScanResult(result *analyzer.ScanResult) (*scanner.DependencyGraph, error) {
+	graph := &scanner.DependencyGraph{
+		Nodes: make([]scanner.DependencyNode, 0),
+		Edges: make([]scanner.DependencyEdge, 0),
+		Depth: 0,
+		Stats: scanner.GraphStatistics{},
+	}
+
+	// Extract packages from threats since analyzer.ScanResult doesn't have Packages field
+	packageMap := make(map[string]*types.Package)
+	for _, threat := range result.Threats {
+		// Create package from threat information
+		pkg := &types.Package{
+			Name:     threat.Package,
+			Version:  threat.Version,
+			Registry: threat.Registry,
+		}
+		packageMap[threat.Package] = pkg
+	}
+
+	// Add nodes from packages
+	for _, pkg := range packageMap {
+		riskScore := determineRiskScore(result.Threats, pkg.Name)
+		node := scanner.DependencyNode{
+			ID:       pkg.Name,
+			Package:  pkg,
+			Level:    1,
+			Direct:   true,
+			RiskData: &scanner.NodeRiskData{
+				RiskScore:    riskScore,
+				ThreatCount:  countThreatsForPackage(result.Threats, pkg.Name),
+				IsVulnerable: riskScore > 0.5,
+			},
+			Metadata: buildNodeMetadata(*pkg),
+		}
+		graph.Nodes = append(graph.Nodes, node)
+	}
+
+	// Add edges (simplified - create basic dependency relationships)
+	nodes := graph.Nodes
+	for i := 0; i < len(nodes)-1; i++ {
+		edge := scanner.DependencyEdge{
+			From:         nodes[i].ID,
+			To:           nodes[i+1].ID,
+			RelationType: "dependency",
+			Constraints:  "",
+			Metadata:     make(map[string]interface{}),
+		}
+		graph.Edges = append(graph.Edges, edge)
+	}
+
+	// Update graph statistics
+	graph.Stats = scanner.GraphStatistics{
+		TotalNodes:     len(graph.Nodes),
+		TotalEdges:     len(graph.Edges),
+		DirectDeps:     len(graph.Nodes),
+		TransitiveDeps: 0,
+		MaxDepth:       1,
+		CyclicDeps:     0,
+	}
+
+	return graph, nil
+}
+
+// determineRiskScore determines risk score based on threats for a package
+func determineRiskScore(threats []types.Threat, packageName string) float64 {
+	totalScore := 0.0
+	count := 0
+
+	for _, threat := range threats {
+		if threat.Package == packageName {
+			count++
+			switch threat.Severity {
+			case types.SeverityCritical:
+				totalScore += 1.0
+			case types.SeverityHigh:
+				totalScore += 0.8
+			case types.SeverityMedium:
+				totalScore += 0.5
+			case types.SeverityLow:
+				totalScore += 0.2
+			}
+		}
+	}
+
+	// Normalize score to 0-1 range
+	if totalScore > 1.0 {
+		return 1.0
+	}
+	return totalScore
+}
+
+// countThreatsForPackage counts threats for a specific package
+func countThreatsForPackage(threats []types.Threat, packageName string) int {
+	count := 0
+	for _, threat := range threats {
+		if threat.Package == packageName {
+			count++
+		}
+	}
+	return count
+}
+
+// buildNodeMetadata builds metadata for dependency node
+func buildNodeMetadata(pkg types.Package) map[string]interface{} {
+	metadata := make(map[string]interface{})
+	metadata["package_type"] = string(pkg.Type)
+	metadata["dependency_count"] = len(pkg.Dependencies)
+	metadata["registry"] = pkg.Registry
+	return metadata
+}
+
+// outputDepthAnalysisResults outputs the depth analysis results
+func outputDepthAnalysisResults(result *scanner.DepthAnalysisResult, scanPath string, verbose bool) error {
+	if result == nil {
+		return fmt.Errorf("no depth analysis result available")
+	}
+
+	// Print summary
+	printDepthAnalysisSummary(result, scanPath)
+
+	// Print detailed results if verbose
+	if verbose {
+		printDetailedDepthAnalysis(result)
+	}
+
+	// Save results to file
+	return saveDepthAnalysisToFile(result, scanPath)
+}
+
+// printDepthAnalysisSummary prints a summary of depth analysis
+func printDepthAnalysisSummary(result *scanner.DepthAnalysisResult, scanPath string) {
+	fmt.Printf("\n📊 Dependency Depth Analysis Summary\n")
+	fmt.Printf("═══════════════════════════════════════\n")
+	fmt.Printf("📁 Target: %s\n", scanPath)
+	fmt.Printf("📏 Maximum Depth: %d\n", result.MaxDepth)
+	fmt.Printf("📈 Average Depth: %.2f\n", result.AverageDepth)
+	fmt.Printf("📦 Total Dependencies: %d\n", result.DepthMetrics.TotalPackages)
+	fmt.Printf("🔍 Deep Dependencies: %d\n", len(result.DeepDependencies))
+	fmt.Printf("⚠️  Critical Paths: %d\n", len(result.CriticalPaths))
+	fmt.Printf("🎯 Transitive Risks: %d\n", len(result.TransitiveRisks))
+	fmt.Println()
+
+	// Print depth distribution
+	fmt.Printf("📊 Depth Distribution:\n")
+	for depth, count := range result.DepthDistribution {
+		percentage := float64(count) / float64(result.DepthMetrics.TotalPackages) * 100
+		fmt.Printf("   Depth %d: %d dependencies (%.1f%%)\n", depth, count, percentage)
+	}
+	fmt.Println()
+
+	// Print risk by depth
+	if len(result.RiskByDepth) > 0 {
+		fmt.Printf("⚠️  Risk Distribution by Depth:\n")
+		for depth, riskScore := range result.RiskByDepth {
+			fmt.Printf("   Depth %d: Average Risk Score %.2f\n", depth, riskScore)
+		}
+		fmt.Println()
+	}
+
+	// Print recommendations
+	if len(result.Recommendations) > 0 {
+		fmt.Printf("💡 Recommendations:\n")
+		for i, rec := range result.Recommendations {
+			fmt.Printf("   %d. %s\n", i+1, rec)
+		}
+		fmt.Println()
+	}
+}
+
+// printDetailedDepthAnalysis prints detailed depth analysis information
+func printDetailedDepthAnalysis(result *scanner.DepthAnalysisResult) {
+	// Print critical paths
+	if len(result.CriticalPaths) > 0 {
+		fmt.Printf("🔍 Critical Dependency Paths:\n")
+		for i, path := range result.CriticalPaths {
+			fmt.Printf("   %d. %s (Depth: %d, Risk Score: %.2f)\n", i+1, strings.Join(path.Path, " → "), path.Depth, path.RiskScore)
+		if path.Criticality != "" {
+			fmt.Printf("      Criticality: %s\n", path.Criticality)
+		}
+		}
+		fmt.Println()
+	}
+
+	// Print deep dependencies
+	if len(result.DeepDependencies) > 0 {
+		fmt.Printf("🕳️  Deep Dependencies (Depth > 5):\n")
+		for i, dep := range result.DeepDependencies {
+			fmt.Printf("   %d. %s (Depth: %d)\n", i+1, dep.PackageName, dep.Depth)
+		if !dep.Maintenance.LastUpdate.IsZero() {
+			fmt.Printf("      Last Update: %s\n", dep.Maintenance.LastUpdate.Format("2006-01-02"))
+		}
+		}
+		fmt.Println()
+	}
+
+	// Print transitive risks
+	if len(result.TransitiveRisks) > 0 {
+		fmt.Printf("⚠️  Transitive Security Risks:\n")
+		for i, risk := range result.TransitiveRisks {
+			fmt.Printf("   %d. %s -> %s (Severity: %s, Score: %.2f)\n", i+1, risk.SourcePackage, risk.TargetPackage, risk.Severity, risk.RiskScore)
+			fmt.Printf("      Path: %s\n", strings.Join(risk.Path, " → "))
+			fmt.Printf("      Propagation: %s, Depth: %d\n", risk.PropagationType, risk.Depth)
+		}
+		fmt.Println()
+	}
+}
+
+// saveDepthAnalysisToFile saves depth analysis results to a JSON file
+func saveDepthAnalysisToFile(result *scanner.DepthAnalysisResult, scanPath string) error {
+	// Create output directory if it doesn't exist
+	outputDir := "output"
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	// Generate filename
+	packageName := extractPackageNameFromPath(scanPath)
+	timestamp := time.Now().Format("20060102-150405")
+	filename := fmt.Sprintf("%s/%s-depth-analysis-%s.json", outputDir, packageName, timestamp)
+
+	// Convert to JSON
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal depth analysis result: %w", err)
+	}
+
+	// Write to file
+	if err := os.WriteFile(filename, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write depth analysis file: %w", err)
+	}
+
+	fmt.Printf("💾 Depth analysis results saved to: %s\n", filename)
+	return nil
+}
+
+// performDependencyGraphAnalysis performs comprehensive dependency graph analysis
+func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, outputFormat string, verbose bool) error {
+	// Initialize configuration
+	cfg := createDefaultConfig()
+	
+	// Configure supply chain settings
+	if cfg.SupplyChain == nil {
+		cfg.SupplyChain = &config.SupplyChainConfig{}
+	}
+	cfg.SupplyChain.Enabled = true
+	cfg.SupplyChain.DependencyGraph = config.DependencyGraphConfig{
+		Enabled:                 true,
+		MaxDepth:                maxDepth,
+		TransitiveAnalysis:      true,
+		ConfusionDetection:      true,
+		SupplyChainRiskAnalysis: true,
+	}
+	
+	// Initialize analyzer
+	analyzerInstance, err := analyzer.New(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to initialize analyzer: %w", err)
+	}
+	
+	fmt.Printf("🔍 Analyzing dependency graph for: %s\n", path)
+	fmt.Printf("📊 Configuration: Max Depth=%d, Include Dev=%v, Output=%s\n", maxDepth, includeDev, outputFormat)
+	fmt.Println()
+	
+	// Perform scan with supply chain analysis
+	scanOptions := &analyzer.ScanOptions{
+		OutputFormat:           outputFormat,
+		IncludeDevDependencies: includeDev,
+		EnableSupplyChain:      true,
+		AdvancedAnalysis:       true,
+	}
+	
+	result, err := analyzerInstance.Scan(path, scanOptions)
+	if err != nil {
+		return fmt.Errorf("failed to perform dependency graph analysis: %w", err)
+	}
+	
+	// Display results based on output format
+	switch outputFormat {
+	case "json":
+		return outputDependencyGraphJSON(result, verbose)
+	case "dot":
+		return outputDependencyGraphDOT(result, verbose)
+	case "svg":
+		return outputDependencyGraphSVG(result, verbose)
+	case "interactive":
+		return outputInteractiveGraph(result, path, verbose)
+	case "advanced-svg":
+		return outputAdvancedSVG(result, path, verbose)
+	case "depth-analysis":
+		return performDepthAnalysis(result, path, verbose)
+	default:
+		return outputDependencyGraphTable(result, verbose)
+	}
+}
+
+// outputDependencyGraphJSON outputs dependency graph analysis in JSON format
+func outputDependencyGraphJSON(result *analyzer.ScanResult, verbose bool) error {
+	if result == nil {
+		return fmt.Errorf("no scan result available")
+	}
+	
+	// Create dependency graph summary
+	graphSummary := map[string]interface{}{
+		"scan_id":        result.ScanID,
+		"path":           result.Path,
+		"timestamp":      result.Timestamp,
+		"duration":       result.Duration,
+		"total_packages": result.TotalPackages,
+		"threats":        len(result.Threats),
+		"warnings":       len(result.Warnings),
+		"summary":        result.Summary,
+		"metadata":       result.Metadata,
+	}
+	
+	if verbose {
+		graphSummary["detailed_threats"] = result.Threats
+		graphSummary["detailed_warnings"] = result.Warnings
+	}
+	
+	data, err := json.MarshalIndent(graphSummary, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	
+	fmt.Println(string(data))
+	return nil
+}
+
+// outputDependencyGraphDOT outputs dependency graph in DOT format for Graphviz
+func outputDependencyGraphDOT(result *analyzer.ScanResult, verbose bool) error {
+	fmt.Println("digraph DependencyGraph {")
+	fmt.Println("  rankdir=TB;")
+	fmt.Println("  node [shape=box, style=filled];")
+	fmt.Println()
+	
+	// Add root node
+	fmt.Printf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n", 
+		result.Path, result.Path, result.TotalPackages)
+	
+	// Add threat nodes
+	for i, threat := range result.Threats {
+		color := "lightcoral"
+		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+			color = "red"
+		}
+		fmt.Printf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n", 
+			i, color, threat.Package, threat.Type)
+		fmt.Printf("  \"%s\" -> \"threat_%d\";\n", result.Path, i)
+	}
+	
+	fmt.Println("}")
+	return nil
+}
+
+// outputDependencyGraphSVG outputs dependency graph in SVG format
+func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
+	fmt.Println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+	fmt.Println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\">")
+	fmt.Println("  <title>Dependency Graph Analysis</title>")
+	
+	// Background
+	fmt.Println("  <rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>")
+	
+	// Title
+	fmt.Printf("  <text x=\"400\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path)
+	
+	// Root node
+	fmt.Println("  <circle cx=\"400\" cy=\"100\" r=\"30\" fill=\"#007bff\" stroke=\"#0056b3\" stroke-width=\"2\"/>")
+	fmt.Printf("  <text x=\"400\" y=\"105\" text-anchor=\"middle\" fill=\"white\" font-size=\"12\">%d pkg</text>\n", result.TotalPackages)
+	
+	// Threat nodes
+	y := 200
+	for i, threat := range result.Threats {
+		x := 200 + (i%3)*200
+		if i > 0 && i%3 == 0 {
+			y += 100
+		}
+		
+		color := "#ffc107" // warning
+		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+			color = "#dc3545" // danger
+		}
+		
+		fmt.Printf("  <circle cx=\"%d\" cy=\"%d\" r=\"25\" fill=\"%s\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y, color)
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\">%s</text>\n", x, y-5, threat.Package)
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"8\">%s</text>\n", x, y+8, threat.Severity)
+		
+		// Connection line
+		fmt.Printf("  <line x1=\"400\" y1=\"130\" x2=\"%d\" y2=\"%d\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y-25)
+	}
+	
+	// Legend
+	fmt.Println("  <text x=\"50\" y=\"550\" font-size=\"12\" font-weight=\"bold\">Legend:</text>")
+	fmt.Println("  <circle cx=\"70\" cy=\"570\" r=\"8\" fill=\"#007bff\"/>")
+	fmt.Println("  <text x=\"85\" y=\"575\" font-size=\"10\">Root Package</text>")
+	fmt.Println("  <circle cx=\"200\" cy=\"570\" r=\"8\" fill=\"#dc3545\"/>")
+	fmt.Println("  <text x=\"215\" y=\"575\" font-size=\"10\">High/Critical Threat</text>")
+	fmt.Println("  <circle cx=\"350\" cy=\"570\" r=\"8\" fill=\"#ffc107\"/>")
+	fmt.Println("  <text x=\"365\" y=\"575\" font-size=\"10\">Medium/Low Threat</text>")
+	
+	fmt.Println("</svg>")
+	return nil
+}
+
+// outputDependencyGraphTable outputs dependency graph analysis in table format
+func outputDependencyGraphTable(result *analyzer.ScanResult, verbose bool) error {
+	fmt.Println("\n🔍 DEPENDENCY GRAPH ANALYSIS RESULTS")
+	fmt.Println("═══════════════════════════════════════")
+	fmt.Printf("📁 Target Path: %s\n", result.Path)
+	fmt.Printf("🕒 Scan Time: %s\n", result.Timestamp.Format("2006-01-02 15:04:05"))
+	fmt.Printf("⏱️  Duration: %v\n", result.Duration)
+	fmt.Printf("📦 Total Packages: %d\n", result.TotalPackages)
+	fmt.Printf("⚠️  Threats Found: %d\n", len(result.Threats))
+	fmt.Printf("🔔 Warnings: %d\n", len(result.Warnings))
+	fmt.Println()
+	
+	if len(result.Threats) > 0 {
+		fmt.Println("🚨 DETECTED THREATS:")
+		fmt.Println("────────────────────")
+		for i, threat := range result.Threats {
+			fmt.Printf("%d. Package: %s\n", i+1, threat.Package)
+			fmt.Printf("   Type: %s\n", threat.Type)
+			fmt.Printf("   Severity: %s\n", threat.Severity)
+			fmt.Printf("   Description: %s\n", threat.Description)
+			if verbose && threat.Evidence != nil {
+				fmt.Printf("   Evidence: %v\n", threat.Evidence)
+			}
+			fmt.Println()
+		}
+	}
+	
+	if len(result.Warnings) > 0 && verbose {
+		fmt.Println("⚠️  WARNINGS:")
+		fmt.Println("─────────────")
+		for i, warning := range result.Warnings {
+			fmt.Printf("%d. %s\n", i+1, warning.Message)
+		}
+		fmt.Println()
+	}
+	
+	// Display summary
+	// Always output summary since ScanSummary is not a pointer
+	fmt.Println("📊 ANALYSIS SUMMARY:")
+	fmt.Println("────────────────────")
+	fmt.Printf("Critical Threats: %d\n", result.Summary.CriticalThreats)
+	fmt.Printf("High Threats: %d\n", result.Summary.HighThreats)
+	fmt.Printf("Medium Threats: %d\n", result.Summary.MediumThreats)
+	fmt.Printf("Low Threats: %d\n", result.Summary.LowThreats)
+	fmt.Printf("Total Warnings: %d\n", result.Summary.TotalWarnings)
+	fmt.Printf("Clean Packages: %d\n", result.Summary.CleanPackages)
+	fmt.Println()
+	
+	// Display metadata if verbose
+	if verbose && result.Metadata != nil {
+		fmt.Println("🔧 METADATA:")
+		fmt.Println("────────────")
+		for key, value := range result.Metadata {
+			fmt.Printf("%s: %v\n", key, value)
+		}
+		fmt.Println()
+	}
+	
+	return nil
 }

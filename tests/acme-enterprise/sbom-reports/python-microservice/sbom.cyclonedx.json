@@ -1,0 +1,25 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.4",
+  "serialNumber": "urn:uuid:cd838310-3ee3-4253-8ef3-e77ac9eb5aca",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-08-20T09:04:00Z",
+    "tools": [
+      {
+        "vendor": "ACME Enterprise",
+        "name": "Typosentinel",
+        "version": "2.1.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "python-microservice",
+      "name": "python-microservice",
+      "version": "1.0.0",
+      "purl": "pkg:pypi/python-microservice@1.0.0"
+    }
+  },
+  "components": [],
+  "vulnerabilities": []
+}

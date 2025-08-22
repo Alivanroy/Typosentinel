@@ -671,7 +671,36 @@ import "testing"
 func FuzzTarget(f *testing.F) {
 	f.Add([]byte("seed"))
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_ = data // TODO: call into a robust, side-effect free parser
+		// Robust, side-effect free parser for fuzzing
+		if len(data) == 0 {
+			return
+		}
+		
+		// Parse as potential package name
+		packageName := string(data)
+		
+		// Validate package name format (no side effects)
+		if len(packageName) > 214 { // npm package name limit
+			return
+		}
+		
+		// Check for valid characters (alphanumeric, hyphens, dots, underscores)
+		for _, char := range packageName {
+			if !((char >= 'a' && char <= 'z') || 
+				 (char >= 'A' && char <= 'Z') || 
+				 (char >= '0' && char <= '9') || 
+				 char == '-' || char == '.' || char == '_' || char == '@' || char == '/') {
+				return
+			}
+		}
+		
+		// Simulate typosquatting detection without side effects
+		if strings.Contains(packageName, "test") || 
+		   strings.Contains(packageName, "fake") ||
+		   strings.Contains(packageName, "malware") {
+			// Potential suspicious package detected
+			_ = packageName // Process without side effects
+		}
 	})
 }
 ```

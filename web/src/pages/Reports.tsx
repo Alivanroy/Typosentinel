@@ -18,132 +18,20 @@ import {
   Package,
   X,
   Send,
-  Settings,
-  Users
+  RefreshCw
 } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
-import { useReports } from '../hooks/useApi'
+import { useReports, useReportTemplates } from '../hooks/useApi'
 import { useNotifications } from '../contexts/NotificationContext'
 
-const reports = [
-  {
-    id: 'RPT-001',
-    title: 'Weekly Security Summary',
-    type: 'security',
-    description: 'Comprehensive security analysis for the past week including vulnerability scans and threat assessments.',
-    generatedDate: '2023-10-20',
-    status: 'completed',
-    format: 'PDF',
-    size: '2.4 MB',
-    author: 'Security Team',
-    tags: ['weekly', 'security', 'vulnerabilities'],
-    metrics: {
-      vulnerabilities: 12,
-      scans: 45,
-      packages: 234
-    }
-  },
-  {
-    id: 'RPT-002',
-    title: 'Dependency Audit Report',
-    type: 'dependencies',
-    description: 'Detailed analysis of all project dependencies, including outdated packages and security recommendations.',
-    generatedDate: '2023-10-18',
-    status: 'completed',
-    format: 'PDF',
-    size: '1.8 MB',
-    author: 'DevOps Team',
-    tags: ['dependencies', 'audit', 'packages'],
-    metrics: {
-      vulnerabilities: 8,
-      scans: 23,
-      packages: 156
-    }
-  },
-  {
-    id: 'RPT-003',
-    title: 'Compliance Assessment',
-    type: 'compliance',
-    description: 'Monthly compliance report covering security standards and regulatory requirements.',
-    generatedDate: '2023-10-15',
-    status: 'generating',
-    format: 'PDF',
-    size: 'Generating...',
-    author: 'Compliance Team',
-    tags: ['compliance', 'monthly', 'standards'],
-    metrics: {
-      vulnerabilities: 0,
-      scans: 67,
-      packages: 289
-    }
-  },
-  {
-    id: 'RPT-004',
-    title: 'Vulnerability Trends Analysis',
-    type: 'analytics',
-    description: 'Quarterly analysis of vulnerability trends and security improvements over time.',
-    generatedDate: '2023-10-10',
-    status: 'completed',
-    format: 'PDF',
-    size: '3.2 MB',
-    author: 'Analytics Team',
-    tags: ['quarterly', 'trends', 'analytics'],
-    metrics: {
-      vulnerabilities: 45,
-      scans: 156,
-      packages: 567
-    }
-  },
-  {
-    id: 'RPT-005',
-    title: 'Executive Summary',
-    type: 'executive',
-    description: 'High-level security overview for executive leadership and stakeholders.',
-    generatedDate: '2023-10-05',
-    status: 'completed',
-    format: 'PDF',
-    size: '1.2 MB',
-    author: 'Security Team',
-    tags: ['executive', 'summary', 'leadership'],
-    metrics: {
-      vulnerabilities: 23,
-      scans: 89,
-      packages: 345
-    }
-  }
-]
-
-const reportTemplates = [
-  {
-    id: 'template-1',
-    name: 'Security Summary',
-    description: 'Weekly or monthly security overview',
-    icon: Shield,
-    color: 'text-blue-600 bg-blue-100'
-  },
-  {
-    id: 'template-2',
-    name: 'Vulnerability Report',
-    description: 'Detailed vulnerability analysis',
-    icon: Bug,
-    color: 'text-red-600 bg-red-100'
-  },
-  {
-    id: 'template-3',
-    name: 'Dependency Audit',
-    description: 'Package and dependency analysis',
-    icon: Package,
-    color: 'text-green-600 bg-green-100'
-  },
-  {
-    id: 'template-4',
-    name: 'Compliance Report',
-    description: 'Regulatory compliance assessment',
-    icon: FileBarChart,
-    color: 'text-purple-600 bg-purple-100'
-  }
-]
+// Icon mapping for templates
+const iconMap = {
+  Shield,
+  Bug,
+  Package,
+  FileBarChart
+}
 
 export function Reports() {
   const [filter, setFilter] = useState('all')
@@ -155,18 +43,46 @@ export function Reports() {
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedReport, setSelectedReport] = useState<any>(null)
   const [selectedReports, setSelectedReports] = useState<string[]>([])
-  const [showBulkActions, setShowBulkActions] = useState(false)
+  // const [showBulkActions] = useState(false)
 
   const {
     reports: apiReports,
+    loading,
+    error,
     generateReport,
     downloadReport,
     scheduleReport 
   } = useReports()
+  const {
+    templates: reportTemplates = [],
+    loading: templatesLoading
+  } = useReportTemplates()
   const { success, showError, info } = useNotifications()
 
-  // Use API reports if available, otherwise fall back to mock data
-  const reportsData = apiReports || reports
+  // Use API reports from the database
+  const reportsData = apiReports || []
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading reports...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">
+        <AlertTriangle className="w-8 h-8 mr-2" />
+        <span className="text-lg">Error loading reports: {error}</span>
+        <Button onClick={() => window.location.reload()} className="ml-4">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Retry
+        </Button>
+      </div>
+    )
+  }
 
   const filteredReports = reportsData.filter(report => {
     const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -193,20 +109,10 @@ export function Reports() {
 
   const handleDownloadReport = async (reportId: string, title: string) => {
     try {
-      const result = await downloadReport(reportId, 'PDF')
-      if (result.success) {
-        // Create a mock PDF download
-        const content = `Report: ${title}\nGenerated: ${new Date().toISOString()}\n\nThis is a mock PDF content.`
-        const blob = new Blob([content], { type: 'application/pdf' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${title.replace(/\s+/g, '_')}.pdf`
-        a.click()
-        window.URL.revokeObjectURL(url)
-        success('Report downloaded successfully!')
-      }
+      const blob = await downloadReport(reportId, `${title.replace(/\s+/g, '_')}.pdf`)
+      success('Report downloaded successfully!')
     } catch (error) {
+      console.error('Download error:', error)
       showError('Failed to download report')
     }
   }
@@ -245,7 +151,7 @@ export function Reports() {
         }
       }
       setSelectedReports([])
-      setShowBulkActions(false)
+      // setShowBulkActions(false)
       success(`Downloaded ${selectedReports.length} reports successfully!`)
     } catch (error) {
       showError('Failed to download reports')
@@ -259,7 +165,7 @@ export function Reports() {
       // In a real app, this would call an API to delete reports
       info(`Deleted ${selectedReports.length} reports`)
       setSelectedReports([])
-      setShowBulkActions(false)
+      // setShowBulkActions(false)
     } catch (error) {
       showError('Failed to delete reports')
     }
@@ -575,11 +481,23 @@ export function Reports() {
                             by {report.author}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm">
+                        <div className="flex items-center space-x-4 text-sm flex-wrap">
                           <div className="flex items-center text-red-600">
                             <Bug className="w-4 h-4 mr-1" />
                             {report.metrics?.vulnerabilities || 0} vulnerabilities
                           </div>
+                          {report.metrics?.critical > 0 && (
+                            <div className="flex items-center text-red-800">
+                              <AlertTriangle className="w-4 h-4 mr-1" />
+                              {report.metrics.critical} critical
+                            </div>
+                          )}
+                          {report.metrics?.high > 0 && (
+                            <div className="flex items-center text-orange-600">
+                              <AlertTriangle className="w-4 h-4 mr-1" />
+                              {report.metrics.high} high
+                            </div>
+                          )}
                           <div className="flex items-center text-blue-600">
                             <Shield className="w-4 h-4 mr-1" />
                             {report.metrics?.scans || 0} scans
@@ -588,6 +506,12 @@ export function Reports() {
                             <Package className="w-4 h-4 mr-1" />
                             {report.metrics?.packages || 0} packages
                           </div>
+                          {report.metrics?.fixedVersionsAvailable > 0 && (
+                            <div className="flex items-center text-green-700">
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              {report.metrics.fixedVersionsAvailable} fixes available
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-1 mt-3">
                           {report.tags?.map((tag: string) => (
@@ -635,7 +559,13 @@ export function Reports() {
           transition={{ delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          {reportTemplates.map((template, index) => (
+          {templatesLoading ? (
+            <div className="col-span-full flex items-center justify-center py-8">
+              <RefreshCw className="w-6 h-6 animate-spin text-primary mr-2" />
+              <span>Loading templates...</span>
+            </div>
+          ) : (
+            Array.isArray(reportTemplates) && reportTemplates.map((template, index) => (
             <motion.div
               key={template.id}
               initial={{ opacity: 0, y: 20 }}
@@ -645,7 +575,10 @@ export function Reports() {
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-6 text-center">
                   <div className={`w-16 h-16 rounded-full ${template.color} flex items-center justify-center mx-auto mb-4`}>
-                    <template.icon className="w-8 h-8" />
+                    {(() => {
+                      const IconComponent = iconMap[template.icon as keyof typeof iconMap] || FileText
+                      return <IconComponent className="w-8 h-8" />
+                    })()}
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
                   <p className="text-gray-600 text-sm mb-4">{template.description}</p>
@@ -656,7 +589,8 @@ export function Reports() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          ))
+          )}
         </motion.div>
       )}
 
@@ -742,20 +676,30 @@ export function Reports() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reportTemplates.map((template) => (
+              {templatesLoading ? (
+                <div className="col-span-full flex items-center justify-center py-8">
+                  <RefreshCw className="w-6 h-6 animate-spin text-primary mr-2" />
+                  <span>Loading templates...</span>
+                </div>
+              ) : (
+                Array.isArray(reportTemplates) && reportTemplates.map((template) => (
                 <Card key={template.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
                   handleGenerateReport(template.id)
                   setShowGenerateModal(false)
                 }}>
                   <CardContent className="p-4 text-center">
                     <div className={`w-12 h-12 rounded-full ${template.color} flex items-center justify-center mx-auto mb-3`}>
-                      <template.icon className="w-6 h-6" />
+                      {(() => {
+                        const IconComponent = iconMap[template.icon as keyof typeof iconMap] || FileText
+                        return <IconComponent className="w-6 h-6" />
+                      })()}
                     </div>
                     <h4 className="font-semibold mb-1">{template.name}</h4>
                     <p className="text-gray-600 text-sm">{template.description}</p>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </div>
             <div className="flex justify-end pt-4">
               <Button variant="outline" onClick={() => setShowGenerateModal(false)}>
@@ -819,13 +763,111 @@ export function Reports() {
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Report Preview</h4>
-                <div className="bg-white p-4 rounded border min-h-[200px]">
-                  <p className="text-gray-600 text-center py-8">
-                    📄 Report content would be displayed here in a real application.
-                    <br />
-                    This could include charts, tables, and detailed analysis.
-                  </p>
+                <h4 className="font-semibold mb-2">Vulnerability Breakdown</h4>
+                <div className="bg-white p-4 rounded border">
+                  {selectedReport.metrics && selectedReport.metrics.vulnerabilities > 0 ? (
+                     <div className="space-y-4">
+                       {/* Generate vulnerability breakdown from metrics */}
+                       {selectedReport.metrics.critical > 0 && (
+                         <div className="border-l-4 border-red-500 pl-4 py-2">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium text-gray-900">Critical Vulnerabilities</h5>
+                             <span className="px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-800">
+                               Critical
+                             </span>
+                           </div>
+                           <div className="text-sm text-gray-600 mb-1">
+                             <span className="font-medium">Count:</span> {selectedReport.metrics.critical}
+                           </div>
+                           <div className="text-sm text-gray-600">
+                             <span className="font-medium">Status:</span> Requires immediate attention
+                           </div>
+                           <div className="text-sm text-blue-600">
+                             <span className="font-medium">Recommendation:</span> Update packages immediately
+                           </div>
+                         </div>
+                       )}
+                       {selectedReport.metrics.high > 0 && (
+                         <div className="border-l-4 border-orange-500 pl-4 py-2">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium text-gray-900">High Severity Vulnerabilities</h5>
+                             <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-800">
+                               High
+                             </span>
+                           </div>
+                           <div className="text-sm text-gray-600 mb-1">
+                             <span className="font-medium">Count:</span> {selectedReport.metrics.high}
+                           </div>
+                           <div className="text-sm text-gray-600">
+                             <span className="font-medium">Status:</span> Should be addressed soon
+                           </div>
+                           <div className="text-sm text-blue-600">
+                             <span className="font-medium">Recommendation:</span> Plan updates within 7 days
+                           </div>
+                         </div>
+                       )}
+                       {selectedReport.metrics.medium > 0 && (
+                         <div className="border-l-4 border-yellow-500 pl-4 py-2">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium text-gray-900">Medium Severity Vulnerabilities</h5>
+                             <span className="px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-800">
+                               Medium
+                             </span>
+                           </div>
+                           <div className="text-sm text-gray-600 mb-1">
+                             <span className="font-medium">Count:</span> {selectedReport.metrics.medium}
+                           </div>
+                           <div className="text-sm text-gray-600">
+                             <span className="font-medium">Status:</span> Monitor and plan updates
+                           </div>
+                           <div className="text-sm text-blue-600">
+                             <span className="font-medium">Recommendation:</span> Include in next maintenance cycle
+                           </div>
+                         </div>
+                       )}
+                       {selectedReport.metrics.low > 0 && (
+                         <div className="border-l-4 border-gray-500 pl-4 py-2">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium text-gray-900">Low Severity Vulnerabilities</h5>
+                             <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
+                               Low
+                             </span>
+                           </div>
+                           <div className="text-sm text-gray-600 mb-1">
+                             <span className="font-medium">Count:</span> {selectedReport.metrics.low}
+                           </div>
+                           <div className="text-sm text-gray-600">
+                             <span className="font-medium">Status:</span> Low priority
+                           </div>
+                           <div className="text-sm text-blue-600">
+                             <span className="font-medium">Recommendation:</span> Address when convenient
+                           </div>
+                         </div>
+                       )}
+                       {selectedReport.metrics.fixedVersionsAvailable > 0 && (
+                         <div className="border-l-4 border-green-500 pl-4 py-2">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium text-gray-900">Fixes Available</h5>
+                             <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-800">
+                               Fixable
+                             </span>
+                           </div>
+                           <div className="text-sm text-gray-600 mb-1">
+                             <span className="font-medium">Count:</span> {selectedReport.metrics.fixedVersionsAvailable}
+                           </div>
+                           <div className="text-sm text-green-600">
+                             <span className="font-medium">Progress:</span> {Math.round((selectedReport.metrics.fixedVersionsAvailable / selectedReport.metrics.vulnerabilities) * 100)}% of vulnerabilities have fixes available
+                           </div>
+                         </div>
+                       )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-center py-8">
+                      📄 No vulnerabilities detected in this report.
+                      <br />
+                      All scanned packages appear to be secure.
+                    </p>
+                  )}
                 </div>
               </div>
 

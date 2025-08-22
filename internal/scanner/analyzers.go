@@ -83,6 +83,18 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 
 	var packages []*types.Package
 
+	// Helper function to create package metadata
+	createPackageMetadata := func(name, version string) *types.PackageMetadata {
+		return &types.PackageMetadata{
+			Name:        name,
+			Version:     version,
+			Registry:    "npm",
+			Description: "Package metadata will be fetched during analysis", // Placeholder description
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+	}
+
 	// Extract production dependencies
 	if deps, ok := packageJSON["dependencies"].(map[string]interface{}); ok {
 		for name, version := range deps {
@@ -92,6 +104,7 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 					Version:  versionStr,
 					Registry: "npm",
 					Type:     "production",
+					Metadata: createPackageMetadata(name, versionStr),
 				}
 				packages = append(packages, pkg)
 			}
@@ -108,6 +121,7 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 						Version:  versionStr,
 						Registry: "npm",
 						Type:     "development",
+						Metadata: createPackageMetadata(name, versionStr),
 					}
 					packages = append(packages, pkg)
 				}
@@ -124,6 +138,7 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 					Version:  versionStr,
 					Registry: "npm",
 					Type:     "peer",
+					Metadata: createPackageMetadata(name, versionStr),
 				}
 				packages = append(packages, pkg)
 			}
@@ -139,6 +154,7 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 					Version:  versionStr,
 					Registry: "npm",
 					Type:     "optional",
+					Metadata: createPackageMetadata(name, versionStr),
 				}
 				packages = append(packages, pkg)
 			}

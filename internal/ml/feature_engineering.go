@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -70,10 +71,10 @@ func NewFeatureEngineer() *FeatureEngineer {
 		normalizer: NewFeatureNormalizer(),
 	}
 
-	// TODO: Register specific extractors when interface compatibility is resolved
-	// fe.RegisterExtractor("typosquatting", NewTyposquattingFeatureExtractor())
-	// fe.RegisterExtractor("reputation", NewReputationFeatureExtractor())
-	// fe.RegisterExtractor("anomaly", NewAnomalyFeatureExtractor())
+	// Register specific extractors
+	fe.RegisterExtractor("typosquatting", NewTyposquattingFeatureExtractor())
+	fe.RegisterExtractor("reputation", NewReputationFeatureExtractor())
+	fe.RegisterExtractor("anomaly", NewAnomalyFeatureExtractor())
 
 	return fe
 }
@@ -912,66 +913,246 @@ func (rfe *ReputationFeatureExtractor) calculateMaintainerReputation(pkg *types.
 }
 
 func calculatePackageAge(pkg *types.Package) float64 {
-	// Placeholder: calculate package age in years
-	// In real implementation, would use pkg.CreatedAt
-	return 1.0 // Default to 1 year
+	if pkg.Metadata == nil {
+		return 0.0
+	}
+	
+	// Use PublishedAt if available, otherwise fall back to CreatedAt
+	var packageTime time.Time
+	if pkg.Metadata.PublishedAt != nil && !pkg.Metadata.PublishedAt.IsZero() {
+		packageTime = *pkg.Metadata.PublishedAt
+	} else if pkg.Metadata.CreationDate != nil && !pkg.Metadata.CreationDate.IsZero() {
+		packageTime = *pkg.Metadata.CreationDate
+	} else if !pkg.Metadata.CreatedAt.IsZero() {
+		packageTime = pkg.Metadata.CreatedAt
+	} else {
+		return 0.0
+	}
+	
+	// Calculate age in days
+	ageInDays := time.Since(packageTime).Hours() / 24
+	return math.Max(0, ageInDays)
 }
 
 func calculateReleaseFrequency(pkg *types.Package) float64 {
-	// Placeholder: calculate release frequency
-	age := calculatePackageAge(pkg)
-	versionCount := 1.0 // Placeholder since VersionCount doesn't exist
-	if age > 0 && versionCount > 0 {
-		return versionCount / age
+	if pkg.Metadata == nil {
+		return 0.0
 	}
-	return 0.0
+	
+	// Calculate time span between creation and last update
+	var creationTime, lastUpdateTime time.Time
+	
+	// Get creation time
+	if pkg.Metadata.PublishedAt != nil && !pkg.Metadata.PublishedAt.IsZero() {
+		creationTime = *pkg.Metadata.PublishedAt
+	} else if pkg.Metadata.CreationDate != nil && !pkg.Metadata.CreationDate.IsZero() {
+		creationTime = *pkg.Metadata.CreationDate
+	} else if !pkg.Metadata.CreatedAt.IsZero() {
+		creationTime = pkg.Metadata.CreatedAt
+	} else {
+		return 0.0
+	}
+	
+	// Get last update time
+	if pkg.Metadata.LastUpdated != nil && !pkg.Metadata.LastUpdated.IsZero() {
+		lastUpdateTime = *pkg.Metadata.LastUpdated
+	} else if !pkg.Metadata.UpdatedAt.IsZero() {
+		lastUpdateTime = pkg.Metadata.UpdatedAt
+	} else {
+		// If no update time, assume single release
+		return 0.1 // Low frequency for single release
+	}
+	
+	// Calculate time span in days
+	timeSpan := lastUpdateTime.Sub(creationTime).Hours() / 24
+	if timeSpan <= 0 {
+		return 0.1 // Single release or invalid data
+	}
+	
+	// Estimate release frequency (releases per month)
+	// Assume at least 2 releases (creation + update) over the time span
+	minReleases := 2.0
+	releaseFrequency := minReleases / (timeSpan / 30.0) // releases per month
+	
+	// Cap the frequency to reasonable bounds
+	return math.Min(releaseFrequency, 10.0) // Max 10 releases per month
 }
 
 func calculateDocumentationQuality(pkg *types.Package) float64 {
+	if pkg.Metadata == nil {
+		return 0.0
+	}
+	
 	score := 0.0
 	
-	// Check for README (placeholder since HasReadme doesn't exist)
-	hasReadme := true // Placeholder
-	if hasReadme {
-		score += 0.3
+	// Check for description quality
+	description := pkg.Metadata.Description
+	if len(description) > 50 {
+		score += 0.2
+		if len(description) > 200 {
+			score += 0.1 // Bonus for detailed description
+		}
 	}
 	
-	// Check for documentation in description
-	description := ""
-	if pkg.Metadata != nil {
-		description = pkg.Metadata.Description
-	}
-	if len(description) > 100 {
-		score += 0.3
-	}
-	
-	// Check for homepage/repository (placeholders since these don't exist)
-	homepage := "" // Placeholder
-	repository := "" // Placeholder
-	if homepage != "" {
+	// Check for homepage
+	if pkg.Metadata.Homepage != "" {
 		score += 0.2
 	}
 	
-	if repository != "" {
+	// Check for repository
+	if pkg.Metadata.Repository != "" {
 		score += 0.2
 	}
 	
-	return score
+	// Check for license information
+	if pkg.Metadata.License != "" {
+		score += 0.1
+	}
+	
+	// Check for keywords (indicates thoughtful categorization)
+	if len(pkg.Metadata.Keywords) > 0 {
+		score += 0.1
+		if len(pkg.Metadata.Keywords) >= 3 {
+			score += 0.1 // Bonus for multiple keywords
+		}
+	}
+	
+	return math.Min(score, 1.0) // Cap at 1.0
 }
 
 func calculateTestCoverage(pkg *types.Package) float64 {
-	// Placeholder: would analyze package contents for test files
-	return 0.5 // Default coverage
+	if pkg.Metadata == nil {
+		return 0.0
+	}
+	
+	score := 0.0
+	
+	// Check if package has test-related keywords
+	for _, keyword := range pkg.Metadata.Keywords {
+		lowerKeyword := strings.ToLower(keyword)
+		if strings.Contains(lowerKeyword, "test") || strings.Contains(lowerKeyword, "testing") {
+			score += 0.3
+			break
+		}
+	}
+	
+	// Estimate based on file count (more files might indicate tests)
+	if pkg.Metadata.FileCount > 10 {
+		score += 0.2
+		if pkg.Metadata.FileCount > 50 {
+			score += 0.2 // Bonus for larger projects
+		}
+	}
+	
+	// Check for common test patterns in description
+	description := strings.ToLower(pkg.Metadata.Description)
+	if strings.Contains(description, "test") || strings.Contains(description, "coverage") || 
+	   strings.Contains(description, "spec") || strings.Contains(description, "jest") ||
+	   strings.Contains(description, "mocha") || strings.Contains(description, "pytest") {
+		score += 0.3
+	}
+	
+	return math.Min(score, 1.0) // Cap at 1.0
 }
 
 func calculateCodeQuality(pkg *types.Package) float64 {
-	// Placeholder: would analyze code quality metrics
-	return 0.7 // Default quality score
+	if pkg.Metadata == nil {
+		return 0.0
+	}
+	
+	score := 0.0
+	
+	// Base score for having metadata
+	score += 0.1
+	
+	// Check for license (indicates professional development)
+	if pkg.Metadata.License != "" {
+		score += 0.2
+	}
+	
+	// Check for repository (indicates version control)
+	if pkg.Metadata.Repository != "" {
+		score += 0.2
+	}
+	
+	// Check for maintainers (indicates active maintenance)
+	if len(pkg.Metadata.Maintainers) > 0 {
+		score += 0.1
+		if len(pkg.Metadata.Maintainers) > 1 {
+			score += 0.1 // Bonus for multiple maintainers
+		}
+	}
+	
+	// Check for reasonable file count (not too small, not too large)
+	if pkg.Metadata.FileCount >= 5 && pkg.Metadata.FileCount <= 1000 {
+		score += 0.1
+	}
+	
+	// Check for quality indicators in description
+	description := strings.ToLower(pkg.Metadata.Description)
+	qualityKeywords := []string{"typescript", "eslint", "prettier", "lint", "quality", "standard", "clean"}
+	for _, keyword := range qualityKeywords {
+		if strings.Contains(description, keyword) {
+			score += 0.05
+		}
+	}
+	
+	// Check for reasonable package size (not too small, not too large)
+	if pkg.Metadata.Size > 1024 && pkg.Metadata.Size < 10*1024*1024 { // 1KB to 10MB
+		score += 0.1
+	}
+	
+	return math.Min(score, 1.0) // Cap at 1.0
 }
 
 func calculateSecurityScore(pkg *types.Package) float64 {
-	// Placeholder: would check for security vulnerabilities
-	return 0.8 // Default security score
+	if pkg.Metadata == nil {
+		return 0.0
+	}
+	
+	score := 1.0 // Start with perfect security score
+	
+	// Penalize for detected threats
+	for _, threat := range pkg.Threats {
+		switch threat.Severity {
+		case types.SeverityCritical:
+			score -= 0.5
+		case types.SeverityHigh:
+			score -= 0.3
+		case types.SeverityMedium:
+			score -= 0.2
+		case types.SeverityLow:
+			score -= 0.1
+		}
+	}
+	
+	// Bonus for security-related indicators
+	description := strings.ToLower(pkg.Metadata.Description)
+	securityKeywords := []string{"security", "secure", "crypto", "encryption", "auth", "ssl", "tls"}
+	for _, keyword := range securityKeywords {
+		if strings.Contains(description, keyword) {
+			score += 0.05 // Small bonus for security focus
+			break
+		}
+	}
+	
+	// Check for checksums (indicates integrity verification)
+	if len(pkg.Metadata.Checksums) > 0 {
+		score += 0.1
+	}
+	
+	// Penalize for install scripts (potential security risk)
+	if pkg.Metadata.HasInstallScript {
+		score -= 0.1
+	}
+	
+	// Bonus for established packages (age indicates stability)
+	age := calculatePackageAge(pkg)
+	if age > 365 { // More than 1 year old
+		score += 0.05
+	}
+	
+	return math.Max(0.0, math.Min(score, 1.0)) // Clamp between 0 and 1
 }
 
 func calculateDependencyRisk(pkg *types.Package) float64 {

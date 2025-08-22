@@ -361,6 +361,7 @@ func main() {
 	r.Handle("/v1/analyze/batch", rateLimitMiddleware(http.HandlerFunc(batchAnalyzeHandler))).Methods("POST")
 	r.HandleFunc("/v1/status", statusHandler).Methods("GET")
 	r.HandleFunc("/v1/stats", statsHandler).Methods("GET")
+	r.HandleFunc("/api/v1/vulnerabilities", vulnerabilitiesHandler).Methods("GET")
 
 	// Configure CORS
 	c := cors.New(cors.Options{
@@ -419,4 +420,82 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 		"message":            "This is a demo API. Statistics are not tracked in demo mode.",
 	}
 	json.NewEncoder(w).Encode(stats)
+}
+
+func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
+	// Parse query parameters for filtering
+	severity := r.URL.Query().Get("severity")
+	status := r.URL.Query().Get("status")
+	packageName := r.URL.Query().Get("package")
+	
+	// Mock vulnerability data
+	vulnerabilities := []map[string]interface{}{
+		{
+			"id":               "CVE-2023-1234",
+			"title":            "Cross-site Scripting (XSS) vulnerability",
+			"package":          "react",
+			"version":          "16.8.0",
+			"severity":         "high",
+			"score":            7.5,
+			"description":      "A cross-site scripting vulnerability exists in React versions prior to 16.8.6",
+			"publishedDate":    "2023-01-15T10:30:00Z",
+			"lastModified":     "2023-01-20T14:45:00Z",
+			"status":           "open",
+			"affectedVersions": "< 16.8.6",
+			"fixedVersion":     "16.8.6",
+			"cve":              "CVE-2023-1234",
+			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-1234"},
+		},
+		{
+			"id":               "CVE-2023-5678",
+			"title":            "SQL Injection vulnerability",
+			"package":          "lodash",
+			"version":          "4.17.15",
+			"severity":         "critical",
+			"score":            9.8,
+			"description":      "SQL injection vulnerability in lodash template function",
+			"publishedDate":    "2023-02-10T08:15:00Z",
+			"lastModified":     "2023-02-15T12:30:00Z",
+			"status":           "investigating",
+			"affectedVersions": "< 4.17.21",
+			"fixedVersion":     "4.17.21",
+			"cve":              "CVE-2023-5678",
+			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-5678"},
+		},
+		{
+			"id":               "CVE-2023-9012",
+			"title":            "Remote Code Execution vulnerability",
+			"package":          "express",
+			"version":          "4.16.0",
+			"severity":         "critical",
+			"score":            9.9,
+			"description":      "Remote code execution vulnerability in Express.js middleware",
+			"publishedDate":    "2023-03-05T16:20:00Z",
+			"lastModified":     "2023-03-10T09:45:00Z",
+			"status":           "fixed",
+			"affectedVersions": "< 4.18.2",
+			"fixedVersion":     "4.18.2",
+			"cve":              "CVE-2023-9012",
+			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-9012"},
+		},
+	}
+	
+	// Apply filters
+	filteredVulns := make([]map[string]interface{}, 0)
+	for _, vuln := range vulnerabilities {
+		if severity != "" && vuln["severity"] != severity {
+			continue
+		}
+		if status != "" && vuln["status"] != status {
+			continue
+		}
+		if packageName != "" && vuln["package"] != packageName {
+			continue
+		}
+		filteredVulns = append(filteredVulns, vuln)
+	}
+	
+	json.NewEncoder(w).Encode(filteredVulns)
 }

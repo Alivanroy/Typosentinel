@@ -1,0 +1,853 @@
+# Core web framework
+Flask==2.3.3
+Flask-RESTful==0.3.10
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+Flask-JWT-Extended==4.5.3
+Flask-CORS==4.0.0
+Flask-Limiter==3.5.0
+Flask-Caching==2.1.0
+
+# Database
+psycopg2-binary==2.9.7
+SQLAlchemy==2.0.21
+redis==5.0.1
+
+# Authentication & Security
+bcrypt==4.0.1
+PyJWT==2.8.0
+cryptography==41.0.4
+passlib==1.7.4
+
+# HTTP & API
+requests==2.31.0
+httpx==0.24.1
+urllib3==2.0.4
+certifi==2023.7.22
+
+# Data processing
+pandas==2.1.1
+numpy==1.25.2
+scipy==1.11.3
+scikit-learn==1.3.0
+
+# Serialization
+marshmallow==3.20.1
+pydantic==2.3.0
+orjson==3.9.7
+
+# Logging & Monitoring
+loguru==0.7.2
+prometheus-client==0.17.1
+statsd==4.0.1
+
+# Task queue
+celery==5.3.2
+kombu==5.3.2
+
+# Configuration
+python-dotenv==1.0.0
+click==8.1.7
+
+# Testing (dev dependencies but included for vulnerability testing)
+pytest==7.4.2
+pytest-cov==4.1.0
+pytest-mock==3.11.1
+factory-boy==3.3.0
+
+# Linting & Formatting
+black==23.7.0
+flake8==6.0.0
+isort==5.12.0
+mypy==1.5.1
+
+# Documentation
+Sphinx==7.2.6
+
+# Utilities
+click==8.1.7
+colorama==0.4.6
+tqdm==4.66.1
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Potentially vulnerable packages (for testing)
+lodash-py==0.1.0  # Suspicious package name
+requests-oauthlib==1.3.1
+oauthlib==3.2.2
+
+# Package with known vulnerabilities (older versions)
+Pillow==9.5.0  # May have vulnerabilities
+jinja2==3.1.2  # Template engine
+werkzeug==2.3.7  # WSGI utility
+
+# XML processing (potential XXE vulnerabilities)
+lxml==4.9.3
+defusedxml==0.7.1
+
+# Serialization (potential deserialization vulnerabilities)
+pickle5==0.0.12
+dill==0.3.7
+
+# Network libraries
+paramiko==3.3.1
+fabric==3.2.2
+
+# File processing
+openpyxl==3.1.2
+csv-reader==1.2.0  # Suspicious package
+
+# Typosquatting targets
+requets==2.31.0  # Typo of 'requests'
+beautifulsoup4==4.12.2
+bs4==0.0.1  # Alternative import for beautifulsoup4
+
+# Development tools
+ipython==8.15.0
+jupyter==1.0.0
+notebook==7.0.3
+
+# AWS SDK (potential for credential exposure)
+boto3==1.28.57
+botocore==1.31.57
+
+# Google Cloud (potential for credential exposure)
+google-cloud-storage==2.10.0
+google-auth==2.23.0
+
+# Azure SDK
+azure-storage-blob==12.17.0
+azure-identity==1.14.0
+
+# Machine Learning
+tensorflow==2.13.0
+torch==2.0.1
+scikit-image==0.21.0
+
+# Web scraping
+selenium==4.12.0
+beautifulsoup4==4.12.2
+scrapy==2.11.0
+
+# API clients
+twilio==8.8.0
+stripe==6.6.0
+sendgrid==6.10.0
+
+# Caching
+memcached==1.59
+pylibmc==1.6.3
+
+# Message queues
+pika==1.3.2
+kafka-python==2.0.2
+
+# Monitoring
+sentry-sdk==1.32.0
+newrelic==8.10.0
+
+# Performance
+gunicorn==21.2.0
+gevent==23.7.0
+eventlet==0.33.3
+
+# Image processing
+opencv-python==4.8.0.76
+Pillow==9.5.0
+
+# PDF processing
+PyPDF2==3.0.1
+reportlab==4.0.4
+
+# Excel processing
+xlrd==2.0.1
+xlwt==1.3.0
+
+# Email
+email-validator==2.0.0
+yagmail==0.15.293
+
+# Timezone
+pytz==2023.3
+tzlocal==5.0.1
+
+# Validation
+voluptuous==0.13.1
+schema==0.7.5
+
+# Hashing
+hashlib==20081119  # Potentially outdated
+argon2-cffi==23.1.0
+
+# Compression
+zstandard==0.21.0
+lz4==4.3.2
+
+# Protocol buffers
+protobuf==4.24.3
+grpcio==1.57.0
+
+# GraphQL
+graphene==3.3
+graphql-core==3.2.3
+
+# WebSocket
+websockets==11.0.3
+socketio==0.2.1
+
+# Async
+aiohttp==3.8.5
+aiofiles==23.2.1
+asyncio==3.4.3
+
+# CLI tools
+rich==13.5.2
+typer==0.9.0
+
+# Configuration management
+hydra-core==1.3.2
+omegaconf==2.3.0
+
+# Workflow
+airflow==2.7.1  # Heavy dependency with many sub-dependencies
+
+# Scientific computing
+sympy==1.12
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# Natural language processing
+nltk==3.8.1
+spacy==3.6.1
+textblob==0.17.1
+
+# Computer vision
+opencv-contrib-python==4.8.0.76
+scikit-image==0.21.0
+
+# Audio processing
+librosa==0.10.1
+pydub==0.25.1
+
+# Video processing
+moviepy==1.0.3
+opencv-python==4.8.0.76
+
+# Blockchain
+web3==6.9.0
+eth-account==0.9.0
+
+# Cryptocurrency
+ccxt==4.0.77
+
+# Social media APIs
+tweepy==4.14.0
+facebook-sdk==3.1.0
+
+# Payment processing
+stripe==6.6.0
+paypal-sdk==1.0.0  # Potentially fake package
+
+# Geolocation
+geopy==2.4.0
+folium==0.14.0
+
+# QR codes
+qrcode==7.4.2
+pyzbar==0.1.9
+
+# Barcode
+python-barcode==0.14.0
+
+# OCR
+pytesseract==0.3.10
+easyocr==1.7.0
+
+# Game development
+pygame==2.5.2
+
+# GUI
+tkinter==8.6  # Built-in but listed for completeness
+PyQt5==5.15.9
+
+# Desktop notifications
+plyer==2.1.0
+
+# System monitoring
+psutil==5.9.5
+GPUtil==1.4.0
+
+# Hardware info
+py-cpuinfo==9.0.0
+
+# USB
+pyusb==1.2.1
+
+# Serial communication
+pyserial==3.5
+
+# Bluetooth
+pybluez==0.23
+
+# IoT
+paho-mqtt==1.6.1
+
+# Robotics
+rospy==1.16.0  # ROS package
+
+# 3D graphics
+open3d==0.17.0
+vtk==9.2.6
+
+# CAD
+FreeCAD==0.21.0  # May not be available via pip
+
+# Simulation
+simpy==4.0.2
+
+# Optimization
+scipy==1.11.3
+cvxpy==1.3.2
+
+# Statistics
+statsmodels==0.14.0
+
+# Time series
+fbprophet==0.7.1  # Deprecated, now prophet
+prophet==1.1.4
+
+# Anomaly detection
+pyod==1.1.0
+
+# Clustering
+scikit-learn==1.3.0
+
+# Dimensionality reduction
+umap-learn==0.5.3
+
+# Feature selection
+feature-engine==1.6.2
+
+# Model interpretation
+shap==0.42.1
+lime==0.2.0.1
+
+# Hyperparameter tuning
+optuna==3.3.0
+hyperopt==0.2.7
+
+# MLOps
+mlflow==2.6.0
+wandb==0.15.10
+
+# Data validation
+great-expectations==0.17.12
+
+# Data profiling
+pandas-profiling==3.6.6
+
+# Synthetic data
+faker==19.6.2
+
+# Privacy
+differential-privacy==1.1.5  # Potentially fake package
+
+# Federated learning
+flower==1.5.0  # FL framework
+
+# Quantum computing
+qiskit==0.44.1
+cirq==1.2.0
+
+# Bioinformatics
+biopython==1.81
+
+# Chemistry
+rdkit==2023.3.3  # May require conda
+
+# Physics
+quantum-computing==1.0.0  # Potentially fake package
+
+# Astronomy
+astropy==5.3.2
+
+# Geography
+geopandas==0.13.2
+
+# Climate
+xarray==2023.8.0
+
+# Finance
+yfinance==0.2.22
+quandl==3.7.0
+
+# Economics
+statsmodels==0.14.0
+
+# Social sciences
+networkx==3.1
+
+# Education
+manim==0.17.3  # Animation library
+
+# Art
+PIL==10.0.0  # Pillow fork
+
+# Music
+mido==1.3.0
+pretty-midi==0.2.10
+
+# Games
+chess==1.999
+
+# Puzzles
+sudoku-solver==1.0.0  # Potentially fake package
+
+# Utilities
+more-itertools==10.1.0
+itertools==8.0.0  # Built-in but listed
+
+# Debugging
+pdb==0.1  # Built-in but listed
+ipdb==0.13.13
+
+# Profiling
+cProfile==1.0  # Built-in but listed
+line-profiler==4.1.1
+
+# Memory profiling
+memory-profiler==0.61.0
+
+# Code analysis
+bandit==1.7.5
+safety==2.3.5
+
+# Code formatting
+autopep8==2.0.4
+yapf==0.40.2
+
+# Import sorting
+isort==5.12.0
+
+# Type checking
+mypy==1.5.1
+pyright==1.1.325
+
+# Documentation
+sphinx-rtd-theme==1.3.0
+mkdocs==1.5.2
+
+# Packaging
+setuptools==68.2.2
+wheel==0.41.2
+twine==4.0.2
+
+# Virtual environments
+virtualenv==20.24.5
+pipenv==2023.9.8
+
+# Package management
+pip-tools==7.3.0
+pipdeptree==2.13.0
+
+# Environment management
+conda==23.7.4  # Not available via pip
+
+# Jupyter extensions
+jupyterlab==4.0.6
+notebook==7.0.3
+
+# IDE integration
+pylsp==1.7.4
+
+# Git integration
+GitPython==3.1.37
+
+# CI/CD
+tox==4.11.3
+nox==2023.4.22
+
+# Deployment
+fabric==3.2.2
+ansible==8.4.0  # May require system dependencies
+
+# Containerization
+docker==6.1.3
+kubernetes==27.2.0
+
+# Cloud
+boto3==1.28.57  # AWS
+azure-mgmt==4.0.0  # Azure
+google-cloud==0.34.0  # GCP
+
+# Serverless
+zappa==0.57.0
+chalice==1.29.0
+
+# Microservices
+nameko==2.14.1
+
+# API Gateway
+fastapi==0.103.1
+uvicorn==0.23.2
+
+# Load balancing
+haproxy-stats==2.4.0  # Potentially fake package
+
+# Service mesh
+istio-client==1.0.0  # Potentially fake package
+
+# Observability
+opentelemetry-api==1.20.0
+jaeger-client==4.8.0
+
+# Chaos engineering
+chaos-toolkit==1.16.0
+
+# Load testing
+locust==2.17.0
+
+# Security testing
+bandit==1.7.5
+semgrep==1.38.0
+
+# Penetration testing
+scapy==2.5.0
+nmap==0.0.1  # Python wrapper
+
+# Forensics
+volatility3==2.4.1
+
+# Reverse engineering
+angr==9.2.70
+
+# Malware analysis
+yara-python==4.3.1
+
+# Threat intelligence
+misp-python==2.4.172
+
+# Incident response
+dfir-toolkit==1.0.0  # Potentially fake package
+
+# Compliance
+iso27001-toolkit==1.0.0  # Potentially fake package
+
+# Risk assessment
+risk-calculator==1.0.0  # Potentially fake package
+
+# Vulnerability scanning
+nessus-api==1.0.0  # Potentially fake package
+openvas-client==1.0.0  # Potentially fake package
+
+# SIEM
+splunk-sdk==1.7.4
+elastic-apm==6.18.1
+
+# Threat hunting
+yara==4.3.1  # Pattern matching
+
+# Digital forensics
+pytsk3==20230125
+
+# Network analysis
+wireshark-python==1.0.0  # Potentially fake package
+
+# Cryptanalysis
+cryptography==41.0.4
+pycrypto==2.6.1  # Deprecated
+
+# Steganography
+stegano==0.11.2
+
+# Social engineering
+social-engineer-toolkit==1.0.0  # Potentially fake package
+
+# OSINT
+shodan==1.29.1
+censys==2.2.8
+
+# Dark web
+tor-python==1.0.0  # Potentially fake package
+
+# Blockchain analysis
+bitcoin-analysis==1.0.0  # Potentially fake package
+
+# AI security
+adversarial-robustness==1.0.0  # Potentially fake package
+
+# Privacy engineering
+differential-privacy==1.1.5  # Potentially fake package
+
+# Homomorphic encryption
+homomorphic-encryption==1.0.0  # Potentially fake package
+
+# Zero-knowledge proofs
+zk-proofs==1.0.0  # Potentially fake package
+
+# Secure multi-party computation
+smpc==1.0.0  # Potentially fake package
+
+# Post-quantum cryptography
+post-quantum-crypto==1.0.0  # Potentially fake package
+
+# Quantum-resistant algorithms
+quantum-resistant==1.0.0  # Potentially fake package
+
+# Side-channel analysis
+side-channel-analysis==1.0.0  # Potentially fake package
+
+# Hardware security
+hardware-security==1.0.0  # Potentially fake package
+
+# IoT security
+iot-security==1.0.0  # Potentially fake package
+
+# Mobile security
+mobile-security==1.0.0  # Potentially fake package
+
+# Web security
+web-security==1.0.0  # Potentially fake package
+
+# Cloud security
+cloud-security==1.0.0  # Potentially fake package
+
+# Container security
+container-security==1.0.0  # Potentially fake package
+
+# DevSecOps
+devsecops==1.0.0  # Potentially fake package
+
+# Security automation
+security-automation==1.0.0  # Potentially fake package
+
+# Threat modeling
+threat-modeling==1.0.0  # Potentially fake package
+
+# Security metrics
+security-metrics==1.0.0  # Potentially fake package
+
+# Security training
+security-training==1.0.0  # Potentially fake package
+
+# Security awareness
+security-awareness==1.0.0  # Potentially fake package
+
+# Phishing simulation
+phishing-simulation==1.0.0  # Potentially fake package
+
+# Red team tools
+red-team-tools==1.0.0  # Potentially fake package
+
+# Blue team tools
+blue-team-tools==1.0.0  # Potentially fake package
+
+# Purple team tools
+purple-team-tools==1.0.0  # Potentially fake package
+
+# Cyber threat intelligence
+cti==1.0.0  # Potentially fake package
+
+# Malware detection
+malware-detection==1.0.0  # Potentially fake package
+
+# Anomaly detection
+anomaly-detection==1.0.0  # Potentially fake package
+
+# Behavioral analysis
+behavioral-analysis==1.0.0  # Potentially fake package
+
+# Network security
+network-security==1.0.0  # Potentially fake package
+
+# Endpoint security
+endpoint-security==1.0.0  # Potentially fake package
+
+# Data loss prevention
+data-loss-prevention==1.0.0  # Potentially fake package
+
+# Identity and access management
+iam==1.0.0  # Potentially fake package
+
+# Privileged access management
+pam==1.0.0  # Potentially fake package
+
+# Single sign-on
+sso==1.0.0  # Potentially fake package
+
+# Multi-factor authentication
+mfa==1.0.0  # Potentially fake package
+
+# Biometric authentication
+biometric-auth==1.0.0  # Potentially fake package
+
+# Risk-based authentication
+risk-based-auth==1.0.0  # Potentially fake package
+
+# Adaptive authentication
+adaptive-auth==1.0.0  # Potentially fake package
+
+# Zero trust
+zero-trust==1.0.0  # Potentially fake package
+
+# Microsegmentation
+microsegmentation==1.0.0  # Potentially fake package
+
+# Software-defined perimeter
+sdp==1.0.0  # Potentially fake package
+
+# Secure access service edge
+sase==1.0.0  # Potentially fake package
+
+# Cloud access security broker
+casb==1.0.0  # Potentially fake package
+
+# Security orchestration
+soar==1.0.0  # Potentially fake package
+
+# Extended detection and response
+xdr==1.0.0  # Potentially fake package
+
+# Managed detection and response
+mdr==1.0.0  # Potentially fake package
+
+# Security information and event management
+siem==1.0.0  # Potentially fake package
+
+# User and entity behavior analytics
+ueba==1.0.0  # Potentially fake package
+
+# Network traffic analysis
+nta==1.0.0  # Potentially fake package
+
+# Deception technology
+deception-tech==1.0.0  # Potentially fake package
+
+# Honeypots
+honeypots==1.0.0  # Potentially fake package
+
+# Threat hunting
+threat-hunting==1.0.0  # Potentially fake package
+
+# Digital forensics and incident response
+dfir==1.0.0  # Potentially fake package
+
+# Security testing
+security-testing==1.0.0  # Potentially fake package
+
+# Vulnerability assessment
+vuln-assessment==1.0.0  # Potentially fake package
+
+# Penetration testing
+pentest==1.0.0  # Potentially fake package
+
+# Red team exercises
+red-team==1.0.0  # Potentially fake package
+
+# Security auditing
+security-audit==1.0.0  # Potentially fake package
+
+# Compliance monitoring
+compliance-monitoring==1.0.0  # Potentially fake package
+
+# Risk management
+risk-management==1.0.0  # Potentially fake package
+
+# Governance, risk, and compliance
+grc==1.0.0  # Potentially fake package
+
+# Business continuity
+business-continuity==1.0.0  # Potentially fake package
+
+# Disaster recovery
+disaster-recovery==1.0.0  # Potentially fake package
+
+# Crisis management
+crisis-management==1.0.0  # Potentially fake package
+
+# Emergency response
+emergency-response==1.0.0  # Potentially fake package
+
+# Incident management
+incident-management==1.0.0  # Potentially fake package
+
+# Change management
+change-management==1.0.0  # Potentially fake package
+
+# Configuration management
+config-management==1.0.0  # Potentially fake package
+
+# Asset management
+asset-management==1.0.0  # Potentially fake package
+
+# Vendor risk management
+vendor-risk==1.0.0  # Potentially fake package
+
+# Third-party risk
+third-party-risk==1.0.0  # Potentially fake package
+
+# Supply chain security
+supply-chain-security==1.0.0  # Potentially fake package
+
+# Software supply chain
+software-supply-chain==1.0.0  # Potentially fake package
+
+# Open source security
+open-source-security==1.0.0  # Potentially fake package
+
+# License compliance
+license-compliance==1.0.0  # Potentially fake package
+
+# Software composition analysis
+sca==1.0.0  # Potentially fake package
+
+# Static application security testing
+sast==1.0.0  # Potentially fake package
+
+# Dynamic application security testing
+dast==1.0.0  # Potentially fake package
+
+# Interactive application security testing
+iast==1.0.0  # Potentially fake package
+
+# Runtime application self-protection
+rasp==1.0.0  # Potentially fake package
+
+# Web application firewall
+waf==1.0.0  # Potentially fake package
+
+# API security
+api-security==1.0.0  # Potentially fake package
+
+# Database security
+db-security==1.0.0  # Potentially fake package
+
+# File integrity monitoring
+fim==1.0.0  # Potentially fake package
+
+# Log management
+log-management==1.0.0  # Potentially fake package
+
+# Security monitoring
+security-monitoring==1.0.0  # Potentially fake package
+
+# Continuous monitoring
+continuous-monitoring==1.0.0  # Potentially fake package
+
+# Real-time monitoring
+real-time-monitoring==1.0.0  # Potentially fake package
+
+# Predictive analytics
+predictive-analytics==1.0.0  # Potentially fake package
+
+# Machine learning security
+ml-security==1.0.0  # Potentially fake package
+
+# AI security
+ai-security==1.0.0  # Potentially fake package
+
+# Quantum security
+quantum-security==1.0.0  # Potentially fake package
+
+# Future security
+future-security==1.0.0  # Potentially fake package

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
@@ -14,19 +15,7 @@ import (
 // DatabaseService provides CRUD operations for the database
 type DatabaseService struct {
 	db     *sql.DB
-	config *DatabaseConfig
-}
-
-// DatabaseConfig contains database connection configuration
-type DatabaseConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	DBName   string `json:"dbname"`
-	SSLMode  string `json:"sslmode"`
-	MaxConns int    `json:"max_conns"`
-	MaxIdle  int    `json:"max_idle"`
+	config *config.DatabaseConfig
 }
 
 // Organization represents an organization record
@@ -119,13 +108,13 @@ type ScanJob struct {
 }
 
 // NewDatabaseService creates a new database service
-func NewDatabaseService(config *DatabaseConfig) (*DatabaseService, error) {
-	if config == nil {
+func NewDatabaseService(dbConfig *config.DatabaseConfig) (*DatabaseService, error) {
+	if dbConfig == nil {
 		return nil, fmt.Errorf("database config cannot be nil")
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode)
+		dbConfig.Host, dbConfig.Port, dbConfig.Username, dbConfig.Password, dbConfig.Database, dbConfig.SSLMode)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -133,11 +122,11 @@ func NewDatabaseService(config *DatabaseConfig) (*DatabaseService, error) {
 	}
 
 	// Configure connection pool
-	if config.MaxConns > 0 {
-		db.SetMaxOpenConns(config.MaxConns)
+	if dbConfig.MaxOpenConns > 0 {
+		db.SetMaxOpenConns(dbConfig.MaxOpenConns)
 	}
-	if config.MaxIdle > 0 {
-		db.SetMaxIdleConns(config.MaxIdle)
+	if dbConfig.MaxIdleConns > 0 {
+		db.SetMaxIdleConns(dbConfig.MaxIdleConns)
 	}
 	db.SetConnMaxLifetime(time.Hour)
 
@@ -148,7 +137,7 @@ func NewDatabaseService(config *DatabaseConfig) (*DatabaseService, error) {
 
 	return &DatabaseService{
 		db:     db,
-		config: config,
+		config: dbConfig,
 	}, nil
 }
 

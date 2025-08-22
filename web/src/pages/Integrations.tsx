@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { apiService, type Integration } from '../services/api'
 import { 
   Plug, 
   Settings, 
@@ -25,122 +26,89 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 
-const integrations = [
-  {
-    id: 'github',
-    name: 'GitHub',
-    description: 'Integrate with GitHub repositories for automated security scanning',
-    icon: GitBranch,
-    category: 'Version Control',
-    status: 'connected',
-    color: 'text-gray-900 bg-gray-100',
-    features: ['Repository scanning', 'Pull request checks', 'Issue creation'],
-    setupTime: '5 minutes',
-    popularity: 95
-  },
-  {
-    id: 'slack',
-    name: 'Slack',
-    description: 'Get security alerts and notifications in your Slack channels',
-    icon: MessageSquare,
-    category: 'Communication',
-    status: 'connected',
-    color: 'text-purple-600 bg-purple-100',
-    features: ['Real-time alerts', 'Custom channels', 'Report summaries'],
-    setupTime: '2 minutes',
-    popularity: 88
-  },
-  {
-    id: 'jira',
-    name: 'Jira',
-    description: 'Create and track security issues in Jira automatically',
-    icon: AlertCircle,
-    category: 'Project Management',
-    status: 'available',
-    color: 'text-blue-600 bg-blue-100',
-    features: ['Issue creation', 'Status tracking', 'Custom workflows'],
-    setupTime: '10 minutes',
-    popularity: 76
-  },
-  {
-    id: 'jenkins',
-    name: 'Jenkins',
-    description: 'Integrate security scans into your CI/CD pipeline',
-    icon: Server,
-    category: 'CI/CD',
-    status: 'available',
-    color: 'text-orange-600 bg-orange-100',
-    features: ['Pipeline integration', 'Build gates', 'Automated scanning'],
-    setupTime: '15 minutes',
-    popularity: 82
-  },
-  {
-    id: 'email',
-    name: 'Email Notifications',
-    description: 'Receive security alerts and reports via email',
-    icon: Mail,
-    category: 'Communication',
-    status: 'connected',
-    color: 'text-red-600 bg-red-100',
-    features: ['Alert emails', 'Weekly reports', 'Custom templates'],
-    setupTime: '3 minutes',
-    popularity: 92
-  },
-  {
-    id: 'webhook',
-    name: 'Webhooks',
-    description: 'Send security data to custom endpoints and services',
-    icon: Webhook,
-    category: 'API',
-    status: 'available',
-    color: 'text-green-600 bg-green-100',
-    features: ['Custom payloads', 'Real-time data', 'Flexible endpoints'],
-    setupTime: '5 minutes',
-    popularity: 65
-  },
-  {
-    id: 'aws',
-    name: 'AWS Security Hub',
-    description: 'Integrate with AWS Security Hub for centralized security findings',
-    icon: Cloud,
-    category: 'Cloud Security',
-    status: 'available',
-    color: 'text-yellow-600 bg-yellow-100',
-    features: ['Security findings', 'Compliance checks', 'Multi-account support'],
-    setupTime: '20 minutes',
-    popularity: 71
-  },
-  {
-    id: 'splunk',
-    name: 'Splunk',
-    description: 'Send security logs and events to Splunk for analysis',
-    icon: Database,
-    category: 'SIEM',
-    status: 'available',
-    color: 'text-indigo-600 bg-indigo-100',
-    features: ['Log forwarding', 'Custom dashboards', 'Alert correlation'],
-    setupTime: '25 minutes',
-    popularity: 58
+// Icon mapping for integrations
+const getIntegrationIcon = (iconName: string) => {
+  const iconMap: Record<string, any> = {
+    github: GitBranch,
+    slack: MessageSquare,
+    jira: AlertCircle,
+    jenkins: Server,
+    email: Mail,
+    webhook: Webhook,
+    aws: Cloud,
+    splunk: Database
   }
-]
+  return iconMap[iconName] || Plug
+}
 
-const connectedIntegrations = integrations.filter(i => i.status === 'connected')
-const availableIntegrations = integrations.filter(i => i.status === 'available')
+// Color mapping for integrations
+const getIntegrationColor = (category: string) => {
+  const colorMap: Record<string, string> = {
+    source_control: 'text-gray-900 bg-gray-100',
+    notifications: 'text-purple-600 bg-purple-100',
+    issue_tracking: 'text-blue-600 bg-blue-100',
+    ci_cd: 'text-orange-600 bg-orange-100',
+    custom: 'text-green-600 bg-green-100',
+    cloud_security: 'text-yellow-600 bg-yellow-100',
+    siem: 'text-indigo-600 bg-indigo-100'
+  }
+  return colorMap[category] || 'text-gray-600 bg-gray-100'
+}
+
+// Category mapping
+const getCategoryDisplayName = (category: string) => {
+  const categoryMap: Record<string, string> = {
+    source_control: 'Version Control',
+    notifications: 'Communication',
+    issue_tracking: 'Project Management',
+    ci_cd: 'CI/CD',
+    custom: 'API',
+    cloud_security: 'Cloud Security',
+    siem: 'SIEM'
+  }
+  return categoryMap[category] || category
+}
 
 const categories = ['All', 'Version Control', 'Communication', 'CI/CD', 'Cloud Security', 'SIEM', 'API', 'Project Management']
 
 export function Integrations() {
+  const [integrations, setIntegrations] = useState<Integration[]>([])
+  // const [loading, setLoading] = useState(true)
+  // const [error, setError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [searchTerm, setSearchTerm] = useState('')
+
+  // Fetch integrations from API
+  useEffect(() => {
+    const fetchIntegrations = async () => {
+      try {
+        // setLoading(true)
+        const response = await apiService.getAllIntegrations()
+        setIntegrations(response)
+        // setError(null)
+      } catch (err) {
+        console.error('Failed to fetch integrations:', err)
+        // setError('Failed to load integrations')
+      } finally {
+        // setLoading(false)
+      }
+    }
+
+    fetchIntegrations()
+  }, [])
+
+  // Derived state
+  const connectedIntegrations = integrations.filter(i => i.status === 'connected')
+  const availableIntegrations = integrations.filter(i => i.status === 'disconnected')
   const [activeTab, setActiveTab] = useState('all')
 
   const filteredIntegrations = integrations.filter(integration => {
     const matchesSearch = integration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          integration.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === 'All' || integration.category === selectedCategory
+    const matchesCategory = selectedCategory === 'All' || getCategoryDisplayName(integration.category) === selectedCategory
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'connected' && integration.status === 'connected') ||
-                      (activeTab === 'available' && integration.status === 'available')
+                      (activeTab === 'available' && integration.status === 'disconnected')
     return matchesSearch && matchesCategory && matchesTab
   })
 
@@ -148,12 +116,12 @@ export function Integrations() {
     switch (status) {
       case 'connected':
         return <Check className="w-4 h-4 text-green-500" />
-      case 'available':
+      case 'disconnected':
         return <Plus className="w-4 h-4 text-gray-500" />
-      case 'configuring':
-        return <Clock className="w-4 h-4 text-yellow-500" />
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />
+        return <Clock className="w-4 h-4 text-yellow-500" />
     }
   }
 
@@ -241,7 +209,9 @@ export function Integrations() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Alerts</p>
-                <p className="text-2xl font-bold text-orange-600">12</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {integrations.filter(i => i.status === 'error').length}
+                </p>
               </div>
               <Bell className="w-8 h-8 text-orange-500" />
             </div>
@@ -344,12 +314,15 @@ export function Integrations() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-lg ${integration.color} flex items-center justify-center`}>
-                      <integration.icon className="w-6 h-6" />
+                    <div className={`w-12 h-12 rounded-lg ${getIntegrationColor(integration.category)} flex items-center justify-center`}>
+                      {(() => {
+                        const IconComponent = getIntegrationIcon(integration.icon)
+                        return <IconComponent className="w-6 h-6" />
+                      })()}
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold">{integration.name}</h3>
-                      <span className="text-sm text-gray-600">{integration.category}</span>
+                      <span className="text-sm text-gray-600">{getCategoryDisplayName(integration.category)}</span>
                     </div>
                   </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(integration.status)}`}>
@@ -362,20 +335,14 @@ export function Integrations() {
                 
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Setup time:</span>
-                    <span className="font-medium">{integration.setupTime}</span>
+                    <span className="text-gray-600">Last sync:</span>
+                    <span className="font-medium">
+                      {integration.lastSync ? new Date(integration.lastSync).toLocaleDateString() : 'Never'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Popularity:</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full"
-                          style={{ width: `${integration.popularity}%` }}
-                        />
-                      </div>
-                      <span className="font-medium">{integration.popularity}%</span>
-                    </div>
+                    <span className="text-gray-600">Features:</span>
+                    <span className="font-medium">{integration.features.length} available</span>
                   </div>
                 </div>
 
@@ -458,36 +425,35 @@ export function Integrations() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <GitBranch className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="text-sm font-medium">GitHub scan completed</p>
-                      <p className="text-xs text-gray-600">Repository: main-app • 2 minutes ago</p>
-                    </div>
+                {connectedIntegrations.length > 0 ? (
+                  connectedIntegrations.slice(0, 3).map((integration, index) => {
+                    const IconComponent = getIntegrationIcon(integration.icon)
+                    const colorClass = integration.category === 'source_control' ? 'bg-green-50 text-green-600' :
+                                     integration.category === 'notifications' ? 'bg-blue-50 text-blue-600' :
+                                     'bg-purple-50 text-purple-600'
+                    const statusColor = integration.status === 'connected' ? 'text-green-500' : 'text-gray-500'
+                    
+                    return (
+                      <div key={integration.id} className={`flex items-center justify-between p-3 rounded-lg ${colorClass.split(' ')[0]}`}>
+                        <div className="flex items-center space-x-3">
+                          <IconComponent className={`w-5 h-5 ${colorClass.split(' ')[1]}`} />
+                          <div>
+                            <p className="text-sm font-medium">{integration.name} integration active</p>
+                            <p className="text-xs text-gray-600">
+                              Last sync: {integration.lastSync ? new Date(integration.lastSync).toLocaleDateString() : 'Never'}
+                            </p>
+                          </div>
+                        </div>
+                        <Check className={`w-5 h-5 ${statusColor}`} />
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p className="text-sm">No connected integrations to show activity for.</p>
+                    <p className="text-xs mt-1">Connect an integration to see activity here.</p>
                   </div>
-                  <Check className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-medium">Slack notification sent</p>
-                      <p className="text-xs text-gray-600">Channel: #security • 15 minutes ago</p>
-                    </div>
-                  </div>
-                  <Check className="w-5 h-5 text-blue-500" />
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-5 h-5 text-purple-600" />
-                    <div>
-                      <p className="text-sm font-medium">Weekly report sent</p>
-                      <p className="text-xs text-gray-600">Recipients: 5 • 1 hour ago</p>
-                    </div>
-                  </div>
-                  <Check className="w-5 h-5 text-purple-500" />
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

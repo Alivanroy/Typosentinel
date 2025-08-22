@@ -14,38 +14,101 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// DDoSTracker tracks potential DDoS attacks
+type DDoSTracker struct {
+	requestCount int
+	lastReset    time.Time
+	blocked      bool
+	blockUntil   time.Time
+}
+
+// CircuitBreaker implements circuit breaker pattern
+type CircuitBreaker struct {
+	failureCount int
+	lastFailure  time.Time
+	state        CircuitBreakerState
+	nextAttempt  time.Time
+}
+
+// CircuitBreakerState represents circuit breaker states
+type CircuitBreakerState int
+
+const (
+	CircuitBreakerClosed CircuitBreakerState = iota
+	CircuitBreakerOpen
+	CircuitBreakerHalfOpen
+)
+
+// RateLimitMetrics tracks rate limiting metrics
+type RateLimitMetrics struct {
+	totalRequests     int64
+	allowedRequests   int64
+	blockedRequests   int64
+	ddosBlocks        int64
+	circuitBreakerTrips int64
+	mutex             sync.RWMutex
+}
+
 // RateLimiter provides rate limiting functionality
 type RateLimiter struct {
 	redis       *redis.Client
 	localLimits map[string]*rate.Limiter
 	mutex       sync.RWMutex
 	config      *RateLimitConfig
+	
+	// Connection tracking
+	activeConnections map[string]int
+	connectionMutex   sync.RWMutex
+	
+	// DDoS protection
+	ddosTracker     map[string]*DDoSTracker
+	ddosMutex       sync.RWMutex
+	
+	// Circuit breaker
+	circuitBreakers map[string]*CircuitBreaker
+	circuitMutex    sync.RWMutex
+	
+	// Metrics
+	metrics *RateLimitMetrics
 }
 
 // RateLimitConfig defines rate limiting configuration
 type RateLimitConfig struct {
 	// Global limits
-	GlobalRequestsPerSecond int           `yaml:"global_requests_per_second" default:"1000"`
-	GlobalBurstSize         int           `yaml:"global_burst_size" default:"2000"`
+	GlobalRequestsPerSecond int           `yaml:"global_requests_per_second" default:"500"`
+	GlobalBurstSize         int           `yaml:"global_burst_size" default:"1000"`
 	GlobalWindowDuration    time.Duration `yaml:"global_window_duration" default:"1m"`
 
 	// Per-IP limits
-	IPRequestsPerSecond int           `yaml:"ip_requests_per_second" default:"10"`
-	IPBurstSize         int           `yaml:"ip_burst_size" default:"20"`
+	IPRequestsPerSecond int           `yaml:"ip_requests_per_second" default:"20"`
+	IPBurstSize         int           `yaml:"ip_burst_size" default:"40"`
 	IPWindowDuration    time.Duration `yaml:"ip_window_duration" default:"1m"`
 
 	// Per-User limits
-	UserRequestsPerSecond int           `yaml:"user_requests_per_second" default:"50"`
-	UserBurstSize         int           `yaml:"user_burst_size" default:"100"`
+	UserRequestsPerSecond int           `yaml:"user_requests_per_second" default:"100"`
+	UserBurstSize         int           `yaml:"user_burst_size" default:"200"`
 	UserWindowDuration    time.Duration `yaml:"user_window_duration" default:"1m"`
 
 	// Per-API-Key limits
-	APIKeyRequestsPerSecond int           `yaml:"api_key_requests_per_second" default:"100"`
-	APIKeyBurstSize         int           `yaml:"api_key_burst_size" default:"200"`
+	APIKeyRequestsPerSecond int           `yaml:"api_key_requests_per_second" default:"200"`
+	APIKeyBurstSize         int           `yaml:"api_key_burst_size" default:"400"`
 	APIKeyWindowDuration    time.Duration `yaml:"api_key_window_duration" default:"1m"`
 
 	// Endpoint-specific limits
 	EndpointLimits map[string]EndpointLimit `yaml:"endpoint_limits"`
+
+	// Connection throttling
+	MaxConcurrentConnections int           `yaml:"max_concurrent_connections" default:"1000"`
+	ConnectionTimeout        time.Duration `yaml:"connection_timeout" default:"30s"`
+	SlowlorisProtection      bool          `yaml:"slowloris_protection" default:"true"`
+	SlowlorisTimeout         time.Duration `yaml:"slowloris_timeout" default:"10s"`
+
+	// DDoS Protection
+	EnableDDoSProtection     bool          `yaml:"enable_ddos_protection" default:"true"`
+	DDoSThreshold           int           `yaml:"ddos_threshold" default:"100"`
+	DDoSWindowDuration      time.Duration `yaml:"ddos_window_duration" default:"1m"`
+	DDoSBlockDuration       time.Duration `yaml:"ddos_block_duration" default:"10m"`
+	SuspiciousPatternDetection bool       `yaml:"suspicious_pattern_detection" default:"true"`
 
 	// Advanced settings
 	EnableDistributed bool          `yaml:"enable_distributed" default:"false"`
@@ -57,9 +120,15 @@ type RateLimitConfig struct {
 	BlacklistedIPs []string `yaml:"blacklisted_ips"`
 	
 	// Adaptive rate limiting
-	EnableAdaptive     bool    `yaml:"enable_adaptive" default:"false"`
+	EnableAdaptive     bool    `yaml:"enable_adaptive" default:"true"`
 	AdaptiveThreshold  float64 `yaml:"adaptive_threshold" default:"0.8"`
 	AdaptiveMultiplier float64 `yaml:"adaptive_multiplier" default:"0.5"`
+
+	// Circuit breaker
+	EnableCircuitBreaker bool          `yaml:"enable_circuit_breaker" default:"true"`
+	CircuitBreakerThreshold int        `yaml:"circuit_breaker_threshold" default:"50"`
+	CircuitBreakerTimeout   time.Duration `yaml:"circuit_breaker_timeout" default:"30s"`
+	CircuitBreakerRecoveryTime time.Duration `yaml:"circuit_breaker_recovery_time" default:"5m"`
 }
 
 // RateLimitResult represents the result of a rate limit check
@@ -87,9 +156,13 @@ const (
 // NewRateLimiter creates a new rate limiter
 func NewRateLimiter(config *RateLimitConfig, redisClient *redis.Client) *RateLimiter {
 	rl := &RateLimiter{
-		redis:       redisClient,
-		localLimits: make(map[string]*rate.Limiter),
-		config:      config,
+		redis:             redisClient,
+		localLimits:       make(map[string]*rate.Limiter),
+		config:            config,
+		activeConnections: make(map[string]int),
+		ddosTracker:       make(map[string]*DDoSTracker),
+		circuitBreakers:   make(map[string]*CircuitBreaker),
+		metrics:           &RateLimitMetrics{},
 	}
 
 	// Start cleanup routine
@@ -102,8 +175,14 @@ func NewRateLimiter(config *RateLimitConfig, redisClient *redis.Client) *RateLim
 func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, userID, apiKey string) (*RateLimitResult, error) {
 	clientIP := rl.getClientIP(req)
 	
+	// Update metrics
+	rl.metrics.mutex.Lock()
+	rl.metrics.totalRequests++
+	rl.metrics.mutex.Unlock()
+	
 	// Check blacklist first
 	if rl.isBlacklisted(clientIP) {
+		rl.updateMetrics(false, "blacklisted")
 		return &RateLimitResult{
 			Allowed:    false,
 			LimitType:  string(RateLimitTypeIP),
@@ -114,11 +193,51 @@ func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, us
 
 	// Check whitelist
 	if rl.isWhitelisted(clientIP) {
+		rl.updateMetrics(true, "whitelisted")
 		return &RateLimitResult{
 			Allowed:    true,
 			LimitType:  "whitelisted",
 			Identifier: clientIP,
 		}, nil
+	}
+	
+	// Check DDoS protection
+	if rl.config.EnableDDoSProtection {
+		if blocked, retryAfter := rl.checkDDoSProtection(clientIP); blocked {
+			rl.updateMetrics(false, "ddos")
+			return &RateLimitResult{
+				Allowed:    false,
+				LimitType:  "ddos_protection",
+				Identifier: clientIP,
+				RetryAfter: retryAfter,
+			}, nil
+		}
+	}
+	
+	// Check circuit breaker
+	if rl.config.EnableCircuitBreaker {
+		if blocked, retryAfter := rl.checkCircuitBreaker(clientIP); blocked {
+			rl.updateMetrics(false, "circuit_breaker")
+			return &RateLimitResult{
+				Allowed:    false,
+				LimitType:  "circuit_breaker",
+				Identifier: clientIP,
+				RetryAfter: retryAfter,
+			}, nil
+		}
+	}
+	
+	// Check connection limits
+	if rl.config.MaxConcurrentConnections > 0 {
+		if !rl.checkConnectionLimit(clientIP) {
+			rl.updateMetrics(false, "connection_limit")
+			return &RateLimitResult{
+				Allowed:    false,
+				LimitType:  "connection_limit",
+				Identifier: clientIP,
+				RetryAfter: rl.config.ConnectionTimeout,
+			}, nil
+		}
 	}
 
 	// Check multiple rate limits in order of priority
@@ -180,6 +299,7 @@ func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, us
 	}
 
 	// All checks passed
+	rl.updateMetrics(true, "allowed")
 	return &RateLimitResult{
 		Allowed:    true,
 		LimitType:  "allowed",
@@ -488,4 +608,165 @@ func (rl *RateLimiter) UpdateConfig(config *RateLimitConfig) {
 	
 	// Clear local limiters to apply new limits
 	rl.localLimits = make(map[string]*rate.Limiter)
+}
+
+// updateMetrics updates rate limiting metrics
+func (rl *RateLimiter) updateMetrics(allowed bool, reason string) {
+	rl.metrics.mutex.Lock()
+	defer rl.metrics.mutex.Unlock()
+	
+	if allowed {
+		rl.metrics.allowedRequests++
+	} else {
+		rl.metrics.blockedRequests++
+		switch reason {
+		case "ddos":
+			rl.metrics.ddosBlocks++
+		case "circuit_breaker":
+			rl.metrics.circuitBreakerTrips++
+		}
+	}
+}
+
+// checkDDoSProtection checks for DDoS attacks
+func (rl *RateLimiter) checkDDoSProtection(clientIP string) (bool, time.Duration) {
+	rl.ddosMutex.Lock()
+	defer rl.ddosMutex.Unlock()
+	
+	tracker, exists := rl.ddosTracker[clientIP]
+	if !exists {
+		tracker = &DDoSTracker{
+			requestCount: 1,
+			lastReset:    time.Now(),
+		}
+		rl.ddosTracker[clientIP] = tracker
+		return false, 0
+	}
+	
+	// Check if currently blocked
+	if tracker.blocked && time.Now().Before(tracker.blockUntil) {
+		return true, time.Until(tracker.blockUntil)
+	}
+	
+	// Reset block if expired
+	if tracker.blocked && time.Now().After(tracker.blockUntil) {
+		tracker.blocked = false
+		tracker.requestCount = 0
+		tracker.lastReset = time.Now()
+	}
+	
+	// Reset counter if window expired
+	if time.Since(tracker.lastReset) > rl.config.DDoSWindowDuration {
+		tracker.requestCount = 1
+		tracker.lastReset = time.Now()
+		return false, 0
+	}
+	
+	// Increment request count
+	tracker.requestCount++
+	
+	// Check if threshold exceeded
+	if tracker.requestCount > rl.config.DDoSThreshold {
+		tracker.blocked = true
+		tracker.blockUntil = time.Now().Add(rl.config.DDoSBlockDuration)
+		return true, rl.config.DDoSBlockDuration
+	}
+	
+	return false, 0
+}
+
+// checkCircuitBreaker checks circuit breaker state
+func (rl *RateLimiter) checkCircuitBreaker(clientIP string) (bool, time.Duration) {
+	rl.circuitMutex.Lock()
+	defer rl.circuitMutex.Unlock()
+	
+	cb, exists := rl.circuitBreakers[clientIP]
+	if !exists {
+		cb = &CircuitBreaker{
+			state: CircuitBreakerClosed,
+		}
+		rl.circuitBreakers[clientIP] = cb
+		return false, 0
+	}
+	
+	switch cb.state {
+	case CircuitBreakerOpen:
+		if time.Now().After(cb.nextAttempt) {
+			cb.state = CircuitBreakerHalfOpen
+			return false, 0
+		}
+		return true, time.Until(cb.nextAttempt)
+		
+	case CircuitBreakerHalfOpen:
+		// Allow one request to test
+		return false, 0
+		
+	default: // CircuitBreakerClosed
+		return false, 0
+	}
+}
+
+// checkConnectionLimit checks concurrent connection limits
+func (rl *RateLimiter) checkConnectionLimit(clientIP string) bool {
+	rl.connectionMutex.Lock()
+	defer rl.connectionMutex.Unlock()
+	
+	currentConnections := rl.activeConnections[clientIP]
+	if currentConnections >= rl.config.MaxConcurrentConnections {
+		return false
+	}
+	
+	rl.activeConnections[clientIP]++
+	return true
+}
+
+// ReleaseConnection releases a connection for an IP
+func (rl *RateLimiter) ReleaseConnection(clientIP string) {
+	rl.connectionMutex.Lock()
+	defer rl.connectionMutex.Unlock()
+	
+	if rl.activeConnections[clientIP] > 0 {
+		rl.activeConnections[clientIP]--
+		if rl.activeConnections[clientIP] == 0 {
+			delete(rl.activeConnections, clientIP)
+		}
+	}
+}
+
+// RecordFailure records a failure for circuit breaker
+func (rl *RateLimiter) RecordFailure(clientIP string) {
+	rl.circuitMutex.Lock()
+	defer rl.circuitMutex.Unlock()
+	
+	cb, exists := rl.circuitBreakers[clientIP]
+	if !exists {
+		cb = &CircuitBreaker{
+			state: CircuitBreakerClosed,
+		}
+		rl.circuitBreakers[clientIP] = cb
+	}
+	
+	cb.failureCount++
+	cb.lastFailure = time.Now()
+	
+	if cb.failureCount >= rl.config.CircuitBreakerThreshold {
+		cb.state = CircuitBreakerOpen
+		cb.nextAttempt = time.Now().Add(rl.config.CircuitBreakerRecoveryTime)
+	}
+}
+
+// RecordSuccess records a success for circuit breaker
+func (rl *RateLimiter) RecordSuccess(clientIP string) {
+	rl.circuitMutex.Lock()
+	defer rl.circuitMutex.Unlock()
+	
+	cb, exists := rl.circuitBreakers[clientIP]
+	if !exists {
+		return
+	}
+	
+	if cb.state == CircuitBreakerHalfOpen {
+		cb.state = CircuitBreakerClosed
+		cb.failureCount = 0
+	}
 }

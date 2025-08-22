@@ -1,28 +1,17 @@
 # Multi-stage build for TypoSentinel Production
 
-# Stage 1: Build the Go application
-FROM golang:1.23-alpine AS go-builder
+# Build stage
+FROM golang:1.21-alpine AS go-builder
 
-# Install build dependencies
-RUN apk add --no-cache git ca-certificates tzdata curl
-
-# Set working directory
 WORKDIR /app
-
-# Copy go mod files
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy source code
 COPY . .
-
-# Build the application with optimizations for production
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags='-w -s -extldflags "-static"' \
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags='-w -s' \
     -a -installsuffix cgo \
-    -o typosentinel .
+    -o typosentinel ./main.go
 
 # Stage 2: Final runtime image
 FROM alpine:latest

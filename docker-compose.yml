@@ -2,38 +2,50 @@ version: '3.8'
 
 services:
   # Web Frontend
-  planfinale-web:
+  typosentinel-web:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: planfinale-web
+      args:
+        - VITE_API_URL=/api
+    container_name: typosentinel-web
     ports:
       - "3000:80"
     restart: unless-stopped
     depends_on:
-      - planfinale-api
+      - postgres
+      - typosentinel-api
     networks:
-      - planfinale-network
+      - typosentinel-network
 
   # API Backend
-  planfinale-api:
+  typosentinel-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: planfinale-api
+    container_name: typosentinel-api
     ports:
       - "8080:8080"
     restart: unless-stopped
     environment:
       - PORT=8080
       - ENV=production
-      - PLANFINALE_JWT_SECRET=${PLANFINALE_JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
-      - PLANFINALE_DB_PATH=/app/data/planfinale.db
+      - TYPOSENTINEL_JWT_SECRET=${TYPOSENTINEL_JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - TYPOSENTINEL_DB_TYPE=postgres
+      - TYPOSENTINEL_DB_HOST=postgres
+      - TYPOSENTINEL_DB_PORT=5432
+      - TYPOSENTINEL_DB_NAME=typosentinel
+      - TYPOSENTINEL_DB_USER=typosentinel
+      - TYPOSENTINEL_DB_PASSWORD=typosentinel123
+      - TYPOSENTINEL_DB_SSLMODE=disable
+      - TYPOSENTINEL_LOG_LEVEL=info
+      - TYPOSENTINEL_CORS_ORIGINS=http://localhost:3000
+      - TYPOSENTINEL_DISABLE_AUTH=true
     volumes:
-      - planfinale_data:/app/data
-      - planfinale_logs:/app/logs
+      - typosentinel_data:/app/data
+      - typosentinel_logs:/app/logs
     networks:
-      - planfinale-network
+      - typosentinel-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -41,10 +53,31 @@ services:
       retries: 3
       start_period: 40s
 
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: typosentinel-postgres
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=typosentinel
+      - POSTGRES_PASSWORD=typosentinel123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - typosentinel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typosentinel -d typosentinel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Prometheus for metrics collection (optional)
   prometheus:
     image: prom/prometheus:latest
-    container_name: planfinale-prometheus
+    container_name: typosentinel-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -59,14 +92,14 @@ services:
       - '--web.enable-lifecycle'
     restart: unless-stopped
     networks:
-      - planfinale-network
+      - typosentinel-network
     profiles:
       - monitoring
 
   # Grafana for monitoring dashboards (optional)
   grafana:
     image: grafana/grafana:latest
-    container_name: planfinale-grafana
+    container_name: typosentinel-grafana
     ports:
       - "3001:3000"
     environment:
@@ -76,14 +109,14 @@ services:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
     networks:
-      - planfinale-network
+      - typosentinel-network
     profiles:
       - monitoring
 
   # Node Exporter for system metrics (optional)
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: planfinale-node-exporter
+    container_name: typosentinel-node-exporter
     ports:
       - "9100:9100"
     volumes:
@@ -97,14 +130,16 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     restart: unless-stopped
     networks:
-      - planfinale-network
+      - typosentinel-network
     profiles:
       - monitoring
 
 volumes:
-  planfinale_data:
+  typosentinel_data:
     driver: local
-  planfinale_logs:
+  typosentinel_logs:
+    driver: local
+  postgres_data:
     driver: local
   prometheus_data:
     driver: local
@@ -112,5 +147,5 @@ volumes:
     driver: local
 
 networks:
-  planfinale-network:
+  typosentinel-network:
     driver: bridge

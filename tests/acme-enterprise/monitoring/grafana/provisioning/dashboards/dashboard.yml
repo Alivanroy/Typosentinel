@@ -1,0 +1,71 @@
+# ACME Enterprise Grafana Dashboard Provisioning
+# Automatic dashboard configuration for Typosentinel monitoring
+
+apiVersion: 1
+
+providers:
+  # Typosentinel Security Dashboards
+  - name: 'typosentinel-security'
+    orgId: 1
+    folder: 'Typosentinel Security'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/security
+
+  # Typosentinel Operations Dashboards
+  - name: 'typosentinel-operations'
+    orgId: 1
+    folder: 'Typosentinel Operations'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/operations
+
+  # Infrastructure Monitoring
+  - name: 'infrastructure'
+    orgId: 1
+    folder: 'Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/infrastructure
+
+  # Registry Monitoring
+  - name: 'registries'
+    orgId: 1
+    folder: 'Package Registries'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/registries
+
+  # Compliance and Governance
+  - name: 'compliance'
+    orgId: 1
+    folder: 'Compliance'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/compliance
+
+  # Executive Dashboards
+  - name: 'executive'
+    orgId: 1
+    folder: 'Executive'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 60
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/executive

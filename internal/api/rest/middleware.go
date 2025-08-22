@@ -21,6 +21,9 @@ import (
 
 // corsMiddleware configures CORS middleware
 func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
+	log.Printf("[CORS DEBUG] Creating CORS middleware with config: Enabled=%v, AllowedOrigins=%v, AllowedMethods=%v, AllowedHeaders=%v", 
+		corsConfig.Enabled, corsConfig.AllowedOrigins, corsConfig.AllowedMethods, corsConfig.AllowedHeaders)
+	
 	config := cors.Config{
 		AllowOrigins:     corsConfig.AllowedOrigins,
 		AllowMethods:     corsConfig.AllowedMethods,
@@ -32,19 +35,25 @@ func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
 
 	// If no origins specified, allow all
 	if len(config.AllowOrigins) == 0 {
+		log.Printf("[CORS DEBUG] No origins specified, allowing all origins")
 		config.AllowAllOrigins = true
 	}
 
 	// Default methods if none specified
 	if len(config.AllowMethods) == 0 {
+		log.Printf("[CORS DEBUG] No methods specified, using defaults")
 		config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	}
 
 	// Default headers if none specified
 	if len(config.AllowHeaders) == 0 {
+		log.Printf("[CORS DEBUG] No headers specified, using defaults")
 		config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Requested-With"}
 	}
 
+	log.Printf("[CORS DEBUG] Final CORS config: AllowAllOrigins=%v, AllowOrigins=%v, AllowMethods=%v, AllowHeaders=%v, AllowCredentials=%v", 
+		config.AllowAllOrigins, config.AllowOrigins, config.AllowMethods, config.AllowHeaders, config.AllowCredentials)
+	
 	return cors.New(config)
 }
 

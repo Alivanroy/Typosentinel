@@ -1,0 +1,38 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "backend-api-SBOM",
+  "documentNamespace": "https://acme.enterprise/sbom/backend-api-20250820_110400",
+  "creationInfo": {
+    "created": "2025-08-20T09:04:00Z",
+    "creators": ["Tool: Typosentinel-Enterprise"],
+    "licenseListVersion": "3.19"
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-backend-api",
+      "name": "backend-api",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": true,
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "8e058aff3689fd117b031402793e4cac7c11f0f9"
+      },
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/backend-api@1.0.0"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-backend-api"
+    }
+  ]
+}

@@ -601,7 +601,7 @@ func (ga *GitHubActionsPlugin) createSecurityIssues(ctx context.Context, results
 					Description: fmt.Sprintf("Created security issue for %s", pkg.Name),
 					Metadata: map[string]interface{}{
 						"package":  pkg.Name,
-						"severity": string(threat.Severity),
+						"severity": threat.Severity.String(),
 						"type":     string(threat.Type),
 					},
 					Timestamp: time.Now(),
@@ -614,13 +614,13 @@ func (ga *GitHubActionsPlugin) createSecurityIssues(ctx context.Context, results
 }
 
 func (ga *GitHubActionsPlugin) createSecurityIssue(ctx context.Context, client *http.Client, token, repo string, pkg *types.Package, threat types.Threat) error {
-	title := fmt.Sprintf("[SECURITY] %s vulnerability in %s", strings.ToUpper(string(threat.Severity)), pkg.Name)
+	title := fmt.Sprintf("[SECURITY] %s vulnerability in %s", strings.ToUpper(threat.Severity.String()), pkg.Name)
 	body := ga.formatSecurityIssueBody(pkg, threat)
 
 	issue := map[string]interface{}{
 		"title": title,
 		"body":  body,
-		"labels": []string{"security", "vulnerability", string(threat.Severity)},
+		"labels": []string{"security", "vulnerability", threat.Severity.String()},
 	}
 
 	payloadBytes, err := json.Marshal(issue)
@@ -659,7 +659,7 @@ func (ga *GitHubActionsPlugin) formatSecurityIssueBody(pkg *types.Package, threa
 	body.WriteString(fmt.Sprintf("**Package:** `%s`\n", pkg.Name))
 	body.WriteString(fmt.Sprintf("**Version:** `%s`\n", pkg.Version))
 	body.WriteString(fmt.Sprintf("**Registry:** `%s`\n", pkg.Registry))
-	body.WriteString(fmt.Sprintf("**Severity:** %s\n", strings.ToUpper(string(threat.Severity))))
+	body.WriteString(fmt.Sprintf("**Severity:** %s\n", strings.ToUpper(threat.Severity.String())))
 	body.WriteString(fmt.Sprintf("**Threat Type:** %s\n", string(threat.Type)))
 	body.WriteString(fmt.Sprintf("**Confidence:** %.2f\n\n", threat.Confidence))
 

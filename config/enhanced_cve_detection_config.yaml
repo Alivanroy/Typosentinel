@@ -1,0 +1,321 @@
+# Enhanced CVE Detection Configuration
+# Implements Novel CVE Breakthrough 2025 Criteria
+# Version: 2.0-enhanced
+# Last Updated: 2025-01-13
+# Integrated with NOVEL_CVE_BREAKTHROUGH_2025.md criteria
+
+version: "2.0-enhanced"
+detection_mode: "novel_breakthrough_2025"
+breakthrough_integration: true
+last_updated: "2025-01-13"
+config_type: "enhanced_cve_detection"
+
+# Enhanced Detection Algorithm Thresholds
+detection_algorithms:
+  aurora:
+    name: "Advanced Unsupervised Runtime Outlier Recognition Algorithm"
+    enabled: true
+    enhanced_threshold: -0.3  # More sensitive than previous -0.229
+    confidence_threshold: 0.8
+    novel_patterns:
+      - "prototype_chain_manipulation"
+      - "reactive_system_escape"
+      - "concurrent_feature_exploitation"
+      - "interceptor_bypass_patterns"
+      - "advanced_clone_pollution"
+    
+  rcs2:
+    name: "Recursive Clustering for Supply-chain Security"
+    enabled: true
+    coordination_threshold: 0.8  # Enhanced from 0.6
+    cluster_confidence: 0.85
+    novel_patterns:
+      - "coordinated_interceptor_bypass"
+      - "multi_package_prototype_pollution"
+      - "synchronized_latest_version_attacks"
+    
+  mked:
+    name: "Maintainer Knowledge Entropy Drift"
+    enabled: true
+    drift_threshold: 0.7  # Enhanced from 0.5
+    entropy_sensitivity: 0.9
+    novel_patterns:
+      - "latest_version_behavioral_changes"
+      - "maintainer_account_compromise_indicators"
+      - "release_pattern_anomalies"
+    
+  dirt:
+    name: "Dependency Impact & Risk Targeting"
+    enabled: true
+    strategic_threshold: 1.5  # Enhanced from 1.25
+    impact_multiplier: 1.2
+    latest_version_bonus: 0.5
+    novel_patterns:
+      - "latest_version_targeting_strategies"
+      - "high_impact_dependency_exploitation"
+      - "concurrent_feature_targeting"
+
+# Novel Attack Vector Classifications
+novel_attack_vectors:
+  route_pollution:
+    name: "Route Pollution via Prototype Manipulation"
+    target_packages: ["express@5.x", "koa@3.x", "fastify@4.x"]
+    cvss_baseline: 8.5
+    detection_patterns:
+      - "router_prototype_pollution"
+      - "authentication_bypass_routes"
+      - "middleware_chain_manipulation"
+    acceptance_criteria:
+      - "demonstrates_route_level_auth_bypass"
+      - "affects_express_5x_or_newer"
+      - "working_poc_exploit"
+  
+  reactive_proxy_escape:
+    name: "Reactive Proxy Escape"
+    target_packages: ["vue@3.5.x", "@vue/reactivity@3.x"]
+    cvss_baseline: 8.2
+    detection_patterns:
+      - "proxy_escape_patterns"
+      - "component_state_pollution"
+      - "reactive_system_bypass"
+    acceptance_criteria:
+      - "bypasses_vue_reactive_proxy"
+      - "causes_component_state_pollution"
+      - "affects_vue_35x_or_newer"
+  
+  interceptor_bypass:
+    name: "Request Interceptor Bypass"
+    target_packages: ["axios@1.11.x", "fetch@3.x"]
+    cvss_baseline: 7.8
+    detection_patterns:
+      - "security_interceptor_bypass"
+      - "prototype_pollution_interceptors"
+      - "request_manipulation"
+    acceptance_criteria:
+      - "bypasses_security_interceptors"
+      - "uses_prototype_manipulation"
+      - "affects_axios_111x_or_newer"
+  
+  concurrent_race_condition:
+    name: "Concurrent Features Race Condition"
+    target_packages: ["react@19.x", "@react/concurrent@19.x"]
+    cvss_baseline: 8.0
+    detection_patterns:
+      - "concurrent_rendering_race"
+      - "state_corruption_patterns"
+      - "component_hijacking"
+    acceptance_criteria:
+      - "exploits_react19_concurrent_features"
+      - "causes_state_corruption_or_hijacking"
+      - "demonstrates_race_condition"
+  
+  advanced_clone_pollution:
+    name: "Advanced Clone Pollution"
+    target_packages: ["lodash@4.17.21", "ramda@0.29.x", "underscore@1.13.x"]
+    cvss_baseline: 8.3
+    detection_patterns:
+      - "sophisticated_clone_pollution"
+      - "deep_cloning_exploitation"
+      - "global_prototype_pollution"
+    acceptance_criteria:
+      - "uses_advanced_clone_pollution"
+      - "affects_global_prototype_chain"
+      - "not_previously_documented"
+
+# Latest Version Targeting Requirements
+latest_version_requirements:
+  enabled: true
+  max_age_months: 6  # Package version must be ≤6 months old
+  priority_level: "CRITICAL"
+  version_check_patterns:
+    - "@latest"
+    - "^\\d+\\.\\d+\\.\\d+$"  # Semantic versioning
+  target_series:
+    - "express@5.x"
+    - "vue@3.5.x"
+    - "axios@1.11.x"
+    - "react@19.x"
+    - "lodash@4.17.x"
+
+# Enhanced CVSS Scoring Configuration
+cvss_scoring:
+  base_calculation: "CVSS:3.1"
+  enhancements:
+    latest_version_bonus: 0.5
+    novel_technique_bonus: 0.3
+    high_impact_bonus: 0.2  # For >20M weekly downloads
+    prototype_pollution_bonus: 0.4
+    concurrent_exploitation_bonus: 0.3
+  
+  severity_thresholds:
+    critical:
+      min_score: 8.0
+      requires_novel_factor: true
+    high:
+      min_score: 7.0
+      requires_latest_version: true
+    medium_high:
+      min_score: 6.0
+      requires_high_impact: true
+
+# Real-World Impact Assessment
+impact_assessment:
+  download_thresholds:
+    minimum_per_package: 4000000  # 4M+ weekly downloads
+    target_total_affected: 124000000  # 124M+ total weekly downloads
+    high_impact_threshold: 20000000  # 20M+ for bonus scoring
+  
+  application_types:
+    web_servers_apis:
+      packages: ["express", "koa", "fastify", "hapi"]
+      impact_multiplier: 1.3
+    frontend_applications:
+      packages: ["vue", "react", "angular", "svelte"]
+      impact_multiplier: 1.2
+    http_clients:
+      packages: ["axios", "fetch", "request", "node-fetch"]
+      impact_multiplier: 1.1
+    utility_libraries:
+      packages: ["lodash", "ramda", "underscore", "moment"]
+      impact_multiplier: 1.0
+
+# Technical Innovation Requirements
+technical_innovation:
+  novelty_requirements:
+    first_in_series: true  # First vulnerability in package series
+    no_previous_cve: true  # No previous CVE for same attack vector
+    undocumented_technique: true  # Novel technique not documented
+  
+  exploitation_requirements:
+    working_poc: true  # Working proof-of-concept required
+    reproducible: true  # Must be reproducible across environments
+    step_by_step_guide: true  # Detailed exploitation guide required
+
+# Submission Readiness Criteria
+submission_criteria:
+  technical_documentation:
+    detailed_description: true
+    working_poc_exploit: true
+    impact_assessment: true
+    cvss_calculation: true
+    affected_versions: true
+    mitigation_recommendations: true
+  
+  quality_assurance:
+    cross_algorithm_validation: 2  # Minimum 2 algorithms must detect
+    manual_verification: true
+    false_positive_analysis: true
+    reproducibility_confirmed: true
+  
+  responsible_disclosure:
+    maintainer_contact_identified: true
+    disclosure_timeline_prepared: true  # 90-day standard
+    security_advisory_draft: true
+    patch_coordination_plan: true
+
+# Success Metrics
+success_metrics:
+  discovery_targets:
+    novel_cves_per_quarter: 5
+    average_cvss_minimum: 8.0
+    latest_version_coverage: 100  # Percentage
+    mitre_acceptance_rate: 80  # Percentage
+  
+  quality_metrics:
+    max_false_positive_rate: 5  # Percentage
+    exploitation_success_rate: 100  # Percentage
+    novel_technique_rate: 60  # Percentage
+    high_impact_rate: 80  # Percentage (>10M downloads)
+
+# Algorithm Weight Configuration
+algorithm_weights:
+  basic_pattern_detection: 0.30  # Reduced from 40%
+  aurora_behavioral: 0.25  # Increased from 20%
+  rcs2_coordination: 0.20  # Increased from 15%
+  mked_drift: 0.10  # Same as before
+  dirt_targeting: 0.15  # Same as before
+
+# Risk Level Calculation
+risk_levels:
+  critical:
+    min_score: 85
+    requires:
+      - "latest_version_target"
+      - "novel_attack_vector"
+      - "high_impact"
+  high:
+    min_score: 70
+    requires:
+      - "latest_version_target"
+      - "working_exploit"
+  medium:
+    min_score: 50
+    requires:
+      - "reproducible_vulnerability"
+  low:
+    min_score: 0
+    requires: []
+
+# Validation Pipeline Configuration
+validation_pipeline:
+  enabled: true
+  stages:
+    - "latest_version_check"
+    - "novel_attack_vector_validation"
+    - "working_exploit_verification"
+    - "impact_assessment"
+    - "cross_algorithm_validation"
+    - "manual_verification"
+    - "submission_readiness_check"
+  
+  failure_handling:
+    continue_on_warning: true
+    stop_on_critical_failure: true
+    log_all_validations: true
+
+# Monitoring and Alerting
+monitoring:
+  enabled: true
+  metrics_collection:
+    detection_rates: true
+    false_positive_tracking: true
+    algorithm_performance: true
+    submission_success_rates: true
+  
+  alerts:
+    critical_vulnerability_detected: true
+    novel_attack_vector_found: true
+    high_impact_package_affected: true
+    submission_ready_candidate: true
+
+# Integration Settings
+integrations:
+  mitre_cve_database:
+    enabled: true
+    api_endpoint: "https://cve.mitre.org/api/v1"
+    check_existing_cves: true
+  
+  package_registries:
+    npm:
+      enabled: true
+      api_endpoint: "https://registry.npmjs.org"
+      check_latest_versions: true
+    
+  security_databases:
+    nvd:
+      enabled: true
+      api_endpoint: "https://services.nvd.nist.gov/rest/json"
+    osv:
+      enabled: true
+      api_endpoint: "https://api.osv.dev"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  enhanced_detection_events: true
+  novel_pattern_detection: true
+  validation_pipeline_steps: true
+  submission_preparation: true
+  file_rotation: true
+  max_file_size: "100MB"
+  retention_days: 90

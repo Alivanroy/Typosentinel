@@ -1,0 +1,38 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "java-maven-app-SBOM",
+  "documentNamespace": "https://acme.enterprise/sbom/java-maven-app-20250820_110400",
+  "creationInfo": {
+    "created": "2025-08-20T09:04:00Z",
+    "creators": ["Tool: Typosentinel-Enterprise"],
+    "licenseListVersion": "3.19"
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-java-maven-app",
+      "name": "java-maven-app",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": true,
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "60bc2902053a060af5ab26c61c4da9bc1453de99"
+      },
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:maven/java-maven-app@1.0.0"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-java-maven-app"
+    }
+  ]
+}

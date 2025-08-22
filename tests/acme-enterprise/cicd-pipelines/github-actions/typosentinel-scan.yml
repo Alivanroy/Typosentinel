@@ -1,0 +1,866 @@
+name: Typosentinel Security Scan
+
+# Comprehensive CI/CD pipeline for ACME Enterprise
+# Integrates Typosentinel scanning across multiple package registries
+# Supports vulnerability detection, dependency confusion, and supply chain attacks
+
+on:
+  push:
+    branches: [ main, develop, release/* ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily security scans at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of scan to perform'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - dependencies-only
+          - zero-day-scenarios
+      severity_threshold:
+        description: 'Minimum severity level to report'
+        required: false
+        default: 'medium'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - critical
+
+env:
+  TYPOSENTINEL_VERSION: 'latest'
+  SCAN_TIMEOUT: '1800'  # 30 minutes
+  ARTIFACT_RETENTION_DAYS: 30
+  REGISTRY_CONFIG_PATH: './tests/acme-enterprise/registry-config'
+
+jobs:
+  # Pre-scan setup and validation
+  setup:
+    name: Setup and Validation
+    runs-on: ubuntu-latest
+    outputs:
+      scan-matrix: ${{ steps.matrix.outputs.registries }}
+      scan-config: ${{ steps.config.outputs.config }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Setup scan matrix
+        id: matrix
+        run: |
+          # Determine which registries to scan based on project structure
+          registries='[]'
+          
+          if [ -f "package.json" ] || [ -f "package-lock.json" ] || [ -f "yarn.lock" ]; then
+            registries=$(echo $registries | jq '. + ["npm"]')
+          fi
+          
+          if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ] || [ -f "Pipfile" ]; then
+            registries=$(echo $registries | jq '. + ["pypi"]')
+          fi
+          
+          if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+            registries=$(echo $registries | jq '. + ["maven"]')
+          fi
+          
+          if [ -f "*.csproj" ] || [ -f "*.sln" ] || [ -f "packages.config" ] || [ -f "*.fsproj" ] || [ -f "*.vbproj" ]; then
+            registries=$(echo $registries | jq '. + ["nuget"]')
+          fi
+          
+          if [ -f "Gemfile" ] || [ -f "Gemfile.lock" ] || [ -f "*.gemspec" ]; then
+            registries=$(echo $registries | jq '. + ["rubygems"]')
+          fi
+          
+          if [ -f "go.mod" ] || [ -f "go.sum" ]; then
+            registries=$(echo $registries | jq '. + ["go"]')
+          fi
+          
+          # Always include comprehensive scan for enterprise testing
+          if [ "${{ github.event.inputs.scan_type }}" = "full" ] || [ "${{ github.event_name }}" = "schedule" ]; then
+            registries='["npm", "pypi", "maven", "nuget", "rubygems", "go"]'
+          fi
+          
+          echo "registries=$registries" >> $GITHUB_OUTPUT
+          echo "Detected registries: $registries"
+
+      - name: Generate scan configuration
+        id: config
+        run: |
+          cat > scan-config.json << EOF
+          {
+            "scan_type": "${{ github.event.inputs.scan_type || 'full' }}",
+            "severity_threshold": "${{ github.event.inputs.severity_threshold || 'medium' }}",
+            "enable_zero_day_detection": true,
+            "enable_dependency_confusion": true,
+            "enable_supply_chain_analysis": true,
+            "enable_typosquatting_detection": true,
+            "scan_timeout": ${{ env.SCAN_TIMEOUT }},
+            "parallel_scans": 3,
+            "deep_analysis": ${{ github.event_name == 'schedule' || github.event.inputs.scan_type == 'full' }},
+            "enterprise_features": {
+              "policy_enforcement": true,
+              "compliance_reporting": true,
+              "risk_assessment": true,
+              "threat_intelligence": true
+            },
+            "reporting": {
+              "formats": ["json", "sarif", "html", "pdf"],
+              "include_remediation": true,
+              "include_risk_score": true,
+              "include_compliance_status": true
+            }
+          }
+          EOF
+          
+          config=$(cat scan-config.json | jq -c .)
+          echo "config=$config" >> $GITHUB_OUTPUT
+
+      - name: Upload scan configuration
+        uses: actions/upload-artifact@v3
+        with:
+          name: scan-config
+          path: scan-config.json
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
+  # Registry-specific scans
+  registry-scan:
+    name: Scan ${{ matrix.registry }}
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.scan-matrix != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        registry: ${{ fromJson(needs.setup.outputs.scan-matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download scan configuration
+        uses: actions/download-artifact@v3
+        with:
+          name: scan-config
+
+      - name: Setup registry environment
+        run: |
+          # Setup registry-specific environment
+          case "${{ matrix.registry }}" in
+            npm)
+              echo "Setting up Node.js environment"
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+              npm config set audit-level moderate
+              ;;
+            pypi)
+              echo "Setting up Python environment"
+              sudo apt-get update
+              sudo apt-get install -y python3 python3-pip
+              pip3 install --upgrade pip setuptools wheel
+              pip3 install safety bandit
+              ;;
+            maven)
+              echo "Setting up Java environment"
+              sudo apt-get update
+              sudo apt-get install -y openjdk-17-jdk maven
+              export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+              ;;
+            nuget)
+              echo "Setting up .NET environment"
+              wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+              sudo dpkg -i packages-microsoft-prod.deb
+              sudo apt-get update
+              sudo apt-get install -y dotnet-sdk-6.0
+              ;;
+            rubygems)
+              echo "Setting up Ruby environment"
+              sudo apt-get update
+              sudo apt-get install -y ruby-full bundler
+              gem install bundler-audit
+              ;;
+            go)
+              echo "Setting up Go environment"
+              wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
+              sudo tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
+              echo "/usr/local/go/bin" >> $GITHUB_PATH
+              ;;
+          esac
+
+      - name: Install Typosentinel
+        run: |
+          # Download and install Typosentinel Enterprise
+          if [ "${{ env.TYPOSENTINEL_VERSION }}" = "latest" ]; then
+            DOWNLOAD_URL="https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-amd64"
+          else
+            DOWNLOAD_URL="https://github.com/typosentinel/typosentinel/releases/download/${{ env.TYPOSENTINEL_VERSION }}/typosentinel-linux-amd64"
+          fi
+          
+          curl -L "$DOWNLOAD_URL" -o typosentinel
+          chmod +x typosentinel
+          sudo mv typosentinel /usr/local/bin/
+          
+          # Verify installation
+          typosentinel --version
+
+      - name: Configure Typosentinel
+        run: |
+          # Create Typosentinel configuration
+          mkdir -p ~/.typosentinel
+          
+          cat > ~/.typosentinel/config.yaml << EOF
+          # Typosentinel Enterprise Configuration
+          # Registry: ${{ matrix.registry }}
+          
+          api:
+            endpoint: "${{ secrets.TYPOSENTINEL_API_ENDPOINT || 'https://api.typosentinel.com' }}"
+            token: "${{ secrets.TYPOSENTINEL_API_TOKEN }}"
+            timeout: 300
+          
+          scanning:
+            registry: "${{ matrix.registry }}"
+            parallel_workers: 3
+            timeout: ${{ env.SCAN_TIMEOUT }}
+            deep_analysis: ${{ fromJson(needs.setup.outputs.scan-config).deep_analysis }}
+            
+          detection:
+            typosquatting:
+              enabled: true
+              algorithms: ["levenshtein", "jaro_winkler", "soundex", "metaphone"]
+              threshold: 0.8
+              check_popular_packages: true
+            
+            dependency_confusion:
+              enabled: true
+              check_internal_packages: true
+              namespace_analysis: true
+              version_analysis: true
+            
+            supply_chain:
+              enabled: true
+              check_maintainer_changes: true
+              check_suspicious_updates: true
+              check_malicious_code: true
+            
+            zero_day:
+              enabled: ${{ fromJson(needs.setup.outputs.scan-config).enable_zero_day_detection }}
+              ml_models: true
+              behavioral_analysis: true
+              signature_detection: true
+          
+          policies:
+            severity_threshold: "${{ fromJson(needs.setup.outputs.scan-config).severity_threshold }}"
+            fail_on_high: true
+            fail_on_critical: true
+            allow_dev_dependencies: false
+            
+          reporting:
+            formats: ${{ toJson(fromJson(needs.setup.outputs.scan-config).reporting.formats) }}
+            output_dir: "./typosentinel-reports"
+            include_remediation: ${{ fromJson(needs.setup.outputs.scan-config).reporting.include_remediation }}
+            include_risk_score: ${{ fromJson(needs.setup.outputs.scan-config).reporting.include_risk_score }}
+          
+          enterprise:
+            license_key: "${{ secrets.TYPOSENTINEL_ENTERPRISE_LICENSE }}"
+            compliance_mode: true
+            audit_logging: true
+            threat_intelligence: ${{ fromJson(needs.setup.outputs.scan-config).enterprise_features.threat_intelligence }}
+          EOF
+
+      - name: Run registry-specific pre-scan
+        run: |
+          # Registry-specific dependency installation and preparation
+          case "${{ matrix.registry }}" in
+            npm)
+              if [ -f "package.json" ]; then
+                npm ci --audit=false || npm install --no-audit
+                npm audit --audit-level=moderate --json > npm-audit.json || true
+              fi
+              ;;
+            pypi)
+              if [ -f "requirements.txt" ]; then
+                pip3 install -r requirements.txt --dry-run
+                safety check --json --output safety-report.json || true
+              fi
+              ;;
+            maven)
+              if [ -f "pom.xml" ]; then
+                mvn dependency:resolve -q
+                mvn org.owasp:dependency-check-maven:check -Dformat=JSON || true
+              fi
+              ;;
+            nuget)
+              if [ -f "*.csproj" ] || [ -f "packages.config" ]; then
+                dotnet restore --verbosity quiet
+                dotnet list package --vulnerable --include-transitive --format json > nuget-vulnerabilities.json || true
+              fi
+              ;;
+            rubygems)
+              if [ -f "Gemfile" ]; then
+                bundle install --deployment
+                bundle audit --format json --output bundler-audit.json || true
+              fi
+              ;;
+            go)
+              if [ -f "go.mod" ]; then
+                go mod download
+                go list -json -m all > go-modules.json
+                govulncheck -json ./... > govulncheck.json 2>/dev/null || true
+              fi
+              ;;
+          esac
+
+      - name: Run Typosentinel scan
+        run: |
+          # Create output directory
+          mkdir -p typosentinel-reports
+          
+          # Run comprehensive scan
+          echo "Starting Typosentinel scan for ${{ matrix.registry }}..."
+          
+          typosentinel scan \
+            --registry "${{ matrix.registry }}" \
+            --config ~/.typosentinel/config.yaml \
+            --output-dir ./typosentinel-reports \
+            --format json,sarif,html \
+            --severity-threshold "${{ fromJson(needs.setup.outputs.scan-config).severity_threshold }}" \
+            --timeout ${{ env.SCAN_TIMEOUT }} \
+            --enterprise \
+            --verbose \
+            . || echo "Scan completed with findings"
+          
+          # Generate summary
+          echo "## Typosentinel Scan Results - ${{ matrix.registry }}" > scan-summary.md
+          echo "" >> scan-summary.md
+          echo "**Scan Type:** ${{ fromJson(needs.setup.outputs.scan-config).scan_type }}" >> scan-summary.md
+          echo "**Registry:** ${{ matrix.registry }}" >> scan-summary.md
+          echo "**Severity Threshold:** ${{ fromJson(needs.setup.outputs.scan-config).severity_threshold }}" >> scan-summary.md
+          echo "**Scan Time:** $(date)" >> scan-summary.md
+          echo "" >> scan-summary.md
+          
+          # Extract key metrics from scan results
+          if [ -f "typosentinel-reports/scan-results.json" ]; then
+            total_packages=$(jq '.summary.total_packages // 0' typosentinel-reports/scan-results.json)
+            vulnerabilities=$(jq '.summary.vulnerabilities // 0' typosentinel-reports/scan-results.json)
+            high_risk=$(jq '.summary.high_risk_packages // 0' typosentinel-reports/scan-results.json)
+            
+            echo "**Total Packages Scanned:** $total_packages" >> scan-summary.md
+            echo "**Vulnerabilities Found:** $vulnerabilities" >> scan-summary.md
+            echo "**High Risk Packages:** $high_risk" >> scan-summary.md
+          fi
+
+      - name: Run zero-day scenario tests
+        if: fromJson(needs.setup.outputs.scan-config).enable_zero_day_detection
+        run: |
+          echo "Running zero-day scenario tests for ${{ matrix.registry }}..."
+          
+          # Run the zero-day scenarios specific to this registry
+          if [ -f "./tests/acme-enterprise/zero-day-scenarios/run-all-scenarios.sh" ]; then
+            cd ./tests/acme-enterprise/zero-day-scenarios
+            ./run-all-scenarios.sh --registry "${{ matrix.registry }}" --output-dir "../../../typosentinel-reports/zero-day"
+            cd -
+          fi
+
+      - name: Process scan results
+        run: |
+          # Convert results to GitHub Security format
+          if [ -f "typosentinel-reports/scan-results.sarif" ]; then
+            echo "SARIF report generated successfully"
+          fi
+          
+          # Generate compliance report
+          if [ -f "typosentinel-reports/scan-results.json" ]; then
+            jq '.compliance // {}' typosentinel-reports/scan-results.json > compliance-report.json
+          fi
+          
+          # Check for critical findings
+          critical_count=0
+          if [ -f "typosentinel-reports/scan-results.json" ]; then
+            critical_count=$(jq '.summary.critical_vulnerabilities // 0' typosentinel-reports/scan-results.json)
+          fi
+          
+          echo "CRITICAL_FINDINGS=$critical_count" >> $GITHUB_ENV
+          
+          # Set job status based on findings
+          if [ "$critical_count" -gt 0 ] && [ "${{ fromJson(needs.setup.outputs.scan-config).enterprise_features.policy_enforcement }}" = "true" ]; then
+            echo "SCAN_STATUS=failed" >> $GITHUB_ENV
+            echo "Critical vulnerabilities found: $critical_count"
+          else
+            echo "SCAN_STATUS=passed" >> $GITHUB_ENV
+          fi
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: typosentinel-results-${{ matrix.registry }}
+          path: |
+            typosentinel-reports/
+            scan-summary.md
+            compliance-report.json
+            *-audit.json
+            *-vulnerabilities.json
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always() && hashFiles('typosentinel-reports/scan-results.sarif') != ''
+        with:
+          sarif_file: typosentinel-reports/scan-results.sarif
+          category: typosentinel-${{ matrix.registry }}
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let comment = '## 🔍 Typosentinel Security Scan Results - ${{ matrix.registry }}\n\n';
+            
+            if (fs.existsSync('scan-summary.md')) {
+              const summary = fs.readFileSync('scan-summary.md', 'utf8');
+              comment += summary + '\n\n';
+            }
+            
+            if ('${{ env.SCAN_STATUS }}' === 'failed') {
+              comment += '❌ **Scan Failed**: Critical vulnerabilities detected\n';
+              comment += `🚨 Critical findings: ${{ env.CRITICAL_FINDINGS }}\n\n`;
+            } else {
+              comment += '✅ **Scan Passed**: No critical vulnerabilities detected\n\n';
+            }
+            
+            comment += '📊 **Detailed Results**: Check the Actions tab for full reports\n';
+            comment += '🔗 **Artifacts**: Download detailed reports from the workflow run\n';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Fail on critical findings
+        if: env.SCAN_STATUS == 'failed'
+        run: |
+          echo "❌ Scan failed due to critical security findings"
+          echo "Critical vulnerabilities: ${{ env.CRITICAL_FINDINGS }}"
+          echo "Please review the scan results and address critical issues before proceeding."
+          exit 1
+
+  # Aggregate results and generate comprehensive report
+  aggregate-results:
+    name: Aggregate Results
+    runs-on: ubuntu-latest
+    needs: [setup, registry-scan]
+    if: always() && needs.setup.outputs.scan-matrix != '[]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all scan results
+        uses: actions/download-artifact@v3
+        with:
+          path: all-results
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq python3 python3-pip
+          pip3 install jinja2 markdown
+
+      - name: Aggregate scan results
+        run: |
+          mkdir -p aggregated-reports
+          
+          # Combine all JSON results
+          echo '{"scans": []}' > aggregated-reports/combined-results.json
+          
+          for registry_dir in all-results/typosentinel-results-*/; do
+            if [ -d "$registry_dir" ]; then
+              registry=$(basename "$registry_dir" | sed 's/typosentinel-results-//')
+              
+              if [ -f "$registry_dir/typosentinel-reports/scan-results.json" ]; then
+                # Add registry info to the scan result
+                jq --arg registry "$registry" '. + {"registry": $registry}' \
+                  "$registry_dir/typosentinel-reports/scan-results.json" > "temp-$registry.json"
+                
+                # Merge into combined results
+                jq --slurpfile scan "temp-$registry.json" '.scans += $scan' \
+                  aggregated-reports/combined-results.json > temp-combined.json
+                mv temp-combined.json aggregated-reports/combined-results.json
+                
+                rm "temp-$registry.json"
+              fi
+            fi
+          done
+
+      - name: Generate executive summary
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          from datetime import datetime
+          
+          # Load combined results
+          with open('aggregated-reports/combined-results.json', 'r') as f:
+              data = json.load(f)
+          
+          # Calculate aggregate metrics
+          total_packages = 0
+          total_vulnerabilities = 0
+          total_critical = 0
+          total_high = 0
+          total_medium = 0
+          total_low = 0
+          registries_scanned = []
+          
+          for scan in data.get('scans', []):
+              summary = scan.get('summary', {})
+              total_packages += summary.get('total_packages', 0)
+              total_vulnerabilities += summary.get('vulnerabilities', 0)
+              total_critical += summary.get('critical_vulnerabilities', 0)
+              total_high += summary.get('high_vulnerabilities', 0)
+              total_medium += summary.get('medium_vulnerabilities', 0)
+              total_low += summary.get('low_vulnerabilities', 0)
+              registries_scanned.append(scan.get('registry', 'unknown'))
+          
+          # Generate executive summary
+          summary = {
+              'scan_date': datetime.now().isoformat(),
+              'workflow_run': os.environ.get('GITHUB_RUN_ID', 'unknown'),
+              'commit_sha': os.environ.get('GITHUB_SHA', 'unknown'),
+              'branch': os.environ.get('GITHUB_REF_NAME', 'unknown'),
+              'registries_scanned': registries_scanned,
+              'total_packages_scanned': total_packages,
+              'total_vulnerabilities': total_vulnerabilities,
+              'severity_breakdown': {
+                  'critical': total_critical,
+                  'high': total_high,
+                  'medium': total_medium,
+                  'low': total_low
+              },
+              'risk_score': min(100, (total_critical * 10 + total_high * 5 + total_medium * 2 + total_low * 1)),
+              'compliance_status': 'PASS' if total_critical == 0 else 'FAIL',
+              'recommendations': []
+          }
+          
+          # Add recommendations based on findings
+          if total_critical > 0:
+              summary['recommendations'].append('Immediately address critical vulnerabilities')
+          if total_high > 5:
+              summary['recommendations'].append('Review and prioritize high-severity findings')
+          if total_packages > 1000:
+              summary['recommendations'].append('Consider implementing dependency management policies')
+          
+          # Save executive summary
+          with open('aggregated-reports/executive-summary.json', 'w') as f:
+              json.dump(summary, f, indent=2)
+          
+          print(f"Executive Summary Generated:")
+          print(f"- Registries Scanned: {len(registries_scanned)}")
+          print(f"- Total Packages: {total_packages}")
+          print(f"- Total Vulnerabilities: {total_vulnerabilities}")
+          print(f"- Critical: {total_critical}")
+          print(f"- Risk Score: {summary['risk_score']}")
+          print(f"- Compliance Status: {summary['compliance_status']}")
+          EOF
+
+      - name: Generate HTML report
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          from datetime import datetime
+          
+          # Load data
+          with open('aggregated-reports/executive-summary.json', 'r') as f:
+              summary = json.load(f)
+          
+          with open('aggregated-reports/combined-results.json', 'r') as f:
+              detailed = json.load(f)
+          
+          # Generate HTML report
+          html = f'''
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>ACME Enterprise - Typosentinel Security Report</title>
+              <style>
+                  body {{ font-family: Arial, sans-serif; margin: 40px; }}
+                  .header {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }}
+                  .metric {{ display: inline-block; margin: 10px 20px; text-align: center; }}
+                  .metric-value {{ font-size: 2em; font-weight: bold; }}
+                  .critical {{ color: #dc3545; }}
+                  .high {{ color: #fd7e14; }}
+                  .medium {{ color: #ffc107; }}
+                  .low {{ color: #28a745; }}
+                  .pass {{ color: #28a745; }}
+                  .fail {{ color: #dc3545; }}
+                  table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+                  th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+                  th {{ background-color: #f2f2f2; }}
+                  .registry-section {{ margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }}
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <h1>🔍 ACME Enterprise Security Scan Report</h1>
+                  <p><strong>Scan Date:</strong> {summary['scan_date']}</p>
+                  <p><strong>Branch:</strong> {summary['branch']}</p>
+                  <p><strong>Commit:</strong> {summary['commit_sha'][:8]}</p>
+                  <p><strong>Workflow Run:</strong> {summary['workflow_run']}</p>
+              </div>
+              
+              <h2>📊 Executive Summary</h2>
+              <div class="metrics">
+                  <div class="metric">
+                      <div class="metric-value">{summary['total_packages_scanned']}</div>
+                      <div>Packages Scanned</div>
+                  </div>
+                  <div class="metric">
+                      <div class="metric-value">{summary['total_vulnerabilities']}</div>
+                      <div>Total Vulnerabilities</div>
+                  </div>
+                  <div class="metric">
+                      <div class="metric-value critical">{summary['severity_breakdown']['critical']}</div>
+                      <div>Critical</div>
+                  </div>
+                  <div class="metric">
+                      <div class="metric-value high">{summary['severity_breakdown']['high']}</div>
+                      <div>High</div>
+                  </div>
+                  <div class="metric">
+                      <div class="metric-value {summary['compliance_status'].lower()}">{summary['compliance_status']}</div>
+                      <div>Compliance Status</div>
+                  </div>
+              </div>
+              
+              <h2>🎯 Registries Scanned</h2>
+              <ul>
+          '''
+          
+          for registry in summary['registries_scanned']:
+              html += f'<li><strong>{registry.upper()}</strong></li>'
+          
+          html += '</ul>'
+          
+          # Add registry-specific details
+          for scan in detailed.get('scans', []):
+              registry = scan.get('registry', 'unknown')
+              scan_summary = scan.get('summary', {})
+              
+              html += f'''
+              <div class="registry-section">
+                  <h3>📦 {registry.upper()} Registry Results</h3>
+                  <table>
+                      <tr><th>Metric</th><th>Value</th></tr>
+                      <tr><td>Packages Scanned</td><td>{scan_summary.get('total_packages', 0)}</td></tr>
+                      <tr><td>Vulnerabilities</td><td>{scan_summary.get('vulnerabilities', 0)}</td></tr>
+                      <tr><td>Critical</td><td class="critical">{scan_summary.get('critical_vulnerabilities', 0)}</td></tr>
+                      <tr><td>High</td><td class="high">{scan_summary.get('high_vulnerabilities', 0)}</td></tr>
+                      <tr><td>Medium</td><td class="medium">{scan_summary.get('medium_vulnerabilities', 0)}</td></tr>
+                      <tr><td>Low</td><td class="low">{scan_summary.get('low_vulnerabilities', 0)}</td></tr>
+                  </table>
+              </div>
+              '''
+          
+          html += '''
+              <h2>💡 Recommendations</h2>
+              <ul>
+          '''
+          
+          for rec in summary['recommendations']:
+              html += f'<li>{rec}</li>'
+          
+          html += '''
+              </ul>
+              
+              <hr>
+              <p><em>Generated by Typosentinel Enterprise Security Scanner</em></p>
+          </body>
+          </html>
+          '''
+          
+          with open('aggregated-reports/security-report.html', 'w') as f:
+              f.write(html)
+          
+          print("HTML report generated: aggregated-reports/security-report.html")
+          EOF
+
+      - name: Upload aggregated results
+        uses: actions/upload-artifact@v3
+        with:
+          name: typosentinel-aggregated-report
+          path: aggregated-reports/
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
+      - name: Create release on schedule
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = JSON.parse(fs.readFileSync('aggregated-reports/executive-summary.json', 'utf8'));
+            
+            const tagName = `security-scan-${new Date().toISOString().split('T')[0]}`;
+            const releaseName = `Security Scan Report - ${new Date().toLocaleDateString()}`;
+            
+            const releaseBody = `
+            ## 🔍 Daily Security Scan Report
+            
+            **Scan Date:** ${summary.scan_date}
+            **Compliance Status:** ${summary.compliance_status}
+            **Risk Score:** ${summary.risk_score}/100
+            
+            ### 📊 Summary
+            - **Total Packages Scanned:** ${summary.total_packages_scanned}
+            - **Total Vulnerabilities:** ${summary.total_vulnerabilities}
+            - **Critical:** ${summary.severity_breakdown.critical}
+            - **High:** ${summary.severity_breakdown.high}
+            - **Medium:** ${summary.severity_breakdown.medium}
+            - **Low:** ${summary.severity_breakdown.low}
+            
+            ### 🎯 Registries Scanned
+            ${summary.registries_scanned.map(r => `- ${r.toUpperCase()}`).join('\n')}
+            
+            ### 💡 Key Recommendations
+            ${summary.recommendations.map(r => `- ${r}`).join('\n')}
+            
+            Download the detailed reports from the workflow artifacts.
+            `;
+            
+            try {
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tagName,
+                name: releaseName,
+                body: releaseBody,
+                draft: false,
+                prerelease: false
+              });
+              console.log(`Release created: ${tagName}`);
+            } catch (error) {
+              console.log(`Release creation failed: ${error.message}`);
+            }
+
+  # Notification and alerting
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [setup, registry-scan, aggregate-results]
+    if: always() && (github.event_name == 'schedule' || contains(needs.*.result, 'failure'))
+    steps:
+      - name: Download executive summary
+        uses: actions/download-artifact@v3
+        with:
+          name: typosentinel-aggregated-report
+          path: reports
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -f "reports/executive-summary.json" ]; then
+            summary=$(cat reports/executive-summary.json)
+            compliance_status=$(echo "$summary" | jq -r '.compliance_status')
+            total_critical=$(echo "$summary" | jq -r '.severity_breakdown.critical')
+            total_vulnerabilities=$(echo "$summary" | jq -r '.total_vulnerabilities')
+            
+            if [ "$compliance_status" = "FAIL" ]; then
+              color="danger"
+              emoji="🚨"
+              status_text="FAILED - Critical vulnerabilities detected"
+            else
+              color="good"
+              emoji="✅"
+              status_text="PASSED - No critical vulnerabilities"
+            fi
+            
+            payload=$(cat << EOF
+            {
+              "text": "$emoji ACME Enterprise Security Scan Report",
+              "attachments": [
+                {
+                  "color": "$color",
+                  "fields": [
+                    {
+                      "title": "Status",
+                      "value": "$status_text",
+                      "short": true
+                    },
+                    {
+                      "title": "Critical Vulnerabilities",
+                      "value": "$total_critical",
+                      "short": true
+                    },
+                    {
+                      "title": "Total Vulnerabilities",
+                      "value": "$total_vulnerabilities",
+                      "short": true
+                    },
+                    {
+                      "title": "Workflow",
+                      "value": "<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>",
+                      "short": true
+                    }
+                  ]
+                }
+              ]
+            }
+            EOF
+            )
+            
+            curl -X POST -H 'Content-type: application/json' \
+              --data "$payload" \
+              "$SLACK_WEBHOOK_URL"
+          fi
+
+      - name: Send email notification
+        if: env.SMTP_SERVER != '' && contains(needs.*.result, 'failure')
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.SECURITY_TEAM_EMAIL }}
+        run: |
+          # Install mail utilities
+          sudo apt-get update
+          sudo apt-get install -y mailutils
+          
+          # Configure mail
+          echo "set smtp=$SMTP_SERVER" >> ~/.mailrc
+          echo "set smtp-auth=login" >> ~/.mailrc
+          echo "set smtp-auth-user=$SMTP_USERNAME" >> ~/.mailrc
+          echo "set smtp-auth-password=$SMTP_PASSWORD" >> ~/.mailrc
+          
+          # Send notification email
+          if [ -f "reports/executive-summary.json" ]; then
+            summary=$(cat reports/executive-summary.json)
+            compliance_status=$(echo "$summary" | jq -r '.compliance_status')
+            
+            subject="[ACME Enterprise] Security Scan Alert - $compliance_status"
+            
+            body="ACME Enterprise Security Scan Report
+            
+            Scan Date: $(echo "$summary" | jq -r '.scan_date')
+            Compliance Status: $compliance_status
+            Total Vulnerabilities: $(echo "$summary" | jq -r '.total_vulnerabilities')
+            Critical: $(echo "$summary" | jq -r '.severity_breakdown.critical')
+            
+            View detailed results: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            This is an automated notification from the ACME Enterprise Security Pipeline."
+            
+            echo "$body" | mail -s "$subject" "$EMAIL_TO"
+          fi

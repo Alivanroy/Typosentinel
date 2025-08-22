@@ -14,6 +14,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/registry"
+	"github.com/Alivanroy/Typosentinel/internal/scanner"
 	"github.com/Alivanroy/Typosentinel/internal/vulnerability"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/sirupsen/logrus"
@@ -21,10 +22,12 @@ import (
 
 // Analyzer orchestrates the security scanning process
 type Analyzer struct {
-	config     *config.Config
-	detector   *detector.Engine
-	registries map[string]registry.Connector
-	resolver   *DependencyResolver
+	config       *config.Config
+	detector     *detector.Engine
+	registries   map[string]registry.Connector
+	resolver     *DependencyResolver
+	autoDetector *registry.AutoDetector
+	factory      *registry.Factory
 }
 
 // ScanOptions contains options for scanning
@@ -39,6 +42,14 @@ type ScanOptions struct {
 	CheckVulnerabilities   bool
 	VulnerabilityDBs       []string
 	VulnConfigPath         string
+	// Recursive scanning options
+	Recursive              bool
+	WorkspaceAware         bool
+	ConsolidateReport      bool
+	PackageManagers        []string
+	// Supply chain analysis options
+	EnableSupplyChain      bool
+	AdvancedAnalysis       bool
 }
 
 // ScanResult contains the results of a security scan
@@ -78,10 +89,17 @@ func New(cfg *config.Config) (*Analyzer, error) {
 	// Initialize dependency resolver
 	resolver := NewDependencyResolver(cfg.Scanner)
 
+	// Initialize registry factory and auto-detector
+	factory := registry.NewFactory()
+	autoDetector := registry.NewAutoDetector()
+
 	return &Analyzer{
-		config:   cfg,
-		detector: detectorEngine,
-		resolver: resolver,
+		config:       cfg,
+		detector:     detectorEngine,
+		resolver:     resolver,
+		autoDetector: autoDetector,
+		factory:      factory,
+		registries:   make(map[string]registry.Connector),
 	}, nil
 }
 
@@ -92,12 +110,44 @@ func (a *Analyzer) Scan(path string, options *ScanOptions) (*ScanResult, error) 
 
 	logrus.Infof("Starting scan %s for path: %s", scanID, path)
 
+	// Handle enhanced supply chain scanning
+	if options.EnableSupplyChain {
+		return a.scanWithSupplyChain(path, options)
+	}
+
 	// Initialize scan result
 	result := &ScanResult{
 		ScanID:    scanID,
 		Timestamp: start,
 		Path:      path,
 		Metadata:  make(map[string]interface{}),
+	}
+
+	// Handle recursive scanning
+	if options.Recursive {
+		return a.scanRecursive(path, options, result)
+	}
+
+	// Use auto-detection if no specific package managers are specified
+	if len(options.PackageManagers) == 0 {
+		// Auto-detect project types and create registry connectors
+		projects, err := a.autoDetector.DetectAllProjectTypes(path)
+		if err != nil {
+			logrus.Warnf("Auto-detection failed: %v", err)
+		} else {
+			logrus.Infof("Auto-detected %d projects", len(projects))
+			// Create registry connectors for detected project types
+			connectors, err := a.autoDetector.CreateConnectorsForProjects(projects)
+			if err != nil {
+				logrus.Warnf("Failed to create connectors: %v", err)
+			} else {
+				// Add connectors to the analyzer's registry map
+				for registryType, connector := range connectors {
+					a.registries[registryType] = connector
+					logrus.Debugf("Created %s registry connector", registryType)
+				}
+			}
+		}
 	}
 
 	// Discover dependency files
@@ -404,7 +454,7 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 	logrus.Debugf("Parsing dependency file: %s", filePath)
 
 	// Determine file type and registry
-	fileType, _ := a.detectFileType(filePath)
+	fileType, registryType := a.detectFileType(filePath)
 	logrus.Printf("DEBUG: Parsing file %s with type %s", filePath, fileType)
 	if fileType == "" {
 		return nil, fmt.Errorf("unsupported file type: %s", filePath)
@@ -415,7 +465,16 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 	case "npm":
 		return a.parseNPMDependencies(filePath, options)
 	default:
-		// For other file types, return empty for now
+		// Check if we have a registry connector for this type
+		if connector, exists := a.registries[registryType]; exists {
+			// Use the registry connector to parse dependencies
+			logrus.Debugf("Using %s connector to parse %s", registryType, filePath)
+			// For now, return empty dependencies as we need to implement
+			// specific parsing logic for each registry type
+			_ = connector // Use connector to avoid unused variable error
+			return []types.Dependency{}, nil
+		}
+		// For unsupported file types, return empty
 		return []types.Dependency{}, nil
 	}
 }
@@ -924,6 +983,13 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 	var allThreats []types.Threat
 	var allWarnings []types.Warning
 
+	// Initialize enhanced supply chain detector if enabled
+	var enhancedDetector *detector.EnhancedSupplyChainDetector
+	if options.EnableSupplyChain {
+		logrus.Info("Enhanced supply chain detection enabled")
+		enhancedDetector = detector.NewEnhancedSupplyChainDetector()
+	}
+
 	// Initialize vulnerability manager if vulnerability checking is enabled
 	var vulnManager *vulnerability.Manager
 	if options.CheckVulnerabilities {
@@ -992,6 +1058,52 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 		allThreats = append(allThreats, result.Threats...)
 		allWarnings = append(allWarnings, result.Warnings...)
 
+		// Perform enhanced supply chain analysis if enabled
+		if enhancedDetector != nil {
+			// Convert dependency to package for enhanced analysis
+			pkg := &types.Package{
+				Name:     dep.Name,
+				Version:  dep.Version,
+				Registry: dep.Registry,
+				Type:     dep.Registry,
+			}
+
+			// Perform enhanced threat detection
+			enhancedResults, err := enhancedDetector.DetectThreats(ctx, []types.Package{*pkg})
+			if err != nil {
+				logrus.Warnf("Enhanced supply chain analysis failed for %s: %v", dep.Name, err)
+			} else if len(enhancedResults) > 0 {
+				enhancedResult := enhancedResults[0]
+				
+				// Convert enhanced result to standard threat if not filtered
+				if !enhancedResult.IsFiltered && enhancedResult.ConfidenceScore > 0.5 {
+					threat := types.Threat{
+						Package:            enhancedResult.Package,
+						Registry:           enhancedResult.Registry,
+						Type:               types.ThreatType(enhancedResult.ThreatType),
+						Severity:           a.convertStringSeverity(enhancedResult.Severity),
+						Description:        fmt.Sprintf("Enhanced supply chain threat detected: %s", enhancedResult.ThreatType),
+						Recommendation:     strings.Join(enhancedResult.Recommendations, "; "),
+						Confidence:         enhancedResult.ConfidenceScore,
+						DetectedAt:         time.Now(),
+						DetectionMethod:    "enhanced_supply_chain",
+						Metadata: map[string]interface{}{
+							"supply_chain_risk":    enhancedResult.SupplyChainRisk,
+							"false_positive_risk":  enhancedResult.FalsePositiveRisk,
+							"filter_reasons":       enhancedResult.FilterReasons,
+							"evidence":             enhancedResult.Evidence,
+						},
+					}
+					allThreats = append(allThreats, threat)
+					logrus.Infof("Enhanced supply chain threat detected for %s: %s (confidence: %.2f)", 
+						dep.Name, enhancedResult.ThreatType, enhancedResult.ConfidenceScore)
+				} else if enhancedResult.IsFiltered {
+					logrus.Debugf("Package %s filtered by enhanced supply chain analysis: %v", 
+						dep.Name, enhancedResult.FilterReasons)
+				}
+			}
+		}
+
 		// Check for vulnerabilities if enabled
 		if vulnManager != nil {
 			// Create package object for vulnerability checking
@@ -1010,19 +1122,41 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 
 			// Convert vulnerabilities to threats
 			for _, vuln := range vulns {
+				// Extract affected versions from vulnerability data
+				affectedVersions := ""
+				fixedVersion := ""
+				if len(vuln.AffectedPackages) > 0 {
+					for _, affected := range vuln.AffectedPackages {
+						if affected.Name == dep.Name {
+							affectedVersions = affected.VersionRange
+							break
+						}
+					}
+				}
+				
+				// Generate proposed correction
+				proposedCorrection := fmt.Sprintf("Update %s to a patched version that addresses %s", dep.Name, vuln.ID)
+				if fixedVersion != "" {
+					proposedCorrection = fmt.Sprintf("Update %s from version %s to %s or later", dep.Name, dep.Version, fixedVersion)
+				}
+				
 				threat := types.Threat{
-					Package:         dep.Name,
-					Version:         dep.Version,
-					Registry:        dep.Registry,
-					Type:            types.ThreatTypeVulnerable,
-					Severity:        vuln.Severity,
-					Description:     vuln.Description,
-					Recommendation:  fmt.Sprintf("Update to a version that fixes %s", vuln.ID),
-					Confidence:      1.0, // High confidence for known vulnerabilities
-					DetectedAt:      time.Now(),
-					DetectionMethod: "vulnerability_database",
-					CVEs:            []string{vuln.CVE},
-					References:      vuln.References,
+					Package:            dep.Name,
+					Version:            dep.Version,
+					Registry:           dep.Registry,
+					Type:               types.ThreatTypeVulnerable,
+					Severity:           vuln.Severity,
+					Description:        vuln.Description,
+					Recommendation:     fmt.Sprintf("Update to a version that fixes %s", vuln.ID),
+					Confidence:         1.0, // High confidence for known vulnerabilities
+					DetectedAt:         time.Now(),
+					DetectionMethod:    "vulnerability_database",
+					CVEs:               []string{vuln.CVE},
+					References:         vuln.References,
+					AffectedVersions:   affectedVersions,
+					FixedVersion:       fixedVersion,
+					ProposedCorrection: proposedCorrection,
+					CVE:                vuln.CVE,
 					Metadata: map[string]interface{}{
 						"vulnerability_id": vuln.ID,
 						"cvss_score":      vuln.CVSSScore,
@@ -1088,8 +1222,295 @@ func (a *Analyzer) AnalyzeDependency(dep types.Dependency, popularPackages []str
 }
 
 // generateScanID generates a unique scan identifier
+// scanRecursive performs recursive scanning of directories
+func (a *Analyzer) scanRecursive(rootPath string, options *ScanOptions, result *ScanResult) (*ScanResult, error) {
+	start := time.Now()
+	logrus.Infof("Starting recursive scan for path: %s", rootPath)
+
+	// Find all project directories
+	projectDirs, err := a.findProjectDirectories(rootPath, options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find project directories: %w", err)
+	}
+
+	logrus.Infof("Found %d project directories for recursive scan", len(projectDirs))
+
+	// Scan each project directory
+	allDependencies := make([]types.Dependency, 0)
+	allThreats := make([]types.Threat, 0)
+	allWarnings := make([]types.Warning, 0)
+	projectResults := make(map[string]*ScanResult)
+
+	for _, projectDir := range projectDirs {
+		logrus.Infof("Scanning project directory: %s", projectDir)
+
+		// Create a copy of options without recursive flag to avoid infinite recursion
+		projectOptions := *options
+		projectOptions.Recursive = false
+
+		// Scan individual project
+		projectResult, err := a.Scan(projectDir, &projectOptions)
+		if err != nil {
+			logrus.Warnf("Failed to scan project %s: %v", projectDir, err)
+			continue
+		}
+
+		// Store project result for consolidated reporting
+		projectResults[projectDir] = projectResult
+
+		// Aggregate results
+		allThreats = append(allThreats, projectResult.Threats...)
+		allWarnings = append(allWarnings, projectResult.Warnings...)
+
+		// Parse dependencies from project
+		depFiles, err := a.discoverDependencyFiles(projectDir, &projectOptions)
+		if err != nil {
+			logrus.Warnf("Failed to discover dependencies in %s: %v", projectDir, err)
+			continue
+		}
+
+		for _, file := range depFiles {
+			deps, err := a.parseDependencyFile(file, &projectOptions)
+			if err != nil {
+				logrus.Warnf("Failed to parse %s: %v", file, err)
+				continue
+			}
+			allDependencies = append(allDependencies, deps...)
+		}
+	}
+
+	// Update result with aggregated data
+	result.TotalPackages = len(allDependencies)
+	result.Threats = allThreats
+	result.Warnings = allWarnings
+	result.Duration = time.Since(start)
+	result.Summary = a.calculateSummary(allThreats, allWarnings, len(allDependencies))
+
+	// Add metadata for recursive scan
+	result.Metadata["recursive_scan"] = true
+	result.Metadata["projects_scanned"] = len(projectDirs)
+	result.Metadata["project_directories"] = projectDirs
+
+	// Add consolidated report if requested
+	if options.ConsolidateReport {
+		result.Metadata["project_results"] = projectResults
+	}
+
+	logrus.Infof("Recursive scan completed. Scanned %d projects, found %d threats", len(projectDirs), len(allThreats))
+	return result, nil
+}
+
+// findProjectDirectories discovers all project directories in the given path
+func (a *Analyzer) findProjectDirectories(rootPath string, options *ScanOptions) ([]string, error) {
+	var projectDirs []string
+	manifestFiles := []string{
+		"package.json",      // npm
+		"requirements.txt",  // pip
+		"Pipfile",          // pipenv
+		"pyproject.toml",   // poetry
+		"pom.xml",          // maven
+		"build.gradle",     // gradle
+		"*.csproj",         // nuget
+		"packages.config",  // nuget
+		"Gemfile",          // rubygems
+		"go.mod",           // go modules
+		"Cargo.toml",       // cargo
+		"composer.json",    // composer
+	}
+
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Continue walking despite errors
+		}
+
+		// Skip hidden directories and common non-project directories
+		if info.IsDir() {
+			dirName := filepath.Base(path)
+			if strings.HasPrefix(dirName, ".") || 
+			   dirName == "node_modules" || 
+			   dirName == "vendor" || 
+			   dirName == "target" || 
+			   dirName == "build" || 
+			   dirName == "dist" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Check if this is a manifest file
+		fileName := filepath.Base(path)
+		for _, manifestFile := range manifestFiles {
+			if fileName == manifestFile {
+				// Filter by package manager if specified
+				if len(options.PackageManagers) > 0 {
+					registry := a.getRegistryFromFile(fileName)
+					if !a.isRegistryAllowed(registry, options.PackageManagers) {
+						continue
+					}
+				}
+
+				projectDir := filepath.Dir(path)
+				// Avoid duplicate directories
+				if !a.containsPath(projectDirs, projectDir) {
+					projectDirs = append(projectDirs, projectDir)
+				}
+				break
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk directory tree: %w", err)
+	}
+
+	return projectDirs, nil
+}
+
+// getRegistryFromFile maps file names to registry types
+func (a *Analyzer) getRegistryFromFile(fileName string) string {
+	switch fileName {
+	case "package.json":
+		return "npm"
+	case "requirements.txt", "Pipfile", "pyproject.toml":
+		return "pypi"
+	case "pom.xml", "build.gradle":
+		return "maven"
+	case "packages.config":
+		return "nuget"
+	case "Gemfile":
+		return "rubygems"
+	case "go.mod":
+		return "go"
+	case "Cargo.toml":
+		return "cargo"
+	case "composer.json":
+		return "composer"
+	default:
+		return "unknown"
+	}
+}
+
+// isRegistryAllowed checks if a registry is in the allowed list
+func (a *Analyzer) isRegistryAllowed(registry string, allowedRegistries []string) bool {
+	for _, allowed := range allowedRegistries {
+		if registry == allowed {
+			return true
+		}
+	}
+	return false
+}
+
+// containsPath checks if a path is already in the slice
+func (a *Analyzer) containsPath(paths []string, path string) bool {
+	for _, p := range paths {
+		if p == path {
+			return true
+		}
+	}
+	return false
+}
+
+// convertStringSeverity converts string severity to types.Severity
+func (a *Analyzer) convertStringSeverity(severity string) types.Severity {
+	switch strings.ToLower(severity) {
+	case "critical":
+		return types.SeverityCritical
+	case "high":
+		return types.SeverityHigh
+	case "medium":
+		return types.SeverityMedium
+	case "low":
+		return types.SeverityLow
+	default:
+		return types.SeverityUnknown
+	}
+}
+
+// scanWithSupplyChain performs enhanced supply chain scanning
+func (a *Analyzer) scanWithSupplyChain(path string, options *ScanOptions) (*ScanResult, error) {
+	logrus.Infof("Starting enhanced supply chain scan for path: %s", path)
+
+	// Create a base scanner first
+	baseScanner, err := scanner.New(a.config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create base scanner: %w", err)
+	}
+
+	// Create enhanced scanner with supply chain config
+	enhancedScanner, err := scanner.NewEnhancedScanner(baseScanner, a.config.SupplyChain)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create enhanced scanner: %w", err)
+	}
+
+	// Perform enhanced scan
+	ctx := context.Background()
+	enhancedResult, err := enhancedScanner.ScanWithSupplyChainAnalysis(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("enhanced supply chain scan failed: %w", err)
+	}
+
+	// Convert enhanced result to analyzer ScanResult format
+	result := &ScanResult{
+		ScanID:        enhancedResult.ScanMetadata.ScanID,
+		Timestamp:     enhancedResult.ScanMetadata.Timestamp,
+		Duration:      enhancedResult.ScanMetadata.ScanDuration,
+		Path:          path,
+		TotalPackages: 0, // Will be calculated from enhanced findings
+		Threats:       []types.Threat{},
+		Warnings:      []types.Warning{},
+		Metadata:      make(map[string]interface{}),
+	}
+
+	// Extract threats and warnings from enhanced result packages
+	if enhancedResult.ScanResult != nil && enhancedResult.ScanResult.Packages != nil {
+		result.TotalPackages = len(enhancedResult.ScanResult.Packages)
+		for _, pkg := range enhancedResult.ScanResult.Packages {
+			if pkg.Threats != nil {
+				result.Threats = append(result.Threats, pkg.Threats...)
+			}
+			if pkg.Warnings != nil {
+				result.Warnings = append(result.Warnings, pkg.Warnings...)
+			}
+		}
+	}
+
+	// Add supply chain specific metadata
+	result.Metadata["supply_chain_analysis"] = true
+	result.Metadata["build_integrity_findings"] = len(enhancedResult.BuildIntegrityFindings)
+	result.Metadata["zero_day_findings"] = len(enhancedResult.ZeroDayFindings)
+	result.Metadata["threat_intel_findings"] = len(enhancedResult.ThreatIntelFindings)
+	result.Metadata["honeypot_detections"] = len(enhancedResult.HoneypotDetections)
+	result.Metadata["supply_chain_risk_score"] = enhancedResult.SupplyChainRisk.OverallScore
+	result.Metadata["supply_chain_risk_level"] = enhancedResult.SupplyChainRisk.RiskLevel
+
+	// Create summary with threat and warning counts
+	result.Summary = ScanSummary{
+		TotalWarnings: len(result.Warnings),
+		CleanPackages: result.TotalPackages - len(result.Threats),
+	}
+
+	// Count threats by severity
+	for _, threat := range result.Threats {
+		switch threat.Severity {
+		case types.SeverityCritical:
+			result.Summary.CriticalThreats++
+		case types.SeverityHigh:
+			result.Summary.HighThreats++
+		case types.SeverityMedium:
+			result.Summary.MediumThreats++
+		case types.SeverityLow:
+			result.Summary.LowThreats++
+		}
+	}
+
+	logrus.Infof("Enhanced supply chain scan completed with %d packages, %d threats and %d warnings", result.TotalPackages, len(result.Threats), len(result.Warnings))
+	return result, nil
+}
+
 func generateScanID() string {
-	return fmt.Sprintf("scan_%d", time.Now().UnixNano())
+	return fmt.Sprintf("scan_%d", time.Now().Unix())
 }
 
 // OutputJSON outputs scan results in JSON format

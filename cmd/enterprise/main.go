@@ -36,7 +36,6 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
 	"github.com/Alivanroy/Typosentinel/internal/security"
 	"github.com/Alivanroy/Typosentinel/internal/storage"
-	"github.com/Alivanroy/Typosentinel/internal/testing"
 	pkglogger "github.com/Alivanroy/Typosentinel/pkg/logger"
 
 	"github.com/gin-gonic/gin"
@@ -165,6 +164,38 @@ func (pla *PkgLoggerAdapter) Debug(msg string, fields ...map[string]interface{})
 	}
 	pla.logger.Debug(msg, logFields...)
 }
+
+// noOpMetrics is a no-op implementation of interfaces.Metrics
+type noOpMetrics struct{}
+
+func (m *noOpMetrics) IncrementCounter(name string, labels interfaces.MetricTags) {}
+func (m *noOpMetrics) SetGauge(name string, value float64, labels interfaces.MetricTags) {}
+func (m *noOpMetrics) RecordHistogram(name string, value float64, labels interfaces.MetricTags) {}
+func (m *noOpMetrics) RecordDuration(name string, duration time.Duration, tags interfaces.MetricTags) {}
+func (m *noOpMetrics) Start(ctx context.Context) error { return nil }
+func (m *noOpMetrics) Stop() error { return nil }
+func (m *noOpMetrics) Counter(name string, tags interfaces.MetricTags) interfaces.Counter { return &noOpCounter{} }
+func (m *noOpMetrics) Gauge(name string, tags interfaces.MetricTags) interfaces.Gauge { return &noOpGauge{} }
+func (m *noOpMetrics) Histogram(name string, tags interfaces.MetricTags) interfaces.Histogram { return &noOpHistogram{} }
+func (m *noOpMetrics) Timer(name string, tags interfaces.MetricTags) interfaces.Timer { return &noOpTimer{} }
+
+type noOpCounter struct{}
+func (c *noOpCounter) Inc() {}
+func (c *noOpCounter) Add(value float64) {}
+
+type noOpGauge struct{}
+func (g *noOpGauge) Set(value float64) {}
+func (g *noOpGauge) Inc() {}
+func (g *noOpGauge) Dec() {}
+func (g *noOpGauge) Add(value float64) {}
+func (g *noOpGauge) Sub(value float64) {}
+
+type noOpHistogram struct{}
+func (h *noOpHistogram) Observe(value float64) {}
+
+type noOpTimer struct{}
+func (t *noOpTimer) Time() func() { return func() {} }
+func (t *noOpTimer) Record(duration time.Duration) {}
 
 // Helper functions
 func outputScanResult(result *repository.ScanResult) error {
@@ -793,8 +824,8 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	var monitoringService *monitoring.MonitoringService
 	if enableMonitoring {
-		// Create a mock metrics implementation for now
-		metrics := testing.NewMockMetrics()
+		// Create a no-op metrics implementation for now
+		metrics := &noOpMetrics{}
 		monitoringService = monitoring.NewMonitoringService(enterpriseConfig.Monitoring, *pkgLogger, metrics)
 		monitoringService.Start(ctx)
 		defer monitoringService.Stop()
@@ -846,15 +877,15 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 
 	// Initialize database service
-	dbConfig := &database.DatabaseConfig{
-		Host:     "localhost",
-		Port:     5432,
-		User:     "typosentinel",
-		Password: "password",
-		DBName:   "typosentinel",
-		SSLMode:  "disable",
-		MaxConns: 10,
-		MaxIdle:  5,
+	dbConfig := &config.DatabaseConfig{
+		Host:            "localhost",
+		Port:            5432,
+		Username:        "typosentinel",
+		Password:        "password",
+		Database:        "typosentinel",
+		SSLMode:         "disable",
+		MaxOpenConns:    10,
+		MaxIdleConns:    5,
 	}
 	dbService, err := database.NewDatabaseService(dbConfig)
 	if err != nil {
@@ -956,12 +987,30 @@ func runServer(cmd *cobra.Command, args []string) {
 		}
 
 		// Create REST API config
+		corsConfig := &config.CORSConfig{
+			Enabled:          true,
+			AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "X-Requested-With"},
+			AllowCredentials: true,
+			MaxAge:           86400,
+		}
+		log.Printf("[ENTERPRISE DEBUG] CORS config created: %+v", corsConfig)
+		
 		restConfig := config.RESTAPIConfig{
 			Enabled:  true,
 			Host:     host,
 			Port:     port,
 			BasePath: "/api",
+			Versioning: config.APIVersioning{
+				Enabled:           true,
+				Strategy:          "path",
+				DefaultVersion:    "v1",
+				SupportedVersions: []string{"v1"},
+			},
+			CORS: corsConfig,
 		}
+		log.Printf("[ENTERPRISE DEBUG] REST config created with CORS: %+v", restConfig.CORS)
 
 		// Create analyzer instance
 		analyzer, err := analyzer.New(cfg)
@@ -2617,15 +2666,15 @@ func runHealthCheck(cmd *cobra.Command, args []string) {
 
 	// Check database connectivity
 	if cfg.Database.Type != "" {
-		dbConfig := &database.DatabaseConfig{
-			Host:     cfg.Database.Host,
-			Port:     cfg.Database.Port,
-			User:     cfg.Database.Username,
-			Password: cfg.Database.Password,
-			DBName:   cfg.Database.Database,
-			SSLMode:  cfg.Database.SSLMode,
-			MaxConns: cfg.Database.MaxOpenConns,
-			MaxIdle:  cfg.Database.MaxIdleConns,
+		dbConfig := &config.DatabaseConfig{
+			Host:         cfg.Database.Host,
+			Port:         cfg.Database.Port,
+			Username:     cfg.Database.Username,
+			Password:     cfg.Database.Password,
+			Database:     cfg.Database.Database,
+			SSLMode:      cfg.Database.SSLMode,
+			MaxOpenConns: cfg.Database.MaxOpenConns,
+			MaxIdleConns: cfg.Database.MaxIdleConns,
 		}
 
 		dbService, err := database.NewDatabaseService(dbConfig)
@@ -2688,15 +2737,15 @@ func runHealthMetrics(cmd *cobra.Command, args []string) {
 	cfg := cfgManager.Get()
 
 	// Initialize database service
-	dbConfig := &database.DatabaseConfig{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.Username,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.Database,
-		SSLMode:  cfg.Database.SSLMode,
-		MaxConns: cfg.Database.MaxOpenConns,
-		MaxIdle:  cfg.Database.MaxIdleConns,
+	dbConfig := &config.DatabaseConfig{
+		Host:         cfg.Database.Host,
+		Port:         cfg.Database.Port,
+		Username:     cfg.Database.Username,
+		Password:     cfg.Database.Password,
+		Database:     cfg.Database.Database,
+		SSLMode:      cfg.Database.SSLMode,
+		MaxOpenConns: cfg.Database.MaxOpenConns,
+		MaxIdleConns: cfg.Database.MaxIdleConns,
 	}
 
 	dbService, err := database.NewDatabaseService(dbConfig)
@@ -3046,15 +3095,15 @@ func runExportDashboard(cmd *cobra.Command, args []string) {
 	cfg := cfgManager.Get()
 
 	// Initialize database connection
-	dbConfig := &database.DatabaseConfig{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.Username,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.Database,
-		SSLMode:  cfg.Database.SSLMode,
-		MaxConns: cfg.Database.MaxOpenConns,
-		MaxIdle:  cfg.Database.MaxIdleConns,
+	dbConfig := &config.DatabaseConfig{
+		Host:         cfg.Database.Host,
+		Port:         cfg.Database.Port,
+		Username:     cfg.Database.Username,
+		Password:     cfg.Database.Password,
+		Database:     cfg.Database.Database,
+		SSLMode:      cfg.Database.SSLMode,
+		MaxOpenConns: cfg.Database.MaxOpenConns,
+		MaxIdleConns: cfg.Database.MaxIdleConns,
 	}
 
 	dbService, err := database.NewDatabaseService(dbConfig)

@@ -17,7 +17,6 @@ import {
   FileText,
   Calendar,
   Target,
-  Activity,
   Bug
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
@@ -90,23 +89,8 @@ export function SecurityScans() {
             ]
           }
           
-          // Create a scan result based on the real analysis
-          const newScan = {
-            id: `scan-${Date.now()}`,
-            name: scanConfig.name,
-            target: scanConfig.target,
-            type: scanConfig.type,
-            status: 'completed',
-            progress: 100,
-            startTime: new Date().toISOString(),
-            endTime: new Date().toISOString(),
-            duration: '2s',
-            vulnerabilities: demoThreats.length,
-            criticalIssues: demoThreats.filter((t: any) => t.severity === 'critical').length,
-            warnings: demoWarnings.length,
-            packagesScanned: 1,
-            lastRun: new Date().toISOString()
-          }
+          // Create scan result based on the real analysis
+          // This would typically be handled by the backend API
           
           success(`Package "${scanConfig.target}" analyzed successfully! Found ${demoThreats.length} threats and ${demoWarnings.length} warnings.`)
         } catch (error) {

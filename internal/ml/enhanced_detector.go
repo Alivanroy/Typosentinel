@@ -2306,9 +2306,8 @@ func (td *TypoDetector) calculateEditDistance(s1, s2 string) int {
 			}
 			
 			matrix[i][j] = min(
-				matrix[i-1][j]+1,      // deletion
-				matrix[i][j-1]+1,      // insertion
-				matrix[i-1][j-1]+cost, // substitution
+				min(matrix[i-1][j]+1, matrix[i][j-1]+1), // deletion, insertion
+				matrix[i-1][j-1]+cost,                    // substitution
 			)
 		}
 	}

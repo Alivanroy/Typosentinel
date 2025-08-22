@@ -228,6 +228,35 @@ perf-test:
 	@echo "Running performance tests..."
 	./tests/run_performance_tests.sh
 
+# Comprehensive test automation
+.PHONY: test-comprehensive
+test-comprehensive: test-unit test-integration test-security test-e2e test-performance
+	@echo "All comprehensive tests completed successfully"
+
+.PHONY: test-security
+test-security:
+	@echo "Running security tests..."
+	@go test -v -timeout=15m -run="TestSecurity" ./tests/
+
+.PHONY: test-performance
+test-performance:
+	@echo "Running performance tests..."
+	@go test -v -timeout=15m -run="TestAPIPerformanceBaseline|TestPackageAnalysisPerformance|TestBatchAnalysisPerformance" ./tests/
+
+.PHONY: test-e2e
+test-e2e:
+	@echo "Running end-to-end tests..."
+	@go test -v -timeout=20m -run="TestE2E" ./tests/
+
+# CI/CD automation targets
+.PHONY: ci-comprehensive
+ci-comprehensive: lint test-comprehensive benchmark
+	@echo "Comprehensive CI pipeline completed"
+
+.PHONY: ci-quick-comprehensive
+ci-quick-comprehensive: test-unit test-security
+	@echo "Quick comprehensive CI pipeline completed"
+
 # Code quality targets
 .PHONY: lint
 lint:

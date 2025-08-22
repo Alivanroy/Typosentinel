@@ -488,9 +488,9 @@ export function Settings() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Items per page
             </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" defaultValue="25">
               <option value="10">10 items</option>
-              <option value="25" selected>25 items</option>
+              <option value="25">25 items</option>
               <option value="50">50 items</option>
               <option value="100">100 items</option>
             </select>
@@ -499,19 +499,19 @@ export function Settings() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date format
             </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" defaultValue="YYYY-MM-DD">
               <option value="MM/DD/YYYY">MM/DD/YYYY</option>
               <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-              <option value="YYYY-MM-DD" selected>YYYY-MM-DD</option>
+              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Time format
             </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" defaultValue="24h">
               <option value="12h">12-hour</option>
-              <option value="24h" selected>24-hour</option>
+              <option value="24h">24-hour</option>
             </select>
           </div>
         </CardContent>
@@ -591,9 +591,9 @@ export function Settings() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Scan frequency
             </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" defaultValue="daily">
               <option value="hourly">Every hour</option>
-              <option value="daily" selected>Daily</option>
+              <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>
@@ -602,9 +602,9 @@ export function Settings() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Scan depth
             </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" defaultValue="standard">
               <option value="quick">Quick scan</option>
-              <option value="standard" selected>Standard scan</option>
+              <option value="standard">Standard scan</option>
               <option value="deep">Deep scan</option>
             </select>
           </div>

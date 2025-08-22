@@ -1,0 +1,117 @@
+{
+  "test_scenarios": {
+    "typosquatting_examples": [
+      {
+        "name": "lodahs",
+        "registry": "npm",
+        "description": "Typosquatting attempt on 'lodash' - common typo",
+        "target": "lodash",
+        "risk_level": "high"
+      },
+      {
+        "name": "reqeust",
+        "registry": "npm",
+        "description": "Typosquatting attempt on 'request' - missing 'u'",
+        "target": "request",
+        "risk_level": "high"
+      },
+      {
+        "name": "expres",
+        "registry": "npm",
+        "description": "Typosquatting attempt on 'express' - missing 's'",
+        "target": "express",
+        "risk_level": "high"
+      },
+      {
+        "name": "numpy-",
+        "registry": "pypi",
+        "description": "Typosquatting attempt on 'numpy' with trailing dash",
+        "target": "numpy",
+        "risk_level": "high"
+      },
+      {
+        "name": "reqeusts",
+        "registry": "pypi",
+        "description": "Typosquatting attempt on 'requests' - swapped letters",
+        "target": "requests",
+        "risk_level": "high"
+      }
+    ],
+    "known_vulnerable_packages": [
+      {
+        "name": "event-stream",
+        "version": "3.3.6",
+        "registry": "npm",
+        "description": "Known malicious package that was compromised",
+        "cve": "CVE-2018-3728",
+        "risk_level": "critical"
+      },
+      {
+        "name": "eslint-scope",
+        "version": "3.7.2",
+        "registry": "npm",
+        "description": "Package with known vulnerability",
+        "risk_level": "high"
+      },
+      {
+        "name": "lodash",
+        "version": "4.17.15",
+        "registry": "npm",
+        "description": "Older version with prototype pollution vulnerability",
+        "cve": "CVE-2020-8203",
+        "risk_level": "medium"
+      }
+    ],
+    "legitimate_packages": [
+      {
+        "name": "lodash",
+        "version": "4.17.21",
+        "registry": "npm",
+        "description": "Popular utility library - latest safe version",
+        "risk_level": "low"
+      },
+      {
+        "name": "express",
+        "version": "4.18.2",
+        "registry": "npm",
+        "description": "Popular web framework",
+        "risk_level": "low"
+      },
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "registry": "npm",
+        "description": "Popular UI library",
+        "risk_level": "low"
+      },
+      {
+        "name": "numpy",
+        "version": "1.24.3",
+        "registry": "pypi",
+        "description": "Popular scientific computing library",
+        "risk_level": "low"
+      },
+      {
+        "name": "requests",
+        "version": "2.31.0",
+        "registry": "pypi",
+        "description": "Popular HTTP library",
+        "risk_level": "low"
+      }
+    ],
+    "suspicious_patterns": [
+      {
+        "name": "crypto-miner-js",
+        "registry": "npm",
+        "description": "Package with suspicious cryptocurrency mining functionality",
+        "risk_level": "high"
+      },
+      {
+        "name": "data-harvester",
+        "registry": "npm",
+        "description": "Package with suspicious data collection patterns",
+        "risk_level": "high"
+      }
+    ]
+  }
+}

@@ -77,6 +77,21 @@ simple_docker_test.sh
 test_docker_implementation.sh
 docker_test_project/
 
+# Production cleanup artifacts
+.tmp.*/
+build/
+output/
+response.json
+stats_response.json
+test_similarity.json
+test-reports/
+test_scan/
+test_threat_filtering/
+vulnerable-test/
+dependency-graph.dot
+dependency-graph.svg
+data/typosentinel.db
+
 # Generated reports
 *-report-*.json
 *_test_results_*/

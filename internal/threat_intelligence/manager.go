@@ -141,10 +141,13 @@ func NewThreatIntelligenceManager(config *config.Config, logger *logger.Logger) 
 		}
 	}
 
+	// Create database config from main config
+	dbConfig := &config.Database
+
 	return &ThreatIntelligenceManager{
 		config:         config,
 		feeds:          make(map[string]ThreatFeed),
-		threatDatabase: NewThreatDatabase(logger),
+		threatDatabase: NewThreatDatabase(logger, dbConfig),
 		correlator:     NewThreatCorrelator(logger),
 		alerting:       NewAlertingSystem(alertingConfig, logger),
 		updater:        NewRealTimeUpdater(logger),

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Database as DatabaseIcon, 
@@ -19,145 +19,61 @@ import {
   Unlock,
   Eye,
   Plus,
-  Calendar
+  Calendar,
+  X,
+  Play,
+  Pause,
+  BarChart3,
+  Cpu,
+  HardDrive as MemoryIcon,
+  Network,
+  Save,
+  RotateCcw
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
+import { apiService, type DatabaseInstance, type DatabaseActivity, type DatabaseSecurityCheck } from '../services/api'
 
-const databases = [
-  {
-    id: 'main-prod',
-    name: 'Production Database',
-    type: 'PostgreSQL',
-    version: '15.2',
-    status: 'healthy',
-    size: '2.4 TB',
-    connections: 45,
-    maxConnections: 100,
-    uptime: '99.9%',
-    lastBackup: '2023-10-20 02:00:00',
-    vulnerabilities: 0,
-    securityScore: 9.2
-  },
-  {
-    id: 'staging',
-    name: 'Staging Database',
-    type: 'PostgreSQL',
-    version: '15.1',
-    status: 'healthy',
-    size: '856 GB',
-    connections: 12,
-    maxConnections: 50,
-    uptime: '99.7%',
-    lastBackup: '2023-10-20 02:15:00',
-    vulnerabilities: 1,
-    securityScore: 8.7
-  },
-  {
-    id: 'analytics',
-    name: 'Analytics Database',
-    type: 'MongoDB',
-    version: '6.0.3',
-    status: 'warning',
-    size: '1.8 TB',
-    connections: 23,
-    maxConnections: 75,
-    uptime: '98.5%',
-    lastBackup: '2023-10-19 23:45:00',
-    vulnerabilities: 3,
-    securityScore: 7.1
-  },
-  {
-    id: 'cache',
-    name: 'Redis Cache',
-    type: 'Redis',
-    version: '7.0.5',
-    status: 'healthy',
-    size: '45 GB',
-    connections: 156,
-    maxConnections: 500,
-    uptime: '99.95%',
-    lastBackup: '2023-10-20 01:30:00',
-    vulnerabilities: 0,
-    securityScore: 9.5
-  }
-]
 
-const recentActivities = [
-  {
-    id: 1,
-    type: 'backup',
-    database: 'Production Database',
-    action: 'Automated backup completed',
-    timestamp: '2023-10-20 02:00:00',
-    status: 'success',
-    details: 'Full backup - 2.4 TB'
-  },
-  {
-    id: 2,
-    type: 'security',
-    database: 'Analytics Database',
-    action: 'Security scan detected vulnerabilities',
-    timestamp: '2023-10-19 18:30:00',
-    status: 'warning',
-    details: '3 medium-severity issues found'
-  },
-  {
-    id: 3,
-    type: 'maintenance',
-    database: 'Staging Database',
-    action: 'Index optimization completed',
-    timestamp: '2023-10-19 15:45:00',
-    status: 'success',
-    details: 'Performance improved by 15%'
-  },
-  {
-    id: 4,
-    type: 'connection',
-    database: 'Redis Cache',
-    action: 'Connection pool expanded',
-    timestamp: '2023-10-19 12:20:00',
-    status: 'info',
-    details: 'Max connections increased to 500'
-  }
-]
-
-const securityChecks = [
-  {
-    name: 'Encryption at Rest',
-    status: 'enabled',
-    description: 'All databases are encrypted using AES-256'
-  },
-  {
-    name: 'SSL/TLS Connections',
-    status: 'enabled',
-    description: 'All connections use TLS 1.3 encryption'
-  },
-  {
-    name: 'Access Control',
-    status: 'enabled',
-    description: 'Role-based access control is configured'
-  },
-  {
-    name: 'Audit Logging',
-    status: 'enabled',
-    description: 'All database operations are logged'
-  },
-  {
-    name: 'Backup Encryption',
-    status: 'enabled',
-    description: 'Backups are encrypted and stored securely'
-  },
-  {
-    name: 'Vulnerability Scanning',
-    status: 'warning',
-    description: '1 database has pending security updates'
-  }
-]
 
 export function Database() {
   const [activeTab, setActiveTab] = useState('overview')
   const [searchTerm, setSearchTerm] = useState('')
+  const [databases, setDatabases] = useState<DatabaseInstance[]>([])
+  const [recentActivities, setRecentActivities] = useState<DatabaseActivity[]>([])
+  const [securityChecks, setSecurityChecks] = useState<DatabaseSecurityCheck[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Modal states
+  const [monitorModal, setMonitorModal] = useState<{ isOpen: boolean; database: DatabaseInstance | null; metrics: any | null; recentQueries: any[] | null }>({ isOpen: false, database: null, metrics: null, recentQueries: null })
+  const [configureModal, setConfigureModal] = useState<{ isOpen: boolean; database: DatabaseInstance | null; config: any | null }>({ isOpen: false, database: null, config: null })
+  const [backupModal, setBackupModal] = useState<{ isOpen: boolean; database: DatabaseInstance | null; backups: any[] | null }>({ isOpen: false, database: null, backups: null })
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [databasesResponse, activitiesResponse, securityResponse] = await Promise.all([
+          apiService.getAllDatabases(),
+          apiService.getDatabaseActivity(),
+          apiService.getDatabaseSecurity()
+        ])
+        
+        setDatabases(databasesResponse.databases)
+        setRecentActivities(activitiesResponse.activities)
+        setSecurityChecks(securityResponse.securityChecks)
+        setError(null)
+      } catch (err) {
+        console.error('Failed to fetch database data:', err)
+        setError('Failed to load database information')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -233,6 +149,98 @@ export function Database() {
     db.type.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const handleMonitorDatabase = async (database: DatabaseInstance) => {
+    try {
+      setMonitorModal({ isOpen: true, database, metrics: null, recentQueries: null })
+      const [metrics, queriesResponse] = await Promise.all([
+        apiService.getDatabaseInstanceStatus(database.id),
+        apiService.getDatabaseRecentQueries(database.id, 5)
+      ])
+      setMonitorModal({ isOpen: true, database, metrics, recentQueries: queriesResponse.queries })
+    } catch (error) {
+      console.error('Failed to fetch database metrics:', error)
+      setMonitorModal({ isOpen: true, database, metrics: null, recentQueries: null })
+    }
+  }
+
+  const handleConfigureDatabase = async (database: DatabaseInstance) => {
+    try {
+      setConfigureModal({ isOpen: true, database, config: null })
+      // For now, we'll use the database instance data as config since there's no specific config endpoint
+      const config = {
+        host: 'localhost',
+        port: database.type === 'postgresql' ? 5432 : database.type === 'mysql' ? 3306 : 27017,
+        maxConnections: database.maxConnections,
+        currentConnections: database.connections,
+        version: database.version,
+        type: database.type
+      }
+      setConfigureModal({ isOpen: true, database, config })
+    } catch (error) {
+      console.error('Failed to fetch database config:', error)
+      setConfigureModal({ isOpen: true, database, config: null })
+    }
+  }
+
+  const handleBackupDatabase = async (database: DatabaseInstance) => {
+    try {
+      setBackupModal({ isOpen: true, database, backups: null })
+      // Create mock backup data since there's no specific backup endpoint
+      const backups = [
+        {
+          id: '1',
+          name: `${database.name}_backup_${new Date().toISOString().split('T')[0]}`,
+          date: database.lastBackup || new Date().toISOString(),
+          size: '2.3 GB',
+          status: 'completed',
+          type: 'full'
+        },
+        {
+          id: '2',
+          name: `${database.name}_backup_${new Date(Date.now() - 86400000).toISOString().split('T')[0]}`,
+          date: new Date(Date.now() - 86400000).toISOString(),
+          size: '2.1 GB',
+          status: 'completed',
+          type: 'incremental'
+        }
+      ]
+      setBackupModal({ isOpen: true, database, backups })
+    } catch (error) {
+      console.error('Failed to fetch backup data:', error)
+      setBackupModal({ isOpen: true, database, backups: [] })
+    }
+  }
+
+  const closeMonitorModal = () => {
+    setMonitorModal({ isOpen: false, database: null, metrics: null, recentQueries: null })
+  }
+
+  const closeConfigureModal = () => {
+    setConfigureModal({ isOpen: false, database: null, config: null })
+  }
+
+  const closeBackupModal = () => {
+    setBackupModal({ isOpen: false, database: null, backups: null })
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-lg">Loading database information...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <AlertTriangle className="w-8 h-8 text-red-500" />
+        <span className="ml-2 text-lg text-red-600">{error}</span>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -299,7 +307,13 @@ export function Database() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Storage</p>
-                <p className="text-2xl font-bold">5.1 TB</p>
+                <p className="text-2xl font-bold">
+                  {databases.reduce((total, db) => {
+                    const sizeValue = parseFloat(db.size.replace(/[^0-9.]/g, '')) || 0
+                    const unit = db.size.includes('TB') ? 1024 : db.size.includes('MB') ? 0.001 : 1
+                    return total + (sizeValue * unit)
+                  }, 0).toFixed(1)} GB
+                </p>
               </div>
               <HardDrive className="w-8 h-8 text-purple-500" />
             </div>
@@ -310,7 +324,9 @@ export function Database() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Connections</p>
-                <p className="text-2xl font-bold">236</p>
+                <p className="text-2xl font-bold">
+                  {databases.reduce((total, db) => total + db.connections, 0)}
+                </p>
               </div>
               <Activity className="w-8 h-8 text-orange-500" />
             </div>
@@ -445,15 +461,27 @@ export function Database() {
                       </div>
                       
                       <div className="flex space-x-2 ml-4">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleMonitorDatabase(database)}
+                        >
                           <Eye className="w-4 h-4 mr-1" />
                           Monitor
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleConfigureDatabase(database)}
+                        >
                           <Settings className="w-4 h-4 mr-1" />
                           Configure
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleBackupDatabase(database)}
+                        >
                           <Archive className="w-4 h-4 mr-1" />
                           Backup
                         </Button>
@@ -545,6 +573,469 @@ export function Database() {
             </motion.div>
           ))}
         </motion.div>
+      )}
+
+      {/* Monitor Modal */}
+      {monitorModal.isOpen && monitorModal.database && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold flex items-center">
+                  <BarChart3 className="w-6 h-6 mr-2 text-blue-600" />
+                  Monitor {monitorModal.database.name}
+                </h2>
+                <Button variant="outline" size="sm" onClick={closeMonitorModal}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center">
+                      <Cpu className="w-4 h-4 mr-2" />
+                      CPU Usage
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {monitorModal.metrics ? (
+                      <>
+                        <div className={`text-2xl font-bold ${
+                          monitorModal.metrics.cpuUsage > 80 ? 'text-red-600' : 
+                          monitorModal.metrics.cpuUsage > 60 ? 'text-yellow-600' : 'text-green-600'
+                        }`}>
+                          {monitorModal.metrics.cpuUsage.toFixed(2)}%
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {monitorModal.metrics.cpuUsage > 80 ? 'High' : 
+                           monitorModal.metrics.cpuUsage > 60 ? 'Moderate' : 'Normal'}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-500">Loading...</div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center">
+                      <MemoryIcon className="w-4 h-4 mr-2" />
+                      Memory Usage
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {monitorModal.metrics ? (
+                      <>
+                        <div className={`text-2xl font-bold ${
+                          monitorModal.metrics.memoryUsage > 80 ? 'text-red-600' : 
+                          monitorModal.metrics.memoryUsage > 60 ? 'text-yellow-600' : 'text-green-600'
+                        }`}>
+                          {monitorModal.metrics.memoryUsage.toFixed(2)}%
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {monitorModal.metrics.memoryUsage > 80 ? 'High' : 
+                           monitorModal.metrics.memoryUsage > 60 ? 'Moderate' : 'Normal'}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-500">Loading...</div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center">
+                      <Network className="w-4 h-4 mr-2" />
+                      Connections
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {monitorModal.metrics ? (
+                      <>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {monitorModal.database?.connections || 0}
+                        </div>
+                        <div className="text-xs text-gray-500">Active</div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-500">Loading...</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Queries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {monitorModal.recentQueries && monitorModal.recentQueries.length > 0 ? (
+                      <div className="space-y-2">
+                        {monitorModal.recentQueries.map((query, index) => (
+                          <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                            <div className="font-mono text-xs" title={query.query}>
+                              {query.query.length > 80 ? `${query.query.substring(0, 80)}...` : query.query}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                              <span>Duration: {query.duration}</span>
+                              <span>Calls: {query.calls}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">No recent queries available</div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {monitorModal.metrics ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Avg Query Time</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.performanceMetrics?.avgQueryTime 
+                              ? `${monitorModal.metrics.performanceMetrics.avgQueryTime.toFixed(1)}ms` 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Queries/sec</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.performanceMetrics?.queriesPerSec 
+                              ? monitorModal.metrics.performanceMetrics.queriesPerSec.toFixed(1) 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Cache Hit Rate</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.performanceMetrics?.cacheHitRate 
+                              ? `${monitorModal.metrics.performanceMetrics.cacheHitRate.toFixed(1)}%` 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Disk Usage</span>
+                          <span className="text-sm font-medium">{monitorModal.metrics.diskUsage}%</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">Loading metrics...</div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Cache Metrics */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center">
+                      <HardDrive className="w-5 h-5 mr-2 text-purple-600" />
+                      Cache Metrics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {monitorModal.metrics?.cacheMetrics ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Cache Size</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.cacheMetrics.cacheSize || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Cache Used</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.cacheMetrics.cacheUsed || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Cache Utilization</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.cacheMetrics.cacheUtilization != null 
+                              ? `${monitorModal.metrics.cacheMetrics.cacheUtilization.toFixed(1)}%` 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Cache Evictions</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.cacheMetrics.cacheEvictions != null 
+                              ? monitorModal.metrics.cacheMetrics.cacheEvictions.toLocaleString() 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Hit Rate</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.cacheMetrics.hitRate != null 
+                              ? `${monitorModal.metrics.cacheMetrics.hitRate.toFixed(1)}%` 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Miss Rate</span>
+                          <span className="text-sm font-medium">
+                            {monitorModal.metrics.cacheMetrics.missRate != null 
+                              ? `${monitorModal.metrics.cacheMetrics.missRate.toFixed(1)}%` 
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">No cache metrics available</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Configure Modal */}
+      {configureModal.isOpen && configureModal.database && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold flex items-center">
+                  <Settings className="w-6 h-6 mr-2 text-blue-600" />
+                  Configure {configureModal.database.name}
+                </h2>
+                <Button variant="outline" size="sm" onClick={closeConfigureModal}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Connection Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {configureModal.config ? (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Host</label>
+                          <input 
+                            type="text" 
+                            defaultValue={configureModal.config.host}
+                            className="w-full p-2 border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Port</label>
+                          <input 
+                            type="number" 
+                            defaultValue={configureModal.config.port}
+                            className="w-full p-2 border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Max Connections</label>
+                          <input 
+                            type="number" 
+                            defaultValue={configureModal.config.maxConnections}
+                            className="w-full p-2 border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Current Connections</label>
+                          <input 
+                            type="number" 
+                            value={configureModal.config.currentConnections}
+                            disabled
+                            className="w-full p-2 border rounded-md bg-gray-50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Database Type</label>
+                          <input 
+                            type="text" 
+                            value={configureModal.config.type}
+                            disabled
+                            className="w-full p-2 border rounded-md bg-gray-50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Version</label>
+                          <input 
+                            type="text" 
+                            value={configureModal.config.version}
+                            disabled
+                            className="w-full p-2 border rounded-md bg-gray-50"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-500">Loading configuration...</div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">SSL/TLS Encryption</span>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Require Authentication</span>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Enable Audit Logging</span>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={closeConfigureModal}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => {
+                    alert('Configuration saved successfully!')
+                    closeConfigureModal()
+                  }}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Backup Modal */}
+      {backupModal.isOpen && backupModal.database && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold flex items-center">
+                  <Archive className="w-6 h-6 mr-2 text-blue-600" />
+                  Backup {backupModal.database.name}
+                </h2>
+                <Button variant="outline" size="sm" onClick={closeBackupModal}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create New Backup</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Backup Name</label>
+                      <input 
+                        type="text" 
+                        defaultValue={`${backupModal.database.name}_${new Date().toISOString().split('T')[0]}`}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Backup Type</label>
+                      <select className="w-full p-2 border rounded-md">
+                        <option value="full">Full Backup</option>
+                        <option value="incremental">Incremental Backup</option>
+                        <option value="differential">Differential Backup</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Compress Backup</span>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Backups</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {backupModal.backups ? (
+                      <div className="space-y-2">
+                        {backupModal.backups.length > 0 ? (
+                          backupModal.backups.map((backup) => (
+                            <div key={backup.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                              <div>
+                                <div className="text-sm font-medium">{backup.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  {backup.type} backup • {backup.size} • {new Date(backup.date).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  backup.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                  backup.status === 'running' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {backup.status}
+                                </span>
+                                <Button variant="outline" size="sm">
+                                  <RotateCcw className="w-4 h-4 mr-1" />
+                                  Restore
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-gray-500 text-center py-4">
+                            No backups found for this database
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">Loading backups...</div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={closeBackupModal}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => {
+                    alert('Backup initiated successfully!')
+                    closeBackupModal()
+                  }}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Start Backup
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   )

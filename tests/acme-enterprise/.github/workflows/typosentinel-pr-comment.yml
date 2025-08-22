@@ -1,0 +1,300 @@
+# GitHub Workflow: Typosentinel PR Comments
+# Automatically comments on pull requests with security scan results
+
+name: Typosentinel PR Security Comments
+
+on:
+  workflow_run:
+    workflows: ["Typosentinel Security Scan"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+  issues: write
+
+jobs:
+  comment-pr:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+    
+    steps:
+      - name: Download scan artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{ github.event.workflow_run.id }}
+            });
+            
+            const scanArtifact = artifacts.data.artifacts.find(artifact => 
+              artifact.name === 'typosentinel-scan-results'
+            );
+            
+            if (scanArtifact) {
+              const download = await github.rest.actions.downloadArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: scanArtifact.id,
+                archive_format: 'zip'
+              });
+              
+              require('fs').writeFileSync('scan-results.zip', Buffer.from(download.data));
+            }
+      
+      - name: Extract scan results
+        run: |
+          if [ -f scan-results.zip ]; then
+            unzip scan-results.zip
+            ls -la
+          fi
+      
+      - name: Parse scan results
+        id: parse-results
+        run: |
+          if [ -f combined-results.json ]; then
+            # Parse scan results
+            TOTAL_PACKAGES=$(jq -r '.summary.total_packages // 0' combined-results.json)
+            CRITICAL_VULNS=$(jq -r '.summary.vulnerabilities.critical // 0' combined-results.json)
+            HIGH_VULNS=$(jq -r '.summary.vulnerabilities.high // 0' combined-results.json)
+            MEDIUM_VULNS=$(jq -r '.summary.vulnerabilities.medium // 0' combined-results.json)
+            LOW_VULNS=$(jq -r '.summary.vulnerabilities.low // 0' combined-results.json)
+            RISK_SCORE=$(jq -r '.summary.risk_score // 0' combined-results.json)
+            COMPLIANCE_STATUS=$(jq -r '.summary.compliance_status // "UNKNOWN"' combined-results.json)
+            SCAN_STATUS=$(jq -r '.summary.scan_status // "UNKNOWN"' combined-results.json)
+            
+            # Set outputs
+            echo "total_packages=$TOTAL_PACKAGES" >> $GITHUB_OUTPUT
+            echo "critical_vulns=$CRITICAL_VULNS" >> $GITHUB_OUTPUT
+            echo "high_vulns=$HIGH_VULNS" >> $GITHUB_OUTPUT
+            echo "medium_vulns=$MEDIUM_VULNS" >> $GITHUB_OUTPUT
+            echo "low_vulns=$LOW_VULNS" >> $GITHUB_OUTPUT
+            echo "risk_score=$RISK_SCORE" >> $GITHUB_OUTPUT
+            echo "compliance_status=$COMPLIANCE_STATUS" >> $GITHUB_OUTPUT
+            echo "scan_status=$SCAN_STATUS" >> $GITHUB_OUTPUT
+            
+            # Determine overall status
+            if [ "$CRITICAL_VULNS" -gt 0 ]; then
+              echo "overall_status=FAILED" >> $GITHUB_OUTPUT
+              echo "status_emoji=🚨" >> $GITHUB_OUTPUT
+              echo "status_color=danger" >> $GITHUB_OUTPUT
+            elif [ "$HIGH_VULNS" -gt 0 ]; then
+              echo "overall_status=WARNING" >> $GITHUB_OUTPUT
+              echo "status_emoji=⚠️" >> $GITHUB_OUTPUT
+              echo "status_color=warning" >> $GITHUB_OUTPUT
+            else
+              echo "overall_status=PASSED" >> $GITHUB_OUTPUT
+              echo "status_emoji=✅" >> $GITHUB_OUTPUT
+              echo "status_color=success" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "overall_status=ERROR" >> $GITHUB_OUTPUT
+            echo "status_emoji=❌" >> $GITHUB_OUTPUT
+            echo "status_color=danger" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get PR number
+        id: get-pr
+        run: |
+          PR_NUMBER=$(jq -r '.pull_request.number // empty' "$GITHUB_EVENT_PATH")
+          if [ -z "$PR_NUMBER" ]; then
+            # Try to get from workflow run
+            PR_NUMBER=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}" | \
+              jq -r '.pull_requests[0].number // empty')
+          fi
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+      
+      - name: Create detailed security comment
+        if: steps.get-pr.outputs.pr_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = '${{ steps.get-pr.outputs.pr_number }}';
+            const status = '${{ steps.parse-results.outputs.overall_status }}';
+            const emoji = '${{ steps.parse-results.outputs.status_emoji }}';
+            const totalPackages = '${{ steps.parse-results.outputs.total_packages }}';
+            const criticalVulns = '${{ steps.parse-results.outputs.critical_vulns }}';
+            const highVulns = '${{ steps.parse-results.outputs.high_vulns }}';
+            const mediumVulns = '${{ steps.parse-results.outputs.medium_vulns }}';
+            const lowVulns = '${{ steps.parse-results.outputs.low_vulns }}';
+            const riskScore = '${{ steps.parse-results.outputs.risk_score }}';
+            const complianceStatus = '${{ steps.parse-results.outputs.compliance_status }}';
+            
+            // Read detailed results if available
+            let detailedResults = '';
+            try {
+              const fs = require('fs');
+              if (fs.existsSync('combined-results.json')) {
+                const results = JSON.parse(fs.readFileSync('combined-results.json', 'utf8'));
+                
+                // Generate registry-specific results
+                if (results.registries) {
+                  detailedResults = '\n### 📊 Registry-Specific Results\n\n';
+                  for (const [registry, data] of Object.entries(results.registries)) {
+                    const registryEmoji = {
+                      'npm': '📦',
+                      'pypi': '🐍',
+                      'maven': '☕',
+                      'nuget': '📘',
+                      'rubygems': '💎',
+                      'go': '🐹'
+                    }[registry] || '📋';
+                    
+                    detailedResults += `${registryEmoji} **${registry.toUpperCase()}**: `;
+                    if (data.packages_scanned > 0) {
+                      detailedResults += `${data.packages_scanned} packages scanned, `;
+                      detailedResults += `${data.vulnerabilities?.total || 0} vulnerabilities found\n`;
+                    } else {
+                      detailedResults += 'No packages found\n';
+                    }
+                  }
+                }
+                
+                // Add top vulnerabilities
+                if (results.vulnerabilities && results.vulnerabilities.length > 0) {
+                  detailedResults += '\n### 🔍 Top Security Findings\n\n';
+                  const topVulns = results.vulnerabilities.slice(0, 5);
+                  for (const vuln of topVulns) {
+                    const severityEmoji = {
+                      'critical': '🚨',
+                      'high': '🔴',
+                      'medium': '🟡',
+                      'low': '🟢'
+                    }[vuln.severity?.toLowerCase()] || '⚪';
+                    
+                    detailedResults += `${severityEmoji} **${vuln.package}@${vuln.version}** - ${vuln.title}\n`;
+                    detailedResults += `   - CVSS: ${vuln.cvss || 'N/A'} | CWE: ${vuln.cwe || 'N/A'}\n`;
+                  }
+                  
+                  if (results.vulnerabilities.length > 5) {
+                    detailedResults += `\n*... and ${results.vulnerabilities.length - 5} more findings*\n`;
+                  }
+                }
+              }
+            } catch (error) {
+              console.log('Could not read detailed results:', error.message);
+            }
+            
+            const comment = `## ${emoji} Typosentinel Security Scan Results
+            
+**Status**: ${status} | **Risk Score**: ${riskScore}/100 | **Compliance**: ${complianceStatus}
+            
+### 📋 Scan Summary
+| Metric | Value |
+|--------|-------|
+| 📦 Total Packages | ${totalPackages} |
+| 🚨 Critical | ${criticalVulns} |
+| 🔴 High | ${highVulns} |
+| 🟡 Medium | ${mediumVulns} |
+| 🟢 Low | ${lowVulns} |
+| 🎯 Risk Score | ${riskScore}/100 |
+| ✅ Compliance | ${complianceStatus} |
+            ${detailedResults}
+            
+### 🛡️ Security Policies
+${criticalVulns > 0 ? '❌ **BLOCKING**: Critical vulnerabilities must be resolved before merge' : ''}
+${highVulns > 0 ? '⚠️ **WARNING**: High-severity vulnerabilities detected - review required' : ''}
+${status === 'PASSED' ? '✅ **APPROVED**: No blocking security issues found' : ''}
+            
+### 🔗 Additional Resources
+- 📊 [View Detailed Report](https://security.acme.com/scans/pr-${prNumber})
+- 📋 [Download SBOM](https://security.acme.com/sbom/pr-${prNumber}.json)
+- 🔍 [Vulnerability Database](https://security.acme.com/vulnerabilities)
+- 📚 [Security Guidelines](https://docs.acme.com/security)
+            
+---
+*🤖 This comment was automatically generated by Typosentinel v${{ github.event.workflow_run.head_sha }}*
+*⏰ Scan completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')*`;
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: comment
+            });
+            
+            // Add labels based on results
+            const labels = ['security-scanned'];
+            if (criticalVulns > 0) labels.push('security-critical');
+            if (highVulns > 0) labels.push('security-high');
+            if (status === 'PASSED') labels.push('security-approved');
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: labels
+            });
+      
+      - name: Create security issue for critical findings
+        if: steps.parse-results.outputs.critical_vulns > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const criticalVulns = '${{ steps.parse-results.outputs.critical_vulns }}';
+            const prNumber = '${{ steps.get-pr.outputs.pr_number }}';
+            
+            const issueTitle = `🚨 Critical Security Vulnerabilities in PR #${prNumber}`;
+            const issueBody = `## Critical Security Alert
+            
+Critical security vulnerabilities have been detected in PR #${prNumber}.
+            
+**Immediate Action Required**:
+- [ ] Review security findings
+- [ ] Apply security patches
+- [ ] Re-run security scan
+- [ ] Verify fixes
+            
+### Scan Results
+- **Critical Vulnerabilities**: ${criticalVulns}
+- **PR**: #${prNumber}
+- **Scan ID**: ${{ github.event.workflow_run.id }}
+            
+### Next Steps
+1. Review the detailed scan results in PR #${prNumber}
+2. Apply recommended fixes
+3. Re-run the security scan
+4. Verify all critical issues are resolved
+            
+**⚠️ This PR is blocked from merging until all critical vulnerabilities are resolved.**
+            
+---
+*Auto-generated by Typosentinel Security Scanner*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['security', 'critical', 'vulnerability', 'needs-immediate-attention'],
+              assignees: ['acme-security-team']
+            });
+      
+      - name: Update PR status check
+        if: steps.get-pr.outputs.pr_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ steps.parse-results.outputs.overall_status }}';
+            const criticalVulns = '${{ steps.parse-results.outputs.critical_vulns }}';
+            
+            const state = criticalVulns > 0 ? 'failure' : 'success';
+            const description = criticalVulns > 0 
+              ? `${criticalVulns} critical vulnerabilities found`
+              : 'No critical security issues detected';
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: '${{ github.event.workflow_run.head_sha }}',
+              state: state,
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.event.workflow_run.id }}`,
+              description: description,
+              context: 'Typosentinel Security Scan'
+            });

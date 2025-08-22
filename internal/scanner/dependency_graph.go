@@ -12,15 +12,17 @@ import (
 
 // DependencyGraphAnalyzerImpl implements the DependencyGraphAnalyzer interface
 type DependencyGraphAnalyzerImpl struct {
-	config *config.DependencyGraphConfig
-	logger *logger.Logger
+	config       *config.DependencyGraphConfig
+	logger       *logger.Logger
+	depthAnalyzer *DependencyDepthAnalyzer
 }
 
 // NewDependencyGraphAnalyzer creates a new dependency graph analyzer instance
 func NewDependencyGraphAnalyzer(cfg *config.DependencyGraphConfig, log *logger.Logger) *DependencyGraphAnalyzerImpl {
 	return &DependencyGraphAnalyzerImpl{
-		config: cfg,
-		logger: log,
+		config:        cfg,
+		logger:        log,
+		depthAnalyzer: NewDependencyDepthAnalyzer(cfg, log),
 	}
 }
 
@@ -389,6 +391,15 @@ func (dga *DependencyGraphAnalyzerImpl) hasTransitiveThreats(dep *types.Dependen
 }
 
 // Risk calculation
+
+// AnalyzeDependencyDepth performs comprehensive depth analysis on the dependency graph
+func (dga *DependencyGraphAnalyzerImpl) AnalyzeDependencyDepth(ctx context.Context, graph *DependencyGraph) (*DepthAnalysisResult, error) {
+	if !dga.config.Enabled {
+		return nil, nil
+	}
+
+	return dga.depthAnalyzer.AnalyzeDependencyDepth(ctx, graph)
+}
 
 func (dga *DependencyGraphAnalyzerImpl) calculateGraphRiskScore(graph *DependencyGraph) float64 {
 	score := 0.0

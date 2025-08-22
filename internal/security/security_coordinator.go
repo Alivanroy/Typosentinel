@@ -14,39 +14,41 @@ import (
 // Integrates: temporal detection, complexity analysis, trust validation, ML hardening,
 // multi-vector coordination, and behavioral analysis
 type SecurityCoordinator struct {
-	config                  *SecurityCoordinatorConfig
-	temporalDetector        *TemporalDetector
-	complexityAnalyzer      *ComplexityAnalyzer
-	trustValidator          *TrustValidator
-	mlHardeningSystem       *MLHardeningSystem
-	multiVectorCoordinator  *MultiVectorCoordinator
-	behavioralAnalyzer      *BehavioralAnalyzer
-	threatIntelligence      *ThreatIntelligence
-	responseOrchestrator    *ResponseOrchestrator
-	securityMetrics         *SecurityMetrics
-	alertManager            *AlertManager
-	logger                  logger.Logger
-	mutex                   sync.RWMutex
+	config                     *SecurityCoordinatorConfig
+	temporalDetector           *TemporalDetector
+	complexityAnalyzer         *ComplexityAnalyzer
+	trustValidator             *TrustValidator
+	mlHardeningSystem          *MLHardeningSystem
+	multiVectorCoordinator     *MultiVectorCoordinator
+	behavioralAnalyzer         *BehavioralAnalyzer
+	resourceExhaustionDetector *ResourceExhaustionDetector
+	threatIntelligence         *ThreatIntelligence
+	responseOrchestrator       *ResponseOrchestrator
+	securityMetrics            *SecurityMetrics
+	alertManager               *AlertManager
+	logger                     logger.Logger
+	mutex                      sync.RWMutex
 }
 
 // SecurityCoordinatorConfig configures the security coordinator
 type SecurityCoordinatorConfig struct {
-	EnableTemporalDetection     bool          `yaml:"enable_temporal_detection"`     // true
-	EnableComplexityAnalysis    bool          `yaml:"enable_complexity_analysis"`    // true
-	EnableTrustValidation       bool          `yaml:"enable_trust_validation"`       // true
-	EnableMLHardening           bool          `yaml:"enable_ml_hardening"`           // true
-	EnableMultiVectorDetection  bool          `yaml:"enable_multi_vector_detection"` // true
-	EnableBehavioralAnalysis    bool          `yaml:"enable_behavioral_analysis"`    // true
-	EnableThreatIntelligence    bool          `yaml:"enable_threat_intelligence"`    // true
-	EnableResponseOrchestration bool          `yaml:"enable_response_orchestration"` // true
-	EnableSecurityMetrics       bool          `yaml:"enable_security_metrics"`       // true
-	EnableAlertManagement       bool          `yaml:"enable_alert_management"`       // true
-	MaxConcurrentScans          int           `yaml:"max_concurrent_scans"`          // 10
-	ScanTimeout                 time.Duration `yaml:"scan_timeout"`                  // 30m
-	ThreatScoreThreshold        float64       `yaml:"threat_score_threshold"`        // 0.7
-	CriticalThreatThreshold     float64       `yaml:"critical_threat_threshold"`     // 0.9
-	AutoResponseEnabled         bool          `yaml:"auto_response_enabled"`         // false
-	Enabled                     bool          `yaml:"enabled"`                       // true
+	EnableTemporalDetection        bool          `yaml:"enable_temporal_detection"`        // true
+	EnableComplexityAnalysis       bool          `yaml:"enable_complexity_analysis"`       // true
+	EnableTrustValidation          bool          `yaml:"enable_trust_validation"`          // true
+	EnableMLHardening              bool          `yaml:"enable_ml_hardening"`              // true
+	EnableMultiVectorDetection     bool          `yaml:"enable_multi_vector_detection"`    // true
+	EnableBehavioralAnalysis       bool          `yaml:"enable_behavioral_analysis"`       // true
+	EnableResourceExhaustionDetection bool       `yaml:"enable_resource_exhaustion_detection"` // true
+	EnableThreatIntelligence       bool          `yaml:"enable_threat_intelligence"`       // true
+	EnableResponseOrchestration    bool          `yaml:"enable_response_orchestration"`    // true
+	EnableSecurityMetrics          bool          `yaml:"enable_security_metrics"`          // true
+	EnableAlertManagement          bool          `yaml:"enable_alert_management"`          // true
+	MaxConcurrentScans             int           `yaml:"max_concurrent_scans"`             // 10
+	ScanTimeout                    time.Duration `yaml:"scan_timeout"`                     // 30m
+	ThreatScoreThreshold           float64       `yaml:"threat_score_threshold"`           // 0.7
+	CriticalThreatThreshold        float64       `yaml:"critical_threat_threshold"`        // 0.9
+	AutoResponseEnabled            bool          `yaml:"auto_response_enabled"`            // false
+	Enabled                        bool          `yaml:"enabled"`                          // true
 }
 
 // ComprehensiveSecurityResult represents comprehensive security analysis results
@@ -60,6 +62,7 @@ type ComprehensiveSecurityResult struct {
 	MLHardening              *MLHardeningResult            `json:"ml_hardening"`
 	MultiVectorAnalysis      *MultiVectorAnalysisResult    `json:"multi_vector_analysis"`
 	BehavioralAnalysis       *BehavioralAnalysisResult     `json:"behavioral_analysis"`
+	ResourceExhaustionAnalysis *ResourceExhaustionAnalysisResult `json:"resource_exhaustion_analysis"`
 	ThreatIntelligence       *ThreatIntelResult            `json:"threat_intelligence"`
 	SecurityMetrics          *SecurityMetricsResult        `json:"security_metrics"`
 	DetectedThreats          []DetectedThreat              `json:"detected_threats"`
@@ -346,6 +349,12 @@ func NewSecurityCoordinator(config *SecurityCoordinatorConfig, logger logger.Log
 		sc.trustValidator = NewTrustValidator(trustConfig, logger)
 	}
 	
+	if config.EnableResourceExhaustionDetection {
+		resourceConfig := DefaultResourceExhaustionConfig()
+		sc.resourceExhaustionDetector = NewResourceExhaustionDetector(resourceConfig, logger)
+		// Start will be called when the coordinator starts
+	}
+	
 	return sc
 }
 
@@ -397,6 +406,17 @@ func (sc *SecurityCoordinator) PerformComprehensiveSecurityAnalysis(ctx context.
 		} else {
 			result.TrustValidation = trustResult
 			threats = append(threats, sc.extractThreatsFromTrust(trustResult)...)
+		}
+	}
+
+	// Perform resource exhaustion analysis
+	if sc.config.EnableResourceExhaustionDetection && sc.resourceExhaustionDetector != nil {
+		resourceResult, err := sc.performResourceExhaustionAnalysis(ctx, pkg)
+		if err != nil {
+			sc.logger.Error("Resource exhaustion analysis failed: " + err.Error())
+		} else {
+			result.ResourceExhaustionAnalysis = resourceResult
+			threats = append(threats, sc.extractThreatsFromResourceExhaustion(resourceResult)...)
 		}
 	}
 
@@ -457,23 +477,191 @@ func (sc *SecurityCoordinator) extractThreatsFromTrust(result *TrustValidationRe
 	return threats
 }
 
+func (sc *SecurityCoordinator) performResourceExhaustionAnalysis(ctx context.Context, pkg *types.Package) (*ResourceExhaustionAnalysisResult, error) {
+	if sc.resourceExhaustionDetector == nil {
+		return nil, fmt.Errorf("resource exhaustion detector not initialized")
+	}
+
+	// Get current resource metrics
+	currentMetrics := sc.resourceExhaustionDetector.GetCurrentMetrics()
+	
+	// Get detected patterns (empty for now, would need to implement this method)
+	var detectedPatterns []PatternDetection
+	
+	// Get active alerts
+	activeAlertsPtr := sc.resourceExhaustionDetector.GetActiveAlerts()
+	activeAlerts := make([]ResourceExhaustionAlert, len(activeAlertsPtr))
+	for i, alert := range activeAlertsPtr {
+		if alert != nil {
+			activeAlerts[i] = *alert
+		}
+	}
+	
+	// Get active mitigations (empty for now, would need to implement this method)
+	var activeMitigations []ActiveMitigation
+	
+	// Calculate threat score based on current metrics and patterns
+	threatScore := sc.calculateResourceThreatScore(currentMetrics, detectedPatterns)
+	
+	// Determine system health
+	systemHealth := sc.determineSystemHealth(currentMetrics, threatScore)
+	
+	// Generate recommendations
+	recommendations := sc.generateResourceRecommendations(currentMetrics, detectedPatterns)
+	
+	result := &ResourceExhaustionAnalysisResult{
+		ThreatScore:       threatScore,
+		ThreatLevel:       sc.determineThreatLevel(threatScore),
+		CurrentMetrics:    currentMetrics,
+		DetectedPatterns:  detectedPatterns,
+		ActiveAlerts:      activeAlerts,
+		ActiveMitigations: activeMitigations,
+		Recommendations:   recommendations,
+		SystemHealth:      systemHealth,
+		AnalysisTimestamp: time.Now(),
+		Metrics:           sc.resourceExhaustionDetector.GetDetectorMetrics(),
+	}
+	
+	return result, nil
+}
+
+func (sc *SecurityCoordinator) extractThreatsFromResourceExhaustion(result *ResourceExhaustionAnalysisResult) []DetectedThreat {
+	var threats []DetectedThreat
+	
+	if result == nil {
+		return threats
+	}
+	
+	// Extract threats from detected patterns
+	for _, pattern := range result.DetectedPatterns {
+		threat := DetectedThreat{
+			ThreatID:           fmt.Sprintf("resource-exhaustion-%d", time.Now().Unix()),
+			ThreatType:         "Resource Exhaustion",
+			ThreatCategory:     "Performance",
+			Severity:           sc.mapConfidenceToSeverity(pattern.Confidence),
+			Confidence:         pattern.Confidence,
+			Description:        fmt.Sprintf("Resource exhaustion pattern detected: %s", pattern.PatternName),
+			DetectionSource:    "ResourceExhaustionDetector",
+			DetectionTimestamp: pattern.DetectedAt,
+			Context:            map[string]interface{}{"pattern": pattern, "evidence": pattern.Evidence},
+		}
+		threats = append(threats, threat)
+	}
+	
+	// Extract threats from active alerts
+	for _, alert := range result.ActiveAlerts {
+		threat := DetectedThreat{
+			ThreatID:           fmt.Sprintf("resource-alert-%s", alert.AlertID),
+			ThreatType:         "Resource Alert",
+			ThreatCategory:     "Performance",
+			Severity:           alert.Severity.String(),
+			Confidence:         0.9, // High confidence for active alerts
+			Description:        alert.Message,
+			DetectionSource:    "ResourceExhaustionDetector",
+			DetectionTimestamp: alert.DetectedAt,
+			Context:            map[string]interface{}{"alert": alert},
+		}
+		threats = append(threats, threat)
+	}
+	
+	return threats
+}
+
+func (sc *SecurityCoordinator) calculateResourceThreatScore(metrics *ResourceUsageMetrics, patterns []PatternDetection) float64 {
+	if metrics == nil {
+		return 0.0
+	}
+	
+	var score float64
+	
+	// Base score from resource utilization
+	if metrics.CPUUsage > 80.0 {
+		score += 0.3
+	}
+	if metrics.MemoryUsage > 1024*1024*1024 { // 1GB
+		score += 0.3
+	}
+	if metrics.GoroutineCount > 10000 {
+		score += 0.2
+	}
+	
+	// Additional score from detected patterns
+	for _, pattern := range patterns {
+		score += pattern.Confidence * 0.1
+	}
+	
+	// Cap the score at 1.0
+	if score > 1.0 {
+		score = 1.0
+	}
+	
+	return score
+}
+
+func (sc *SecurityCoordinator) determineSystemHealth(metrics *ResourceUsageMetrics, threatScore float64) string {
+	if threatScore > 0.8 {
+		return "Critical"
+	} else if threatScore > 0.6 {
+		return "Warning"
+	} else if threatScore > 0.3 {
+		return "Caution"
+	}
+	return "Healthy"
+}
+
+func (sc *SecurityCoordinator) generateResourceRecommendations(metrics *ResourceUsageMetrics, patterns []PatternDetection) []string {
+	var recommendations []string
+	
+	if metrics != nil {
+		if metrics.CPUUsage > 80.0 {
+			recommendations = append(recommendations, "Consider optimizing CPU-intensive operations")
+		}
+		if metrics.MemoryUsage > 1024*1024*1024 {
+			recommendations = append(recommendations, "Monitor memory usage and implement garbage collection optimizations")
+		}
+		if metrics.GoroutineCount > 10000 {
+			recommendations = append(recommendations, "Review goroutine management and implement proper cleanup")
+		}
+	}
+	
+	if len(patterns) > 0 {
+		recommendations = append(recommendations, "Investigate detected resource exhaustion patterns")
+	}
+	
+	return recommendations
+}
+
+func (sc *SecurityCoordinator) mapConfidenceToSeverity(confidence float64) string {
+	if confidence > 0.8 {
+		return "High"
+	} else if confidence > 0.6 {
+		return "Medium"
+	}
+	return "Low"
+}
+
 func (sc *SecurityCoordinator) calculateOverallThreatScore(result *ComprehensiveSecurityResult) float64 {
 	var scores []float64
 	var weights []float64
 
 	if result.TemporalAnalysis != nil {
 		scores = append(scores, result.TemporalAnalysis.ConfidenceScore)
-		weights = append(weights, 0.2)
+		weights = append(weights, 0.15)
 	}
 
 	if result.ComplexityAnalysis != nil {
 		scores = append(scores, result.ComplexityAnalysis.ComplexityScore)
-		weights = append(weights, 0.2)
+		weights = append(weights, 0.15)
 	}
 
 	if result.TrustValidation != nil {
 		scores = append(scores, result.TrustValidation.OverallTrustScore)
-		weights = append(weights, 0.3)
+		weights = append(weights, 0.25)
+	}
+
+	if result.ResourceExhaustionAnalysis != nil {
+		scores = append(scores, result.ResourceExhaustionAnalysis.ThreatScore)
+		weights = append(weights, 0.25)
 	}
 
 	if len(scores) == 0 {

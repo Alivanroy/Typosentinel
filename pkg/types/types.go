@@ -124,22 +124,26 @@ type PackageMetadata struct {
 
 // Threat represents a detected security threat
 type Threat struct {
-	ID              string                 `json:"id"`
-	Package         string                 `json:"package"`
-	Version         string                 `json:"version,omitempty"`
-	Registry        string                 `json:"registry"`
-	Type            ThreatType             `json:"type"`
-	Severity        Severity               `json:"severity"`
-	Confidence      float64                `json:"confidence"` // 0.0 to 1.0
-	Description     string                 `json:"description"`
-	SimilarTo       string                 `json:"similar_to,omitempty"`
-	Recommendation  string                 `json:"recommendation,omitempty"`
-	Evidence        []Evidence             `json:"evidence,omitempty"`
-	CVEs            []string               `json:"cves,omitempty"`
-	References      []string               `json:"references,omitempty"`
-	DetectedAt      time.Time              `json:"detected_at"`
-	DetectionMethod string                 `json:"detection_method"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	ID                 string                 `json:"id"`
+	Package            string                 `json:"package"`
+	Version            string                 `json:"version,omitempty"`
+	Registry           string                 `json:"registry"`
+	Type               ThreatType             `json:"type"`
+	Severity           Severity               `json:"severity"`
+	Confidence         float64                `json:"confidence"` // 0.0 to 1.0
+	Description        string                 `json:"description"`
+	SimilarTo          string                 `json:"similar_to,omitempty"`
+	Recommendation     string                 `json:"recommendation,omitempty"`
+	Evidence           []Evidence             `json:"evidence,omitempty"`
+	CVEs               []string               `json:"cves,omitempty"`
+	References         []string               `json:"references,omitempty"`
+	DetectedAt         time.Time              `json:"detected_at"`
+	DetectionMethod    string                 `json:"detection_method"`
+	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	AffectedVersions   string                 `json:"affected_versions,omitempty"`
+	FixedVersion       string                 `json:"fixed_version,omitempty"`
+	ProposedCorrection string                 `json:"proposed_correction,omitempty"`
+	CVE                string                 `json:"cve,omitempty"`
 }
 
 // AnalysisResult represents the result of package analysis

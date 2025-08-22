@@ -262,6 +262,33 @@ func (al *AuditLogger) LogSystemEvent(eventType, action, message string, details
 	al.writeLogEntry(entry)
 }
 
+// LogEvent logs a generic audit event
+func (al *AuditLogger) LogEvent(event AuditEvent) {
+	entry := AuditLogEntry{
+		Timestamp:   time.Now(),
+		Level:       "INFO",
+		EventType:   event.EventType,
+		UserID:      "",
+		IPAddress:   event.IPAddress,
+		UserAgent:   event.UserAgent,
+		Action:      "EVENT",
+		Result:      "SUCCESS",
+		Message:     "Generic audit event",
+		Details:     event.EventData,
+	}
+
+	if event.UserID != nil {
+		entry.UserID = *event.UserID
+	}
+
+	if !event.Success {
+		entry.Result = "FAILURE"
+		entry.Level = "WARN"
+	}
+
+	al.writeLogEntry(entry)
+}
+
 // writeLogEntry writes a log entry to the audit log
 func (al *AuditLogger) writeLogEntry(entry AuditLogEntry) {
 	// Generate fingerprint for deduplication

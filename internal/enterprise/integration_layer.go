@@ -288,7 +288,13 @@ func NewEnterpriseIntegrationLayer(config *EnterpriseConfig) *EnterpriseIntegrat
 	}
 
 	if config.MLPredictionEnabled {
-		layer.threatPredictor = ml.NewThreatPredictor(config.PredictorConfig)
+		predictor, err := ml.NewThreatPredictor(config.PredictorConfig)
+		if err != nil {
+			// Log error but continue without ML prediction
+			layer.threatPredictor = nil
+		} else {
+			layer.threatPredictor = predictor
+		}
 	}
 
 	if config.AutoRemediationEnabled {
@@ -439,7 +445,10 @@ func (eil *EnterpriseIntegrationLayer) GetMLModelMetrics() map[string]*ml.ModelM
 		return nil
 	}
 
-	return eil.threatPredictor.GetModelMetrics()
+	metrics := eil.threatPredictor.GetModelMetrics()
+	return map[string]*ml.ModelMetrics{
+		"threat_predictor": metrics,
+	}
 }
 
 // GetIntegrationMetrics returns overall integration metrics
@@ -497,7 +506,7 @@ func (eil *EnterpriseIntegrationLayer) enhanceThreatsWithML(ctx context.Context,
 
 	for _, threat := range threats {
 		// Get ML prediction
-		prediction, err := eil.threatPredictor.PredictThreat(ctx, threat)
+		prediction, err := eil.threatPredictor.PredictThreatFromThreat(ctx, threat)
 		if err != nil {
 			return nil, fmt.Errorf("ML prediction failed for threat %s: %w", threat.ID, err)
 		}
@@ -538,7 +547,7 @@ func (eil *EnterpriseIntegrationLayer) executeAutomatedRemediation(ctx context.C
 		// Convert threat to policy violation for remediation
 		violation := &auth.PolicyViolation{
 			ID:          threat.ID,
-			Severity:    string(threat.Severity),
+			Severity:    threat.Severity.String(),
 			Description: threat.Description,
 			Metadata: map[string]interface{}{
 				"threat_type":      string(threat.Type),
@@ -637,7 +646,7 @@ func (eil *EnterpriseIntegrationLayer) generateRiskAssessment(threat *types.Thre
 
 func (eil *EnterpriseIntegrationLayer) generateBusinessImpact(threat *types.Threat) *BusinessImpact {
 	return &BusinessImpact{
-		Criticality:      string(threat.Severity),
+		Criticality:      threat.Severity.String(),
 		AffectedSystems:  []string{"production"},
 		UserImpact:       "potential service disruption",
 		ReputationImpact: "moderate",

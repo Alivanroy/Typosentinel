@@ -28,6 +28,7 @@ type Scanner struct {
 	mlDetector       *ml.EnhancedMLDetector
 	eventBus         *events.EventBus
 	integrationHub   *hub.IntegrationHub
+	metadataEnricher *MetadataEnricher
 }
 
 // ProjectDetector interface for detecting different project types
@@ -86,6 +87,7 @@ func New(cfg *config.Config) (*Scanner, error) {
 		detectors:        make(map[string]ProjectDetector),
 		analyzers:        make(map[string]DependencyAnalyzer),
 		analyzerRegistry: NewAnalyzerRegistry(cfg),
+		metadataEnricher: NewMetadataEnricher(),
 	}
 
 	// Initialize logger
@@ -174,6 +176,22 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	packages, err := s.extractPackages(projectInfo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract packages: %w", err)
+	}
+
+	// Enrich package metadata
+	ctx := context.Background()
+	for _, pkg := range packages {
+		// Initialize metadata if nil
+		if pkg.Metadata == nil {
+			pkg.Metadata = &types.PackageMetadata{}
+		}
+		fmt.Printf("Enriching package %s (registry: %s, description: %s)\n", pkg.Name, pkg.Registry, pkg.Metadata.Description)
+		if err := s.metadataEnricher.enrichPackage(ctx, pkg); err != nil {
+			// Log error but continue with other packages
+			fmt.Printf("Failed to enrich package %s: %v\n", pkg.Name, err)
+		} else {
+			fmt.Printf("Enriched package %s - new description: %s\n", pkg.Name, pkg.Metadata.Description)
+		}
 	}
 
 	// Analyze threats for each package

@@ -252,7 +252,16 @@ func NewCacheManager(config *CacheConfig, db *database.ThreatDB) *CacheManager {
 	}
 
 	// Initialize L2 cache
-	fileCache := cache.NewCacheIntegration(config.L2Config.CacheDir, true, config.L2Config.DefaultTTL)
+	cacheConfig := &cache.CacheConfig{
+		Enabled:  true,
+		CacheDir: config.L2Config.CacheDir,
+		TTL:      config.L2Config.DefaultTTL,
+	}
+	fileCache, err := cache.NewCacheIntegration(cacheConfig)
+	if err != nil {
+		log.Printf("Failed to initialize L2 cache: %v", err)
+		fileCache = nil
+	}
 	l2 := &L2Cache{
 		fileCache: fileCache,
 		ttl:       config.L2Config.DefaultTTL,

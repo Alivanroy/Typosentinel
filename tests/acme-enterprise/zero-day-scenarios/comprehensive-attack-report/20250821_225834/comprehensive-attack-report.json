@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-08-21T20:58:35Z",
+  "simulation_id": "20250821_225834",
+  "report_version": "1.0.0",
+  "summary": {
+    "total_scenarios": 3,
+    "successful_scenarios": 3,
+    "failed_scenarios": 0,
+    "total_attacks_generated": 112,
+    "registries_targeted": [],
+    "attack_types_covered": []
+  },
+  "scenarios": {
+    "typosquatting": {
+      "status": "success",
+      "attacks_generated": 0,
+      "artifacts_location": "/Users/alikorsi/Documents/Typosentinel/tests/acme-enterprise/zero-day-scenarios/comprehensive-attack-report/20250821_225834/typosquatting"
+    },
+    "dependency_confusion": {
+      "status": "success",
+      "attacks_generated": 96,
+      "artifacts_location": "/Users/alikorsi/Documents/Typosentinel/tests/acme-enterprise/zero-day-scenarios/comprehensive-attack-report/20250821_225834/dependency-confusion"
+    },
+    "supply_chain": {
+      "status": "success",
+      "attacks_generated": 16,
+      "artifacts_location": "/Users/alikorsi/Documents/Typosentinel/tests/acme-enterprise/zero-day-scenarios/comprehensive-attack-report/20250821_225834/supply-chain"
+    }
+  },
+  "detection_challenges": {
+    "high_similarity_attacks": 0,
+    "obfuscated_payloads": 0,
+    "time_delayed_attacks": 0,
+    "environment_specific_attacks": 0,
+    "legitimate_looking_metadata": 0
+  },
+  "risk_analysis": {
+    "critical_risk_attacks": 0,
+    "high_risk_attacks": 0,
+    "medium_risk_attacks": 0,
+    "low_risk_attacks": 0
+  },
+  "recommendations": [
+    "Implement real-time package scanning during CI/CD",
+    "Monitor for typosquatting patterns in package names",
+    "Validate package metadata and maintainer information",
+    "Implement dependency pinning and lock file verification",
+    "Set up alerts for new packages matching internal naming patterns",
+    "Regular security audits of dependency chains",
+    "Implement package signature verification",
+    "Monitor for suspicious package behavior post-installation"
+  ]
+}

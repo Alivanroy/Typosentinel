@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	_ "github.com/lib/pq"
 )
@@ -57,15 +58,18 @@ func (dm *DatabaseManager) Initialize(ctx context.Context) error {
 	}
 
 	// Initialize database service
-	dbConfig := &DatabaseConfig{
-		Host:     dm.config.Host,
-		Port:     dm.config.Port,
-		User:     dm.config.Username,
-		Password: dm.config.Password,
-		DBName:   dm.config.Database,
-		SSLMode:  dm.config.SSLMode,
-		MaxConns: dm.config.MaxOpenConns,
-		MaxIdle:  dm.config.MaxIdleConns,
+	dbConfig := &config.DatabaseConfig{
+		Type:            "postgres",
+		Host:            dm.config.Host,
+		Port:            dm.config.Port,
+		Username:        dm.config.Username,
+		Password:        dm.config.Password,
+		Database:        dm.config.Database,
+		SSLMode:         dm.config.SSLMode,
+		MaxOpenConns:    dm.config.MaxOpenConns,
+		MaxIdleConns:    dm.config.MaxIdleConns,
+		ConnMaxLifetime: dm.config.ConnMaxLifetime,
+		MigrationsPath:  "./migrations",
 	}
 	var err error
 	dm.service, err = NewDatabaseService(dbConfig)

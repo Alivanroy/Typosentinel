@@ -633,7 +633,12 @@ func (m *Manager) Load(configDir string) error {
 	}
 
 	// Load environment-specific configuration
-	env := Environment(viper.GetString("app.environment"))
+	// Check environment variable first, then fall back to config
+	envStr := os.Getenv("TYPOSENTINEL_APP_ENVIRONMENT")
+	if envStr == "" {
+		envStr = viper.GetString("app.environment")
+	}
+	env := Environment(envStr)
 	m.env = env
 
 	if env != "" {
@@ -776,6 +781,7 @@ func (m *Manager) setDefaults() {
 
 	// ML defaults
 	viper.SetDefault("ml.enabled", false)
+	viper.SetDefault("ml.model_path", "./models/default.model")
 	viper.SetDefault("ml.threshold", 0.5)
 	viper.SetDefault("ml.batch_size", 100)
 	viper.SetDefault("ml.timeout", "30s")
@@ -1061,6 +1067,16 @@ func (m *Manager) registerCustomValidators() {
 		info, err := os.Stat(path)
 		return err == nil && info.IsDir()
 	})
+
+	// Register file validator
+	m.validator.RegisterValidation("file", func(fl validator.FieldLevel) bool {
+		path := fl.Field().String()
+		if path == "" {
+			return true // Allow empty paths to pass validation
+		}
+		info, err := os.Stat(path)
+		return err == nil && !info.IsDir()
+	})
 }
 
 // customValidation performs custom validation logic
@@ -1101,6 +1117,9 @@ func (m *Manager) customValidation() error {
 
 // postProcess performs post-processing on the configuration
 func (m *Manager) postProcess() error {
+	// Sync the config's environment with the manager's detected environment
+	m.config.App.Environment = m.env
+
 	// Ensure directories exist
 	dirs := []string{
 		m.config.App.DataDir,
@@ -1240,7 +1259,12 @@ func NewDefaultConfig() *Config {
 		},
 		Database: DatabaseConfig{
 			Type:            viper.GetString("database.type"),
+			Host:            viper.GetString("database.host"),
+			Port:            viper.GetInt("database.port"),
 			Database:        viper.GetString("database.database"),
+			Username:        viper.GetString("database.username"),
+			Password:        viper.GetString("database.password"),
+			SSLMode:         viper.GetString("database.ssl_mode"),
 			MaxOpenConns:    viper.GetInt("database.max_open_conns"),
 			MaxIdleConns:    viper.GetInt("database.max_idle_conns"),
 			ConnMaxLifetime: viper.GetDuration("database.conn_max_lifetime"),

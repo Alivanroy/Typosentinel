@@ -624,6 +624,7 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 		"numpy": true, "flask": true, "django": true, "axios": true,
 		"moment": true, "jquery": true, "bootstrap": true, "vue": true,
 		"angular": true, "typescript": true, "webpack": true, "babel": true,
+		"stripe": true, "paypal": true, "twilio": true, "aws-sdk": true,
 	}
 
 	// If this is a known legitimate package, return very low similarity
@@ -679,8 +680,14 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 		jaroWinklerSim := a.calculateJaroWinklerSimilarity(pkg.Name, popular)
 		phoneticSim := a.calculatePhoneticSimilarity(pkg.Name, popular)
 
-		// Weighted combination of similarity metrics
-		combinedSim := (levenshteinSim*0.5 + jaroWinklerSim*0.3 + phoneticSim*0.2)
+		// Apply length difference penalty to reduce false positives
+		lengthDiffPenalty := a.calculateLengthDifferencePenalty(pkg.Name, popular)
+		
+		// Apply semantic context penalty for unrelated packages
+		semanticPenalty := a.calculateSemanticContextPenalty(pkg.Name, popular)
+
+		// Weighted combination of similarity metrics with penalties
+		combinedSim := (levenshteinSim*0.5 + jaroWinklerSim*0.3 + phoneticSim*0.2) * lengthDiffPenalty * semanticPenalty
 
 		if combinedSim > maxSimilarity {
 			maxSimilarity = combinedSim
@@ -710,10 +717,22 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 		}
 	}
 
-	// Apply threshold to reduce false positives for legitimate packages
-	// Only reduce similarity for very low matches to avoid false positives
-	if maxSimilarity < 0.3 {
-		maxSimilarity = maxSimilarity * 0.5 // Reduce similarity score for very low matches only
+	// Apply enhanced threshold logic to reduce false positives
+	// Stricter filtering for packages with significant differences
+	if maxSimilarity < 0.4 {
+		maxSimilarity = maxSimilarity * 0.3 // Heavily reduce similarity for low matches
+	} else if maxSimilarity < 0.6 {
+		maxSimilarity = maxSimilarity * 0.7 // Moderately reduce medium similarity scores
+	}
+	
+	// Additional filtering for packages with very different lengths or contexts
+	if mostSimilarPackage != "" {
+		if a.hasSignificantLengthDifference(pkg.Name, mostSimilarPackage) {
+			maxSimilarity = maxSimilarity * 0.5
+		}
+		if a.hasUnrelatedSemanticContext(pkg.Name, mostSimilarPackage) {
+			maxSimilarity = maxSimilarity * 0.4
+		}
 	}
 
 	// Enhanced typosquatting detection with pattern analysis

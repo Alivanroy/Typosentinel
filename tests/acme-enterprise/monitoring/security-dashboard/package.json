@@ -1,0 +1,240 @@
+{
+  "name": "acme-security-dashboard",
+  "version": "1.0.0",
+  "description": "ACME Enterprise Security Dashboard for Typosentinel Monitoring",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "npm run build:client",
+    "build:client": "cd client && npm run build",
+    "install:client": "cd client && npm install",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "security:audit": "npm audit",
+    "docker:build": "docker build -t acme-security-dashboard .",
+    "docker:run": "docker run -p 4000:4000 acme-security-dashboard"
+  },
+  "keywords": [
+    "security",
+    "dashboard",
+    "typosentinel",
+    "monitoring",
+    "enterprise",
+    "vulnerability",
+    "package-security"
+  ],
+  "author": "ACME Enterprise Security Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^7.0.0",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "winston": "^3.9.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "axios": "^1.4.0",
+    "redis": "^4.6.7",
+    "ioredis": "^5.3.2",
+    "socket.io": "^4.7.1",
+    "jsonwebtoken": "^9.0.1",
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.9.2",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.0",
+    "node-cron": "^3.0.2",
+    "prom-client": "^14.2.0",
+    "elasticsearch": "^16.7.3",
+    "@elastic/elasticsearch": "^8.8.0",
+    "pg": "^8.11.1",
+    "pg-pool": "^3.6.1",
+    "dotenv": "^16.3.1",
+    "config": "^3.3.9",
+    "express-validator": "^7.0.1",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.1",
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^20.7.2",
+    "chart.js": "^4.3.0",
+    "chartjs-node-canvas": "^4.1.6",
+    "d3": "^7.8.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "express-openapi-validator": "^5.0.4",
+    "node-cache": "^5.1.2",
+    "express-slow-down": "^1.6.0",
+    "express-brute": "^1.0.1",
+    "express-brute-redis": "^0.0.1",
+    "passport": "^0.6.0",
+    "passport-local": "^1.0.0",
+    "passport-jwt": "^4.0.1",
+    "passport-oauth2": "^1.7.0",
+    "express-session": "^1.17.3",
+    "connect-redis": "^7.1.0",
+    "cookie-parser": "^1.4.6",
+    "express-mongo-sanitize": "^2.2.0",
+    "xss": "^1.0.14",
+    "hpp": "^0.2.3",
+    "express-fileupload": "^1.4.0",
+    "nodemailer": "^6.9.3",
+    "handlebars": "^4.7.7",
+    "marked": "^5.1.1",
+    "dompurify": "^3.0.3",
+    "jsdom": "^22.1.0",
+    "csv-parser": "^3.0.0",
+    "csv-writer": "^1.6.0",
+    "archiver": "^5.3.1",
+    "yauzl": "^2.10.0",
+    "tar": "^6.1.15",
+    "semver": "^7.5.4",
+    "validator": "^13.9.0",
+    "sanitize-html": "^2.11.0",
+    "rate-limiter-flexible": "^2.4.2",
+    "express-prometheus-middleware": "^1.2.0",
+    "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.38.0",
+    "@opentelemetry/exporter-jaeger": "^1.15.0",
+    "@opentelemetry/exporter-prometheus": "^0.41.0",
+    "@opentelemetry/sdk-node": "^0.41.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.44.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.2.2",
+    "eslint-plugin-security": "^1.7.1",
+    "prettier": "^3.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
+    "@types/node": "^20.4.2",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.3",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/lodash": "^4.14.195",
+    "@types/uuid": "^9.0.2",
+    "@types/multer": "^1.4.7",
+    "@types/passport": "^1.0.12",
+    "@types/passport-local": "^1.0.35",
+    "@types/passport-jwt": "^3.0.8",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/express-session": "^1.17.7",
+    "@types/nodemailer": "^6.4.8",
+    "@types/marked": "^5.0.1",
+    "@types/dompurify": "^3.0.2",
+    "@types/jsdom": "^21.1.1",
+    "@types/archiver": "^5.3.2",
+    "@types/yauzl": "^2.10.0",
+    "@types/tar": "^6.1.5",
+    "@types/semver": "^7.5.0",
+    "@types/validator": "^13.7.17",
+    "@types/sanitize-html": "^2.9.0",
+    "typescript": "^5.1.6",
+    "ts-node": "^10.9.1",
+    "ts-jest": "^29.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.1.0",
+    "@typescript-eslint/parser": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acme-enterprise/security-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/acme-enterprise/security-dashboard/issues"
+  },
+  "homepage": "https://security.acme.local",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm test"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.{js,ts}",
+      "!src/**/*.test.{js,ts}",
+      "!src/**/*.spec.{js,ts}"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.(js|ts)",
+      "**/*.(test|spec).(js|ts)"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "airbnb-base",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:security/recommended",
+      "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "security",
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es2022": true,
+      "jest": true
+    },
+    "rules": {
+      "prettier/prettier": "error",
+      "no-console": "warn",
+      "security/detect-object-injection": "warn",
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/explicit-function-return-type": "warn"
+    }
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false
+  }
+}

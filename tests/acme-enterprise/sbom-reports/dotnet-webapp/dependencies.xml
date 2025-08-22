@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packages>
+  <!-- Core .NET packages -->
+  <package id="Microsoft.AspNetCore.App" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Mvc" version="2.2.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Authentication.JwtBearer" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Authentication.Google" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Authentication.Facebook" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Identity.EntityFrameworkCore" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.SignalR" version="1.1.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Cors" version="2.2.0" targetFramework="net6.0" />
+  
+  <!-- Entity Framework -->
+  <package id="Microsoft.EntityFrameworkCore" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore.SqlServer" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore.PostgreSQL" version="6.0.8" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore.Tools" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore.Design" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore.InMemory" version="6.0.21" targetFramework="net6.0" />
+  
+  <!-- Database drivers -->
+  <package id="System.Data.SqlClient" version="4.8.5" targetFramework="net6.0" />
+  <package id="MySql.Data" version="8.1.0" targetFramework="net6.0" />
+  <package id="Oracle.ManagedDataAccess.Core" version="3.21.120" targetFramework="net6.0" />
+  <package id="MongoDB.Driver" version="2.21.0" targetFramework="net6.0" />
+  <package id="StackExchange.Redis" version="2.6.122" targetFramework="net6.0" />
+  
+  <!-- JSON processing -->
+  <package id="Newtonsoft.Json" version="13.0.3" targetFramework="net6.0" />
+  <package id="System.Text.Json" version="6.0.8" targetFramework="net6.0" />
+  
+  <!-- HTTP clients -->
+  <package id="Microsoft.Extensions.Http" version="6.0.0" targetFramework="net6.0" />
+  <package id="RestSharp" version="110.2.0" targetFramework="net6.0" />
+  <package id="Flurl.Http" version="3.2.4" targetFramework="net6.0" />
+  
+  <!-- Logging -->
+  <package id="Microsoft.Extensions.Logging" version="6.0.0" targetFramework="net6.0" />
+  <package id="Serilog" version="3.0.1" targetFramework="net6.0" />
+  <package id="Serilog.AspNetCore" version="7.0.0" targetFramework="net6.0" />
+  <package id="Serilog.Sinks.Console" version="4.1.0" targetFramework="net6.0" />
+  <package id="Serilog.Sinks.File" version="5.0.0" targetFramework="net6.0" />
+  <package id="NLog" version="5.2.4" targetFramework="net6.0" />
+  <package id="NLog.Web.AspNetCore" version="5.3.4" targetFramework="net6.0" />
+  
+  <!-- Configuration -->
+  <package id="Microsoft.Extensions.Configuration" version="6.0.1" targetFramework="net6.0" />
+  <package id="Microsoft.Extensions.Configuration.Json" version="6.0.0" targetFramework="net6.0" />
+  <package id="Microsoft.Extensions.Configuration.EnvironmentVariables" version="6.0.1" targetFramework="net6.0" />
+  
+  <!-- Dependency Injection -->
+  <package id="Microsoft.Extensions.DependencyInjection" version="6.0.1" targetFramework="net6.0" />
+  <package id="Autofac" version="7.1.0" targetFramework="net6.0" />
+  <package id="Autofac.Extensions.DependencyInjection" version="8.0.0" targetFramework="net6.0" />
+  
+  <!-- Validation -->
+  <package id="FluentValidation" version="11.7.1" targetFramework="net6.0" />
+  <package id="FluentValidation.AspNetCore" version="11.3.0" targetFramework="net6.0" />
+  
+  <!-- Mapping -->
+  <package id="AutoMapper" version="12.0.1" targetFramework="net6.0" />
+  <package id="AutoMapper.Extensions.Microsoft.DependencyInjection" version="12.0.1" targetFramework="net6.0" />
+  
+  <!-- Caching -->
+  <package id="Microsoft.Extensions.Caching.Memory" version="6.0.1" targetFramework="net6.0" />
+  <package id="Microsoft.Extensions.Caching.Redis" version="2.2.0" targetFramework="net6.0" />
+  
+  <!-- Background services -->
+  <package id="Hangfire" version="1.8.5" targetFramework="net6.0" />
+  <package id="Hangfire.SqlServer" version="1.8.5" targetFramework="net6.0" />
+  <package id="Quartz" version="3.7.0" targetFramework="net6.0" />
+  
+  <!-- File processing -->
+  <package id="EPPlus" version="6.2.10" targetFramework="net6.0" />
+  <package id="ClosedXML" version="0.102.1" targetFramework="net6.0" />
+  <package id="iTextSharp" version="5.5.13.3" targetFramework="net6.0" />
+  <package id="PdfSharp" version="1.50.5147" targetFramework="net6.0" />
+  <package id="CsvHelper" version="30.0.1" targetFramework="net6.0" />
+  
+  <!-- Image processing -->
+  <package id="ImageSharp" version="3.0.2" targetFramework="net6.0" />
+  <package id="System.Drawing.Common" version="6.0.0" targetFramework="net6.0" />
+  
+  <!-- Compression -->
+  <package id="SharpZipLib" version="1.4.2" targetFramework="net6.0" />
+  <package id="DotNetZip" version="1.16.0" targetFramework="net6.0" />
+  
+  <!-- Encryption -->
+  <package id="BouncyCastle" version="1.8.9" targetFramework="net6.0" />
+  <package id="System.Security.Cryptography.Algorithms" version="4.3.1" targetFramework="net6.0" />
+  
+  <!-- Email -->
+  <package id="MailKit" version="4.2.0" targetFramework="net6.0" />
+  <package id="MimeKit" version="4.2.0" targetFramework="net6.0" />
+  <package id="SendGrid" version="9.28.1" targetFramework="net6.0" />
+  
+  <!-- Cloud services -->
+  <package id="AWSSDK.S3" version="3.7.203.32" targetFramework="net6.0" />
+  <package id="AWSSDK.DynamoDBv2" version="3.7.201.32" targetFramework="net6.0" />
+  <package id="AWSSDK.SQS" version="3.7.201.32" targetFramework="net6.0" />
+  <package id="Azure.Storage.Blobs" version="12.17.0" targetFramework="net6.0" />
+  <package id="Azure.Storage.Queues" version="12.15.0" targetFramework="net6.0" />
+  <package id="Google.Cloud.Storage.V1" version="4.6.0" targetFramework="net6.0" />
+  
+  <!-- Message queues -->
+  <package id="RabbitMQ.Client" version="6.6.0" targetFramework="net6.0" />
+  <package id="Apache.Kafka" version="2.2.0" targetFramework="net6.0" />
+  <package id="Azure.Messaging.ServiceBus" version="7.15.0" targetFramework="net6.0" />
+  
+  <!-- Monitoring -->
+  <package id="Sentry.AspNetCore" version="3.34.0" targetFramework="net6.0" />
+  <package id="ApplicationInsights.AspNetCore" version="2.21.0" targetFramework="net6.0" />
+  <package id="Prometheus.AspNetCore" version="8.0.1" targetFramework="net6.0" />
+  
+  <!-- API documentation -->
+  <package id="Swashbuckle.AspNetCore" version="6.5.0" targetFramework="net6.0" />
+  <package id="NSwag.AspNetCore" version="13.20.0" targetFramework="net6.0" />
+  
+  <!-- Testing -->
+  <package id="Microsoft.AspNetCore.Mvc.Testing" version="6.0.21" targetFramework="net6.0" />
+  <package id="xunit" version="2.4.2" targetFramework="net6.0" />
+  <package id="xunit.runner.visualstudio" version="2.4.5" targetFramework="net6.0" />
+  <package id="Moq" version="4.20.69" targetFramework="net6.0" />
+  <package id="FluentAssertions" version="6.12.0" targetFramework="net6.0" />
+  <package id="Bogus" version="34.0.2" targetFramework="net6.0" />
+  
+  <!-- Utilities -->
+  <package id="Humanizer" version="2.14.1" targetFramework="net6.0" />
+  <package id="Polly" version="7.2.4" targetFramework="net6.0" />
+  <package id="MediatR" version="12.1.1" targetFramework="net6.0" />
+  <package id="MediatR.Extensions.Microsoft.DependencyInjection" version="11.1.0" targetFramework="net6.0" />
+  
+  <!-- Potentially vulnerable packages -->
+  <package id="Microsoft.AspNetCore.Mvc" version="1.1.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Authentication" version="2.0.0" targetFramework="net6.0" />
+  <package id="System.Data.SqlClient" version="4.4.0" targetFramework="net6.0" />
+  <package id="Newtonsoft.Json" version="9.0.1" targetFramework="net6.0" />
+  <package id="System.Text.Encodings.Web" version="4.5.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Server.Kestrel" version="2.0.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.HttpsPolicy" version="2.1.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.Cors" version="2.0.0" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCore.SignalR" version="1.0.0" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore" version="2.1.0" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCore.SqlServer" version="2.1.0" targetFramework="net6.0" />
+  <package id="System.Security.Cryptography.Xml" version="4.5.0" targetFramework="net6.0" />
+  <package id="System.Drawing.Common" version="4.5.0" targetFramework="net6.0" />
+  <package id="System.Text.Json" version="4.6.0" targetFramework="net6.0" />
+  <package id="Microsoft.Extensions.Logging" version="2.1.0" targetFramework="net6.0" />
+  <package id="Microsoft.Extensions.Configuration" version="2.1.0" targetFramework="net6.0" />
+  <package id="Microsoft.Extensions.DependencyInjection" version="2.1.0" targetFramework="net6.0" />
+  <package id="AutoMapper" version="8.0.0" targetFramework="net6.0" />
+  <package id="FluentValidation" version="8.0.0" targetFramework="net6.0" />
+  <package id="Serilog" version="2.8.0" targetFramework="net6.0" />
+  <package id="NLog" version="4.6.0" targetFramework="net6.0" />
+  <package id="RestSharp" version="106.6.0" targetFramework="net6.0" />
+  <package id="StackExchange.Redis" version="2.0.0" targetFramework="net6.0" />
+  <package id="MongoDB.Driver" version="2.8.0" targetFramework="net6.0" />
+  <package id="EPPlus" version="4.5.0" targetFramework="net6.0" />
+  <package id="iTextSharp" version="5.5.0" targetFramework="net6.0" />
+  <package id="CsvHelper" version="12.0.0" targetFramework="net6.0" />
+  <package id="ImageSharp" version="1.0.0" targetFramework="net6.0" />
+  <package id="SharpZipLib" version="1.0.0" targetFramework="net6.0" />
+  <package id="BouncyCastle" version="1.8.0" targetFramework="net6.0" />
+  <package id="MailKit" version="2.0.0" targetFramework="net6.0" />
+  <package id="SendGrid" version="9.0.0" targetFramework="net6.0" />
+  <package id="AWSSDK.S3" version="3.3.0" targetFramework="net6.0" />
+  <package id="Azure.Storage.Blobs" version="12.0.0" targetFramework="net6.0" />
+  <package id="RabbitMQ.Client" version="5.0.0" targetFramework="net6.0" />
+  <package id="Hangfire" version="1.6.0" targetFramework="net6.0" />
+  <package id="Quartz" version="3.0.0" targetFramework="net6.0" />
+  <package id="Swashbuckle.AspNetCore" version="5.0.0" targetFramework="net6.0" />
+  <package id="Polly" version="6.0.0" targetFramework="net6.0" />
+  <package id="MediatR" version="7.0.0" targetFramework="net6.0" />
+  <package id="Humanizer" version="2.5.0" targetFramework="net6.0" />
+  <package id="xunit" version="2.4.0" targetFramework="net6.0" />
+  <package id="Moq" version="4.10.0" targetFramework="net6.0" />
+  <package id="FluentAssertions" version="5.6.0" targetFramework="net6.0" />
+  <package id="Bogus" version="28.0.0" targetFramework="net6.0" />
+  
+  <!-- Typosquatting examples -->
+  <package id="Newtonsoft.JSon" version="13.0.3" targetFramework="net6.0" />
+  <package id="Microsoft.AspNetCor.Mvc" version="6.0.21" targetFramework="net6.0" />
+  <package id="Microsoft.EntityFrameworkCor" version="6.0.21" targetFramework="net6.0" />
+  <package id="AutoMappper" version="12.0.1" targetFramework="net6.0" />
+  <package id="FluentValidaton" version="11.7.1" targetFramework="net6.0" />
+  <package id="Serilogg" version="3.0.1" targetFramework="net6.0" />
+  <package id="RestSharpp" version="110.2.0" targetFramework="net6.0" />
+  <package id="StackExchang.Redis" version="2.6.122" targetFramework="net6.0" />
+  <package id="MongoDb.Driver" version="2.21.0" targetFramework="net6.0" />
+  <package id="EPPLus" version="6.2.10" targetFramework="net6.0" />
+  <package id="iTextSharpp" version="5.5.13.3" targetFramework="net6.0" />
+  <package id="CsvHelperr" version="30.0.1" targetFramework="net6.0" />
+  <package id="ImageSharpp" version="3.0.2" targetFramework="net6.0" />
+  <package id="SharpZipLlib" version="1.4.2" targetFramework="net6.0" />
+  <package id="BouncyCastlee" version="1.8.9" targetFramework="net6.0" />
+  <package id="MailKitt" version="4.2.0" targetFramework="net6.0" />
+  <package id="SendGridd" version="9.28.1" targetFramework="net6.0" />
+  <package id="AWSSDK.S33" version="3.7.203.32" targetFramework="net6.0" />
+  <package id="Azure.Storage.Blobss" version="12.17.0" targetFramework="net6.0" />
+  <package id="RabbitMQ.Clientt" version="6.6.0" targetFramework="net6.0" />
+  <package id="Hangfiree" version="1.8.5" targetFramework="net6.0" />
+  <package id="Quarttz" version="3.7.0" targetFramework="net6.0" />
+  <package id="Swashbuckle.AspNetCoree" version="6.5.0" targetFramework="net6.0" />
+  <package id="Pollyy" version="7.2.4" targetFramework="net6.0" />
+  <package id="MediatRR" version="12.1.1" targetFramework="net6.0" />
+  <package id="Humanizerr" version="2.14.1" targetFramework="net6.0" />
+  
+  <!-- Suspicious/malicious package names -->
+  <package id="Backdoor.AspNetCore" version="1.0.0" targetFramework="net6.0" />
+  <package id="SqlInjection.Helper" version="2.1.0" targetFramework="net6.0" />
+  <package id="XSS.Generator" version="1.5.0" targetFramework="net6.0" />
+  <package id="CSRF.Bypass" version="1.2.0" targetFramework="net6.0" />
+  <package id="Session.Hijacker" version="0.9.0" targetFramework="net6.0" />
+  <package id="Password.Stealer" version="1.1.0" targetFramework="net6.0" />
+  <package id="Data.Exfiltrator" version="0.8.0" targetFramework="net6.0" />
+  <package id="Reverse.Shell" version="2.0.0" targetFramework="net6.0" />
+  <package id="Keylogger.AspNetCore" version="1.3.0" targetFramework="net6.0" />
+  <package id="Admin.Bypass" version="2.5.0" targetFramework="net6.0" />
+  <package id="Exploit.Framework" version="1.7.0" targetFramework="net6.0" />
+  <package id="Malware.Dropper" version="0.6.0" targetFramework="net6.0" />
+  <package id="Crypto.Miner" version="1.4.0" targetFramework="net6.0" />
+  <package id="Botnet.Client" version="2.2.0" targetFramework="net6.0" />
+  <package id="Ransomware.Core" version="1.0.0" targetFramework="net6.0" />
+  
+  <!-- Internal/private packages (dependency confusion targets) -->
+  <package id="Acme.Utils" version="1.0.0" targetFramework="net6.0" />
+  <package id="Acme.Auth" version="2.1.0" targetFramework="net6.0" />
+  <package id="Acme.ApiClient" version="1.5.0" targetFramework="net6.0" />
+  <package id="Acme.Core" version="3.0.0" targetFramework="net6.0" />
+  <package id="Acme.Models" version="1.8.0" targetFramework="net6.0" />
+  <package id="Acme.Helpers" version="2.3.0" targetFramework="net6.0" />
+  <package id="Acme.Config" version="1.2.0" targetFramework="net6.0" />
+  <package id="Acme.Logger" version="1.7.0" targetFramework="net6.0" />
+  <package id="Acme.Mailer" version="2.0.0" targetFramework="net6.0" />
+  <package id="Acme.Workers" version="1.4.0" targetFramework="net6.0" />
+  <package id="Acme.Database" version="2.6.0" targetFramework="net6.0" />
+  <package id="Acme.Security" version="1.9.0" targetFramework="net6.0" />
+  <package id="Acme.Reporting" version="1.3.0" targetFramework="net6.0" />
+  <package id="Acme.Integration" version="2.4.0" targetFramework="net6.0" />
+  <package id="Acme.Monitoring" version="1.6.0" targetFramework="net6.0" />
+</packages>

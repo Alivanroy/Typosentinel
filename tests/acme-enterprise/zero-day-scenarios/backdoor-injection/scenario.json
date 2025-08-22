@@ -1,0 +1,41 @@
+{
+  "scenario_id": "backdoor-injection-001",
+  "name": "Backdoor Injection Attack",
+  "description": "Simulates injection of backdoors into legitimate packages through various attack vectors",
+  "severity": "critical",
+  "attack_type": "backdoor_injection",
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z",
+  "status": "active",
+  "metadata": {
+    "cve_references": ["CVE-2021-44228", "CVE-2022-23812"],
+    "mitre_attack_techniques": ["T1195.002", "T1059", "T1027", "T1055"],
+    "affected_ecosystems": ["npm", "pypi", "maven", "nuget", "rubygems", "go"]
+  },
+  "attack_vectors": [
+    {
+      "vector_id": "bi-001",
+      "name": "Build Process Injection",
+      "description": "Backdoor injected during package build process",
+      "registry": "maven",
+      "package_name": "org.apache.commons.collections4",
+      "malicious_version": "4.4.1",
+      "payload_type": "remote_shell",
+      "detection_difficulty": "high",
+      "impact_scope": "system"
+    }
+  ],
+  "test_cases": [
+    {
+      "test_id": "bi-test-001",
+      "name": "Backdoor Detection",
+      "description": "Test detection of backdoors in packages",
+      "expected_result": "BLOCK",
+      "test_data": {
+        "package_name": "org.apache.commons.collections4",
+        "version": "4.4.1",
+        "registry": "maven"
+      }
+    }
+  ]
+}

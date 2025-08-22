@@ -649,3 +649,71 @@ const (
 	CheckTypeMetadata     BuildIntegrityCheckType = "metadata"
 	CheckTypeAnomaly      BuildIntegrityCheckType = "anomaly"
 )
+
+// DependencyGraphAnalysisResult represents the result of dependency graph analysis
+type DependencyGraphAnalysisResult struct {
+	Graph           *DependencyGraph   `json:"graph"`
+	RiskAnalysis    *GraphRiskAnalysis `json:"risk_analysis"`
+	Recommendations []Recommendation   `json:"recommendations"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// GraphRiskAnalysis contains risk analysis results for the dependency graph
+type GraphRiskAnalysis struct {
+	OverallRisk     RiskLevel              `json:"overall_risk"`
+	RiskScore       float64                `json:"risk_score"`
+	CriticalPaths   [][]string             `json:"critical_paths"`
+	VulnerablePaths [][]string             `json:"vulnerable_paths"`
+	RiskFactors     []RiskFactor           `json:"risk_factors"`
+	RiskDistribution map[RiskLevel]int     `json:"risk_distribution"`
+}
+
+// RiskFactor represents a factor contributing to overall risk
+type RiskFactor struct {
+	Type        string    `json:"type"`
+	Description string    `json:"description"`
+	Severity    RiskLevel `json:"severity"`
+	Impact      float64   `json:"impact"`
+	Packages    []string  `json:"packages,omitempty"`
+}
+
+// GraphGenerationRequest represents a request for dependency graph generation
+type GraphGenerationRequest struct {
+	Target  string                   `json:"target" binding:"required"`
+	Options GraphGenerationOptions   `json:"options"`
+}
+
+// GraphGenerationOptions contains options for graph generation
+type GraphGenerationOptions struct {
+	MaxDepth        int    `json:"max_depth"`
+	IncludeDev      bool   `json:"include_dev"`
+	IncludeOptional bool   `json:"include_optional"`
+	Format          string `json:"format"`
+	Visualization   bool   `json:"visualization"`
+}
+
+// GraphExportRequest represents a request for dependency graph export
+type GraphExportRequest struct {
+	Target  string              `json:"target" binding:"required"`
+	Format  string              `json:"format" binding:"required"`
+	Options GraphExportOptions  `json:"options"`
+}
+
+// GraphExportOptions contains options for graph export
+type GraphExportOptions struct {
+	MaxDepth        int  `json:"max_depth"`
+	IncludeDev      bool `json:"include_dev"`
+	IncludeOptional bool `json:"include_optional"`
+	IncludeMetadata bool `json:"include_metadata"`
+	PrettyPrint     bool `json:"pretty_print"`
+}
+
+// ProjectInfo represents information about a project to be scanned
+type ProjectInfo struct {
+	Path        string            `json:"path"`
+	Type        string            `json:"type"`
+	Name        string            `json:"name,omitempty"`
+	Version     string            `json:"version,omitempty"`
+	Description string            `json:"description,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}

@@ -19,6 +19,11 @@ type InputValidator struct {
 	htmlPolicy   *bluemonday.Policy
 	maxJSONDepth int
 	maxSize      int64
+	// Enhanced security features
+	blacklist    map[string]bool
+	whitelist    map[string]bool
+	maxFieldSize int64
+	enableLogging bool
 }
 
 // ValidationError represents a validation error
@@ -48,16 +53,43 @@ func NewInputValidator() *InputValidator {
 	v.RegisterValidation("safe_filename", validateSafeFilename)
 	v.RegisterValidation("api_key", validateAPIKey)
 	v.RegisterValidation("jwt_token", validateJWTToken)
+	v.RegisterValidation("no_path_traversal", validateNoPathTraversal)
+	v.RegisterValidation("no_command_injection", validateNoCommandInjection)
+	v.RegisterValidation("safe_regex", validateSafeRegex)
+	v.RegisterValidation("no_ldap_injection", validateNoLDAPInjection)
 	
 	// Create strict HTML policy
 	htmlPolicy := bluemonday.StrictPolicy()
 	
+	// Initialize blacklist and whitelist
+	blacklist := make(map[string]bool)
+	whitelist := make(map[string]bool)
+	
+	// Add common malicious patterns to blacklist
+	maliciousPatterns := []string{
+		"../", "..\\\\", "/etc/passwd", "/etc/shadow",
+		"cmd.exe", "powershell", "/bin/sh", "/bin/bash",
+		"eval(", "exec(", "system(", "shell_exec(",
+	}
+	for _, pattern := range maliciousPatterns {
+		blacklist[pattern] = true
+	}
+	
 	return &InputValidator{
-		validator:    v,
+		validator:     v,
 		htmlPolicy:   htmlPolicy,
 		maxJSONDepth: 10,
 		maxSize:      10 * 1024 * 1024, // 10MB
+		blacklist:    blacklist,
+		whitelist:    whitelist,
+		maxFieldSize: 1024 * 1024, // 1MB per field
+		enableLogging: true,
 	}
+}
+
+// RegisterCustomValidator allows registering custom validation functions
+func (iv *InputValidator) RegisterCustomValidator(tag string, fn validator.Func) error {
+	return iv.validator.RegisterValidation(tag, fn)
 }
 
 // ValidateStruct validates a struct using validation tags
@@ -319,10 +351,26 @@ func validateURLSafe(fl validator.FieldLevel) bool {
 
 func validateNoSQLInjection(fl validator.FieldLevel) bool {
 	value := strings.ToLower(fl.Field().String())
+	// Enhanced SQL injection patterns
 	sqlPatterns := []string{
 		"'", "\"", ";", "--", "/*", "*/", "xp_", "sp_",
 		"union", "select", "insert", "update", "delete",
 		"drop", "create", "alter", "exec", "execute",
+		"declare", "cast", "convert", "char", "varchar",
+		"waitfor", "delay", "benchmark", "sleep",
+		"information_schema", "sys.", "master.", "msdb.",
+		"pg_", "mysql.", "performance_schema",
+		"load_file", "into outfile", "into dumpfile",
+		"0x", "unhex", "hex", "ascii", "substring",
+		"concat", "group_concat", "having", "order by",
+		"union all", "union select", "or 1=1", "and 1=1",
+		"' or '", "\" or \"", "admin'--", "admin\"--",
+	}
+	
+	// Check for encoded patterns
+	encodedPatterns := []string{
+		"%27", "%22", "%3b", "%2d%2d", "%2f%2a", "%2a%2f",
+		"%75%6e%69%6f%6e", "%73%65%6c%65%63%74",
 	}
 	
 	for _, pattern := range sqlPatterns {
@@ -330,15 +378,39 @@ func validateNoSQLInjection(fl validator.FieldLevel) bool {
 			return false
 		}
 	}
+	
+	for _, pattern := range encodedPatterns {
+		if strings.Contains(value, pattern) {
+			return false
+		}
+	}
+	
 	return true
 }
 
 func validateNoXSS(fl validator.FieldLevel) bool {
 	value := strings.ToLower(fl.Field().String())
+	// Enhanced XSS patterns
 	xssPatterns := []string{
 		"<script", "</script>", "javascript:", "vbscript:",
 		"onload=", "onerror=", "onclick=", "onmouseover=",
+		"onmouseout=", "onfocus=", "onblur=", "onchange=",
+		"onsubmit=", "onreset=", "onkeydown=", "onkeyup=",
 		"eval(", "alert(", "confirm(", "prompt(",
+		"document.", "window.", "location.", "history.",
+		"settimeout", "setinterval", "innerhtml", "outerhtml",
+		"<iframe", "<object", "<embed", "<applet",
+		"<meta", "<link", "<style", "<img",
+		"src=", "href=", "action=", "formaction=",
+		"data:", "blob:", "filesystem:",
+	}
+	
+	// Check for encoded XSS patterns
+	encodedPatterns := []string{
+		"%3c%73%63%72%69%70%74", "%3cscript",
+		"&#x3c;script", "&lt;script",
+		"%6a%61%76%61%73%63%72%69%70%74",
+		"&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;",
 	}
 	
 	for _, pattern := range xssPatterns {
@@ -346,6 +418,13 @@ func validateNoXSS(fl validator.FieldLevel) bool {
 			return false
 		}
 	}
+	
+	for _, pattern := range encodedPatterns {
+		if strings.Contains(value, pattern) {
+			return false
+		}
+	}
+	
 	return true
 }
 
@@ -385,6 +464,101 @@ func validateJWTToken(fl validator.FieldLevel) bool {
 	// Each part should be base64url encoded
 	for _, part := range parts {
 		if len(part) == 0 {
+			return false
+		}
+	}
+	
+	return true
+}
+
+func validateNoPathTraversal(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	if len(value) == 0 {
+		return true
+	}
+	
+	// Check for path traversal patterns
+	pathTraversalPatterns := []string{
+		"../", "..\\\\", "..%2f", "..%5c", "..%252f", "..%255c",
+		"%2e%2e%2f", "%2e%2e%5c", "%252e%252e%252f", "%252e%252e%255c",
+		"....//", "....\\\\\\\\", "/etc/", "\\\\windows\\\\", "c:\\\\",
+	}
+	
+	valueLower := strings.ToLower(value)
+	for _, pattern := range pathTraversalPatterns {
+		if strings.Contains(valueLower, strings.ToLower(pattern)) {
+			return false
+		}
+	}
+	
+	return true
+}
+
+func validateNoCommandInjection(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	if len(value) == 0 {
+		return true
+	}
+	
+	// Check for command injection patterns
+	cmdInjectionPatterns := []string{
+		";", "|", "&", "`", "$(", "${",
+		"eval(", "exec(", "system(", "shell_exec(", "passthru(",
+		"cmd.exe", "powershell", "/bin/sh", "/bin/bash", "sh -c",
+		"wget ", "curl ", "nc ", "netcat", "telnet",
+	}
+	
+	valueLower := strings.ToLower(value)
+	for _, pattern := range cmdInjectionPatterns {
+		if strings.Contains(valueLower, strings.ToLower(pattern)) {
+			return false
+		}
+	}
+	
+	return true
+}
+
+func validateSafeRegex(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	if len(value) == 0 {
+		return true
+	}
+	
+	// Check for potentially dangerous regex patterns
+	unsafePatterns := []string{
+		"(.*)*", "(.+)+", "(.+)*", "(.*)+ ",
+		"([^\\r\\n])*", "([^\\r\\n])+",
+		"(a|a)*", "(a|a)+",
+	}
+	
+	for _, pattern := range unsafePatterns {
+		if strings.Contains(value, pattern) {
+			return false
+		}
+	}
+	
+	// Try to compile the regex to check if it's valid
+	_, err := regexp.Compile(value)
+	return err == nil
+}
+
+func validateNoLDAPInjection(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	if len(value) == 0 {
+		return true
+	}
+	
+	// Check for LDAP injection patterns
+	ldapInjectionPatterns := []string{
+		"*)", "*)(", "*))%00", ")(cn=*", ")(&",
+		"*)(uid=*", "*)(|(uid=*", "*))%00",
+		"admin*", "*)(|(password=*", "*)(|(objectclass=*",
+		")(objectclass=*", "*)(cn=*)(password=*",
+	}
+	
+	valueLower := strings.ToLower(value)
+	for _, pattern := range ldapInjectionPatterns {
+		if strings.Contains(valueLower, strings.ToLower(pattern)) {
 			return false
 		}
 	}

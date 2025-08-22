@@ -1,0 +1,38 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "dotnet-webapp-SBOM",
+  "documentNamespace": "https://acme.enterprise/sbom/dotnet-webapp-20250820_110400",
+  "creationInfo": {
+    "created": "2025-08-20T09:04:00Z",
+    "creators": ["Tool: Typosentinel-Enterprise"],
+    "licenseListVersion": "3.19"
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-dotnet-webapp",
+      "name": "dotnet-webapp",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": true,
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "97fdf9caca612aed4783b12dcdd4cd07ea3395b5"
+      },
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:nuget/dotnet-webapp@1.0.0"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-dotnet-webapp"
+    }
+  ]
+}

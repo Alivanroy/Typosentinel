@@ -367,12 +367,37 @@ jobs:
           curl -f http://localhost:8001/health || exit 1
           docker stop ml-test
 
-  # Performance tests
-  performance:
-    name: Performance Tests
+  # Comprehensive test suite
+  comprehensive-tests:
+    name: Comprehensive Test Suite
     runs-on: ubuntu-latest
     needs: [integration]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test123
+          POSTGRES_USER: postgres
+          POSTGRES_DB: typosentinel_test
+        options: >
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -382,16 +407,88 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Install dependencies
+        run: |
+          go mod download
+          sudo apt-get update
+          sudo apt-get install -y curl jq
+
+      - name: Run unit tests with coverage
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: typosentinel_test
+          DB_USER: postgres
+          DB_PASSWORD: test123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          go tool cover -html=coverage.out -o coverage.html
+
+      - name: Run security tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: typosentinel_test
+          DB_USER: postgres
+          DB_PASSWORD: test123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          go test -v -timeout=15m -run="TestSecurity" ./tests/
+
+      - name: Run performance tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: typosentinel_test
+          DB_USER: postgres
+          DB_PASSWORD: test123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          go test -v -timeout=15m -run="TestAPIPerformanceBaseline|TestPackageAnalysisPerformance|TestBatchAnalysisPerformance" ./tests/
+
+      - name: Run end-to-end tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: typosentinel_test
+          DB_USER: postgres
+          DB_PASSWORD: test123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          go test -v -timeout=20m -run="TestE2E" ./tests/
+
       - name: Run benchmarks
         run: |
           go test -bench=. -benchmem ./... > benchmark.txt
           cat benchmark.txt
 
-      - name: Upload benchmark results
+      - name: Run comprehensive test script
+        run: |
+          chmod +x scripts/run-comprehensive-tests.sh
+          ./scripts/run-comprehensive-tests.sh
+
+      - name: Upload test results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: benchmark-results
-          path: benchmark.txt
+          name: comprehensive-test-results
+          path: |
+            coverage.html
+            benchmark.txt
+            stress-test-results/
+            logs/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: comprehensive
+          name: comprehensive-coverage
 
   # Release
   release:

@@ -1,0 +1,7 @@
+{
+  "behavioral_weight": 0.15,
+  "dependency_weight": 0.1,
+  "metadata_weight": 0.2,
+  "reputation_weight": 0.25,
+  "similarity_weight": 0.35
+}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -12,7 +13,11 @@ import (
 // ExampleBasicOptimization demonstrates basic optimization setup and usage
 func ExampleBasicOptimization() {
 	// Initialize database
-	db, err := database.NewThreatDB(":memory:")
+	dbConfig := &config.DatabaseConfig{
+		Type: "sqlite",
+		Database: ":memory:",
+	}
+	db, err := database.NewThreatDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}
@@ -60,7 +65,11 @@ func ExampleBasicOptimization() {
 // ExampleBatchOptimization demonstrates batch processing optimization
 func ExampleBatchOptimization() {
 	// Initialize database
-	db, err := database.NewThreatDB(":memory:")
+	dbConfig := &config.DatabaseConfig{
+		Type: "sqlite",
+		Database: ":memory:",
+	}
+	db, err := database.NewThreatDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}
@@ -118,7 +127,11 @@ func ExampleBatchOptimization() {
 // ExampleAdvancedOptimization demonstrates advanced optimization features
 func ExampleAdvancedOptimization() {
 	// Initialize database
-	db, err := database.NewThreatDB(":memory:")
+	dbConfig := &config.DatabaseConfig{
+		Type: "sqlite",
+		Database: ":memory:",
+	}
+	db, err := database.NewThreatDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}
@@ -300,7 +313,11 @@ func ExampleAdvancedOptimization() {
 // ExampleHealthMonitoring demonstrates health monitoring and alerting
 func ExampleHealthMonitoring() {
 	// Initialize database
-	db, err := database.NewThreatDB(":memory:")
+	dbConfig := &config.DatabaseConfig{
+		Type: "sqlite",
+		Database: ":memory:",
+	}
+	db, err := database.NewThreatDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}
@@ -355,7 +372,11 @@ func ExampleHealthMonitoring() {
 // ExampleConfigurationManagement demonstrates configuration management
 func ExampleConfigurationManagement() {
 	// Initialize database
-	db, err := database.NewThreatDB(":memory:")
+	dbConfig := &config.DatabaseConfig{
+		Type: "sqlite",
+		Database: ":memory:",
+	}
+	db, err := database.NewThreatDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}
@@ -406,7 +427,11 @@ func GetRecommendedConfiguration() *PerformanceConfig {
 // ExamplePerformanceBenchmarking demonstrates performance benchmarking
 func ExamplePerformanceBenchmarking() {
 	// Initialize database
-	db, err := database.NewThreatDB(":memory:")
+	dbConfig := &config.DatabaseConfig{
+		Type: "sqlite",
+		Database: ":memory:",
+	}
+	db, err := database.NewThreatDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}

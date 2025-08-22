@@ -1,0 +1,265 @@
+version: '3.8'
+
+services:
+  # Typosentinel Enterprise Server
+  typosentinel:
+    image: typosentinel:latest
+    container_name: acme-typosentinel
+    ports:
+      - "8080:8080"
+    environment:
+      - TYPOSENTINEL_DB_TYPE=postgres
+      - TYPOSENTINEL_DB_HOST=postgres
+      - TYPOSENTINEL_DB_PORT=5432
+      - TYPOSENTINEL_DB_USER=typosentinel
+      - TYPOSENTINEL_DB_PASSWORD=typosentinel_password
+      - TYPOSENTINEL_DB_NAME=typosentinel
+      - TYPOSENTINEL_LOG_LEVEL=debug
+      - TYPOSENTINEL_ENTERPRISE_MODE=true
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./config/typosentinel.yml:/etc/typosentinel/config.yml
+      - ./logs:/var/log/typosentinel
+    networks:
+      - acme-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: acme-postgres
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=typosentinel
+      - POSTGRES_PASSWORD=typosentinel_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - acme-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: acme-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - acme-network
+
+  # Private NPM Registry (Verdaccio)
+  npm-registry:
+    image: verdaccio/verdaccio:5
+    container_name: acme-npm-registry
+    ports:
+      - "4873:4873"
+    volumes:
+      - ./registries/npm/config.yaml:/verdaccio/conf/config.yaml
+      - npm_storage:/verdaccio/storage
+    networks:
+      - acme-network
+
+  # Private PyPI Registry (DevPI)
+  pypi-registry:
+    image: muccg/devpi:latest
+    container_name: acme-pypi-registry
+    ports:
+      - "3141:3141"
+    volumes:
+      - devpi_data:/data
+    environment:
+      - DEVPI_PASSWORD=admin123
+    networks:
+      - acme-network
+
+  # Private Maven Registry (Nexus)
+  maven-registry:
+    image: sonatype/nexus3:latest
+    container_name: acme-maven-registry
+    ports:
+      - "8081:8081"
+    volumes:
+      - nexus_data:/nexus-data
+    environment:
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1g -Xmx1g -XX:MaxDirectMemorySize=2g
+    networks:
+      - acme-network
+
+  # GitLab for CI/CD
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: acme-gitlab
+    hostname: gitlab.acme.local
+    ports:
+      - "8443:443"
+      - "8080:80"
+      - "2222:22"
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    environment:
+      - GITLAB_OMNIBUS_CONFIG=|
+          external_url 'http://gitlab.acme.local:8080'
+          gitlab_rails['gitlab_shell_ssh_port'] = 2222
+    networks:
+      - acme-network
+
+  # Jenkins for CI/CD
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: acme-jenkins
+    ports:
+      - "8082:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./ci-cd/jenkins/plugins.txt:/usr/share/jenkins/ref/plugins.txt
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - acme-network
+
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: acme-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - acme-network
+
+  # Grafana for Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: acme-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    networks:
+      - acme-network
+
+  # Elasticsearch for Logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: acme-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - acme-network
+
+  # Kibana for Log Analysis
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: acme-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - acme-network
+
+  # Logstash for Log Processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: acme-logstash
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logs:/var/log/input
+    environment:
+      - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
+    depends_on:
+      - elasticsearch
+    networks:
+      - acme-network
+
+  # Simulated Vulnerable Applications
+  vulnerable-webapp:
+    build: ./projects/frontend-webapp
+    container_name: acme-vulnerable-webapp
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - REACT_APP_API_URL=http://vulnerable-api:3002
+    depends_on:
+      - vulnerable-api
+    networks:
+      - acme-network
+
+  vulnerable-api:
+    build: ./projects/backend-api
+    container_name: acme-vulnerable-api
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://typosentinel:typosentinel_password@postgres:5432/typosentinel
+    depends_on:
+      - postgres
+    networks:
+      - acme-network
+
+  # Attack Simulation Service
+  attack-simulator:
+    build: ./attack-scenarios
+    container_name: acme-attack-simulator
+    volumes:
+      - ./attack-scenarios:/app/scenarios
+      - ./reports:/app/reports
+    environment:
+      - TYPOSENTINEL_API_URL=http://typosentinel:8080
+      - SIMULATION_MODE=enterprise
+    depends_on:
+      - typosentinel
+    networks:
+      - acme-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  npm_storage:
+  devpi_data:
+  nexus_data:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+  jenkins_home:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  acme-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

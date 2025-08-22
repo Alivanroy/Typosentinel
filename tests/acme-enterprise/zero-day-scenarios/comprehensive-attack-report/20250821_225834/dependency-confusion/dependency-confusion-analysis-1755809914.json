@@ -1,0 +1,548 @@
+{
+  "timestamp": "2025-08-21T22:58:34.882100",
+  "simulation_type": "dependency_confusion",
+  "analysis": {
+    "total_packages": 96,
+    "registries_targeted": 5,
+    "attack_vectors": {
+      "namespace_confusion": 29,
+      "similar_name": 25,
+      "typo_variation": 24,
+      "exact_name_match": 18
+    },
+    "payload_types": {
+      "data_exfiltration": 22,
+      "supply_chain_poison": 20,
+      "backdoor": 23,
+      "credential_theft": 31
+    },
+    "risk_distribution": {
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 96
+    },
+    "evasion_techniques": {
+      "version_bumping": 96,
+      "metadata_spoofing": 96,
+      "delayed_activation": 29,
+      "legitimate_functionality": 65,
+      "environment_detection": 38,
+      "obfuscation": 52
+    },
+    "detection_challenges": {
+      "exact_name_matches": 18,
+      "high_version_numbers": 0,
+      "legitimate_metadata": 0,
+      "delayed_payloads": 29,
+      "obfuscated_payloads": 52
+    },
+    "target_analysis": {
+      "critical_targets": 0,
+      "high_usage_targets": 0,
+      "multiple_variations": 28
+    }
+  },
+  "internal_packages": [
+    {
+      "name": "acme-auth-lib",
+      "registry": "npm",
+      "version": "4.8.6",
+      "namespace": "@acme",
+      "description": "Authentication library for ACME services",
+      "last_updated": "2025-05-03T22:58:34.874327",
+      "usage_frequency": 966,
+      "criticality": "high"
+    },
+    {
+      "name": "acme-config-manager",
+      "registry": "npm",
+      "version": "2.20.36",
+      "namespace": "@acme",
+      "description": "Configuration management utility",
+      "last_updated": "2025-04-09T22:58:34.874349",
+      "usage_frequency": 437,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-logger",
+      "registry": "npm",
+      "version": "4.3.1",
+      "namespace": "@acme",
+      "description": "Internal logging framework",
+      "last_updated": "2025-08-14T22:58:34.874356",
+      "usage_frequency": 415,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-api-client",
+      "registry": "npm",
+      "version": "5.3.27",
+      "namespace": "@acme",
+      "description": "Internal API client library",
+      "last_updated": "2025-07-05T22:58:34.874362",
+      "usage_frequency": 906,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-utils",
+      "registry": "npm",
+      "version": "5.4.23",
+      "namespace": "@acme",
+      "description": "Common utility functions",
+      "last_updated": "2025-04-22T22:58:34.874367",
+      "usage_frequency": 518,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-db-connector",
+      "registry": "npm",
+      "version": "3.5.24",
+      "namespace": "@acme",
+      "description": "Database connection library",
+      "last_updated": "2025-07-13T22:58:34.874372",
+      "usage_frequency": 959,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-crypto-utils",
+      "registry": "npm",
+      "version": "4.1.35",
+      "namespace": "@acme",
+      "description": "Cryptographic utilities",
+      "last_updated": "2024-09-19T22:58:34.874378",
+      "usage_frequency": 352,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-monitoring",
+      "registry": "npm",
+      "version": "3.9.7",
+      "namespace": "@acme",
+      "description": "Internal monitoring tools",
+      "last_updated": "2025-07-21T22:58:34.874383",
+      "usage_frequency": 627,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-cache-manager",
+      "registry": "npm",
+      "version": "1.16.16",
+      "namespace": "@acme",
+      "description": "Caching layer implementation",
+      "last_updated": "2024-09-06T22:58:34.874388",
+      "usage_frequency": 328,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-message-queue",
+      "registry": "npm",
+      "version": "4.12.32",
+      "namespace": "@acme",
+      "description": "Message queue client",
+      "last_updated": "2025-06-03T22:58:34.874393",
+      "usage_frequency": 509,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-auth",
+      "registry": "pypi",
+      "version": "1.10.17",
+      "namespace": "acme",
+      "description": "Python authentication library",
+      "last_updated": "2024-12-25T22:58:34.874399",
+      "usage_frequency": 59,
+      "criticality": "low"
+    },
+    {
+      "name": "acme-config",
+      "registry": "pypi",
+      "version": "0.20.37",
+      "namespace": "acme",
+      "description": "Configuration management",
+      "last_updated": "2025-06-22T22:58:34.874404",
+      "usage_frequency": 423,
+      "criticality": "high"
+    },
+    {
+      "name": "acme-logging",
+      "registry": "pypi",
+      "version": "1.4.34",
+      "namespace": "acme",
+      "description": "Logging framework",
+      "last_updated": "2025-05-03T22:58:34.874410",
+      "usage_frequency": 336,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-api",
+      "registry": "pypi",
+      "version": "1.15.9",
+      "namespace": "acme",
+      "description": "API client library",
+      "last_updated": "2025-03-05T22:58:34.874415",
+      "usage_frequency": 307,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-common",
+      "registry": "pypi",
+      "version": "0.8.15",
+      "namespace": "acme",
+      "description": "Common utilities",
+      "last_updated": "2024-10-29T22:58:34.874420",
+      "usage_frequency": 353,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-database",
+      "registry": "pypi",
+      "version": "2.15.20",
+      "namespace": "acme",
+      "description": "Database utilities",
+      "last_updated": "2024-09-09T22:58:34.874426",
+      "usage_frequency": 99,
+      "criticality": "low"
+    },
+    {
+      "name": "acme-security",
+      "registry": "pypi",
+      "version": "2.19.11",
+      "namespace": "acme",
+      "description": "Security utilities",
+      "last_updated": "2025-06-18T22:58:34.874431",
+      "usage_frequency": 153,
+      "criticality": "high"
+    },
+    {
+      "name": "acme-monitoring",
+      "registry": "pypi",
+      "version": "0.0.17",
+      "namespace": "acme",
+      "description": "Monitoring tools",
+      "last_updated": "2024-11-11T22:58:34.874436",
+      "usage_frequency": 6,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-cache",
+      "registry": "pypi",
+      "version": "0.0.38",
+      "namespace": "acme",
+      "description": "Caching utilities",
+      "last_updated": "2025-07-11T22:58:34.874441",
+      "usage_frequency": 245,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-queue",
+      "registry": "pypi",
+      "version": "1.9.7",
+      "namespace": "acme",
+      "description": "Queue management",
+      "last_updated": "2025-07-12T22:58:34.874446",
+      "usage_frequency": 402,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-auth-core",
+      "registry": "maven",
+      "version": "8.39.99",
+      "namespace": "com.acme",
+      "description": "Core authentication library",
+      "last_updated": "2024-12-06T22:58:34.874452",
+      "usage_frequency": 597,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-config-api",
+      "registry": "maven",
+      "version": "5.17.20",
+      "namespace": "com.acme",
+      "description": "Configuration API",
+      "last_updated": "2024-11-22T22:58:34.874457",
+      "usage_frequency": 78,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-logging-framework",
+      "registry": "maven",
+      "version": "9.14.25",
+      "namespace": "com.acme",
+      "description": "Logging framework",
+      "last_updated": "2025-05-07T22:58:34.874462",
+      "usage_frequency": 751,
+      "criticality": "low"
+    },
+    {
+      "name": "acme-rest-client",
+      "registry": "maven",
+      "version": "1.42.20",
+      "namespace": "com.acme",
+      "description": "REST client library",
+      "last_updated": "2024-08-31T22:58:34.874468",
+      "usage_frequency": 507,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-common-utils",
+      "registry": "maven",
+      "version": "4.35.56",
+      "namespace": "com.acme",
+      "description": "Common utilities",
+      "last_updated": "2024-09-21T22:58:34.874473",
+      "usage_frequency": 443,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-data-access",
+      "registry": "maven",
+      "version": "2.0.14",
+      "namespace": "com.acme",
+      "description": "Data access layer",
+      "last_updated": "2025-08-20T22:58:34.874478",
+      "usage_frequency": 402,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-security-core",
+      "registry": "maven",
+      "version": "9.39.84",
+      "namespace": "com.acme",
+      "description": "Security core library",
+      "last_updated": "2024-08-29T22:58:34.874483",
+      "usage_frequency": 177,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-metrics",
+      "registry": "maven",
+      "version": "10.46.25",
+      "namespace": "com.acme",
+      "description": "Metrics collection",
+      "last_updated": "2024-11-09T22:58:34.874488",
+      "usage_frequency": 674,
+      "criticality": "medium"
+    },
+    {
+      "name": "acme-cache-api",
+      "registry": "maven",
+      "version": "10.38.36",
+      "namespace": "com.acme",
+      "description": "Caching API",
+      "last_updated": "2025-08-09T22:58:34.874493",
+      "usage_frequency": 545,
+      "criticality": "low"
+    },
+    {
+      "name": "acme-messaging",
+      "registry": "maven",
+      "version": "2.33.46",
+      "namespace": "com.acme",
+      "description": "Messaging framework",
+      "last_updated": "2025-04-01T22:58:34.874498",
+      "usage_frequency": 149,
+      "criticality": "high"
+    },
+    {
+      "name": "Acme.Authentication",
+      "registry": "nuget",
+      "version": "3.5.14.244",
+      "namespace": "Acme",
+      "description": "Authentication library",
+      "last_updated": "2025-02-07T22:58:34.874505",
+      "usage_frequency": 474,
+      "criticality": "medium"
+    },
+    {
+      "name": "Acme.Configuration",
+      "registry": "nuget",
+      "version": "1.4.10.148",
+      "namespace": "Acme",
+      "description": "Configuration management",
+      "last_updated": "2024-11-29T22:58:34.874513",
+      "usage_frequency": 16,
+      "criticality": "low"
+    },
+    {
+      "name": "Acme.Logging",
+      "registry": "nuget",
+      "version": "3.1.2.984",
+      "namespace": "Acme",
+      "description": "Logging framework",
+      "last_updated": "2025-08-15T22:58:34.874519",
+      "usage_frequency": 98,
+      "criticality": "high"
+    },
+    {
+      "name": "Acme.ApiClient",
+      "registry": "nuget",
+      "version": "2.2.9.941",
+      "namespace": "Acme",
+      "description": "API client library",
+      "last_updated": "2025-08-14T22:58:34.874524",
+      "usage_frequency": 258,
+      "criticality": "medium"
+    },
+    {
+      "name": "Acme.Common",
+      "registry": "nuget",
+      "version": "4.12.0.185",
+      "namespace": "Acme",
+      "description": "Common utilities",
+      "last_updated": "2024-09-21T22:58:34.874530",
+      "usage_frequency": 202,
+      "criticality": "critical"
+    },
+    {
+      "name": "Acme.DataAccess",
+      "registry": "nuget",
+      "version": "2.20.13.500",
+      "namespace": "Acme",
+      "description": "Data access utilities",
+      "last_updated": "2024-10-05T22:58:34.874536",
+      "usage_frequency": 522,
+      "criticality": "critical"
+    },
+    {
+      "name": "Acme.Security",
+      "registry": "nuget",
+      "version": "3.1.0.293",
+      "namespace": "Acme",
+      "description": "Security utilities",
+      "last_updated": "2025-02-05T22:58:34.874541",
+      "usage_frequency": 533,
+      "criticality": "high"
+    },
+    {
+      "name": "Acme.Monitoring",
+      "registry": "nuget",
+      "version": "3.20.30.321",
+      "namespace": "Acme",
+      "description": "Monitoring tools",
+      "last_updated": "2025-04-06T22:58:34.874547",
+      "usage_frequency": 430,
+      "criticality": "low"
+    },
+    {
+      "name": "Acme.Caching",
+      "registry": "nuget",
+      "version": "5.10.12.889",
+      "namespace": "Acme",
+      "description": "Caching framework",
+      "last_updated": "2025-03-15T22:58:34.874552",
+      "usage_frequency": 391,
+      "criticality": "low"
+    },
+    {
+      "name": "Acme.Messaging",
+      "registry": "nuget",
+      "version": "1.2.34.355",
+      "namespace": "Acme",
+      "description": "Messaging utilities",
+      "last_updated": "2024-11-28T22:58:34.874558",
+      "usage_frequency": 248,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-auth",
+      "registry": "rubygems",
+      "version": "3.9.19",
+      "namespace": "acme",
+      "description": "Authentication gem",
+      "last_updated": "2024-12-09T22:58:34.874563",
+      "usage_frequency": 228,
+      "criticality": "high"
+    },
+    {
+      "name": "acme-config",
+      "registry": "rubygems",
+      "version": "0.13.49",
+      "namespace": "acme",
+      "description": "Configuration gem",
+      "last_updated": "2025-07-04T22:58:34.874569",
+      "usage_frequency": 304,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-logger",
+      "registry": "rubygems",
+      "version": "3.1.24",
+      "namespace": "acme",
+      "description": "Logging gem",
+      "last_updated": "2025-05-12T22:58:34.874574",
+      "usage_frequency": 157,
+      "criticality": "high"
+    },
+    {
+      "name": "acme-api-client",
+      "registry": "rubygems",
+      "version": "2.0.31",
+      "namespace": "acme",
+      "description": "API client gem",
+      "last_updated": "2024-12-16T22:58:34.874579",
+      "usage_frequency": 248,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-utils",
+      "registry": "rubygems",
+      "version": "1.13.7",
+      "namespace": "acme",
+      "description": "Utility gem",
+      "last_updated": "2024-09-02T22:58:34.874584",
+      "usage_frequency": 178,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-db",
+      "registry": "rubygems",
+      "version": "3.18.25",
+      "namespace": "acme",
+      "description": "Database gem",
+      "last_updated": "2024-12-14T22:58:34.874589",
+      "usage_frequency": 318,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-security",
+      "registry": "rubygems",
+      "version": "2.3.50",
+      "namespace": "acme",
+      "description": "Security gem",
+      "last_updated": "2025-07-28T22:58:34.874594",
+      "usage_frequency": 194,
+      "criticality": "high"
+    },
+    {
+      "name": "acme-monitor",
+      "registry": "rubygems",
+      "version": "2.2.24",
+      "namespace": "acme",
+      "description": "Monitoring gem",
+      "last_updated": "2024-10-09T22:58:34.874599",
+      "usage_frequency": 259,
+      "criticality": "critical"
+    },
+    {
+      "name": "acme-cache",
+      "registry": "rubygems",
+      "version": "2.20.42",
+      "namespace": "acme",
+      "description": "Caching gem",
+      "last_updated": "2024-09-23T22:58:34.874604",
+      "usage_frequency": 379,
+      "criticality": "low"
+    },
+    {
+      "name": "acme-queue",
+      "registry": "rubygems",
+      "version": "3.13.30",
+      "namespace": "acme",
+      "description": "Queue gem",
+      "last_updated": "2024-11-05T22:58:34.874609",
+      "usage_frequency": 242,
+      "criticality": "high"
+    }
+  ]
+}

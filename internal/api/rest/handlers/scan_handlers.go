@@ -123,8 +123,22 @@ func (h *ScanHandlers) GetScanResults(c *gin.Context) {
 		return
 	}
 
+	// Convert scans to frontend format
+	var scanResults []gin.H
+	for _, scan := range scans {
+		scanResult := gin.H{
+			"id":           scan.ID,
+			"target":       scan.PackageName,
+			"status":       scan.Status,
+			"threatsFound": scan.ThreatCount,
+			"createdAt":    scan.StartedAt,
+			"duration":     fmt.Sprintf("%ds", scan.Duration),
+		}
+		scanResults = append(scanResults, scanResult)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"scans": scans,
+		"data": scanResults,
 		"pagination": gin.H{
 			"page":  page,
 			"limit": limit,

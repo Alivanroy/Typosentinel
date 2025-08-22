@@ -90,6 +90,42 @@ export function Dashboard() {
     success('Time filter functionality coming soon!')
   }
 
+  const handleGenerateReport = async (scanId: string) => {
+    try {
+      success('Generating report...')
+      const result = await apiService.generateReport({
+        type: 'security',
+        title: `Security Report for Scan ${scanId}`,
+        description: `Detailed security analysis report for scan ${scanId}`,
+        format: 'pdf'
+      })
+      if (result.success) {
+        success(`Report generation started! Estimated time: ${result.estimatedTime}`)
+        handleCloseDetails()
+      } else {
+        showError('Failed to generate report')
+      }
+    } catch (err) {
+      showError('Failed to generate report')
+    }
+  }
+
+  const handleRerunScan = async (scanId: string) => {
+    try {
+      success('Re-running scan...')
+      const result = await apiService.runScan(scanId)
+      if (result.success) {
+        success('Scan re-started successfully!')
+        handleCloseDetails()
+        refetch() // Refresh dashboard data
+      } else {
+        showError('Failed to re-run scan')
+      }
+    } catch (err) {
+      showError('Failed to re-run scan')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -336,7 +372,7 @@ export function Dashboard() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
@@ -446,11 +482,19 @@ export function Dashboard() {
                   <Eye className="w-4 h-4 mr-2" />
                   View Full Details
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleGenerateReport(selectedScan.id)}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleRerunScan(selectedScan.id)}
+                >
                   <Target className="w-4 h-4 mr-2" />
                   Re-run Scan
                 </Button>

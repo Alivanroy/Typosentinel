@@ -5,19 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"time"
 
+	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
-// ThreatDB represents the SQLite threat database
+// ThreatDB represents the PostgreSQL threat database
 type ThreatDB struct {
-	db   *sql.DB
-	path string
+	db     *sql.DB
+	config *config.DatabaseConfig
 }
 
 // ThreatRecord represents a threat record in the database
@@ -49,31 +48,29 @@ type ThreatPattern struct {
 }
 
 // NewThreatDB creates a new threat database instance
-func NewThreatDB(dbPath string) (*ThreatDB, error) {
-	// Ensure directory exists
-	dir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create database directory: %w", err)
-	}
-
-	// Open database connection
-	db, err := sql.Open("sqlite3", dbPath)
+func NewThreatDB(dbConfig *config.DatabaseConfig) (*ThreatDB, error) {
+	// Open PostgreSQL database connection
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		dbConfig.Host, dbConfig.Port, dbConfig.Username, dbConfig.Password, dbConfig.Database, dbConfig.SSLMode)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	// Test connection
 	if err := db.Ping(); err != nil {
+		db.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	threatDB := &ThreatDB{
-		db:   db,
-		path: dbPath,
+		db:     db,
+		config: dbConfig,
 	}
 
 	// Initialize schema
 	if err := threatDB.initSchema(); err != nil {
+		db.Close()
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
 	}
 
@@ -85,17 +82,17 @@ func (tdb *ThreatDB) initSchema() error {
 	// Create threats table
 	threatTableSQL := `
 	CREATE TABLE IF NOT EXISTS threats (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		package_name TEXT NOT NULL,
-		registry TEXT NOT NULL,
-		threat_type TEXT NOT NULL,
-		severity TEXT NOT NULL,
-		confidence REAL NOT NULL,
+		id BIGSERIAL PRIMARY KEY,
+		package_name VARCHAR(255) NOT NULL,
+		registry VARCHAR(100) NOT NULL,
+		threat_type VARCHAR(100) NOT NULL,
+		severity VARCHAR(50) NOT NULL,
+		confidence DECIMAL(5,4) NOT NULL,
 		description TEXT,
-		source TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		metadata TEXT,
+		source VARCHAR(255),
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		metadata JSONB,
 		UNIQUE(package_name, registry, threat_type)
 	);
 	`
@@ -103,15 +100,15 @@ func (tdb *ThreatDB) initSchema() error {
 	// Create threat patterns table
 	patternTableSQL := `
 	CREATE TABLE IF NOT EXISTS threat_patterns (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL UNIQUE,
+		id BIGSERIAL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL UNIQUE,
 		pattern TEXT NOT NULL,
-		pattern_type TEXT NOT NULL,
-		threat_type TEXT NOT NULL,
-		severity TEXT NOT NULL,
+		pattern_type VARCHAR(50) NOT NULL,
+		threat_type VARCHAR(100) NOT NULL,
+		severity VARCHAR(50) NOT NULL,
 		enabled BOOLEAN DEFAULT TRUE,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 	);
 	`
 

@@ -1,0 +1,38 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "ruby-rails-app-SBOM",
+  "documentNamespace": "https://acme.enterprise/sbom/ruby-rails-app-20250820_110400",
+  "creationInfo": {
+    "created": "2025-08-20T09:04:00Z",
+    "creators": ["Tool: Typosentinel-Enterprise"],
+    "licenseListVersion": "3.19"
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-ruby-rails-app",
+      "name": "ruby-rails-app",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": true,
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "1c6fcb1c0ef6ce7dc43bf0613252d4e086e62aac"
+      },
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:rubygems/ruby-rails-app@1.0.0"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-ruby-rails-app"
+    }
+  ]
+}

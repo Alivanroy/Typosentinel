@@ -29,9 +29,9 @@ func main() {
 			fmt.Printf("❌ Security validation failed:\n%v\n\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("✅ Production security configuration is valid!\n")
+		fmt.Println("✅ Production security configuration is valid!")
 	} else {
-		fmt.Println("⚠️  Development environment detected - running basic checks...\n")
+		fmt.Println("⚠️  Development environment detected - running basic checks...")
 		
 		// Basic checks for development
 		jwtSecret := os.Getenv("TYPOSENTINEL_JWT_SECRET")

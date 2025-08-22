@@ -376,7 +376,7 @@ func (s *EnterpriseAPIServer) handleMLPredict(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	prediction, err := s.integrationLayer.threatPredictor.PredictThreat(r.Context(), &threat)
+	prediction, err := s.integrationLayer.threatPredictor.PredictThreatFromThreat(r.Context(), &threat)
 	if err != nil {
 		s.writeErrorResponse(w, http.StatusInternalServerError, "ML prediction failed", err)
 		return

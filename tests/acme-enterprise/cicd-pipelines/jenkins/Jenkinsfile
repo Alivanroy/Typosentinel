@@ -1,0 +1,1006 @@
+// Jenkins Pipeline for ACME Enterprise
+// Comprehensive Typosentinel Security Scanning Integration
+// Supports multi-registry vulnerability detection and enterprise compliance
+
+pipeline {
+    agent any
+    
+    parameters {
+        choice(
+            name: 'SCAN_TYPE',
+            choices: ['full', 'quick', 'dependencies-only', 'zero-day-scenarios'],
+            description: 'Type of security scan to perform'
+        )
+        choice(
+            name: 'SEVERITY_THRESHOLD',
+            choices: ['low', 'medium', 'high', 'critical'],
+            description: 'Minimum severity threshold for reporting'
+        )
+        booleanParam(
+            name: 'FAIL_ON_CRITICAL',
+            defaultValue: true,
+            description: 'Fail pipeline on critical vulnerabilities'
+        )
+        booleanParam(
+            name: 'RUN_ZERO_DAY_TESTS',
+            defaultValue: false,
+            description: 'Run zero-day attack scenario tests'
+        )
+        string(
+            name: 'PARALLEL_SCANS',
+            defaultValue: '3',
+            description: 'Number of parallel scans to run'
+        )
+    }
+    
+    environment {
+        TYPOSENTINEL_VERSION = 'latest'
+        SCAN_TIMEOUT = '1800'
+        ARTIFACT_RETENTION = '30'
+        REGISTRY_CONFIG_PATH = './tests/acme-enterprise/registry-config'
+        ENTERPRISE_MODE = 'true'
+        
+        // Tool versions
+        NODE_VERSION = '18'
+        PYTHON_VERSION = '3.11'
+        JAVA_VERSION = '17'
+        DOTNET_VERSION = '6.0'
+        RUBY_VERSION = '3.2'
+        GO_VERSION = '1.21'
+        
+        // Security credentials (configured in Jenkins)
+        TYPOSENTINEL_API_TOKEN = credentials('typosentinel-api-token')
+        TYPOSENTINEL_ENTERPRISE_LICENSE = credentials('typosentinel-enterprise-license')
+        SLACK_WEBHOOK_URL = credentials('slack-webhook-url')
+        SECURITY_DASHBOARD_TOKEN = credentials('security-dashboard-token')
+        
+        // API endpoints
+        TYPOSENTINEL_API_ENDPOINT = 'https://api.typosentinel.com'
+        SECURITY_DASHBOARD_URL = 'https://security.acme-enterprise.com'
+    }
+    
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+        timeout(time: 2, unit: 'HOURS')
+        timestamps()
+        ansiColor('xterm')
+        parallelsAlwaysFailFast()
+    }
+    
+    stages {
+        stage('🔍 Environment Validation') {
+            parallel {
+                stage('Validate Pipeline') {
+                    steps {
+                        script {
+                            echo "🚀 Starting ACME Enterprise Security Pipeline"
+                            echo "Pipeline: ${env.BUILD_NUMBER}"
+                            echo "Commit: ${env.GIT_COMMIT}"
+                            echo "Branch: ${env.GIT_BRANCH}"
+                            echo "Scan Type: ${params.SCAN_TYPE}"
+                            echo "Severity Threshold: ${params.SEVERITY_THRESHOLD}"
+                            
+                            // Create directories
+                            sh 'mkdir -p reports logs artifacts'
+                            
+                            // Detect project registries
+                            def detectedRegistries = []
+                            
+                            if (fileExists('package.json') || fileExists('package-lock.json') || fileExists('yarn.lock')) {
+                                detectedRegistries.add('npm')
+                                echo "✅ NPM detected"
+                            }
+                            
+                            if (fileExists('requirements.txt') || fileExists('setup.py') || fileExists('pyproject.toml') || fileExists('Pipfile')) {
+                                detectedRegistries.add('pypi')
+                                echo "✅ PyPI detected"
+                            }
+                            
+                            if (fileExists('pom.xml') || fileExists('build.gradle') || fileExists('build.gradle.kts')) {
+                                detectedRegistries.add('maven')
+                                echo "✅ Maven detected"
+                            }
+                            
+                            if (sh(script: 'find . -name "*.csproj" -o -name "*.sln" -o -name "packages.config" | head -1', returnStatus: true) == 0) {
+                                detectedRegistries.add('nuget')
+                                echo "✅ NuGet detected"
+                            }
+                            
+                            if (fileExists('Gemfile') || fileExists('Gemfile.lock') || sh(script: 'find . -name "*.gemspec" | head -1', returnStatus: true) == 0) {
+                                detectedRegistries.add('rubygems')
+                                echo "✅ RubyGems detected"
+                            }
+                            
+                            if (fileExists('go.mod') || fileExists('go.sum')) {
+                                detectedRegistries.add('go')
+                                echo "✅ Go modules detected"
+                            }
+                            
+                            env.DETECTED_REGISTRIES = detectedRegistries.join(',')
+                            echo "Detected registries: ${env.DETECTED_REGISTRIES}"
+                            
+                            // Generate scan configuration
+                            def scanConfig = [
+                                pipeline_id: env.BUILD_NUMBER,
+                                commit_sha: env.GIT_COMMIT,
+                                branch: env.GIT_BRANCH,
+                                scan_type: params.SCAN_TYPE,
+                                severity_threshold: params.SEVERITY_THRESHOLD,
+                                enterprise_mode: env.ENTERPRISE_MODE.toBoolean(),
+                                parallel_scans: params.PARALLEL_SCANS.toInteger(),
+                                timeout: env.SCAN_TIMEOUT.toInteger(),
+                                detected_registries: detectedRegistries,
+                                features: [
+                                    typosquatting_detection: true,
+                                    dependency_confusion: true,
+                                    supply_chain_analysis: true,
+                                    zero_day_detection: true,
+                                    compliance_reporting: true,
+                                    threat_intelligence: true
+                                ],
+                                policies: [
+                                    fail_on_critical: params.FAIL_ON_CRITICAL,
+                                    fail_on_high: false,
+                                    allow_dev_dependencies: true,
+                                    enforce_license_compliance: true
+                                ],
+                                reporting: [
+                                    formats: ['json', 'sarif', 'html', 'pdf'],
+                                    include_remediation: true,
+                                    include_risk_assessment: true
+                                ]
+                            ]
+                            
+                            writeJSON file: 'scan-config.json', json: scanConfig
+                            echo "📋 Scan configuration generated"
+                        }
+                    }
+                }
+                
+                stage('Validate Secrets') {
+                    steps {
+                        script {
+                            echo "🔐 Validating required secrets and configuration"
+                            
+                            // Check required environment variables
+                            def missingVars = []
+                            
+                            if (!env.TYPOSENTINEL_API_TOKEN) {
+                                missingVars.add('TYPOSENTINEL_API_TOKEN')
+                            }
+                            
+                            if (!env.TYPOSENTINEL_ENTERPRISE_LICENSE) {
+                                echo "⚠️  Warning: TYPOSENTINEL_ENTERPRISE_LICENSE not set (enterprise features disabled)"
+                            }
+                            
+                            if (missingVars) {
+                                error "❌ Missing required variables: ${missingVars.join(', ')}"
+                            }
+                            
+                            echo "✅ All required secrets are configured"
+                            
+                            // Test API connectivity
+                            if (env.TYPOSENTINEL_API_ENDPOINT) {
+                                echo "🌐 Testing API connectivity..."
+                                def response = sh(
+                                    script: "curl -f -H 'Authorization: Bearer ${env.TYPOSENTINEL_API_TOKEN}' '${env.TYPOSENTINEL_API_ENDPOINT}/health'",
+                                    returnStatus: true
+                                )
+                                
+                                if (response == 0) {
+                                    echo "✅ API connectivity verified"
+                                } else {
+                                    echo "⚠️  Warning: API connectivity test failed"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('🔧 Tool Installation') {
+            steps {
+                script {
+                    echo "📥 Installing Typosentinel and dependencies"
+                    
+                    // Install Typosentinel
+                    sh '''
+                        if [ "$TYPOSENTINEL_VERSION" = "latest" ]; then
+                            DOWNLOAD_URL="https://github.com/typosentinel/typosentinel/releases/latest/download/typosentinel-linux-amd64"
+                        else
+                            DOWNLOAD_URL="https://github.com/typosentinel/typosentinel/releases/download/$TYPOSENTINEL_VERSION/typosentinel-linux-amd64"
+                        fi
+                        
+                        curl -L "$DOWNLOAD_URL" -o typosentinel
+                        chmod +x typosentinel
+                        sudo mv typosentinel /usr/local/bin/
+                        typosentinel --version
+                    '''
+                    
+                    // Configure Typosentinel
+                    sh '''
+                        mkdir -p ~/.typosentinel
+                        cat > ~/.typosentinel/config.yaml << EOF
+                        api:
+                          endpoint: "${TYPOSENTINEL_API_ENDPOINT}"
+                          token: "${TYPOSENTINEL_API_TOKEN}"
+                          timeout: 300
+                        
+                        scanning:
+                          parallel_workers: ${PARALLEL_SCANS}
+                          timeout: ${SCAN_TIMEOUT}
+                          deep_analysis: true
+                        
+                        detection:
+                          typosquatting:
+                            enabled: true
+                            algorithms: ["levenshtein", "jaro_winkler", "soundex"]
+                            threshold: 0.8
+                          dependency_confusion:
+                            enabled: true
+                            check_internal_packages: true
+                          supply_chain:
+                            enabled: true
+                            check_maintainer_changes: true
+                          zero_day:
+                            enabled: true
+                            ml_models: true
+                        
+                        policies:
+                          severity_threshold: "${SEVERITY_THRESHOLD}"
+                          fail_on_critical: ${FAIL_ON_CRITICAL}
+                        
+                        enterprise:
+                          license_key: "${TYPOSENTINEL_ENTERPRISE_LICENSE}"
+                          compliance_mode: true
+                        EOF
+                    '''
+                    
+                    echo "✅ Typosentinel installed and configured"
+                }
+            }
+        }
+        
+        stage('🔍 Security Scanning') {
+            parallel {
+                stage('NPM Scan') {
+                    when {
+                        expression { env.DETECTED_REGISTRIES.contains('npm') }
+                    }
+                    agent {
+                        docker {
+                            image "node:${env.NODE_VERSION}-alpine"
+                            args '-v /usr/local/bin/typosentinel:/usr/local/bin/typosentinel'
+                        }
+                    }
+                    steps {
+                        script {
+                            echo "📦 Starting NPM security scan"
+                            
+                            // Setup NPM environment
+                            sh '''
+                                apk add --no-cache curl jq bash openssl ca-certificates
+                                npm config set cache /tmp/.npm
+                                npm config set audit-level moderate
+                            '''
+                            
+                            // Install dependencies and run native audit
+                            sh '''
+                                if [ -f "package.json" ]; then
+                                    echo "📋 Installing NPM dependencies..."
+                                    npm ci --audit=false || npm install --no-audit
+                                    
+                                    echo "🔍 Running NPM audit..."
+                                    npm audit --audit-level=moderate --json > reports/npm-audit.json || true
+                                    
+                                    echo "📊 Generating dependency tree..."
+                                    npm list --json > reports/npm-dependencies.json || true
+                                fi
+                            '''
+                            
+                            // Run Typosentinel scan
+                            sh '''
+                                echo "🚀 Running Typosentinel NPM scan..."
+                                typosentinel scan \
+                                    --registry npm \
+                                    --config ~/.typosentinel/config.yaml \
+                                    --output-dir ./reports/npm \
+                                    --format json,sarif,html \
+                                    --severity-threshold "${SEVERITY_THRESHOLD}" \
+                                    --timeout ${SCAN_TIMEOUT} \
+                                    --enterprise \
+                                    --verbose \
+                                    . || echo "Scan completed with findings"
+                            '''
+                            
+                            // Process results
+                            script {
+                                if (fileExists('reports/npm/scan-results.json')) {
+                                    def results = readJSON file: 'reports/npm/scan-results.json'
+                                    def summary = results.summary ?: [:]
+                                    
+                                    env.NPM_TOTAL_PACKAGES = summary.total_packages ?: 0
+                                    env.NPM_VULNERABILITIES = summary.vulnerabilities ?: 0
+                                    env.NPM_CRITICAL = summary.critical_vulnerabilities ?: 0
+                                    
+                                    echo "📊 NPM Scan Results:"
+                                    echo "  - Total Packages: ${env.NPM_TOTAL_PACKAGES}"
+                                    echo "  - Vulnerabilities: ${env.NPM_VULNERABILITIES}"
+                                    echo "  - Critical: ${env.NPM_CRITICAL}"
+                                    
+                                    if (env.NPM_CRITICAL.toInteger() > 0) {
+                                        echo "❌ Critical vulnerabilities found in NPM packages"
+                                        env.NPM_SCAN_STATUS = 'failed'
+                                    } else {
+                                        echo "✅ No critical vulnerabilities found in NPM packages"
+                                        env.NPM_SCAN_STATUS = 'passed'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'reports/npm/**/*', allowEmptyArchive: true
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'reports/npm',
+                                reportFiles: '*.html',
+                                reportName: 'NPM Security Report'
+                            ])
+                        }
+                    }
+                }
+                
+                stage('PyPI Scan') {
+                    when {
+                        expression { env.DETECTED_REGISTRIES.contains('pypi') }
+                    }
+                    agent {
+                        docker {
+                            image "python:${env.PYTHON_VERSION}-slim"
+                            args '-v /usr/local/bin/typosentinel:/usr/local/bin/typosentinel'
+                        }
+                    }
+                    steps {
+                        script {
+                            echo "🐍 Starting PyPI security scan"
+                            
+                            // Setup Python environment
+                            sh '''
+                                apt-get update && apt-get install -y curl jq git build-essential
+                                pip install --upgrade pip setuptools wheel
+                                pip install safety bandit pip-audit
+                            '''
+                            
+                            // Run Python-specific security tools
+                            sh '''
+                                if [ -f "requirements.txt" ]; then
+                                    echo "🔍 Running Safety scan..."
+                                    safety check --json --output reports/safety-report.json || true
+                                    
+                                    echo "🔍 Running pip-audit..."
+                                    pip-audit --format=json --output=reports/pip-audit.json || true
+                                    
+                                    echo "📋 Installing dependencies for analysis..."
+                                    pip install -r requirements.txt --dry-run > reports/pip-install-log.txt 2>&1 || true
+                                fi
+                                
+                                if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+                                    echo "🔍 Running Bandit security scan..."
+                                    bandit -r . -f json -o reports/bandit-report.json || true
+                                fi
+                            '''
+                            
+                            // Run Typosentinel scan
+                            sh '''
+                                echo "🚀 Running Typosentinel PyPI scan..."
+                                typosentinel scan \
+                                    --registry pypi \
+                                    --config ~/.typosentinel/config.yaml \
+                                    --output-dir ./reports/pypi \
+                                    --format json,sarif,html \
+                                    --severity-threshold "${SEVERITY_THRESHOLD}" \
+                                    --timeout ${SCAN_TIMEOUT} \
+                                    --enterprise \
+                                    --verbose \
+                                    . || echo "Scan completed with findings"
+                            '''
+                            
+                            // Process results
+                            script {
+                                if (fileExists('reports/pypi/scan-results.json')) {
+                                    def results = readJSON file: 'reports/pypi/scan-results.json'
+                                    def summary = results.summary ?: [:]
+                                    
+                                    env.PYPI_TOTAL_PACKAGES = summary.total_packages ?: 0
+                                    env.PYPI_VULNERABILITIES = summary.vulnerabilities ?: 0
+                                    env.PYPI_CRITICAL = summary.critical_vulnerabilities ?: 0
+                                    
+                                    if (env.PYPI_CRITICAL.toInteger() > 0) {
+                                        echo "❌ Critical vulnerabilities found in PyPI packages"
+                                        env.PYPI_SCAN_STATUS = 'failed'
+                                    } else {
+                                        echo "✅ No critical vulnerabilities found in PyPI packages"
+                                        env.PYPI_SCAN_STATUS = 'passed'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'reports/pypi/**/*', allowEmptyArchive: true
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'reports/pypi',
+                                reportFiles: '*.html',
+                                reportName: 'PyPI Security Report'
+                            ])
+                        }
+                    }
+                }
+                
+                stage('Maven Scan') {
+                    when {
+                        expression { env.DETECTED_REGISTRIES.contains('maven') }
+                    }
+                    agent {
+                        docker {
+                            image "openjdk:${env.JAVA_VERSION}-jdk-slim"
+                            args '-v /usr/local/bin/typosentinel:/usr/local/bin/typosentinel'
+                        }
+                    }
+                    steps {
+                        script {
+                            echo "☕ Starting Maven security scan"
+                            
+                            // Setup Maven environment
+                            sh '''
+                                apt-get update && apt-get install -y curl jq git
+                                curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.5/binaries/apache-maven-3.9.5-bin.tar.gz | tar xz -C /opt
+                                ln -s /opt/apache-maven-3.9.5/bin/mvn /usr/local/bin/mvn
+                                export MAVEN_OPTS="-Dmaven.repo.local=.m2/repository"
+                            '''
+                            
+                            // Run Maven-specific security tools
+                            sh '''
+                                if [ -f "pom.xml" ]; then
+                                    echo "📋 Resolving Maven dependencies..."
+                                    mvn dependency:resolve -q
+                                    
+                                    echo "🔍 Running OWASP Dependency Check..."
+                                    mvn org.owasp:dependency-check-maven:check \
+                                        -Dformat=JSON \
+                                        -DoutputDirectory=reports \
+                                        -DsuppressionsFile=false || true
+                                    
+                                    echo "📊 Generating dependency tree..."
+                                    mvn dependency:tree -DoutputFile=reports/maven-dependencies.txt || true
+                                fi
+                            '''
+                            
+                            // Run Typosentinel scan
+                            sh '''
+                                echo "🚀 Running Typosentinel Maven scan..."
+                                typosentinel scan \
+                                    --registry maven \
+                                    --config ~/.typosentinel/config.yaml \
+                                    --output-dir ./reports/maven \
+                                    --format json,sarif,html \
+                                    --severity-threshold "${SEVERITY_THRESHOLD}" \
+                                    --timeout ${SCAN_TIMEOUT} \
+                                    --enterprise \
+                                    --verbose \
+                                    . || echo "Scan completed with findings"
+                            '''
+                            
+                            // Process results
+                            script {
+                                if (fileExists('reports/maven/scan-results.json')) {
+                                    def results = readJSON file: 'reports/maven/scan-results.json'
+                                    def summary = results.summary ?: [:]
+                                    
+                                    env.MAVEN_TOTAL_PACKAGES = summary.total_packages ?: 0
+                                    env.MAVEN_VULNERABILITIES = summary.vulnerabilities ?: 0
+                                    env.MAVEN_CRITICAL = summary.critical_vulnerabilities ?: 0
+                                    
+                                    if (env.MAVEN_CRITICAL.toInteger() > 0) {
+                                        echo "❌ Critical vulnerabilities found in Maven packages"
+                                        env.MAVEN_SCAN_STATUS = 'failed'
+                                    } else {
+                                        echo "✅ No critical vulnerabilities found in Maven packages"
+                                        env.MAVEN_SCAN_STATUS = 'passed'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'reports/maven/**/*', allowEmptyArchive: true
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'reports/maven',
+                                reportFiles: '*.html',
+                                reportName: 'Maven Security Report'
+                            ])
+                        }
+                    }
+                }
+                
+                stage('Zero-Day Scenarios') {
+                    when {
+                        expression { params.RUN_ZERO_DAY_TESTS }
+                    }
+                    steps {
+                        script {
+                            echo "🎯 Running zero-day attack scenarios"
+                            
+                            // Install required tools
+                            sh '''
+                                apt-get update && apt-get install -y nodejs npm python3 python3-pip ruby
+                            '''
+                            
+                            // Run zero-day scenarios
+                            sh '''
+                                if [ -d "./tests/acme-enterprise/zero-day-scenarios" ]; then
+                                    echo "🚀 Executing zero-day attack simulations..."
+                                    cd ./tests/acme-enterprise/zero-day-scenarios
+                                    
+                                    # Make scripts executable
+                                    chmod +x *.sh *.js *.py *.rb
+                                    
+                                    # Run all scenarios
+                                    ./run-all-scenarios.sh --output-dir "../../../reports/zero-day" --format json
+                                    
+                                    cd -
+                                    
+                                    # Test Typosentinel detection against generated scenarios
+                                    echo "🔍 Testing Typosentinel detection capabilities..."
+                                    typosentinel test-scenarios \
+                                        --scenarios-dir ./reports/zero-day \
+                                        --output-dir ./reports \
+                                        --format json,html \
+                                        --enterprise || true
+                                else
+                                    echo "⚠️  Zero-day scenarios not found, skipping"
+                                fi
+                            '''
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'reports/zero-day/**/*', allowEmptyArchive: true
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('📊 Analysis & Reporting') {
+            steps {
+                script {
+                    echo "📊 Aggregating security scan results"
+                    
+                    // Install analysis tools
+                    sh 'apt-get update && apt-get install -y jq python3 python3-pip'
+                    sh 'pip3 install jinja2'
+                    
+                    // Combine all scan results
+                    sh '''
+                        echo "🔄 Combining scan results..."
+                        mkdir -p aggregated-reports
+                        
+                        # Initialize combined results
+                        cat > aggregated-reports/combined-results.json << EOF
+                        {
+                          "pipeline_id": "${BUILD_NUMBER}",
+                          "commit_sha": "${GIT_COMMIT}",
+                          "branch": "${GIT_BRANCH}",
+                          "scan_date": "$(date -Iseconds)",
+                          "scans": []
+                        }
+                        EOF
+                        
+                        # Merge individual scan results
+                        for report_dir in reports/*/; do
+                            if [ -d "$report_dir" ] && [ -f "$report_dir/scan-results.json" ]; then
+                                registry=$(basename "$report_dir")
+                                echo "📋 Processing $registry results..."
+                                
+                                # Add registry info and merge
+                                jq --arg registry "$registry" '. + {"registry": $registry}' \
+                                    "$report_dir/scan-results.json" > "temp-$registry.json"
+                                
+                                jq --slurpfile scan "temp-$registry.json" '.scans += $scan' \
+                                    aggregated-reports/combined-results.json > temp-combined.json
+                                mv temp-combined.json aggregated-reports/combined-results.json
+                                
+                                rm "temp-$registry.json"
+                            fi
+                        done
+                    '''
+                    
+                    // Generate executive summary
+                    sh '''
+                        echo "📈 Generating executive summary..."
+                        python3 << 'EOF'
+                        import json
+                        import os
+                        from datetime import datetime
+                        
+                        # Load combined results
+                        with open('aggregated-reports/combined-results.json', 'r') as f:
+                            data = json.load(f)
+                        
+                        # Calculate metrics
+                        total_packages = 0
+                        total_vulnerabilities = 0
+                        total_critical = 0
+                        total_high = 0
+                        registries = []
+                        
+                        for scan in data.get('scans', []):
+                            summary = scan.get('summary', {})
+                            total_packages += summary.get('total_packages', 0)
+                            total_vulnerabilities += summary.get('vulnerabilities', 0)
+                            total_critical += summary.get('critical_vulnerabilities', 0)
+                            total_high += summary.get('high_vulnerabilities', 0)
+                            registries.append(scan.get('registry', 'unknown'))
+                        
+                        # Generate summary
+                        summary = {
+                            'pipeline_id': data.get('pipeline_id'),
+                            'commit_sha': data.get('commit_sha'),
+                            'branch': data.get('branch'),
+                            'scan_date': data.get('scan_date'),
+                            'registries_scanned': registries,
+                            'total_packages': total_packages,
+                            'total_vulnerabilities': total_vulnerabilities,
+                            'critical_vulnerabilities': total_critical,
+                            'high_vulnerabilities': total_high,
+                            'risk_score': min(100, total_critical * 10 + total_high * 5),
+                            'compliance_status': 'PASS' if total_critical == 0 else 'FAIL'
+                        }
+                        
+                        with open('aggregated-reports/executive-summary.json', 'w') as f:
+                            json.dump(summary, f, indent=2)
+                        
+                        print(f"Executive summary generated:")
+                        print(f"- Total packages: {total_packages}")
+                        print(f"- Total vulnerabilities: {total_vulnerabilities}")
+                        print(f"- Critical: {total_critical}")
+                        print(f"- Compliance: {summary['compliance_status']}")
+                        EOF
+                    '''
+                    
+                    // Set environment variables from summary
+                    script {
+                        if (fileExists('aggregated-reports/executive-summary.json')) {
+                            def summary = readJSON file: 'aggregated-reports/executive-summary.json'
+                            
+                            env.TOTAL_PACKAGES = summary.total_packages ?: 0
+                            env.TOTAL_VULNERABILITIES = summary.total_vulnerabilities ?: 0
+                            env.CRITICAL_VULNERABILITIES = summary.critical_vulnerabilities ?: 0
+                            env.COMPLIANCE_STATUS = summary.compliance_status ?: 'UNKNOWN'
+                            env.RISK_SCORE = summary.risk_score ?: 0
+                            
+                            echo "📊 Final Results:"
+                            echo "  - Total Packages: ${env.TOTAL_PACKAGES}"
+                            echo "  - Total Vulnerabilities: ${env.TOTAL_VULNERABILITIES}"
+                            echo "  - Critical: ${env.CRITICAL_VULNERABILITIES}"
+                            echo "  - Compliance: ${env.COMPLIANCE_STATUS}"
+                            echo "  - Risk Score: ${env.RISK_SCORE}"
+                        }
+                    }
+                    
+                    // Generate HTML report
+                    sh '''
+                        echo "🎨 Generating HTML report..."
+                        python3 << 'EOF'
+                        import json
+                        
+                        with open('aggregated-reports/executive-summary.json', 'r') as f:
+                            summary = json.load(f)
+                        
+                        html = f'''
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>ACME Enterprise Security Report</title>
+                            <style>
+                                body {{ font-family: Arial, sans-serif; margin: 40px; }}
+                                .header {{ background: #f8f9fa; padding: 20px; border-radius: 8px; }}
+                                .metric {{ display: inline-block; margin: 20px; text-align: center; }}
+                                .metric-value {{ font-size: 2em; font-weight: bold; }}
+                                .critical {{ color: #dc3545; }}
+                                .pass {{ color: #28a745; }}
+                                .fail {{ color: #dc3545; }}
+                                .jenkins-info {{ background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h1>🔍 ACME Enterprise Security Report</h1>
+                                <p>Pipeline: {summary['pipeline_id']} | Branch: {summary['branch']}</p>
+                                <p>Scan Date: {summary['scan_date']}</p>
+                            </div>
+                            
+                            <div class="jenkins-info">
+                                <h3>🔧 Jenkins Pipeline Information</h3>
+                                <p><strong>Build Number:</strong> {summary['pipeline_id']}</p>
+                                <p><strong>Git Commit:</strong> {summary['commit_sha']}</p>
+                                <p><strong>Branch:</strong> {summary['branch']}</p>
+                            </div>
+                            
+                            <h2>📊 Summary</h2>
+                            <div class="metrics">
+                                <div class="metric">
+                                    <div class="metric-value">{summary['total_packages']}</div>
+                                    <div>Packages Scanned</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{summary['total_vulnerabilities']}</div>
+                                    <div>Total Vulnerabilities</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value critical">{summary['critical_vulnerabilities']}</div>
+                                    <div>Critical</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value {summary['compliance_status'].lower()}">{summary['compliance_status']}</div>
+                                    <div>Compliance</div>
+                                </div>
+                            </div>
+                            
+                            <h2>🎯 Registries Scanned</h2>
+                            <ul>
+                        '''
+                        
+                        for registry in summary['registries_scanned']:
+                            html += f'<li>{registry.upper()}</li>'
+                        
+                        html += '''
+                            </ul>
+                            <p><em>Generated by ACME Enterprise Jenkins Pipeline</em></p>
+                        </body>
+                        </html>
+                        '''
+                        
+                        with open('aggregated-reports/security-report.html', 'w') as f:
+                            f.write(html)
+                        EOF
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'aggregated-reports/**/*', allowEmptyArchive: true
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'aggregated-reports',
+                        reportFiles: 'security-report.html',
+                        reportName: 'Security Summary Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('📢 Notifications') {
+            parallel {
+                stage('Slack Notification') {
+                    when {
+                        anyOf {
+                            expression { env.COMPLIANCE_STATUS == 'FAIL' }
+                            expression { currentBuild.currentResult == 'FAILURE' }
+                            triggeredBy 'TimerTrigger'
+                        }
+                    }
+                    steps {
+                        script {
+                            echo "📱 Sending Slack notification"
+                            
+                            def color = env.COMPLIANCE_STATUS == 'FAIL' ? 'danger' : 'good'
+                            def emoji = env.COMPLIANCE_STATUS == 'FAIL' ? '🚨' : '✅'
+                            
+                            def slackMessage = [
+                                text: "${emoji} ACME Enterprise Security Scan Report",
+                                attachments: [[
+                                    color: color,
+                                    fields: [
+                                        [
+                                            title: "Status",
+                                            value: env.COMPLIANCE_STATUS,
+                                            short: true
+                                        ],
+                                        [
+                                            title: "Critical",
+                                            value: env.CRITICAL_VULNERABILITIES,
+                                            short: true
+                                        ],
+                                        [
+                                            title: "Total Vulnerabilities",
+                                            value: env.TOTAL_VULNERABILITIES,
+                                            short: true
+                                        ],
+                                        [
+                                            title: "Pipeline",
+                                            value: "<${env.BUILD_URL}|${env.BUILD_NUMBER}>",
+                                            short: true
+                                        ]
+                                    ]
+                                ]]
+                            ]
+                            
+                            if (env.SLACK_WEBHOOK_URL) {
+                                sh """
+                                    curl -X POST -H 'Content-type: application/json' \
+                                        --data '${groovy.json.JsonBuilder(slackMessage).toString()}' \
+                                        '${env.SLACK_WEBHOOK_URL}'
+                                """
+                            }
+                        }
+                    }
+                }
+                
+                stage('Security Dashboard') {
+                    when {
+                        expression { env.SECURITY_DASHBOARD_URL && env.SECURITY_DASHBOARD_TOKEN }
+                    }
+                    steps {
+                        script {
+                            echo "📊 Uploading results to security dashboard"
+                            
+                            sh """
+                                curl -X POST \
+                                    -H "Authorization: Bearer ${env.SECURITY_DASHBOARD_TOKEN}" \
+                                    -H "Content-Type: application/json" \
+                                    -d @aggregated-reports/executive-summary.json \
+                                    "${env.SECURITY_DASHBOARD_URL}/api/scans"
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('🚨 Compliance Check') {
+            steps {
+                script {
+                    echo "🔍 Checking compliance status"
+                    
+                    if (env.COMPLIANCE_STATUS == 'FAIL' && params.FAIL_ON_CRITICAL) {
+                        echo "❌ Pipeline failed due to critical security findings"
+                        echo "Critical vulnerabilities found: ${env.CRITICAL_VULNERABILITIES}"
+                        echo "Please review the security report and address critical issues."
+                        
+                        currentBuild.result = 'FAILURE'
+                        error "Critical security vulnerabilities detected"
+                    } else {
+                        echo "✅ Compliance check passed"
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "🏁 Pipeline completed"
+            
+            // Archive all artifacts
+            archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'logs/**/*', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'scan-config.json', allowEmptyArchive: true
+            
+            // Clean up workspace
+            cleanWs()
+        }
+        
+        success {
+            echo "✅ Security scan completed successfully"
+        }
+        
+        failure {
+            echo "❌ Security scan failed"
+            
+            // Send failure notification
+            script {
+                if (env.SLACK_WEBHOOK_URL) {
+                    def failureMessage = [
+                        text: "🚨 ACME Enterprise Security Pipeline Failed",
+                        attachments: [[
+                            color: 'danger',
+                            fields: [
+                                [
+                                    title: "Pipeline",
+                                    value: "<${env.BUILD_URL}|${env.BUILD_NUMBER}>",
+                                    short: true
+                                ],
+                                [
+                                    title: "Branch",
+                                    value: env.GIT_BRANCH,
+                                    short: true
+                                ],
+                                [
+                                    title: "Reason",
+                                    value: "Critical security vulnerabilities detected",
+                                    short: false
+                                ]
+                            ]
+                        ]]
+                    ]
+                    
+                    sh """
+                        curl -X POST -H 'Content-type: application/json' \
+                            --data '${groovy.json.JsonBuilder(failureMessage).toString()}' \
+                            '${env.SLACK_WEBHOOK_URL}'
+                    """
+                }
+            }
+        }
+        
+        unstable {
+            echo "⚠️  Security scan completed with warnings"
+        }
+    }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+@NonCPS
+def getRegistryFromPackageFile(filename) {
+    switch(filename) {
+        case ~/.*package\.json$/:
+        case ~/.*package-lock\.json$/:
+        case ~/.*yarn\.lock$/:
+            return 'npm'
+        case ~/.*requirements\.txt$/:
+        case ~/.*setup\.py$/:
+        case ~/.*pyproject\.toml$/:
+        case ~/.*Pipfile$/:
+            return 'pypi'
+        case ~/.*pom\.xml$/:
+        case ~/.*build\.gradle$/:
+        case ~/.*build\.gradle\.kts$/:
+            return 'maven'
+        case ~/.*\.csproj$/:
+        case ~/.*\.sln$/:
+        case ~/.*packages\.config$/:
+            return 'nuget'
+        case ~/.*Gemfile$/:
+        case ~/.*Gemfile\.lock$/:
+        case ~/.*\.gemspec$/:
+            return 'rubygems'
+        case ~/.*go\.mod$/:
+        case ~/.*go\.sum$/:
+            return 'go'
+        default:
+            return null
+    }
+}
+
+@NonCPS
+def calculateRiskScore(critical, high, medium, low) {
+    return Math.min(100, (critical * 10) + (high * 5) + (medium * 2) + (low * 1))
+}
+
+@NonCPS
+def formatDuration(startTime, endTime) {
+    def duration = endTime - startTime
+    def minutes = Math.floor(duration / 60000)
+    def seconds = Math.floor((duration % 60000) / 1000)
+    return "${minutes}m ${seconds}s"
+}

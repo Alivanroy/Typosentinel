@@ -1,0 +1,88 @@
+# Typosentinel Alerting Rules for ACME Enterprise
+
+groups:
+  - name: typosentinel.security
+    rules:
+      - alert: CriticalVulnerabilityDetected
+        expr: typosentinel_vulnerabilities_critical > 0
+        for: 0m
+        labels:
+          severity: critical
+          alert_type: security
+        annotations:
+          summary: "Critical vulnerability detected in package scan"
+          description: "{{ $value }} critical vulnerabilities found in package dependencies"
+
+      - alert: MaliciousPackageDetected
+        expr: typosentinel_malicious_packages_detected > 0
+        for: 0m
+        labels:
+          severity: critical
+          alert_type: security
+        annotations:
+          summary: "Malicious package detected"
+          description: "{{ $value }} malicious packages detected in scan"
+
+      - alert: SupplyChainAttackDetected
+        expr: typosentinel_supply_chain_attacks > 0
+        for: 0m
+        labels:
+          severity: critical
+          alert_type: security
+        annotations:
+          summary: "Supply chain attack detected"
+          description: "Potential supply chain attack detected in package {{ $labels.package_name }}"
+
+  - name: typosentinel.operational
+    rules:
+      - alert: TyposentinelServiceDown
+        expr: up{job="typosentinel-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          alert_type: operational
+        annotations:
+          summary: "Typosentinel service is down"
+          description: "Typosentinel server has been down for more than 1 minute"
+
+      - alert: HighScanLatency
+        expr: typosentinel_scan_duration_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          alert_type: operational
+        annotations:
+          summary: "High scan latency detected"
+          description: "Package scan taking longer than 30 seconds"
+
+      - alert: ScanFailureRate
+        expr: rate(typosentinel_scan_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          alert_type: operational
+        annotations:
+          summary: "High scan failure rate"
+          description: "Scan failure rate is {{ $value }} failures per second"
+
+  - name: typosentinel.compliance
+    rules:
+      - alert: PolicyViolationDetected
+        expr: typosentinel_policy_violations > 0
+        for: 0m
+        labels:
+          severity: warning
+          alert_type: compliance
+        annotations:
+          summary: "Security policy violation detected"
+          description: "{{ $value }} policy violations found in package scan"
+
+      - alert: UnauthorizedRegistryAccess
+        expr: typosentinel_unauthorized_registry_access > 0
+        for: 0m
+        labels:
+          severity: high
+          alert_type: compliance
+        annotations:
+          summary: "Unauthorized registry access detected"
+          description: "Attempt to access unauthorized package registry detected"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"net/http"
 	"net/url"
@@ -199,32 +200,87 @@ func (n *NPMConnector) Close() error {
 // PyPIConnector implements Connector for PyPI registry
 type PyPIConnector struct {
 	registry *Registry
+	client   *PyPIClient
 }
 
 // NewPyPIConnector creates a new PyPI connector
 func NewPyPIConnector(registry *Registry) *PyPIConnector {
 	return &PyPIConnector{
 		registry: registry,
+		client:   NewPyPIClient(),
 	}
 }
 
 // Connect establishes connection to PyPI registry
 func (p *PyPIConnector) Connect(ctx context.Context) error {
+	// Test connection by making a simple API call
+	_, err := p.client.GetPackageInfo("requests")
+	if err != nil {
+		return fmt.Errorf("failed to connect to PyPI: %w", err)
+	}
 	return nil
 }
 
 // GetPackageInfo retrieves package information from PyPI
 func (p *PyPIConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
+	var packageInfo *PyPIPackageInfo
+	var err error
+
+	if version == "" {
+		packageInfo, err = p.client.GetPackageInfo(name)
+	} else {
+		packageInfo, err = p.client.GetPackageVersion(name, version)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get PyPI package info: %w", err)
+	}
+
 	return &types.PackageMetadata{
-		Name:     name,
-		Version:  version,
-		Registry: "pypi",
+		Name:        packageInfo.Info.Name,
+		Version:     packageInfo.Info.Version,
+		Description: packageInfo.Info.Description,
+		Registry:    "pypi",
+		Author:      packageInfo.Info.Author,
+		License:     packageInfo.Info.License,
+		Homepage:    packageInfo.Info.HomePage,
+		Keywords:    []string{packageInfo.Info.Keywords},
 	}, nil
 }
 
 // SearchPackages searches for packages in PyPI registry
 func (p *PyPIConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
-	return []*types.PackageMetadata{}, nil
+	// PyPI doesn't have a direct search API, so we'll use popular packages as fallback
+	popularPackages, err := p.client.GetPopularPackages(50)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get popular packages: %w", err)
+	}
+
+	var results []*types.PackageMetadata
+	for _, pkgName := range popularPackages {
+		if len(results) >= 20 { // Limit results
+			break
+		}
+		
+		// Simple string matching for search
+		if query == "" || containsIgnoreCase(pkgName, query) {
+			packageInfo, err := p.client.GetPackageInfo(pkgName)
+			if err != nil {
+				continue // Skip packages that fail to load
+			}
+
+			results = append(results, &types.PackageMetadata{
+				Name:        packageInfo.Info.Name,
+				Version:     packageInfo.Info.Version,
+				Description: packageInfo.Info.Summary,
+				Registry:    "pypi",
+				Author:      packageInfo.Info.Author,
+				License:     packageInfo.Info.License,
+			})
+		}
+	}
+
+	return results, nil
 }
 
 // GetRegistryType returns the registry type
@@ -235,6 +291,250 @@ func (p *PyPIConnector) GetRegistryType() string {
 // Close closes the connection
 func (p *PyPIConnector) Close() error {
 	return nil
+}
+
+// MavenConnector implements Connector for Maven Central registry
+type MavenConnector struct {
+	registry *Registry
+	client   *MavenClient
+}
+
+// NewMavenConnector creates a new Maven connector
+func NewMavenConnector(registry *Registry) *MavenConnector {
+	return &MavenConnector{
+		registry: registry,
+		client:   NewMavenClient(),
+	}
+}
+
+// Connect establishes connection to Maven Central registry
+func (m *MavenConnector) Connect(ctx context.Context) error {
+	// Maven Central doesn't require authentication for public access
+	return nil
+}
+
+// GetPackageInfo retrieves package information from Maven Central
+func (m *MavenConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
+	// Parse Maven coordinate (groupId:artifactId)
+	parts := strings.Split(name, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid Maven coordinate format: %s (expected groupId:artifactId)", name)
+	}
+	
+	groupID := parts[0]
+	artifactID := parts[1]
+	
+	return m.client.GetPackageInfo(ctx, groupID, artifactID, version)
+}
+
+// SearchPackages searches for packages in Maven Central
+func (m *MavenConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
+	return m.client.SearchPackages(ctx, query)
+}
+
+// GetRegistryType returns the registry type
+func (m *MavenConnector) GetRegistryType() string {
+	return "maven"
+}
+
+// Close closes the Maven connector
+func (m *MavenConnector) Close() error {
+	return nil
+}
+
+// NuGetConnector implements Connector for NuGet registry
+type NuGetConnector struct {
+	registry *Registry
+	client   *NuGetClient
+}
+
+// NewNuGetConnector creates a new NuGet connector
+func NewNuGetConnector(registry *Registry) *NuGetConnector {
+	return &NuGetConnector{
+		registry: registry,
+		client:   NewNuGetClient(),
+	}
+}
+
+// Connect establishes connection to NuGet registry
+func (n *NuGetConnector) Connect(ctx context.Context) error {
+	// NuGet.org doesn't require authentication for public access
+	return nil
+}
+
+// GetPackageInfo retrieves package information from NuGet.org
+func (n *NuGetConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
+	return n.client.GetPackageInfo(ctx, name, version)
+}
+
+// SearchPackages searches for packages in NuGet.org
+func (n *NuGetConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
+	return n.client.SearchPackages(ctx, query)
+}
+
+// GetRegistryType returns the registry type
+func (n *NuGetConnector) GetRegistryType() string {
+	return "nuget"
+}
+
+// Close closes the NuGet connector
+func (n *NuGetConnector) Close() error {
+	return nil
+}
+
+// RubyGemsConnector implements Connector for RubyGems registry
+type RubyGemsConnector struct {
+	registry *Registry
+	client   *RubyGemsClient
+}
+
+// NewRubyGemsConnector creates a new RubyGems connector
+func NewRubyGemsConnector(registry *Registry) *RubyGemsConnector {
+	return &RubyGemsConnector{
+		registry: registry,
+		client:   NewRubyGemsClient(),
+	}
+}
+
+// Connect establishes connection to RubyGems registry
+func (r *RubyGemsConnector) Connect(ctx context.Context) error {
+	// RubyGems.org doesn't require authentication for public access
+	return nil
+}
+
+// GetPackageInfo retrieves package information from RubyGems.org
+func (r *RubyGemsConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
+	return r.client.GetPackageInfo(ctx, name, version)
+}
+
+// SearchPackages searches for packages in RubyGems.org
+func (r *RubyGemsConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
+	return r.client.SearchPackages(ctx, query)
+}
+
+// GetRegistryType returns the registry type
+func (r *RubyGemsConnector) GetRegistryType() string {
+	return "rubygems"
+}
+
+// Close closes the RubyGems connector
+func (r *RubyGemsConnector) Close() error {
+	return nil
+}
+
+// ComposerConnector implements Connector for Composer registry
+type ComposerConnector struct {
+	registry *Registry
+	client   *ComposerClient
+}
+
+// NewComposerConnector creates a new Composer connector
+func NewComposerConnector(registry *Registry) *ComposerConnector {
+	return &ComposerConnector{
+		registry: registry,
+		client:   NewComposerClient(),
+	}
+}
+
+// Connect establishes connection to Packagist
+func (c *ComposerConnector) Connect(ctx context.Context) error {
+	// Packagist doesn't require authentication for public access
+	return nil
+}
+
+// GetPackageInfo retrieves package information from Packagist
+func (c *ComposerConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
+	return c.client.GetPackageInfo(ctx, name, version)
+}
+
+// SearchPackages searches for packages in Packagist
+func (c *ComposerConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
+	return c.client.SearchPackages(ctx, query)
+}
+
+// GetRegistryType returns the registry type
+func (c *ComposerConnector) GetRegistryType() string {
+	return "composer"
+}
+
+// Close closes the Composer connector
+func (c *ComposerConnector) Close() error {
+	return nil
+}
+
+// CargoConnector implements Connector for Cargo registry
+type CargoConnector struct {
+	registry *Registry
+	client   *CargoClient
+}
+
+// NewCargoConnector creates a new Cargo connector
+func NewCargoConnector(registry *Registry) *CargoConnector {
+	return &CargoConnector{
+		registry: registry,
+		client:   NewCargoClient(),
+	}
+}
+
+// Connect establishes connection to crates.io
+func (c *CargoConnector) Connect(ctx context.Context) error {
+	// crates.io doesn't require authentication for public access
+	return nil
+}
+
+// GetPackageInfo retrieves package information from crates.io
+func (c *CargoConnector) GetPackageInfo(ctx context.Context, name, version string) (*types.PackageMetadata, error) {
+	return c.client.GetPackageInfo(ctx, name, version)
+}
+
+// SearchPackages searches for packages in crates.io
+func (c *CargoConnector) SearchPackages(ctx context.Context, query string) ([]*types.PackageMetadata, error) {
+	return c.client.SearchPackages(ctx, query)
+}
+
+// GetRegistryType returns the registry type
+func (c *CargoConnector) GetRegistryType() string {
+	return "cargo"
+}
+
+// Close closes the Cargo connector
+func (c *CargoConnector) Close() error {
+	return nil
+}
+
+// containsIgnoreCase performs case-insensitive substring search
+func containsIgnoreCase(s, substr string) bool {
+	return len(s) >= len(substr) && 
+		   (s == substr || 
+			len(s) > len(substr) && 
+			(s[:len(substr)] == substr || 
+			 s[len(s)-len(substr):] == substr || 
+			 indexIgnoreCase(s, substr) >= 0))
+}
+
+// indexIgnoreCase finds the index of substr in s, case-insensitive
+func indexIgnoreCase(s, substr string) int {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		match := true
+		for j := 0; j < len(substr); j++ {
+			if toLower(s[i+j]) != toLower(substr[j]) {
+				match = false
+				break
+			}
+		}
+		if match {
+			return i
+		}
+	}
+	return -1
+}
+
+// toLower converts a byte to lowercase
+func toLower(b byte) byte {
+	if b >= 'A' && b <= 'Z' {
+		return b + ('a' - 'A')
+	}
+	return b
 }
 
 // Manager manages multiple registry connectors

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   AlertTriangle, 
@@ -19,91 +19,44 @@ import {
   Copy,
   FileText,
   Bug,
-  Link
+  Link,
+  RefreshCw
 } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
+import { apiService, type VulnerabilityDetail } from '../services/api'
 
-const vulnerabilities = [
-  {
-    id: 'CVE-2023-1234',
-    title: 'Cross-Site Scripting (XSS) in lodash',
-    package: 'lodash',
-    version: '4.17.20',
-    severity: 'high',
-    score: 8.2,
-    description: 'A cross-site scripting vulnerability exists in lodash that allows attackers to execute arbitrary JavaScript code.',
-    publishedDate: '2023-10-15',
-    lastModified: '2023-10-20',
-    status: 'open',
-    affectedVersions: '< 4.17.21',
-    fixedVersion: '4.17.21',
-    references: [
-      'https://nvd.nist.gov/vuln/detail/CVE-2023-1234',
-      'https://github.com/lodash/lodash/security/advisories'
-    ]
-  },
-  {
-    id: 'CVE-2023-5678',
-    title: 'Remote Code Execution in express',
-    package: 'express',
-    version: '4.17.1',
-    severity: 'critical',
-    score: 9.8,
-    description: 'A remote code execution vulnerability in Express.js allows attackers to execute arbitrary code on the server.',
-    publishedDate: '2023-09-28',
-    lastModified: '2023-10-01',
-    status: 'fixed',
-    affectedVersions: '< 4.18.2',
-    fixedVersion: '4.18.2',
-    references: [
-      'https://nvd.nist.gov/vuln/detail/CVE-2023-5678',
-      'https://expressjs.com/en/advanced/security-updates.html'
-    ]
-  },
-  {
-    id: 'CVE-2023-9012',
-    title: 'SQL Injection in mysql2',
-    package: 'mysql2',
-    version: '2.3.0',
-    severity: 'medium',
-    score: 6.5,
-    description: 'SQL injection vulnerability in mysql2 driver allows attackers to manipulate database queries.',
-    publishedDate: '2023-08-12',
-    lastModified: '2023-08-15',
-    status: 'investigating',
-    affectedVersions: '< 2.3.3',
-    fixedVersion: '2.3.3',
-    references: [
-      'https://nvd.nist.gov/vuln/detail/CVE-2023-9012'
-    ]
-  },
-  {
-    id: 'CVE-2023-3456',
-    title: 'Prototype Pollution in minimist',
-    package: 'minimist',
-    version: '1.2.5',
-    severity: 'low',
-    score: 3.7,
-    description: 'Prototype pollution vulnerability in minimist allows modification of object prototypes.',
-    publishedDate: '2023-07-05',
-    lastModified: '2023-07-10',
-    status: 'open',
-    affectedVersions: '< 1.2.6',
-    fixedVersion: '1.2.6',
-    references: [
-      'https://nvd.nist.gov/vuln/detail/CVE-2023-3456'
-    ]
-  }
-]
+
 
 export function Vulnerabilities() {
+  const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityDetail[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [severityFilter, setSeverityFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedVuln, setExpandedVuln] = useState<string | null>(null)
+  // const [showFilters, setShowFilters] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [selectedVuln, setSelectedVuln] = useState<any>(null)
+  const [selectedVuln, setSelectedVuln] = useState<VulnerabilityDetail | null>(null)
+
+  useEffect(() => {
+    const fetchVulnerabilities = async () => {
+      try {
+        setLoading(true)
+        const data = await apiService.getVulnerabilities()
+        setVulnerabilities(data)
+        setError(null)
+      } catch (err) {
+        setError('Failed to fetch vulnerabilities')
+        console.error('Error fetching vulnerabilities:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchVulnerabilities()
+  }, [])
 
   const filteredVulnerabilities = vulnerabilities.filter(vuln => {
     const matchesSearch = vuln.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -174,6 +127,33 @@ export function Vulnerabilities() {
     high: vulnerabilities.filter(v => v.severity === 'high').length,
     medium: vulnerabilities.filter(v => v.severity === 'medium').length,
     low: vulnerabilities.filter(v => v.severity === 'low').length
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <RefreshCw className="w-6 h-6 animate-spin" />
+          <span>Loading vulnerabilities...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Error Loading Vulnerabilities</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -351,17 +331,25 @@ export function Vulnerabilities() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <h4 className="font-medium text-gray-900 mb-1">Affected Versions</h4>
-                            <p className="text-sm text-gray-600">{vuln.affectedVersions}</p>
+                            <p className="text-sm text-gray-600">{vuln.affectedVersions || 'Not specified'}</p>
                           </div>
                           <div>
                             <h4 className="font-medium text-gray-900 mb-1">Fixed Version</h4>
-                            <p className="text-sm text-gray-600">{vuln.fixedVersion}</p>
+                            <p className="text-sm text-gray-600">{vuln.fixedVersion || 'Not available'}</p>
                           </div>
                         </div>
+                        {vuln.proposedCorrection && (
+                          <div className="mt-4">
+                            <h4 className="font-medium text-gray-900 mb-2">Proposed Correction</h4>
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <p className="text-sm text-blue-800">{vuln.proposedCorrection}</p>
+                            </div>
+                          </div>
+                        )}
                         <div>
                           <h4 className="font-medium text-gray-900 mb-2">References</h4>
                           <div className="space-y-1">
-                            {vuln.references.map((ref, idx) => (
+                            {vuln.references && vuln.references.length > 0 ? vuln.references.map((ref, idx) => (
                               <a
                                 key={idx}
                                 href={ref}
@@ -372,7 +360,9 @@ export function Vulnerabilities() {
                                 <ExternalLink className="w-3 h-3 mr-1" />
                                 {ref}
                               </a>
-                            ))}
+                            )) : (
+                              <p className="text-sm text-gray-500">No references available</p>
+                            )}
                           </div>
                         </div>
                       </motion.div>
@@ -519,22 +509,31 @@ export function Vulnerabilities() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Affected Versions</h3>
                   <code className="px-3 py-2 bg-red-50 border border-red-200 rounded text-sm font-mono block">
-                    {selectedVuln.affectedVersions}
+                    {selectedVuln.affectedVersions || 'Not specified'}
                   </code>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Fixed Version</h3>
                   <code className="px-3 py-2 bg-green-50 border border-green-200 rounded text-sm font-mono block">
-                    {selectedVuln.fixedVersion}
+                    {selectedVuln.fixedVersion || 'Not available'}
                   </code>
                 </div>
               </div>
+              
+              {selectedVuln.proposedCorrection && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Proposed Correction</h3>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800 leading-relaxed">{selectedVuln.proposedCorrection}</p>
+                  </div>
+                </div>
+              )}
 
               {/* References */}
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-3">References</h3>
                 <div className="space-y-2">
-                  {selectedVuln.references.map((ref: string, idx: number) => (
+                  {selectedVuln.references && selectedVuln.references.length > 0 ? selectedVuln.references.map((ref: string, idx: number) => (
                     <a
                       key={idx}
                       href={ref}
@@ -546,7 +545,9 @@ export function Vulnerabilities() {
                       <span className="text-sm">{ref}</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-gray-500 p-2">No references available for this vulnerability</p>
+                  )}
                 </div>
               </div>
 

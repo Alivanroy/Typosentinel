@@ -1,0 +1,215 @@
+{
+  "scenario_id": "supply-chain-attack-001",
+  "name": "Supply Chain Attack Simulation",
+  "description": "Simulates a sophisticated supply chain attack where a legitimate package is compromised with malicious code",
+  "severity": "critical",
+  "attack_type": "supply_chain",
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z",
+  "status": "active",
+  "metadata": {
+    "cve_references": [
+      "CVE-2021-44228",
+      "CVE-2022-23812",
+      "CVE-2023-26115"
+    ],
+    "mitre_attack_techniques": [
+      "T1195.002",
+      "T1059.001",
+      "T1027"
+    ],
+    "affected_ecosystems": [
+      "npm",
+      "pypi",
+      "maven",
+      "nuget",
+      "rubygems",
+      "go"
+    ]
+  },
+  "attack_vectors": [
+    {
+      "vector_id": "sc-001",
+      "name": "Compromised Maintainer Account",
+      "description": "Attacker gains access to legitimate package maintainer account",
+      "registry": "npm",
+      "package_name": "popular-utility-lib",
+      "malicious_version": "2.1.5",
+      "legitimate_version": "2.1.4",
+      "payload_type": "backdoor",
+      "detection_difficulty": "high",
+      "impact_scope": "global"
+    },
+    {
+      "vector_id": "sc-002",
+      "name": "Dependency Confusion via Internal Package",
+      "description": "Attacker publishes malicious package with same name as internal package",
+      "registry": "pypi",
+      "package_name": "acme-internal-utils",
+      "malicious_version": "1.0.0",
+      "payload_type": "data_exfiltration",
+      "detection_difficulty": "medium",
+      "impact_scope": "organization"
+    },
+    {
+      "vector_id": "sc-003",
+      "name": "Typosquatting with Malicious Code",
+      "description": "Attacker creates package with similar name to popular library",
+      "registry": "maven",
+      "package_name": "org.springframework.core-utils",
+      "legitimate_package": "org.springframework:spring-core",
+      "malicious_version": "5.3.21",
+      "payload_type": "remote_access_trojan",
+      "detection_difficulty": "low",
+      "impact_scope": "targeted"
+    }
+  ],
+  "payloads": [
+    {
+      "payload_id": "payload-001",
+      "type": "backdoor",
+      "description": "Hidden backdoor that activates on specific conditions",
+      "trigger_conditions": [
+        "environment_variable_check",
+        "date_based_activation",
+        "network_connectivity_check"
+      ],
+      "malicious_actions": [
+        "environment_variable_collection",
+        "file_system_access",
+        "network_communication",
+        "process_injection"
+      ],
+      "obfuscation_techniques": [
+        "base64_encoding",
+        "string_concatenation",
+        "dynamic_imports",
+        "code_splitting"
+      ]
+    },
+    {
+      "payload_id": "payload-002",
+      "type": "data_exfiltration",
+      "description": "Steals sensitive data and sends to external server",
+      "target_data": [
+        "environment_variables",
+        "configuration_files",
+        "source_code",
+        "database_credentials"
+      ],
+      "exfiltration_methods": [
+        "http_post_requests",
+        "dns_tunneling",
+        "email_attachments"
+      ]
+    }
+  ],
+  "detection_signatures": [
+    {
+      "signature_id": "sig-001",
+      "type": "behavioral",
+      "pattern": "Unexpected network connections during package installation",
+      "confidence": "high",
+      "false_positive_rate": "low"
+    },
+    {
+      "signature_id": "sig-002",
+      "type": "static_analysis",
+      "pattern": "Obfuscated code patterns in package source",
+      "confidence": "medium",
+      "false_positive_rate": "medium"
+    },
+    {
+      "signature_id": "sig-003",
+      "type": "metadata_analysis",
+      "pattern": "Unusual package metadata or version history",
+      "confidence": "medium",
+      "false_positive_rate": "high"
+    }
+  ],
+  "mitigation_strategies": [
+    {
+      "strategy_id": "mit-001",
+      "name": "Package Integrity Verification",
+      "description": "Verify package checksums and signatures",
+      "effectiveness": "high",
+      "implementation_complexity": "medium"
+    },
+    {
+      "strategy_id": "mit-002",
+      "name": "Dependency Pinning",
+      "description": "Pin exact versions of dependencies",
+      "effectiveness": "medium",
+      "implementation_complexity": "low"
+    },
+    {
+      "strategy_id": "mit-003",
+      "name": "Private Package Registry",
+      "description": "Use private registries for internal packages",
+      "effectiveness": "high",
+      "implementation_complexity": "high"
+    }
+  ],
+  "test_cases": [
+    {
+      "test_id": "test-001",
+      "name": "Malicious Package Detection",
+      "description": "Test ability to detect known malicious packages",
+      "expected_result": "BLOCK",
+      "test_data": {
+        "package_name": "popular-utility-lib",
+        "version": "2.1.5",
+        "registry": "npm"
+      }
+    },
+    {
+      "test_id": "test-002",
+      "name": "Dependency Confusion Detection",
+      "description": "Test detection of dependency confusion attacks",
+      "expected_result": "WARN",
+      "test_data": {
+        "package_name": "acme-internal-utils",
+        "version": "1.0.0",
+        "registry": "pypi"
+      }
+    },
+    {
+      "test_id": "test-003",
+      "name": "Typosquatting Detection",
+      "description": "Test detection of typosquatting packages",
+      "expected_result": "BLOCK",
+      "test_data": {
+        "package_name": "org.springframework.core-utils",
+        "version": "5.3.21",
+        "registry": "maven"
+      }
+    }
+  ],
+  "simulation_config": {
+    "duration_minutes": 30,
+    "concurrent_attacks": 3,
+    "target_environments": [
+      "development",
+      "staging",
+      "production"
+    ],
+    "monitoring_enabled": true,
+    "logging_level": "debug"
+  },
+  "compliance_mappings": {
+    "nist_csf": [
+      "DE.CM-8",
+      "PR.DS-6",
+      "RS.MI-3"
+    ],
+    "iso_27001": [
+      "A.12.6.1",
+      "A.14.2.5"
+    ],
+    "cis_controls": [
+      "2.1",
+      "2.2",
+      "16.11"
+    ]
+  }
+}

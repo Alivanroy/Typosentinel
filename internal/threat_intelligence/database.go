@@ -9,17 +9,21 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
-// ThreatDatabase manages the storage and retrieval of threat intelligence data
+// ThreatDatabase manages the storage and retrieval of// ThreatDatabase manages threat intelligence data
 type ThreatDatabase struct {
 	db     *sql.DB
 	logger *logger.Logger
 	mu     sync.RWMutex
 	stats  DatabaseStats
+	config *config.DatabaseConfig
 }
+
+
 
 // DatabaseStats represents database statistics
 type DatabaseStats struct {
@@ -56,9 +60,10 @@ type ThreatSearchResult struct {
 }
 
 // NewThreatDatabase creates a new threat database instance
-func NewThreatDatabase(logger *logger.Logger) *ThreatDatabase {
+func NewThreatDatabase(logger *logger.Logger, dbConfig *config.DatabaseConfig) *ThreatDatabase {
 	return &ThreatDatabase{
 		logger: logger,
+		config: dbConfig,
 		stats: DatabaseStats{
 			ThreatsByType:     make(map[string]int64),
 			ThreatsBySeverity: make(map[string]int64),
@@ -71,8 +76,10 @@ func NewThreatDatabase(logger *logger.Logger) *ThreatDatabase {
 func (td *ThreatDatabase) Initialize(ctx context.Context) error {
 	td.logger.Info("Initializing threat database")
 
-	// Open SQLite database
-	db, err := sql.Open("sqlite3", "threat_intelligence.db?cache=shared&mode=rwc")
+	// Open PostgreSQL database
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		td.config.Host, td.config.Port, td.config.Username, td.config.Password, td.config.Database, td.config.SSLMode)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
@@ -359,18 +366,16 @@ func (td *ThreatDatabase) Close() error {
 // Helper methods
 
 func (td *ThreatDatabase) configureDatabase(ctx context.Context) error {
-	// Set SQLite pragmas for performance
-	pragmas := []string{
-		"PRAGMA journal_mode = WAL",
-		"PRAGMA synchronous = NORMAL",
-		"PRAGMA cache_size = 10000",
-		"PRAGMA temp_store = memory",
-		"PRAGMA mmap_size = 268435456", // 256MB
+	// Configure PostgreSQL connection settings
+	configs := []string{
+		"SET statement_timeout = '30s'",
+		"SET lock_timeout = '10s'",
+		"SET idle_in_transaction_session_timeout = '60s'",
 	}
 
-	for _, pragma := range pragmas {
-		if _, err := td.db.ExecContext(ctx, pragma); err != nil {
-			return fmt.Errorf("failed to execute pragma %s: %w", pragma, err)
+	for _, config := range configs {
+		if _, err := td.db.ExecContext(ctx, config); err != nil {
+			return fmt.Errorf("failed to execute config %s: %w", config, err)
 		}
 	}
 
@@ -380,23 +385,23 @@ func (td *ThreatDatabase) configureDatabase(ctx context.Context) error {
 func (td *ThreatDatabase) createTables(ctx context.Context) error {
 	query := `
 		CREATE TABLE IF NOT EXISTS threats (
-			id TEXT PRIMARY KEY,
-			source TEXT NOT NULL,
-			type TEXT NOT NULL,
-			severity TEXT NOT NULL,
-			package_name TEXT NOT NULL,
-			ecosystem TEXT NOT NULL,
+			id VARCHAR(255) PRIMARY KEY,
+			source VARCHAR(255) NOT NULL,
+			type VARCHAR(255) NOT NULL,
+			severity VARCHAR(50) NOT NULL,
+			package_name VARCHAR(255) NOT NULL,
+			ecosystem VARCHAR(100) NOT NULL,
 			description TEXT,
-			indicators TEXT, -- JSON
-			"references" TEXT, -- JSON
-			tags TEXT, -- JSON
-			confidence_level REAL NOT NULL,
-			first_seen DATETIME NOT NULL,
-			last_seen DATETIME NOT NULL,
-			expires_at DATETIME,
-			metadata TEXT, -- JSON
-			created_at DATETIME NOT NULL,
-			updated_at DATETIME NOT NULL
+			indicators JSONB,
+			references JSONB,
+			tags JSONB,
+			confidence_level DECIMAL(3,2) NOT NULL,
+			first_seen TIMESTAMP WITH TIME ZONE NOT NULL,
+			last_seen TIMESTAMP WITH TIME ZONE NOT NULL,
+			expires_at TIMESTAMP WITH TIME ZONE,
+			metadata JSONB,
+			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 		)
 	`
 

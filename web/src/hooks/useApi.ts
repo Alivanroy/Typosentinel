@@ -215,21 +215,91 @@ export function useReports() {
       const result = await apiService.scheduleReport(scheduleConfig)
       return result
     } catch (err) {
-      throw err
+        throw err
+      }
+    }, [])
+
+    useEffect(() => {
+      fetchReports()
+    }, [])
+
+    return {
+    reports,
+    loading,
+    error,
+    fetchReports,
+    generateReport,
+    downloadReport,
+    scheduleReport
+  }
+}
+
+// Hook for report templates
+export function useReportTemplates() {
+  const [templates, setTemplates] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchTemplates = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await apiService.getReportTemplates()
+      setTemplates(result)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch templates')
+      // Fallback to hardcoded templates if API fails
+      setTemplates([
+        {
+          id: 'template-1',
+          name: 'Security Summary',
+          description: 'Weekly or monthly security overview',
+          type: 'security',
+          format: 'PDF',
+          icon: 'Shield',
+          color: 'text-blue-600 bg-blue-100'
+        },
+        {
+          id: 'template-2',
+          name: 'Vulnerability Report',
+          description: 'Detailed vulnerability analysis',
+          type: 'vulnerability',
+          format: 'PDF',
+          icon: 'Bug',
+          color: 'text-red-600 bg-red-100'
+        },
+        {
+          id: 'template-3',
+          name: 'Dependency Audit',
+          description: 'Package and dependency analysis',
+          type: 'dependencies',
+          format: 'PDF',
+          icon: 'Package',
+          color: 'text-green-600 bg-green-100'
+        },
+        {
+          id: 'template-4',
+          name: 'Compliance Report',
+          description: 'Regulatory compliance assessment',
+          type: 'compliance',
+          format: 'PDF',
+          icon: 'FileBarChart',
+          color: 'text-purple-600 bg-purple-100'
+        }
+      ])
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchReports()
-  }, [fetchReports])
+    fetchTemplates()
+  }, [])
 
   return {
-    reports,
+    templates,
     loading,
     error,
-    refetch: fetchReports,
-    generateReport,
-    downloadReport,
-    scheduleReport
+    fetchTemplates
   }
 }

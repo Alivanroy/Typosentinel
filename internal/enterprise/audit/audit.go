@@ -12,13 +12,13 @@ import (
 
 // AuditLogger provides enterprise audit logging capabilities
 type AuditLogger struct {
-	config    *AuditConfig
-	logger    logger.Logger
-	writers   []AuditWriter
-	buffer    []*AuditEntry
-	bufferMu  sync.Mutex
-	stopChan  chan struct{}
-	wg        sync.WaitGroup
+	config   *AuditConfig
+	logger   logger.Logger
+	writers  []AuditWriter
+	buffer   []*AuditEntry
+	bufferMu sync.Mutex
+	stopChan chan struct{}
+	wg       sync.WaitGroup
 }
 
 // AuditConfig holds audit logging configuration
@@ -60,25 +60,25 @@ type EncryptionConfig struct {
 
 // AuditEntry represents a single audit log entry
 type AuditEntry struct {
-	ID          string                 `json:"id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	EventType   string                 `json:"event_type"`
-	Action      string                 `json:"action"`
-	Resource    string                 `json:"resource"`
-	UserID      string                 `json:"user_id"`
-	UserName    string                 `json:"user_name"`
-	UserRole    string                 `json:"user_role"`
-	SourceIP    string                 `json:"source_ip"`
-	UserAgent   string                 `json:"user_agent"`
-	SessionID   string                 `json:"session_id"`
-	Severity    AuditSeverity          `json:"severity"`
-	Status      string                 `json:"status"`
-	Message     string                 `json:"message"`
-	Details     map[string]interface{} `json:"details"`
-	RiskScore   float64                `json:"risk_score"`
-	Tags        []string               `json:"tags"`
-	CorrelationID string               `json:"correlation_id"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	ID            string                 `json:"id"`
+	Timestamp     time.Time              `json:"timestamp"`
+	EventType     string                 `json:"event_type"`
+	Action        string                 `json:"action"`
+	Resource      string                 `json:"resource"`
+	UserID        string                 `json:"user_id"`
+	UserName      string                 `json:"user_name"`
+	UserRole      string                 `json:"user_role"`
+	SourceIP      string                 `json:"source_ip"`
+	UserAgent     string                 `json:"user_agent"`
+	SessionID     string                 `json:"session_id"`
+	Severity      AuditSeverity          `json:"severity"`
+	Status        string                 `json:"status"`
+	Message       string                 `json:"message"`
+	Details       map[string]interface{} `json:"details"`
+	RiskScore     float64                `json:"risk_score"`
+	Tags          []string               `json:"tags"`
+	CorrelationID string                 `json:"correlation_id"`
+	Metadata      map[string]interface{} `json:"metadata"`
 }
 
 // AuditSeverity represents audit event severity levels
@@ -159,9 +159,9 @@ func (al *AuditLogger) Start(ctx context.Context) error {
 	}
 
 	al.logger.Info("Audit logger started", map[string]interface{}{
-		"writers":         len(al.writers),
-		"buffer_size":     al.config.BufferSize,
-		"flush_interval":  al.config.FlushInterval,
+		"writers":          len(al.writers),
+		"buffer_size":      al.config.BufferSize,
+		"flush_interval":   al.config.FlushInterval,
 		"retention_period": al.config.RetentionPeriod,
 	})
 
@@ -437,15 +437,15 @@ func (al *AuditLogger) GetAuditEntries(ctx context.Context, criteria *AuditSearc
 
 // AuditSearchCriteria defines search criteria for audit entries
 type AuditSearchCriteria struct {
-	StartTime   *time.Time `json:"start_time"`
-	EndTime     *time.Time `json:"end_time"`
-	EventType   string     `json:"event_type"`
-	Action      string     `json:"action"`
-	UserID      string     `json:"user_id"`
-	Resource    string     `json:"resource"`
-	Severity    string     `json:"severity"`
-	Limit       int        `json:"limit"`
-	Offset      int        `json:"offset"`
+	StartTime *time.Time `json:"start_time"`
+	EndTime   *time.Time `json:"end_time"`
+	EventType string     `json:"event_type"`
+	Action    string     `json:"action"`
+	UserID    string     `json:"user_id"`
+	Resource  string     `json:"resource"`
+	Severity  string     `json:"severity"`
+	Limit     int        `json:"limit"`
+	Offset    int        `json:"offset"`
 }
 
 // Helper functions

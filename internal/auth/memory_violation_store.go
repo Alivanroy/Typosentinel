@@ -25,7 +25,7 @@ func (mvs *MemoryViolationStore) CreateViolation(ctx context.Context, violation 
 	if violation == nil {
 		return fmt.Errorf("violation cannot be nil")
 	}
-	
+
 	if violation.ID == "" {
 		return fmt.Errorf("violation ID cannot be empty")
 	}
@@ -76,7 +76,7 @@ func (mvs *MemoryViolationStore) UpdateViolationStatus(ctx context.Context, id s
 
 	// Update the violation status
 	violation.Status = status
-	
+
 	// Add approval record if this is an approval/rejection
 	if status == ViolationStatusApproved || status == ViolationStatusRejected {
 		approval := PolicyApproval{
@@ -91,8 +91,8 @@ func (mvs *MemoryViolationStore) UpdateViolationStatus(ctx context.Context, id s
 	}
 
 	// Set resolved time if the violation is resolved
-	if status == ViolationStatusApproved || status == ViolationStatusRejected || 
-	   status == ViolationStatusRemediated || status == ViolationStatusIgnored {
+	if status == ViolationStatusApproved || status == ViolationStatusRejected ||
+		status == ViolationStatusRemediated || status == ViolationStatusIgnored {
 		now := time.Now()
 		violation.ResolvedAt = &now
 	}

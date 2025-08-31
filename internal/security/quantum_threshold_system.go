@@ -13,7 +13,7 @@ import (
 
 // QuantumThresholdSystem implements quantum-sensitive threshold detection with predictive capabilities
 type QuantumThresholdSystem struct {
-	mu                    sync.RWMutex
+	mu                   sync.RWMutex
 	logger               *logger.Logger
 	quantumStates        map[string]*QuantumState
 	predictiveModels     map[string]*PredictiveModel
@@ -64,13 +64,13 @@ type PredictiveModel struct {
 
 // SuperpositionState represents multiple possible states simultaneously
 type SuperpositionState struct {
-	StateID       string                 `json:"state_id"`
-	PossibleStates []PossibleState       `json:"possible_states"`
-	Coherence     float64                `json:"coherence"`
-	Collapsed     bool                   `json:"collapsed"`
-	CollapseTime  time.Time              `json:"collapse_time"`
-	Observer      string                 `json:"observer"`
-	Metadata      map[string]interface{} `json:"metadata"`
+	StateID        string                 `json:"state_id"`
+	PossibleStates []PossibleState        `json:"possible_states"`
+	Coherence      float64                `json:"coherence"`
+	Collapsed      bool                   `json:"collapsed"`
+	CollapseTime   time.Time              `json:"collapse_time"`
+	Observer       string                 `json:"observer"`
+	Metadata       map[string]interface{} `json:"metadata"`
 }
 
 // PossibleState represents a single possible state in superposition
@@ -84,32 +84,32 @@ type PossibleState struct {
 
 // QuantumSnapshot captures the quantum state at a specific time
 type QuantumSnapshot struct {
-	SnapshotID       string                    `json:"snapshot_id"`
-	Timestamp        time.Time                 `json:"timestamp"`
-	QuantumStates    map[string]*QuantumState  `json:"quantum_states"`
-	Entanglements    map[string]map[string]float64 `json:"entanglements"`
-	CoherenceLevel   float64                   `json:"coherence_level"`
-	SystemEntropy    float64                   `json:"system_entropy"`
-	QuantumEnergy    float64                   `json:"quantum_energy"`
-	PhaseCorrelations map[string]float64       `json:"phase_correlations"`
-	UncertaintyLevel float64                   `json:"uncertainty_level"`
-	Metadata         map[string]interface{}    `json:"metadata"`
+	SnapshotID        string                        `json:"snapshot_id"`
+	Timestamp         time.Time                     `json:"timestamp"`
+	QuantumStates     map[string]*QuantumState      `json:"quantum_states"`
+	Entanglements     map[string]map[string]float64 `json:"entanglements"`
+	CoherenceLevel    float64                       `json:"coherence_level"`
+	SystemEntropy     float64                       `json:"system_entropy"`
+	QuantumEnergy     float64                       `json:"quantum_energy"`
+	PhaseCorrelations map[string]float64            `json:"phase_correlations"`
+	UncertaintyLevel  float64                       `json:"uncertainty_level"`
+	Metadata          map[string]interface{}        `json:"metadata"`
 }
 
 // QuantumPrediction represents a quantum-enhanced prediction
 type QuantumPrediction struct {
-	PredictionID     string                 `json:"prediction_id"`
-	Timestamp        time.Time              `json:"timestamp"`
-	PredictionTime   time.Time              `json:"prediction_time"`
-	MetricName       string                 `json:"metric_name"`
-	PredictedValue   float64                `json:"predicted_value"`
-	Confidence       float64                `json:"confidence"`
-	Uncertainty      float64                `json:"uncertainty"`
-	QuantumFeatures  map[string]float64     `json:"quantum_features"`
-	ProbabilityDist  []float64              `json:"probability_distribution"`
-	ActualValue      *float64               `json:"actual_value,omitempty"`
-	Accuracy         *float64               `json:"accuracy,omitempty"`
-	Metadata         map[string]interface{} `json:"metadata"`
+	PredictionID    string                 `json:"prediction_id"`
+	Timestamp       time.Time              `json:"timestamp"`
+	PredictionTime  time.Time              `json:"prediction_time"`
+	MetricName      string                 `json:"metric_name"`
+	PredictedValue  float64                `json:"predicted_value"`
+	Confidence      float64                `json:"confidence"`
+	Uncertainty     float64                `json:"uncertainty"`
+	QuantumFeatures map[string]float64     `json:"quantum_features"`
+	ProbabilityDist []float64              `json:"probability_distribution"`
+	ActualValue     *float64               `json:"actual_value,omitempty"`
+	Accuracy        *float64               `json:"accuracy,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata"`
 }
 
 // UncertaintyPrinciple implements quantum uncertainty calculations
@@ -153,18 +153,18 @@ type QuantumViolation struct {
 // NewQuantumThresholdSystem creates a new quantum threshold system
 func NewQuantumThresholdSystem(logger *logger.Logger) *QuantumThresholdSystem {
 	return &QuantumThresholdSystem{
-		logger:               logger,
-		quantumStates:        make(map[string]*QuantumState),
-		predictiveModels:     make(map[string]*PredictiveModel),
-		coherenceThreshold:   0.85,
-		entanglementMatrix:   make([][]float64, 0),
-		superpositionStates:  make(map[string]*SuperpositionState),
-		quantumHistory:       make([]*QuantumSnapshot, 0),
-		maxHistorySize:       1000,
-		updateInterval:       time.Minute * 5,
-		predictionHorizon:    time.Hour * 24,
-		quantumSensitivity:   0.0001,
-		phaseCorrelations:    make(map[string]float64),
+		logger:              logger,
+		quantumStates:       make(map[string]*QuantumState),
+		predictiveModels:    make(map[string]*PredictiveModel),
+		coherenceThreshold:  0.85,
+		entanglementMatrix:  make([][]float64, 0),
+		superpositionStates: make(map[string]*SuperpositionState),
+		quantumHistory:      make([]*QuantumSnapshot, 0),
+		maxHistorySize:      1000,
+		updateInterval:      time.Minute * 5,
+		predictionHorizon:   time.Hour * 24,
+		quantumSensitivity:  0.0001,
+		phaseCorrelations:   make(map[string]float64),
 		uncertaintyPrinciple: &UncertaintyPrinciple{
 			PlanckConstant:   6.62607015e-34,
 			UncertaintyPairs: make(map[string][]string),
@@ -558,7 +558,7 @@ func (qts *QuantumThresholdSystem) initializePredictiveModel(metricName string) 
 
 func (qts *QuantumThresholdSystem) generateSinglePrediction(state *QuantumState, model *PredictiveModel) *QuantumPrediction {
 	// Simplified quantum prediction
-	predictedValue := real(state.Amplitude) * model.PredictionWeights[0] +
+	predictedValue := real(state.Amplitude)*model.PredictionWeights[0] +
 		state.Phase*model.PredictionWeights[1] +
 		state.Coherence*model.PredictionWeights[2]
 
@@ -580,7 +580,7 @@ func (qts *QuantumThresholdSystem) generateSinglePrediction(state *QuantumState,
 		},
 		ProbabilityDist: qts.calculateProbabilityDistribution(state),
 		Metadata: map[string]interface{}{
-			"model_id":     model.ModelID,
+			"model_id":      model.ModelID,
 			"quantum_state": state,
 		},
 	}

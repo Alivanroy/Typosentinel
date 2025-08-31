@@ -35,44 +35,44 @@ type MultiVectorCoordinator struct {
 
 // MultiVectorConfig configures multi-vector coordination parameters
 type MultiVectorConfig struct {
-	EnableAttackCorrelation     bool          `yaml:"enable_attack_correlation"`     // true
-	EnableDefenseCoordination   bool          `yaml:"enable_defense_coordination"`   // true
-	EnableThreatIntelligence    bool          `yaml:"enable_threat_intelligence"`    // true
+	EnableAttackCorrelation     bool          `yaml:"enable_attack_correlation"`      // true
+	EnableDefenseCoordination   bool          `yaml:"enable_defense_coordination"`    // true
+	EnableThreatIntelligence    bool          `yaml:"enable_threat_intelligence"`     // true
 	EnableCrossEcosystemMonitor bool          `yaml:"enable_cross_ecosystem_monitor"` // true
-	EnableCampaignDetection     bool          `yaml:"enable_campaign_detection"`     // true
-	EnableResponseOrchestration bool          `yaml:"enable_response_orchestration"` // true
-	CorrelationWindow           time.Duration `yaml:"correlation_window"`            // 24h
-	AttackThreshold             float64       `yaml:"attack_threshold"`              // 0.7
-	CampaignThreshold           float64       `yaml:"campaign_threshold"`            // 0.8
-	ResponseTimeout             time.Duration `yaml:"response_timeout"`              // 30s
-	MaxConcurrentAnalysis       int           `yaml:"max_concurrent_analysis"`       // 10
-	Enabled                     bool          `yaml:"enabled"`                       // true
+	EnableCampaignDetection     bool          `yaml:"enable_campaign_detection"`      // true
+	EnableResponseOrchestration bool          `yaml:"enable_response_orchestration"`  // true
+	CorrelationWindow           time.Duration `yaml:"correlation_window"`             // 24h
+	AttackThreshold             float64       `yaml:"attack_threshold"`               // 0.7
+	CampaignThreshold           float64       `yaml:"campaign_threshold"`             // 0.8
+	ResponseTimeout             time.Duration `yaml:"response_timeout"`               // 30s
+	MaxConcurrentAnalysis       int           `yaml:"max_concurrent_analysis"`        // 10
+	Enabled                     bool          `yaml:"enabled"`                        // true
 }
 
 // MultiVectorAnalysisResult represents multi-vector analysis results
 type MultiVectorAnalysisResult struct {
-	PackageName              string                     `json:"package_name"`
-	OverallThreatScore       float64                    `json:"overall_threat_score"`
-	AttackCorrelation        *AttackCorrelationResult   `json:"attack_correlation"`
-	DefenseCoordination      *DefenseCoordinationResult `json:"defense_coordination"`
-	ThreatIntelligence       *ThreatIntelligenceResult  `json:"threat_intelligence"`
-	CrossEcosystemAnalysis   *CrossEcosystemResult      `json:"cross_ecosystem_analysis"`
-	CampaignDetection        *CampaignDetectionResult   `json:"campaign_detection"`
-	ResponseOrchestration    *ResponseOrchestrationResult `json:"response_orchestration"`
-	DetectedAttackVectors    []AttackVector             `json:"detected_attack_vectors"`
-	CoordinatedThreats       []CoordinatedThreat        `json:"coordinated_threats"`
-	DefenseRecommendations   []DefenseRecommendation    `json:"defense_recommendations"`
-	Metadata                 map[string]interface{}     `json:"metadata"`
+	PackageName            string                       `json:"package_name"`
+	OverallThreatScore     float64                      `json:"overall_threat_score"`
+	AttackCorrelation      *AttackCorrelationResult     `json:"attack_correlation"`
+	DefenseCoordination    *DefenseCoordinationResult   `json:"defense_coordination"`
+	ThreatIntelligence     *ThreatIntelligenceResult    `json:"threat_intelligence"`
+	CrossEcosystemAnalysis *CrossEcosystemResult        `json:"cross_ecosystem_analysis"`
+	CampaignDetection      *CampaignDetectionResult     `json:"campaign_detection"`
+	ResponseOrchestration  *ResponseOrchestrationResult `json:"response_orchestration"`
+	DetectedAttackVectors  []AttackVector               `json:"detected_attack_vectors"`
+	CoordinatedThreats     []CoordinatedThreat          `json:"coordinated_threats"`
+	DefenseRecommendations []DefenseRecommendation      `json:"defense_recommendations"`
+	Metadata               map[string]interface{}       `json:"metadata"`
 }
 
 // AttackCorrelationResult represents attack correlation analysis
 type AttackCorrelationResult struct {
-	CorrelationScore        float64              `json:"correlation_score"`
-	CorrelatedAttacks       []CorrelatedAttack   `json:"correlated_attacks"`
-	AttackPatterns          []AttackPattern      `json:"attack_patterns"`
-	TemporalCorrelations    []TemporalCorrelation `json:"temporal_correlations"`
-	SpatialCorrelations     []SpatialCorrelation `json:"spatial_correlations"`
-	TechnicalCorrelations   []TechnicalCorrelation `json:"technical_correlations"`
+	CorrelationScore      float64                `json:"correlation_score"`
+	CorrelatedAttacks     []CorrelatedAttack     `json:"correlated_attacks"`
+	AttackPatterns        []AttackPattern        `json:"attack_patterns"`
+	TemporalCorrelations  []TemporalCorrelation  `json:"temporal_correlations"`
+	SpatialCorrelations   []SpatialCorrelation   `json:"spatial_correlations"`
+	TechnicalCorrelations []TechnicalCorrelation `json:"technical_correlations"`
 }
 
 // CorrelatedAttack represents correlated attack instances
@@ -87,21 +87,21 @@ type CorrelatedAttack struct {
 
 // AttackPattern represents identified attack patterns
 type AttackPattern struct {
-	PatternID       string    `json:"pattern_id"`
-	PatternType     string    `json:"pattern_type"`
-	Description     string    `json:"description"`
-	Frequency       int       `json:"frequency"`
-	Confidence      float64   `json:"confidence"`
-	FirstSeen       time.Time `json:"first_seen"`
-	LastSeen        time.Time `json:"last_seen"`
-	ThreatActors    []string  `json:"threat_actors"`
+	PatternID    string    `json:"pattern_id"`
+	PatternType  string    `json:"pattern_type"`
+	Description  string    `json:"description"`
+	Frequency    int       `json:"frequency"`
+	Confidence   float64   `json:"confidence"`
+	FirstSeen    time.Time `json:"first_seen"`
+	LastSeen     time.Time `json:"last_seen"`
+	ThreatActors []string  `json:"threat_actors"`
 }
 
 // TemporalCorrelation represents temporal attack correlations
 type TemporalCorrelation struct {
-	TimeWindow      time.Duration `json:"time_window"`
-	AttackCount     int           `json:"attack_count"`
-	CorrelationScore float64      `json:"correlation_score"`
+	TimeWindow         time.Duration       `json:"time_window"`
+	AttackCount        int                 `json:"attack_count"`
+	CorrelationScore   float64             `json:"correlation_score"`
 	SynchronizedEvents []SynchronizedEvent `json:"synchronized_events"`
 }
 
@@ -116,38 +116,38 @@ type SynchronizedEvent struct {
 
 // SpatialCorrelation represents spatial attack correlations
 type SpatialCorrelation struct {
-	GeographicRegion    string  `json:"geographic_region"`
-	AttackDensity       float64 `json:"attack_density"`
-	CorrelationStrength float64 `json:"correlation_strength"`
+	GeographicRegion    string   `json:"geographic_region"`
+	AttackDensity       float64  `json:"attack_density"`
+	CorrelationStrength float64  `json:"correlation_strength"`
 	AffectedEcosystems  []string `json:"affected_ecosystems"`
 }
 
 // TechnicalCorrelation represents technical attack correlations
 type TechnicalCorrelation struct {
-	TechnicalIndicator  string  `json:"technical_indicator"`
-	IndicatorType       string  `json:"indicator_type"`
-	CorrelationStrength float64 `json:"correlation_strength"`
+	TechnicalIndicator  string   `json:"technical_indicator"`
+	IndicatorType       string   `json:"indicator_type"`
+	CorrelationStrength float64  `json:"correlation_strength"`
 	AffectedPackages    []string `json:"affected_packages"`
 	AttackTechniques    []string `json:"attack_techniques"`
 }
 
 // DefenseCoordinationResult represents defense coordination results
 type DefenseCoordinationResult struct {
-	CoordinationScore       float64                `json:"coordination_score"`
-	ActiveDefenses          []ActiveDefense        `json:"active_defenses"`
-	DefenseGaps             []DefenseGap           `json:"defense_gaps"`
-	CoordinatedResponses    []CoordinatedResponse  `json:"coordinated_responses"`
-	DefenseEffectiveness    float64                `json:"defense_effectiveness"`
+	CoordinationScore    float64               `json:"coordination_score"`
+	ActiveDefenses       []ActiveDefense       `json:"active_defenses"`
+	DefenseGaps          []DefenseGap          `json:"defense_gaps"`
+	CoordinatedResponses []CoordinatedResponse `json:"coordinated_responses"`
+	DefenseEffectiveness float64               `json:"defense_effectiveness"`
 }
 
 // ActiveDefense represents active defense mechanisms
 type ActiveDefense struct {
-	DefenseType     string    `json:"defense_type"`
-	Status          string    `json:"status"`
-	Effectiveness   float64   `json:"effectiveness"`
-	Coverage        []string  `json:"coverage"`
-	LastActivated   time.Time `json:"last_activated"`
-	ResponseTime    time.Duration `json:"response_time"`
+	DefenseType   string        `json:"defense_type"`
+	Status        string        `json:"status"`
+	Effectiveness float64       `json:"effectiveness"`
+	Coverage      []string      `json:"coverage"`
+	LastActivated time.Time     `json:"last_activated"`
+	ResponseTime  time.Duration `json:"response_time"`
 }
 
 // DefenseGap represents identified defense gaps
@@ -161,12 +161,12 @@ type DefenseGap struct {
 
 // CoordinatedResponse represents coordinated defense responses
 type CoordinatedResponse struct {
-	ResponseID      string    `json:"response_id"`
-	ResponseType    string    `json:"response_type"`
-	TriggerEvent    string    `json:"trigger_event"`
-	Actions         []string  `json:"actions"`
-	Effectiveness   float64   `json:"effectiveness"`
-	ExecutionTime   time.Time `json:"execution_time"`
+	ResponseID    string    `json:"response_id"`
+	ResponseType  string    `json:"response_type"`
+	TriggerEvent  string    `json:"trigger_event"`
+	Actions       []string  `json:"actions"`
+	Effectiveness float64   `json:"effectiveness"`
+	ExecutionTime time.Time `json:"execution_time"`
 }
 
 // ThreatIntelligenceResult represents threat intelligence analysis
@@ -180,79 +180,79 @@ type ThreatIntelligenceResult struct {
 
 // ThreatActor represents identified threat actors
 type ThreatActor struct {
-	ActorID         string    `json:"actor_id"`
-	ActorName       string    `json:"actor_name"`
-	ThreatLevel     string    `json:"threat_level"`
-	Capabilities    []string  `json:"capabilities"`
-	KnownTTPs       []string  `json:"known_ttps"`
-	LastActivity    time.Time `json:"last_activity"`
-	Attribution     float64   `json:"attribution"`
+	ActorID      string    `json:"actor_id"`
+	ActorName    string    `json:"actor_name"`
+	ThreatLevel  string    `json:"threat_level"`
+	Capabilities []string  `json:"capabilities"`
+	KnownTTPs    []string  `json:"known_ttps"`
+	LastActivity time.Time `json:"last_activity"`
+	Attribution  float64   `json:"attribution"`
 }
 
 // AttackCampaign represents identified attack campaigns
 type AttackCampaign struct {
-	CampaignID      string    `json:"campaign_id"`
-	CampaignName    string    `json:"campaign_name"`
-	StartDate       time.Time `json:"start_date"`
+	CampaignID      string     `json:"campaign_id"`
+	CampaignName    string     `json:"campaign_name"`
+	StartDate       time.Time  `json:"start_date"`
 	EndDate         *time.Time `json:"end_date"`
-	ThreatActor     string    `json:"threat_actor"`
-	Objectives      []string  `json:"objectives"`
-	Techniques      []string  `json:"techniques"`
-	AffectedTargets []string  `json:"affected_targets"`
+	ThreatActor     string     `json:"threat_actor"`
+	Objectives      []string   `json:"objectives"`
+	Techniques      []string   `json:"techniques"`
+	AffectedTargets []string   `json:"affected_targets"`
 }
 
 // ThreatIndicator represents threat indicators
 type ThreatIndicator struct {
-	IndicatorType   string    `json:"indicator_type"`
-	IndicatorValue  string    `json:"indicator_value"`
-	Confidence      float64   `json:"confidence"`
-	ThreatLevel     string    `json:"threat_level"`
-	FirstSeen       time.Time `json:"first_seen"`
-	LastSeen        time.Time `json:"last_seen"`
-	Sources         []string  `json:"sources"`
+	IndicatorType  string    `json:"indicator_type"`
+	IndicatorValue string    `json:"indicator_value"`
+	Confidence     float64   `json:"confidence"`
+	ThreatLevel    string    `json:"threat_level"`
+	FirstSeen      time.Time `json:"first_seen"`
+	LastSeen       time.Time `json:"last_seen"`
+	Sources        []string  `json:"sources"`
 }
 
 // AttributionAnalysis represents threat attribution analysis
 type AttributionAnalysis struct {
-	PrimaryAttribution   string             `json:"primary_attribution"`
-	AttributionConfidence float64           `json:"attribution_confidence"`
-	AlternativeAttributions []Attribution  `json:"alternative_attributions"`
-	AttributionFactors   []AttributionFactor `json:"attribution_factors"`
+	PrimaryAttribution      string              `json:"primary_attribution"`
+	AttributionConfidence   float64             `json:"attribution_confidence"`
+	AlternativeAttributions []Attribution       `json:"alternative_attributions"`
+	AttributionFactors      []AttributionFactor `json:"attribution_factors"`
 }
 
 // Attribution represents threat attribution
 type Attribution struct {
-	ThreatActor string  `json:"threat_actor"`
-	Confidence  float64 `json:"confidence"`
+	ThreatActor string   `json:"threat_actor"`
+	Confidence  float64  `json:"confidence"`
 	Evidence    []string `json:"evidence"`
 }
 
 // AttributionFactor represents attribution factors
 type AttributionFactor struct {
-	FactorType  string  `json:"factor_type"`
-	Weight      float64 `json:"weight"`
-	Evidence    string  `json:"evidence"`
-	Confidence  float64 `json:"confidence"`
+	FactorType string  `json:"factor_type"`
+	Weight     float64 `json:"weight"`
+	Evidence   string  `json:"evidence"`
+	Confidence float64 `json:"confidence"`
 }
 
 // CrossEcosystemResult represents cross-ecosystem analysis
 type CrossEcosystemResult struct {
-	EcosystemsAnalyzed      []string                `json:"ecosystems_analyzed"`
-	CrossEcosystemThreats   []CrossEcosystemThreat  `json:"cross_ecosystem_threats"`
-	EcosystemCorrelations   []EcosystemCorrelation  `json:"ecosystem_correlations"`
-	SupplyChainRisks        []SupplyChainRisk       `json:"supply_chain_risks"`
+	EcosystemsAnalyzed      []string                 `json:"ecosystems_analyzed"`
+	CrossEcosystemThreats   []CrossEcosystemThreat   `json:"cross_ecosystem_threats"`
+	EcosystemCorrelations   []EcosystemCorrelation   `json:"ecosystem_correlations"`
+	SupplyChainRisks        []SupplyChainRisk        `json:"supply_chain_risks"`
 	CrossPlatformIndicators []CrossPlatformIndicator `json:"cross_platform_indicators"`
 }
 
 // CrossEcosystemThreat represents cross-ecosystem threats
 type CrossEcosystemThreat struct {
-	ThreatID            string    `json:"threat_id"`
-	ThreatType          string    `json:"threat_type"`
-	AffectedEcosystems  []string  `json:"affected_ecosystems"`
-	CoordinationLevel   string    `json:"coordination_level"`
-	ThreatSeverity      string    `json:"threat_severity"`
-	FirstDetected       time.Time `json:"first_detected"`
-	PropagationVector   string    `json:"propagation_vector"`
+	ThreatID           string    `json:"threat_id"`
+	ThreatType         string    `json:"threat_type"`
+	AffectedEcosystems []string  `json:"affected_ecosystems"`
+	CoordinationLevel  string    `json:"coordination_level"`
+	ThreatSeverity     string    `json:"threat_severity"`
+	FirstDetected      time.Time `json:"first_detected"`
+	PropagationVector  string    `json:"propagation_vector"`
 }
 
 // EcosystemCorrelation represents ecosystem correlations
@@ -265,152 +265,152 @@ type EcosystemCorrelation struct {
 
 // SupplyChainRisk represents supply chain risks
 type SupplyChainRisk struct {
-	RiskType        string   `json:"risk_type"`
-	RiskLevel       string   `json:"risk_level"`
-	AffectedChain   []string `json:"affected_chain"`
-	ImpactRadius    int      `json:"impact_radius"`
-	Mitigation      []string `json:"mitigation"`
+	RiskType      string   `json:"risk_type"`
+	RiskLevel     string   `json:"risk_level"`
+	AffectedChain []string `json:"affected_chain"`
+	ImpactRadius  int      `json:"impact_radius"`
+	Mitigation    []string `json:"mitigation"`
 }
 
 // CrossPlatformIndicator represents cross-platform indicators
 type CrossPlatformIndicator struct {
-	IndicatorType   string   `json:"indicator_type"`
-	Platforms       []string `json:"platforms"`
-	IndicatorValue  string   `json:"indicator_value"`
-	ThreatLevel     string   `json:"threat_level"`
-	Confidence      float64  `json:"confidence"`
+	IndicatorType  string   `json:"indicator_type"`
+	Platforms      []string `json:"platforms"`
+	IndicatorValue string   `json:"indicator_value"`
+	ThreatLevel    string   `json:"threat_level"`
+	Confidence     float64  `json:"confidence"`
 }
 
 // CampaignDetectionResult represents campaign detection results
 type CampaignDetectionResult struct {
-	DetectedCampaigns   []DetectedCampaign   `json:"detected_campaigns"`
-	CampaignPatterns    []CampaignPattern    `json:"campaign_patterns"`
-	StagedAttacks       []StagedAttack       `json:"staged_attacks"`
-	CampaignMetrics     *CampaignMetrics     `json:"campaign_metrics"`
+	DetectedCampaigns []DetectedCampaign `json:"detected_campaigns"`
+	CampaignPatterns  []CampaignPattern  `json:"campaign_patterns"`
+	StagedAttacks     []StagedAttack     `json:"staged_attacks"`
+	CampaignMetrics   *CampaignMetrics   `json:"campaign_metrics"`
 }
 
 // DetectedCampaign represents detected attack campaigns
 type DetectedCampaign struct {
-	CampaignID      string    `json:"campaign_id"`
-	CampaignType    string    `json:"campaign_type"`
-	Stage           string    `json:"stage"`
-	Confidence      float64   `json:"confidence"`
-	StartTime       time.Time `json:"start_time"`
-	Duration        time.Duration `json:"duration"`
-	AttackVectors   []string  `json:"attack_vectors"`
-	TargetedAssets  []string  `json:"targeted_assets"`
+	CampaignID     string        `json:"campaign_id"`
+	CampaignType   string        `json:"campaign_type"`
+	Stage          string        `json:"stage"`
+	Confidence     float64       `json:"confidence"`
+	StartTime      time.Time     `json:"start_time"`
+	Duration       time.Duration `json:"duration"`
+	AttackVectors  []string      `json:"attack_vectors"`
+	TargetedAssets []string      `json:"targeted_assets"`
 }
 
 // CampaignPattern represents campaign patterns
 type CampaignPattern struct {
-	PatternID       string    `json:"pattern_id"`
-	PatternName     string    `json:"pattern_name"`
-	Stages          []string  `json:"stages"`
-	Duration        time.Duration `json:"duration"`
-	SuccessRate     float64   `json:"success_rate"`
-	ThreatActors    []string  `json:"threat_actors"`
+	PatternID    string        `json:"pattern_id"`
+	PatternName  string        `json:"pattern_name"`
+	Stages       []string      `json:"stages"`
+	Duration     time.Duration `json:"duration"`
+	SuccessRate  float64       `json:"success_rate"`
+	ThreatActors []string      `json:"threat_actors"`
 }
 
 // StagedAttack represents staged attack sequences
 type StagedAttack struct {
-	AttackID        string       `json:"attack_id"`
-	Stages          []AttackStage `json:"stages"`
-	CurrentStage    int          `json:"current_stage"`
-	Progression     float64      `json:"progression"`
-	NextStageETA    *time.Time   `json:"next_stage_eta"`
+	AttackID     string        `json:"attack_id"`
+	Stages       []AttackStage `json:"stages"`
+	CurrentStage int           `json:"current_stage"`
+	Progression  float64       `json:"progression"`
+	NextStageETA *time.Time    `json:"next_stage_eta"`
 }
 
 // AttackStage represents individual attack stages
 type AttackStage struct {
-	StageNumber     int       `json:"stage_number"`
-	StageName       string    `json:"stage_name"`
-	Status          string    `json:"status"`
-	StartTime       *time.Time `json:"start_time"`
-	EndTime         *time.Time `json:"end_time"`
-	Objectives      []string  `json:"objectives"`
-	Techniques      []string  `json:"techniques"`
-	Success         bool      `json:"success"`
+	StageNumber int        `json:"stage_number"`
+	StageName   string     `json:"stage_name"`
+	Status      string     `json:"status"`
+	StartTime   *time.Time `json:"start_time"`
+	EndTime     *time.Time `json:"end_time"`
+	Objectives  []string   `json:"objectives"`
+	Techniques  []string   `json:"techniques"`
+	Success     bool       `json:"success"`
 }
 
 // CampaignMetrics represents campaign detection metrics
 type CampaignMetrics struct {
-	TotalCampaigns      int     `json:"total_campaigns"`
-	ActiveCampaigns     int     `json:"active_campaigns"`
-	CompletedCampaigns  int     `json:"completed_campaigns"`
+	TotalCampaigns       int           `json:"total_campaigns"`
+	ActiveCampaigns      int           `json:"active_campaigns"`
+	CompletedCampaigns   int           `json:"completed_campaigns"`
 	AverageDetectionTime time.Duration `json:"average_detection_time"`
-	DetectionAccuracy   float64 `json:"detection_accuracy"`
+	DetectionAccuracy    float64       `json:"detection_accuracy"`
 }
 
 // ResponseOrchestrationResult represents response orchestration results
 type ResponseOrchestrationResult struct {
-	OrchestrationScore  float64              `json:"orchestration_score"`
-	ActiveResponses     []ActiveResponse     `json:"active_responses"`
-	ResponseChains      []ResponseChain      `json:"response_chains"`
-	AutomatedActions    []AutomatedAction    `json:"automated_actions"`
-	EscalationPaths     []EscalationPath     `json:"escalation_paths"`
+	OrchestrationScore float64           `json:"orchestration_score"`
+	ActiveResponses    []ActiveResponse  `json:"active_responses"`
+	ResponseChains     []ResponseChain   `json:"response_chains"`
+	AutomatedActions   []AutomatedAction `json:"automated_actions"`
+	EscalationPaths    []EscalationPath  `json:"escalation_paths"`
 }
 
 // ActiveResponse represents active response mechanisms
 type ActiveResponse struct {
-	ResponseID      string    `json:"response_id"`
-	ResponseType    string    `json:"response_type"`
-	Status          string    `json:"status"`
-	TriggerEvent    string    `json:"trigger_event"`
-	Actions         []string  `json:"actions"`
-	Effectiveness   float64   `json:"effectiveness"`
-	StartTime       time.Time `json:"start_time"`
-	Duration        time.Duration `json:"duration"`
+	ResponseID    string        `json:"response_id"`
+	ResponseType  string        `json:"response_type"`
+	Status        string        `json:"status"`
+	TriggerEvent  string        `json:"trigger_event"`
+	Actions       []string      `json:"actions"`
+	Effectiveness float64       `json:"effectiveness"`
+	StartTime     time.Time     `json:"start_time"`
+	Duration      time.Duration `json:"duration"`
 }
 
 // ResponseChain represents response chains
 type ResponseChain struct {
-	ChainID         string     `json:"chain_id"`
-	ChainType       string     `json:"chain_type"`
-	Responses       []string   `json:"responses"`
-	ExecutionOrder  []int      `json:"execution_order"`
-	Dependencies    []string   `json:"dependencies"`
-	Success         bool       `json:"success"`
+	ChainID        string   `json:"chain_id"`
+	ChainType      string   `json:"chain_type"`
+	Responses      []string `json:"responses"`
+	ExecutionOrder []int    `json:"execution_order"`
+	Dependencies   []string `json:"dependencies"`
+	Success        bool     `json:"success"`
 }
 
 // AutomatedAction represents automated actions
 type AutomatedAction struct {
-	ActionID        string    `json:"action_id"`
-	ActionType      string    `json:"action_type"`
-	TriggerCondition string   `json:"trigger_condition"`
-	ExecutionTime   time.Time `json:"execution_time"`
-	Result          string    `json:"result"`
-	Effectiveness   float64   `json:"effectiveness"`
+	ActionID         string    `json:"action_id"`
+	ActionType       string    `json:"action_type"`
+	TriggerCondition string    `json:"trigger_condition"`
+	ExecutionTime    time.Time `json:"execution_time"`
+	Result           string    `json:"result"`
+	Effectiveness    float64   `json:"effectiveness"`
 }
 
 // EscalationPath represents escalation paths
 type EscalationPath struct {
-	PathID          string    `json:"path_id"`
-	TriggerSeverity string    `json:"trigger_severity"`
-	EscalationSteps []string  `json:"escalation_steps"`
-	Stakeholders    []string  `json:"stakeholders"`
+	PathID          string        `json:"path_id"`
+	TriggerSeverity string        `json:"trigger_severity"`
+	EscalationSteps []string      `json:"escalation_steps"`
+	Stakeholders    []string      `json:"stakeholders"`
 	Timeline        time.Duration `json:"timeline"`
 }
 
 // AttackVector represents attack vectors
 type AttackVector struct {
-	VectorID        string    `json:"vector_id"`
-	VectorType      string    `json:"vector_type"`
-	Severity        string    `json:"severity"`
-	Description     string    `json:"description"`
+	VectorID         string                 `json:"vector_id"`
+	VectorType       string                 `json:"vector_type"`
+	Severity         string                 `json:"severity"`
+	Description      string                 `json:"description"`
 	TechnicalDetails map[string]interface{} `json:"technical_details"`
-	Indicators      []string  `json:"indicators"`
-	DetectionTime   time.Time `json:"detection_time"`
+	Indicators       []string               `json:"indicators"`
+	DetectionTime    time.Time              `json:"detection_time"`
 }
 
 // CoordinatedThreat represents coordinated threats
 type CoordinatedThreat struct {
-	ThreatID        string       `json:"threat_id"`
-	ThreatType      string       `json:"threat_type"`
-	CoordinationLevel string     `json:"coordination_level"`
-	AttackVectors   []string     `json:"attack_vectors"`
-	ThreatActors    []string     `json:"threat_actors"`
-	Timeline        []ThreatEvent `json:"timeline"`
-	ImpactAssessment *ImpactAssessment `json:"impact_assessment"`
+	ThreatID          string            `json:"threat_id"`
+	ThreatType        string            `json:"threat_type"`
+	CoordinationLevel string            `json:"coordination_level"`
+	AttackVectors     []string          `json:"attack_vectors"`
+	ThreatActors      []string          `json:"threat_actors"`
+	Timeline          []ThreatEvent     `json:"timeline"`
+	ImpactAssessment  *ImpactAssessment `json:"impact_assessment"`
 }
 
 // ThreatEvent represents threat timeline events
@@ -425,133 +425,133 @@ type ThreatEvent struct {
 
 // ImpactAssessment represents threat impact assessment
 type ImpactAssessment struct {
-	ImpactLevel     string   `json:"impact_level"`
-	AffectedSystems []string `json:"affected_systems"`
-	BusinessImpact  string   `json:"business_impact"`
-	TechnicalImpact string   `json:"technical_impact"`
+	ImpactLevel     string        `json:"impact_level"`
+	AffectedSystems []string      `json:"affected_systems"`
+	BusinessImpact  string        `json:"business_impact"`
+	TechnicalImpact string        `json:"technical_impact"`
 	RecoveryTime    time.Duration `json:"recovery_time"`
 }
 
 // DefenseRecommendation represents defense recommendations
 type DefenseRecommendation struct {
-	RecommendationID   string   `json:"recommendation_id"`
-	RecommendationType string   `json:"recommendation_type"`
-	Priority           string   `json:"priority"`
-	Description        string   `json:"description"`
-	Actions            []string `json:"actions"`
+	RecommendationID   string        `json:"recommendation_id"`
+	RecommendationType string        `json:"recommendation_type"`
+	Priority           string        `json:"priority"`
+	Description        string        `json:"description"`
+	Actions            []string      `json:"actions"`
 	Timeline           time.Duration `json:"timeline"`
-	Resources          []string `json:"resources"`
-	Effectiveness      float64  `json:"effectiveness"`
+	Resources          []string      `json:"resources"`
+	Effectiveness      float64       `json:"effectiveness"`
 }
 
 // Component structures
 
 type AttackCorrelator struct {
-	correlationWindow   time.Duration
-	attackDatabase      map[string]AttackRecord
-	patternMatcher      *PatternMatcher
-	temporalAnalyzer    *TemporalAnalyzer
-	spatialAnalyzer     *SpatialAnalyzer
-	technicalAnalyzer   *TechnicalAnalyzer
-	mutex               sync.RWMutex
+	correlationWindow time.Duration
+	attackDatabase    map[string]AttackRecord
+	patternMatcher    *PatternMatcher
+	temporalAnalyzer  *TemporalAnalyzer
+	spatialAnalyzer   *SpatialAnalyzer
+	technicalAnalyzer *TechnicalAnalyzer
+	mutex             sync.RWMutex
 }
 
 type AttackRecord struct {
-	AttackID        string
-	AttackType      string
-	Timestamp       time.Time
-	Indicators      []string
-	TechnicalData   map[string]interface{}
-	GeographicData  map[string]interface{}
-	Ecosystem       string
+	AttackID       string
+	AttackType     string
+	Timestamp      time.Time
+	Indicators     []string
+	TechnicalData  map[string]interface{}
+	GeographicData map[string]interface{}
+	Ecosystem      string
 }
 
 type PatternMatcher struct {
-	patterns        []AttackPattern
-	matchThreshold  float64
+	patterns       []AttackPattern
+	matchThreshold float64
 }
 
 type TemporalAnalyzer struct {
-	timeWindows     []time.Duration
-	syncThreshold   float64
+	timeWindows   []time.Duration
+	syncThreshold float64
 }
 
 type SpatialAnalyzer struct {
-	regions         []string
+	regions          []string
 	densityThreshold float64
 }
 
 type TechnicalAnalyzer struct {
-	indicators      []string
+	indicators       []string
 	correlationRules []CorrelationRule
 }
 
 type CorrelationRule struct {
-	RuleID      string
-	Conditions  []string
-	Threshold   float64
-	Action      string
+	RuleID     string
+	Conditions []string
+	Threshold  float64
+	Action     string
 }
 
 type DefenseCoordinator struct {
-	defenseRegistry     map[string]DefenseSystem
-	coordinationRules   []CoordinationRule
-	responseTemplates   []ResponseTemplate
+	defenseRegistry      map[string]DefenseSystem
+	coordinationRules    []CoordinationRule
+	responseTemplates    []ResponseTemplate
 	effectivenessTracker *EffectivenessTracker
 }
 
 type DefenseSystem struct {
-	SystemID        string
-	SystemType      string
-	Status          string
-	Capabilities    []string
-	ResponseTime    time.Duration
-	Effectiveness   float64
+	SystemID      string
+	SystemType    string
+	Status        string
+	Capabilities  []string
+	ResponseTime  time.Duration
+	Effectiveness float64
 }
 
 type CoordinationRule struct {
-	RuleID          string
+	RuleID           string
 	TriggerCondition string
-	DefenseSystems  []string
-	Actions         []string
-	Priority        int
+	DefenseSystems   []string
+	Actions          []string
+	Priority         int
 }
 
 type ResponseTemplate struct {
-	TemplateID      string
-	ThreatType      string
-	ResponseSteps   []string
-	Timeline        time.Duration
-	Resources       []string
+	TemplateID    string
+	ThreatType    string
+	ResponseSteps []string
+	Timeline      time.Duration
+	Resources     []string
 }
 
 type EffectivenessTracker struct {
-	metrics         map[string]float64
-	historicalData  []EffectivenessRecord
+	metrics        map[string]float64
+	historicalData []EffectivenessRecord
 }
 
 type EffectivenessRecord struct {
-	Timestamp       time.Time
-	DefenseSystem   string
-	ThreatType      string
-	Effectiveness   float64
-	ResponseTime    time.Duration
+	Timestamp     time.Time
+	DefenseSystem string
+	ThreatType    string
+	Effectiveness float64
+	ResponseTime  time.Duration
 }
 
 type ThreatIntelligence struct {
-	intelSources        []IntelSource
-	actorDatabase       map[string]ThreatActor
-	campaignDatabase    map[string]AttackCampaign
-	indicatorDatabase   map[string]ThreatIndicator
-	attributionEngine   *AttributionEngine
+	intelSources      []IntelSource
+	actorDatabase     map[string]ThreatActor
+	campaignDatabase  map[string]AttackCampaign
+	indicatorDatabase map[string]ThreatIndicator
+	attributionEngine *AttributionEngine
 }
 
 type IntelSource struct {
-	SourceID        string
-	SourceType      string
-	Reliability     float64
-	LastUpdate      time.Time
-	APIEndpoint     string
+	SourceID    string
+	SourceType  string
+	Reliability float64
+	LastUpdate  time.Time
+	APIEndpoint string
 }
 
 type AttributionEngine struct {
@@ -560,11 +560,11 @@ type AttributionEngine struct {
 }
 
 type AttributionRule struct {
-	RuleID          string
-	Indicators      []string
-	ThreatActor     string
-	Weight          float64
-	Confidence      float64
+	RuleID      string
+	Indicators  []string
+	ThreatActor string
+	Weight      float64
+	Confidence  float64
 }
 
 type CrossEcosystemMonitor struct {
@@ -575,78 +575,78 @@ type CrossEcosystemMonitor struct {
 }
 
 type ThreatPropagationModel struct {
-	propagationRules    []PropagationRule
-	velocityThreshold   float64
+	propagationRules  []PropagationRule
+	velocityThreshold float64
 }
 
 type PropagationRule struct {
-	SourceEcosystem     string
-	TargetEcosystem     string
-	PropagationVector   string
-	Probability         float64
-	TimeDelay           time.Duration
+	SourceEcosystem   string
+	TargetEcosystem   string
+	PropagationVector string
+	Probability       float64
+	TimeDelay         time.Duration
 }
 
 type SupplyChainAnalyzer struct {
-	dependencyGraphs    map[string]*types.DependencyGraph
-	riskAssessment      *RiskAssessment
+	dependencyGraphs map[string]*types.DependencyGraph
+	riskAssessment   *RiskAssessment
 }
 
 type DependencyEdge struct {
-	Source      string
-	Target      string
+	Source       string
+	Target       string
 	Relationship string
-	Weight      float64
+	Weight       float64
 }
 
 type RiskAssessment struct {
-	riskFactors     []RiskFactor
-	riskMatrix      map[string]float64
+	riskFactors []RiskFactor
+	riskMatrix  map[string]float64
 }
 
 type RiskFactor struct {
-	FactorType  string
-	Weight      float64
-	Threshold   float64
+	FactorType string
+	Weight     float64
+	Threshold  float64
 }
 
 type CampaignDetector struct {
-	campaignPatterns    []CampaignPattern
-	stageDetector       *StageDetector
-	progressionTracker  *ProgressionTracker
+	campaignPatterns   []CampaignPattern
+	stageDetector      *StageDetector
+	progressionTracker *ProgressionTracker
 }
 
 type StageDetector struct {
-	stageSignatures     []StageSignature
-	transitionRules     []TransitionRule
+	stageSignatures []StageSignature
+	transitionRules []TransitionRule
 }
 
 type StageSignature struct {
-	StageID         string
-	StageName       string
-	Indicators      []string
-	Duration        time.Duration
-	Confidence      float64
+	StageID    string
+	StageName  string
+	Indicators []string
+	Duration   time.Duration
+	Confidence float64
 }
 
 type TransitionRule struct {
-	FromStage       string
-	ToStage         string
-	Conditions      []string
-	Probability     float64
+	FromStage   string
+	ToStage     string
+	Conditions  []string
+	Probability float64
 }
 
 type ProgressionTracker struct {
-	activeCampaigns     map[string]CampaignProgress
-	progressionRules    []ProgressionRule
+	activeCampaigns  map[string]CampaignProgress
+	progressionRules []ProgressionRule
 }
 
 type CampaignProgress struct {
-	CampaignID      string
-	CurrentStage    int
-	Progression     float64
-	StartTime       time.Time
-	LastUpdate      time.Time
+	CampaignID   string
+	CurrentStage int
+	Progression  float64
+	StartTime    time.Time
+	LastUpdate   time.Time
 }
 
 type ProgressionRule struct {
@@ -657,47 +657,47 @@ type ProgressionRule struct {
 }
 
 type ResponseOrchestrator struct {
-	responseRegistry    map[string]ResponseSystem
-	orchestrationRules  []OrchestrationRule
-	automationEngine    *AutomationEngine
-	escalationManager   *EscalationManager
+	responseRegistry   map[string]ResponseSystem
+	orchestrationRules []OrchestrationRule
+	automationEngine   *AutomationEngine
+	escalationManager  *EscalationManager
 }
 
 type ResponseSystem struct {
-	SystemID        string
-	SystemType      string
-	Capabilities    []string
-	Status          string
-	ResponseTime    time.Duration
+	SystemID     string
+	SystemType   string
+	Capabilities []string
+	Status       string
+	ResponseTime time.Duration
 }
 
 type OrchestrationRule struct {
-	RuleID          string
-	TriggerEvent    string
-	ResponseChain   []string
-	Priority        int
-	Conditions      []string
+	RuleID        string
+	TriggerEvent  string
+	ResponseChain []string
+	Priority      int
+	Conditions    []string
 }
 
 type AutomationEngine struct {
-	automationRules     []AutomationRule
-	executionQueue      []AutomationTask
+	automationRules []AutomationRule
+	executionQueue  []AutomationTask
 }
 
 type AutomationRule struct {
-	RuleID          string
+	RuleID           string
 	TriggerCondition string
-	Actions         []string
-	Priority        int
-	Enabled         bool
+	Actions          []string
+	Priority         int
+	Enabled          bool
 }
 
 type AutomationTask struct {
-	TaskID          string
-	TaskType        string
-	Parameters      map[string]interface{}
-	ScheduledTime   time.Time
-	Status          string
+	TaskID        string
+	TaskType      string
+	Parameters    map[string]interface{}
+	ScheduledTime time.Time
+	Status        string
 }
 
 type EscalationManager struct {
@@ -706,16 +706,16 @@ type EscalationManager struct {
 }
 
 type Stakeholder struct {
-	StakeholderID   string
-	Name            string
-	Role            string
-	ContactInfo     map[string]string
-	Availability    []TimeWindow
+	StakeholderID string
+	Name          string
+	Role          string
+	ContactInfo   map[string]string
+	Availability  []TimeWindow
 }
 
 type TimeWindow struct {
-	Start   time.Time
-	End     time.Time
+	Start    time.Time
+	End      time.Time
 	Timezone string
 }
 
@@ -889,9 +889,9 @@ func (mvc *MultiVectorCoordinator) performDefenseCoordination(ctx context.Contex
 // performThreatIntelligence performs threat intelligence analysis
 func (mvc *MultiVectorCoordinator) performThreatIntelligence(ctx context.Context, pkg *types.Package) *ThreatIntelligenceResult {
 	result := &ThreatIntelligenceResult{
-		ThreatActors:     []ThreatActor{},
-		AttackCampaigns:  []AttackCampaign{},
-		ThreatIndicators: []ThreatIndicator{},
+		ThreatActors:        []ThreatActor{},
+		AttackCampaigns:     []AttackCampaign{},
+		ThreatIndicators:    []ThreatIndicator{},
 		AttributionAnalysis: &AttributionAnalysis{},
 	}
 
@@ -1109,13 +1109,13 @@ func (mvc *MultiVectorCoordinator) extractAttackVectors(result *MultiVectorAnaly
 	if result.AttackCorrelation != nil {
 		for _, attack := range result.AttackCorrelation.CorrelatedAttacks {
 			vector := AttackVector{
-				VectorID:        attack.AttackID,
-				VectorType:      attack.AttackType,
-				Severity:        mvc.determineSeverity(attack.CorrelationStrength),
-				Description:     fmt.Sprintf("Correlated attack: %s", attack.AttackType),
+				VectorID:         attack.AttackID,
+				VectorType:       attack.AttackType,
+				Severity:         mvc.determineSeverity(attack.CorrelationStrength),
+				Description:      fmt.Sprintf("Correlated attack: %s", attack.AttackType),
 				TechnicalDetails: make(map[string]interface{}),
-				Indicators:      attack.SharedIndicators,
-				DetectionTime:   attack.Timestamp,
+				Indicators:       attack.SharedIndicators,
+				DetectionTime:    attack.Timestamp,
 			}
 			vectors = append(vectors, vector)
 		}
@@ -1205,12 +1205,12 @@ func (mvc *MultiVectorCoordinator) determineCoordinationLevel(confidence float64
 
 func NewAttackCorrelator(correlationWindow time.Duration) *AttackCorrelator {
 	return &AttackCorrelator{
-		correlationWindow:  correlationWindow,
-		attackDatabase:     make(map[string]AttackRecord),
-		patternMatcher:     &PatternMatcher{matchThreshold: 0.7},
-		temporalAnalyzer:   &TemporalAnalyzer{syncThreshold: 0.8},
-		spatialAnalyzer:    &SpatialAnalyzer{densityThreshold: 0.6},
-		technicalAnalyzer:  &TechnicalAnalyzer{},
+		correlationWindow: correlationWindow,
+		attackDatabase:    make(map[string]AttackRecord),
+		patternMatcher:    &PatternMatcher{matchThreshold: 0.7},
+		temporalAnalyzer:  &TemporalAnalyzer{syncThreshold: 0.8},
+		spatialAnalyzer:   &SpatialAnalyzer{densityThreshold: 0.6},
+		technicalAnalyzer: &TechnicalAnalyzer{},
 	}
 }
 
@@ -1263,11 +1263,11 @@ func NewResponseOrchestrator() *ResponseOrchestrator {
 
 func (ac *AttackCorrelator) correlateAttacks(pkg *types.Package) []CorrelatedAttack {
 	var correlatedAttacks []CorrelatedAttack
-	
+
 	// Analyze package for attack indicators
 	packageName := pkg.Name
 	currentTime := time.Now()
-	
+
 	// Check for typosquatting correlations
 	if ac.isTyposquattingCandidate(packageName) {
 		correlatedAttacks = append(correlatedAttacks, CorrelatedAttack{
@@ -1279,7 +1279,7 @@ func (ac *AttackCorrelator) correlateAttacks(pkg *types.Package) []CorrelatedAtt
 			SharedIndicators:    []string{"similar_name", "recent_creation", "low_downloads"},
 		})
 	}
-	
+
 	// Check for dependency confusion attacks
 	if ac.isDependencyConfusionCandidate(pkg) {
 		correlatedAttacks = append(correlatedAttacks, CorrelatedAttack{
@@ -1291,7 +1291,7 @@ func (ac *AttackCorrelator) correlateAttacks(pkg *types.Package) []CorrelatedAtt
 			SharedIndicators:    []string{"high_version", "internal_namespace", "suspicious_metadata"},
 		})
 	}
-	
+
 	// Check for malware distribution
 	if ac.isMalwareCandidate(pkg) {
 		correlatedAttacks = append(correlatedAttacks, CorrelatedAttack{
@@ -1303,7 +1303,7 @@ func (ac *AttackCorrelator) correlateAttacks(pkg *types.Package) []CorrelatedAtt
 			SharedIndicators:    []string{"suspicious_scripts", "network_calls", "file_operations"},
 		})
 	}
-	
+
 	return correlatedAttacks
 }
 
@@ -1313,7 +1313,7 @@ func (ac *AttackCorrelator) isTyposquattingCandidate(packageName string) bool {
 	if len(packageName) < 3 {
 		return false
 	}
-	
+
 	// Check for suspicious character substitutions
 	suspiciousChars := []string{"0", "1", "l", "I", "o", "O"}
 	for _, char := range suspiciousChars {
@@ -1321,7 +1321,7 @@ func (ac *AttackCorrelator) isTyposquattingCandidate(packageName string) bool {
 			return true
 		}
 	}
-	
+
 	// Check for common typosquatting suffixes/prefixes
 	suspiciousPatterns := []string{"-js", "-node", "-npm", "lib-", "node-", "js-"}
 	for _, pattern := range suspiciousPatterns {
@@ -1329,7 +1329,7 @@ func (ac *AttackCorrelator) isTyposquattingCandidate(packageName string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -1338,7 +1338,7 @@ func (ac *AttackCorrelator) isDependencyConfusionCandidate(pkg *types.Package) b
 	if strings.Contains(pkg.Version, "999") || strings.Contains(pkg.Version, "100") {
 		return true
 	}
-	
+
 	// Check for internal-looking package names
 	internalPatterns := []string{"internal", "corp", "company", "private", "local"}
 	for _, pattern := range internalPatterns {
@@ -1346,14 +1346,14 @@ func (ac *AttackCorrelator) isDependencyConfusionCandidate(pkg *types.Package) b
 			return true
 		}
 	}
-	
+
 	// Check for suspicious metadata
 	if pkg.Metadata != nil {
 		if pkg.Metadata.Description == "" || len(pkg.Metadata.Description) < 10 {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -1367,12 +1367,12 @@ func (ac *AttackCorrelator) isMalwareCandidate(pkg *types.Package) bool {
 			return true
 		}
 	}
-	
+
 	// Check for suspicious package characteristics
 	if pkg.RiskScore > 0.7 {
 		return true
 	}
-	
+
 	// Check for suspicious metadata patterns
 	if pkg.Metadata != nil {
 		suspiciousKeywords := []string{"bitcoin", "crypto", "wallet", "password", "keylog"}
@@ -1383,23 +1383,23 @@ func (ac *AttackCorrelator) isMalwareCandidate(pkg *types.Package) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
 func (ac *AttackCorrelator) identifyPatterns(attacks []CorrelatedAttack) []AttackPattern {
 	var patterns []AttackPattern
-	
+
 	if len(attacks) == 0 {
 		return patterns
 	}
-	
+
 	// Group attacks by type
 	attacksByType := make(map[string][]CorrelatedAttack)
 	for _, attack := range attacks {
 		attacksByType[attack.AttackType] = append(attacksByType[attack.AttackType], attack)
 	}
-	
+
 	// Analyze patterns for each attack type
 	for attackType, typeAttacks := range attacksByType {
 		if len(typeAttacks) >= 2 {
@@ -1416,17 +1416,17 @@ func (ac *AttackCorrelator) identifyPatterns(attacks []CorrelatedAttack) []Attac
 			patterns = append(patterns, pattern)
 		}
 	}
-	
+
 	// Look for temporal patterns
 	if temporalPattern := ac.detectTemporalPattern(attacks); temporalPattern != nil {
 		patterns = append(patterns, *temporalPattern)
 	}
-	
+
 	// Look for ecosystem correlation patterns
 	if ecosystemPattern := ac.detectEcosystemPattern(attacks); ecosystemPattern != nil {
 		patterns = append(patterns, *ecosystemPattern)
 	}
-	
+
 	return patterns
 }
 
@@ -1435,20 +1435,20 @@ func (ac *AttackCorrelator) calculatePatternConfidence(attacks []CorrelatedAttac
 	if len(attacks) == 0 {
 		return 0.0
 	}
-	
+
 	totalConfidence := 0.0
 	for _, attack := range attacks {
 		totalConfidence += attack.CorrelationStrength
 	}
-	
+
 	avgConfidence := totalConfidence / float64(len(attacks))
-	
+
 	// Boost confidence for multiple attacks
 	frequencyBoost := float64(len(attacks)) * 0.1
 	if frequencyBoost > 0.3 {
 		frequencyBoost = 0.3
 	}
-	
+
 	return minFloat64(avgConfidence+frequencyBoost, 1.0)
 }
 
@@ -1456,7 +1456,7 @@ func (ac *AttackCorrelator) getEarliestTimestamp(attacks []CorrelatedAttack) tim
 	if len(attacks) == 0 {
 		return time.Now()
 	}
-	
+
 	earliest := attacks[0].Timestamp
 	for _, attack := range attacks[1:] {
 		if attack.Timestamp.Before(earliest) {
@@ -1470,7 +1470,7 @@ func (ac *AttackCorrelator) getLatestTimestamp(attacks []CorrelatedAttack) time.
 	if len(attacks) == 0 {
 		return time.Now()
 	}
-	
+
 	latest := attacks[0].Timestamp
 	for _, attack := range attacks[1:] {
 		if attack.Timestamp.After(latest) {
@@ -1482,7 +1482,7 @@ func (ac *AttackCorrelator) getLatestTimestamp(attacks []CorrelatedAttack) time.
 
 func (ac *AttackCorrelator) extractThreatActors(attacks []CorrelatedAttack) []string {
 	actorMap := make(map[string]bool)
-	
+
 	for _, attack := range attacks {
 		// Extract potential threat actors from attack patterns
 		if strings.Contains(attack.AttackType, "typosquatting") {
@@ -1494,7 +1494,7 @@ func (ac *AttackCorrelator) extractThreatActors(attacks []CorrelatedAttack) []st
 		if strings.Contains(attack.AttackType, "malware") {
 			actorMap["malware_distributor"] = true
 		}
-		
+
 		// Extract from shared indicators
 		for _, indicator := range attack.SharedIndicators {
 			if strings.Contains(indicator, "automated") {
@@ -1505,7 +1505,7 @@ func (ac *AttackCorrelator) extractThreatActors(attacks []CorrelatedAttack) []st
 			}
 		}
 	}
-	
+
 	var actors []string
 	for actor := range actorMap {
 		actors = append(actors, actor)
@@ -1517,11 +1517,11 @@ func (ac *AttackCorrelator) detectTemporalPattern(attacks []CorrelatedAttack) *A
 	if len(attacks) < 3 {
 		return nil
 	}
-	
+
 	// Sort attacks by timestamp
 	sortedAttacks := make([]CorrelatedAttack, len(attacks))
 	copy(sortedAttacks, attacks)
-	
+
 	for i := 0; i < len(sortedAttacks)-1; i++ {
 		for j := i + 1; j < len(sortedAttacks); j++ {
 			if sortedAttacks[i].Timestamp.After(sortedAttacks[j].Timestamp) {
@@ -1529,17 +1529,17 @@ func (ac *AttackCorrelator) detectTemporalPattern(attacks []CorrelatedAttack) *A
 			}
 		}
 	}
-	
+
 	// Check for temporal clustering (attacks within short time windows)
 	timeWindow := 24 * time.Hour
 	clusters := 0
-	
+
 	for i := 0; i < len(sortedAttacks)-1; i++ {
 		if sortedAttacks[i+1].Timestamp.Sub(sortedAttacks[i].Timestamp) <= timeWindow {
 			clusters++
 		}
 	}
-	
+
 	if clusters >= 2 {
 		return &AttackPattern{
 			PatternID:    fmt.Sprintf("temporal_pattern_%d", time.Now().Unix()),
@@ -1552,7 +1552,7 @@ func (ac *AttackCorrelator) detectTemporalPattern(attacks []CorrelatedAttack) *A
 			ThreatActors: []string{"coordinated_campaign"},
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1560,13 +1560,13 @@ func (ac *AttackCorrelator) detectEcosystemPattern(attacks []CorrelatedAttack) *
 	if len(attacks) < 2 {
 		return nil
 	}
-	
+
 	// Group by ecosystem
 	ecosystemCounts := make(map[string]int)
 	for _, attack := range attacks {
 		ecosystemCounts[attack.TargetEcosystem]++
 	}
-	
+
 	// Check for cross-ecosystem attacks
 	if len(ecosystemCounts) >= 2 {
 		maxCount := 0
@@ -1575,7 +1575,7 @@ func (ac *AttackCorrelator) detectEcosystemPattern(attacks []CorrelatedAttack) *
 				maxCount = count
 			}
 		}
-		
+
 		if maxCount >= 2 {
 			return &AttackPattern{
 				PatternID:    fmt.Sprintf("ecosystem_pattern_%d", time.Now().Unix()),
@@ -1589,7 +1589,7 @@ func (ac *AttackCorrelator) detectEcosystemPattern(attacks []CorrelatedAttack) *
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1601,15 +1601,13 @@ func minFloat64(a, b float64) float64 {
 	return b
 }
 
-
-
 func (ac *AttackCorrelator) analyzeTemporalCorrelations(attacks []CorrelatedAttack) []TemporalCorrelation {
 	var correlations []TemporalCorrelation
-	
+
 	if len(attacks) < 2 {
 		return correlations
 	}
-	
+
 	// Group attacks by time windows
 	timeWindows := []time.Duration{
 		1 * time.Hour,
@@ -1617,28 +1615,28 @@ func (ac *AttackCorrelator) analyzeTemporalCorrelations(attacks []CorrelatedAtta
 		24 * time.Hour,
 		7 * 24 * time.Hour,
 	}
-	
+
 	for _, window := range timeWindows {
 		windowCorrelations := ac.analyzeTimeWindow(attacks, window)
 		correlations = append(correlations, windowCorrelations...)
 	}
-	
+
 	return correlations
 }
 
 func (ac *AttackCorrelator) analyzeTimeWindow(attacks []CorrelatedAttack, window time.Duration) []TemporalCorrelation {
 	var correlations []TemporalCorrelation
-	
+
 	// Sort attacks by timestamp
 	sort.Slice(attacks, func(i, j int) bool {
 		return attacks[i].Timestamp.Before(attacks[j].Timestamp)
 	})
-	
+
 	// Find attacks within the time window
 	for i := 0; i < len(attacks); i++ {
 		var relatedAttacks []string
 		baseTime := attacks[i].Timestamp
-		
+
 		for j := i + 1; j < len(attacks); j++ {
 			if attacks[j].Timestamp.Sub(baseTime) <= window {
 				relatedAttacks = append(relatedAttacks, attacks[j].AttackID)
@@ -1646,7 +1644,7 @@ func (ac *AttackCorrelator) analyzeTimeWindow(attacks []CorrelatedAttack, window
 				break // Attacks are sorted, so no more will be in window
 			}
 		}
-		
+
 		if len(relatedAttacks) > 0 {
 			// Create synchronized events for the correlation
 			var syncEvents []SynchronizedEvent
@@ -1657,7 +1655,7 @@ func (ac *AttackCorrelator) analyzeTimeWindow(attacks []CorrelatedAttack, window
 				PackageName: fmt.Sprintf("attack_%s", attacks[i].AttackID),
 				Severity:    "high",
 			})
-			
+
 			correlation := TemporalCorrelation{
 				TimeWindow:         window,
 				AttackCount:        len(relatedAttacks) + 1,
@@ -1667,7 +1665,7 @@ func (ac *AttackCorrelator) analyzeTimeWindow(attacks []CorrelatedAttack, window
 			correlations = append(correlations, correlation)
 		}
 	}
-	
+
 	return correlations
 }
 
@@ -1688,7 +1686,7 @@ func (ac *AttackCorrelator) calculateTemporalConfidence(attackCount int, window 
 	if baseConfidence > 1.0 {
 		baseConfidence = 1.0
 	}
-	
+
 	// Adjust based on time window
 	windowHours := window.Hours()
 	if windowHours <= 1 {
@@ -1698,49 +1696,49 @@ func (ac *AttackCorrelator) calculateTemporalConfidence(attackCount int, window 
 	} else {
 		baseConfidence *= 0.8
 	}
-	
+
 	if baseConfidence > 1.0 {
 		baseConfidence = 1.0
 	}
-	
+
 	return baseConfidence
 }
 
 func (ac *AttackCorrelator) analyzeSpatialCorrelations(attacks []CorrelatedAttack) []SpatialCorrelation {
 	// Group attacks by geographic regions (simulated based on ecosystem patterns)
 	regionMap := make(map[string][]CorrelatedAttack)
-	
+
 	for _, attack := range attacks {
 		// Simulate geographic region based on ecosystem and attack patterns
 		region := ac.inferGeographicRegion(attack)
 		regionMap[region] = append(regionMap[region], attack)
 	}
-	
+
 	var correlations []SpatialCorrelation
-	
+
 	for region, regionAttacks := range regionMap {
 		if len(regionAttacks) < 2 {
 			continue // Need at least 2 attacks for correlation
 		}
-		
+
 		// Calculate attack density (attacks per time unit)
 		timeSpan := ac.calculateTimeSpan(regionAttacks)
 		density := float64(len(regionAttacks)) / timeSpan.Hours()
-		
+
 		// Calculate correlation strength based on attack patterns
 		correlationStrength := ac.calculateSpatialCorrelationStrength(regionAttacks)
-		
+
 		// Extract affected ecosystems
 		ecosystemSet := make(map[string]bool)
 		for _, attack := range regionAttacks {
 			ecosystemSet[attack.TargetEcosystem] = true
 		}
-		
+
 		var affectedEcosystems []string
 		for ecosystem := range ecosystemSet {
 			affectedEcosystems = append(affectedEcosystems, ecosystem)
 		}
-		
+
 		correlations = append(correlations, SpatialCorrelation{
 			GeographicRegion:    region,
 			AttackDensity:       density,
@@ -1748,7 +1746,7 @@ func (ac *AttackCorrelator) analyzeSpatialCorrelations(attacks []CorrelatedAttac
 			AffectedEcosystems:  affectedEcosystems,
 		})
 	}
-	
+
 	return correlations
 }
 
@@ -1774,10 +1772,10 @@ func (ac *AttackCorrelator) calculateTimeSpan(attacks []CorrelatedAttack) time.D
 	if len(attacks) == 0 {
 		return time.Hour
 	}
-	
+
 	earliest := attacks[0].Timestamp
 	latest := attacks[0].Timestamp
-	
+
 	for _, attack := range attacks {
 		if attack.Timestamp.Before(earliest) {
 			earliest = attack.Timestamp
@@ -1786,12 +1784,12 @@ func (ac *AttackCorrelator) calculateTimeSpan(attacks []CorrelatedAttack) time.D
 			latest = attack.Timestamp
 		}
 	}
-	
+
 	span := latest.Sub(earliest)
 	if span == 0 {
 		return time.Hour // Default to 1 hour if all attacks at same time
 	}
-	
+
 	return span
 }
 
@@ -1799,13 +1797,13 @@ func (ac *AttackCorrelator) calculateSpatialCorrelationStrength(attacks []Correl
 	if len(attacks) < 2 {
 		return 0.0
 	}
-	
+
 	// Calculate correlation based on attack type similarity and timing
 	typeMap := make(map[string]int)
 	for _, attack := range attacks {
 		typeMap[attack.AttackType]++
 	}
-	
+
 	// Higher correlation if attacks are of similar types
 	maxTypeCount := 0
 	for _, count := range typeMap {
@@ -1813,51 +1811,51 @@ func (ac *AttackCorrelator) calculateSpatialCorrelationStrength(attacks []Correl
 			maxTypeCount = count
 		}
 	}
-	
+
 	typeSimilarity := float64(maxTypeCount) / float64(len(attacks))
-	
+
 	// Factor in timing correlation
 	timeSpan := ac.calculateTimeSpan(attacks)
 	timingFactor := 1.0 / (1.0 + timeSpan.Hours()/24.0) // Stronger correlation for closer timing
-	
+
 	return (typeSimilarity * 0.7) + (timingFactor * 0.3)
 }
 
 func (ac *AttackCorrelator) analyzeTechnicalCorrelations(attacks []CorrelatedAttack) []TechnicalCorrelation {
 	// Group attacks by technical indicators
 	indicatorMap := make(map[string][]CorrelatedAttack)
-	
+
 	for _, attack := range attacks {
 		// Extract technical indicators from shared indicators
 		for _, indicator := range attack.SharedIndicators {
 			indicatorMap[indicator] = append(indicatorMap[indicator], attack)
 		}
-		
+
 		// Add attack type as a technical indicator
 		indicatorMap[attack.AttackType] = append(indicatorMap[attack.AttackType], attack)
 	}
-	
+
 	var correlations []TechnicalCorrelation
-	
+
 	for indicator, indicatorAttacks := range indicatorMap {
 		if len(indicatorAttacks) < 2 {
 			continue // Need at least 2 attacks for correlation
 		}
-		
+
 		// Calculate correlation strength
 		correlationStrength := ac.calculateTechnicalCorrelationStrength(indicatorAttacks)
-		
+
 		// Extract affected packages
 		packageSet := make(map[string]bool)
 		for _, attack := range indicatorAttacks {
 			packageSet[attack.AttackID] = true // Using AttackID as package identifier
 		}
-		
+
 		var affectedPackages []string
 		for pkg := range packageSet {
 			affectedPackages = append(affectedPackages, pkg)
 		}
-		
+
 		// Extract attack techniques
 		techniqueSet := make(map[string]bool)
 		for _, attack := range indicatorAttacks {
@@ -1867,15 +1865,15 @@ func (ac *AttackCorrelator) analyzeTechnicalCorrelations(attacks []CorrelatedAtt
 				techniqueSet[sharedIndicator] = true
 			}
 		}
-		
+
 		var attackTechniques []string
 		for technique := range techniqueSet {
 			attackTechniques = append(attackTechniques, technique)
 		}
-		
+
 		// Determine indicator type
 		indicatorType := ac.classifyIndicatorType(indicator)
-		
+
 		correlations = append(correlations, TechnicalCorrelation{
 			TechnicalIndicator:  indicator,
 			IndicatorType:       indicatorType,
@@ -1884,7 +1882,7 @@ func (ac *AttackCorrelator) analyzeTechnicalCorrelations(attacks []CorrelatedAtt
 			AttackTechniques:    attackTechniques,
 		})
 	}
-	
+
 	return correlations
 }
 
@@ -1892,39 +1890,39 @@ func (ac *AttackCorrelator) calculateTechnicalCorrelationStrength(attacks []Corr
 	if len(attacks) < 2 {
 		return 0.0
 	}
-	
+
 	// Calculate correlation based on shared indicators and timing
 	totalSharedIndicators := 0
 	for _, attack := range attacks {
 		totalSharedIndicators += len(attack.SharedIndicators)
 	}
-	
+
 	// Average shared indicators per attack
 	avgSharedIndicators := float64(totalSharedIndicators) / float64(len(attacks))
-	
+
 	// Normalize to 0-1 scale (assuming max 10 shared indicators is very high)
 	indicatorStrength := avgSharedIndicators / 10.0
 	if indicatorStrength > 1.0 {
 		indicatorStrength = 1.0
 	}
-	
+
 	// Factor in timing correlation
 	timeSpan := ac.calculateTimeSpan(attacks)
 	timingFactor := 1.0 / (1.0 + timeSpan.Hours()/24.0) // Stronger correlation for closer timing
-	
+
 	// Factor in correlation strength from attacks
 	totalCorrelationStrength := 0.0
 	for _, attack := range attacks {
 		totalCorrelationStrength += attack.CorrelationStrength
 	}
 	avgCorrelationStrength := totalCorrelationStrength / float64(len(attacks))
-	
+
 	return (indicatorStrength * 0.4) + (timingFactor * 0.3) + (avgCorrelationStrength * 0.3)
 }
 
 func (ac *AttackCorrelator) classifyIndicatorType(indicator string) string {
 	indicator = strings.ToLower(indicator)
-	
+
 	// Classify based on indicator content
 	if strings.Contains(indicator, "hash") || strings.Contains(indicator, "md5") || strings.Contains(indicator, "sha") {
 		return "file_hash"
@@ -1947,14 +1945,14 @@ func (ac *AttackCorrelator) classifyIndicatorType(indicator string) string {
 	if strings.Contains(indicator, "behavioral") || strings.Contains(indicator, "pattern") {
 		return "behavioral_indicator"
 	}
-	
+
 	return "generic_indicator"
 }
 
 func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveDefense {
 	var activeDefenses []ActiveDefense
 	currentTime := time.Now()
-	
+
 	// Assess signature-based detection
 	signatureDefense := ActiveDefense{
 		DefenseType:   "signature_detection",
@@ -1965,7 +1963,7 @@ func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveD
 		ResponseTime:  time.Millisecond * 500,
 	}
 	activeDefenses = append(activeDefenses, signatureDefense)
-	
+
 	// Assess behavioral analysis
 	behavioralDefense := ActiveDefense{
 		DefenseType:   "behavioral_analysis",
@@ -1976,7 +1974,7 @@ func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveD
 		ResponseTime:  time.Second * 2,
 	}
 	activeDefenses = append(activeDefenses, behavioralDefense)
-	
+
 	// Assess reputation-based filtering
 	reputationDefense := ActiveDefense{
 		DefenseType:   "reputation_filtering",
@@ -1987,7 +1985,7 @@ func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveD
 		ResponseTime:  time.Millisecond * 200,
 	}
 	activeDefenses = append(activeDefenses, reputationDefense)
-	
+
 	// Assess static analysis
 	staticDefense := ActiveDefense{
 		DefenseType:   "static_analysis",
@@ -1998,7 +1996,7 @@ func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveD
 		ResponseTime:  time.Second * 10,
 	}
 	activeDefenses = append(activeDefenses, staticDefense)
-	
+
 	// Assess sandboxing
 	sandboxDefense := ActiveDefense{
 		DefenseType:   "sandboxing",
@@ -2009,7 +2007,7 @@ func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveD
 		ResponseTime:  time.Second * 30,
 	}
 	activeDefenses = append(activeDefenses, sandboxDefense)
-	
+
 	// Assess network monitoring
 	networkDefense := ActiveDefense{
 		DefenseType:   "network_monitoring",
@@ -2020,7 +2018,7 @@ func (dc *DefenseCoordinator) assessActiveDefenses(pkg *types.Package) []ActiveD
 		ResponseTime:  time.Millisecond * 100,
 	}
 	activeDefenses = append(activeDefenses, networkDefense)
-	
+
 	return activeDefenses
 }
 
@@ -2039,7 +2037,7 @@ func (dc *DefenseCoordinator) getDefenseStatus(pkg *types.Package, defenseType s
 func (dc *DefenseCoordinator) calculateSignatureEffectiveness(pkg *types.Package) float64 {
 	// Calculate effectiveness based on known threat patterns
 	effectiveness := 0.7 // Base effectiveness
-	
+
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
 		if strings.Contains(threatType, "malware") || strings.Contains(threatType, "malicious") {
@@ -2049,21 +2047,21 @@ func (dc *DefenseCoordinator) calculateSignatureEffectiveness(pkg *types.Package
 			effectiveness -= 0.2 // Signatures are poor against unknown threats
 		}
 	}
-	
+
 	if effectiveness > 1.0 {
 		effectiveness = 1.0
 	}
 	if effectiveness < 0.0 {
 		effectiveness = 0.0
 	}
-	
+
 	return effectiveness
 }
 
 func (dc *DefenseCoordinator) calculateBehavioralEffectiveness(pkg *types.Package) float64 {
 	// Behavioral analysis is generally effective against unknown threats
 	effectiveness := 0.8 // Base effectiveness
-	
+
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
 		if strings.Contains(threatType, "zero_day") || strings.Contains(threatType, "unknown") {
@@ -2073,21 +2071,21 @@ func (dc *DefenseCoordinator) calculateBehavioralEffectiveness(pkg *types.Packag
 			effectiveness -= 0.1 // Can be evaded
 		}
 	}
-	
+
 	if effectiveness > 1.0 {
 		effectiveness = 1.0
 	}
 	if effectiveness < 0.0 {
 		effectiveness = 0.0
 	}
-	
+
 	return effectiveness
 }
 
 func (dc *DefenseCoordinator) calculateReputationEffectiveness(pkg *types.Package) float64 {
 	// Reputation-based filtering effectiveness
 	effectiveness := 0.6 // Base effectiveness
-	
+
 	if pkg.Metadata != nil {
 		// Check author reputation factors
 		if pkg.Metadata.Author != "" {
@@ -2097,23 +2095,23 @@ func (dc *DefenseCoordinator) calculateReputationEffectiveness(pkg *types.Packag
 			effectiveness += 0.05 // Has version info
 		}
 	}
-	
+
 	// Factor in package age and popularity (simulated)
 	if pkg.RiskScore < 0.3 {
 		effectiveness += 0.2 // Low risk packages likely have good reputation
 	}
-	
+
 	if effectiveness > 1.0 {
 		effectiveness = 1.0
 	}
-	
+
 	return effectiveness
 }
 
 func (dc *DefenseCoordinator) calculateStaticAnalysisEffectiveness(pkg *types.Package) float64 {
 	// Static analysis effectiveness
 	effectiveness := 0.75 // Base effectiveness
-	
+
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
 		if strings.Contains(threatType, "code") || strings.Contains(threatType, "vulnerability") {
@@ -2123,21 +2121,21 @@ func (dc *DefenseCoordinator) calculateStaticAnalysisEffectiveness(pkg *types.Pa
 			effectiveness -= 0.1 // Poor at runtime issues
 		}
 	}
-	
+
 	if effectiveness > 1.0 {
 		effectiveness = 1.0
 	}
 	if effectiveness < 0.0 {
 		effectiveness = 0.0
 	}
-	
+
 	return effectiveness
 }
 
 func (dc *DefenseCoordinator) calculateSandboxEffectiveness(pkg *types.Package) float64 {
 	// Sandboxing effectiveness
 	effectiveness := 0.85 // Base effectiveness (generally high)
-	
+
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
 		if strings.Contains(threatType, "evasion") || strings.Contains(threatType, "anti_sandbox") {
@@ -2147,21 +2145,21 @@ func (dc *DefenseCoordinator) calculateSandboxEffectiveness(pkg *types.Package) 
 			effectiveness += 0.1 // Good at detecting execution-based threats
 		}
 	}
-	
+
 	if effectiveness > 1.0 {
 		effectiveness = 1.0
 	}
 	if effectiveness < 0.0 {
 		effectiveness = 0.0
 	}
-	
+
 	return effectiveness
 }
 
 func (dc *DefenseCoordinator) calculateNetworkEffectiveness(pkg *types.Package) float64 {
 	// Network monitoring effectiveness
 	effectiveness := 0.7 // Base effectiveness
-	
+
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
 		if strings.Contains(threatType, "c2") || strings.Contains(threatType, "communication") {
@@ -2171,45 +2169,45 @@ func (dc *DefenseCoordinator) calculateNetworkEffectiveness(pkg *types.Package) 
 			effectiveness -= 0.1 // Harder to detect encrypted communications
 		}
 	}
-	
+
 	if effectiveness > 1.0 {
 		effectiveness = 1.0
 	}
 	if effectiveness < 0.0 {
 		effectiveness = 0.0
 	}
-	
+
 	return effectiveness
 }
 
 func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses []ActiveDefense) []DefenseGap {
 	var gaps []DefenseGap
-	
+
 	// Create a map of active defense types for quick lookup
 	activeDefenseTypes := make(map[string]bool)
 	defenseEffectiveness := make(map[string]float64)
-	
+
 	for _, defense := range defenses {
 		activeDefenseTypes[defense.DefenseType] = true
 		defenseEffectiveness[defense.DefenseType] = defense.Effectiveness
 	}
-	
+
 	// Check for missing critical defense mechanisms
 	criticalDefenses := []string{
 		"signature_detection",
-		"behavioral_analysis", 
+		"behavioral_analysis",
 		"reputation_filtering",
 		"static_analysis",
 		"sandboxing",
 		"network_monitoring",
 	}
-	
+
 	for _, criticalDefense := range criticalDefenses {
 		if !activeDefenseTypes[criticalDefense] {
 			gaps = append(gaps, DefenseGap{
-				GapType:     "missing_defense",
-				Severity:    dc.calculateGapSeverity(pkg, criticalDefense),
-				Description: fmt.Sprintf("Missing %s defense mechanism", criticalDefense),
+				GapType:       "missing_defense",
+				Severity:      dc.calculateGapSeverity(pkg, criticalDefense),
+				Description:   fmt.Sprintf("Missing %s defense mechanism", criticalDefense),
 				AffectedAreas: []string{criticalDefense},
 				Recommendations: []string{
 					fmt.Sprintf("Implement %s defense", criticalDefense),
@@ -2219,14 +2217,14 @@ func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses [
 			})
 		}
 	}
-	
+
 	// Check for low-effectiveness defenses
 	for defenseType, effectiveness := range defenseEffectiveness {
 		if effectiveness < 0.5 {
 			gaps = append(gaps, DefenseGap{
-				GapType:     "low_effectiveness",
-				Severity:    dc.calculateEffectivenessGapSeverity(effectiveness),
-				Description: fmt.Sprintf("Low effectiveness in %s defense (%.2f)", defenseType, effectiveness),
+				GapType:       "low_effectiveness",
+				Severity:      dc.calculateEffectivenessGapSeverity(effectiveness),
+				Description:   fmt.Sprintf("Low effectiveness in %s defense (%.2f)", defenseType, effectiveness),
 				AffectedAreas: []string{defenseType},
 				Recommendations: []string{
 					"Review and update detection rules",
@@ -2237,18 +2235,18 @@ func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses [
 			})
 		}
 	}
-	
+
 	// Check for threat-specific gaps
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		// Check for advanced persistent threat gaps
 		if strings.Contains(threatType, "apt") || strings.Contains(threatType, "advanced") {
 			if !dc.hasAdvancedThreatDefense(defenses) {
 				gaps = append(gaps, DefenseGap{
-					GapType:     "advanced_threat_gap",
-					Severity:    "high",
-					Description: "Insufficient defenses against advanced persistent threats",
+					GapType:       "advanced_threat_gap",
+					Severity:      "high",
+					Description:   "Insufficient defenses against advanced persistent threats",
 					AffectedAreas: []string{"apt_detection", "advanced_evasion", "long_term_persistence"},
 					Recommendations: []string{
 						"Implement advanced behavioral analysis",
@@ -2259,14 +2257,14 @@ func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses [
 				})
 			}
 		}
-		
+
 		// Check for supply chain specific gaps
 		if strings.Contains(threatType, "supply_chain") {
 			if !dc.hasSupplyChainDefense(defenses) {
 				gaps = append(gaps, DefenseGap{
-					GapType:     "supply_chain_gap",
-					Severity:    "high",
-					Description: "Insufficient supply chain security controls",
+					GapType:       "supply_chain_gap",
+					Severity:      "high",
+					Description:   "Insufficient supply chain security controls",
 					AffectedAreas: []string{"dependency_analysis", "build_security", "vendor_assessment"},
 					Recommendations: []string{
 						"Implement dependency scanning",
@@ -2277,14 +2275,14 @@ func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses [
 				})
 			}
 		}
-		
+
 		// Check for zero-day gaps
 		if strings.Contains(threatType, "zero_day") || strings.Contains(threatType, "unknown") {
 			if !dc.hasZeroDayDefense(defenses) {
 				gaps = append(gaps, DefenseGap{
-					GapType:     "zero_day_gap",
-					Severity:    "critical",
-					Description: "Insufficient protection against zero-day threats",
+					GapType:       "zero_day_gap",
+					Severity:      "critical",
+					Description:   "Insufficient protection against zero-day threats",
 					AffectedAreas: []string{"unknown_threat_detection", "behavioral_analysis", "sandboxing"},
 					Recommendations: []string{
 						"Enhance behavioral analysis capabilities",
@@ -2296,14 +2294,14 @@ func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses [
 			}
 		}
 	}
-	
+
 	// Check for coverage gaps based on package risk
 	if pkg.RiskScore > 0.8 {
 		if !dc.hasHighRiskDefense(defenses) {
 			gaps = append(gaps, DefenseGap{
-				GapType:     "high_risk_coverage_gap",
-				Severity:    "critical",
-				Description: "Insufficient defense coverage for high-risk packages",
+				GapType:       "high_risk_coverage_gap",
+				Severity:      "critical",
+				Description:   "Insufficient defense coverage for high-risk packages",
 				AffectedAreas: []string{"real_time_monitoring", "immediate_response", "escalation_procedures"},
 				Recommendations: []string{
 					"Implement real-time monitoring",
@@ -2314,7 +2312,7 @@ func (dc *DefenseCoordinator) identifyDefenseGaps(pkg *types.Package, defenses [
 			})
 		}
 	}
-	
+
 	return gaps
 }
 
@@ -2370,7 +2368,7 @@ func (dc *DefenseCoordinator) hasSupplyChainDefense(defenses []ActiveDefense) bo
 func (dc *DefenseCoordinator) hasZeroDayDefense(defenses []ActiveDefense) bool {
 	behavioralFound := false
 	sandboxFound := false
-	
+
 	for _, defense := range defenses {
 		if defense.DefenseType == "behavioral_analysis" && defense.Effectiveness > 0.7 {
 			behavioralFound = true
@@ -2379,30 +2377,30 @@ func (dc *DefenseCoordinator) hasZeroDayDefense(defenses []ActiveDefense) bool {
 			sandboxFound = true
 		}
 	}
-	
+
 	return behavioralFound && sandboxFound
 }
 
 func (dc *DefenseCoordinator) hasHighRiskDefense(defenses []ActiveDefense) bool {
 	effectiveDefenses := 0
-	
+
 	for _, defense := range defenses {
 		if defense.Effectiveness > 0.7 && defense.Status == "active_high_alert" {
 			effectiveDefenses++
 		}
 	}
-	
+
 	return effectiveDefenses >= 3 // Need at least 3 highly effective defenses for high-risk packages
 }
 
 func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []CoordinatedResponse {
 	var responses []CoordinatedResponse
-	
+
 	// Analyze package risk level and threats to determine appropriate responses
 	riskLevel := pkg.RiskLevel
 	riskScore := pkg.RiskScore
 	currentTime := time.Now()
-	
+
 	// High-risk packages require immediate coordinated response
 	if riskScore > 0.8 || riskLevel == types.SeverityCritical {
 		responses = append(responses, CoordinatedResponse{
@@ -2414,7 +2412,7 @@ func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []Coordina
 			ExecutionTime: currentTime,
 		})
 	}
-	
+
 	// Medium-risk packages require monitoring response
 	if riskScore > 0.5 && riskScore <= 0.8 {
 		responses = append(responses, CoordinatedResponse{
@@ -2426,11 +2424,11 @@ func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []Coordina
 			ExecutionTime: currentTime,
 		})
 	}
-	
+
 	// Check for specific threat types and add targeted responses
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		if strings.Contains(threatType, "typosquatting") {
 			responses = append(responses, CoordinatedResponse{
 				ResponseID:    fmt.Sprintf("typo_response_%s_%d", pkg.Name, currentTime.Unix()),
@@ -2441,7 +2439,7 @@ func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []Coordina
 				ExecutionTime: currentTime,
 			})
 		}
-		
+
 		if strings.Contains(threatType, "malicious") {
 			responses = append(responses, CoordinatedResponse{
 				ResponseID:    fmt.Sprintf("malware_response_%s_%d", pkg.Name, currentTime.Unix()),
@@ -2452,7 +2450,7 @@ func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []Coordina
 				ExecutionTime: currentTime,
 			})
 		}
-		
+
 		if strings.Contains(threatType, "supply_chain") {
 			responses = append(responses, CoordinatedResponse{
 				ResponseID:    fmt.Sprintf("supply_chain_response_%s_%d", pkg.Name, currentTime.Unix()),
@@ -2464,7 +2462,7 @@ func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []Coordina
 			})
 		}
 	}
-	
+
 	// Add escalation response for high-confidence threats
 	for _, threat := range pkg.Threats {
 		if threat.Confidence > 0.9 {
@@ -2479,13 +2477,13 @@ func (dc *DefenseCoordinator) coordinateResponses(pkg *types.Package) []Coordina
 			break // Only need one escalation response
 		}
 	}
-	
+
 	return responses
 }
 
 func (ti *ThreatIntelligence) identifyThreatActors(pkg *types.Package) []ThreatActor {
 	var threatActors []ThreatActor
-	
+
 	// Check for known APT group patterns
 	if ti.matchesAPTPatterns(pkg) {
 		threatActors = append(threatActors, ThreatActor{
@@ -2498,7 +2496,7 @@ func (ti *ThreatIntelligence) identifyThreatActors(pkg *types.Package) []ThreatA
 			Attribution:  0.7,
 		})
 	}
-	
+
 	// Check for cybercriminal patterns
 	if ti.matchesCybercriminalPatterns(pkg) {
 		threatActors = append(threatActors, ThreatActor{
@@ -2511,7 +2509,7 @@ func (ti *ThreatIntelligence) identifyThreatActors(pkg *types.Package) []ThreatA
 			Attribution:  0.6,
 		})
 	}
-	
+
 	// Check for script kiddie patterns
 	if ti.matchesScriptKiddiePatterns(pkg) {
 		threatActors = append(threatActors, ThreatActor{
@@ -2524,7 +2522,7 @@ func (ti *ThreatIntelligence) identifyThreatActors(pkg *types.Package) []ThreatA
 			Attribution:  0.4,
 		})
 	}
-	
+
 	// Check for nation-state patterns
 	if ti.matchesNationStatePatterns(pkg) {
 		threatActors = append(threatActors, ThreatActor{
@@ -2537,7 +2535,7 @@ func (ti *ThreatIntelligence) identifyThreatActors(pkg *types.Package) []ThreatA
 			Attribution:  0.8,
 		})
 	}
-	
+
 	return threatActors
 }
 
@@ -2547,7 +2545,7 @@ func (ti *ThreatIntelligence) matchesAPTPatterns(pkg *types.Package) bool {
 	if pkg.RiskScore > 0.8 {
 		return true
 	}
-	
+
 	// Check for advanced evasion techniques
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
@@ -2555,7 +2553,7 @@ func (ti *ThreatIntelligence) matchesAPTPatterns(pkg *types.Package) bool {
 			return true
 		}
 	}
-	
+
 	// Check for persistence mechanisms
 	if pkg.Metadata != nil {
 		description := strings.ToLower(pkg.Metadata.Description)
@@ -2566,7 +2564,7 @@ func (ti *ThreatIntelligence) matchesAPTPatterns(pkg *types.Package) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -2581,7 +2579,7 @@ func (ti *ThreatIntelligence) matchesCybercriminalPatterns(pkg *types.Package) b
 			}
 		}
 	}
-	
+
 	// Check for data theft patterns
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
@@ -2589,7 +2587,7 @@ func (ti *ThreatIntelligence) matchesCybercriminalPatterns(pkg *types.Package) b
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -2598,7 +2596,7 @@ func (ti *ThreatIntelligence) matchesScriptKiddiePatterns(pkg *types.Package) bo
 	if pkg.RiskScore < 0.5 && len(pkg.Threats) > 0 {
 		return true
 	}
-	
+
 	// Check for simple attack patterns
 	packageName := strings.ToLower(pkg.Name)
 	simplePatterns := []string{"hack", "pwn", "exploit", "test", "demo"}
@@ -2607,7 +2605,7 @@ func (ti *ThreatIntelligence) matchesScriptKiddiePatterns(pkg *types.Package) bo
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -2616,7 +2614,7 @@ func (ti *ThreatIntelligence) matchesNationStatePatterns(pkg *types.Package) boo
 	if pkg.RiskScore > 0.9 {
 		return true
 	}
-	
+
 	// Check for infrastructure targeting
 	if pkg.Metadata != nil {
 		description := strings.ToLower(pkg.Metadata.Description)
@@ -2627,7 +2625,7 @@ func (ti *ThreatIntelligence) matchesNationStatePatterns(pkg *types.Package) boo
 			}
 		}
 	}
-	
+
 	// Check for zero-day indicators
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
@@ -2635,97 +2633,97 @@ func (ti *ThreatIntelligence) matchesNationStatePatterns(pkg *types.Package) boo
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 func (ti *ThreatIntelligence) identifyAttackCampaigns(pkg *types.Package) []AttackCampaign {
 	var campaigns []AttackCampaign
 	currentTime := time.Now()
-	
+
 	// Analyze package threats to identify potential campaigns
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		// Identify APT campaigns
 		if strings.Contains(threatType, "apt") || strings.Contains(threatType, "advanced") {
 			campaigns = append(campaigns, AttackCampaign{
-				CampaignID:   fmt.Sprintf("apt_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-				CampaignName: "Advanced Persistent Threat Campaign",
-				StartDate:    currentTime.Add(-30 * 24 * time.Hour), // Assume 30 days ago
-				EndDate:      nil, // Ongoing
-				ThreatActor:  "APT Group",
-				Objectives:   []string{"espionage", "data_theft", "persistence", "lateral_movement"},
-				Techniques:   []string{"supply_chain_compromise", "backdoor_implantation", "steganography"},
+				CampaignID:      fmt.Sprintf("apt_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+				CampaignName:    "Advanced Persistent Threat Campaign",
+				StartDate:       currentTime.Add(-30 * 24 * time.Hour), // Assume 30 days ago
+				EndDate:         nil,                                   // Ongoing
+				ThreatActor:     "APT Group",
+				Objectives:      []string{"espionage", "data_theft", "persistence", "lateral_movement"},
+				Techniques:      []string{"supply_chain_compromise", "backdoor_implantation", "steganography"},
 				AffectedTargets: []string{pkg.Registry, "enterprise_networks", "government_systems"},
 			})
 		}
-		
+
 		// Identify cybercriminal campaigns
 		if strings.Contains(threatType, "malware") || strings.Contains(threatType, "financial") {
 			campaigns = append(campaigns, AttackCampaign{
-				CampaignID:   fmt.Sprintf("cybercrime_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-				CampaignName: "Cybercriminal Malware Campaign",
-				StartDate:    currentTime.Add(-14 * 24 * time.Hour), // Assume 14 days ago
-				EndDate:      nil, // Ongoing
-				ThreatActor:  "Cybercriminal Group",
-				Objectives:   []string{"financial_gain", "data_theft", "cryptocurrency_mining", "ransomware"},
-				Techniques:   []string{"malicious_packages", "credential_harvesting", "botnet_recruitment"},
+				CampaignID:      fmt.Sprintf("cybercrime_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+				CampaignName:    "Cybercriminal Malware Campaign",
+				StartDate:       currentTime.Add(-14 * 24 * time.Hour), // Assume 14 days ago
+				EndDate:         nil,                                   // Ongoing
+				ThreatActor:     "Cybercriminal Group",
+				Objectives:      []string{"financial_gain", "data_theft", "cryptocurrency_mining", "ransomware"},
+				Techniques:      []string{"malicious_packages", "credential_harvesting", "botnet_recruitment"},
 				AffectedTargets: []string{pkg.Registry, "developer_workstations", "production_systems"},
 			})
 		}
-		
+
 		// Identify typosquatting campaigns
 		if strings.Contains(threatType, "typosquatting") || strings.Contains(threatType, "homoglyph") {
 			campaigns = append(campaigns, AttackCampaign{
-				CampaignID:   fmt.Sprintf("typosquat_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-				CampaignName: "Typosquatting Campaign",
-				StartDate:    currentTime.Add(-7 * 24 * time.Hour), // Assume 7 days ago
-				EndDate:      nil, // Ongoing
-				ThreatActor:  "Opportunistic Attacker",
-				Objectives:   []string{"credential_theft", "malware_distribution", "brand_impersonation"},
-				Techniques:   []string{"similar_package_names", "unicode_confusion", "brand_squatting"},
+				CampaignID:      fmt.Sprintf("typosquat_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+				CampaignName:    "Typosquatting Campaign",
+				StartDate:       currentTime.Add(-7 * 24 * time.Hour), // Assume 7 days ago
+				EndDate:         nil,                                  // Ongoing
+				ThreatActor:     "Opportunistic Attacker",
+				Objectives:      []string{"credential_theft", "malware_distribution", "brand_impersonation"},
+				Techniques:      []string{"similar_package_names", "unicode_confusion", "brand_squatting"},
 				AffectedTargets: []string{pkg.Registry, "unsuspecting_developers", "automated_systems"},
 			})
 		}
-		
+
 		// Identify supply chain campaigns
 		if strings.Contains(threatType, "supply_chain") || strings.Contains(threatType, "dependency") {
 			campaigns = append(campaigns, AttackCampaign{
-				CampaignID:   fmt.Sprintf("supply_chain_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-				CampaignName: "Supply Chain Attack Campaign",
-				StartDate:    currentTime.Add(-21 * 24 * time.Hour), // Assume 21 days ago
-				EndDate:      nil, // Ongoing
-				ThreatActor:  "Nation State Actor",
-				Objectives:   []string{"infrastructure_compromise", "widespread_access", "strategic_positioning"},
-				Techniques:   []string{"dependency_confusion", "package_substitution", "build_system_compromise"},
+				CampaignID:      fmt.Sprintf("supply_chain_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+				CampaignName:    "Supply Chain Attack Campaign",
+				StartDate:       currentTime.Add(-21 * 24 * time.Hour), // Assume 21 days ago
+				EndDate:         nil,                                   // Ongoing
+				ThreatActor:     "Nation State Actor",
+				Objectives:      []string{"infrastructure_compromise", "widespread_access", "strategic_positioning"},
+				Techniques:      []string{"dependency_confusion", "package_substitution", "build_system_compromise"},
 				AffectedTargets: []string{pkg.Registry, "software_supply_chain", "critical_infrastructure"},
 			})
 		}
 	}
-	
+
 	// Identify campaigns based on package characteristics
 	if pkg.RiskScore > 0.8 {
 		// High-risk packages may be part of coordinated campaigns
 		campaigns = append(campaigns, AttackCampaign{
-			CampaignID:   fmt.Sprintf("coordinated_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-			CampaignName: "Coordinated High-Risk Package Campaign",
-			StartDate:    currentTime.Add(-10 * 24 * time.Hour), // Assume 10 days ago
-			EndDate:      nil, // Ongoing
-			ThreatActor:  "Organized Threat Group",
-			Objectives:   []string{"mass_compromise", "data_collection", "infrastructure_mapping"},
-			Techniques:   []string{"multi_vector_attack", "coordinated_deployment", "evasion_techniques"},
+			CampaignID:      fmt.Sprintf("coordinated_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+			CampaignName:    "Coordinated High-Risk Package Campaign",
+			StartDate:       currentTime.Add(-10 * 24 * time.Hour), // Assume 10 days ago
+			EndDate:         nil,                                   // Ongoing
+			ThreatActor:     "Organized Threat Group",
+			Objectives:      []string{"mass_compromise", "data_collection", "infrastructure_mapping"},
+			Techniques:      []string{"multi_vector_attack", "coordinated_deployment", "evasion_techniques"},
 			AffectedTargets: []string{pkg.Registry, "development_environments", "production_systems"},
 		})
 	}
-	
+
 	return campaigns
 }
 
 func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []ThreatIndicator {
 	var indicators []ThreatIndicator
 	currentTime := time.Now()
-	
+
 	// Extract indicators from package metadata
 	if pkg.Name != "" {
 		indicators = append(indicators, ThreatIndicator{
@@ -2738,7 +2736,7 @@ func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []Thre
 			Sources:        []string{"package_registry", "static_analysis"},
 		})
 	}
-	
+
 	// Extract indicators from package version patterns
 	if pkg.Version != "" {
 		indicators = append(indicators, ThreatIndicator{
@@ -2751,7 +2749,7 @@ func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []Thre
 			Sources:        []string{"package_registry"},
 		})
 	}
-	
+
 	// Extract indicators from threats
 	for _, threat := range pkg.Threats {
 		indicators = append(indicators, ThreatIndicator{
@@ -2764,7 +2762,7 @@ func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []Thre
 			Sources:        []string{"threat_detection", "behavioral_analysis"},
 		})
 	}
-	
+
 	// Extract indicators from risk score
 	if pkg.RiskScore > 0.5 {
 		indicators = append(indicators, ThreatIndicator{
@@ -2777,7 +2775,7 @@ func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []Thre
 			Sources:        []string{"risk_assessment", "ml_analysis"},
 		})
 	}
-	
+
 	// Extract indicators from download patterns (simulated)
 	downloadCount := ti.simulateDownloadCount(pkg)
 	if downloadCount > 10000 {
@@ -2791,7 +2789,7 @@ func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []Thre
 			Sources:        []string{"download_analytics", "behavioral_analysis"},
 		})
 	}
-	
+
 	// Extract network indicators (simulated)
 	if pkg.Registry != "" {
 		indicators = append(indicators, ThreatIndicator{
@@ -2804,7 +2802,7 @@ func (ti *ThreatIntelligence) extractThreatIndicators(pkg *types.Package) []Thre
 			Sources:        []string{"registry_analysis"},
 		})
 	}
-	
+
 	return indicators
 }
 
@@ -2832,26 +2830,26 @@ func (ti *ThreatIntelligence) mapRiskSeverity(riskScore float64) string {
 func (ti *ThreatIntelligence) simulateDownloadCount(pkg *types.Package) int {
 	// Simulate download count based on package characteristics
 	baseCount := 1000
-	
+
 	// Higher risk packages might have artificially inflated download counts
 	if pkg.RiskScore > 0.7 {
 		baseCount *= 50 // Simulate bot downloads
 	} else if pkg.RiskScore > 0.5 {
 		baseCount *= 10
 	}
-	
+
 	// Add some randomness based on package name hash
 	nameHash := 0
 	for _, char := range pkg.Name {
 		nameHash += int(char)
 	}
-	
+
 	return baseCount + (nameHash % 5000)
 }
 
 func (ti *ThreatIntelligence) analyzeRegistryAttribution(registry string) []AttributionFactor {
 	var factors []AttributionFactor
-	
+
 	// Analyze registry patterns for attribution clues
 	switch strings.ToLower(registry) {
 	case "npm":
@@ -2885,68 +2883,68 @@ func (ti *ThreatIntelligence) analyzeRegistryAttribution(registry string) []Attr
 			})
 		}
 	}
-	
+
 	return factors
 }
 
 func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, actors []ThreatActor, campaigns []AttackCampaign) *AttributionAnalysis {
 	var alternativeAttributions []Attribution
 	var attributionFactors []AttributionFactor
-	
+
 	primaryAttribution := "Unknown"
 	primaryConfidence := 0.0
-	
+
 	// Analyze threat types for attribution clues
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		// APT attribution indicators
 		if strings.Contains(threatType, "apt") || strings.Contains(threatType, "advanced") {
 			primaryAttribution = "Advanced Persistent Threat Group"
 			primaryConfidence = 0.8
-			
+
 			attributionFactors = append(attributionFactors, AttributionFactor{
 				FactorType: "threat_sophistication",
 				Weight:     0.9,
 				Evidence:   "Advanced persistent threat indicators detected",
 				Confidence: threat.Confidence,
 			})
-			
+
 			alternativeAttributions = append(alternativeAttributions, Attribution{
 				ThreatActor: "Nation State Actor",
 				Confidence:  0.7,
 				Evidence:    []string{"sophisticated_techniques", "persistence_indicators", "stealth_capabilities"},
 			})
 		}
-		
+
 		// Cybercriminal attribution indicators
 		if strings.Contains(threatType, "malware") || strings.Contains(threatType, "financial") {
 			if primaryConfidence < 0.7 {
 				primaryAttribution = "Cybercriminal Group"
 				primaryConfidence = 0.7
 			}
-			
+
 			attributionFactors = append(attributionFactors, AttributionFactor{
 				FactorType: "financial_motivation",
 				Weight:     0.8,
 				Evidence:   "Financial gain indicators detected",
 				Confidence: threat.Confidence,
 			})
-			
+
 			alternativeAttributions = append(alternativeAttributions, Attribution{
 				ThreatActor: "Organized Crime Syndicate",
 				Confidence:  0.6,
 				Evidence:    []string{"profit_motive", "mass_distribution", "commodity_malware"},
 			})
 		}
-		
+
 		// Opportunistic attacker indicators
 		if strings.Contains(threatType, "typosquatting") || strings.Contains(threatType, "homoglyph") {
 			if primaryConfidence < 0.6 {
 				primaryAttribution = "Opportunistic Attacker"
 				primaryConfidence = 0.6
 			}
-			
+
 			attributionFactors = append(attributionFactors, AttributionFactor{
 				FactorType: "opportunistic_behavior",
 				Weight:     0.6,
@@ -2955,7 +2953,7 @@ func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, act
 			})
 		}
 	}
-	
+
 	// Analyze package characteristics for attribution
 	if pkg.RiskScore > 0.8 {
 		attributionFactors = append(attributionFactors, AttributionFactor{
@@ -2964,22 +2962,22 @@ func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, act
 			Evidence:   fmt.Sprintf("High risk score: %.2f", pkg.RiskScore),
 			Confidence: pkg.RiskScore,
 		})
-		
+
 		if primaryConfidence < 0.8 {
 			primaryAttribution = "Skilled Threat Actor"
 			primaryConfidence = 0.8
 		}
 	}
-	
+
 	// Analyze registry patterns for attribution
 	registryFactors := ti.analyzeRegistryAttribution(pkg.Registry)
 	attributionFactors = append(attributionFactors, registryFactors...)
-	
+
 	// Cross-reference with known campaigns
 	for _, campaign := range campaigns {
 		if strings.Contains(campaign.ThreatActor, primaryAttribution) {
 			primaryConfidence = math.Min(primaryConfidence+0.1, 1.0)
-			
+
 			attributionFactors = append(attributionFactors, AttributionFactor{
 				FactorType: "campaign_correlation",
 				Weight:     0.8,
@@ -2988,12 +2986,12 @@ func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, act
 			})
 		}
 	}
-	
+
 	// Cross-reference with known threat actors
 	for _, actor := range actors {
 		if strings.Contains(actor.ActorName, primaryAttribution) || strings.Contains(primaryAttribution, actor.ActorName) {
 			primaryConfidence = math.Min(primaryConfidence+0.15, 1.0)
-			
+
 			attributionFactors = append(attributionFactors, AttributionFactor{
 				FactorType: "actor_correlation",
 				Weight:     0.9,
@@ -3002,7 +3000,7 @@ func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, act
 			})
 		}
 	}
-	
+
 	// Add alternative attributions based on uncertainty
 	if primaryConfidence < 0.8 {
 		alternativeAttributions = append(alternativeAttributions, Attribution{
@@ -3010,14 +3008,14 @@ func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, act
 			Confidence:  0.3,
 			Evidence:    []string{"low_sophistication", "common_techniques", "opportunistic_targeting"},
 		})
-		
+
 		alternativeAttributions = append(alternativeAttributions, Attribution{
 			ThreatActor: "Insider Threat",
 			Confidence:  0.2,
 			Evidence:    []string{"internal_access", "privilege_abuse", "data_exfiltration"},
 		})
 	}
-	
+
 	return &AttributionAnalysis{
 		PrimaryAttribution:      primaryAttribution,
 		AttributionConfidence:   primaryConfidence,
@@ -3029,7 +3027,7 @@ func (ti *ThreatIntelligence) performAttributionAnalysis(pkg *types.Package, act
 func (cem *CrossEcosystemMonitor) identifyThreats(pkg *types.Package) []CrossEcosystemThreat {
 	var threats []CrossEcosystemThreat
 	currentTime := time.Now()
-	
+
 	// Identify cross-ecosystem typosquatting threats
 	if cem.hasTyposquattingIndicators(pkg) {
 		threats = append(threats, CrossEcosystemThreat{
@@ -3042,7 +3040,7 @@ func (cem *CrossEcosystemMonitor) identifyThreats(pkg *types.Package) []CrossEco
 			PropagationVector:  "package_name_similarity",
 		})
 	}
-	
+
 	// Identify supply chain infiltration threats
 	if cem.hasSupplyChainIndicators(pkg) {
 		threats = append(threats, CrossEcosystemThreat{
@@ -3055,7 +3053,7 @@ func (cem *CrossEcosystemMonitor) identifyThreats(pkg *types.Package) []CrossEco
 			PropagationVector:  "dependency_confusion",
 		})
 	}
-	
+
 	// Identify coordinated malware campaigns
 	if cem.hasMalwareIndicators(pkg) {
 		threats = append(threats, CrossEcosystemThreat{
@@ -3068,7 +3066,7 @@ func (cem *CrossEcosystemMonitor) identifyThreats(pkg *types.Package) []CrossEco
 			PropagationVector:  "malicious_payload_distribution",
 		})
 	}
-	
+
 	return threats
 }
 
@@ -3104,10 +3102,10 @@ func (cem *CrossEcosystemMonitor) hasMalwareIndicators(pkg *types.Package) bool 
 
 func (cem *CrossEcosystemMonitor) analyzeCorrelations(pkg *types.Package) []EcosystemCorrelation {
 	var correlations []EcosystemCorrelation
-	
+
 	// Analyze correlations between current ecosystem and others
 	currentEcosystem := pkg.Registry
-	
+
 	// NPM correlation analysis
 	if currentEcosystem != "npm" {
 		correlations = append(correlations, EcosystemCorrelation{
@@ -3117,7 +3115,7 @@ func (cem *CrossEcosystemMonitor) analyzeCorrelations(pkg *types.Package) []Ecos
 			AttackVectors:       []string{"typosquatting", "dependency_confusion", "malware_distribution"},
 		})
 	}
-	
+
 	// PyPI correlation analysis
 	if currentEcosystem != "pypi" {
 		correlations = append(correlations, EcosystemCorrelation{
@@ -3127,7 +3125,7 @@ func (cem *CrossEcosystemMonitor) analyzeCorrelations(pkg *types.Package) []Ecos
 			AttackVectors:       []string{"typosquatting", "supply_chain", "malicious_packages"},
 		})
 	}
-	
+
 	// RubyGems correlation analysis
 	if currentEcosystem != "rubygems" {
 		correlations = append(correlations, EcosystemCorrelation{
@@ -3137,7 +3135,7 @@ func (cem *CrossEcosystemMonitor) analyzeCorrelations(pkg *types.Package) []Ecos
 			AttackVectors:       []string{"typosquatting", "backdoor_injection"},
 		})
 	}
-	
+
 	// Maven correlation analysis
 	if currentEcosystem != "maven" {
 		correlations = append(correlations, EcosystemCorrelation{
@@ -3147,7 +3145,7 @@ func (cem *CrossEcosystemMonitor) analyzeCorrelations(pkg *types.Package) []Ecos
 			AttackVectors:       []string{"dependency_confusion", "supply_chain"},
 		})
 	}
-	
+
 	return correlations
 }
 
@@ -3155,33 +3153,33 @@ func (cem *CrossEcosystemMonitor) analyzeCorrelations(pkg *types.Package) []Ecos
 func (cem *CrossEcosystemMonitor) calculateCorrelationStrength(pkg *types.Package, targetEcosystem string) float64 {
 	// Base correlation strength calculation
 	baseStrength := 0.3
-	
+
 	// Increase strength based on package characteristics
 	if pkg.RiskScore > 0.7 {
 		baseStrength += 0.3
 	}
-	
+
 	// Check for similar naming patterns across ecosystems
 	if cem.hasSimilarNamingPatterns(pkg.Name, targetEcosystem) {
 		baseStrength += 0.2
 	}
-	
+
 	// Check for threat type overlap
 	if cem.hasCommonThreatTypes(pkg, targetEcosystem) {
 		baseStrength += 0.2
 	}
-	
+
 	// Cap at 1.0
 	if baseStrength > 1.0 {
 		baseStrength = 1.0
 	}
-	
+
 	return baseStrength
 }
 
 func (cem *CrossEcosystemMonitor) identifySharedThreats(pkg *types.Package, targetEcosystem string) []string {
 	var sharedThreats []string
-	
+
 	// Common threat patterns across ecosystems
 	commonThreats := map[string][]string{
 		"npm":      {"typosquatting", "dependency_confusion", "malware_injection"},
@@ -3190,7 +3188,7 @@ func (cem *CrossEcosystemMonitor) identifySharedThreats(pkg *types.Package, targ
 		"maven":    {"dependency_confusion", "supply_chain", "artifact_poisoning"},
 		"nuget":    {"typosquatting", "package_substitution", "malware_distribution"},
 	}
-	
+
 	if threats, exists := commonThreats[targetEcosystem]; exists {
 		for _, threat := range threats {
 			// Check if current package has indicators of this threat type
@@ -3199,7 +3197,7 @@ func (cem *CrossEcosystemMonitor) identifySharedThreats(pkg *types.Package, targ
 			}
 		}
 	}
-	
+
 	return sharedThreats
 }
 
@@ -3211,14 +3209,14 @@ func (cem *CrossEcosystemMonitor) hasSimilarNamingPatterns(packageName, targetEc
 		"rails", "devise", "nokogiri", "rspec", "bundler", // Ruby
 		"spring", "hibernate", "junit", "maven", "gradle", // Java
 	}
-	
+
 	packageLower := strings.ToLower(packageName)
 	for _, pattern := range commonPatterns {
 		if strings.Contains(packageLower, pattern) && packageLower != pattern {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -3227,9 +3225,9 @@ func (cem *CrossEcosystemMonitor) hasCommonThreatTypes(pkg *types.Package, targe
 	for _, threat := range pkg.Threats {
 		threatType := strings.ToLower(string(threat.Type))
 		if strings.Contains(threatType, "typosquatting") ||
-		   strings.Contains(threatType, "dependency") ||
-		   strings.Contains(threatType, "supply_chain") ||
-		   strings.Contains(threatType, "malware") {
+			strings.Contains(threatType, "dependency") ||
+			strings.Contains(threatType, "supply_chain") ||
+			strings.Contains(threatType, "malware") {
 			return true
 		}
 	}
@@ -3252,57 +3250,57 @@ func (cem *CrossEcosystemMonitor) hasIndicatorsForThreatType(pkg *types.Package,
 
 func (cem *CrossEcosystemMonitor) assessSupplyChainRisks(pkg *types.Package) []SupplyChainRisk {
 	var risks []SupplyChainRisk
-	
+
 	// Assess dependency confusion risk
 	if cem.hasDependencyConfusionRisk(pkg) {
 		risks = append(risks, SupplyChainRisk{
-			RiskType:        "dependency_confusion",
-			RiskLevel:       "high",
-			AffectedChain:   []string{pkg.Registry, "private_repositories", "internal_packages"},
-			ImpactRadius:    cem.calculateImpactRadius(pkg),
-			Mitigation:      []string{"namespace_verification", "private_registry_priority", "dependency_pinning"},
+			RiskType:      "dependency_confusion",
+			RiskLevel:     "high",
+			AffectedChain: []string{pkg.Registry, "private_repositories", "internal_packages"},
+			ImpactRadius:  cem.calculateImpactRadius(pkg),
+			Mitigation:    []string{"namespace_verification", "private_registry_priority", "dependency_pinning"},
 		})
 	}
-	
+
 	// Assess typosquatting supply chain risk
 	if cem.hasTyposquattingSupplyChainRisk(pkg) {
 		risks = append(risks, SupplyChainRisk{
-			RiskType:        "typosquatting_supply_chain",
-			RiskLevel:       "medium",
-			AffectedChain:   []string{pkg.Registry, "developer_environments", "ci_cd_pipelines"},
-			ImpactRadius:    cem.calculateImpactRadius(pkg),
-			Mitigation:      []string{"package_verification", "automated_scanning", "developer_training"},
+			RiskType:      "typosquatting_supply_chain",
+			RiskLevel:     "medium",
+			AffectedChain: []string{pkg.Registry, "developer_environments", "ci_cd_pipelines"},
+			ImpactRadius:  cem.calculateImpactRadius(pkg),
+			Mitigation:    []string{"package_verification", "automated_scanning", "developer_training"},
 		})
 	}
-	
+
 	// Assess malicious package injection risk
 	if cem.hasMaliciousInjectionRisk(pkg) {
 		risks = append(risks, SupplyChainRisk{
-			RiskType:        "malicious_package_injection",
-			RiskLevel:       "critical",
-			AffectedChain:   []string{pkg.Registry, "downstream_dependencies", "production_systems"},
-			ImpactRadius:    cem.calculateImpactRadius(pkg),
-			Mitigation:      []string{"immediate_quarantine", "dependency_audit", "security_scanning", "incident_response"},
+			RiskType:      "malicious_package_injection",
+			RiskLevel:     "critical",
+			AffectedChain: []string{pkg.Registry, "downstream_dependencies", "production_systems"},
+			ImpactRadius:  cem.calculateImpactRadius(pkg),
+			Mitigation:    []string{"immediate_quarantine", "dependency_audit", "security_scanning", "incident_response"},
 		})
 	}
-	
+
 	// Assess compromised maintainer risk
 	if cem.hasCompromisedMaintainerRisk(pkg) {
 		risks = append(risks, SupplyChainRisk{
-			RiskType:        "compromised_maintainer",
-			RiskLevel:       "high",
-			AffectedChain:   []string{pkg.Registry, "package_ecosystem", "user_trust"},
-			ImpactRadius:    cem.calculateImpactRadius(pkg),
-			Mitigation:      []string{"maintainer_verification", "code_review", "multi_factor_auth", "access_monitoring"},
+			RiskType:      "compromised_maintainer",
+			RiskLevel:     "high",
+			AffectedChain: []string{pkg.Registry, "package_ecosystem", "user_trust"},
+			ImpactRadius:  cem.calculateImpactRadius(pkg),
+			Mitigation:    []string{"maintainer_verification", "code_review", "multi_factor_auth", "access_monitoring"},
 		})
 	}
-	
+
 	return risks
 }
 
 func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Package) []CrossPlatformIndicator {
 	var indicators []CrossPlatformIndicator
-	
+
 	// Extract package name indicators
 	indicators = append(indicators, CrossPlatformIndicator{
 		IndicatorType:  "package_name_pattern",
@@ -3311,7 +3309,7 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 		ThreatLevel:    cem.calculateNameThreatLevel(pkg),
 		Confidence:     cem.calculateNameConfidence(pkg),
 	})
-	
+
 	// Extract version pattern indicators
 	if pkg.Version != "" {
 		indicators = append(indicators, CrossPlatformIndicator{
@@ -3322,7 +3320,7 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 			Confidence:     cem.calculateVersionConfidence(pkg),
 		})
 	}
-	
+
 	// Extract threat signature indicators
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
@@ -3334,7 +3332,7 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 			Confidence:     threat.Confidence,
 		})
 	}
-	
+
 	// Extract metadata indicators
 	if pkg.Metadata != nil {
 		if pkg.Metadata.Description != "" {
@@ -3346,7 +3344,7 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 				Confidence:     cem.calculateDescriptionConfidence(pkg),
 			})
 		}
-		
+
 		if pkg.Metadata.Author != "" {
 			indicators = append(indicators, CrossPlatformIndicator{
 				IndicatorType:  "author_pattern",
@@ -3357,7 +3355,7 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 			})
 		}
 	}
-	
+
 	// Extract dependency pattern indicators
 	if len(pkg.Dependencies) > 0 {
 		dependencyPattern := fmt.Sprintf("deps_%d", len(pkg.Dependencies))
@@ -3369,7 +3367,7 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 			Confidence:     cem.calculateDependencyConfidence(pkg),
 		})
 	}
-	
+
 	return indicators
 }
 
@@ -3377,8 +3375,8 @@ func (cem *CrossEcosystemMonitor) extractCrossPlatformIndicators(pkg *types.Pack
 func (cem *CrossEcosystemMonitor) hasDependencyConfusionRisk(pkg *types.Package) bool {
 	// Check for dependency confusion indicators
 	return strings.Contains(strings.ToLower(pkg.Name), "internal") ||
-		   strings.Contains(strings.ToLower(pkg.Name), "private") ||
-		   len(pkg.Name) > 20 // Unusually long names often indicate confusion attacks
+		strings.Contains(strings.ToLower(pkg.Name), "private") ||
+		len(pkg.Name) > 20 // Unusually long names often indicate confusion attacks
 }
 
 func (cem *CrossEcosystemMonitor) hasTyposquattingSupplyChainRisk(pkg *types.Package) bool {
@@ -3400,20 +3398,20 @@ func (cem *CrossEcosystemMonitor) hasCompromisedMaintainerRisk(pkg *types.Packag
 func (cem *CrossEcosystemMonitor) calculateImpactRadius(pkg *types.Package) int {
 	// Calculate potential impact radius based on package characteristics
 	radius := 1 // Base radius
-	
+
 	// Increase radius based on download count
 	if pkg.Metadata != nil && pkg.Metadata.Downloads > 1000 {
 		radius += 2
 	} else if pkg.Metadata != nil && pkg.Metadata.Downloads > 100 {
 		radius += 1
 	}
-	
+
 	// Increase radius based on dependencies
 	radius += len(pkg.Dependencies) / 5
-	
+
 	// Increase radius based on risk score
 	radius += int(pkg.RiskScore * 3)
-	
+
 	return radius
 }
 
@@ -3429,21 +3427,21 @@ func (cem *CrossEcosystemMonitor) calculateNameThreatLevel(pkg *types.Package) s
 
 func (cem *CrossEcosystemMonitor) calculateNameConfidence(pkg *types.Package) float64 {
 	confidence := 0.5
-	
+
 	// Increase confidence based on threat indicators
 	for _, threat := range pkg.Threats {
 		if strings.Contains(string(threat.Type), "typosquatting") {
 			confidence += 0.3
 		}
 	}
-	
+
 	// Increase confidence based on risk score
 	confidence += pkg.RiskScore * 0.3
-	
+
 	if confidence > 1.0 {
 		confidence = 1.0
 	}
-	
+
 	return confidence
 }
 
@@ -3469,19 +3467,19 @@ func (cem *CrossEcosystemMonitor) calculateVersionConfidence(pkg *types.Package)
 func (cem *CrossEcosystemMonitor) getAffectedEcosystems(threatType string) []string {
 	// Map threat types to commonly affected ecosystems
 	ecosystemMap := map[string][]string{
-		"typosquatting":      {"npm", "pypi", "rubygems", "nuget", "maven"},
-		"supply_chain":       {"npm", "pypi", "maven", "nuget", "cargo"},
-		"malicious":          {"npm", "pypi", "rubygems", "nuget"},
-		"dependency":         {"npm", "pypi", "maven", "nuget", "cargo"},
-		"backdoor":           {"npm", "pypi", "rubygems"},
+		"typosquatting": {"npm", "pypi", "rubygems", "nuget", "maven"},
+		"supply_chain":  {"npm", "pypi", "maven", "nuget", "cargo"},
+		"malicious":     {"npm", "pypi", "rubygems", "nuget"},
+		"dependency":    {"npm", "pypi", "maven", "nuget", "cargo"},
+		"backdoor":      {"npm", "pypi", "rubygems"},
 	}
-	
+
 	for key, ecosystems := range ecosystemMap {
 		if strings.Contains(strings.ToLower(threatType), key) {
 			return ecosystems
 		}
 	}
-	
+
 	// Default to major ecosystems
 	return []string{"npm", "pypi", "rubygems", "maven", "nuget"}
 }
@@ -3490,16 +3488,16 @@ func (cem *CrossEcosystemMonitor) calculateDescriptionThreatLevel(pkg *types.Pac
 	if pkg.Metadata == nil || pkg.Metadata.Description == "" {
 		return "medium" // Missing description is suspicious
 	}
-	
+
 	description := strings.ToLower(pkg.Metadata.Description)
 	suspiciousKeywords := []string{"crypto", "miner", "stealer", "backdoor", "payload", "obfuscated"}
-	
+
 	for _, keyword := range suspiciousKeywords {
 		if strings.Contains(description, keyword) {
 			return "high"
 		}
 	}
-	
+
 	return "low"
 }
 
@@ -3544,52 +3542,52 @@ func (cem *CrossEcosystemMonitor) calculateDependencyConfidence(pkg *types.Packa
 
 func (cd *CampaignDetector) detectCampaigns(pkg *types.Package) []DetectedCampaign {
 	var campaigns []DetectedCampaign
-	
+
 	// Analyze package for campaign indicators
 	currentTime := time.Now()
-	
+
 	// Check for typosquatting campaign
 	if cd.isTyposquattingCampaign(pkg) {
 		campaigns = append(campaigns, DetectedCampaign{
-			CampaignID:      fmt.Sprintf("typo_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-			CampaignType:    "typosquatting",
-			Stage:           "active",
-			Confidence:      0.8,
-			StartTime:       currentTime.Add(-24 * time.Hour), // Assume started 24h ago
-			Duration:        24 * time.Hour,
-			AttackVectors:   []string{"similar_package_names", "recent_creation", "suspicious_metadata"},
-			TargetedAssets:  []string{pkg.Registry},
+			CampaignID:     fmt.Sprintf("typo_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+			CampaignType:   "typosquatting",
+			Stage:          "active",
+			Confidence:     0.8,
+			StartTime:      currentTime.Add(-24 * time.Hour), // Assume started 24h ago
+			Duration:       24 * time.Hour,
+			AttackVectors:  []string{"similar_package_names", "recent_creation", "suspicious_metadata"},
+			TargetedAssets: []string{pkg.Registry},
 		})
 	}
-	
+
 	// Check for supply chain campaign
 	if cd.isSupplyChainCampaign(pkg) {
 		campaigns = append(campaigns, DetectedCampaign{
-			CampaignID:      fmt.Sprintf("supply_chain_%s_%d", pkg.Name, currentTime.Unix()),
-			CampaignType:    "supply_chain",
-			Stage:           "infiltration",
-			Confidence:      0.9,
-			StartTime:       currentTime.Add(-72 * time.Hour), // Assume started 72h ago
-			Duration:        72 * time.Hour,
-			AttackVectors:   []string{"dependency_confusion", "malicious_code", "backdoor"},
-			TargetedAssets:  []string{pkg.Registry, "downstream_dependencies"},
+			CampaignID:     fmt.Sprintf("supply_chain_%s_%d", pkg.Name, currentTime.Unix()),
+			CampaignType:   "supply_chain",
+			Stage:          "infiltration",
+			Confidence:     0.9,
+			StartTime:      currentTime.Add(-72 * time.Hour), // Assume started 72h ago
+			Duration:       72 * time.Hour,
+			AttackVectors:  []string{"dependency_confusion", "malicious_code", "backdoor"},
+			TargetedAssets: []string{pkg.Registry, "downstream_dependencies"},
 		})
 	}
-	
+
 	// Check for mass malware campaign
 	if cd.isMalwareCampaign(pkg) {
 		campaigns = append(campaigns, DetectedCampaign{
-			CampaignID:      fmt.Sprintf("malware_campaign_%s_%d", pkg.Name, currentTime.Unix()),
-			CampaignType:    "malware_distribution",
-			Stage:           "distribution",
-			Confidence:      0.85,
-			StartTime:       currentTime.Add(-48 * time.Hour), // Assume started 48h ago
-			Duration:        48 * time.Hour,
-			AttackVectors:   []string{"malicious_payload", "obfuscated_code", "network_communication"},
-			TargetedAssets:  []string{pkg.Registry, "developer_systems"},
+			CampaignID:     fmt.Sprintf("malware_campaign_%s_%d", pkg.Name, currentTime.Unix()),
+			CampaignType:   "malware_distribution",
+			Stage:          "distribution",
+			Confidence:     0.85,
+			StartTime:      currentTime.Add(-48 * time.Hour), // Assume started 48h ago
+			Duration:       48 * time.Hour,
+			AttackVectors:  []string{"malicious_payload", "obfuscated_code", "network_communication"},
+			TargetedAssets: []string{pkg.Registry, "developer_systems"},
 		})
 	}
-	
+
 	return campaigns
 }
 
@@ -3602,7 +3600,7 @@ func (cd *CampaignDetector) isTyposquattingCampaign(pkg *types.Package) bool {
 			return true
 		}
 	}
-	
+
 	// Check for suspicious package name patterns
 	packageName := strings.ToLower(pkg.Name)
 	suspiciousPatterns := []string{"lodash", "express", "react", "angular", "jquery"}
@@ -3611,7 +3609,7 @@ func (cd *CampaignDetector) isTyposquattingCampaign(pkg *types.Package) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -3623,12 +3621,12 @@ func (cd *CampaignDetector) isSupplyChainCampaign(pkg *types.Package) bool {
 			return true
 		}
 	}
-	
+
 	// Check for high-risk packages with dependencies
 	if pkg.RiskScore > 0.8 && len(pkg.Dependencies) > 0 {
 		return true
 	}
-	
+
 	// Check for suspicious metadata indicating supply chain targeting
 	if pkg.Metadata != nil {
 		description := strings.ToLower(pkg.Metadata.Description)
@@ -3639,7 +3637,7 @@ func (cd *CampaignDetector) isSupplyChainCampaign(pkg *types.Package) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -3651,25 +3649,25 @@ func (cd *CampaignDetector) isMalwareCampaign(pkg *types.Package) bool {
 			return true
 		}
 	}
-	
+
 	// Check for high confidence malware indicators
 	for _, threat := range pkg.Threats {
 		if threat.Confidence > 0.8 {
 			return true
 		}
 	}
-	
+
 	// Check for suspicious package characteristics
 	if pkg.RiskScore > 0.7 {
 		return true
 	}
-	
+
 	return false
 }
 
 func (cd *CampaignDetector) identifyPatterns(pkg *types.Package) []CampaignPattern {
 	var patterns []CampaignPattern
-	
+
 	// Pattern 1: Typosquatting pattern
 	if cd.isTyposquattingPattern(pkg) {
 		patterns = append(patterns, CampaignPattern{
@@ -3681,7 +3679,7 @@ func (cd *CampaignDetector) identifyPatterns(pkg *types.Package) []CampaignPatte
 			ThreatActors: []string{"opportunistic_attackers", "cybercriminal_groups"},
 		})
 	}
-	
+
 	// Pattern 2: Supply chain infiltration pattern
 	if cd.isSupplyChainPattern(pkg) {
 		patterns = append(patterns, CampaignPattern{
@@ -3693,7 +3691,7 @@ func (cd *CampaignDetector) identifyPatterns(pkg *types.Package) []CampaignPatte
 			ThreatActors: []string{"apt_groups", "nation_state_actors"},
 		})
 	}
-	
+
 	// Pattern 3: Dependency confusion pattern
 	if cd.isDependencyConfusionPattern(pkg) {
 		patterns = append(patterns, CampaignPattern{
@@ -3705,7 +3703,7 @@ func (cd *CampaignDetector) identifyPatterns(pkg *types.Package) []CampaignPatte
 			ThreatActors: []string{"cybercriminal_groups", "insider_threats"},
 		})
 	}
-	
+
 	// Pattern 4: Malware distribution pattern
 	if cd.isMalwareDistributionPattern(pkg) {
 		patterns = append(patterns, CampaignPattern{
@@ -3717,14 +3715,14 @@ func (cd *CampaignDetector) identifyPatterns(pkg *types.Package) []CampaignPatte
 			ThreatActors: []string{"malware_operators", "ransomware_groups"},
 		})
 	}
-	
+
 	return patterns
 }
 
 func (cd *CampaignDetector) detectStagedAttacks(pkg *types.Package) []StagedAttack {
 	var stagedAttacks []StagedAttack
 	currentTime := time.Now()
-	
+
 	// Detect multi-stage typosquatting campaigns
 	if cd.isMultiStageTyposquatting(pkg) {
 		nextStageTime := currentTime.Add(12 * time.Hour)
@@ -3764,7 +3762,7 @@ func (cd *CampaignDetector) detectStagedAttacks(pkg *types.Package) []StagedAtta
 			},
 		})
 	}
-	
+
 	// Detect staged supply chain attacks
 	if cd.isMultiStageSupplyChain(pkg) {
 		nextStageTime := currentTime.Add(24 * time.Hour)
@@ -3812,7 +3810,7 @@ func (cd *CampaignDetector) detectStagedAttacks(pkg *types.Package) []StagedAtta
 			},
 		})
 	}
-	
+
 	// Detect staged malware distribution campaigns
 	if cd.isMultiStageMalware(pkg) {
 		nextStageTime := currentTime.Add(6 * time.Hour)
@@ -3850,63 +3848,63 @@ func (cd *CampaignDetector) detectStagedAttacks(pkg *types.Package) []StagedAtta
 			},
 		})
 	}
-	
+
 	return stagedAttacks
 }
 
 func (cd *CampaignDetector) calculateMetrics(campaigns []DetectedCampaign) *CampaignMetrics {
 	if len(campaigns) == 0 {
 		return &CampaignMetrics{
-			TotalCampaigns:        0,
-			ActiveCampaigns:       0,
-			CompletedCampaigns:    0,
-			AverageDetectionTime:  0,
-			DetectionAccuracy:     0.0,
+			TotalCampaigns:       0,
+			ActiveCampaigns:      0,
+			CompletedCampaigns:   0,
+			AverageDetectionTime: 0,
+			DetectionAccuracy:    0.0,
 		}
 	}
-	
+
 	activeCampaigns := 0
 	totalConfidence := 0.0
 	threatTypes := make(map[string]bool)
 	var responseTimes []time.Duration
-	
+
 	for _, campaign := range campaigns {
 		// Count active campaigns
 		if campaign.Stage == "active" || campaign.Stage == "infiltration" || campaign.Stage == "distribution" {
 			activeCampaigns++
 		}
-		
+
 		// Calculate average confidence
 		totalConfidence += campaign.Confidence
-		
+
 		// Track threat type coverage
 		threatTypes[campaign.CampaignType] = true
-		
+
 		// Calculate response time (time since campaign start)
 		responseTime := time.Since(campaign.StartTime)
 		responseTimes = append(responseTimes, responseTime)
 	}
-	
+
 	// Calculate detection accuracy based on confidence levels
 	averageConfidence := totalConfidence / float64(len(campaigns))
 	detectionAccuracy := averageConfidence * 0.9 // Slightly lower than confidence
-	
+
 	// Calculate completed campaigns
 	completedCampaigns := len(campaigns) - activeCampaigns
-	
+
 	// Calculate average detection time
 	var totalDetectionTime time.Duration
 	for _, responseTime := range responseTimes {
 		totalDetectionTime += responseTime
 	}
 	averageDetectionTime := totalDetectionTime / time.Duration(len(responseTimes))
-	
+
 	return &CampaignMetrics{
-		TotalCampaigns:        len(campaigns),
-		ActiveCampaigns:       activeCampaigns,
-		CompletedCampaigns:    completedCampaigns,
-		AverageDetectionTime:  averageDetectionTime,
-		DetectionAccuracy:     detectionAccuracy,
+		TotalCampaigns:       len(campaigns),
+		ActiveCampaigns:      activeCampaigns,
+		CompletedCampaigns:   completedCampaigns,
+		AverageDetectionTime: averageDetectionTime,
+		DetectionAccuracy:    detectionAccuracy,
 	}
 }
 
@@ -3984,7 +3982,7 @@ func (ro *ResponseOrchestrator) assessActiveResponses(pkg *types.Package) []Acti
 	var responses []ActiveResponse
 	currentTime := time.Now()
 	riskScore := pkg.RiskScore
-	
+
 	// Critical threat response
 	if riskScore > 0.9 {
 		responses = append(responses, ActiveResponse{
@@ -3998,7 +3996,7 @@ func (ro *ResponseOrchestrator) assessActiveResponses(pkg *types.Package) []Acti
 			Duration:      15 * time.Minute,
 		})
 	}
-	
+
 	// High risk threat response
 	if riskScore > 0.7 && riskScore <= 0.9 {
 		responses = append(responses, ActiveResponse{
@@ -4012,7 +4010,7 @@ func (ro *ResponseOrchestrator) assessActiveResponses(pkg *types.Package) []Acti
 			Duration:      30 * time.Minute,
 		})
 	}
-	
+
 	// Medium risk threat response
 	if riskScore > 0.5 && riskScore <= 0.7 {
 		responses = append(responses, ActiveResponse{
@@ -4026,11 +4024,11 @@ func (ro *ResponseOrchestrator) assessActiveResponses(pkg *types.Package) []Acti
 			Duration:      1 * time.Hour,
 		})
 	}
-	
+
 	// Threat-specific responses
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		if strings.Contains(threatType, "typosquatting") && threat.Confidence > 0.7 {
 			responses = append(responses, ActiveResponse{
 				ResponseID:    fmt.Sprintf("typo_response_%s_%d", pkg.Name, currentTime.Unix()),
@@ -4043,7 +4041,7 @@ func (ro *ResponseOrchestrator) assessActiveResponses(pkg *types.Package) []Acti
 				Duration:      45 * time.Minute,
 			})
 		}
-		
+
 		if strings.Contains(threatType, "malicious") && threat.Confidence > 0.8 {
 			responses = append(responses, ActiveResponse{
 				ResponseID:    fmt.Sprintf("malware_response_%s_%d", pkg.Name, currentTime.Unix()),
@@ -4057,14 +4055,14 @@ func (ro *ResponseOrchestrator) assessActiveResponses(pkg *types.Package) []Acti
 			})
 		}
 	}
-	
+
 	return responses
 }
 
 func (ro *ResponseOrchestrator) identifyResponseChains(pkg *types.Package) []ResponseChain {
 	var chains []ResponseChain
 	riskScore := pkg.RiskScore
-	
+
 	// Critical threat response chain
 	if riskScore > 0.9 {
 		chains = append(chains, ResponseChain{
@@ -4076,7 +4074,7 @@ func (ro *ResponseOrchestrator) identifyResponseChains(pkg *types.Package) []Res
 			Success:        true,
 		})
 	}
-	
+
 	// High risk response chain
 	if riskScore > 0.7 && riskScore <= 0.9 {
 		chains = append(chains, ResponseChain{
@@ -4088,11 +4086,11 @@ func (ro *ResponseOrchestrator) identifyResponseChains(pkg *types.Package) []Res
 			Success:        true,
 		})
 	}
-	
+
 	// Supply chain response chain
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		if strings.Contains(threatType, "supply_chain") && threat.Confidence > 0.6 {
 			chains = append(chains, ResponseChain{
 				ChainID:        fmt.Sprintf("supply_chain_%s", pkg.Name),
@@ -4103,7 +4101,7 @@ func (ro *ResponseOrchestrator) identifyResponseChains(pkg *types.Package) []Res
 				Success:        false,
 			})
 		}
-		
+
 		if strings.Contains(threatType, "typosquatting") && threat.Confidence > 0.7 {
 			chains = append(chains, ResponseChain{
 				ChainID:        fmt.Sprintf("typosquatting_chain_%s", pkg.Name),
@@ -4115,16 +4113,16 @@ func (ro *ResponseOrchestrator) identifyResponseChains(pkg *types.Package) []Res
 			})
 		}
 	}
-	
+
 	return chains
 }
 
 func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []AutomatedAction {
 	var actions []AutomatedAction
-	
+
 	currentTime := time.Now()
 	riskScore := pkg.RiskScore
-	
+
 	// Execute immediate actions for critical threats
 	if riskScore > 0.9 {
 		actions = append(actions, AutomatedAction{
@@ -4135,7 +4133,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 			Result:           "Package quarantined successfully",
 			Effectiveness:    0.95,
 		})
-		
+
 		actions = append(actions, AutomatedAction{
 			ActionID:         fmt.Sprintf("alert_%s_%d", pkg.Name, currentTime.Unix()),
 			ActionType:       "security_alert",
@@ -4145,7 +4143,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 			Effectiveness:    0.9,
 		})
 	}
-	
+
 	// Execute monitoring actions for medium-high risk packages
 	if riskScore > 0.6 && riskScore <= 0.9 {
 		actions = append(actions, AutomatedAction{
@@ -4156,7 +4154,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 			Result:           "Enhanced monitoring activated",
 			Effectiveness:    0.8,
 		})
-		
+
 		actions = append(actions, AutomatedAction{
 			ActionID:         fmt.Sprintf("scan_%s_%d", pkg.Name, currentTime.Unix()),
 			ActionType:       "deep_scan",
@@ -4166,11 +4164,11 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 			Effectiveness:    0.75,
 		})
 	}
-	
+
 	// Execute threat-specific actions
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		if strings.Contains(threatType, "typosquatting") && threat.Confidence > 0.7 {
 			actions = append(actions, AutomatedAction{
 				ActionID:         fmt.Sprintf("typo_check_%s_%d", pkg.Name, currentTime.Unix()),
@@ -4181,7 +4179,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 				Effectiveness:    0.85,
 			})
 		}
-		
+
 		if strings.Contains(threatType, "malicious") && threat.Confidence > 0.8 {
 			actions = append(actions, AutomatedAction{
 				ActionID:         fmt.Sprintf("isolate_%s_%d", pkg.Name, currentTime.Unix()),
@@ -4191,7 +4189,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 				Result:           "Package isolated from network",
 				Effectiveness:    0.9,
 			})
-			
+
 			actions = append(actions, AutomatedAction{
 				ActionID:         fmt.Sprintf("forensics_%s_%d", pkg.Name, currentTime.Unix()),
 				ActionType:       "forensic_analysis",
@@ -4201,7 +4199,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 				Effectiveness:    0.8,
 			})
 		}
-		
+
 		if strings.Contains(threatType, "supply_chain") && threat.Confidence > 0.6 {
 			actions = append(actions, AutomatedAction{
 				ActionID:         fmt.Sprintf("dependency_check_%s_%d", pkg.Name, currentTime.Unix()),
@@ -4213,7 +4211,7 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 			})
 		}
 	}
-	
+
 	// Execute notification actions based on severity
 	for _, threat := range pkg.Threats {
 		if threat.Severity == types.SeverityCritical {
@@ -4228,15 +4226,15 @@ func (ro *ResponseOrchestrator) executeAutomatedActions(pkg *types.Package) []Au
 			break // Only escalate once
 		}
 	}
-	
+
 	return actions
 }
 
 func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []EscalationPath {
 	var paths []EscalationPath
-	
+
 	riskScore := pkg.RiskScore
-	
+
 	// Critical risk escalation path
 	if riskScore > 0.9 {
 		paths = append(paths, EscalationPath{
@@ -4260,7 +4258,7 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 			Timeline: 15 * time.Minute,
 		})
 	}
-	
+
 	// High risk escalation path
 	if riskScore > 0.7 && riskScore <= 0.9 {
 		paths = append(paths, EscalationPath{
@@ -4281,7 +4279,7 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 			Timeline: 30 * time.Minute,
 		})
 	}
-	
+
 	// Medium risk escalation path
 	if riskScore > 0.5 && riskScore <= 0.7 {
 		paths = append(paths, EscalationPath{
@@ -4300,11 +4298,11 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 			Timeline: 1 * time.Hour,
 		})
 	}
-	
+
 	// Threat-specific escalation paths
 	for _, threat := range pkg.Threats {
 		threatType := string(threat.Type)
-		
+
 		// Malware-specific escalation
 		if strings.Contains(threatType, "malicious") && threat.Confidence > 0.8 {
 			paths = append(paths, EscalationPath{
@@ -4326,7 +4324,7 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 				Timeline: 20 * time.Minute,
 			})
 		}
-		
+
 		// Supply chain attack escalation
 		if strings.Contains(threatType, "supply_chain") && threat.Confidence > 0.7 {
 			paths = append(paths, EscalationPath{
@@ -4348,7 +4346,7 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 				Timeline: 45 * time.Minute,
 			})
 		}
-		
+
 		// Typosquatting escalation
 		if strings.Contains(threatType, "typosquatting") && threat.Confidence > 0.6 {
 			paths = append(paths, EscalationPath{
@@ -4370,7 +4368,7 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 			})
 		}
 	}
-	
+
 	// Severity-based escalation paths
 	for _, threat := range pkg.Threats {
 		if threat.Severity == types.SeverityCritical {
@@ -4394,6 +4392,6 @@ func (ro *ResponseOrchestrator) identifyEscalationPaths(pkg *types.Package) []Es
 			break // Only create one critical severity escalation
 		}
 	}
-	
+
 	return paths
 }

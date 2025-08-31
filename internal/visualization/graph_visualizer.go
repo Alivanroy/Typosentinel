@@ -20,14 +20,14 @@ type GraphVisualizer struct {
 
 // VisualizationConfig contains configuration for graph visualization
 type VisualizationConfig struct {
-	Interactive     bool   `json:"interactive"`
-	ShowRiskScores  bool   `json:"show_risk_scores"`
-	ShowMetadata    bool   `json:"show_metadata"`
-	ColorScheme     string `json:"color_scheme"`
-	Layout          string `json:"layout"`
-	MaxNodes        int    `json:"max_nodes"`
+	Interactive     bool    `json:"interactive"`
+	ShowRiskScores  bool    `json:"show_risk_scores"`
+	ShowMetadata    bool    `json:"show_metadata"`
+	ColorScheme     string  `json:"color_scheme"`
+	Layout          string  `json:"layout"`
+	MaxNodes        int     `json:"max_nodes"`
 	MinRiskScore    float64 `json:"min_risk_score"`
-	OutputDirectory string `json:"output_directory"`
+	OutputDirectory string  `json:"output_directory"`
 }
 
 // InteractiveGraphData represents data for interactive visualization
@@ -41,32 +41,32 @@ type InteractiveGraphData struct {
 
 // GraphNodeData represents a node in the interactive graph
 type GraphNodeData struct {
-	ID           string                 `json:"id"`
-	Label        string                 `json:"label"`
-	PackageName  string                 `json:"package_name"`
-	Version      string                 `json:"version"`
-	RiskScore    float64                `json:"risk_score"`
-	Severity     string                 `json:"severity"`
-	Threats      []types.Threat         `json:"threats"`
-	Direct       bool                   `json:"direct"`
-	Depth        int                    `json:"depth"`
-	Size         float64                `json:"size"`
-	Color        string                 `json:"color"`
-	Group        string                 `json:"group"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	Coordinates  *NodeCoordinates       `json:"coordinates,omitempty"`
+	ID          string                 `json:"id"`
+	Label       string                 `json:"label"`
+	PackageName string                 `json:"package_name"`
+	Version     string                 `json:"version"`
+	RiskScore   float64                `json:"risk_score"`
+	Severity    string                 `json:"severity"`
+	Threats     []types.Threat         `json:"threats"`
+	Direct      bool                   `json:"direct"`
+	Depth       int                    `json:"depth"`
+	Size        float64                `json:"size"`
+	Color       string                 `json:"color"`
+	Group       string                 `json:"group"`
+	Metadata    map[string]interface{} `json:"metadata"`
+	Coordinates *NodeCoordinates       `json:"coordinates,omitempty"`
 }
 
 // GraphEdgeData represents an edge in the interactive graph
 type GraphEdgeData struct {
-	ID       string  `json:"id"`
-	Source   string  `json:"source"`
-	Target   string  `json:"target"`
-	Weight   float64 `json:"weight"`
-	Type     string  `json:"type"`
-	Color    string  `json:"color"`
-	Width    float64 `json:"width"`
-	Dashed   bool    `json:"dashed"`
+	ID     string  `json:"id"`
+	Source string  `json:"source"`
+	Target string  `json:"target"`
+	Weight float64 `json:"weight"`
+	Type   string  `json:"type"`
+	Color  string  `json:"color"`
+	Width  float64 `json:"width"`
+	Dashed bool    `json:"dashed"`
 }
 
 // NodeCoordinates represents the position of a node
@@ -90,9 +90,9 @@ type GraphMetadata struct {
 
 // FilterOptions contains available filter options
 type FilterOptions struct {
-	SeverityLevels []string  `json:"severity_levels"`
-	PackageTypes   []string  `json:"package_types"`
-	RiskRange      RiskRange `json:"risk_range"`
+	SeverityLevels []string   `json:"severity_levels"`
+	PackageTypes   []string   `json:"package_types"`
+	RiskRange      RiskRange  `json:"risk_range"`
 	DepthRange     DepthRange `json:"depth_range"`
 }
 
@@ -129,20 +129,20 @@ func NewGraphVisualizer(config *VisualizationConfig) *GraphVisualizer {
 func (gv *GraphVisualizer) GenerateInteractiveGraph(result *analyzer.ScanResult, outputPath string) error {
 	// Convert scan result to graph data
 	graphData := gv.convertToGraphData(result)
-	
+
 	// Generate HTML file
 	htmlContent := gv.generateHTMLVisualization(graphData)
-	
+
 	// Ensure output directory exists
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
-	
+
 	// Write HTML file
 	if err := os.WriteFile(outputPath, []byte(htmlContent), 0644); err != nil {
 		return fmt.Errorf("failed to write HTML file: %w", err)
 	}
-	
+
 	fmt.Printf("✅ Interactive dependency graph generated: %s\n", outputPath)
 	return nil
 }
@@ -150,18 +150,18 @@ func (gv *GraphVisualizer) GenerateInteractiveGraph(result *analyzer.ScanResult,
 // GenerateAdvancedSVG creates an enhanced SVG visualization
 func (gv *GraphVisualizer) GenerateAdvancedSVG(result *analyzer.ScanResult, outputPath string) error {
 	graphData := gv.convertToGraphData(result)
-	
+
 	// Calculate layout
 	gv.calculateForceLayout(graphData)
-	
+
 	// Generate SVG content
 	svgContent := gv.generateAdvancedSVGContent(graphData)
-	
+
 	// Write SVG file
 	if err := os.WriteFile(outputPath, []byte(svgContent), 0644); err != nil {
 		return fmt.Errorf("failed to write SVG file: %w", err)
 	}
-	
+
 	fmt.Printf("✅ Advanced SVG graph generated: %s\n", outputPath)
 	return nil
 }
@@ -170,7 +170,7 @@ func (gv *GraphVisualizer) GenerateAdvancedSVG(result *analyzer.ScanResult, outp
 func (gv *GraphVisualizer) convertToGraphData(result *analyzer.ScanResult) *InteractiveGraphData {
 	nodes := make([]GraphNodeData, 0)
 	edges := make([]GraphEdgeData, 0)
-	
+
 	// Create root node
 	rootNode := GraphNodeData{
 		ID:          "root",
@@ -184,24 +184,24 @@ func (gv *GraphVisualizer) convertToGraphData(result *analyzer.ScanResult) *Inte
 		Size:        gv.calculateNodeSize(0, len(result.Threats)),
 		Color:       gv.getNodeColor(gv.calculateOverallRiskScore(result)),
 		Group:       "root",
-		Metadata:    map[string]interface{}{
+		Metadata: map[string]interface{}{
 			"total_packages": result.TotalPackages,
-			"scan_duration": result.Duration.String(),
+			"scan_duration":  result.Duration.String(),
 		},
 	}
 	nodes = append(nodes, rootNode)
-	
+
 	// Create threat nodes
 	for i, threat := range result.Threats {
 		if i >= gv.config.MaxNodes-1 { // Reserve space for root node
 			break
 		}
-		
+
 		riskScore := gv.calculateThreatRiskScore(threat)
 		if riskScore < gv.config.MinRiskScore {
 			continue
 		}
-		
+
 		nodeID := fmt.Sprintf("threat_%d", i)
 		threatNode := GraphNodeData{
 			ID:          nodeID,
@@ -209,7 +209,7 @@ func (gv *GraphVisualizer) convertToGraphData(result *analyzer.ScanResult) *Inte
 			PackageName: threat.Package,
 			Version:     threat.Version,
 			RiskScore:   riskScore,
-			Severity:    string(threat.Severity),
+			Severity:    threat.Severity.String(),
 			Threats:     []types.Threat{threat},
 			Direct:      i < 10, // Assume first 10 are direct dependencies
 			Depth:       gv.calculateDepth(threat),
@@ -219,7 +219,7 @@ func (gv *GraphVisualizer) convertToGraphData(result *analyzer.ScanResult) *Inte
 			Metadata:    gv.extractThreatMetadata(threat),
 		}
 		nodes = append(nodes, threatNode)
-		
+
 		// Create edge from root to threat
 		edgeID := fmt.Sprintf("edge_root_%d", i)
 		edge := GraphEdgeData{
@@ -234,7 +234,7 @@ func (gv *GraphVisualizer) convertToGraphData(result *analyzer.ScanResult) *Inte
 		}
 		edges = append(edges, edge)
 	}
-	
+
 	// Calculate metadata
 	metadata := GraphMetadata{
 		Title:           fmt.Sprintf("Dependency Graph - %s", filepath.Base(result.Path)),
@@ -247,10 +247,10 @@ func (gv *GraphVisualizer) convertToGraphData(result *analyzer.ScanResult) *Inte
 		GeneratedAt:     time.Now(),
 		ScanDuration:    result.Duration.String(),
 	}
-	
+
 	// Calculate filter options
 	filters := gv.calculateFilterOptions(nodes)
-	
+
 	return &InteractiveGraphData{
 		Nodes:     nodes,
 		Edges:     edges,
@@ -266,7 +266,7 @@ func (gv *GraphVisualizer) calculateOverallRiskScore(result *analyzer.ScanResult
 	if len(result.Threats) == 0 {
 		return 0.0
 	}
-	
+
 	totalRisk := 0.0
 	for _, threat := range result.Threats {
 		totalRisk += gv.calculateThreatRiskScore(threat)
@@ -389,18 +389,18 @@ func (gv *GraphVisualizer) calculateFilterOptions(nodes []GraphNodeData) FilterO
 	packageTypes := make(map[string]bool)
 	minRisk, maxRisk := 1.0, 0.0
 	minDepth, maxDepth := 1000, 0
-	
+
 	for _, node := range nodes {
 		severityLevels[node.Severity] = true
 		packageTypes[node.Group] = true
-		
+
 		if node.RiskScore < minRisk {
 			minRisk = node.RiskScore
 		}
 		if node.RiskScore > maxRisk {
 			maxRisk = node.RiskScore
 		}
-		
+
 		if node.Depth < minDepth {
 			minDepth = node.Depth
 		}
@@ -408,19 +408,19 @@ func (gv *GraphVisualizer) calculateFilterOptions(nodes []GraphNodeData) FilterO
 			maxDepth = node.Depth
 		}
 	}
-	
+
 	severities := make([]string, 0, len(severityLevels))
 	for severity := range severityLevels {
 		severities = append(severities, severity)
 	}
 	sort.Strings(severities)
-	
+
 	types := make([]string, 0, len(packageTypes))
 	for pkgType := range packageTypes {
 		types = append(types, pkgType)
 	}
 	sort.Strings(types)
-	
+
 	return FilterOptions{
 		SeverityLevels: severities,
 		PackageTypes:   types,
@@ -465,7 +465,7 @@ func (gv *GraphVisualizer) calculateForceLayout(data *InteractiveGraphData) {
 	// Simple circular layout for demonstration
 	centerX, centerY := 400.0, 300.0
 	radius := 200.0
-	
+
 	for i := range data.Nodes {
 		if data.Nodes[i].ID == "root" {
 			data.Nodes[i].Coordinates = &NodeCoordinates{X: centerX, Y: centerY}
@@ -491,7 +491,7 @@ func (gv *GraphVisualizer) generateAdvancedSVGContent(data *InteractiveGraphData
   <rect width="100%%" height="100%%" fill="#f8f9fa"/>
   <text x="400" y="30" text-anchor="middle" font-size="20" font-weight="bold">%s</text>
 `, data.Metadata.Title, data.Metadata.Title)
-	
+
 	// Add edges
 	for _, edge := range data.Edges {
 		sourceNode := gv.findNodeByID(data.Nodes, edge.Source)
@@ -508,7 +508,7 @@ func (gv *GraphVisualizer) generateAdvancedSVGContent(data *InteractiveGraphData
 				edge.Color, edge.Width, strokeStyle)
 		}
 	}
-	
+
 	// Add nodes
 	for _, node := range data.Nodes {
 		if node.Coordinates != nil {
@@ -520,7 +520,7 @@ func (gv *GraphVisualizer) generateAdvancedSVGContent(data *InteractiveGraphData
 				node.Coordinates.X, node.Coordinates.Y+3, gv.truncateLabel(node.Label, 10))
 		}
 	}
-	
+
 	// Add legend
 	svg += `  <g transform="translate(50, 500)">
     <text x="0" y="0" font-size="12" font-weight="bold">Legend:</text>
@@ -532,7 +532,7 @@ func (gv *GraphVisualizer) generateAdvancedSVGContent(data *InteractiveGraphData
     <text x="30" y="65" font-size="10">Low Risk</text>
   </g>
 `
-	
+
 	svg += "</svg>"
 	return svg
 }

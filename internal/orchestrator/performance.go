@@ -14,75 +14,75 @@ import (
 
 // PerformanceOptimizer handles performance optimization for repository scanning
 type PerformanceOptimizer struct {
-	config PerformanceConfig
-	logger *log.Logger
+	config  PerformanceConfig
+	logger  *log.Logger
 	metrics *PerformanceMetrics
-	mu     sync.RWMutex
+	mu      sync.RWMutex
 }
 
 // PerformanceConfig holds performance optimization settings
 type PerformanceConfig struct {
-	MaxConcurrentScans    int           `json:"max_concurrent_scans"`
-	MaxConcurrentRepos    int           `json:"max_concurrent_repos"`
-	ScanTimeout           time.Duration `json:"scan_timeout"`
-	MemoryLimit           int64         `json:"memory_limit"`          // in bytes
-	CPULimit              float64       `json:"cpu_limit"`             // percentage (0-100)
-	CacheEnabled          bool          `json:"cache_enabled"`
-	CacheTTL              time.Duration `json:"cache_ttl"`
-	BatchSize             int           `json:"batch_size"`
-	RetryAttempts         int           `json:"retry_attempts"`
-	RetryDelay            time.Duration `json:"retry_delay"`
-	AdaptiveScaling       bool          `json:"adaptive_scaling"`
-	ResourceMonitoring    bool          `json:"resource_monitoring"`
-	GCOptimization        bool          `json:"gc_optimization"`
-	ConnectionPoolSize    int           `json:"connection_pool_size"`
-	RequestQueueSize      int           `json:"request_queue_size"`
-	CompressionEnabled    bool          `json:"compression_enabled"`
-	PrefetchEnabled       bool          `json:"prefetch_enabled"`
+	MaxConcurrentScans int           `json:"max_concurrent_scans"`
+	MaxConcurrentRepos int           `json:"max_concurrent_repos"`
+	ScanTimeout        time.Duration `json:"scan_timeout"`
+	MemoryLimit        int64         `json:"memory_limit"` // in bytes
+	CPULimit           float64       `json:"cpu_limit"`    // percentage (0-100)
+	CacheEnabled       bool          `json:"cache_enabled"`
+	CacheTTL           time.Duration `json:"cache_ttl"`
+	BatchSize          int           `json:"batch_size"`
+	RetryAttempts      int           `json:"retry_attempts"`
+	RetryDelay         time.Duration `json:"retry_delay"`
+	AdaptiveScaling    bool          `json:"adaptive_scaling"`
+	ResourceMonitoring bool          `json:"resource_monitoring"`
+	GCOptimization     bool          `json:"gc_optimization"`
+	ConnectionPoolSize int           `json:"connection_pool_size"`
+	RequestQueueSize   int           `json:"request_queue_size"`
+	CompressionEnabled bool          `json:"compression_enabled"`
+	PrefetchEnabled    bool          `json:"prefetch_enabled"`
 }
 
 // PerformanceMetrics tracks performance statistics
 type PerformanceMetrics struct {
-	TotalScans           int64         `json:"total_scans"`
-	SuccessfulScans      int64         `json:"successful_scans"`
-	FailedScans          int64         `json:"failed_scans"`
-	AverageScanDuration  time.Duration `json:"average_scan_duration"`
-	TotalScanDuration    time.Duration `json:"total_scan_duration"`
-	PeakMemoryUsage      int64         `json:"peak_memory_usage"`
-	AverageMemoryUsage   int64         `json:"average_memory_usage"`
-	PeakCPUUsage         float64       `json:"peak_cpu_usage"`
-	AverageCPUUsage      float64       `json:"average_cpu_usage"`
-	CacheHitRate         float64       `json:"cache_hit_rate"`
-	CacheMissRate        float64       `json:"cache_miss_rate"`
-	ThroughputPerSecond  float64       `json:"throughput_per_second"`
-	ErrorRate            float64       `json:"error_rate"`
-	RetryRate            float64       `json:"retry_rate"`
-	QueueLength          int           `json:"queue_length"`
-	ActiveConnections    int           `json:"active_connections"`
-	LastUpdated          time.Time     `json:"last_updated"`
-	mu                   sync.RWMutex
+	TotalScans          int64         `json:"total_scans"`
+	SuccessfulScans     int64         `json:"successful_scans"`
+	FailedScans         int64         `json:"failed_scans"`
+	AverageScanDuration time.Duration `json:"average_scan_duration"`
+	TotalScanDuration   time.Duration `json:"total_scan_duration"`
+	PeakMemoryUsage     int64         `json:"peak_memory_usage"`
+	AverageMemoryUsage  int64         `json:"average_memory_usage"`
+	PeakCPUUsage        float64       `json:"peak_cpu_usage"`
+	AverageCPUUsage     float64       `json:"average_cpu_usage"`
+	CacheHitRate        float64       `json:"cache_hit_rate"`
+	CacheMissRate       float64       `json:"cache_miss_rate"`
+	ThroughputPerSecond float64       `json:"throughput_per_second"`
+	ErrorRate           float64       `json:"error_rate"`
+	RetryRate           float64       `json:"retry_rate"`
+	QueueLength         int           `json:"queue_length"`
+	ActiveConnections   int           `json:"active_connections"`
+	LastUpdated         time.Time     `json:"last_updated"`
+	mu                  sync.RWMutex
 }
 
 // ScanBatch represents a batch of repositories to scan
 type ScanBatch struct {
-	ID           string                 `json:"id"`
+	ID           string                   `json:"id"`
 	Repositories []*repository.Repository `json:"repositories"`
-	Priority     int                    `json:"priority"`
-	CreatedAt    time.Time              `json:"created_at"`
-	StartedAt    *time.Time             `json:"started_at,omitempty"`
-	CompletedAt  *time.Time             `json:"completed_at,omitempty"`
-	Status       string                 `json:"status"`
+	Priority     int                      `json:"priority"`
+	CreatedAt    time.Time                `json:"created_at"`
+	StartedAt    *time.Time               `json:"started_at,omitempty"`
+	CompletedAt  *time.Time               `json:"completed_at,omitempty"`
+	Status       string                   `json:"status"`
 	Results      []*repository.ScanResult `json:"results"`
-	Errors       []error                `json:"errors"`
+	Errors       []error                  `json:"errors"`
 }
 
 // ResourceMonitor tracks system resource usage
 type ResourceMonitor struct {
-	memStats    runtime.MemStats
-	cpuUsage    float64
-	goroutines  int
-	lastUpdate  time.Time
-	mu          sync.RWMutex
+	memStats   runtime.MemStats
+	cpuUsage   float64
+	goroutines int
+	lastUpdate time.Time
+	mu         sync.RWMutex
 }
 
 // NewPerformanceOptimizer creates a new performance optimizer
@@ -328,9 +328,27 @@ func (po *PerformanceOptimizer) GetMetrics() *PerformanceMetrics {
 	po.metrics.mu.RLock()
 	defer po.metrics.mu.RUnlock()
 
-	// Create a copy to avoid race conditions
-	metricsCopy := *po.metrics
-	return &metricsCopy
+	// Create a copy to avoid race conditions without copying the mutex
+	metricsCopy := &PerformanceMetrics{
+		TotalScans:          po.metrics.TotalScans,
+		SuccessfulScans:     po.metrics.SuccessfulScans,
+		FailedScans:         po.metrics.FailedScans,
+		AverageScanDuration: po.metrics.AverageScanDuration,
+		TotalScanDuration:   po.metrics.TotalScanDuration,
+		PeakMemoryUsage:     po.metrics.PeakMemoryUsage,
+		AverageMemoryUsage:  po.metrics.AverageMemoryUsage,
+		PeakCPUUsage:        po.metrics.PeakCPUUsage,
+		AverageCPUUsage:     po.metrics.AverageCPUUsage,
+		CacheHitRate:        po.metrics.CacheHitRate,
+		CacheMissRate:       po.metrics.CacheMissRate,
+		ThroughputPerSecond: po.metrics.ThroughputPerSecond,
+		ErrorRate:           po.metrics.ErrorRate,
+		RetryRate:           po.metrics.RetryRate,
+		QueueLength:         po.metrics.QueueLength,
+		ActiveConnections:   po.metrics.ActiveConnections,
+		LastUpdated:         po.metrics.LastUpdated,
+	}
+	return metricsCopy
 }
 
 // getCurrentMemoryUsage returns current memory usage percentage

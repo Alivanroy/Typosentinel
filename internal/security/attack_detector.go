@@ -60,10 +60,10 @@ type ResponseFilter struct {
 
 // ResponseFilterConfig configures response filtering
 type ResponseFilterConfig struct {
-	Enabled           bool
-	RemoveHeaders     []string
+	Enabled            bool
+	RemoveHeaders      []string
 	AddSecurityHeaders bool
-	SanitizeContent   bool
+	SanitizeContent    bool
 }
 
 // NewAttackDetector creates a new attack detector
@@ -218,14 +218,14 @@ func initializeAdvancedPatterns() map[string]*AdvancedPattern {
 // getDefaultThresholds returns default detection thresholds
 func getDefaultThresholds() map[string]int {
 	return map[string]int{
-		"sql_injection":     3,
-		"xss":              5,
-		"command_injection": 2,
-		"path_traversal":    3,
-		"ldap_injection":    2,
-		"nosql_injection":   3,
-		"xxe":              1,
-		"ssrf":             2,
+		"sql_injection":      3,
+		"xss":                5,
+		"command_injection":  2,
+		"path_traversal":     3,
+		"ldap_injection":     2,
+		"nosql_injection":    3,
+		"xxe":                1,
+		"ssrf":               2,
 		"template_injection": 2,
 	}
 }

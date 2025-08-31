@@ -706,38 +706,38 @@ func (pa *ProvenanceAnalyzer) verifySignature(ctx context.Context, packagePath s
 	if sig == nil {
 		return false, fmt.Errorf("signature is nil")
 	}
-	
+
 	// Read package file for verification
 	packageData, err := os.ReadFile(packagePath)
 	if err != nil {
 		return false, fmt.Errorf("failed to read package file: %w", err)
 	}
-	
+
 	// Calculate hash of package data
 	hash := sha256.Sum256(packageData)
 	expectedHash := hex.EncodeToString(hash[:])
-	
+
 	// For demonstration, we'll do basic validation
 	// In a real implementation, this would use proper cryptographic verification
 	if sig.Algorithm == "" || sig.Value == "" {
 		return false, fmt.Errorf("invalid signature format")
 	}
-	
+
 	// Basic integrity check - in real implementation this would be proper signature verification
 	if len(expectedHash) == 0 {
 		return false, fmt.Errorf("failed to calculate package hash")
 	}
-	
+
 	// Check if signature format is valid (basic validation)
 	if len(sig.Value) < 64 { // Minimum expected signature length
 		return false, fmt.Errorf("signature too short")
 	}
-	
+
 	// Verify signer is trusted
 	if !pa.isSignerTrusted(sig.Signer) {
 		return false, fmt.Errorf("untrusted signer: %s", sig.Signer)
 	}
-	
+
 	// In a real implementation, this would perform actual cryptographic verification
 	// For now, we return true if basic checks pass
 	return true, nil
@@ -756,7 +756,7 @@ func (pa *ProvenanceAnalyzer) isSignerTrusted(signer string) bool {
 func (pa *ProvenanceAnalyzer) findKeylessSignatures(ctx context.Context, packageName, version, registry string) []KeylessSignature {
 	// Find keyless signatures from transparency logs
 	signatures := []KeylessSignature{}
-	
+
 	// In a real implementation, this would query transparency logs like Rekor
 	// For now, we'll simulate finding signatures based on package metadata
 	if packageName != "" && version != "" {
@@ -775,7 +775,7 @@ func (pa *ProvenanceAnalyzer) findKeylessSignatures(ctx context.Context, package
 		}
 		signatures = append(signatures, sig)
 	}
-	
+
 	return signatures
 }
 
@@ -784,11 +784,11 @@ func (pa *ProvenanceAnalyzer) fetchSLSAProvenance(ctx context.Context, packageNa
 	if packageName == "" || version == "" {
 		return nil, fmt.Errorf("package name and version are required")
 	}
-	
+
 	// In a real implementation, this would fetch from the registry API or transparency log
 	// For now, we'll simulate SLSA provenance data
 	provenance := map[string]interface{}{
-		"_type": "https://in-toto.io/Statement/v0.1",
+		"_type":         "https://in-toto.io/Statement/v0.1",
 		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"subject": []map[string]interface{}{
 			{
@@ -814,15 +814,15 @@ func (pa *ProvenanceAnalyzer) fetchSLSAProvenance(ctx context.Context, packageNa
 			"metadata": map[string]interface{}{
 				"buildInvocationId": "simulated-build-id",
 				"completeness": map[string]bool{
-					"parameters": true,
+					"parameters":  true,
 					"environment": false,
-					"materials": true,
+					"materials":   true,
 				},
 				"reproducible": false,
 			},
 		},
 	}
-	
+
 	return provenance, nil
 }
 
@@ -845,34 +845,34 @@ func (pa *ProvenanceAnalyzer) verifySLSAProvenanceData(ctx context.Context, data
 	if data == nil {
 		return false, fmt.Errorf("provenance data is nil")
 	}
-	
+
 	// Check required fields
 	if _, ok := data["_type"]; !ok {
 		return false, fmt.Errorf("missing _type field in provenance")
 	}
-	
+
 	if _, ok := data["predicateType"]; !ok {
 		return false, fmt.Errorf("missing predicateType field in provenance")
 	}
-	
+
 	// Verify predicate type is SLSA
 	predicateType, ok := data["predicateType"].(string)
 	if !ok || !strings.Contains(predicateType, "slsa.dev/provenance") {
 		return false, fmt.Errorf("invalid predicate type: %v", predicateType)
 	}
-	
+
 	// Check for subject
 	subject, ok := data["subject"]
 	if !ok {
 		return false, fmt.Errorf("missing subject in provenance")
 	}
-	
+
 	// Verify subject structure
 	if subjectArray, ok := subject.([]interface{}); ok && len(subjectArray) > 0 {
 		// Basic validation passed
 		return true, nil
 	}
-	
+
 	return false, fmt.Errorf("invalid subject structure in provenance")
 }
 
@@ -1015,36 +1015,36 @@ func (pa *ProvenanceAnalyzer) verifyContent(packagePath, packageName, version, r
 		MissingFiles:        []string{},
 		ExtraFiles:          []string{},
 	}
-	
+
 	if packagePath == "" {
 		return verification, fmt.Errorf("package path is required")
 	}
-	
+
 	// Check if package file exists
 	if _, err := os.Stat(packagePath); os.IsNotExist(err) {
 		return verification, fmt.Errorf("package file does not exist: %s", packagePath)
 	}
-	
+
 	// Basic manifest verification - check if file is readable
 	file, err := os.Open(packagePath)
 	if err != nil {
 		return verification, fmt.Errorf("failed to open package file: %w", err)
 	}
 	defer file.Close()
-	
+
 	// Read first few bytes to verify file format
 	buffer := make([]byte, 512)
 	n, err := file.Read(buffer)
 	if err != nil && n == 0 {
 		return verification, fmt.Errorf("failed to read package file: %w", err)
 	}
-	
+
 	// Basic file format validation
 	if n > 0 {
 		verification.ManifestVerified = true
 		verification.FilesVerified = true
 	}
-	
+
 	// Check file permissions
 	info, err := file.Stat()
 	if err == nil {
@@ -1054,24 +1054,24 @@ func (pa *ProvenanceAnalyzer) verifyContent(packagePath, packageName, version, r
 			verification.PermissionsVerified = true
 		}
 	}
-	
+
 	// In a real implementation, this would:
 	// 1. Extract and verify package manifest
 	// 2. Check file integrity against manifest
 	// 3. Verify file permissions and ownership
 	// 4. Detect modified, missing, or extra files
-	
+
 	return verification, nil
 }
 
 func (pa *ProvenanceAnalyzer) searchTransparencyLogEntries(ctx context.Context, packageName, version, registry string) ([]TransparencyLogEntry, error) {
 	// Search transparency log for package entries
 	entries := []TransparencyLogEntry{}
-	
+
 	if packageName == "" || version == "" {
 		return entries, nil
 	}
-	
+
 	// In a real implementation, this would query transparency logs like Rekor
 	// For now, simulate finding entries based on package metadata
 	entry := TransparencyLogEntry{
@@ -1097,7 +1097,7 @@ func (pa *ProvenanceAnalyzer) searchTransparencyLogEntries(ctx context.Context, 
 			},
 		},
 	}
-	
+
 	entries = append(entries, entry)
 	return entries, nil
 }
@@ -1107,25 +1107,25 @@ func (pa *ProvenanceAnalyzer) verifyTransparencyLogEntry(ctx context.Context, en
 	if entry == nil {
 		return false, fmt.Errorf("entry is nil")
 	}
-	
+
 	// Basic validation checks
 	if entry.LogIndex < 0 {
 		return false, fmt.Errorf("invalid log index: %d", entry.LogIndex)
 	}
-	
+
 	if entry.LogID == "" {
 		return false, fmt.Errorf("log ID is empty")
 	}
-	
+
 	if entry.IntegratedTime <= 0 {
 		return false, fmt.Errorf("invalid integrated time: %d", entry.IntegratedTime)
 	}
-	
+
 	// Check if verification data exists and is valid
 	if entry.Verification != nil && entry.Verification.InclusionProof != nil {
 		return entry.Verification.InclusionProof.Verified, nil
 	}
-	
+
 	// If no verification data, consider it unverified but not an error
 	return false, nil
 }

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Alivanroy/Typosentinel/internal/auth"
 	"github.com/Alivanroy/Typosentinel/internal/storage"
+	"github.com/gin-gonic/gin"
 )
 
 // EnterpriseHandlers provides HTTP handlers for enterprise features
@@ -334,7 +334,7 @@ func (eh *EnterpriseHandlers) DeleteRole(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf("Role '%s' deleted successfully", roleID),
+		"message":   fmt.Sprintf("Role '%s' deleted successfully", roleID),
 		"timestamp": time.Now().UTC(),
 	})
 }
@@ -463,9 +463,9 @@ func (eh *EnterpriseHandlers) ListViolations(c *gin.Context) {
 	sb := strings.ToLower(sortBy)
 	if sb != "" && !allowedSortColumns[sb] {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":        "invalid sort_by",
-			"allowed":      []string{"created_at", "severity", "status", "policy_id", "policy_name", "resolved_at"},
-			"received":     sortBy,
+			"error":    "invalid sort_by",
+			"allowed":  []string{"created_at", "severity", "status", "policy_id", "policy_name", "resolved_at"},
+			"received": sortBy,
 		})
 		return
 	}
@@ -491,7 +491,7 @@ func (eh *EnterpriseHandlers) ListViolations(c *gin.Context) {
 	}
 
 	// Get violations from store
-	violations, total, err := eh.violationStore.ListViolations(c.Request.Context(), filter)
+	violations, total, err := eh.violationStore.ListViolations(c.Request.Context(), &filter)
 	if err != nil {
 		eh.logger.Error("Failed to list violations", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -617,7 +617,7 @@ func (eh *EnterpriseHandlers) getCurrentUser(c *gin.Context) string {
 			return userStr
 		}
 	}
-	
+
 	// Try to get from Authorization header
 	authHeader := c.GetHeader("Authorization")
 	if authHeader != "" {
@@ -625,12 +625,12 @@ func (eh *EnterpriseHandlers) getCurrentUser(c *gin.Context) string {
 		// In a real implementation, you would decode the JWT token
 		return "authenticated_user"
 	}
-	
+
 	// Try to get from X-User-ID header (for service-to-service calls)
 	if userID := c.GetHeader("X-User-ID"); userID != "" {
 		return userID
 	}
-	
+
 	// Default fallback
 	return "system"
 }

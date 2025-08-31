@@ -12,11 +12,11 @@ import (
 
 // ScanTriggerImpl implements the ScanTrigger interface
 type ScanTriggerImpl struct {
-	logger    logger.Logger
-	scanner   Scanner
-	scans     map[string]*ScanStatus
-	scansMux  sync.RWMutex
-	config    *ScanTriggerConfig
+	logger   logger.Logger
+	scanner  Scanner
+	scans    map[string]*ScanStatus
+	scansMux sync.RWMutex
+	config   *ScanTriggerConfig
 }
 
 // ScanTriggerConfig configuration for scan trigger

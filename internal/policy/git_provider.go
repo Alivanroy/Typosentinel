@@ -17,15 +17,15 @@ type DefaultGitProvider struct {
 
 // GitProviderConfig configuration for Git provider
 type GitProviderConfig struct {
-	Provider    string            `json:"provider"` // github, gitlab, bitbucket
-	BaseURL     string            `json:"base_url"`
-	Token       string            `json:"token"`
-	Username    string            `json:"username"`
-	Timeout     time.Duration     `json:"timeout"`
-	MaxRetries  int               `json:"max_retries"`
-	RetryDelay  time.Duration     `json:"retry_delay"`
-	UserAgent   string            `json:"user_agent"`
-	Headers     map[string]string `json:"headers"`
+	Provider   string            `json:"provider"` // github, gitlab, bitbucket
+	BaseURL    string            `json:"base_url"`
+	Token      string            `json:"token"`
+	Username   string            `json:"username"`
+	Timeout    time.Duration     `json:"timeout"`
+	MaxRetries int               `json:"max_retries"`
+	RetryDelay time.Duration     `json:"retry_delay"`
+	UserAgent  string            `json:"user_agent"`
+	Headers    map[string]string `json:"headers"`
 }
 
 // GitHubCreateBranchRequest represents a GitHub create branch request
@@ -36,11 +36,11 @@ type GitHubCreateBranchRequest struct {
 
 // GitHubCommitRequest represents a GitHub commit request
 type GitHubCommitRequest struct {
-	Message   string                    `json:"message"`
-	Tree      string                    `json:"tree"`
-	Parents   []string                  `json:"parents"`
-	Author    GitHubCommitAuthor        `json:"author"`
-	Committer GitHubCommitAuthor        `json:"committer"`
+	Message   string             `json:"message"`
+	Tree      string             `json:"tree"`
+	Parents   []string           `json:"parents"`
+	Author    GitHubCommitAuthor `json:"author"`
+	Committer GitHubCommitAuthor `json:"committer"`
 }
 
 // GitHubCommitAuthor represents commit author information
@@ -52,12 +52,12 @@ type GitHubCommitAuthor struct {
 
 // GitHubPullRequestRequest represents a GitHub PR request
 type GitHubPullRequestRequest struct {
-	Title                 string   `json:"title"`
-	Head                  string   `json:"head"`
-	Base                  string   `json:"base"`
-	Body                  string   `json:"body"`
-	MaintainerCanModify   bool     `json:"maintainer_can_modify"`
-	Draft                 bool     `json:"draft"`
+	Title               string `json:"title"`
+	Head                string `json:"head"`
+	Base                string `json:"base"`
+	Body                string `json:"body"`
+	MaintainerCanModify bool   `json:"maintainer_can_modify"`
+	Draft               bool   `json:"draft"`
 }
 
 // GitHubPullRequestResponse represents a GitHub PR response
@@ -171,14 +171,14 @@ func (gp *DefaultGitProvider) createGitHubBranch(ctx context.Context, repo *Repo
 	// First, get the SHA of the base branch
 	fullName := fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
 	url := fmt.Sprintf("%s/repos/%s/git/refs/heads/%s", gp.config.BaseURL, fullName, baseBranch)
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	gp.setAuthHeaders(req)
-	
+
 	resp, err := gp.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to get base branch: %w", err)
@@ -194,14 +194,14 @@ func (gp *DefaultGitProvider) createGitHubBranch(ctx context.Context, repo *Repo
 			SHA string `json:"sha"`
 		} `json:"object"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&refResponse); err != nil {
 		return fmt.Errorf("failed to decode base branch response: %w", err)
 	}
 
 	// Create the new branch
 	createBranchURL := fmt.Sprintf("%s/repos/%s/git/refs", gp.config.BaseURL, fullName)
-	
+
 	branchRequest := GitHubCreateBranchRequest{
 		Ref: fmt.Sprintf("refs/heads/%s", branchName),
 		SHA: refResponse.Object.SHA,
@@ -245,7 +245,7 @@ func (gp *DefaultGitProvider) commitGitHubFiles(ctx context.Context, repo *Repos
 func (gp *DefaultGitProvider) createGitHubPullRequest(ctx context.Context, repo *Repository, pr *PullRequestSpec) (*PRResult, error) {
 	fullName := fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
 	url := fmt.Sprintf("%s/repos/%s/pulls", gp.config.BaseURL, fullName)
-	
+
 	prRequest := GitHubPullRequestRequest{
 		Title:               pr.Title,
 		Head:                pr.HeadBranch,
@@ -297,13 +297,13 @@ func (gp *DefaultGitProvider) getGitHubRepository(ctx context.Context, repoURL s
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid repository URL: %s", repoURL)
 	}
-	
+
 	owner := parts[len(parts)-2]
 	name := parts[len(parts)-1]
 	fullName := fmt.Sprintf("%s/%s", owner, name)
 
 	url := fmt.Sprintf("%s/repos/%s", gp.config.BaseURL, fullName)
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -349,7 +349,7 @@ func (gp *DefaultGitProvider) createGitLabBranch(ctx context.Context, repo *Repo
 	// GitLab uses project ID or namespace/project format
 	projectPath := fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
 	url := fmt.Sprintf("%s/projects/%s/repository/branches", gp.config.BaseURL, strings.ReplaceAll(projectPath, "/", "%2F"))
-	
+
 	branchRequest := map[string]string{
 		"branch": branchName,
 		"ref":    baseBranch,
@@ -384,12 +384,12 @@ func (gp *DefaultGitProvider) createGitLabBranch(ctx context.Context, repo *Repo
 func (gp *DefaultGitProvider) commitGitLabFiles(ctx context.Context, repo *Repository, branch string, changes []FileChange, message string) error {
 	projectPath := fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
 	url := fmt.Sprintf("%s/projects/%s/repository/commits", gp.config.BaseURL, strings.ReplaceAll(projectPath, "/", "%2F"))
-	
+
 	// Convert file changes to GitLab format
 	actions := make([]map[string]interface{}, 0, len(changes))
 	for _, change := range changes {
 		action := map[string]interface{}{
-			"action":   "update", // or "create", "delete"
+			"action":    "update", // or "create", "delete"
 			"file_path": change.Path,
 			"content":   change.Content,
 		}
@@ -431,7 +431,7 @@ func (gp *DefaultGitProvider) commitGitLabFiles(ctx context.Context, repo *Repos
 func (gp *DefaultGitProvider) createGitLabPullRequest(ctx context.Context, repo *Repository, pr *PullRequestSpec) (*PRResult, error) {
 	projectPath := fmt.Sprintf("%s/%s", repo.Owner, repo.Name)
 	url := fmt.Sprintf("%s/projects/%s/merge_requests", gp.config.BaseURL, strings.ReplaceAll(projectPath, "/", "%2F"))
-	
+
 	mrRequest := map[string]interface{}{
 		"source_branch": pr.HeadBranch,
 		"target_branch": pr.BaseBranch,
@@ -485,13 +485,13 @@ func (gp *DefaultGitProvider) getGitLabRepository(ctx context.Context, repoURL s
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid repository URL: %s", repoURL)
 	}
-	
+
 	owner := parts[len(parts)-2]
 	name := parts[len(parts)-1]
 	projectPath := fmt.Sprintf("%s/%s", owner, name)
 
 	url := fmt.Sprintf("%s/projects/%s", gp.config.BaseURL, strings.ReplaceAll(projectPath, "/", "%2F"))
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -536,7 +536,7 @@ func (gp *DefaultGitProvider) createBitbucketBranch(ctx context.Context, repo *R
 	workspace := repo.Owner
 	repoSlug := repo.Name
 	url := fmt.Sprintf("%s/repositories/%s/%s/refs/branches", gp.config.BaseURL, workspace, repoSlug)
-	
+
 	branchRequest := map[string]interface{}{
 		"name": branchName,
 		"target": map[string]string{
@@ -574,7 +574,7 @@ func (gp *DefaultGitProvider) commitBitbucketFiles(ctx context.Context, repo *Re
 	// Bitbucket doesn't have a direct commit API like GitLab
 	// You would typically need to use the file API to update individual files
 	// This is a simplified implementation
-	
+
 	for _, change := range changes {
 		// In a real implementation, you'd use multipart form data to upload files
 		// via the Bitbucket API: POST /repositories/{workspace}/{repo_slug}/src
@@ -589,7 +589,7 @@ func (gp *DefaultGitProvider) createBitbucketPullRequest(ctx context.Context, re
 	workspace := repo.Owner
 	repoSlug := repo.Name
 	url := fmt.Sprintf("%s/repositories/%s/%s/pullrequests", gp.config.BaseURL, workspace, repoSlug)
-	
+
 	prRequest := map[string]interface{}{
 		"title":       pr.Title,
 		"description": pr.Description,
@@ -656,32 +656,32 @@ func (gp *DefaultGitProvider) getBitbucketRepository(ctx context.Context, repoUR
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid Bitbucket repository URL: %s", repoURL)
 	}
-	
+
 	workspace := parts[0]
 	repoSlug := parts[1]
-	
+
 	url := fmt.Sprintf("%s/repositories/%s/%s", gp.config.BaseURL, workspace, repoSlug)
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	gp.setAuthHeaders(req)
-	
+
 	resp, err := gp.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Bitbucket repository: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get Bitbucket repository: %s", resp.Status)
 	}
-	
+
 	var repoResponse struct {
-		Name     string `json:"name"`
-		FullName string `json:"full_name"`
+		Name       string `json:"name"`
+		FullName   string `json:"full_name"`
 		MainBranch struct {
 			Name string `json:"name"`
 		} `json:"mainbranch"`
@@ -695,11 +695,11 @@ func (gp *DefaultGitProvider) getBitbucketRepository(ctx context.Context, repoUR
 			} `json:"clone"`
 		} `json:"links"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&repoResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode repository response: %w", err)
 	}
-	
+
 	// Find HTTPS clone URL
 	cloneURL := repoURL
 	for _, link := range repoResponse.Links.Clone {
@@ -708,12 +708,12 @@ func (gp *DefaultGitProvider) getBitbucketRepository(ctx context.Context, repoUR
 			break
 		}
 	}
-	
+
 	defaultBranch := "main"
 	if repoResponse.MainBranch.Name != "" {
 		defaultBranch = repoResponse.MainBranch.Name
 	}
-	
+
 	return &Repository{
 		URL:           cloneURL,
 		Owner:         repoResponse.Owner.Username,
@@ -727,7 +727,7 @@ func (gp *DefaultGitProvider) getBitbucketRepository(ctx context.Context, repoUR
 
 func (gp *DefaultGitProvider) setAuthHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", gp.config.UserAgent)
-	
+
 	if gp.config.Token != "" {
 		switch strings.ToLower(gp.config.Provider) {
 		case "github":

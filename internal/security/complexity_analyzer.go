@@ -18,25 +18,25 @@ import (
 // - Version constraint conflicts triggering NP-hard resolution problems
 // - Transitive closure calculations scaling to O(V³) complexity
 type ComplexityAnalyzer struct {
-	config                *ComplexityAnalyzerConfig
-	dependencyGraph       *DependencyGraph
-	circularDetector      *CircularDependencyDetector
-	complexityLimiter     *ComplexityLimiter
-	performanceMonitor    *PerformanceMonitor
-	logger                logger.Logger
+	config             *ComplexityAnalyzerConfig
+	dependencyGraph    *DependencyGraph
+	circularDetector   *CircularDependencyDetector
+	complexityLimiter  *ComplexityLimiter
+	performanceMonitor *PerformanceMonitor
+	logger             logger.Logger
 }
 
 // ComplexityAnalyzerConfig configures complexity analysis parameters
 type ComplexityAnalyzerConfig struct {
-	MaxDependencyDepth     int           `yaml:"max_dependency_depth"`      // 15 levels max
-	MaxDependencyCount     int           `yaml:"max_dependency_count"`      // 1000 deps max
-	MaxAnalysisTime        time.Duration `yaml:"max_analysis_time"`         // 30 seconds max
-	MaxMemoryUsage         int64         `yaml:"max_memory_usage"`          // 512MB max
-	CircularDetectionLimit int           `yaml:"circular_detection_limit"`  // 100 cycles max
-	ComplexityThreshold    float64       `yaml:"complexity_threshold"`      // 0.8
-	EnableEarlyTermination bool          `yaml:"enable_early_termination"`  // true
-	EnableComplexityLimits bool          `yaml:"enable_complexity_limits"`  // true
-	Enabled                bool          `yaml:"enabled"`                   // true
+	MaxDependencyDepth     int           `yaml:"max_dependency_depth"`     // 15 levels max
+	MaxDependencyCount     int           `yaml:"max_dependency_count"`     // 1000 deps max
+	MaxAnalysisTime        time.Duration `yaml:"max_analysis_time"`        // 30 seconds max
+	MaxMemoryUsage         int64         `yaml:"max_memory_usage"`         // 512MB max
+	CircularDetectionLimit int           `yaml:"circular_detection_limit"` // 100 cycles max
+	ComplexityThreshold    float64       `yaml:"complexity_threshold"`     // 0.8
+	EnableEarlyTermination bool          `yaml:"enable_early_termination"` // true
+	EnableComplexityLimits bool          `yaml:"enable_complexity_limits"` // true
+	Enabled                bool          `yaml:"enabled"`                  // true
 }
 
 // DependencyGraph represents the dependency graph structure
@@ -61,10 +61,10 @@ type DependencyNode struct {
 
 // CircularDependencyDetector detects circular dependencies
 type CircularDependencyDetector struct {
-	visited    map[string]bool
-	recursion  map[string]bool
-	cycles     [][]string
-	maxCycles  int
+	visited   map[string]bool
+	recursion map[string]bool
+	cycles    [][]string
+	maxCycles int
 }
 
 // ComplexityLimiter enforces complexity limits during analysis
@@ -78,6 +78,7 @@ type ComplexityLimiter struct {
 }
 
 // PerformanceMonitor tracks analysis performance
+// Local PerformanceMonitor for complexity analysis
 type PerformanceMonitor struct {
 	analysisStartTime time.Time
 	memoryPeakUsage   int64
@@ -88,18 +89,18 @@ type PerformanceMonitor struct {
 
 // ComplexityThreat represents a detected complexity threat
 type ComplexityThreat struct {
-	ThreatID            string                 `json:"threat_id"`
-	PackageName         string                 `json:"package_name"`
-	ThreatType          string                 `json:"threat_type"`
-	Severity            types.Severity         `json:"severity"`
-	ComplexityScore     float64                `json:"complexity_score"`
-	DependencyDepth     int                    `json:"dependency_depth"`
-	DependencyCount     int                    `json:"dependency_count"`
-	CircularDependencies []CircularDependency  `json:"circular_dependencies"`
-	PerformanceImpact   *PerformanceImpact     `json:"performance_impact"`
-	ExploitationRisk    string                 `json:"exploitation_risk"`
-	Recommendations     []string               `json:"recommendations"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	ThreatID             string                 `json:"threat_id"`
+	PackageName          string                 `json:"package_name"`
+	ThreatType           string                 `json:"threat_type"`
+	Severity             types.Severity         `json:"severity"`
+	ComplexityScore      float64                `json:"complexity_score"`
+	DependencyDepth      int                    `json:"dependency_depth"`
+	DependencyCount      int                    `json:"dependency_count"`
+	CircularDependencies []CircularDependency   `json:"circular_dependencies"`
+	PerformanceImpact    *PerformanceImpact     `json:"performance_impact"`
+	ExploitationRisk     string                 `json:"exploitation_risk"`
+	Recommendations      []string               `json:"recommendations"`
+	Metadata             map[string]interface{} `json:"metadata"`
 }
 
 // CircularDependency represents a circular dependency
@@ -208,7 +209,7 @@ func (ca *ComplexityAnalyzer) AnalyzeComplexity(ctx context.Context, pkg *types.
 // buildDependencyGraph builds the dependency graph with complexity limits
 func (ca *ComplexityAnalyzer) buildDependencyGraph(ctx context.Context, pkg *types.Package) error {
 	ca.dependencyGraph.Reset()
-	
+
 	// Check for early termination
 	if ca.complexityLimiter.ShouldTerminate() {
 		return fmt.Errorf("complexity analysis terminated due to limits")
@@ -239,14 +240,14 @@ func (ca *ComplexityAnalyzer) buildDependencyGraph(ctx context.Context, pkg *typ
 
 		// Check depth limit
 		if current.Depth >= ca.config.MaxDependencyDepth {
-			ca.logger.Debug(fmt.Sprintf("Reached maximum dependency depth %d for %s", 
+			ca.logger.Debug(fmt.Sprintf("Reached maximum dependency depth %d for %s",
 				ca.config.MaxDependencyDepth, current.Name))
 			continue
 		}
 
 		// Check count limit
 		if ca.dependencyGraph.nodeCount >= ca.config.MaxDependencyCount {
-			ca.logger.Debug(fmt.Sprintf("Reached maximum dependency count %d", 
+			ca.logger.Debug(fmt.Sprintf("Reached maximum dependency count %d",
 				ca.config.MaxDependencyCount))
 			break
 		}
@@ -314,8 +315,8 @@ func (ca *ComplexityAnalyzer) calculateComplexityScore(threat *ComplexityThreat)
 
 	// Performance impact
 	if threat.PerformanceImpact != nil {
-		perfScore := threat.PerformanceImpact.TimeoutRisk * 0.1 + 
-					threat.PerformanceImpact.MemoryExhaustion * 0.1
+		perfScore := threat.PerformanceImpact.TimeoutRisk*0.1 +
+			threat.PerformanceImpact.MemoryExhaustion*0.1
 		score += perfScore
 	}
 
@@ -429,7 +430,7 @@ func (cdd *CircularDependencyDetector) Reset() {
 func (cdd *CircularDependencyDetector) FindCycles(node string, graph *DependencyGraph) [][]string {
 	// Simplified cycle detection - would implement full Tarjan's algorithm
 	cycles := [][]string{}
-	
+
 	if len(cdd.cycles) >= cdd.maxCycles {
 		return cycles
 	}
@@ -492,6 +493,7 @@ func (cl *ComplexityLimiter) IncrementOperations() {
 	cl.operationCount++
 }
 
+// NewPerformanceMonitor creates a new performance monitor for complexity analysis
 func NewPerformanceMonitor() *PerformanceMonitor {
 	return &PerformanceMonitor{}
 }
@@ -514,7 +516,7 @@ func (ca *ComplexityAnalyzer) resolveDependencies(node *DependencyNode) []string
 	if node == nil {
 		return []string{}
 	}
-	
+
 	// Filter out duplicates from the existing dependencies
 	seen := make(map[string]bool)
 	uniqueDeps := []string{}
@@ -524,7 +526,7 @@ func (ca *ComplexityAnalyzer) resolveDependencies(node *DependencyNode) []string
 			uniqueDeps = append(uniqueDeps, dep)
 		}
 	}
-	
+
 	return uniqueDeps
 }
 

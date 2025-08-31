@@ -16,22 +16,22 @@ import (
 
 // ElasticsearchConnector sends events to Elasticsearch
 type ElasticsearchConnector struct {
-	name     string
-	config   ElasticsearchConfig
-	client   *http.Client
-	logger   logger.Logger
-	health   integrations.HealthStatus
+	name   string
+	config ElasticsearchConfig
+	client *http.Client
+	logger logger.Logger
+	health integrations.HealthStatus
 }
 
 // ElasticsearchConfig defines Elasticsearch connection settings
 type ElasticsearchConfig struct {
-	URL      string `json:"url"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	APIKey   string `json:"api_key"`
-	Index    string `json:"index"`
-	Timeout  int    `json:"timeout"`
-	VerifySSL bool  `json:"verify_ssl"`
+	URL       string `json:"url"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	APIKey    string `json:"api_key"`
+	Index     string `json:"index"`
+	Timeout   int    `json:"timeout"`
+	VerifySSL bool   `json:"verify_ssl"`
 }
 
 // ElasticsearchEvent represents an event to be sent to Elasticsearch
@@ -221,12 +221,12 @@ func (e *ElasticsearchConnector) transformEvent(event *events.SecurityEvent) *El
 	}
 
 	return &ElasticsearchEvent{
-		Timestamp: event.Timestamp,
-		EventType: string(event.Type),
-		Severity:  string(event.Severity),
-		Source:    event.Source,
-		EventID:   event.ID,
-		RiskScore: event.Threat.RiskScore,
+		Timestamp:   event.Timestamp,
+		EventType:   string(event.Type),
+		Severity:    string(event.Severity),
+		Source:      event.Source,
+		EventID:     event.ID,
+		RiskScore:   event.Threat.RiskScore,
 		Description: event.Threat.Description,
 		Package: map[string]interface{}{
 			"name":     event.Package.Name,
@@ -236,18 +236,18 @@ func (e *ElasticsearchConnector) transformEvent(event *events.SecurityEvent) *El
 			"path":     event.Package.Path,
 		},
 		Threat: map[string]interface{}{
-			"type":         event.Threat.Type,
-			"confidence":   event.Threat.Confidence,
-			"risk_score":   event.Threat.RiskScore,
-			"description":  event.Threat.Description,
-			"evidence":     event.Threat.Evidence,
+			"type":        event.Threat.Type,
+			"confidence":  event.Threat.Confidence,
+			"risk_score":  event.Threat.RiskScore,
+			"description": event.Threat.Description,
+			"evidence":    event.Threat.Evidence,
 			"mitigations": event.Threat.Mitigations,
 		},
 		Metadata: map[string]interface{}{
 			"detection_method": event.Metadata.DetectionMethod,
-			"tags":            event.Metadata.Tags,
-			"custom_fields":   event.Metadata.CustomFields,
-			"correlation_id":  event.Metadata.CorrelationID,
+			"tags":             event.Metadata.Tags,
+			"custom_fields":    event.Metadata.CustomFields,
+			"correlation_id":   event.Metadata.CorrelationID,
 		},
 		Context: context,
 	}

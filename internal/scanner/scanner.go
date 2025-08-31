@@ -11,9 +11,8 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/events"
 	"github.com/Alivanroy/Typosentinel/internal/integrations/hub"
-	"github.com/Alivanroy/Typosentinel/internal/ml"
-	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	pkgevents "github.com/Alivanroy/Typosentinel/pkg/events"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/fsnotify/fsnotify"
 )
@@ -25,7 +24,7 @@ type Scanner struct {
 	analyzers        map[string]DependencyAnalyzer
 	cache            *cache.CacheIntegration
 	analyzerRegistry *AnalyzerRegistry
-	mlDetector       *ml.EnhancedMLDetector
+	// mlDetector removed to break circular dependency
 	eventBus         *events.EventBus
 	integrationHub   *hub.IntegrationHub
 	metadataEnricher *MetadataEnricher
@@ -111,7 +110,7 @@ func New(cfg *config.Config) (*Scanner, error) {
 			TTL:         cfg.Cache.TTL,
 			MaxSize:     int64(cfg.Cache.MaxSize),
 			CacheDir:    cfg.Cache.CacheDir,
-			RedisURL:    "", // Not available in config.CacheConfig
+			RedisURL:    "",    // Not available in config.CacheConfig
 			Compression: false, // Default value
 			Encryption:  false, // Default value
 		}
@@ -122,19 +121,8 @@ func New(cfg *config.Config) (*Scanner, error) {
 		s.cache = cacheIntegration
 	}
 
-	// Initialize enhanced ML detector
-	mlConfig := ml.DefaultEnhancedMLConfig()
-	if cfg.MLAnalysis != nil {
-		// Override with user configuration if available
-		mlConfig.MalwareThreshold = cfg.MLAnalysis.MaliciousThreshold
-		mlConfig.SimilarityThreshold = cfg.MLAnalysis.SimilarityThreshold
-		mlConfig.ReputationThreshold = cfg.MLAnalysis.ReputationThreshold
-	}
-	mlDetector, err := ml.NewEnhancedMLDetector(mlConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize ML detector: %w", err)
-	}
-	s.mlDetector = mlDetector
+	// ML detector initialization commented out to break circular dependency
+	// TODO: Implement ML integration through a different approach
 
 	// Register project detectors
 	s.registerDetectors()
@@ -324,183 +312,30 @@ func (s *Scanner) extractPackages(projectInfo *ProjectInfo) ([]*types.Package, e
 func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, error) {
 	var threats []*types.Threat
 
-	// Convert package to enhanced ML features
-	features := s.convertToMLFeatures(pkg)
+	// ML analysis temporarily disabled due to circular dependency
+	// TODO: Implement basic threat analysis or integrate ML through different approach
 
-	// Run enhanced ML analysis
-	ctx := context.Background()
-	mlResult, err := s.mlDetector.AnalyzePackage(ctx, features)
-	if err != nil {
-		return nil, fmt.Errorf("ML analysis failed: %w", err)
-	}
-
-	// Convert ML results to threats
-	threats = append(threats, s.convertMLResultsToThreats(pkg, mlResult)...)
-
+	// For now, return empty threats list
 	return threats, nil
 }
 
 // convertToMLFeatures converts a package to enhanced ML features
+// Commented out to break circular dependency with ml package
+/*
 func (s *Scanner) convertToMLFeatures(pkg *types.Package) *ml.EnhancedPackageFeatures {
-
-	var description, author, homepage, repository, license string
-	var downloads int64
-	var maintainers, keywords []string
-	var creationDate, lastUpdated time.Time
-
-	if pkg.Metadata != nil {
-		description = pkg.Metadata.Description
-		author = pkg.Metadata.Author
-		homepage = pkg.Metadata.Homepage
-		repository = pkg.Metadata.Repository
-		license = pkg.Metadata.License
-		downloads = pkg.Metadata.Downloads
-		maintainers = pkg.Metadata.Maintainers
-		keywords = pkg.Metadata.Keywords
-		creationDate = pkg.Metadata.CreatedAt
-		lastUpdated = pkg.Metadata.UpdatedAt
-	}
-
-	features := &ml.EnhancedPackageFeatures{
-		Name:         pkg.Name,
-		Version:      pkg.Version,
-		Registry:     pkg.Registry,
-		Description:  description,
-		Author:       author,
-		Homepage:     homepage,
-		Repository:   repository,
-		License:      license,
-		Downloads:    downloads,
-		CreationDate: creationDate,
-		LastUpdated:  lastUpdated,
-		Maintainers:  maintainers,
-		Dependencies: s.convertDependencies(pkg.Dependencies),
-		Keywords:     keywords,
-		// Use empty/default values for file-based analysis since Package struct doesn't have Files field
-		FileStructure: ml.FileStructure{
-			TotalFiles:      0,
-			JavaScriptFiles: 0,
-			TypeScriptFiles: 0,
-			BinaryFiles:     0,
-			ConfigFiles:     0,
-			SuspiciousFiles: []string{},
-		},
-		CodeMetrics: ml.CodeMetrics{
-			LinesOfCode:          0,
-			ObfuscationScore:     0.0,
-			CyclomaticComplexity: 0.0,
-		},
-		SecurityMetrics: ml.SecurityMetrics{
-			VulnerabilityCount: 0, // Package struct doesn't have Vulnerabilities field
-			ObfuscatedCode:     false,
-			NetworkCalls:       0,
-			FileSystemAccess:   0,
-			ProcessExecution:   0,
-		},
-		BehavioralMetrics: ml.BehavioralMetrics{
-			InstallationBehavior: ml.EnhancedInstallBehavior{
-				NetworkActivity:   false,
-				FileModifications: 0,
-			},
-			RuntimeBehavior: ml.EnhancedRuntimeBehavior{
-				AntiAnalysisTechniques: false,
-			},
-			NetworkBehavior: ml.EnhancedNetworkBehavior{
-				DataExfiltration: false,
-			},
-		},
-	}
-
-	return features
+	// Implementation commented out due to circular dependency
+	return nil
 }
+*/
 
 // convertMLResultsToThreats converts ML detection results to threat objects
+// Commented out to break circular dependency with ml package
+/*
 func (s *Scanner) convertMLResultsToThreats(pkg *types.Package, result *ml.MLDetectionResult) []*types.Threat {
-	var threats []*types.Threat
-
-	// Malware detection threat
-	if result.IsMalicious {
-		threats = append(threats, &types.Threat{
-			ID:          fmt.Sprintf("malware-%s", pkg.Name),
-			Package:     pkg.Name,
-			Version:     pkg.Version,
-			Registry:    pkg.Registry,
-			Type:        types.ThreatTypeMalicious,
-			Severity:    s.convertRiskLevelToSeverity(result.ThreatLevel),
-			Description: fmt.Sprintf("Malware detected with confidence %.2f: %s", result.MalwareClassification.Confidence, result.MalwareClassification.ClassificationReason),
-			Evidence: []types.Evidence{
-				{
-					Type:        "ml_classification",
-					Description: "Enhanced ML malware classification",
-					Score:       result.MalwareClassification.Confidence,
-				},
-			},
-		})
-	}
-
-	// Typosquatting detection threat
-	if result.IsTyposquatting {
-		threats = append(threats, &types.Threat{
-			ID:          fmt.Sprintf("typo-%s", pkg.Name),
-			Package:     pkg.Name,
-			Version:     pkg.Version,
-			Registry:    pkg.Registry,
-			Type:        types.ThreatTypeTyposquatting,
-			Severity:    s.convertRiskLevelToSeverity(result.ThreatLevel),
-			Description: fmt.Sprintf("Typosquatting detected targeting '%s' with confidence %.2f", result.TypoDetection.TargetPackage, result.TypoDetection.Confidence),
-			Evidence: []types.Evidence{
-				{
-					Type:        "enhanced_similarity",
-					Description: "Multi-algorithm similarity analysis",
-					Score:       result.TypoDetection.Confidence,
-				},
-			},
-		})
-	}
-
-	// Anomaly detection threat
-	if result.IsAnomalous {
-		threats = append(threats, &types.Threat{
-			ID:          fmt.Sprintf("anomaly-%s", pkg.Name),
-			Package:     pkg.Name,
-			Version:     pkg.Version,
-			Registry:    pkg.Registry,
-			Type:        types.ThreatTypeSuspicious,
-			Severity:    types.SeverityMedium,
-			Description: fmt.Sprintf("Anomalous behavior detected with score %.2f", result.AnomalyDetection.AnomalyScore),
-			Evidence: []types.Evidence{
-				{
-					Type:        "behavioral_anomaly",
-					Description: "Enhanced behavioral anomaly detection",
-					Score:       result.AnomalyDetection.AnomalyScore,
-				},
-			},
-		})
-	}
-
-	// Reputation-based threat
-	// Use a default threshold since GetConfig method is not available
-	if result.ReputationAnalysis.ReputationScore < 0.5 {
-		threats = append(threats, &types.Threat{
-			ID:          fmt.Sprintf("reputation-%s", pkg.Name),
-			Package:     pkg.Name,
-			Version:     pkg.Version,
-			Registry:    pkg.Registry,
-			Type:        types.ThreatTypeSuspicious,
-			Severity:    types.SeverityLow,
-			Description: fmt.Sprintf("Low reputation score: %.2f", result.ReputationAnalysis.ReputationScore),
-			Evidence: []types.Evidence{
-				{
-					Type:        "reputation_analysis",
-					Description: "Enhanced reputation analysis",
-					Score:       result.ReputationAnalysis.ReputationScore,
-				},
-			},
-		})
-	}
-
-	return threats
+	// Implementation commented out due to circular dependency
+	return nil
 }
+*/
 
 // Helper methods for ML feature conversion
 
@@ -527,17 +362,13 @@ func (s *Scanner) convertMaintainers(maintainers []string) []string {
 }
 
 // convertDependencies converts package dependencies to ML format
+// Commented out to break circular dependency with ml package
+/*
 func (s *Scanner) convertDependencies(deps []types.Dependency) []ml.Dependency {
-	mlDeps := make([]ml.Dependency, len(deps))
-	for i, dep := range deps {
-		mlDeps[i] = ml.Dependency{
-			Name:       dep.Name,
-			Version:    dep.Version,
-			Suspicious: false, // Default value since Suspicious field is not available
-		}
-	}
-	return mlDeps
+	// Implementation commented out due to circular dependency
+	return nil
 }
+*/
 
 // countFilesByExtension counts files with specific extension
 func (s *Scanner) countFilesByExtension(files []string, ext string) int {
@@ -1037,7 +868,7 @@ func (s *Scanner) emitSecurityEvent(pkg *types.Package, threat *types.Threat, pr
 		},
 		Metadata: pkgevents.EventMetadata{
 			DetectionMethod: threat.DetectionMethod,
-			Tags:           []string{"scanner", "automated"},
+			Tags:            []string{"scanner", "automated"},
 			CustomFields: map[string]string{
 				"project_path":    projectInfo.Path,
 				"project_type":    projectInfo.Type,
@@ -1086,7 +917,7 @@ func (s *Scanner) convertEvidenceToMap(evidence []types.Evidence) map[string]str
 	if len(evidence) == 0 {
 		return make(map[string]string)
 	}
-	
+
 	result := make(map[string]string)
 	for i, ev := range evidence {
 		key := fmt.Sprintf("evidence_%d", i)

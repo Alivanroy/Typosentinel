@@ -22,16 +22,16 @@ type TenantManager struct {
 func NewTenantManager(config *MultiTenantConfig) *TenantManager {
 	if config == nil {
 		config = &MultiTenantConfig{
-			MaxTenants:           1000,
-			DefaultQuotas:        getDefaultQuotas(),
-			IsolationLevel:       IsolationLevelStrict,
-			ResourcePooling:      true,
-			AuditingEnabled:      true,
-			MetricsEnabled:       true,
-			AutoScaling:          true,
-			DataRetentionDays:    90,
-			BackupEnabled:        true,
-			EncryptionEnabled:    true,
+			MaxTenants:        1000,
+			DefaultQuotas:     getDefaultQuotas(),
+			IsolationLevel:    IsolationLevelStrict,
+			ResourcePooling:   true,
+			AuditingEnabled:   true,
+			MetricsEnabled:    true,
+			AutoScaling:       true,
+			DataRetentionDays: 90,
+			BackupEnabled:     true,
+			EncryptionEnabled: true,
 		}
 	}
 
@@ -300,14 +300,14 @@ func (tm *TenantManager) matchesFilter(tenant *Tenant, filter *TenantFilter) boo
 
 func getDefaultQuotas() *TenantQuotas {
 	return &TenantQuotas{
-		MaxRepositories:     100,
-		MaxScansPerDay:      1000,
-		MaxUsers:            50,
-		MaxStorageGB:        10,
-		MaxAPICallsPerHour:  10000,
-		MaxPolicies:         20,
-		MaxIntegrations:     10,
-		MaxRetentionDays:    90,
+		MaxRepositories:    100,
+		MaxScansPerDay:     1000,
+		MaxUsers:           50,
+		MaxStorageGB:       10,
+		MaxAPICallsPerHour: 10000,
+		MaxPolicies:        20,
+		MaxIntegrations:    10,
+		MaxRetentionDays:   90,
 	}
 }
 

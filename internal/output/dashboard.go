@@ -14,31 +14,31 @@ import (
 
 // DashboardData represents data for the executive dashboard
 type DashboardData struct {
-	ScanResult      *analyzer.ScanResult `json:"scan_result"`
-	RepositoryInfo  *RepositoryInfo      `json:"repository_info"`
+	ScanResult       *analyzer.ScanResult `json:"scan_result"`
+	RepositoryInfo   *RepositoryInfo      `json:"repository_info"`
 	ExecutiveSummary *ExecutiveSummary    `json:"executive_summary"`
-	RiskMetrics     *RiskMetrics         `json:"risk_metrics"`
-	ThreatBreakdown *ThreatBreakdown     `json:"threat_breakdown"`
-	Recommendations []Recommendation     `json:"recommendations"`
-	TrendData       *TrendData           `json:"trend_data,omitempty"`
-	ComplianceData  *ComplianceData      `json:"compliance_data,omitempty"`
-	GeneratedAt     time.Time            `json:"generated_at"`
+	RiskMetrics      *RiskMetrics         `json:"risk_metrics"`
+	ThreatBreakdown  *ThreatBreakdown     `json:"threat_breakdown"`
+	Recommendations  []Recommendation     `json:"recommendations"`
+	TrendData        *TrendData           `json:"trend_data,omitempty"`
+	ComplianceData   *ComplianceData      `json:"compliance_data,omitempty"`
+	GeneratedAt      time.Time            `json:"generated_at"`
 }
 
 // RepositoryInfo contains repository metadata
 type RepositoryInfo struct {
-	URL         string `json:"url"`
-	Branch      string `json:"branch"`
-	CommitSHA   string `json:"commit_sha"`
-	ScanType    string `json:"scan_type"`
-	ProjectName string `json:"project_name"`
-	Owner       string `json:"owner"`
+	URL         string   `json:"url"`
+	Branch      string   `json:"branch"`
+	CommitSHA   string   `json:"commit_sha"`
+	ScanType    string   `json:"scan_type"`
+	ProjectName string   `json:"project_name"`
+	Owner       string   `json:"owner"`
 	Languages   []string `json:"languages"`
 }
 
 // ExecutiveSummary provides high-level insights
 type ExecutiveSummary struct {
-	OverallRiskLevel    string  `json:"overall_risk_level"`
+	OverallRiskLevel   string  `json:"overall_risk_level"`
 	RiskScore          float64 `json:"risk_score"`
 	TotalPackages      int     `json:"total_packages"`
 	VulnerablePackages int     `json:"vulnerable_packages"`
@@ -52,13 +52,13 @@ type ExecutiveSummary struct {
 
 // RiskMetrics contains detailed risk analysis
 type RiskMetrics struct {
-	SupplyChainRisk    float64            `json:"supply_chain_risk"`
-	LicenseRisk        float64            `json:"license_risk"`
-	MaintenanceRisk    float64            `json:"maintenance_risk"`
-	VulnerabilityRisk  float64            `json:"vulnerability_risk"`
-	RiskDistribution   map[string]int     `json:"risk_distribution"`
-	TopRiskyPackages   []RiskyPackage     `json:"top_risky_packages"`
-	RiskTrends         []RiskTrendPoint   `json:"risk_trends,omitempty"`
+	SupplyChainRisk   float64          `json:"supply_chain_risk"`
+	LicenseRisk       float64          `json:"license_risk"`
+	MaintenanceRisk   float64          `json:"maintenance_risk"`
+	VulnerabilityRisk float64          `json:"vulnerability_risk"`
+	RiskDistribution  map[string]int   `json:"risk_distribution"`
+	TopRiskyPackages  []RiskyPackage   `json:"top_risky_packages"`
+	RiskTrends        []RiskTrendPoint `json:"risk_trends,omitempty"`
 }
 
 // ThreatBreakdown categorizes threats by type
@@ -71,13 +71,13 @@ type ThreatBreakdown struct {
 
 // RiskyPackage represents a high-risk package
 type RiskyPackage struct {
-	Name        string  `json:"name"`
-	Version     string  `json:"version"`
-	Registry    string  `json:"registry"`
-	RiskScore   float64 `json:"risk_score"`
+	Name        string   `json:"name"`
+	Version     string   `json:"version"`
+	Registry    string   `json:"registry"`
+	RiskScore   float64  `json:"risk_score"`
 	Threats     []string `json:"threats"`
-	Severity    string  `json:"severity"`
-	Description string  `json:"description"`
+	Severity    string   `json:"severity"`
+	Description string   `json:"description"`
 }
 
 // RiskTrendPoint represents a point in risk trend analysis
@@ -97,22 +97,22 @@ type ThreatPoint struct {
 
 // Recommendation provides actionable security recommendations
 type Recommendation struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Priority    string `json:"priority"`
-	Category    string `json:"category"`
-	Action      string `json:"action"`
-	Impact      string `json:"impact"`
-	Effort      string `json:"effort"`
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Priority    string   `json:"priority"`
+	Category    string   `json:"category"`
+	Action      string   `json:"action"`
+	Impact      string   `json:"impact"`
+	Effort      string   `json:"effort"`
 	Packages    []string `json:"packages,omitempty"`
 }
 
 // TrendData contains historical trend information
 type TrendData struct {
-	RiskTrends       []RiskTrendPoint `json:"risk_trends"`
-	ThreatTrends     []ThreatPoint    `json:"threat_trends"`
-	PackageGrowth    []GrowthPoint    `json:"package_growth"`
+	RiskTrends          []RiskTrendPoint `json:"risk_trends"`
+	ThreatTrends        []ThreatPoint    `json:"threat_trends"`
+	PackageGrowth       []GrowthPoint    `json:"package_growth"`
 	VulnerabilityTrends []VulnTrendPoint `json:"vulnerability_trends"`
 }
 
@@ -126,27 +126,27 @@ type GrowthPoint struct {
 
 // VulnTrendPoint represents vulnerability trends
 type VulnTrendPoint struct {
-	Date            time.Time `json:"date"`
-	NewVulns        int       `json:"new_vulns"`
-	FixedVulns      int       `json:"fixed_vulns"`
-	TotalVulns      int       `json:"total_vulns"`
+	Date       time.Time `json:"date"`
+	NewVulns   int       `json:"new_vulns"`
+	FixedVulns int       `json:"fixed_vulns"`
+	TotalVulns int       `json:"total_vulns"`
 }
 
 // ComplianceData contains compliance-related information
 type ComplianceData struct {
-	Frameworks    []ComplianceFramework `json:"frameworks"`
-	OverallScore  float64               `json:"overall_score"`
-	Status        string                `json:"status"`
-	Violations    []ComplianceViolation `json:"violations"`
-	Recommendations []string            `json:"recommendations"`
+	Frameworks      []ComplianceFramework `json:"frameworks"`
+	OverallScore    float64               `json:"overall_score"`
+	Status          string                `json:"status"`
+	Violations      []ComplianceViolation `json:"violations"`
+	Recommendations []string              `json:"recommendations"`
 }
 
 // ComplianceFramework represents a compliance framework assessment
 type ComplianceFramework struct {
-	Name        string  `json:"name"`
-	Version     string  `json:"version"`
-	Score       float64 `json:"score"`
-	Status      string  `json:"status"`
+	Name         string                  `json:"name"`
+	Version      string                  `json:"version"`
+	Score        float64                 `json:"score"`
+	Status       string                  `json:"status"`
 	Requirements []ComplianceRequirement `json:"requirements"`
 }
 
@@ -170,26 +170,26 @@ type ComplianceViolation struct {
 
 // DashboardFormatter generates executive dashboard reports
 type DashboardFormatter struct {
-	RepositoryURL string
-	Branch        string
-	CommitSHA     string
-	ScanType      string
-	ProjectName   string
-	Owner         string
-	IncludeTrends bool
+	RepositoryURL     string
+	Branch            string
+	CommitSHA         string
+	ScanType          string
+	ProjectName       string
+	Owner             string
+	IncludeTrends     bool
 	IncludeCompliance bool
 }
 
 // NewDashboardFormatter creates a new dashboard formatter
 func NewDashboardFormatter(repoURL, branch, commitSHA, scanType, projectName, owner string) *DashboardFormatter {
 	return &DashboardFormatter{
-		RepositoryURL: repoURL,
-		Branch:        branch,
-		CommitSHA:     commitSHA,
-		ScanType:      scanType,
-		ProjectName:   projectName,
-		Owner:         owner,
-		IncludeTrends: false,
+		RepositoryURL:     repoURL,
+		Branch:            branch,
+		CommitSHA:         commitSHA,
+		ScanType:          scanType,
+		ProjectName:       projectName,
+		Owner:             owner,
+		IncludeTrends:     false,
 		IncludeCompliance: false,
 	}
 }
@@ -198,15 +198,15 @@ func NewDashboardFormatter(repoURL, branch, commitSHA, scanType, projectName, ow
 
 // PackageMaintenanceInfo represents maintenance-related information about a package
 type PackageMaintenanceInfo struct {
-	LastUpdate                    time.Time
-	IsPreRelease                  bool
-	HasSecurityUpdates            bool
-	IsLatestVersion               bool
-	IsDeprecated                  bool
-	HasKnownVulnerabilities       bool
-	ActivityLevel                 string // "inactive", "low", "moderate", "high"
-	SlowIssueResponse             bool
-	HasUnresolvedCriticalIssues   bool
+	LastUpdate                  time.Time
+	IsPreRelease                bool
+	HasSecurityUpdates          bool
+	IsLatestVersion             bool
+	IsDeprecated                bool
+	HasKnownVulnerabilities     bool
+	ActivityLevel               string // "inactive", "low", "moderate", "high"
+	SlowIssueResponse           bool
+	HasUnresolvedCriticalIssues bool
 }
 
 // simulateLicenseDetection simulates license detection based on package characteristics
@@ -214,7 +214,7 @@ func (f *DashboardFormatter) simulateLicenseDetection(threat types.Threat) strin
 	// Simulate license detection based on package name patterns and registry
 	packageName := threat.Package
 	registry := threat.Registry
-	
+
 	// Common license patterns based on package characteristics
 	switch registry {
 	case "npm":
@@ -255,29 +255,29 @@ func (f *DashboardFormatter) simulateLicenseDetection(threat types.Threat) strin
 // hasLicenseCompatibilityIssues checks for license compatibility issues
 func (f *DashboardFormatter) hasLicenseCompatibilityIssues(licenseCounts map[string]int) bool {
 	// Check for common license compatibility issues
-	
+
 	// GPL licenses are incompatible with many others
 	hasGPL := licenseCounts["GPL-3.0"] > 0 || licenseCounts["GPL-2.0"] > 0 || licenseCounts["AGPL-3.0"] > 0
 	hasPermissive := licenseCounts["MIT"] > 0 || licenseCounts["Apache-2.0"] > 0 || licenseCounts["BSD-3-Clause"] > 0
-	
+
 	// GPL + permissive can be problematic in some contexts
 	if hasGPL && hasPermissive {
 		return true
 	}
-	
+
 	// AGPL is particularly restrictive
 	if licenseCounts["AGPL-3.0"] > 0 && len(licenseCounts) > 1 {
 		return true
 	}
-	
+
 	// Commercial/proprietary licenses with open source
 	hasCommercial := licenseCounts["COMMERCIAL"] > 0 || licenseCounts["PROPRIETARY"] > 0
 	hasOpenSource := hasPermissive || hasGPL
-	
+
 	if hasCommercial && hasOpenSource {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -286,29 +286,29 @@ func (f *DashboardFormatter) simulatePackageMaintenanceInfo(threat types.Threat)
 	packageName := threat.Package
 	version := threat.Version
 	registry := threat.Registry
-	
+
 	// Simulate maintenance info based on package characteristics
 	info := PackageMaintenanceInfo{}
-	
+
 	// Simulate last update time based on package name hash
 	nameHash := 0
 	for _, char := range packageName {
 		nameHash += int(char)
 	}
-	
+
 	// Generate a pseudo-random last update time
 	daysAgo := (nameHash % 365) + 30 // 30-395 days ago
 	info.LastUpdate = time.Now().AddDate(0, 0, -daysAgo)
-	
+
 	// Simulate version characteristics
 	info.IsPreRelease = len(version) > 0 && (version[len(version)-1] == 'a' || version[len(version)-1] == 'b')
-	info.IsLatestVersion = nameHash%3 == 0 // ~33% are latest
+	info.IsLatestVersion = nameHash%3 == 0    // ~33% are latest
 	info.HasSecurityUpdates = nameHash%4 == 0 // ~25% have security updates
-	
+
 	// Simulate maintenance status
 	info.IsDeprecated = nameHash%20 == 0 // ~5% are deprecated
 	info.HasKnownVulnerabilities = threat.Type == types.ThreatTypeVulnerable
-	
+
 	// Simulate activity level based on registry and package characteristics
 	switch registry {
 	case "npm":
@@ -328,24 +328,24 @@ func (f *DashboardFormatter) simulatePackageMaintenanceInfo(threat types.Threat)
 	default:
 		info.ActivityLevel = "moderate"
 	}
-	
+
 	// Simulate responsiveness issues
-	info.SlowIssueResponse = nameHash%5 == 0 // ~20% have slow response
+	info.SlowIssueResponse = nameHash%5 == 0           // ~20% have slow response
 	info.HasUnresolvedCriticalIssues = nameHash%8 == 0 // ~12.5% have unresolved critical issues
-	
+
 	return info
 }
 
 // Format generates an executive dashboard HTML report
 func (f *DashboardFormatter) Format(scanResult *analyzer.ScanResult) ([]byte, error) {
 	dashboardData := f.generateDashboardData(scanResult)
-	
+
 	// Generate HTML report
 	htmlReport, err := f.generateHTMLReport(dashboardData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate HTML report: %w", err)
 	}
-	
+
 	return htmlReport, nil
 }
 
@@ -358,15 +358,15 @@ func (f *DashboardFormatter) FormatJSON(scanResult *analyzer.ScanResult) ([]byte
 // generateDashboardData creates comprehensive dashboard data from scan results
 func (f *DashboardFormatter) generateDashboardData(scanResult *analyzer.ScanResult) *DashboardData {
 	return &DashboardData{
-		ScanResult:      scanResult,
-		RepositoryInfo:  f.generateRepositoryInfo(),
+		ScanResult:       scanResult,
+		RepositoryInfo:   f.generateRepositoryInfo(),
 		ExecutiveSummary: f.generateExecutiveSummary(scanResult),
-		RiskMetrics:     f.generateRiskMetrics(scanResult),
-		ThreatBreakdown: f.generateThreatBreakdown(scanResult),
-		Recommendations: f.generateRecommendations(scanResult),
-		TrendData:       f.generateTrendData(scanResult),
-		ComplianceData:  f.generateComplianceData(scanResult),
-		GeneratedAt:     time.Now(),
+		RiskMetrics:      f.generateRiskMetrics(scanResult),
+		ThreatBreakdown:  f.generateThreatBreakdown(scanResult),
+		Recommendations:  f.generateRecommendations(scanResult),
+		TrendData:        f.generateTrendData(scanResult),
+		ComplianceData:   f.generateComplianceData(scanResult),
+		GeneratedAt:      time.Now(),
 	}
 }
 
@@ -389,12 +389,12 @@ func (f *DashboardFormatter) generateExecutiveSummary(scanResult *analyzer.ScanR
 	highCount := f.countBySeverity(scanResult, "high")
 	mediumCount := f.countBySeverity(scanResult, "medium")
 	lowCount := f.countBySeverity(scanResult, "low")
-	
+
 	totalThreats := len(scanResult.Threats)
 	riskScore := f.calculateRiskScore(scanResult)
-	
+
 	return &ExecutiveSummary{
-		OverallRiskLevel:    f.determineRiskLevel(riskScore),
+		OverallRiskLevel:   f.determineRiskLevel(riskScore),
 		RiskScore:          riskScore,
 		TotalPackages:      scanResult.TotalPackages,
 		VulnerablePackages: totalThreats,
@@ -413,7 +413,7 @@ func (f *DashboardFormatter) generateRiskMetrics(scanResult *analyzer.ScanResult
 	for _, threat := range scanResult.Threats {
 		riskDistribution[threat.Severity.String()]++
 	}
-	
+
 	return &RiskMetrics{
 		SupplyChainRisk:   f.calculateSupplyChainRisk(scanResult),
 		LicenseRisk:       f.calculateLicenseRisk(scanResult),
@@ -429,13 +429,13 @@ func (f *DashboardFormatter) generateThreatBreakdown(scanResult *analyzer.ScanRe
 	byType := make(map[string]int)
 	bySeverity := make(map[string]int)
 	byRegistry := make(map[string]int)
-	
+
 	for _, threat := range scanResult.Threats {
 		byType[string(threat.Type)]++
 		bySeverity[threat.Severity.String()]++
 		byRegistry[threat.Registry]++
 	}
-	
+
 	return &ThreatBreakdown{
 		ByType:     byType,
 		BySeverity: bySeverity,
@@ -446,11 +446,11 @@ func (f *DashboardFormatter) generateThreatBreakdown(scanResult *analyzer.ScanRe
 // generateRecommendations creates actionable recommendations
 func (f *DashboardFormatter) generateRecommendations(scanResult *analyzer.ScanResult) []Recommendation {
 	var recommendations []Recommendation
-	
+
 	// Generate recommendations based on threats found
 	criticalCount := f.countBySeverity(scanResult, "critical")
 	highCount := f.countBySeverity(scanResult, "high")
-	
+
 	if criticalCount > 0 {
 		recommendations = append(recommendations, Recommendation{
 			ID:          "CRITICAL_THREATS",
@@ -463,7 +463,7 @@ func (f *DashboardFormatter) generateRecommendations(scanResult *analyzer.ScanRe
 			Effort:      "Medium",
 		})
 	}
-	
+
 	if highCount > 0 {
 		recommendations = append(recommendations, Recommendation{
 			ID:          "HIGH_THREATS",
@@ -476,7 +476,7 @@ func (f *DashboardFormatter) generateRecommendations(scanResult *analyzer.ScanRe
 			Effort:      "Medium",
 		})
 	}
-	
+
 	// Add general recommendations
 	recommendations = append(recommendations, Recommendation{
 		ID:          "DEPENDENCY_UPDATES",
@@ -488,7 +488,7 @@ func (f *DashboardFormatter) generateRecommendations(scanResult *analyzer.ScanRe
 		Impact:      "High",
 		Effort:      "Low",
 	})
-	
+
 	recommendations = append(recommendations, Recommendation{
 		ID:          "SECURITY_SCANNING",
 		Title:       "Integrate Security Scanning in CI/CD",
@@ -499,7 +499,7 @@ func (f *DashboardFormatter) generateRecommendations(scanResult *analyzer.ScanRe
 		Impact:      "High",
 		Effort:      "Low",
 	})
-	
+
 	return recommendations
 }
 
@@ -508,21 +508,21 @@ func (f *DashboardFormatter) generateTrendData(scanResult *analyzer.ScanResult) 
 	if !f.IncludeTrends {
 		return nil
 	}
-	
+
 	now := time.Now()
-	
+
 	// Generate risk trends for the last 30 days
 	riskTrends := f.generateRiskTrends(scanResult, now, 30)
-	
+
 	// Generate threat trends for the last 30 days
 	threatTrends := f.generateThreatTrends(scanResult, now, 30)
-	
+
 	// Generate package growth trends for the last 90 days
 	packageGrowth := f.generatePackageGrowthTrends(scanResult, now, 90)
-	
+
 	// Generate vulnerability trends for the last 60 days
 	vulnTrends := f.generateVulnerabilityTrends(scanResult, now, 60)
-	
+
 	return &TrendData{
 		RiskTrends:          riskTrends,
 		ThreatTrends:        threatTrends,
@@ -535,10 +535,10 @@ func (f *DashboardFormatter) generateTrendData(scanResult *analyzer.ScanResult) 
 func (f *DashboardFormatter) generateRiskTrends(scanResult *analyzer.ScanResult, endDate time.Time, days int) []RiskTrendPoint {
 	var trends []RiskTrendPoint
 	currentRiskScore := f.calculateRiskScore(scanResult)
-	
+
 	for i := days; i >= 0; i-- {
 		date := endDate.AddDate(0, 0, -i)
-		
+
 		// Simulate historical risk scores with some variation
 		variation := float64(i) * 0.5 // Risk generally improves over time
 		riskScore := currentRiskScore + variation
@@ -548,42 +548,42 @@ func (f *DashboardFormatter) generateRiskTrends(scanResult *analyzer.ScanResult,
 		if riskScore < 0 {
 			riskScore = 0
 		}
-		
+
 		// Simulate threat count based on risk score
 		threatCount := int(riskScore / 10)
 		if threatCount > len(scanResult.Threats) {
 			threatCount = len(scanResult.Threats)
 		}
-		
+
 		trends = append(trends, RiskTrendPoint{
 			Date:      date,
 			RiskScore: riskScore,
 			Threats:   threatCount,
 		})
 	}
-	
+
 	return trends
 }
 
 // generateThreatTrends creates threat trend data points
 func (f *DashboardFormatter) generateThreatTrends(scanResult *analyzer.ScanResult, endDate time.Time, days int) []ThreatPoint {
 	var trends []ThreatPoint
-	
+
 	// Group threats by type for trend analysis
 	threatsByType := make(map[string]int)
 	for _, threat := range scanResult.Threats {
 		threatsByType[string(threat.Type)]++
 	}
-	
+
 	for i := days; i >= 0; i-- {
 		date := endDate.AddDate(0, 0, -i)
-		
+
 		// Simulate threat occurrences over time
 		for threatType, count := range threatsByType {
 			// Simulate variation in threat detection over time
 			variation := float64(i%7) * 0.1 // Weekly patterns
 			adjustedCount := int(float64(count) * (1.0 + variation))
-			
+
 			if adjustedCount > 0 {
 				trends = append(trends, ThreatPoint{
 					Date:     date,
@@ -594,7 +594,7 @@ func (f *DashboardFormatter) generateThreatTrends(scanResult *analyzer.ScanResul
 			}
 		}
 	}
-	
+
 	return trends
 }
 
@@ -602,18 +602,18 @@ func (f *DashboardFormatter) generateThreatTrends(scanResult *analyzer.ScanResul
 func (f *DashboardFormatter) generatePackageGrowthTrends(scanResult *analyzer.ScanResult, endDate time.Time, days int) []GrowthPoint {
 	var trends []GrowthPoint
 	totalPackages := scanResult.TotalPackages
-	
+
 	for i := days; i >= 0; i-- {
 		date := endDate.AddDate(0, 0, -i)
-		
+
 		// Simulate package growth over time
 		growthRate := 1.0 - (float64(i) / float64(days) * 0.3) // 30% growth over period
 		packages := int(float64(totalPackages) * growthRate)
-		
+
 		// Simulate new and updated packages
-		newPackages := int(float64(packages) * 0.05) // 5% new packages
+		newPackages := int(float64(packages) * 0.05)    // 5% new packages
 		updatedPackages := int(float64(packages) * 0.1) // 10% updated packages
-		
+
 		trends = append(trends, GrowthPoint{
 			Date:     date,
 			Packages: packages,
@@ -621,14 +621,14 @@ func (f *DashboardFormatter) generatePackageGrowthTrends(scanResult *analyzer.Sc
 			Updated:  updatedPackages,
 		})
 	}
-	
+
 	return trends
 }
 
 // generateVulnerabilityTrends creates vulnerability trend data
 func (f *DashboardFormatter) generateVulnerabilityTrends(scanResult *analyzer.ScanResult, endDate time.Time, days int) []VulnTrendPoint {
 	var trends []VulnTrendPoint
-	
+
 	// Count current vulnerabilities
 	currentVulns := 0
 	for _, threat := range scanResult.Threats {
@@ -636,22 +636,22 @@ func (f *DashboardFormatter) generateVulnerabilityTrends(scanResult *analyzer.Sc
 			currentVulns++
 		}
 	}
-	
+
 	for i := days; i >= 0; i-- {
 		date := endDate.AddDate(0, 0, -i)
-		
+
 		// Simulate vulnerability discovery and fixing over time
 		discoveryRate := float64(i%10) * 0.1 // Periodic discovery
-		fixRate := float64(days-i) * 0.02     // Gradual fixing
-		
+		fixRate := float64(days-i) * 0.02    // Gradual fixing
+
 		newVulns := int(float64(currentVulns) * discoveryRate)
 		fixedVulns := int(float64(currentVulns) * fixRate)
 		totalVulns := currentVulns + newVulns - fixedVulns
-		
+
 		if totalVulns < 0 {
 			totalVulns = 0
 		}
-		
+
 		trends = append(trends, VulnTrendPoint{
 			Date:       date,
 			NewVulns:   newVulns,
@@ -659,20 +659,20 @@ func (f *DashboardFormatter) generateVulnerabilityTrends(scanResult *analyzer.Sc
 			TotalVulns: totalVulns,
 		})
 	}
-	
+
 	return trends
 }
 
 // getSeverityForThreatType determines the most common severity for a threat type
 func (f *DashboardFormatter) getSeverityForThreatType(threatType string, scanResult *analyzer.ScanResult) string {
 	severityCounts := make(map[string]int)
-	
+
 	for _, threat := range scanResult.Threats {
 		if string(threat.Type) == threatType {
 			severityCounts[threat.Severity.String()]++
 		}
 	}
-	
+
 	// Find the most common severity
 	maxCount := 0
 	mostCommonSeverity := "medium"
@@ -682,7 +682,7 @@ func (f *DashboardFormatter) getSeverityForThreatType(threatType string, scanRes
 			mostCommonSeverity = severity
 		}
 	}
-	
+
 	return mostCommonSeverity
 }
 
@@ -691,16 +691,16 @@ func (f *DashboardFormatter) generateComplianceData(scanResult *analyzer.ScanRes
 	if !f.IncludeCompliance {
 		return nil
 	}
-	
+
 	// Generate compliance assessments for major frameworks
 	frameworks := f.generateComplianceFrameworks(scanResult)
 	violations := f.generateComplianceViolationsData(scanResult)
 	recommendations := f.generateComplianceRecommendationsData(scanResult, violations)
-	
+
 	// Calculate overall compliance score
 	overallScore := f.calculateOverallComplianceScore(frameworks)
 	status := f.determineComplianceStatusFromScore(overallScore, violations)
-	
+
 	return &ComplianceData{
 		Frameworks:      frameworks,
 		OverallScore:    overallScore,
@@ -713,23 +713,23 @@ func (f *DashboardFormatter) generateComplianceData(scanResult *analyzer.ScanRes
 // generateComplianceFrameworks creates assessments for major security frameworks
 func (f *DashboardFormatter) generateComplianceFrameworks(scanResult *analyzer.ScanResult) []ComplianceFramework {
 	var frameworks []ComplianceFramework
-	
+
 	// NIST Cybersecurity Framework
 	nistFramework := f.generateNISTFramework(scanResult)
 	frameworks = append(frameworks, nistFramework)
-	
+
 	// OWASP Top 10
 	owaspFramework := f.generateOWASPFramework(scanResult)
 	frameworks = append(frameworks, owaspFramework)
-	
+
 	// ISO 27001
 	isoFramework := f.generateISO27001Framework(scanResult)
 	frameworks = append(frameworks, isoFramework)
-	
+
 	// SOC 2
 	soc2Framework := f.generateSOC2Framework(scanResult)
 	frameworks = append(frameworks, soc2Framework)
-	
+
 	return frameworks
 }
 
@@ -758,10 +758,10 @@ func (f *DashboardFormatter) generateNISTFramework(scanResult *analyzer.ScanResu
 			Evidence:    fmt.Sprintf("Identified %d security threats across dependencies", len(scanResult.Threats)),
 		},
 	}
-	
+
 	score := f.calculateFrameworkScore(requirements)
 	status := f.getFrameworkStatus(score)
-	
+
 	return ComplianceFramework{
 		Name:         "NIST Cybersecurity Framework",
 		Version:      "1.1",
@@ -796,10 +796,10 @@ func (f *DashboardFormatter) generateOWASPFramework(scanResult *analyzer.ScanRes
 			Evidence:    "Automated threat detection and reporting implemented",
 		},
 	}
-	
+
 	score := f.calculateFrameworkScore(requirements)
 	status := f.getFrameworkStatus(score)
-	
+
 	return ComplianceFramework{
 		Name:         "OWASP Top 10",
 		Version:      "2021",
@@ -827,10 +827,10 @@ func (f *DashboardFormatter) generateISO27001Framework(scanResult *analyzer.Scan
 			Evidence:    "Automated security scanning integrated into development workflow",
 		},
 	}
-	
+
 	score := f.calculateFrameworkScore(requirements)
 	status := f.getFrameworkStatus(score)
-	
+
 	return ComplianceFramework{
 		Name:         "ISO 27001",
 		Version:      "2013",
@@ -858,10 +858,10 @@ func (f *DashboardFormatter) generateSOC2Framework(scanResult *analyzer.ScanResu
 			Evidence:    f.getSystemOperationsEvidence(scanResult),
 		},
 	}
-	
+
 	score := f.calculateFrameworkScore(requirements)
 	status := f.getFrameworkStatus(score)
-	
+
 	return ComplianceFramework{
 		Name:         "SOC 2",
 		Version:      "2017",
@@ -882,8 +882,8 @@ func (f *DashboardFormatter) assessInventoryCompliance(scanResult *analyzer.Scan
 func (f *DashboardFormatter) assessIntegrityCompliance(scanResult *analyzer.ScanResult) string {
 	// Check for supply chain and integrity-related threats
 	for _, threat := range scanResult.Threats {
-		if threat.Type == types.ThreatTypeSupplyChainRisk || 
-		   threat.Type == types.ThreatTypeDependencyConfusion {
+		if threat.Type == types.ThreatTypeSupplyChainRisk ||
+			threat.Type == types.ThreatTypeDependencyConfusion {
 			return "non-compliant"
 		}
 	}
@@ -905,7 +905,7 @@ func (f *DashboardFormatter) assessVulnerableComponentsCompliance(scanResult *an
 			vulnCount++
 		}
 	}
-	
+
 	if vulnCount > 0 {
 		return "non-compliant"
 	}
@@ -947,9 +947,9 @@ func (f *DashboardFormatter) getVulnerableComponentsEvidence(scanResult *analyze
 func (f *DashboardFormatter) getIntegrityFailuresEvidence(scanResult *analyzer.ScanResult) string {
 	integrityThreats := 0
 	for _, threat := range scanResult.Threats {
-		if threat.Type == types.ThreatTypeSupplyChainRisk || 
-		   threat.Type == types.ThreatTypeDependencyConfusion ||
-		   threat.Type == types.ThreatTypeTyposquatting {
+		if threat.Type == types.ThreatTypeSupplyChainRisk ||
+			threat.Type == types.ThreatTypeDependencyConfusion ||
+			threat.Type == types.ThreatTypeTyposquatting {
 			integrityThreats++
 		}
 	}
@@ -965,14 +965,14 @@ func (f *DashboardFormatter) calculateFrameworkScore(requirements []ComplianceRe
 	if len(requirements) == 0 {
 		return 0.0
 	}
-	
+
 	compliantCount := 0
 	for _, req := range requirements {
 		if req.Status == "compliant" {
 			compliantCount++
 		}
 	}
-	
+
 	return (float64(compliantCount) / float64(len(requirements))) * 100
 }
 
@@ -993,16 +993,14 @@ func (f *DashboardFormatter) calculateOverallComplianceScore(frameworks []Compli
 	if len(frameworks) == 0 {
 		return 0.0
 	}
-	
+
 	totalScore := 0.0
 	for _, framework := range frameworks {
 		totalScore += framework.Score
 	}
-	
+
 	return totalScore / float64(len(frameworks))
 }
-
-
 
 // Helper functions
 
@@ -1020,20 +1018,20 @@ func (f *DashboardFormatter) calculateRiskScore(scanResult *analyzer.ScanResult)
 	if scanResult.TotalPackages == 0 {
 		return 0.0
 	}
-	
+
 	critical := float64(f.countBySeverity(scanResult, "critical"))
 	high := float64(f.countBySeverity(scanResult, "high"))
 	medium := float64(f.countBySeverity(scanResult, "medium"))
 	low := float64(f.countBySeverity(scanResult, "low"))
-	
+
 	// Weighted risk score calculation
 	weightedScore := (critical * 10) + (high * 7) + (medium * 4) + (low * 1)
 	maxPossibleScore := float64(scanResult.TotalPackages) * 10
-	
+
 	if maxPossibleScore == 0 {
 		return 0.0
 	}
-	
+
 	return (weightedScore / maxPossibleScore) * 100
 }
 
@@ -1070,7 +1068,7 @@ func (f *DashboardFormatter) determineSecurityPosture(riskScore float64) string 
 func (f *DashboardFormatter) determineComplianceStatus(scanResult *analyzer.ScanResult) string {
 	criticalCount := f.countBySeverity(scanResult, "critical")
 	highCount := f.countBySeverity(scanResult, "high")
-	
+
 	if criticalCount > 0 {
 		return "Non-Compliant"
 	}
@@ -1084,17 +1082,17 @@ func (f *DashboardFormatter) calculateSupplyChainRisk(scanResult *analyzer.ScanR
 	// Calculate supply chain risk based on threat types
 	supplyChainThreats := 0
 	for _, threat := range scanResult.Threats {
-		if threat.Type == types.ThreatTypeSupplyChainRisk || 
-		   threat.Type == types.ThreatTypeDependencyConfusion ||
-		   threat.Type == types.ThreatTypeTyposquatting {
+		if threat.Type == types.ThreatTypeSupplyChainRisk ||
+			threat.Type == types.ThreatTypeDependencyConfusion ||
+			threat.Type == types.ThreatTypeTyposquatting {
 			supplyChainThreats++
 		}
 	}
-	
+
 	if scanResult.TotalPackages == 0 {
 		return 0.0
 	}
-	
+
 	return (float64(supplyChainThreats) / float64(scanResult.TotalPackages)) * 100
 }
 
@@ -1102,47 +1100,47 @@ func (f *DashboardFormatter) calculateLicenseRisk(scanResult *analyzer.ScanResul
 	if scanResult.TotalPackages == 0 {
 		return 0.0
 	}
-	
+
 	// Define license risk scores
 	licenseRiskScores := map[string]float64{
 		// High risk licenses
-		"GPL-3.0":     9.0,
-		"GPL-2.0":     8.5,
-		"AGPL-3.0":    10.0,
-		"LGPL-3.0":    7.0,
-		"LGPL-2.1":    6.5,
-		"CDDL-1.0":    7.5,
-		"EPL-2.0":     6.0,
-		"MPL-2.0":     5.5,
-		
+		"GPL-3.0":  9.0,
+		"GPL-2.0":  8.5,
+		"AGPL-3.0": 10.0,
+		"LGPL-3.0": 7.0,
+		"LGPL-2.1": 6.5,
+		"CDDL-1.0": 7.5,
+		"EPL-2.0":  6.0,
+		"MPL-2.0":  5.5,
+
 		// Medium risk licenses
-		"Apache-2.0":  3.0,
+		"Apache-2.0":   3.0,
 		"BSD-3-Clause": 2.5,
 		"BSD-2-Clause": 2.0,
-		"MIT":         1.5,
-		"ISC":         1.5,
-		
+		"MIT":          1.5,
+		"ISC":          1.5,
+
 		// Low risk licenses
-		"Unlicense":   1.0,
-		"CC0-1.0":     1.0,
-		"WTFPL":       2.0,
-		
+		"Unlicense": 1.0,
+		"CC0-1.0":   1.0,
+		"WTFPL":     2.0,
+
 		// Unknown/proprietary (high risk)
 		"UNKNOWN":     8.0,
 		"PROPRIETARY": 9.5,
 		"COMMERCIAL":  8.5,
 	}
-	
+
 	totalRiskScore := 0.0
 	licenseCounts := make(map[string]int)
-	
+
 	// Simulate license detection from package metadata
 	// In a real implementation, this would analyze package.json, go.mod, etc.
 	for _, threat := range scanResult.Threats {
 		// Simulate license detection based on package characteristics
 		license := f.simulateLicenseDetection(threat)
 		licenseCounts[license]++
-		
+
 		if riskScore, exists := licenseRiskScores[license]; exists {
 			totalRiskScore += riskScore
 		} else {
@@ -1150,45 +1148,45 @@ func (f *DashboardFormatter) calculateLicenseRisk(scanResult *analyzer.ScanResul
 			totalRiskScore += 6.0
 		}
 	}
-	
+
 	// Calculate additional risk factors
 	riskMultiplier := 1.0
-	
+
 	// Check for license compatibility issues
 	if f.hasLicenseCompatibilityIssues(licenseCounts) {
 		riskMultiplier += 0.3
 	}
-	
+
 	// Check for missing license information
 	unknownLicenses := licenseCounts["UNKNOWN"] + licenseCounts["PROPRIETARY"]
 	if unknownLicenses > 0 {
 		unknownRatio := float64(unknownLicenses) / float64(scanResult.TotalPackages)
 		riskMultiplier += unknownRatio * 0.5
 	}
-	
+
 	// Normalize to percentage
 	averageRisk := (totalRiskScore / float64(scanResult.TotalPackages)) * riskMultiplier
-	return math.Min(averageRisk * 10, 100.0) // Scale to 0-100 and cap at 100
+	return math.Min(averageRisk*10, 100.0) // Scale to 0-100 and cap at 100
 }
 
 func (f *DashboardFormatter) calculateMaintenanceRisk(scanResult *analyzer.ScanResult) float64 {
 	if scanResult.TotalPackages == 0 {
 		return 0.0
 	}
-	
+
 	totalRiskScore := 0.0
 	now := time.Now()
-	
+
 	for _, threat := range scanResult.Threats {
 		packageRisk := 0.0
-		
+
 		// Simulate package metadata analysis
 		packageInfo := f.simulatePackageMaintenanceInfo(threat)
-		
+
 		// Age-based risk calculation
 		if !packageInfo.LastUpdate.IsZero() {
 			daysSinceUpdate := now.Sub(packageInfo.LastUpdate).Hours() / 24
-			
+
 			switch {
 			case daysSinceUpdate > 730: // 2+ years
 				packageRisk += 8.0
@@ -1205,25 +1203,25 @@ func (f *DashboardFormatter) calculateMaintenanceRisk(scanResult *analyzer.ScanR
 			// No update information available
 			packageRisk += 7.0
 		}
-		
+
 		// Version pattern analysis
 		if packageInfo.IsPreRelease {
 			packageRisk += 3.0
 		}
-		
+
 		if packageInfo.HasSecurityUpdates && !packageInfo.IsLatestVersion {
 			packageRisk += 5.0
 		}
-		
+
 		// Maintenance indicators
 		if packageInfo.IsDeprecated {
 			packageRisk += 9.0
 		}
-		
+
 		if packageInfo.HasKnownVulnerabilities {
 			packageRisk += 4.0
 		}
-		
+
 		// Repository activity (simulated)
 		switch packageInfo.ActivityLevel {
 		case "inactive":
@@ -1237,22 +1235,22 @@ func (f *DashboardFormatter) calculateMaintenanceRisk(scanResult *analyzer.ScanR
 		default:
 			packageRisk += 3.0
 		}
-		
+
 		// Maintainer responsiveness
 		if packageInfo.SlowIssueResponse {
 			packageRisk += 2.0
 		}
-		
+
 		if packageInfo.HasUnresolvedCriticalIssues {
 			packageRisk += 3.0
 		}
-		
+
 		totalRiskScore += packageRisk
 	}
-	
+
 	// Calculate average risk and normalize to percentage
 	averageRisk := totalRiskScore / float64(scanResult.TotalPackages)
-	return math.Min(averageRisk * 2.5, 100.0) // Scale and cap at 100%
+	return math.Min(averageRisk*2.5, 100.0) // Scale and cap at 100%
 }
 
 func (f *DashboardFormatter) calculateVulnerabilityRisk(scanResult *analyzer.ScanResult) float64 {
@@ -1262,38 +1260,38 @@ func (f *DashboardFormatter) calculateVulnerabilityRisk(scanResult *analyzer.Sca
 			vulnThreats++
 		}
 	}
-	
+
 	if scanResult.TotalPackages == 0 {
 		return 0.0
 	}
-	
+
 	return (float64(vulnThreats) / float64(scanResult.TotalPackages)) * 100
 }
 
 func (f *DashboardFormatter) getTopRiskyPackages(scanResult *analyzer.ScanResult, limit int) []RiskyPackage {
 	var riskyPackages []RiskyPackage
-	
+
 	// Group threats by package
 	packageThreats := make(map[string][]types.Threat)
 	for _, threat := range scanResult.Threats {
 		key := fmt.Sprintf("%s@%s", threat.Package, threat.Version)
 		packageThreats[key] = append(packageThreats[key], threat)
 	}
-	
+
 	// Calculate risk score for each package
 	for _, threats := range packageThreats {
 		if len(threats) == 0 {
 			continue
 		}
-		
+
 		firstThreat := threats[0]
 		riskScore := f.calculatePackageRiskScore(threats)
-		
+
 		var threatTypes []string
 		for _, threat := range threats {
 			threatTypes = append(threatTypes, string(threat.Type))
 		}
-		
+
 		riskyPackages = append(riskyPackages, RiskyPackage{
 			Name:        firstThreat.Package,
 			Version:     firstThreat.Version,
@@ -1304,7 +1302,7 @@ func (f *DashboardFormatter) getTopRiskyPackages(scanResult *analyzer.ScanResult
 			Description: firstThreat.Description,
 		})
 	}
-	
+
 	// Sort by risk score and return top packages
 	if len(riskyPackages) > limit {
 		// Simple sort by risk score (descending)
@@ -1317,7 +1315,7 @@ func (f *DashboardFormatter) getTopRiskyPackages(scanResult *analyzer.ScanResult
 		}
 		return riskyPackages[:limit]
 	}
-	
+
 	return riskyPackages
 }
 
@@ -1352,13 +1350,13 @@ func (f *DashboardFormatter) getHighestSeverity(threats []types.Threat) string {
 // generateHTMLReport creates an HTML dashboard report
 func (f *DashboardFormatter) generateHTMLReport(data *DashboardData) ([]byte, error) {
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTemplate))
-	
+
 	var buf bytes.Buffer
 	err := tmpl.Execute(&buf, data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute template: %w", err)
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -1704,7 +1702,7 @@ const dashboardTemplate = `<!DOCTYPE html>
 // generateComplianceViolationsData creates compliance violations based on scan results
 func (f *DashboardFormatter) generateComplianceViolationsData(scanResult *analyzer.ScanResult) []ComplianceViolation {
 	var violations []ComplianceViolation
-	
+
 	// Check for critical vulnerabilities
 	criticalThreats := 0
 	for _, threat := range scanResult.Threats {
@@ -1712,7 +1710,7 @@ func (f *DashboardFormatter) generateComplianceViolationsData(scanResult *analyz
 			criticalThreats++
 		}
 	}
-	
+
 	if criticalThreats > 0 {
 		violations = append(violations, ComplianceViolation{
 			Framework:   "NIST CSF",
@@ -1722,17 +1720,17 @@ func (f *DashboardFormatter) generateComplianceViolationsData(scanResult *analyz
 			Remediation: "Update or replace vulnerable packages immediately",
 		})
 	}
-	
+
 	// Check for supply chain risks
 	supplyChainThreats := 0
 	for _, threat := range scanResult.Threats {
 		if threat.Type == types.ThreatTypeSupplyChainRisk ||
-		   threat.Type == types.ThreatTypeDependencyConfusion ||
-		   threat.Type == types.ThreatTypeTyposquatting {
+			threat.Type == types.ThreatTypeDependencyConfusion ||
+			threat.Type == types.ThreatTypeTyposquatting {
 			supplyChainThreats++
 		}
 	}
-	
+
 	if supplyChainThreats > 0 {
 		violations = append(violations, ComplianceViolation{
 			Framework:   "OWASP Top 10",
@@ -1742,27 +1740,27 @@ func (f *DashboardFormatter) generateComplianceViolationsData(scanResult *analyz
 			Remediation: "Verify package authenticity and implement supply chain security controls",
 		})
 	}
-	
+
 	return violations
 }
 
 // generateComplianceRecommendationsData creates compliance recommendations
 func (f *DashboardFormatter) generateComplianceRecommendationsData(scanResult *analyzer.ScanResult, violations []ComplianceViolation) []string {
 	var recommendations []string
-	
+
 	if len(violations) > 0 {
 		recommendations = append(recommendations, "Address all compliance violations immediately")
 		recommendations = append(recommendations, "Implement automated compliance monitoring")
 	}
-	
+
 	if f.countBySeverity(scanResult, "critical") > 0 {
 		recommendations = append(recommendations, "Establish incident response procedures for critical vulnerabilities")
 	}
-	
+
 	recommendations = append(recommendations, "Regular compliance audits and assessments")
 	recommendations = append(recommendations, "Implement continuous security monitoring")
 	recommendations = append(recommendations, "Maintain up-to-date security documentation")
-	
+
 	return recommendations
 }
 
@@ -1774,11 +1772,11 @@ func (f *DashboardFormatter) determineComplianceStatusFromScore(score float64, v
 			criticalViolations++
 		}
 	}
-	
+
 	if criticalViolations > 0 {
 		return "Critical Issues"
 	}
-	
+
 	switch {
 	case score >= 90:
 		return "Excellent"

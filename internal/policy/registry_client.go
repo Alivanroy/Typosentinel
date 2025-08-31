@@ -22,42 +22,42 @@ type DefaultRegistryClient struct {
 
 // RegistryClientConfig configuration for registry client
 type RegistryClientConfig struct {
-	NPMRegistry     string        `json:"npm_registry"`
-	PyPIRegistry    string        `json:"pypi_registry"`
-	MavenRegistry   string        `json:"maven_registry"`
-	NuGetRegistry   string        `json:"nuget_registry"`
-	RubyGemsRegistry string       `json:"rubygems_registry"`
-	CargoRegistry   string        `json:"cargo_registry"`
-	Timeout         time.Duration `json:"timeout"`
-	MaxRetries      int           `json:"max_retries"`
-	RetryDelay      time.Duration `json:"retry_delay"`
-	UserAgent       string        `json:"user_agent"`
+	NPMRegistry      string        `json:"npm_registry"`
+	PyPIRegistry     string        `json:"pypi_registry"`
+	MavenRegistry    string        `json:"maven_registry"`
+	NuGetRegistry    string        `json:"nuget_registry"`
+	RubyGemsRegistry string        `json:"rubygems_registry"`
+	CargoRegistry    string        `json:"cargo_registry"`
+	Timeout          time.Duration `json:"timeout"`
+	MaxRetries       int           `json:"max_retries"`
+	RetryDelay       time.Duration `json:"retry_delay"`
+	UserAgent        string        `json:"user_agent"`
 }
 
 // NPMPackageInfo represents NPM package information
 type NPMPackageInfo struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Versions    map[string]NPMVersion  `json:"versions"`
-	DistTags    map[string]string      `json:"dist-tags"`
-	Time        map[string]string      `json:"time"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Versions    map[string]NPMVersion `json:"versions"`
+	DistTags    map[string]string     `json:"dist-tags"`
+	Time        map[string]string     `json:"time"`
 }
 
 // NPMVersion represents an NPM package version
 type NPMVersion struct {
-	Version     string            `json:"version"`
-	Description string            `json:"description"`
-	Main        string            `json:"main"`
-	Scripts     map[string]string `json:"scripts"`
-	Dependencies map[string]string `json:"dependencies"`
+	Version         string            `json:"version"`
+	Description     string            `json:"description"`
+	Main            string            `json:"main"`
+	Scripts         map[string]string `json:"scripts"`
+	Dependencies    map[string]string `json:"dependencies"`
 	DevDependencies map[string]string `json:"devDependencies"`
-	Dist        NPMDist           `json:"dist"`
+	Dist            NPMDist           `json:"dist"`
 }
 
 // NPMDist represents NPM distribution info
 type NPMDist struct {
-	Tarball  string `json:"tarball"`
-	Shasum   string `json:"shasum"`
+	Tarball   string `json:"tarball"`
+	Shasum    string `json:"shasum"`
 	Integrity string `json:"integrity"`
 }
 
@@ -79,8 +79,8 @@ type PyPIInfo struct {
 
 // PyPIFile represents a PyPI file
 type PyPIFile struct {
-	Filename string `json:"filename"`
-	URL      string `json:"url"`
+	Filename string            `json:"filename"`
+	URL      string            `json:"url"`
 	Digests  map[string]string `json:"digests"`
 }
 
@@ -181,7 +181,7 @@ func (rc *DefaultRegistryClient) ValidateVersion(pkg *types.Package, version str
 
 func (rc *DefaultRegistryClient) getNPMVersions(packageName string) ([]string, error) {
 	url := fmt.Sprintf("%s/%s", rc.config.NPMRegistry, url.PathEscape(packageName))
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -218,7 +218,7 @@ func (rc *DefaultRegistryClient) getNPMVersions(packageName string) ([]string, e
 
 func (rc *DefaultRegistryClient) getNPMMetadata(packageName, version string) (*types.PackageMetadata, error) {
 	url := fmt.Sprintf("%s/%s/%s", rc.config.NPMRegistry, url.PathEscape(packageName), version)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -263,7 +263,7 @@ func (rc *DefaultRegistryClient) getNPMMetadata(packageName, version string) (*t
 
 func (rc *DefaultRegistryClient) getPyPIVersions(packageName string) ([]string, error) {
 	url := fmt.Sprintf("%s/%s/json", rc.config.PyPIRegistry, url.PathEscape(packageName))
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -300,7 +300,7 @@ func (rc *DefaultRegistryClient) getPyPIVersions(packageName string) ([]string, 
 
 func (rc *DefaultRegistryClient) getPyPIMetadata(packageName, version string) (*types.PackageMetadata, error) {
 	url := fmt.Sprintf("%s/%s/%s/json", rc.config.PyPIRegistry, url.PathEscape(packageName), version)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -346,12 +346,12 @@ func (rc *DefaultRegistryClient) getMavenVersions(packageName string) ([]string,
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Maven package format, expected groupId:artifactId")
 	}
-	
+
 	artifactId := parts[1]
-	
-	url := fmt.Sprintf("https://search.maven.org/solrsearch/select?q=g:%s+AND+a:%s&core=gav&rows=100&wt=json", 
+
+	url := fmt.Sprintf("https://search.maven.org/solrsearch/select?q=g:%s+AND+a:%s&core=gav&rows=100&wt=json",
 		url.QueryEscape(parts[0]), url.QueryEscape(artifactId))
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -375,7 +375,7 @@ func (rc *DefaultRegistryClient) getMavenVersions(packageName string) ([]string,
 			} `json:"docs"`
 		} `json:"response"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return nil, fmt.Errorf("failed to decode Maven response: %w", err)
 	}
@@ -395,14 +395,14 @@ func (rc *DefaultRegistryClient) getMavenMetadata(packageName, version string) (
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Maven package format, expected groupId:artifactId")
 	}
-	
+
 	groupId := strings.ReplaceAll(parts[0], ".", "/")
 	artifactId := parts[1]
-	
+
 	// Try to get POM file for metadata
-	pomURL := fmt.Sprintf("https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom", 
+	pomURL := fmt.Sprintf("https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom",
 		groupId, artifactId, version, artifactId, version)
-	
+
 	req, err := http.NewRequest("GET", pomURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -449,9 +449,9 @@ func extractXMLTag(content, tag string) string {
 }
 
 func (rc *DefaultRegistryClient) getNuGetVersions(packageName string) ([]string, error) {
-	url := fmt.Sprintf("https://api.nuget.org/v3-flatcontainer/%s/index.json", 
+	url := fmt.Sprintf("https://api.nuget.org/v3-flatcontainer/%s/index.json",
 		strings.ToLower(packageName))
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -471,7 +471,7 @@ func (rc *DefaultRegistryClient) getNuGetVersions(packageName string) ([]string,
 	var versionResponse struct {
 		Versions []string `json:"versions"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&versionResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode NuGet response: %w", err)
 	}
@@ -481,9 +481,9 @@ func (rc *DefaultRegistryClient) getNuGetVersions(packageName string) ([]string,
 
 func (rc *DefaultRegistryClient) getNuGetMetadata(packageName, version string) (*types.PackageMetadata, error) {
 	// Get package metadata from NuGet API
-	url := fmt.Sprintf("https://api.nuget.org/v3/registration5-semver1/%s/%s.json", 
+	url := fmt.Sprintf("https://api.nuget.org/v3/registration5-semver1/%s/%s.json",
 		strings.ToLower(packageName), strings.ToLower(version))
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -512,7 +512,7 @@ func (rc *DefaultRegistryClient) getNuGetMetadata(packageName, version string) (
 				Published   time.Time `json:"published"`
 			} `json:"catalogEntry"`
 		}
-		
+
 		if err := json.NewDecoder(resp.Body).Decode(&packageInfo); err == nil {
 			metadata.Description = packageInfo.CatalogEntry.Description
 			if !packageInfo.CatalogEntry.Published.IsZero() {
@@ -526,7 +526,7 @@ func (rc *DefaultRegistryClient) getNuGetMetadata(packageName, version string) (
 
 func (rc *DefaultRegistryClient) getRubyGemsVersions(packageName string) ([]string, error) {
 	url := fmt.Sprintf("https://rubygems.org/api/v1/versions/%s.json", packageName)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -546,7 +546,7 @@ func (rc *DefaultRegistryClient) getRubyGemsVersions(packageName string) ([]stri
 	var versions []struct {
 		Number string `json:"number"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
 		return nil, fmt.Errorf("failed to decode RubyGems response: %w", err)
 	}
@@ -561,7 +561,7 @@ func (rc *DefaultRegistryClient) getRubyGemsVersions(packageName string) ([]stri
 
 func (rc *DefaultRegistryClient) getRubyGemsMetadata(packageName, version string) (*types.PackageMetadata, error) {
 	url := fmt.Sprintf("https://rubygems.org/api/v1/gems/%s.json", packageName)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -585,11 +585,11 @@ func (rc *DefaultRegistryClient) getRubyGemsMetadata(packageName, version string
 
 	if resp.StatusCode == http.StatusOK {
 		var gemInfo struct {
-			Info        string `json:"info"`
-			Version     string `json:"version"`
+			Info             string `json:"info"`
+			Version          string `json:"version"`
 			VersionCreatedAt string `json:"version_created_at"`
 		}
-		
+
 		if err := json.NewDecoder(resp.Body).Decode(&gemInfo); err == nil {
 			metadata.Description = gemInfo.Info
 			if gemInfo.VersionCreatedAt != "" {
@@ -605,7 +605,7 @@ func (rc *DefaultRegistryClient) getRubyGemsMetadata(packageName, version string
 
 func (rc *DefaultRegistryClient) getCargoVersions(packageName string) ([]string, error) {
 	url := fmt.Sprintf("https://crates.io/api/v1/crates/%s/versions", packageName)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -627,7 +627,7 @@ func (rc *DefaultRegistryClient) getCargoVersions(packageName string) ([]string,
 			Num string `json:"num"`
 		} `json:"versions"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&versionResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode Cargo response: %w", err)
 	}
@@ -642,7 +642,7 @@ func (rc *DefaultRegistryClient) getCargoVersions(packageName string) ([]string,
 
 func (rc *DefaultRegistryClient) getCargoMetadata(packageName, version string) (*types.PackageMetadata, error) {
 	url := fmt.Sprintf("https://crates.io/api/v1/crates/%s", packageName)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -671,7 +671,7 @@ func (rc *DefaultRegistryClient) getCargoMetadata(packageName, version string) (
 				CreatedAt   time.Time `json:"created_at"`
 			} `json:"crate"`
 		}
-		
+
 		if err := json.NewDecoder(resp.Body).Decode(&crateInfo); err == nil {
 			metadata.Description = crateInfo.Crate.Description
 			if !crateInfo.Crate.CreatedAt.IsZero() {

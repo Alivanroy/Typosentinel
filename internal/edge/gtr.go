@@ -34,23 +34,23 @@ type GTRConfig struct {
 
 // GTRMetrics tracks GTR algorithm performance
 type GTRMetrics struct {
-	GraphsAnalyzed       int64         `json:"graphs_analyzed"`
-	NodesTraversed       int64         `json:"nodes_traversed"`
-	PathsAnalyzed        int64         `json:"paths_analyzed"`
-	CyclesDetected       int64         `json:"cycles_detected"`
-	AttackPathsFound     int64         `json:"attack_paths_found"`
-	ProcessingTime       time.Duration `json:"processing_time"`
-	TotalAnalyses        int64         `json:"total_analyses"`
-	AverageLatency       time.Duration `json:"average_latency"`
-	TruePositives        int64         `json:"true_positives"`
-	FalsePositives       int64         `json:"false_positives"`
-	TrueNegatives        int64         `json:"true_negatives"`
-	FalseNegatives       int64         `json:"false_negatives"`
-	Accuracy             float64       `json:"accuracy"`
-	Precision            float64       `json:"precision"`
-	Recall               float64       `json:"recall"`
-	F1Score              float64       `json:"f1_score"`
-	LastUpdated          time.Time     `json:"last_updated"`
+	GraphsAnalyzed   int64         `json:"graphs_analyzed"`
+	NodesTraversed   int64         `json:"nodes_traversed"`
+	PathsAnalyzed    int64         `json:"paths_analyzed"`
+	CyclesDetected   int64         `json:"cycles_detected"`
+	AttackPathsFound int64         `json:"attack_paths_found"`
+	ProcessingTime   time.Duration `json:"processing_time"`
+	TotalAnalyses    int64         `json:"total_analyses"`
+	AverageLatency   time.Duration `json:"average_latency"`
+	TruePositives    int64         `json:"true_positives"`
+	FalsePositives   int64         `json:"false_positives"`
+	TrueNegatives    int64         `json:"true_negatives"`
+	FalseNegatives   int64         `json:"false_negatives"`
+	Accuracy         float64       `json:"accuracy"`
+	Precision        float64       `json:"precision"`
+	Recall           float64       `json:"recall"`
+	F1Score          float64       `json:"f1_score"`
+	LastUpdated      time.Time     `json:"last_updated"`
 }
 
 // NewGTRAlgorithm creates a new GTR algorithm instance
@@ -85,7 +85,7 @@ func (g *GTRAlgorithm) Name() string {
 
 // Tier returns the algorithm tier
 func (g *GTRAlgorithm) Tier() AlgorithmTier {
-	return TierG // Production-Ready
+	return TierCore // Production-Ready
 }
 
 // Description returns the algorithm description
@@ -110,22 +110,19 @@ func (g *GTRAlgorithm) Configure(config map[string]interface{}) error {
 // GetMetrics returns algorithm metrics
 func (g *GTRAlgorithm) GetMetrics() *AlgorithmMetrics {
 	return &AlgorithmMetrics{
-		TotalAnalyses:  g.metrics.TotalAnalyses,
-		AverageLatency: g.metrics.AverageLatency,
-		TruePositives:  g.metrics.TruePositives,
-		FalsePositives: g.metrics.FalsePositives,
-		TrueNegatives:  g.metrics.TrueNegatives,
-		FalseNegatives: g.metrics.FalseNegatives,
-		Accuracy:       g.metrics.Accuracy,
-		Precision:      g.metrics.Precision,
-		Recall:         g.metrics.Recall,
-		F1Score:        g.metrics.F1Score,
-		LastUpdated:    g.metrics.LastUpdated,
+		PackagesProcessed: int(g.metrics.TotalAnalyses),
+		ThreatsDetected:   int(g.metrics.AttackPathsFound),
+		ProcessingTime:    g.metrics.ProcessingTime,
+		Accuracy:          g.metrics.Accuracy,
+		Precision:         g.metrics.Precision,
+		Recall:            g.metrics.Recall,
+		F1Score:           g.metrics.F1Score,
+		LastUpdated:       g.metrics.LastUpdated,
 	}
 }
 
 // Analyze performs graph traversal reconnaissance on a package
-func (g *GTRAlgorithm) Analyze(ctx context.Context, input interface{}) (*AnalysisResult, error) {
+func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
 	startTime := time.Now()
 	defer func() {
 		g.metrics.ProcessingTime += time.Since(startTime)
@@ -133,21 +130,23 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, input interface{}) (*Analysi
 		g.metrics.LastUpdated = time.Now()
 	}()
 
-	pkg, ok := input.(*types.Package)
-	if !ok {
-		return nil, fmt.Errorf("input must be a *types.Package")
+	if len(packages) == 0 {
+		return nil, fmt.Errorf("no packages provided")
 	}
 
-	result := &AnalysisResult{
-		AlgorithmName:  g.Name(),
-		Tier:          g.Tier(),
-		ThreatScore:   0.0,
-		Confidence:    0.0,
-		AttackVectors: make([]string, 0),
-		Findings:      make([]Finding, 0),
-		Metadata:      make(map[string]interface{}),
-		ProcessingTime: 0,
-		Timestamp:     time.Now(),
+	result := &AlgorithmResult{
+		Algorithm: g.Name(),
+		Timestamp: time.Now(),
+		Packages:  packages,
+		Findings:  make([]Finding, 0),
+		Metadata:  make(map[string]interface{}),
+	}
+
+	// Create a basic package structure for analysis
+	pkg := &types.Package{
+		Name:     packages[0],
+		Version:  "latest",
+		Registry: "npm",
 	}
 
 	// Analyze package dependencies for graph traversal patterns
@@ -159,7 +158,6 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, input interface{}) (*Analysi
 	// Update metrics
 	result.Metadata["dependencies_count"] = len(pkg.Dependencies)
 	result.Metadata["processing_time_ms"] = time.Since(startTime).Milliseconds()
-	result.ProcessingTime = time.Since(startTime)
 
 	g.metrics.GraphsAnalyzed++
 	g.metrics.NodesTraversed += int64(len(pkg.Dependencies))
@@ -168,7 +166,7 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, input interface{}) (*Analysi
 }
 
 // analyzeDependencyGraph analyzes the dependency graph for security issues
-func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *AnalysisResult) {
+func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *AlgorithmResult) {
 	if pkg.Dependencies == nil {
 		return
 	}
@@ -193,33 +191,72 @@ func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *Analys
 		// Check for high-risk dependencies
 		if riskScore > g.config.MinRiskThreshold {
 			result.Findings = append(result.Findings, Finding{
-				Type:        "high_risk_dependency",
-				Severity:    g.getRiskSeverity(riskScore),
-				Description: fmt.Sprintf("Dependency '%s' has high risk score", dep.Name),
-				Evidence:    map[string]interface{}{"dependency": dep.Name, "risk_score": riskScore, "depth": depth},
-				Remediation: "Review dependency necessity and consider alternatives",
+				ID:              fmt.Sprintf("gtr_high_risk_%s", dep.Name),
+				Package:         dep.Name,
+				Type:            "high_risk_dependency",
+				Severity:        g.getRiskSeverity(riskScore),
+				Message:         fmt.Sprintf("Dependency '%s' has high risk score", dep.Name),
+				Confidence:      riskScore,
+				DetectedAt:      time.Now(),
+				DetectionMethod: "gtr_risk_analysis",
+				Evidence: []Evidence{
+					{
+						Type:        "risk_score",
+						Description: "Calculated risk score for dependency",
+						Value:       riskScore,
+						Score:       riskScore,
+					},
+					{
+						Type:        "dependency_depth",
+						Description: "Depth of dependency in graph",
+						Value:       depth,
+						Score:       float64(depth) / 10.0,
+					},
+				},
 			})
 		}
 
 		// Check for deep dependencies
 		if depth > 3 {
 			result.Findings = append(result.Findings, Finding{
-				Type:        "deep_dependency",
-				Severity:    "MEDIUM",
-				Description: fmt.Sprintf("Dependency '%s' is deeply nested", dep.Name),
-				Evidence:    map[string]interface{}{"dependency": dep.Name, "depth": depth},
-				Remediation: "Consider flattening dependency tree to reduce complexity",
+				ID:              fmt.Sprintf("gtr_deep_dep_%s", dep.Name),
+				Package:         dep.Name,
+				Type:            "deep_dependency",
+				Severity:        "MEDIUM",
+				Message:         fmt.Sprintf("Dependency '%s' is deeply nested", dep.Name),
+				Confidence:      0.7,
+				DetectedAt:      time.Now(),
+				DetectionMethod: "gtr_depth_analysis",
+				Evidence: []Evidence{
+					{
+						Type:        "dependency_depth",
+						Description: "Depth level in dependency tree",
+						Value:       depth,
+						Score:       float64(depth) / 10.0,
+					},
+				},
 			})
 		}
 
 		// Check for development dependencies in production
 		if dep.Development {
 			result.Findings = append(result.Findings, Finding{
-				Type:        "dev_dependency_risk",
-				Severity:    "LOW",
-				Description: fmt.Sprintf("Development dependency '%s' detected", dep.Name),
-				Evidence:    map[string]interface{}{"dependency": dep.Name, "type": "development"},
-				Remediation: "Ensure development dependencies are not included in production builds",
+				ID:              fmt.Sprintf("gtr_dev_dep_%s", dep.Name),
+				Package:         dep.Name,
+				Type:            "dev_dependency_risk",
+				Severity:        "LOW",
+				Message:         fmt.Sprintf("Development dependency '%s' detected", dep.Name),
+				Confidence:      0.5,
+				DetectedAt:      time.Now(),
+				DetectionMethod: "gtr_dev_dependency_check",
+				Evidence: []Evidence{
+					{
+						Type:        "dependency_type",
+						Description: "Type of dependency detected",
+						Value:       "development",
+						Score:       0.5,
+					},
+				},
 			})
 		}
 	}
@@ -281,10 +318,10 @@ func (g *GTRAlgorithm) getRiskSeverity(riskScore float64) string {
 }
 
 // calculateOverallScores calculates overall threat and confidence scores
-func (g *GTRAlgorithm) calculateOverallScores(result *AnalysisResult) {
+func (g *GTRAlgorithm) calculateOverallScores(result *AlgorithmResult) {
 	if len(result.Findings) == 0 {
-		result.ThreatScore = 0.0
-		result.Confidence = 0.8
+		result.Metadata["threat_score"] = 0.0
+		result.Metadata["confidence"] = 0.8
 		return
 	}
 
@@ -309,21 +346,25 @@ func (g *GTRAlgorithm) calculateOverallScores(result *AnalysisResult) {
 	}
 
 	// Normalize threat score
-	result.ThreatScore = math.Min(totalThreat/float64(len(result.Findings)), 1.0)
+	threatScore := math.Min(totalThreat/float64(len(result.Findings)), 1.0)
 
 	// Calculate confidence based on analysis depth
-	result.Confidence = 0.7 // Base confidence for GTR analysis
+	confidence := 0.7 // Base confidence for GTR analysis
 	if criticalCount > 0 || highCount > 2 {
-		result.Confidence = 0.9 // Higher confidence for clear threats
+		confidence = 0.9 // Higher confidence for clear threats
 	}
+	result.Metadata["confidence"] = confidence
 
 	// Add attack vectors based on findings
+	attackVectors := make([]string, 0)
 	if criticalCount > 0 {
-		result.AttackVectors = append(result.AttackVectors, "dependency_chain_attack")
+		attackVectors = append(attackVectors, "dependency_chain_attack")
 	}
 	if highCount > 0 {
-		result.AttackVectors = append(result.AttackVectors, "supply_chain_compromise")
+		attackVectors = append(attackVectors, "supply_chain_compromise")
 	}
+	result.Metadata["attack_vectors"] = attackVectors
+	result.Metadata["threat_score"] = threatScore
 }
 
 // Helper functions
@@ -345,4 +386,13 @@ func (g *GTRAlgorithm) countHighRiskDependencies(riskMap map[string]float64) int
 		}
 	}
 	return count
+}
+
+// Reset resets the algorithm state
+func (g *GTRAlgorithm) Reset() error {
+	// Reset metrics
+	g.metrics = &GTRMetrics{
+		LastUpdated: time.Now(),
+	}
+	return nil
 }

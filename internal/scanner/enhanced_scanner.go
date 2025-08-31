@@ -160,14 +160,14 @@ type SupplyChainRiskScore struct {
 }
 
 type SupplyChainScanMetadata struct {
-	ScanID           string                 `json:"scan_id"`
-	ScanType         string                 `json:"scan_type"`
-	DetectorsUsed    []string               `json:"detectors_used"`
-	ScanDuration     time.Duration          `json:"scan_duration"`
-	PackagesScanned  int                    `json:"packages_scanned"`
-	FindingsCount    map[string]int         `json:"findings_count"`
-	Configuration    map[string]interface{} `json:"configuration"`
-	Timestamp        time.Time              `json:"timestamp"`
+	ScanID          string                 `json:"scan_id"`
+	ScanType        string                 `json:"scan_type"`
+	DetectorsUsed   []string               `json:"detectors_used"`
+	ScanDuration    time.Duration          `json:"scan_duration"`
+	PackagesScanned int                    `json:"packages_scanned"`
+	FindingsCount   map[string]int         `json:"findings_count"`
+	Configuration   map[string]interface{} `json:"configuration"`
+	Timestamp       time.Time              `json:"timestamp"`
 }
 
 // Supporting data structures
@@ -487,18 +487,18 @@ type RiskFactor struct {
 }
 
 type GraphStatistics struct {
-	TotalNodes      int `json:"total_nodes"`
-	TotalEdges      int `json:"total_edges"`
-	DirectDeps      int `json:"direct_deps"`
-	TransitiveDeps  int `json:"transitive_deps"`
-	MaxDepth        int `json:"max_depth"`
-	CyclicDeps      int `json:"cyclic_deps"`
+	TotalNodes     int `json:"total_nodes"`
+	TotalEdges     int `json:"total_edges"`
+	DirectDeps     int `json:"direct_deps"`
+	TransitiveDeps int `json:"transitive_deps"`
+	MaxDepth       int `json:"max_depth"`
+	CyclicDeps     int `json:"cyclic_deps"`
 }
 
 type NodeRiskData struct {
-	RiskScore   float64 `json:"risk_score"`
-	ThreatCount int     `json:"threat_count"`
-	IsVulnerable bool   `json:"is_vulnerable"`
+	RiskScore    float64 `json:"risk_score"`
+	ThreatCount  int     `json:"threat_count"`
+	IsVulnerable bool    `json:"is_vulnerable"`
 }
 
 type MaliciousIndicator struct {
@@ -509,8 +509,8 @@ type MaliciousIndicator struct {
 }
 
 type ReputationAnalysis struct {
-	Score      float64 `json:"score"`
-	TrustLevel string  `json:"trust_level"`
+	Score      float64  `json:"score"`
+	TrustLevel string   `json:"trust_level"`
 	Factors    []string `json:"factors"`
 }
 

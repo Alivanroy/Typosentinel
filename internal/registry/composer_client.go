@@ -42,21 +42,21 @@ type ComposerPackageDetails struct {
 
 // ComposerPackageMetadata represents detailed package metadata
 type ComposerPackageMetadata struct {
-	Name        string                        `json:"name"`
-	Description string                        `json:"description"`
-	Time        string                        `json:"time"`
+	Name        string                         `json:"name"`
+	Description string                         `json:"description"`
+	Time        string                         `json:"time"`
 	Versions    map[string]ComposerVersionInfo `json:"versions"`
-	Repository  ComposerRepository            `json:"repository"`
-	Downloads   ComposerDownloads             `json:"downloads"`
+	Repository  ComposerRepository             `json:"repository"`
+	Downloads   ComposerDownloads              `json:"downloads"`
 }
 
 // ComposerVersionInfo represents version-specific information
 type ComposerVersionInfo struct {
-	Name        string    `json:"name"`
-	Version     string    `json:"version"`
-	Description string    `json:"description"`
-	Time        string    `json:"time"`
-	Authors     []Author  `json:"authors"`
+	Name        string            `json:"name"`
+	Version     string            `json:"version"`
+	Description string            `json:"description"`
+	Time        string            `json:"time"`
+	Authors     []Author          `json:"authors"`
 	Require     map[string]string `json:"require"`
 }
 

@@ -56,10 +56,10 @@ type ConnectorConfig struct {
 
 // RetryConfig defines retry behavior for failed deliveries
 type RetryConfig struct {
-	MaxAttempts int           `mapstructure:"max_attempts" json:"max_attempts"`
-	InitialDelay time.Duration `mapstructure:"initial_delay" json:"initial_delay"`
-	MaxDelay     time.Duration `mapstructure:"max_delay" json:"max_delay"`
-	BackoffFactor float64      `mapstructure:"backoff_factor" json:"backoff_factor"`
+	MaxAttempts   int           `mapstructure:"max_attempts" json:"max_attempts"`
+	InitialDelay  time.Duration `mapstructure:"initial_delay" json:"initial_delay"`
+	MaxDelay      time.Duration `mapstructure:"max_delay" json:"max_delay"`
+	BackoffFactor float64       `mapstructure:"backoff_factor" json:"backoff_factor"`
 }
 
 // DefaultRetryConfig returns a default retry configuration

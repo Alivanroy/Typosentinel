@@ -16,45 +16,45 @@ import (
 // Monitors CPU, memory, goroutines, file descriptors, and network connections
 // Implements adaptive thresholds and attack pattern recognition
 type ResourceExhaustionDetector struct {
-	config                *ResourceExhaustionConfig
-	resourceMonitor       *ResourceMonitor
-	attackPatternDetector *AttackPatternDetector
-	adaptiveThresholds    *AdaptiveThresholds
-	quantumThresholds     *QuantumThresholdSystem
+	config                 *ResourceExhaustionConfig
+	resourceMonitor        *ResourceMonitor
+	attackPatternDetector  *AttackPatternDetector
+	adaptiveThresholds     *AdaptiveThresholds
+	quantumThresholds      *QuantumThresholdSystem
 	steganographicDetector *SteganographicDetector
-	alertManager          *ResourceAlertManager
-	mitigationEngine      *MitigationEngine
-	metrics               *ResourceExhaustionMetrics
-	logger                logger.Logger
-	mutex                 sync.RWMutex
-	active                bool
-	stopChan              chan struct{}
+	alertManager           *ResourceAlertManager
+	mitigationEngine       *MitigationEngine
+	metrics                *ResourceExhaustionMetrics
+	logger                 logger.Logger
+	mutex                  sync.RWMutex
+	active                 bool
+	stopChan               chan struct{}
 }
 
 // ResourceExhaustionConfig configures the resource exhaustion detector
 type ResourceExhaustionConfig struct {
 	// Monitoring intervals
-	MonitoringInterval    time.Duration `yaml:"monitoring_interval" json:"monitoring_interval"`
-	AlertCooldown        time.Duration `yaml:"alert_cooldown" json:"alert_cooldown"`
-	MetricsRetention     time.Duration `yaml:"metrics_retention" json:"metrics_retention"`
+	MonitoringInterval time.Duration `yaml:"monitoring_interval" json:"monitoring_interval"`
+	AlertCooldown      time.Duration `yaml:"alert_cooldown" json:"alert_cooldown"`
+	MetricsRetention   time.Duration `yaml:"metrics_retention" json:"metrics_retention"`
 
 	// Resource thresholds
-	CPUThreshold         float64 `yaml:"cpu_threshold" json:"cpu_threshold"`
-	MemoryThreshold      int64   `yaml:"memory_threshold" json:"memory_threshold"`
-	GoroutineThreshold   int     `yaml:"goroutine_threshold" json:"goroutine_threshold"`
-	FileDescriptorThreshold int  `yaml:"file_descriptor_threshold" json:"file_descriptor_threshold"`
-	NetworkConnectionThreshold int `yaml:"network_connection_threshold" json:"network_connection_threshold"`
+	CPUThreshold               float64 `yaml:"cpu_threshold" json:"cpu_threshold"`
+	MemoryThreshold            int64   `yaml:"memory_threshold" json:"memory_threshold"`
+	GoroutineThreshold         int     `yaml:"goroutine_threshold" json:"goroutine_threshold"`
+	FileDescriptorThreshold    int     `yaml:"file_descriptor_threshold" json:"file_descriptor_threshold"`
+	NetworkConnectionThreshold int     `yaml:"network_connection_threshold" json:"network_connection_threshold"`
 
 	// Attack detection settings
-	EnablePatternDetection bool    `yaml:"enable_pattern_detection" json:"enable_pattern_detection"`
-	EnableAdaptiveThresholds bool  `yaml:"enable_adaptive_thresholds" json:"enable_adaptive_thresholds"`
-	SuspiciousGrowthRate   float64 `yaml:"suspicious_growth_rate" json:"suspicious_growth_rate"`
-	RapidSpikeFactor       float64 `yaml:"rapid_spike_factor" json:"rapid_spike_factor"`
+	EnablePatternDetection   bool    `yaml:"enable_pattern_detection" json:"enable_pattern_detection"`
+	EnableAdaptiveThresholds bool    `yaml:"enable_adaptive_thresholds" json:"enable_adaptive_thresholds"`
+	SuspiciousGrowthRate     float64 `yaml:"suspicious_growth_rate" json:"suspicious_growth_rate"`
+	RapidSpikeFactor         float64 `yaml:"rapid_spike_factor" json:"rapid_spike_factor"`
 
 	// Mitigation settings
-	EnableAutoMitigation   bool          `yaml:"enable_auto_mitigation" json:"enable_auto_mitigation"`
-	MitigationTimeout      time.Duration `yaml:"mitigation_timeout" json:"mitigation_timeout"`
-	GracefulDegradation    bool          `yaml:"graceful_degradation" json:"graceful_degradation"`
+	EnableAutoMitigation bool          `yaml:"enable_auto_mitigation" json:"enable_auto_mitigation"`
+	MitigationTimeout    time.Duration `yaml:"mitigation_timeout" json:"mitigation_timeout"`
+	GracefulDegradation  bool          `yaml:"graceful_degradation" json:"graceful_degradation"`
 }
 
 // ResourceMonitor tracks real-time resource usage
@@ -67,94 +67,94 @@ type ResourceMonitor struct {
 
 // ResourceUsageMetrics represents current resource usage with edge-detection capabilities
 type ResourceUsageMetrics struct {
-	Timestamp           time.Time `json:"timestamp"`
-	CPUUsage           float64   `json:"cpu_usage"`
-	MemoryUsage        int64     `json:"memory_usage"`
-	MemoryPercent      float64   `json:"memory_percent"`
-	GoroutineCount     int       `json:"goroutine_count"`
-	FileDescriptors    int       `json:"file_descriptors"`
-	NetworkConnections int       `json:"network_connections"`
+	Timestamp          time.Time     `json:"timestamp"`
+	CPUUsage           float64       `json:"cpu_usage"`
+	MemoryUsage        int64         `json:"memory_usage"`
+	MemoryPercent      float64       `json:"memory_percent"`
+	GoroutineCount     int           `json:"goroutine_count"`
+	FileDescriptors    int           `json:"file_descriptors"`
+	NetworkConnections int           `json:"network_connections"`
 	GCPauseTime        time.Duration `json:"gc_pause_time"`
-	HeapSize           uint64    `json:"heap_size"`
-	StackSize          uint64    `json:"stack_size"`
-	AllocRate          float64   `json:"alloc_rate"`
-	
+	HeapSize           uint64        `json:"heap_size"`
+	StackSize          uint64        `json:"stack_size"`
+	AllocRate          float64       `json:"alloc_rate"`
+
 	// Advanced edge-detection metrics
-	GoroutineGrowthRate    float64   `json:"goroutine_growth_rate"`
-	CPUSustained          float64   `json:"cpu_sustained"`
-	ResourceOscillation   float64   `json:"resource_oscillation"`
-	PatternEntropy        float64   `json:"pattern_entropy"`
-	TimingCorrelation     float64   `json:"timing_correlation"`
-	SpikeFrequency        float64   `json:"spike_frequency"`
-	SpikeIntensity        float64   `json:"spike_intensity"`
-	RecoverySpeed         float64   `json:"recovery_speed"`
-	ThresholdProbing      float64   `json:"threshold_probing"`
-	BehavioralVariance    float64   `json:"behavioral_variance"`
-	DetectionAvoidance    float64   `json:"detection_avoidance"`
-	QuantumFluctuation    float64   `json:"quantum_fluctuation"`
-	EntropyDeviation      float64   `json:"entropy_deviation"`
-	PhaseCorrelation      float64   `json:"phase_correlation"`
-	
+	GoroutineGrowthRate float64 `json:"goroutine_growth_rate"`
+	CPUSustained        float64 `json:"cpu_sustained"`
+	ResourceOscillation float64 `json:"resource_oscillation"`
+	PatternEntropy      float64 `json:"pattern_entropy"`
+	TimingCorrelation   float64 `json:"timing_correlation"`
+	SpikeFrequency      float64 `json:"spike_frequency"`
+	SpikeIntensity      float64 `json:"spike_intensity"`
+	RecoverySpeed       float64 `json:"recovery_speed"`
+	ThresholdProbing    float64 `json:"threshold_probing"`
+	BehavioralVariance  float64 `json:"behavioral_variance"`
+	DetectionAvoidance  float64 `json:"detection_avoidance"`
+	QuantumFluctuation  float64 `json:"quantum_fluctuation"`
+	EntropyDeviation    float64 `json:"entropy_deviation"`
+	PhaseCorrelation    float64 `json:"phase_correlation"`
+
 	// Behavioral analysis metrics
-	AnomalyScore          float64   `json:"anomaly_score"`
-	ThreatProbability     float64   `json:"threat_probability"`
-	EvasionIndicator      float64   `json:"evasion_indicator"`
-	StealthFactor         float64   `json:"stealth_factor"`
+	AnomalyScore      float64 `json:"anomaly_score"`
+	ThreatProbability float64 `json:"threat_probability"`
+	EvasionIndicator  float64 `json:"evasion_indicator"`
+	StealthFactor     float64 `json:"stealth_factor"`
 }
 
 // AttackPatternDetector identifies resource exhaustion attack patterns
 type AttackPatternDetector struct {
-	patterns          []ResourceAttackPattern
-	detectionHistory  []*PatternDetection
+	patterns             []ResourceAttackPattern
+	detectionHistory     []*PatternDetection
 	microPatternAnalyzer *MicroPatternAnalyzer
-	behavioralEngine  *BehavioralAnalysisEngine
-	mutex             sync.RWMutex
+	behavioralEngine     *BehavioralAnalysisEngine
+	mutex                sync.RWMutex
 }
 
 // MicroPatternAnalyzer detects subtle micro-patterns in resource usage
 type MicroPatternAnalyzer struct {
-	microPatterns     []MicroPattern
-	patternBuffer     []MicroDataPoint
-	analysisWindow    int
-	sensitivityLevel  float64
-	mutex             sync.RWMutex
+	microPatterns    []MicroPattern
+	patternBuffer    []MicroDataPoint
+	analysisWindow   int
+	sensitivityLevel float64
+	mutex            sync.RWMutex
 }
 
 // MicroPattern represents a subtle resource manipulation pattern
 type MicroPattern struct {
-	PatternID         string                 `json:"pattern_id"`
-	PatternName       string                 `json:"pattern_name"`
-	Description       string                 `json:"description"`
-	Signature         []float64              `json:"signature"`
-	Tolerance         float64                `json:"tolerance"`
-	MinOccurrences    int                    `json:"min_occurrences"`
-	Severity          types.Severity         `json:"severity"`
-	Enabled           bool                   `json:"enabled"`
-	Metadata          map[string]interface{} `json:"metadata"`
+	PatternID      string                 `json:"pattern_id"`
+	PatternName    string                 `json:"pattern_name"`
+	Description    string                 `json:"description"`
+	Signature      []float64              `json:"signature"`
+	Tolerance      float64                `json:"tolerance"`
+	MinOccurrences int                    `json:"min_occurrences"`
+	Severity       types.Severity         `json:"severity"`
+	Enabled        bool                   `json:"enabled"`
+	Metadata       map[string]interface{} `json:"metadata"`
 }
 
 // MicroDataPoint represents a single micro-measurement
 type MicroDataPoint struct {
-	Timestamp         time.Time `json:"timestamp"`
-	CPUMicro          float64   `json:"cpu_micro"`
-	MemoryMicro       float64   `json:"memory_micro"`
-	GoroutineMicro    float64   `json:"goroutine_micro"`
-	NetworkMicro      float64   `json:"network_micro"`
-	GCMicro           float64   `json:"gc_micro"`
-	AllocMicro        float64   `json:"alloc_micro"`
+	Timestamp      time.Time `json:"timestamp"`
+	CPUMicro       float64   `json:"cpu_micro"`
+	MemoryMicro    float64   `json:"memory_micro"`
+	GoroutineMicro float64   `json:"goroutine_micro"`
+	NetworkMicro   float64   `json:"network_micro"`
+	GCMicro        float64   `json:"gc_micro"`
+	AllocMicro     float64   `json:"alloc_micro"`
 }
 
 // MicroPatternDetection represents a detected micro-pattern
 type MicroPatternDetection struct {
-	DetectionID       string                 `json:"detection_id"`
-	PatternID         string                 `json:"pattern_id"`
-	PatternName       string                 `json:"pattern_name"`
-	Confidence        float64                `json:"confidence"`
-	Severity          types.Severity         `json:"severity"`
-	DetectedAt        time.Time              `json:"detected_at"`
-	Occurrences       int                    `json:"occurrences"`
-	SignatureMatch    float64                `json:"signature_match"`
-	Metadata          map[string]interface{} `json:"metadata"`
+	DetectionID    string                 `json:"detection_id"`
+	PatternID      string                 `json:"pattern_id"`
+	PatternName    string                 `json:"pattern_name"`
+	Confidence     float64                `json:"confidence"`
+	Severity       types.Severity         `json:"severity"`
+	DetectedAt     time.Time              `json:"detected_at"`
+	Occurrences    int                    `json:"occurrences"`
+	SignatureMatch float64                `json:"signature_match"`
+	Metadata       map[string]interface{} `json:"metadata"`
 }
 
 // BehavioralAnalysisEngine analyzes behavioral patterns for sophisticated evasion detection
@@ -170,13 +170,13 @@ type BehavioralAnalysisEngine struct {
 
 // BehavioralProfile defines expected behavioral patterns
 type BehavioralProfile struct {
-	ProfileID         string                 `json:"profile_id"`
-	ProfileName       string                 `json:"profile_name"`
-	Description       string                 `json:"description"`
-	ExpectedPatterns  []BehavioralPattern    `json:"expected_patterns"`
-	AnomalyThreshold  float64                `json:"anomaly_threshold"`
-	Enabled           bool                   `json:"enabled"`
-	Metadata          map[string]interface{} `json:"metadata"`
+	ProfileID        string                 `json:"profile_id"`
+	ProfileName      string                 `json:"profile_name"`
+	Description      string                 `json:"description"`
+	ExpectedPatterns []BehavioralPattern    `json:"expected_patterns"`
+	AnomalyThreshold float64                `json:"anomaly_threshold"`
+	Enabled          bool                   `json:"enabled"`
+	Metadata         map[string]interface{} `json:"metadata"`
 }
 
 // BehavioralSnapshot captures behavioral state at a point in time
@@ -191,77 +191,77 @@ type BehavioralSnapshot struct {
 
 // EvasionTechnique defines a specific evasion method
 type EvasionTechnique struct {
-	TechniqueID       string                 `json:"technique_id"`
-	TechniqueName     string                 `json:"technique_name"`
-	Description       string                 `json:"description"`
-	Signatures        []EvasionSignature     `json:"signatures"`
-	Countermeasures   []string               `json:"countermeasures"`
-	Severity          types.Severity         `json:"severity"`
+	TechniqueID     string             `json:"technique_id"`
+	TechniqueName   string             `json:"technique_name"`
+	Description     string             `json:"description"`
+	Signatures      []EvasionSignature `json:"signatures"`
+	Countermeasures []string           `json:"countermeasures"`
+	Severity        types.Severity     `json:"severity"`
 }
 
 // EvasionSignature represents a detectable signature of evasion
 type EvasionSignature struct {
-	SignatureType     string    `json:"signature_type"`
-	Pattern           []float64 `json:"pattern"`
-	Tolerance         float64   `json:"tolerance"`
-	MinDuration       time.Duration `json:"min_duration"`
-	ConfidenceWeight  float64   `json:"confidence_weight"`
+	SignatureType    string        `json:"signature_type"`
+	Pattern          []float64     `json:"pattern"`
+	Tolerance        float64       `json:"tolerance"`
+	MinDuration      time.Duration `json:"min_duration"`
+	ConfidenceWeight float64       `json:"confidence_weight"`
 }
 
 // EvasionSignal represents a detected evasion signal
 type EvasionSignal struct {
-	SignalID          string                 `json:"signal_id"`
-	TechniqueID       string                 `json:"technique_id"`
-	TechniqueName     string                 `json:"technique_name"`
-	Confidence        float64                `json:"confidence"`
-	Severity          types.Severity         `json:"severity"`
-	DetectedAt        time.Time              `json:"detected_at"`
-	Evidence          map[string]interface{} `json:"evidence"`
+	SignalID      string                 `json:"signal_id"`
+	TechniqueID   string                 `json:"technique_id"`
+	TechniqueName string                 `json:"technique_name"`
+	Confidence    float64                `json:"confidence"`
+	Severity      types.Severity         `json:"severity"`
+	DetectedAt    time.Time              `json:"detected_at"`
+	Evidence      map[string]interface{} `json:"evidence"`
 }
 
 // BehavioralLearningModel implements ML-based behavioral learning
 type BehavioralLearningModel struct {
-	ModelID           string                 `json:"model_id"`
-	ModelType         string                 `json:"model_type"`
-	TrainingData      []BehavioralSnapshot   `json:"training_data"`
-	ModelParameters   map[string]float64     `json:"model_parameters"`
-	AccuracyMetrics   map[string]float64     `json:"accuracy_metrics"`
-	LastTrained       time.Time              `json:"last_trained"`
-	Enabled           bool                   `json:"enabled"`
+	ModelID         string               `json:"model_id"`
+	ModelType       string               `json:"model_type"`
+	TrainingData    []BehavioralSnapshot `json:"training_data"`
+	ModelParameters map[string]float64   `json:"model_parameters"`
+	AccuracyMetrics map[string]float64   `json:"accuracy_metrics"`
+	LastTrained     time.Time            `json:"last_trained"`
+	Enabled         bool                 `json:"enabled"`
 }
 
 // ProfileViolation represents a violation of expected behavioral profile
 type ProfileViolation struct {
-	ViolationID       string                 `json:"violation_id"`
-	ProfileID         string                 `json:"profile_id"`
-	ViolationType     string                 `json:"violation_type"`
-	Severity          types.Severity         `json:"severity"`
-	Deviation         float64                `json:"deviation"`
-	ExpectedValue     float64                `json:"expected_value"`
-	ActualValue       float64                `json:"actual_value"`
-	DetectedAt        time.Time              `json:"detected_at"`
-	Metadata          map[string]interface{} `json:"metadata"`
+	ViolationID   string                 `json:"violation_id"`
+	ProfileID     string                 `json:"profile_id"`
+	ViolationType string                 `json:"violation_type"`
+	Severity      types.Severity         `json:"severity"`
+	Deviation     float64                `json:"deviation"`
+	ExpectedValue float64                `json:"expected_value"`
+	ActualValue   float64                `json:"actual_value"`
+	DetectedAt    time.Time              `json:"detected_at"`
+	Metadata      map[string]interface{} `json:"metadata"`
 }
 
 // ResourceAttackPattern defines a resource exhaustion attack pattern
 type ResourceAttackPattern struct {
-	PatternID          string                 `json:"pattern_id"`
-	PatternName        string                 `json:"pattern_name"`
-	Description        string                 `json:"description"`
-	ResourceTargets    []string               `json:"resource_targets"`
-	DetectionCriteria  []DetectionCriterion   `json:"detection_criteria"`
-	Severity           types.Severity         `json:"severity"`
-	ConfidenceThreshold float64               `json:"confidence_threshold"`
-	Enabled            bool                   `json:"enabled"`
+	PatternID           string               `json:"pattern_id"`
+	PatternName         string               `json:"pattern_name"`
+	Description         string               `json:"description"`
+	ResourceTargets     []string             `json:"resource_targets"`
+	DetectionCriteria   []DetectionCriterion `json:"detection_criteria"`
+	Severity            types.Severity       `json:"severity"`
+	ConfidenceThreshold float64              `json:"confidence_threshold"`
+	Enabled             bool                 `json:"enabled"`
 }
 
 // DetectionCriterion defines criteria for pattern detection
 type DetectionCriterion struct {
-	Metric          string  `json:"metric"`
-	Operator        string  `json:"operator"`
-	Threshold       float64 `json:"threshold"`
-	TimeWindow      time.Duration `json:"time_window"`
-	Weight          float64 `json:"weight"`
+	Metric     string        `json:"metric"`
+	Operator   string        `json:"operator"`
+	Threshold  float64       `json:"threshold"`
+	TimeWindow time.Duration `json:"time_window"`
+	Weight     float64       `json:"weight"`
 }
 
 // PatternDetection represents a detected attack pattern
@@ -296,19 +296,19 @@ type ResourceAlertManager struct {
 
 // ResourceExhaustionAlert represents a resource exhaustion alert
 type ResourceExhaustionAlert struct {
-	AlertID         string                 `json:"alert_id"`
-	AlertType       string                 `json:"alert_type"`
-	Severity        types.Severity         `json:"severity"`
-	Resource        string                 `json:"resource"`
-	CurrentValue    interface{}            `json:"current_value"`
-	Threshold       interface{}            `json:"threshold"`
-	Message         string                 `json:"message"`
-	DetectedAt      time.Time              `json:"detected_at"`
-	PatternDetected *PatternDetection      `json:"pattern_detected,omitempty"`
-	MitigationApplied bool                 `json:"mitigation_applied"`
-	Resolved        bool                   `json:"resolved"`
-	ResolvedAt      *time.Time             `json:"resolved_at,omitempty"`
-	Metadata        map[string]interface{} `json:"metadata"`
+	AlertID           string                 `json:"alert_id"`
+	AlertType         string                 `json:"alert_type"`
+	Severity          types.Severity         `json:"severity"`
+	Resource          string                 `json:"resource"`
+	CurrentValue      interface{}            `json:"current_value"`
+	Threshold         interface{}            `json:"threshold"`
+	Message           string                 `json:"message"`
+	DetectedAt        time.Time              `json:"detected_at"`
+	PatternDetected   *PatternDetection      `json:"pattern_detected,omitempty"`
+	MitigationApplied bool                   `json:"mitigation_applied"`
+	Resolved          bool                   `json:"resolved"`
+	ResolvedAt        *time.Time             `json:"resolved_at,omitempty"`
+	Metadata          map[string]interface{} `json:"metadata"`
 }
 
 // MitigationEngine applies mitigation strategies for resource exhaustion
@@ -320,21 +320,21 @@ type MitigationEngine struct {
 
 // ResourceMitigationStrategy defines a mitigation strategy
 type ResourceMitigationStrategy struct {
-	StrategyID      string                 `json:"strategy_id"`
-	StrategyName    string                 `json:"strategy_name"`
-	Description     string                 `json:"description"`
-	TriggerCriteria []string               `json:"trigger_criteria"`
-	Actions         []MitigationAction     `json:"actions"`
-	Priority        int                    `json:"priority"`
-	Enabled         bool                   `json:"enabled"`
+	StrategyID      string             `json:"strategy_id"`
+	StrategyName    string             `json:"strategy_name"`
+	Description     string             `json:"description"`
+	TriggerCriteria []string           `json:"trigger_criteria"`
+	Actions         []MitigationAction `json:"actions"`
+	Priority        int                `json:"priority"`
+	Enabled         bool               `json:"enabled"`
 }
 
 // MitigationAction defines a specific mitigation action
 type MitigationAction struct {
-	ActionType   string                 `json:"action_type"`
-	Parameters   map[string]interface{} `json:"parameters"`
-	Timeout      time.Duration          `json:"timeout"`
-	RetryCount   int                    `json:"retry_count"`
+	ActionType string                 `json:"action_type"`
+	Parameters map[string]interface{} `json:"parameters"`
+	Timeout    time.Duration          `json:"timeout"`
+	RetryCount int                    `json:"retry_count"`
 }
 
 // ActiveMitigation represents an active mitigation
@@ -349,48 +349,48 @@ type ActiveMitigation struct {
 
 // ResourceExhaustionMetrics tracks detector performance metrics
 type ResourceExhaustionMetrics struct {
-	DetectionsCount      int64                  `json:"detections_count"`
-	FalsePositives       int64                  `json:"false_positives"`
-	TruePositives        int64                  `json:"true_positives"`
-	MitigationsApplied   int64                  `json:"mitigations_applied"`
-	AverageDetectionTime time.Duration          `json:"average_detection_time"`
-	ResourceUtilization  map[string]float64     `json:"resource_utilization"`
-	LastUpdated          time.Time              `json:"last_updated"`
+	DetectionsCount      int64              `json:"detections_count"`
+	FalsePositives       int64              `json:"false_positives"`
+	TruePositives        int64              `json:"true_positives"`
+	MitigationsApplied   int64              `json:"mitigations_applied"`
+	AverageDetectionTime time.Duration      `json:"average_detection_time"`
+	ResourceUtilization  map[string]float64 `json:"resource_utilization"`
+	LastUpdated          time.Time          `json:"last_updated"`
 	mutex                sync.RWMutex
 }
 
 // ResourceExhaustionAnalysisResult represents the result of resource exhaustion analysis
 type ResourceExhaustionAnalysisResult struct {
-	ThreatScore           float64                   `json:"threat_score"`
-	ThreatLevel           string                    `json:"threat_level"`
-	CurrentMetrics        *ResourceUsageMetrics     `json:"current_metrics"`
-	DetectedPatterns      []PatternDetection        `json:"detected_patterns"`
-	ActiveAlerts          []ResourceExhaustionAlert `json:"active_alerts"`
-	ActiveMitigations     []ActiveMitigation        `json:"active_mitigations"`
-	Recommendations       []string                  `json:"recommendations"`
-	SystemHealth          string                    `json:"system_health"`
-	AnalysisTimestamp     time.Time                 `json:"analysis_timestamp"`
-	Metrics               *ResourceExhaustionMetrics `json:"metrics"`
+	ThreatScore       float64                    `json:"threat_score"`
+	ThreatLevel       string                     `json:"threat_level"`
+	CurrentMetrics    *ResourceUsageMetrics      `json:"current_metrics"`
+	DetectedPatterns  []PatternDetection         `json:"detected_patterns"`
+	ActiveAlerts      []ResourceExhaustionAlert  `json:"active_alerts"`
+	ActiveMitigations []ActiveMitigation         `json:"active_mitigations"`
+	Recommendations   []string                   `json:"recommendations"`
+	SystemHealth      string                     `json:"system_health"`
+	AnalysisTimestamp time.Time                  `json:"analysis_timestamp"`
+	Metrics           *ResourceExhaustionMetrics `json:"metrics"`
 }
 
 // DefaultResourceExhaustionConfig returns default configuration for resource exhaustion detection
 func DefaultResourceExhaustionConfig() *ResourceExhaustionConfig {
 	return &ResourceExhaustionConfig{
 		MonitoringInterval:         time.Second * 5,
-		AlertCooldown:             time.Minute * 5,
-		MetricsRetention:          time.Hour * 24,
-		CPUThreshold:              80.0,
-		MemoryThreshold:           1024 * 1024 * 1024, // 1GB
-		GoroutineThreshold:        10000,
-		FileDescriptorThreshold:   8000,
+		AlertCooldown:              time.Minute * 5,
+		MetricsRetention:           time.Hour * 24,
+		CPUThreshold:               80.0,
+		MemoryThreshold:            1024 * 1024 * 1024, // 1GB
+		GoroutineThreshold:         10000,
+		FileDescriptorThreshold:    8000,
 		NetworkConnectionThreshold: 5000,
-		EnablePatternDetection:    true,
-		EnableAdaptiveThresholds:  true,
-		SuspiciousGrowthRate:      2.0,
-		RapidSpikeFactor:          5.0,
-		EnableAutoMitigation:      false,
-		MitigationTimeout:         time.Minute * 10,
-		GracefulDegradation:       true,
+		EnablePatternDetection:     true,
+		EnableAdaptiveThresholds:   true,
+		SuspiciousGrowthRate:       2.0,
+		RapidSpikeFactor:           5.0,
+		EnableAutoMitigation:       false,
+		MitigationTimeout:          time.Minute * 10,
+		GracefulDegradation:        true,
 	}
 }
 
@@ -401,17 +401,17 @@ func NewResourceExhaustionDetector(config *ResourceExhaustionConfig, logger logg
 	}
 
 	return &ResourceExhaustionDetector{
-		config:                config,
-		resourceMonitor:       newResourceMonitor(),
-		attackPatternDetector: newAttackPatternDetector(),
-		adaptiveThresholds:    newAdaptiveThresholds(config),
-		alertManager:          newResourceAlertManager(),
-		mitigationEngine:      newMitigationEngine(),
-		metrics:               newResourceExhaustionMetrics(),
-		quantumThresholds:     NewQuantumThresholdSystem(&logger),
+		config:                 config,
+		resourceMonitor:        newResourceMonitor(),
+		attackPatternDetector:  newAttackPatternDetector(),
+		adaptiveThresholds:     newAdaptiveThresholds(config),
+		alertManager:           newResourceAlertManager(),
+		mitigationEngine:       newMitigationEngine(),
+		metrics:                newResourceExhaustionMetrics(),
+		quantumThresholds:      NewQuantumThresholdSystem(&logger),
 		steganographicDetector: NewSteganographicDetector(&logger),
-		logger:                logger,
-		stopChan:              make(chan struct{}),
+		logger:                 logger,
+		stopChan:               make(chan struct{}),
 	}
 }
 
@@ -495,10 +495,10 @@ func (red *ResourceExhaustionDetector) collectAndAnalyzeMetrics(ctx context.Cont
 	// Detect attack patterns
 	if red.config.EnablePatternDetection {
 		red.detectAttackPatterns(metrics)
-		
+
 		// Perform micro-pattern analysis
 		microDetections := red.attackPatternDetector.microPatternAnalyzer.analyzeMicroPatterns()
-		
+
 		// Process micro-pattern detections
 		for _, microDetection := range microDetections {
 			// Convert micro-pattern detection to pattern detection for alert processing
@@ -511,18 +511,18 @@ func (red *ResourceExhaustionDetector) collectAndAnalyzeMetrics(ctx context.Cont
 				DetectedAt:      microDetection.DetectedAt,
 				AffectedMetrics: []string{"micro_patterns"},
 				Evidence: map[string]interface{}{
-					"detection_type":   "micro_pattern",
-					"occurrences":      microDetection.Occurrences,
-					"signature_match":  microDetection.SignatureMatch,
-					"micro_metadata":   microDetection.Metadata,
+					"detection_type":  "micro_pattern",
+					"occurrences":     microDetection.Occurrences,
+					"signature_match": microDetection.SignatureMatch,
+					"micro_metadata":  microDetection.Metadata,
 				},
 				Metadata: microDetection.Metadata,
 			}
-			
+
 			// Create alert for micro-pattern detection
 			red.createPatternAlert(patternDetection, metrics)
 		}
-		
+
 		// Perform behavioral analysis
 		behavioralResult := red.attackPatternDetector.behavioralEngine.analyzeBehavior(metrics)
 		if behavioralResult != nil {
@@ -537,12 +537,12 @@ func (red *ResourceExhaustionDetector) collectAndAnalyzeMetrics(ctx context.Cont
 					DetectedAt:      behavior.FirstDetected,
 					AffectedMetrics: []string{"behavioral_analysis"},
 					Evidence: map[string]interface{}{
-						"detection_type":   "behavioral_detection",
-						"behavior_type":    behavior.BehaviorType,
-						"category":         behavior.Category,
-						"frequency":        behavior.Frequency,
-						"indicators":       behavior.Indicators,
-						"evidence":         behavior.Evidence,
+						"detection_type": "behavioral_detection",
+						"behavior_type":  behavior.BehaviorType,
+						"category":       behavior.Category,
+						"frequency":      behavior.Frequency,
+						"indicators":     behavior.Indicators,
+						"evidence":       behavior.Evidence,
 					},
 					Metadata: behavior.Context,
 				}
@@ -560,11 +560,11 @@ func (red *ResourceExhaustionDetector) collectAndAnalyzeMetrics(ctx context.Cont
 					DetectedAt:      anomaly.DetectionTime,
 					AffectedMetrics: []string{"anomaly_detection"},
 					Evidence: map[string]interface{}{
-						"detection_type":   "behavioral_anomaly",
-						"anomaly_type":     anomaly.AnomalyType,
-						"anomaly_score":    anomaly.AnomalyScore,
-						"impact":           anomaly.Impact,
-						"evidence":         anomaly.Evidence,
+						"detection_type": "behavioral_anomaly",
+						"anomaly_type":   anomaly.AnomalyType,
+						"anomaly_score":  anomaly.AnomalyScore,
+						"impact":         anomaly.Impact,
+						"evidence":       anomaly.Evidence,
 					},
 					Metadata: anomaly.Context,
 				}
@@ -587,14 +587,14 @@ func (red *ResourceExhaustionDetector) collectAndAnalyzeMetrics(ctx context.Cont
 				DetectedAt:      violation.DetectedAt,
 				AffectedMetrics: []string{violation.MetricName},
 				Evidence: map[string]interface{}{
-					"detection_type":      "quantum_threshold",
-					"quantum_threshold":   violation.QuantumThreshold,
-					"observed_value":      violation.ObservedValue,
-					"quantum_deviation":   violation.QuantumDeviation,
-					"coherence":           violation.Coherence,
-					"phase":               violation.Phase,
-					"uncertainty":         violation.Uncertainty,
-					"quantum_signature":   violation.QuantumSignature,
+					"detection_type":    "quantum_threshold",
+					"quantum_threshold": violation.QuantumThreshold,
+					"observed_value":    violation.ObservedValue,
+					"quantum_deviation": violation.QuantumDeviation,
+					"coherence":         violation.Coherence,
+					"phase":             violation.Phase,
+					"uncertainty":       violation.Uncertainty,
+					"quantum_signature": violation.QuantumSignature,
 				},
 				Metadata: violation.Metadata,
 			}
@@ -617,15 +617,15 @@ func (red *ResourceExhaustionDetector) collectAndAnalyzeMetrics(ctx context.Cont
 				DetectedAt:      detection.DetectedAt,
 				AffectedMetrics: detection.AffectedResources,
 				Evidence: map[string]interface{}{
-					"detection_type":        "steganographic",
-					"steganographic_type":   detection.SteganographicType,
-					"hiding_technique":      detection.HidingTechnique,
-					"resource_vector":       detection.ResourceVector,
-					"affected_resources":    detection.AffectedResources,
-					"hidden_channels":       detection.HiddenChannels,
-					"covert_operations":     detection.CovertOperations,
-					"duration":              detection.Duration,
-					"evidence":              detection.Evidence,
+					"detection_type":      "steganographic",
+					"steganographic_type": detection.SteganographicType,
+					"hiding_technique":    detection.HidingTechnique,
+					"resource_vector":     detection.ResourceVector,
+					"affected_resources":  detection.AffectedResources,
+					"hidden_channels":     detection.HiddenChannels,
+					"covert_operations":   detection.CovertOperations,
+					"duration":            detection.Duration,
+					"evidence":            detection.Evidence,
 				},
 				Metadata: detection.Metadata,
 			}
@@ -648,7 +648,7 @@ func (red *ResourceExhaustionDetector) collectResourceMetrics() *ResourceUsageMe
 	runtime.ReadMemStats(&m)
 
 	metrics := &ResourceUsageMetrics{
-		Timestamp:           time.Now(),
+		Timestamp:          time.Now(),
 		CPUUsage:           red.getCPUUsage(),
 		MemoryUsage:        int64(m.Alloc),
 		MemoryPercent:      red.getMemoryPercent(int64(m.Alloc)),
@@ -800,7 +800,7 @@ func (red *ResourceExhaustionDetector) evaluateCriterion(criterion DetectionCrit
 		value = float64(metrics.NetworkConnections)
 	case "alloc_rate":
 		value = metrics.AllocRate
-	
+
 	// Advanced edge-detection metrics
 	case "goroutine_growth_rate":
 		value = metrics.GoroutineGrowthRate
@@ -830,7 +830,7 @@ func (red *ResourceExhaustionDetector) evaluateCriterion(criterion DetectionCrit
 		value = metrics.EntropyDeviation
 	case "phase_correlation":
 		value = metrics.PhaseCorrelation
-	
+
 	// Behavioral analysis metrics
 	case "anomaly_score":
 		value = metrics.AnomalyScore
@@ -840,7 +840,7 @@ func (red *ResourceExhaustionDetector) evaluateCriterion(criterion DetectionCrit
 		value = metrics.EvasionIndicator
 	case "stealth_factor":
 		value = metrics.StealthFactor
-	
+
 	default:
 		return false
 	}
@@ -989,21 +989,21 @@ func (red *ResourceExhaustionDetector) GetDetectorMetrics() *ResourceExhaustionM
 
 func getDefaultResourceExhaustionConfig() *ResourceExhaustionConfig {
 	return &ResourceExhaustionConfig{
-		MonitoringInterval:             time.Second * 5,
-		AlertCooldown:                  time.Minute * 5,
-		MetricsRetention:               time.Hour * 24,
-		CPUThreshold:                   80.0,
-		MemoryThreshold:                1024 * 1024 * 1024, // 1GB
-		GoroutineThreshold:             10000,
-		FileDescriptorThreshold:        1000,
-		NetworkConnectionThreshold:     500,
-		EnablePatternDetection:         true,
-		EnableAdaptiveThresholds:       true,
-		SuspiciousGrowthRate:           2.0,
-		RapidSpikeFactor:               5.0,
-		EnableAutoMitigation:           true,
-		MitigationTimeout:              time.Minute * 10,
-		GracefulDegradation:            true,
+		MonitoringInterval:         time.Second * 5,
+		AlertCooldown:              time.Minute * 5,
+		MetricsRetention:           time.Hour * 24,
+		CPUThreshold:               80.0,
+		MemoryThreshold:            1024 * 1024 * 1024, // 1GB
+		GoroutineThreshold:         10000,
+		FileDescriptorThreshold:    1000,
+		NetworkConnectionThreshold: 500,
+		EnablePatternDetection:     true,
+		EnableAdaptiveThresholds:   true,
+		SuspiciousGrowthRate:       2.0,
+		RapidSpikeFactor:           5.0,
+		EnableAutoMitigation:       true,
+		MitigationTimeout:          time.Minute * 10,
+		GracefulDegradation:        true,
 	}
 }
 
@@ -1015,10 +1015,10 @@ func newResourceMonitor() *ResourceMonitor {
 
 func newAttackPatternDetector() *AttackPatternDetector {
 	detector := &AttackPatternDetector{
-		patterns:         make([]ResourceAttackPattern, 0),
-		detectionHistory: make([]*PatternDetection, 0),
+		patterns:             make([]ResourceAttackPattern, 0),
+		detectionHistory:     make([]*PatternDetection, 0),
 		microPatternAnalyzer: newMicroPatternAnalyzer(),
-		behavioralEngine: newBehavioralAnalysisEngine(),
+		behavioralEngine:     newBehavioralAnalysisEngine(),
 	}
 
 	// Initialize default attack patterns
@@ -1031,8 +1031,8 @@ func newMicroPatternAnalyzer() *MicroPatternAnalyzer {
 	analyzer := &MicroPatternAnalyzer{
 		microPatterns:    make([]MicroPattern, 0),
 		patternBuffer:    make([]MicroDataPoint, 0, 1000), // Buffer for 1000 micro-measurements
-		analysisWindow:   100,  // Analyze last 100 data points
-		sensitivityLevel: 0.95, // Ultra-high sensitivity for edge detection
+		analysisWindow:   100,                             // Analyze last 100 data points
+		sensitivityLevel: 0.95,                            // Ultra-high sensitivity for edge detection
 	}
 
 	// Initialize default micro-patterns
@@ -1048,7 +1048,7 @@ func newBehavioralAnalysisEngine() *BehavioralAnalysisEngine {
 		evasionDetectors:   make([]EvasionDetector, 0),
 		learningModel:      newBehavioralLearningModel(),
 		analysisWindow:     time.Minute * 5, // 5-minute analysis window
-		sensitivityLevel:   0.98, // Ultra-high sensitivity for evasion detection
+		sensitivityLevel:   0.98,            // Ultra-high sensitivity for evasion detection
 	}
 
 	// Initialize default behavioral profiles and evasion detectors
@@ -1120,7 +1120,7 @@ func (red *ResourceExhaustionDetector) isOscillatingAroundThreshold(metric strin
 	for i := len(historical) - 5; i < len(historical); i++ {
 		prev := red.getMetricValue(metric, historical[i-1])
 		curr := red.getMetricValue(metric, historical[i])
-		
+
 		if (prev < threshold && curr > threshold) || (prev > threshold && curr < threshold) {
 			crossings++
 		}
@@ -1145,7 +1145,7 @@ func (red *ResourceExhaustionDetector) isTrendingUp(metric string, metrics *Reso
 	for i := len(historical) - 4; i < len(historical); i++ {
 		prev := red.getMetricValue(metric, historical[i-1])
 		curr := red.getMetricValue(metric, historical[i])
-		
+
 		if curr > prev {
 			increases++
 		}
@@ -1170,7 +1170,7 @@ func (red *ResourceExhaustionDetector) isTrendingDown(metric string, metrics *Re
 	for i := len(historical) - 4; i < len(historical); i++ {
 		prev := red.getMetricValue(metric, historical[i-1])
 		curr := red.getMetricValue(metric, historical[i])
-		
+
 		if curr < prev {
 			decreases++
 		}
@@ -1451,7 +1451,7 @@ func (red *ResourceExhaustionDetector) calculateAdvancedMetrics(metrics *Resourc
 		for i := len(historical) - 15; i < len(historical); i++ {
 			variance += math.Pow(float64(historical[i].GoroutineCount)-mean, 2)
 		}
-		metrics.BehavioralVariance = math.Sqrt(variance / 15.0) / mean
+		metrics.BehavioralVariance = math.Sqrt(variance/15.0) / mean
 	}
 
 	// Calculate detection avoidance
@@ -1731,8 +1731,8 @@ func (apd *AttackPatternDetector) initializeDefaultPatterns() {
 		Enabled:             true,
 		DetectionCriteria: []DetectionCriterion{
 			{Metric: "memory_usage", Operator: "gt", Threshold: 1024 * 1024 * 256, Weight: 0.3}, // 256MB (lowered)
-			{Metric: "alloc_rate", Operator: "gt", Threshold: 500, Weight: 0.4}, // Lowered threshold
-			{Metric: "memory_percent", Operator: "gt", Threshold: 60.0, Weight: 0.3}, // Added percentage check
+			{Metric: "alloc_rate", Operator: "gt", Threshold: 500, Weight: 0.4},                 // Lowered threshold
+			{Metric: "memory_percent", Operator: "gt", Threshold: 60.0, Weight: 0.3},            // Added percentage check
 		},
 	}
 
@@ -1746,7 +1746,7 @@ func (apd *AttackPatternDetector) initializeDefaultPatterns() {
 		ConfidenceThreshold: 0.6, // Lowered for edge detection
 		Enabled:             true,
 		DetectionCriteria: []DetectionCriterion{
-			{Metric: "goroutine_count", Operator: "gt", Threshold: 2000, Weight: 0.7}, // Lowered threshold
+			{Metric: "goroutine_count", Operator: "gt", Threshold: 2000, Weight: 0.7},      // Lowered threshold
 			{Metric: "goroutine_growth_rate", Operator: "gt", Threshold: 100, Weight: 0.3}, // Added growth rate
 		},
 	}
@@ -1761,7 +1761,7 @@ func (apd *AttackPatternDetector) initializeDefaultPatterns() {
 		ConfidenceThreshold: 0.65, // Lowered for edge detection
 		Enabled:             true,
 		DetectionCriteria: []DetectionCriterion{
-			{Metric: "cpu_usage", Operator: "gt", Threshold: 75.0, Weight: 0.8}, // Lowered threshold
+			{Metric: "cpu_usage", Operator: "gt", Threshold: 75.0, Weight: 0.8},     // Lowered threshold
 			{Metric: "cpu_sustained", Operator: "gt", Threshold: 30.0, Weight: 0.2}, // Added sustained check
 		},
 	}
@@ -2045,7 +2045,7 @@ func (mpa *MicroPatternAnalyzer) detectMicroPattern(pattern MicroPattern) *Micro
 			Occurrences:    occurrences,
 			SignatureMatch: avgMatch,
 			Metadata: map[string]interface{}{
-				"pattern_type":     pattern.Metadata["type"],
+				"pattern_type":    pattern.Metadata["type"],
 				"resource":        pattern.Metadata["resource"],
 				"sensitivity":     mpa.sensitivityLevel,
 				"analysis_window": mpa.analysisWindow,
@@ -2226,7 +2226,7 @@ func (bae *BehavioralAnalysisEngine) initializeDefaultProfiles() {
 			},
 		},
 		AnomalyThreshold: 0.95,
-		Enabled:         true,
+		Enabled:          true,
 		Metadata: map[string]interface{}{
 			"detection_type": "steganographic",
 			"sensitivity":    "ultra_high",
@@ -2277,7 +2277,7 @@ func (bae *BehavioralAnalysisEngine) initializeDefaultProfiles() {
 			},
 		},
 		AnomalyThreshold: 0.98,
-		Enabled:         true,
+		Enabled:          true,
 		Metadata: map[string]interface{}{
 			"detection_type": "quantum",
 			"precision":      "ultra_high",
@@ -2328,7 +2328,7 @@ func (bae *BehavioralAnalysisEngine) initializeDefaultProfiles() {
 			},
 		},
 		AnomalyThreshold: 0.96,
-		Enabled:         true,
+		Enabled:          true,
 		Metadata: map[string]interface{}{
 			"detection_type": "adaptive",
 			"learning":       "enabled",
@@ -2365,17 +2365,17 @@ func (bae *BehavioralAnalysisEngine) analyzeBehavior(metrics *ResourceUsageMetri
 	snapshot := BehavioralSnapshot{
 		Timestamp: time.Now(),
 		ResourceState: map[string]float64{
-			"cpu_usage":           metrics.CPUUsage,
-			"memory_usage":        float64(metrics.MemoryUsage),
-			"goroutine_count":     float64(metrics.GoroutineCount),
-			"anomaly_score":       metrics.AnomalyScore,
-			"threat_probability":  metrics.ThreatProbability,
-			"evasion_indicator":   metrics.EvasionIndicator,
-			"stealth_factor":      metrics.StealthFactor,
+			"cpu_usage":          metrics.CPUUsage,
+			"memory_usage":       float64(metrics.MemoryUsage),
+			"goroutine_count":    float64(metrics.GoroutineCount),
+			"anomaly_score":      metrics.AnomalyScore,
+			"threat_probability": metrics.ThreatProbability,
+			"evasion_indicator":  metrics.EvasionIndicator,
+			"stealth_factor":     metrics.StealthFactor,
 		},
-		BehavioralScore: bae.calculateBehavioralScore(metrics),
+		BehavioralScore:   bae.calculateBehavioralScore(metrics),
 		AnomalyIndicators: bae.detectAnomalyIndicators(metrics),
-		EvasionSignals: bae.detectEvasionSignals(metrics),
+		EvasionSignals:    bae.detectEvasionSignals(metrics),
 		Metadata: map[string]interface{}{
 			"analysis_timestamp": time.Now(),
 			"detector_version":   "v2.0",
@@ -2432,15 +2432,15 @@ func (bae *BehavioralAnalysisEngine) analyzeBehavior(metrics *ResourceUsageMetri
 		}
 
 		return &BehavioralAnalysisResult{
-			PackageName:             "typosentinel",
-			OverallBehavioralScore:  snapshot.BehavioralScore,
-			DetectedBehaviors:       detectedBehaviors,
-			BehavioralAnomalies:     behavioralAnomalies,
+			PackageName:            "typosentinel",
+			OverallBehavioralScore: snapshot.BehavioralScore,
+			DetectedBehaviors:      detectedBehaviors,
+			BehavioralAnomalies:    behavioralAnomalies,
 			Metadata: map[string]interface{}{
-				"analysis_id":     bae.generateAnalysisID(),
-				"timestamp":       time.Now(),
-				"anomaly_level":   bae.calculateAnomalyLevel(snapshot.BehavioralScore),
-				"confidence":      bae.calculateOverallConfidence(profileViolations, evasionSignals),
+				"analysis_id":      bae.generateAnalysisID(),
+				"timestamp":        time.Now(),
+				"anomaly_level":    bae.calculateAnomalyLevel(snapshot.BehavioralScore),
+				"confidence":       bae.calculateOverallConfidence(profileViolations, evasionSignals),
 				"total_violations": len(profileViolations),
 				"total_signals":    len(evasionSignals),
 				"analysis_window":  bae.analysisWindow.String(),
@@ -2500,8 +2500,8 @@ func (bae *BehavioralAnalysisEngine) detectEvasionSignals(metrics *ResourceUsage
 					"patterns":      detector.Patterns,
 					"confidence":    detector.Confidence,
 					"metrics_snapshot": map[string]interface{}{
-						"cpu_usage":    metrics.CPUUsage,
-						"memory_usage": metrics.MemoryUsage,
+						"cpu_usage":     metrics.CPUUsage,
+						"memory_usage":  metrics.MemoryUsage,
 						"anomaly_score": metrics.AnomalyScore,
 					},
 				},

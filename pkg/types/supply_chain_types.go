@@ -26,18 +26,18 @@ const (
 
 // SupplyChainScanOptions contains options for supply chain scanning
 type SupplyChainScanOptions struct {
-	DeepAnalysis        bool                    `json:"deep_analysis"`
-	IncludeDev          bool                    `json:"include_dev"`
-	MaxDepth            int                     `json:"max_depth"`
-	ThreatIntelEnabled  bool                    `json:"threat_intel_enabled"`
-	BuildIntegrity      bool                    `json:"build_integrity"`
-	GraphAnalysis       bool                    `json:"graph_analysis"`
-	HoneypotDetection   bool                    `json:"honeypot_detection"`
-	ComplianceCheck     bool                    `json:"compliance_check"`
-	SensitivityLevel    SensitivityLevel        `json:"sensitivity_level"`
-	CustomRules         []CustomDetectionRule  `json:"custom_rules,omitempty"`
-	ExcludePatterns     []string                `json:"exclude_patterns,omitempty"`
-	Timeout             time.Duration           `json:"timeout"`
+	DeepAnalysis       bool                  `json:"deep_analysis"`
+	IncludeDev         bool                  `json:"include_dev"`
+	MaxDepth           int                   `json:"max_depth"`
+	ThreatIntelEnabled bool                  `json:"threat_intel_enabled"`
+	BuildIntegrity     bool                  `json:"build_integrity"`
+	GraphAnalysis      bool                  `json:"graph_analysis"`
+	HoneypotDetection  bool                  `json:"honeypot_detection"`
+	ComplianceCheck    bool                  `json:"compliance_check"`
+	SensitivityLevel   SensitivityLevel      `json:"sensitivity_level"`
+	CustomRules        []CustomDetectionRule `json:"custom_rules,omitempty"`
+	ExcludePatterns    []string              `json:"exclude_patterns,omitempty"`
+	Timeout            time.Duration         `json:"timeout"`
 }
 
 // SensitivityLevel defines the sensitivity level for detection
@@ -52,79 +52,79 @@ const (
 
 // SupplyChainScanResult represents the result of a supply chain scan
 type SupplyChainScanResult struct {
-	ScanID           string                    `json:"scan_id"`
-	Target           string                    `json:"target"`
-	ScanType         SupplyChainScanType       `json:"scan_type"`
-	Status           ScanStatus                `json:"status"`
-	StartTime        time.Time                 `json:"start_time"`
-	EndTime          *time.Time                `json:"end_time,omitempty"`
-	Duration         time.Duration             `json:"duration"`
-	RiskScore        float64                   `json:"risk_score"`
-	RiskLevel        RiskLevel                 `json:"risk_level"`
-	Findings         []SupplyChainFinding      `json:"findings"`
-	DependencyGraph  *DependencyGraph          `json:"dependency_graph,omitempty"`
-	BuildIntegrity   *BuildIntegrityResult     `json:"build_integrity,omitempty"`
-	ThreatIntel      *ThreatIntelligenceResult `json:"threat_intel,omitempty"`
-	Compliance       *ComplianceResult         `json:"compliance,omitempty"`
-	Metadata         ScanMetadata              `json:"metadata"`
-	Recommendations  []Recommendation          `json:"recommendations"`
+	ScanID          string                    `json:"scan_id"`
+	Target          string                    `json:"target"`
+	ScanType        SupplyChainScanType       `json:"scan_type"`
+	Status          ScanStatus                `json:"status"`
+	StartTime       time.Time                 `json:"start_time"`
+	EndTime         *time.Time                `json:"end_time,omitempty"`
+	Duration        time.Duration             `json:"duration"`
+	RiskScore       float64                   `json:"risk_score"`
+	RiskLevel       RiskLevel                 `json:"risk_level"`
+	Findings        []SupplyChainFinding      `json:"findings"`
+	DependencyGraph *DependencyGraph          `json:"dependency_graph,omitempty"`
+	BuildIntegrity  *BuildIntegrityResult     `json:"build_integrity,omitempty"`
+	ThreatIntel     *ThreatIntelligenceResult `json:"threat_intel,omitempty"`
+	Compliance      *ComplianceResult         `json:"compliance,omitempty"`
+	Metadata        ScanMetadata              `json:"metadata"`
+	Recommendations []Recommendation          `json:"recommendations"`
 }
 
 // Note: ScanStatus and RiskLevel are already defined in types.go
 
 // SupplyChainFinding represents a security finding in the supply chain
 type SupplyChainFinding struct {
-	ID              string                 `json:"id"`
-	Type            FindingType            `json:"type"`
-	Severity        RiskLevel              `json:"severity"`
-	Title           string                 `json:"title"`
-	Description     string                 `json:"description"`
-	Package         PackageInfo            `json:"package"`
-	Vulnerability   *VulnerabilityInfo     `json:"vulnerability,omitempty"`
-	ThreatIntel     *ThreatIntelInfo       `json:"threat_intel,omitempty"`
-	BuildIntegrity  *BuildIntegrityInfo    `json:"build_integrity,omitempty"`
-	Evidence        []SupplyChainEvidence  `json:"evidence"`
-	Remediation     RemediationAdvice      `json:"remediation"`
-	CVSS            *CVSSScore             `json:"cvss,omitempty"`
-	CWE             []string               `json:"cwe,omitempty"`
-	References      []Reference            `json:"references"`
-	FirstSeen       time.Time              `json:"first_seen"`
-	LastUpdated     time.Time              `json:"last_updated"`
-	Confidence      float64                `json:"confidence"`
-	FalsePositive   bool                   `json:"false_positive"`
+	ID             string                `json:"id"`
+	Type           FindingType           `json:"type"`
+	Severity       RiskLevel             `json:"severity"`
+	Title          string                `json:"title"`
+	Description    string                `json:"description"`
+	Package        PackageInfo           `json:"package"`
+	Vulnerability  *VulnerabilityInfo    `json:"vulnerability,omitempty"`
+	ThreatIntel    *ThreatIntelInfo      `json:"threat_intel,omitempty"`
+	BuildIntegrity *BuildIntegrityInfo   `json:"build_integrity,omitempty"`
+	Evidence       []SupplyChainEvidence `json:"evidence"`
+	Remediation    RemediationAdvice     `json:"remediation"`
+	CVSS           *CVSSScore            `json:"cvss,omitempty"`
+	CWE            []string              `json:"cwe,omitempty"`
+	References     []Reference           `json:"references"`
+	FirstSeen      time.Time             `json:"first_seen"`
+	LastUpdated    time.Time             `json:"last_updated"`
+	Confidence     float64               `json:"confidence"`
+	FalsePositive  bool                  `json:"false_positive"`
 }
 
 // FindingType represents the type of security finding
 type FindingType string
 
 const (
-	FindingTypeVulnerability      FindingType = "vulnerability"
-	FindingTypeMaliciousPackage   FindingType = "malicious_package"
-	FindingTypeTyposquatting      FindingType = "typosquatting"
-	FindingTypeDependencyConfusion FindingType = "dependency_confusion"
-	FindingTypeBuildIntegrity     FindingType = "build_integrity"
-	FindingTypeLicenseViolation   FindingType = "license_violation"
-	FindingTypeOutdatedDependency FindingType = "outdated_dependency"
+	FindingTypeVulnerability        FindingType = "vulnerability"
+	FindingTypeMaliciousPackage     FindingType = "malicious_package"
+	FindingTypeTyposquatting        FindingType = "typosquatting"
+	FindingTypeDependencyConfusion  FindingType = "dependency_confusion"
+	FindingTypeBuildIntegrity       FindingType = "build_integrity"
+	FindingTypeLicenseViolation     FindingType = "license_violation"
+	FindingTypeOutdatedDependency   FindingType = "outdated_dependency"
 	FindingTypeSuspiciousMaintainer FindingType = "suspicious_maintainer"
-	FindingTypeHoneypot           FindingType = "honeypot"
-	FindingTypeSupplyChainAttack  FindingType = "supply_chain_attack"
-	FindingTypeComplianceViolation FindingType = "compliance_violation"
+	FindingTypeHoneypot             FindingType = "honeypot"
+	FindingTypeSupplyChainAttack    FindingType = "supply_chain_attack"
+	FindingTypeComplianceViolation  FindingType = "compliance_violation"
 )
 
 // PackageInfo contains information about a package
 type PackageInfo struct {
-	Name         string            `json:"name"`
-	Version      string            `json:"version"`
-	Ecosystem    string            `json:"ecosystem"`
-	PURL         string            `json:"purl,omitempty"`
-	Repository   string            `json:"repository,omitempty"`
-	Homepage     string            `json:"homepage,omitempty"`
-	License      string            `json:"license,omitempty"`
-	Maintainers  []Maintainer      `json:"maintainers,omitempty"`
+	Name         string                  `json:"name"`
+	Version      string                  `json:"version"`
+	Ecosystem    string                  `json:"ecosystem"`
+	PURL         string                  `json:"purl,omitempty"`
+	Repository   string                  `json:"repository,omitempty"`
+	Homepage     string                  `json:"homepage,omitempty"`
+	License      string                  `json:"license,omitempty"`
+	Maintainers  []Maintainer            `json:"maintainers,omitempty"`
 	Dependencies []SupplyChainDependency `json:"dependencies,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	Checksums    map[string]string `json:"checksums,omitempty"`
-	Signatures   []Signature       `json:"signatures,omitempty"`
+	Metadata     map[string]interface{}  `json:"metadata,omitempty"`
+	Checksums    map[string]string       `json:"checksums,omitempty"`
+	Signatures   []Signature             `json:"signatures,omitempty"`
 }
 
 // Maintainer represents a package maintainer
@@ -140,15 +140,15 @@ type Maintainer struct {
 
 // SupplyChainDependency extends the base Dependency type with supply chain specific fields
 type SupplyChainDependency struct {
-	Dependency   // Embed the existing Dependency type
-	VersionRange string            `json:"version_range,omitempty"`
-	Ecosystem    string            `json:"ecosystem"`
-	Scope        DependencyScope   `json:"scope"`
-	Optional     bool              `json:"optional"`
-	Depth        int               `json:"depth"`
-	PURL         string            `json:"purl,omitempty"`
-	License      string            `json:"license,omitempty"`
-	RiskScore    float64           `json:"risk_score"`
+	Dependency                   // Embed the existing Dependency type
+	VersionRange string          `json:"version_range,omitempty"`
+	Ecosystem    string          `json:"ecosystem"`
+	Scope        DependencyScope `json:"scope"`
+	Optional     bool            `json:"optional"`
+	Depth        int             `json:"depth"`
+	PURL         string          `json:"purl,omitempty"`
+	License      string          `json:"license,omitempty"`
+	RiskScore    float64         `json:"risk_score"`
 }
 
 // DependencyScope represents the scope of a dependency
@@ -164,51 +164,51 @@ const (
 
 // Signature represents a cryptographic signature
 type Signature struct {
-	Algorithm   string    `json:"algorithm"`
-	Value       string    `json:"value"`
-	KeyID       string    `json:"key_id,omitempty"`
-	Signer      string    `json:"signer,omitempty"`
-	Timestamp   time.Time `json:"timestamp"`
-	Valid       bool      `json:"valid"`
-	TrustLevel  string    `json:"trust_level"`
+	Algorithm  string    `json:"algorithm"`
+	Value      string    `json:"value"`
+	KeyID      string    `json:"key_id,omitempty"`
+	Signer     string    `json:"signer,omitempty"`
+	Timestamp  time.Time `json:"timestamp"`
+	Valid      bool      `json:"valid"`
+	TrustLevel string    `json:"trust_level"`
 }
 
 // VulnerabilityInfo contains detailed vulnerability information
 type VulnerabilityInfo struct {
-	CVE         string              `json:"cve,omitempty"`
-	GHSA        string              `json:"ghsa,omitempty"`
-	OSV         string              `json:"osv,omitempty"`
-	Title       string              `json:"title"`
-	Description string              `json:"description"`
-	Severity    RiskLevel           `json:"severity"`
-	CVSS        *CVSSScore          `json:"cvss,omitempty"`
-	CWE         []string            `json:"cwe,omitempty"`
-	Affected    []AffectedVersion   `json:"affected"`
-	Fixed       []string            `json:"fixed,omitempty"`
-	Patched     []string            `json:"patched,omitempty"`
-	Published   time.Time           `json:"published"`
-	Modified    time.Time           `json:"modified"`
-	Withdrawn   *time.Time          `json:"withdrawn,omitempty"`
-	References  []Reference         `json:"references"`
-	Credits     []Credit            `json:"credits,omitempty"`
-	Exploits    []ExploitInfo       `json:"exploits,omitempty"`
+	CVE         string            `json:"cve,omitempty"`
+	GHSA        string            `json:"ghsa,omitempty"`
+	OSV         string            `json:"osv,omitempty"`
+	Title       string            `json:"title"`
+	Description string            `json:"description"`
+	Severity    RiskLevel         `json:"severity"`
+	CVSS        *CVSSScore        `json:"cvss,omitempty"`
+	CWE         []string          `json:"cwe,omitempty"`
+	Affected    []AffectedVersion `json:"affected"`
+	Fixed       []string          `json:"fixed,omitempty"`
+	Patched     []string          `json:"patched,omitempty"`
+	Published   time.Time         `json:"published"`
+	Modified    time.Time         `json:"modified"`
+	Withdrawn   *time.Time        `json:"withdrawn,omitempty"`
+	References  []Reference       `json:"references"`
+	Credits     []Credit          `json:"credits,omitempty"`
+	Exploits    []ExploitInfo     `json:"exploits,omitempty"`
 }
 
 // CVSSScore represents CVSS scoring information
 type CVSSScore struct {
-	Version string  `json:"version"`
-	Vector  string  `json:"vector"`
-	Score   float64 `json:"score"`
-	Severity string `json:"severity"`
+	Version  string  `json:"version"`
+	Vector   string  `json:"vector"`
+	Score    float64 `json:"score"`
+	Severity string  `json:"severity"`
 }
 
 // AffectedVersion represents version ranges affected by a vulnerability
 type AffectedVersion struct {
-	Ecosystem string            `json:"ecosystem"`
-	Package   string            `json:"package"`
-	Ranges    []VersionRange    `json:"ranges"`
-	Versions  []string          `json:"versions,omitempty"`
-	Database  string            `json:"database,omitempty"`
+	Ecosystem string         `json:"ecosystem"`
+	Package   string         `json:"package"`
+	Ranges    []VersionRange `json:"ranges"`
+	Versions  []string       `json:"versions,omitempty"`
+	Database  string         `json:"database,omitempty"`
 }
 
 // Note: VersionRange and VersionEvent are already defined in types.go
@@ -238,17 +238,17 @@ type ExploitInfo struct {
 
 // ThreatIntelInfo contains threat intelligence information
 type ThreatIntelInfo struct {
-	Source      string                 `json:"source"`
-	ThreatType  string                 `json:"threat_type"`
-	Confidence  float64                `json:"confidence"`
-	Severity    RiskLevel              `json:"severity"`
-	Description string                 `json:"description"`
+	Source      string                  `json:"source"`
+	ThreatType  string                  `json:"threat_type"`
+	Confidence  float64                 `json:"confidence"`
+	Severity    RiskLevel               `json:"severity"`
+	Description string                  `json:"description"`
 	IOCs        []IndicatorOfCompromise `json:"iocs,omitempty"`
-	TTP         []ThreatTactic         `json:"ttp,omitempty"`
-	Attribution *ThreatAttribution     `json:"attribution,omitempty"`
-	FirstSeen   time.Time              `json:"first_seen"`
-	LastSeen    time.Time              `json:"last_seen"`
-	Active      bool                   `json:"active"`
+	TTP         []ThreatTactic          `json:"ttp,omitempty"`
+	Attribution *ThreatAttribution      `json:"attribution,omitempty"`
+	FirstSeen   time.Time               `json:"first_seen"`
+	LastSeen    time.Time               `json:"last_seen"`
+	Active      bool                    `json:"active"`
 }
 
 // IndicatorOfCompromise represents an IoC
@@ -263,35 +263,35 @@ type IndicatorOfCompromise struct {
 
 // ThreatTactic represents threat tactics, techniques, and procedures
 type ThreatTactic struct {
-	Tactic     string `json:"tactic"`
-	Technique  string `json:"technique"`
-	Procedure  string `json:"procedure,omitempty"`
-	MITREID    string `json:"mitre_id,omitempty"`
+	Tactic      string `json:"tactic"`
+	Technique   string `json:"technique"`
+	Procedure   string `json:"procedure,omitempty"`
+	MITREID     string `json:"mitre_id,omitempty"`
 	Description string `json:"description"`
 }
 
 // ThreatAttribution contains threat attribution information
 type ThreatAttribution struct {
-	Actor       string   `json:"actor,omitempty"`
-	Group       string   `json:"group,omitempty"`
-	Campaign    string   `json:"campaign,omitempty"`
-	Motivation  string   `json:"motivation,omitempty"`
-	Country     string   `json:"country,omitempty"`
-	Confidence  float64  `json:"confidence"`
-	Aliases     []string `json:"aliases,omitempty"`
+	Actor      string   `json:"actor,omitempty"`
+	Group      string   `json:"group,omitempty"`
+	Campaign   string   `json:"campaign,omitempty"`
+	Motivation string   `json:"motivation,omitempty"`
+	Country    string   `json:"country,omitempty"`
+	Confidence float64  `json:"confidence"`
+	Aliases    []string `json:"aliases,omitempty"`
 }
 
 // BuildIntegrityInfo contains build integrity information
 type BuildIntegrityInfo struct {
-	Verified        bool                   `json:"verified"`
-	ChecksumMatch   bool                   `json:"checksum_match"`
-	SignatureValid  bool                   `json:"signature_valid"`
-	Reproducible    bool                   `json:"reproducible"`
-	BuildSystem     string                 `json:"build_system,omitempty"`
-	BuildMetadata   map[string]interface{} `json:"build_metadata,omitempty"`
-	Provenance      *BuildProvenance       `json:"provenance,omitempty"`
-	Anomalies       []BuildAnomaly         `json:"anomalies,omitempty"`
-	TrustScore      float64                `json:"trust_score"`
+	Verified       bool                   `json:"verified"`
+	ChecksumMatch  bool                   `json:"checksum_match"`
+	SignatureValid bool                   `json:"signature_valid"`
+	Reproducible   bool                   `json:"reproducible"`
+	BuildSystem    string                 `json:"build_system,omitempty"`
+	BuildMetadata  map[string]interface{} `json:"build_metadata,omitempty"`
+	Provenance     *BuildProvenance       `json:"provenance,omitempty"`
+	Anomalies      []BuildAnomaly         `json:"anomalies,omitempty"`
+	TrustScore     float64                `json:"trust_score"`
 }
 
 // BuildProvenance contains build provenance information
@@ -323,22 +323,22 @@ type BuildAnomaly struct {
 
 // SupplyChainEvidence extends the base Evidence type with supply chain specific fields
 type SupplyChainEvidence struct {
-	Evidence    // Embed the existing Evidence type
-	Data        map[string]interface{} `json:"data,omitempty"`
-	Source      string                 `json:"source"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Confidence  float64                `json:"confidence"`
+	Evidence                          // Embed the existing Evidence type
+	Data       map[string]interface{} `json:"data,omitempty"`
+	Source     string                 `json:"source"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Confidence float64                `json:"confidence"`
 }
 
 // RemediationAdvice contains remediation advice for findings
 type RemediationAdvice struct {
-	Summary     string              `json:"summary"`
-	Steps       []RemediationStep   `json:"steps"`
-	Alternatives []string           `json:"alternatives,omitempty"`
-	References  []Reference         `json:"references,omitempty"`
-	Priority    RemediationPriority `json:"priority"`
-	Effort      RemediationEffort   `json:"effort"`
-	Impact      string              `json:"impact,omitempty"`
+	Summary      string              `json:"summary"`
+	Steps        []RemediationStep   `json:"steps"`
+	Alternatives []string            `json:"alternatives,omitempty"`
+	References   []Reference         `json:"references,omitempty"`
+	Priority     RemediationPriority `json:"priority"`
+	Effort       RemediationEffort   `json:"effort"`
+	Impact       string              `json:"impact,omitempty"`
 }
 
 // RemediationStep represents a step in remediation
@@ -379,14 +379,14 @@ type DependencyGraph struct {
 
 // GraphNode represents a node in the dependency graph
 type GraphNode struct {
-	ID          string                 `json:"id"`
-	Package     PackageInfo            `json:"package"`
-	RiskScore   float64                `json:"risk_score"`
-	Centrality  float64                `json:"centrality"`
-	Depth       int                    `json:"depth"`
-	Direct      bool                   `json:"direct"`
-	Findings    []SupplyChainFinding   `json:"findings,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	ID         string                 `json:"id"`
+	Package    PackageInfo            `json:"package"`
+	RiskScore  float64                `json:"risk_score"`
+	Centrality float64                `json:"centrality"`
+	Depth      int                    `json:"depth"`
+	Direct     bool                   `json:"direct"`
+	Findings   []SupplyChainFinding   `json:"findings,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // GraphEdge represents an edge in the dependency graph
@@ -413,25 +413,25 @@ const (
 
 // GraphStats contains statistics about the dependency graph
 type GraphStats struct {
-	TotalNodes      int     `json:"total_nodes"`
-	TotalEdges      int     `json:"total_edges"`
-	MaxDepth        int     `json:"max_depth"`
-	DirectDeps      int     `json:"direct_deps"`
-	TransitiveDeps  int     `json:"transitive_deps"`
-	CyclicDeps      int     `json:"cyclic_deps"`
-	AverageRisk     float64 `json:"average_risk"`
-	HighRiskNodes   int     `json:"high_risk_nodes"`
+	TotalNodes     int     `json:"total_nodes"`
+	TotalEdges     int     `json:"total_edges"`
+	MaxDepth       int     `json:"max_depth"`
+	DirectDeps     int     `json:"direct_deps"`
+	TransitiveDeps int     `json:"transitive_deps"`
+	CyclicDeps     int     `json:"cyclic_deps"`
+	AverageRisk    float64 `json:"average_risk"`
+	HighRiskNodes  int     `json:"high_risk_nodes"`
 }
 
 // BuildIntegrityResult contains build integrity scan results
 type BuildIntegrityResult struct {
-	OverallScore    float64                    `json:"overall_score"`
-	Verified        bool                       `json:"verified"`
-	Checks          []BuildIntegrityCheck      `json:"checks"`
-	Anomalies       []BuildAnomaly             `json:"anomalies"`
-	Provenance      *BuildProvenance           `json:"provenance,omitempty"`
-	Recommendations []Recommendation           `json:"recommendations"`
-	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
+	OverallScore    float64                `json:"overall_score"`
+	Verified        bool                   `json:"verified"`
+	Checks          []BuildIntegrityCheck  `json:"checks"`
+	Anomalies       []BuildAnomaly         `json:"anomalies"`
+	Provenance      *BuildProvenance       `json:"provenance,omitempty"`
+	Recommendations []Recommendation       `json:"recommendations"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // BuildIntegrityCheck represents a build integrity check
@@ -447,25 +447,25 @@ type BuildIntegrityCheck struct {
 
 // ThreatIntelligenceResult contains threat intelligence results
 type ThreatIntelligenceResult struct {
-	OverallRisk     RiskLevel                  `json:"overall_risk"`
-	ThreatScore     float64                    `json:"threat_score"`
-	Threats         []ThreatIntelInfo          `json:"threats"`
-	IOCs            []IndicatorOfCompromise    `json:"iocs"`
-	Attribution     []ThreatAttribution        `json:"attribution,omitempty"`
-	Recommendations []Recommendation           `json:"recommendations"`
-	Sources         []string                   `json:"sources"`
-	LastUpdated     time.Time                  `json:"last_updated"`
-	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
+	OverallRisk     RiskLevel               `json:"overall_risk"`
+	ThreatScore     float64                 `json:"threat_score"`
+	Threats         []ThreatIntelInfo       `json:"threats"`
+	IOCs            []IndicatorOfCompromise `json:"iocs"`
+	Attribution     []ThreatAttribution     `json:"attribution,omitempty"`
+	Recommendations []Recommendation        `json:"recommendations"`
+	Sources         []string                `json:"sources"`
+	LastUpdated     time.Time               `json:"last_updated"`
+	Metadata        map[string]interface{}  `json:"metadata,omitempty"`
 }
 
 // ComplianceResult contains compliance check results
 type ComplianceResult struct {
-	OverallStatus   ComplianceStatus           `json:"overall_status"`
-	Score           float64                    `json:"score"`
-	Standards       []StandardCompliance       `json:"standards"`
-	Violations      []ComplianceViolation      `json:"violations"`
-	Recommendations []Recommendation           `json:"recommendations"`
-	Metadata        map[string]interface{}     `json:"metadata,omitempty"`
+	OverallStatus   ComplianceStatus       `json:"overall_status"`
+	Score           float64                `json:"score"`
+	Standards       []StandardCompliance   `json:"standards"`
+	Violations      []ComplianceViolation  `json:"violations"`
+	Recommendations []Recommendation       `json:"recommendations"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ComplianceStatus represents compliance status
@@ -490,23 +490,23 @@ type StandardCompliance struct {
 
 // ControlResult represents the result of a compliance control check
 type ControlResult struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Status      ComplianceStatus `json:"status"`
+	ID          string                `json:"id"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Status      ComplianceStatus      `json:"status"`
 	Evidence    []SupplyChainEvidence `json:"evidence,omitempty"`
-	Remediation string           `json:"remediation,omitempty"`
+	Remediation string                `json:"remediation,omitempty"`
 }
 
 // ComplianceViolation represents a compliance violation
 type ComplianceViolation struct {
-	Standard    string        `json:"standard"`
-	Control     string        `json:"control"`
-	Severity    RiskLevel     `json:"severity"`
-	Description string        `json:"description"`
+	Standard    string                `json:"standard"`
+	Control     string                `json:"control"`
+	Severity    RiskLevel             `json:"severity"`
+	Description string                `json:"description"`
 	Evidence    []SupplyChainEvidence `json:"evidence"`
-	Remediation string        `json:"remediation"`
-	Deadline    *time.Time    `json:"deadline,omitempty"`
+	Remediation string                `json:"remediation"`
+	Deadline    *time.Time            `json:"deadline,omitempty"`
 }
 
 // Recommendation represents a security recommendation
@@ -555,16 +555,16 @@ type ScanMetadata struct {
 
 // ScanStatistics contains scan statistics
 type ScanStatistics struct {
-	PackagesScanned     int           `json:"packages_scanned"`
-	DependenciesFound   int           `json:"dependencies_found"`
-	VulnerabilitiesFound int          `json:"vulnerabilities_found"`
-	ThreatsDetected     int           `json:"threats_detected"`
-	FindingsTotal       int           `json:"findings_total"`
-	ScanDuration        time.Duration `json:"scan_duration"`
-	CacheHits           int           `json:"cache_hits"`
-	CacheMisses         int           `json:"cache_misses"`
-	APICallsMade        int           `json:"api_calls_made"`
-	ErrorsEncountered   int           `json:"errors_encountered"`
+	PackagesScanned      int           `json:"packages_scanned"`
+	DependenciesFound    int           `json:"dependencies_found"`
+	VulnerabilitiesFound int           `json:"vulnerabilities_found"`
+	ThreatsDetected      int           `json:"threats_detected"`
+	FindingsTotal        int           `json:"findings_total"`
+	ScanDuration         time.Duration `json:"scan_duration"`
+	CacheHits            int           `json:"cache_hits"`
+	CacheMisses          int           `json:"cache_misses"`
+	APICallsMade         int           `json:"api_calls_made"`
+	ErrorsEncountered    int           `json:"errors_encountered"`
 }
 
 // CustomDetectionRule represents a custom detection rule
@@ -581,9 +581,9 @@ type CustomDetectionRule struct {
 
 // GraphAnalysisRequest represents a request for dependency graph analysis
 type GraphAnalysisRequest struct {
-	Target      string                    `json:"target" binding:"required"`
-	Options     GraphAnalysisOptions      `json:"options"`
-	Algorithms  []GraphAnalysisAlgorithm  `json:"algorithms"`
+	Target     string                   `json:"target" binding:"required"`
+	Options    GraphAnalysisOptions     `json:"options"`
+	Algorithms []GraphAnalysisAlgorithm `json:"algorithms"`
 }
 
 // GraphAnalysisOptions contains options for graph analysis
@@ -599,43 +599,43 @@ type GraphAnalysisOptions struct {
 type GraphAnalysisAlgorithm string
 
 const (
-	AlgorithmShortestPath      GraphAnalysisAlgorithm = "shortest_path"
-	AlgorithmCentrality        GraphAnalysisAlgorithm = "centrality"
+	AlgorithmShortestPath       GraphAnalysisAlgorithm = "shortest_path"
+	AlgorithmCentrality         GraphAnalysisAlgorithm = "centrality"
 	AlgorithmCommunityDetection GraphAnalysisAlgorithm = "community_detection"
-	AlgorithmAnomalyDetection  GraphAnalysisAlgorithm = "anomaly_detection"
-	AlgorithmRiskPropagation   GraphAnalysisAlgorithm = "risk_propagation"
+	AlgorithmAnomalyDetection   GraphAnalysisAlgorithm = "anomaly_detection"
+	AlgorithmRiskPropagation    GraphAnalysisAlgorithm = "risk_propagation"
 )
 
 // ThreatIntelRequest represents a request for threat intelligence
 type ThreatIntelRequest struct {
-	Target  string                 `json:"target" binding:"required"`
-	Sources []string               `json:"sources,omitempty"`
-	Options ThreatIntelOptions     `json:"options"`
+	Target  string             `json:"target" binding:"required"`
+	Sources []string           `json:"sources,omitempty"`
+	Options ThreatIntelOptions `json:"options"`
 }
 
 // ThreatIntelOptions contains options for threat intelligence queries
 type ThreatIntelOptions struct {
-	IncludeIOCs     bool          `json:"include_iocs"`
-	IncludeAttribution bool       `json:"include_attribution"`
-	MaxAge          time.Duration `json:"max_age"`
-	MinConfidence   float64       `json:"min_confidence"`
-	ActiveOnly      bool          `json:"active_only"`
+	IncludeIOCs        bool          `json:"include_iocs"`
+	IncludeAttribution bool          `json:"include_attribution"`
+	MaxAge             time.Duration `json:"max_age"`
+	MinConfidence      float64       `json:"min_confidence"`
+	ActiveOnly         bool          `json:"active_only"`
 }
 
 // BuildIntegrityRequest represents a request for build integrity checking
 type BuildIntegrityRequest struct {
 	Target  string                    `json:"target" binding:"required"`
-	Options BuildIntegrityOptions    `json:"options"`
+	Options BuildIntegrityOptions     `json:"options"`
 	Checks  []BuildIntegrityCheckType `json:"checks"`
 }
 
 // BuildIntegrityOptions contains options for build integrity checking
 type BuildIntegrityOptions struct {
-	VerifyChecksums   bool `json:"verify_checksums"`
-	VerifySignatures  bool `json:"verify_signatures"`
-	CheckReproducible bool `json:"check_reproducible"`
+	VerifyChecksums    bool `json:"verify_checksums"`
+	VerifySignatures   bool `json:"verify_signatures"`
+	CheckReproducible  bool `json:"check_reproducible"`
 	ValidateProvenance bool `json:"validate_provenance"`
-	DeepAnalysis      bool `json:"deep_analysis"`
+	DeepAnalysis       bool `json:"deep_analysis"`
 }
 
 // BuildIntegrityCheckType represents a type of build integrity check
@@ -652,20 +652,20 @@ const (
 
 // DependencyGraphAnalysisResult represents the result of dependency graph analysis
 type DependencyGraphAnalysisResult struct {
-	Graph           *DependencyGraph   `json:"graph"`
-	RiskAnalysis    *GraphRiskAnalysis `json:"risk_analysis"`
-	Recommendations []Recommendation   `json:"recommendations"`
+	Graph           *DependencyGraph       `json:"graph"`
+	RiskAnalysis    *GraphRiskAnalysis     `json:"risk_analysis"`
+	Recommendations []Recommendation       `json:"recommendations"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // GraphRiskAnalysis contains risk analysis results for the dependency graph
 type GraphRiskAnalysis struct {
-	OverallRisk     RiskLevel              `json:"overall_risk"`
-	RiskScore       float64                `json:"risk_score"`
-	CriticalPaths   [][]string             `json:"critical_paths"`
-	VulnerablePaths [][]string             `json:"vulnerable_paths"`
-	RiskFactors     []RiskFactor           `json:"risk_factors"`
-	RiskDistribution map[RiskLevel]int     `json:"risk_distribution"`
+	OverallRisk      RiskLevel         `json:"overall_risk"`
+	RiskScore        float64           `json:"risk_score"`
+	CriticalPaths    [][]string        `json:"critical_paths"`
+	VulnerablePaths  [][]string        `json:"vulnerable_paths"`
+	RiskFactors      []RiskFactor      `json:"risk_factors"`
+	RiskDistribution map[RiskLevel]int `json:"risk_distribution"`
 }
 
 // RiskFactor represents a factor contributing to overall risk
@@ -679,8 +679,8 @@ type RiskFactor struct {
 
 // GraphGenerationRequest represents a request for dependency graph generation
 type GraphGenerationRequest struct {
-	Target  string                   `json:"target" binding:"required"`
-	Options GraphGenerationOptions   `json:"options"`
+	Target  string                 `json:"target" binding:"required"`
+	Options GraphGenerationOptions `json:"options"`
 }
 
 // GraphGenerationOptions contains options for graph generation
@@ -694,9 +694,9 @@ type GraphGenerationOptions struct {
 
 // GraphExportRequest represents a request for dependency graph export
 type GraphExportRequest struct {
-	Target  string              `json:"target" binding:"required"`
-	Format  string              `json:"format" binding:"required"`
-	Options GraphExportOptions  `json:"options"`
+	Target  string             `json:"target" binding:"required"`
+	Format  string             `json:"format" binding:"required"`
+	Options GraphExportOptions `json:"options"`
 }
 
 // GraphExportOptions contains options for graph export
@@ -710,10 +710,10 @@ type GraphExportOptions struct {
 
 // ProjectInfo represents information about a project to be scanned
 type ProjectInfo struct {
-	Path        string            `json:"path"`
-	Type        string            `json:"type"`
-	Name        string            `json:"name,omitempty"`
-	Version     string            `json:"version,omitempty"`
-	Description string            `json:"description,omitempty"`
+	Path        string                 `json:"path"`
+	Type        string                 `json:"type"`
+	Name        string                 `json:"name,omitempty"`
+	Version     string                 `json:"version,omitempty"`
+	Description string                 `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }

@@ -35,22 +35,22 @@ type Session struct {
 type AuthProvider interface {
 	// Authenticate authenticates a user with username/password
 	Authenticate(ctx context.Context, username, password string) (*User, error)
-	
+
 	// ValidateToken validates an authentication token
 	ValidateToken(ctx context.Context, token string) (*User, error)
-	
+
 	// GetUser retrieves user information by ID
 	GetUser(ctx context.Context, userID string) (*User, error)
-	
+
 	// GetUserByUsername retrieves user information by username
 	GetUserByUsername(ctx context.Context, username string) (*User, error)
-	
+
 	// RefreshToken refreshes an authentication token
 	RefreshToken(ctx context.Context, token string) (string, error)
-	
+
 	// Logout invalidates a session
 	Logout(ctx context.Context, token string) error
-	
+
 	// GetProviderType returns the provider type
 	GetProviderType() string
 }
@@ -59,24 +59,24 @@ type AuthProvider interface {
 type SessionManager interface {
 	// CreateSession creates a new session for a user
 	CreateSession(ctx context.Context, user *User, ipAddress, userAgent string) (*Session, error)
-	
+
 	// GetSession retrieves a session by token
 	GetSession(ctx context.Context, token string) (*Session, error)
-	
+
 	// RefreshSession refreshes a session
 	RefreshSession(ctx context.Context, token string) (*Session, error)
-	
+
 	// InvalidateSession invalidates a session
 	InvalidateSession(ctx context.Context, token string) error
-	
+
 	// CleanupExpiredSessions removes expired sessions
 	CleanupExpiredSessions(ctx context.Context) error
 }
 
 // AuthManager manages authentication and authorization
 type AuthManager struct {
-	providers      map[string]AuthProvider
-	sessionManager SessionManager
+	providers       map[string]AuthProvider
+	sessionManager  SessionManager
 	defaultProvider string
 }
 
@@ -144,12 +144,12 @@ func (am *AuthManager) Authenticate(ctx context.Context, providerName, username,
 	if providerName == "" {
 		providerName = am.defaultProvider
 	}
-	
+
 	provider, err := am.GetProvider(providerName)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return provider.Authenticate(ctx, username, password)
 }
 
@@ -160,18 +160,18 @@ func (am *AuthManager) ValidateToken(ctx context.Context, token string) (*User, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Check if session is expired
 	if session.ExpiresAt.Before(time.Now()) {
 		return nil, ErrSessionExpired
 	}
-	
+
 	// Get user from default provider
 	provider, err := am.GetProvider(am.defaultProvider)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return provider.GetUser(ctx, session.UserID)
 }
 
@@ -196,7 +196,7 @@ func (am *AuthManager) GetUser(ctx context.Context, userID string) (*User, error
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return provider.GetUser(ctx, userID)
 }
 

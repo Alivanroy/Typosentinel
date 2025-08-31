@@ -16,25 +16,25 @@ import (
 
 // SteganographicDetector detects hidden resource consumption patterns
 type SteganographicDetector struct {
-	mu                    sync.RWMutex
-	logger               *logger.Logger
+	mu                     sync.RWMutex
+	logger                 *logger.Logger
 	steganographicPatterns []SteganographicPattern
-	hiddenChannels       map[string]*HiddenChannel
-	covertOperations     []*CovertOperation
-	analysisWindow       time.Duration
-	sensitivityLevel     float64
-	detectionHistory     []*SteganographicDetection
-	maxHistorySize       int
-	lastAnalysis         time.Time
-	baselineMetrics      *ResourceUsageMetrics
-	anomalyThreshold     float64
-	patternBuffer        []ResourceDataPoint
-	bufferSize           int
+	hiddenChannels         map[string]*HiddenChannel
+	covertOperations       []*CovertOperation
+	analysisWindow         time.Duration
+	sensitivityLevel       float64
+	detectionHistory       []*SteganographicDetection
+	maxHistorySize         int
+	lastAnalysis           time.Time
+	baselineMetrics        *ResourceUsageMetrics
+	anomalyThreshold       float64
+	patternBuffer          []ResourceDataPoint
+	bufferSize             int
 	// Enhanced detection capabilities
-	base64Patterns       []*regexp.Regexp
-	commentPatterns      []*regexp.Regexp
-	metadataPatterns     []*regexp.Regexp
-	encodingDetectors    map[string]func(string) bool
+	base64Patterns    []*regexp.Regexp
+	commentPatterns   []*regexp.Regexp
+	metadataPatterns  []*regexp.Regexp
+	encodingDetectors map[string]func(string) bool
 }
 
 // SteganographicPattern defines patterns for detecting hidden resource usage
@@ -76,23 +76,23 @@ type HiddenChannel struct {
 
 // CovertOperation represents a hidden operation using steganographic techniques
 type CovertOperation struct {
-	OperationID         string                 `json:"operation_id"`
-	OperationType       string                 `json:"operation_type"`
-	SteganographicMethod string                `json:"steganographic_method"`
-	ResourceMask        map[string]float64     `json:"resource_mask"`
-	TimingPattern       []time.Duration        `json:"timing_pattern"`
-	FrequencyMask       []float64              `json:"frequency_mask"`
-	AmplitudeMask       []float64              `json:"amplitude_mask"`
-	Confidence          float64                `json:"confidence"`
-	Severity            types.Severity         `json:"severity"`
-	DetectedAt          time.Time              `json:"detected_at"`
-	Duration            time.Duration          `json:"duration"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	OperationID          string                 `json:"operation_id"`
+	OperationType        string                 `json:"operation_type"`
+	SteganographicMethod string                 `json:"steganographic_method"`
+	ResourceMask         map[string]float64     `json:"resource_mask"`
+	TimingPattern        []time.Duration        `json:"timing_pattern"`
+	FrequencyMask        []float64              `json:"frequency_mask"`
+	AmplitudeMask        []float64              `json:"amplitude_mask"`
+	Confidence           float64                `json:"confidence"`
+	Severity             types.Severity         `json:"severity"`
+	DetectedAt           time.Time              `json:"detected_at"`
+	Duration             time.Duration          `json:"duration"`
+	Metadata             map[string]interface{} `json:"metadata"`
 }
 
 // ResourceDataPoint represents a single resource measurement point
 type ResourceDataPoint struct {
-	Timestamp           time.Time `json:"timestamp"`
+	Timestamp          time.Time `json:"timestamp"`
 	CPUUsage           float64   `json:"cpu_usage"`
 	MemoryUsage        float64   `json:"memory_usage"`
 	NetworkActivity    float64   `json:"network_activity"`
@@ -105,51 +105,51 @@ type ResourceDataPoint struct {
 
 // SteganographicDetection represents a detected steganographic pattern
 type SteganographicDetection struct {
-	DetectionID         string                 `json:"detection_id"`
-	PatternID           string                 `json:"pattern_id"`
-	PatternName         string                 `json:"pattern_name"`
-	SteganographicType  string                 `json:"steganographic_type"`
-	HidingTechnique     string                 `json:"hiding_technique"`
-	ResourceVector      string                 `json:"resource_vector"`
-	Confidence          float64                `json:"confidence"`
-	Severity            types.Severity         `json:"severity"`
-	DetectedAt          time.Time              `json:"detected_at"`
-	Duration            time.Duration          `json:"duration"`
-	AffectedResources   []string               `json:"affected_resources"`
-	HiddenChannels      []string               `json:"hidden_channels"`
-	CovertOperations    []string               `json:"covert_operations"`
-	Evidence            map[string]interface{} `json:"evidence"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	DetectionID        string                 `json:"detection_id"`
+	PatternID          string                 `json:"pattern_id"`
+	PatternName        string                 `json:"pattern_name"`
+	SteganographicType string                 `json:"steganographic_type"`
+	HidingTechnique    string                 `json:"hiding_technique"`
+	ResourceVector     string                 `json:"resource_vector"`
+	Confidence         float64                `json:"confidence"`
+	Severity           types.Severity         `json:"severity"`
+	DetectedAt         time.Time              `json:"detected_at"`
+	Duration           time.Duration          `json:"duration"`
+	AffectedResources  []string               `json:"affected_resources"`
+	HiddenChannels     []string               `json:"hidden_channels"`
+	CovertOperations   []string               `json:"covert_operations"`
+	Evidence           map[string]interface{} `json:"evidence"`
+	Metadata           map[string]interface{} `json:"metadata"`
 }
 
 // SteganographicAnalysisResult contains the results of steganographic analysis
 type SteganographicAnalysisResult struct {
-	AnalysisID          string                    `json:"analysis_id"`
-	Timestamp           time.Time                 `json:"timestamp"`
-	Detections          []*SteganographicDetection `json:"detections"`
-	HiddenChannels      []*HiddenChannel          `json:"hidden_channels"`
-	CovertOperations    []*CovertOperation        `json:"covert_operations"`
-	OverallRiskScore    float64                   `json:"overall_risk_score"`
-	SteganographicRisk  float64                   `json:"steganographic_risk"`
-	CovertChannelRisk   float64                   `json:"covert_channel_risk"`
-	Recommendations     []string                  `json:"recommendations"`
-	Metadata            map[string]interface{}    `json:"metadata"`
+	AnalysisID         string                     `json:"analysis_id"`
+	Timestamp          time.Time                  `json:"timestamp"`
+	Detections         []*SteganographicDetection `json:"detections"`
+	HiddenChannels     []*HiddenChannel           `json:"hidden_channels"`
+	CovertOperations   []*CovertOperation         `json:"covert_operations"`
+	OverallRiskScore   float64                    `json:"overall_risk_score"`
+	SteganographicRisk float64                    `json:"steganographic_risk"`
+	CovertChannelRisk  float64                    `json:"covert_channel_risk"`
+	Recommendations    []string                   `json:"recommendations"`
+	Metadata           map[string]interface{}     `json:"metadata"`
 }
 
 // NewSteganographicDetector creates a new steganographic detector
 func NewSteganographicDetector(logger *logger.Logger) *SteganographicDetector {
 	sd := &SteganographicDetector{
-		logger:              logger,
+		logger:                 logger,
 		steganographicPatterns: make([]SteganographicPattern, 0),
-		hiddenChannels:      make(map[string]*HiddenChannel),
-		covertOperations:    make([]*CovertOperation, 0),
-		analysisWindow:      5 * time.Minute,
-		sensitivityLevel:    0.8,
-		detectionHistory:    make([]*SteganographicDetection, 0),
-		maxHistorySize:      1000,
-		anomalyThreshold:    0.7,
-		patternBuffer:       make([]ResourceDataPoint, 0),
-		bufferSize:          100,
+		hiddenChannels:         make(map[string]*HiddenChannel),
+		covertOperations:       make([]*CovertOperation, 0),
+		analysisWindow:         5 * time.Minute,
+		sensitivityLevel:       0.8,
+		detectionHistory:       make([]*SteganographicDetection, 0),
+		maxHistorySize:         1000,
+		anomalyThreshold:       0.7,
+		patternBuffer:          make([]ResourceDataPoint, 0),
+		bufferSize:             100,
 	}
 	sd.initializeEnhancedDetection()
 	return sd
@@ -191,20 +191,20 @@ func (sd *SteganographicDetector) AnalyzeSteganographicPatterns(ctx context.Cont
 	sd.lastAnalysis = time.Now()
 
 	return &SteganographicAnalysisResult{
-		AnalysisID:          sd.generateAnalysisID(),
-		Timestamp:           time.Now(),
-		Detections:          detections,
-		HiddenChannels:      hiddenChannels,
-		CovertOperations:    covertOperations,
-		OverallRiskScore:    overallRisk,
-		SteganographicRisk:  steganographicRisk,
-		CovertChannelRisk:   covertChannelRisk,
-		Recommendations:     recommendations,
+		AnalysisID:         sd.generateAnalysisID(),
+		Timestamp:          time.Now(),
+		Detections:         detections,
+		HiddenChannels:     hiddenChannels,
+		CovertOperations:   covertOperations,
+		OverallRiskScore:   overallRisk,
+		SteganographicRisk: steganographicRisk,
+		CovertChannelRisk:  covertChannelRisk,
+		Recommendations:    recommendations,
 		Metadata: map[string]interface{}{
-			"analysis_window":    sd.analysisWindow,
-			"sensitivity_level":  sd.sensitivityLevel,
-			"buffer_size":        len(sd.patternBuffer),
-			"patterns_analyzed":  len(sd.steganographicPatterns),
+			"analysis_window":   sd.analysisWindow,
+			"sensitivity_level": sd.sensitivityLevel,
+			"buffer_size":       len(sd.patternBuffer),
+			"patterns_analyzed": len(sd.steganographicPatterns),
 		},
 	}, nil
 }
@@ -352,10 +352,10 @@ func (sd *SteganographicDetector) addSteganographicEvidence(detection *Steganogr
 
 	// Store evidence
 	detection.Evidence[evidenceKey] = map[string]interface{}{
-		"type":    evidenceType,
-		"source":  source,
-		"content": content,
-		"length":  len(content),
+		"type":      evidenceType,
+		"source":    source,
+		"content":   content,
+		"length":    len(content),
 		"timestamp": time.Now(),
 	}
 
@@ -437,7 +437,7 @@ func (sd *SteganographicDetector) calculateStringEntropy(s string) float64 {
 // addToPatternBuffer adds a resource data point to the analysis buffer
 func (sd *SteganographicDetector) addToPatternBuffer(metrics *ResourceUsageMetrics) {
 	dataPoint := ResourceDataPoint{
-		Timestamp:           metrics.Timestamp,
+		Timestamp:          metrics.Timestamp,
 		CPUUsage:           metrics.CPUUsage,
 		MemoryUsage:        float64(metrics.MemoryUsage),
 		NetworkActivity:    float64(metrics.NetworkConnections),
@@ -807,7 +807,7 @@ func (sd *SteganographicDetector) detectCPUTimingChannel(metrics *ResourceUsageM
 			FirstDetected:       time.Now(),
 			LastActivity:        time.Now(),
 			Metadata: map[string]interface{}{
-				"timing_variance": timingVariance,
+				"timing_variance":  timingVariance,
 				"detection_method": "statistical_analysis",
 			},
 		}
@@ -859,7 +859,7 @@ func (sd *SteganographicDetector) detectNetworkTimingChannel(metrics *ResourceUs
 			FirstDetected:       time.Now(),
 			LastActivity:        time.Now(),
 			Metadata: map[string]interface{}{
-				"network_timing": networkTiming,
+				"network_timing":   networkTiming,
 				"detection_method": "timing_analysis",
 			},
 		}
@@ -885,7 +885,7 @@ func (sd *SteganographicDetector) detectGCTimingChannel(metrics *ResourceUsageMe
 			FirstDetected:       time.Now(),
 			LastActivity:        time.Now(),
 			Metadata: map[string]interface{}{
-				"gc_timing": gcTiming,
+				"gc_timing":        gcTiming,
 				"detection_method": "gc_analysis",
 			},
 		}
@@ -900,8 +900,8 @@ func (sd *SteganographicDetector) detectResourceMasking(metrics *ResourceUsageMe
 	maskingScore := sd.calculateMaskingScore(metrics)
 	if maskingScore > 0.7 {
 		return &CovertOperation{
-			OperationID:         sd.generateOperationID(),
-			OperationType:       "resource_masking",
+			OperationID:          sd.generateOperationID(),
+			OperationType:        "resource_masking",
 			SteganographicMethod: "usage_normalization",
 			ResourceMask: map[string]float64{
 				"cpu":    metrics.CPUUsage,
@@ -912,7 +912,7 @@ func (sd *SteganographicDetector) detectResourceMasking(metrics *ResourceUsageMe
 			DetectedAt: time.Now(),
 			Duration:   time.Minute * 5,
 			Metadata: map[string]interface{}{
-				"masking_score": maskingScore,
+				"masking_score":    maskingScore,
 				"detection_method": "statistical_masking",
 			},
 		}
@@ -926,13 +926,13 @@ func (sd *SteganographicDetector) detectTimingManipulation(metrics *ResourceUsag
 	timingManipulation := sd.calculateTimingManipulation()
 	if timingManipulation > 0.6 {
 		return &CovertOperation{
-			OperationID:         sd.generateOperationID(),
-			OperationType:       "timing_manipulation",
+			OperationID:          sd.generateOperationID(),
+			OperationType:        "timing_manipulation",
 			SteganographicMethod: "temporal_encoding",
-			Confidence:          timingManipulation,
-			Severity:            types.SeverityMedium,
-			DetectedAt:          time.Now(),
-			Duration:            time.Minute * 3,
+			Confidence:           timingManipulation,
+			Severity:             types.SeverityMedium,
+			DetectedAt:           time.Now(),
+			Duration:             time.Minute * 3,
 			Metadata: map[string]interface{}{
 				"timing_manipulation": timingManipulation,
 				"detection_method":    "temporal_analysis",
@@ -948,13 +948,13 @@ func (sd *SteganographicDetector) detectFrequencyDomainHiding(metrics *ResourceU
 	frequencyHiding := sd.calculateFrequencyHiding()
 	if frequencyHiding > 0.5 {
 		return &CovertOperation{
-			OperationID:         sd.generateOperationID(),
-			OperationType:       "frequency_hiding",
+			OperationID:          sd.generateOperationID(),
+			OperationType:        "frequency_hiding",
 			SteganographicMethod: "spectral_encoding",
-			Confidence:          frequencyHiding,
-			Severity:            types.SeverityMedium,
-			DetectedAt:          time.Now(),
-			Duration:            time.Minute * 2,
+			Confidence:           frequencyHiding,
+			Severity:             types.SeverityMedium,
+			DetectedAt:           time.Now(),
+			Duration:             time.Minute * 2,
 			Metadata: map[string]interface{}{
 				"frequency_hiding": frequencyHiding,
 				"detection_method": "spectral_analysis",
@@ -1210,17 +1210,17 @@ func (sd *SteganographicDetector) calculatePatternDuration(pattern Steganographi
 
 func (sd *SteganographicDetector) generateEvidence(pattern SteganographicPattern, metrics *ResourceUsageMetrics, confidence float64) map[string]interface{} {
 	return map[string]interface{}{
-		"pattern_id":           pattern.PatternID,
-		"steganographic_type":  pattern.SteganographicType,
-		"confidence":           confidence,
-		"resource_targets":     pattern.ResourceTargets,
-		"hiding_techniques":    pattern.HidingTechniques,
-		"detection_signature":  pattern.DetectionSignature,
-		"current_cpu":          metrics.CPUUsage,
-		"current_memory":       metrics.MemoryUsage,
-		"quantum_fluctuation":  metrics.QuantumFluctuation,
-		"pattern_entropy":      metrics.PatternEntropy,
-		"phase_correlation":    metrics.PhaseCorrelation,
+		"pattern_id":          pattern.PatternID,
+		"steganographic_type": pattern.SteganographicType,
+		"confidence":          confidence,
+		"resource_targets":    pattern.ResourceTargets,
+		"hiding_techniques":   pattern.HidingTechniques,
+		"detection_signature": pattern.DetectionSignature,
+		"current_cpu":         metrics.CPUUsage,
+		"current_memory":      metrics.MemoryUsage,
+		"quantum_fluctuation": metrics.QuantumFluctuation,
+		"pattern_entropy":     metrics.PatternEntropy,
+		"phase_correlation":   metrics.PhaseCorrelation,
 	}
 }
 
@@ -1329,11 +1329,11 @@ func (sd *SteganographicDetector) isURLEncoded(data string) bool {
 // detectEncodedData detects various types of encoded data
 func (sd *SteganographicDetector) detectEncodedData(content string) map[string]bool {
 	results := make(map[string]bool)
-	
+
 	for encoding, detector := range sd.encodingDetectors {
 		results[encoding] = detector(content)
 	}
-	
+
 	return results
 }
 

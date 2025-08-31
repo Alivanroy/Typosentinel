@@ -23,18 +23,18 @@ type EnhancedReputationSystem struct {
 
 // EnhancedReputationConfig contains configuration for the enhanced reputation system
 type EnhancedReputationConfig struct {
-	ThreatIntelEnabled    bool                    `json:"threat_intel_enabled"`
-	CacheEnabled          bool                    `json:"cache_enabled"`
-	CacheTTL              time.Duration           `json:"cache_ttl"`
-	MaxCacheSize          int                     `json:"max_cache_size"`
-	ThreatIntelSources    []ThreatIntelSource     `json:"threat_intel_sources"`
-	ScoringWeights        ScoringWeights          `json:"scoring_weights"`
-	RiskThresholds        RiskThresholds          `json:"risk_thresholds"`
-	MaintainerAnalysis    MaintainerAnalysisConfig `json:"maintainer_analysis"`
-	CommunityAnalysis     CommunityAnalysisConfig  `json:"community_analysis"`
-	UpdateInterval        time.Duration           `json:"update_interval"`
-	MaxRetries            int                     `json:"max_retries"`
-	RequestTimeout        time.Duration           `json:"request_timeout"`
+	ThreatIntelEnabled bool                     `json:"threat_intel_enabled"`
+	CacheEnabled       bool                     `json:"cache_enabled"`
+	CacheTTL           time.Duration            `json:"cache_ttl"`
+	MaxCacheSize       int                      `json:"max_cache_size"`
+	ThreatIntelSources []ThreatIntelSource      `json:"threat_intel_sources"`
+	ScoringWeights     ScoringWeights           `json:"scoring_weights"`
+	RiskThresholds     RiskThresholds           `json:"risk_thresholds"`
+	MaintainerAnalysis MaintainerAnalysisConfig `json:"maintainer_analysis"`
+	CommunityAnalysis  CommunityAnalysisConfig  `json:"community_analysis"`
+	UpdateInterval     time.Duration            `json:"update_interval"`
+	MaxRetries         int                      `json:"max_retries"`
+	RequestTimeout     time.Duration            `json:"request_timeout"`
 }
 
 // ThreatIntelSource represents a threat intelligence source configuration
@@ -52,16 +52,16 @@ type ThreatIntelSource struct {
 
 // ScoringWeights defines weights for different reputation factors
 type ScoringWeights struct {
-	Popularity       float64 `json:"popularity"`
-	Maturity         float64 `json:"maturity"`
-	Maintenance      float64 `json:"maintenance"`
-	Quality          float64 `json:"quality"`
-	Security         float64 `json:"security"`
-	ThreatIntel      float64 `json:"threat_intel"`
-	Community        float64 `json:"community"`
-	Maintainer       float64 `json:"maintainer"`
-	Documentation    float64 `json:"documentation"`
-	Testing          float64 `json:"testing"`
+	Popularity    float64 `json:"popularity"`
+	Maturity      float64 `json:"maturity"`
+	Maintenance   float64 `json:"maintenance"`
+	Quality       float64 `json:"quality"`
+	Security      float64 `json:"security"`
+	ThreatIntel   float64 `json:"threat_intel"`
+	Community     float64 `json:"community"`
+	Maintainer    float64 `json:"maintainer"`
+	Documentation float64 `json:"documentation"`
+	Testing       float64 `json:"testing"`
 }
 
 // RiskThresholds defines thresholds for risk classification
@@ -84,103 +84,103 @@ type MaintainerAnalysisConfig struct {
 
 // CommunityAnalysisConfig configures community reputation analysis
 type CommunityAnalysisConfig struct {
-	Enabled              bool    `json:"enabled"`
-	MinStars             int     `json:"min_stars"`
-	MinForks             int     `json:"min_forks"`
-	MinDownloads         int64   `json:"min_downloads"`
-	MaxIssueRatio        float64 `json:"max_issue_ratio"`
+	Enabled               bool    `json:"enabled"`
+	MinStars              int     `json:"min_stars"`
+	MinForks              int     `json:"min_forks"`
+	MinDownloads          int64   `json:"min_downloads"`
+	MaxIssueRatio         float64 `json:"max_issue_ratio"`
 	MinDocumentationScore float64 `json:"min_documentation_score"`
 }
 
 // EnhancedReputationResult contains comprehensive reputation analysis results
 type EnhancedReputationResult struct {
-	PackageName         string                    `json:"package_name"`
-	Registry            string                    `json:"registry"`
-	Version             string                    `json:"version"`
-	OverallScore        float64                   `json:"overall_score"`
-	RiskLevel           string                    `json:"risk_level"`
-	TrustLevel          string                    `json:"trust_level"`
-	ComponentScores     ComponentScores           `json:"component_scores"`
-	ThreatIntelResults  []ThreatIntelResult       `json:"threat_intel_results"`
-	MaintainerAnalysis  MaintainerAnalysisResult  `json:"maintainer_analysis"`
-	CommunityAnalysis   CommunityAnalysisResult   `json:"community_analysis"`
-	SecurityAnalysis    SecurityAnalysisResult    `json:"security_analysis"`
-	QualityMetrics      QualityMetrics            `json:"quality_metrics"`
-	ReputationFlags     []ReputationFlag          `json:"reputation_flags"`
-	Recommendations     []string                  `json:"recommendations"`
-	DataSources         []string                  `json:"data_sources"`
-	LastUpdated         time.Time                 `json:"last_updated"`
-	CacheHit            bool                      `json:"cache_hit"`
-	AnalysisDuration    time.Duration             `json:"analysis_duration"`
+	PackageName        string                   `json:"package_name"`
+	Registry           string                   `json:"registry"`
+	Version            string                   `json:"version"`
+	OverallScore       float64                  `json:"overall_score"`
+	RiskLevel          string                   `json:"risk_level"`
+	TrustLevel         string                   `json:"trust_level"`
+	ComponentScores    ComponentScores          `json:"component_scores"`
+	ThreatIntelResults []ThreatIntelResult      `json:"threat_intel_results"`
+	MaintainerAnalysis MaintainerAnalysisResult `json:"maintainer_analysis"`
+	CommunityAnalysis  CommunityAnalysisResult  `json:"community_analysis"`
+	SecurityAnalysis   SecurityAnalysisResult   `json:"security_analysis"`
+	QualityMetrics     QualityMetrics           `json:"quality_metrics"`
+	ReputationFlags    []ReputationFlag         `json:"reputation_flags"`
+	Recommendations    []string                 `json:"recommendations"`
+	DataSources        []string                 `json:"data_sources"`
+	LastUpdated        time.Time                `json:"last_updated"`
+	CacheHit           bool                     `json:"cache_hit"`
+	AnalysisDuration   time.Duration            `json:"analysis_duration"`
 }
 
 // ComponentScores contains individual component scores
 type ComponentScores struct {
-	Popularity      float64 `json:"popularity"`
-	Maturity        float64 `json:"maturity"`
-	Maintenance     float64 `json:"maintenance"`
-	Quality         float64 `json:"quality"`
-	Security        float64 `json:"security"`
-	ThreatIntel     float64 `json:"threat_intel"`
-	Community       float64 `json:"community"`
-	Maintainer      float64 `json:"maintainer"`
-	Documentation   float64 `json:"documentation"`
-	Testing         float64 `json:"testing"`
+	Popularity    float64 `json:"popularity"`
+	Maturity      float64 `json:"maturity"`
+	Maintenance   float64 `json:"maintenance"`
+	Quality       float64 `json:"quality"`
+	Security      float64 `json:"security"`
+	ThreatIntel   float64 `json:"threat_intel"`
+	Community     float64 `json:"community"`
+	Maintainer    float64 `json:"maintainer"`
+	Documentation float64 `json:"documentation"`
+	Testing       float64 `json:"testing"`
 }
 
 // ThreatIntelResult contains threat intelligence analysis results
 type ThreatIntelResult struct {
-	Source          string                 `json:"source"`
-	ThreatType      string                 `json:"threat_type"`
-	Severity        string                 `json:"severity"`
-	Confidence      float64                `json:"confidence"`
-	Description     string                 `json:"description"`
-	Indicators      []string               `json:"indicators"`
-	References      []string               `json:"references"`
-	FirstSeen       time.Time              `json:"first_seen"`
-	LastSeen        time.Time              `json:"last_seen"`
-	Metadata        map[string]interface{} `json:"metadata"`
+	Source      string                 `json:"source"`
+	ThreatType  string                 `json:"threat_type"`
+	Severity    string                 `json:"severity"`
+	Confidence  float64                `json:"confidence"`
+	Description string                 `json:"description"`
+	Indicators  []string               `json:"indicators"`
+	References  []string               `json:"references"`
+	FirstSeen   time.Time              `json:"first_seen"`
+	LastSeen    time.Time              `json:"last_seen"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // MaintainerAnalysisResult contains maintainer reputation analysis
 type MaintainerAnalysisResult struct {
-	MaintainerName      string    `json:"maintainer_name"`
-	AccountAge          int       `json:"account_age_days"`
-	PublishedPackages   int       `json:"published_packages"`
-	VerifiedAccount     bool      `json:"verified_account"`
-	ReputationScore     float64   `json:"reputation_score"`
-	SuspiciousPatterns  []string  `json:"suspicious_patterns"`
-	TrustLevel          string    `json:"trust_level"`
-	LastActivity        time.Time `json:"last_activity"`
-	SocialPresence      bool      `json:"social_presence"`
-	OrganizationMember  bool      `json:"organization_member"`
+	MaintainerName     string    `json:"maintainer_name"`
+	AccountAge         int       `json:"account_age_days"`
+	PublishedPackages  int       `json:"published_packages"`
+	VerifiedAccount    bool      `json:"verified_account"`
+	ReputationScore    float64   `json:"reputation_score"`
+	SuspiciousPatterns []string  `json:"suspicious_patterns"`
+	TrustLevel         string    `json:"trust_level"`
+	LastActivity       time.Time `json:"last_activity"`
+	SocialPresence     bool      `json:"social_presence"`
+	OrganizationMember bool      `json:"organization_member"`
 }
 
 // CommunityAnalysisResult contains community reputation analysis
 type CommunityAnalysisResult struct {
-	Stars               int     `json:"stars"`
-	Forks               int     `json:"forks"`
-	Downloads           int64   `json:"downloads"`
-	Issues              int     `json:"issues"`
-	IssueRatio          float64 `json:"issue_ratio"`
-	DocumentationScore  float64 `json:"documentation_score"`
-	CommunityScore      float64 `json:"community_score"`
-	ActiveContributors  int     `json:"active_contributors"`
-	RecentActivity      bool    `json:"recent_activity"`
-	CommunityHealth     string  `json:"community_health"`
+	Stars              int     `json:"stars"`
+	Forks              int     `json:"forks"`
+	Downloads          int64   `json:"downloads"`
+	Issues             int     `json:"issues"`
+	IssueRatio         float64 `json:"issue_ratio"`
+	DocumentationScore float64 `json:"documentation_score"`
+	CommunityScore     float64 `json:"community_score"`
+	ActiveContributors int     `json:"active_contributors"`
+	RecentActivity     bool    `json:"recent_activity"`
+	CommunityHealth    string  `json:"community_health"`
 }
 
 // SecurityAnalysisResult contains security-specific analysis
 type SecurityAnalysisResult struct {
-	VulnerabilityCount    int       `json:"vulnerability_count"`
-	CriticalVulns         int       `json:"critical_vulns"`
-	HighVulns             int       `json:"high_vulns"`
-	LastSecurityUpdate    time.Time `json:"last_security_update"`
-	SecurityScore         float64   `json:"security_score"`
-	HasSecurityPolicy     bool      `json:"has_security_policy"`
-	SignedReleases        bool      `json:"signed_releases"`
-	SecurityAudits        int       `json:"security_audits"`
-	ComplianceScore       float64   `json:"compliance_score"`
+	VulnerabilityCount int       `json:"vulnerability_count"`
+	CriticalVulns      int       `json:"critical_vulns"`
+	HighVulns          int       `json:"high_vulns"`
+	LastSecurityUpdate time.Time `json:"last_security_update"`
+	SecurityScore      float64   `json:"security_score"`
+	HasSecurityPolicy  bool      `json:"has_security_policy"`
+	SignedReleases     bool      `json:"signed_releases"`
+	SecurityAudits     int       `json:"security_audits"`
+	ComplianceScore    float64   `json:"compliance_score"`
 }
 
 // QualityMetrics contains code quality metrics
@@ -331,10 +331,10 @@ func (ers *EnhancedReputationSystem) AnalyzePackageReputation(ctx context.Contex
 	result.AnalysisDuration = time.Since(startTime)
 
 	ers.logger.Info("Enhanced reputation analysis completed", map[string]interface{}{
-		"package":      pkg.Name,
+		"package":       pkg.Name,
 		"overall_score": result.OverallScore,
-		"risk_level":   result.RiskLevel,
-		"duration":     result.AnalysisDuration,
+		"risk_level":    result.RiskLevel,
+		"duration":      result.AnalysisDuration,
 	})
 
 	return result, nil
@@ -356,7 +356,7 @@ func (ers *EnhancedReputationSystem) calculateComponentScores(metrics *PackageMe
 // calculateOverallScore calculates the weighted overall reputation score
 func (ers *EnhancedReputationSystem) calculateOverallScore(scores ComponentScores) float64 {
 	weights := ers.config.ScoringWeights
-	
+
 	totalScore := (scores.Popularity * weights.Popularity) +
 		(scores.Maturity * weights.Maturity) +
 		(scores.Maintenance * weights.Maintenance) +

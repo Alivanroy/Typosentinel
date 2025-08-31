@@ -29,38 +29,38 @@ type PREvent struct {
 
 // RemediationPRConfig configuration for remediation pull requests
 type RemediationPRConfig struct {
-	Enabled             bool              `json:"enabled"`
-	AutoApprove         bool              `json:"auto_approve"`
-	AutoMerge           bool              `json:"auto_merge"`
-	RequiredApprovals   int               `json:"required_approvals"`
-	DefaultReviewers    []string          `json:"default_reviewers"`
-	DefaultAssignees    []string          `json:"default_assignees"`
-	BranchPrefix        string            `json:"branch_prefix"`
-	CommitMessagePrefix string            `json:"commit_message_prefix"`
+	Enabled             bool                `json:"enabled"`
+	AutoApprove         bool                `json:"auto_approve"`
+	AutoMerge           bool                `json:"auto_merge"`
+	RequiredApprovals   int                 `json:"required_approvals"`
+	DefaultReviewers    []string            `json:"default_reviewers"`
+	DefaultAssignees    []string            `json:"default_assignees"`
+	BranchPrefix        string              `json:"branch_prefix"`
+	CommitMessagePrefix string              `json:"commit_message_prefix"`
 	Labels              map[string][]string `json:"labels"`
-	Templates           map[string]string `json:"templates"`
+	Templates           map[string]string   `json:"templates"`
 	Notifications       *NotificationConfig `json:"notifications,omitempty"`
 }
 
 // NotificationConfig configuration for PR notifications
 type NotificationConfig struct {
-	Enabled   bool     `json:"enabled"`
-	Channels  []string `json:"channels"` // slack, email, webhook
-	Webhooks  []string `json:"webhooks,omitempty"`
-	SlackURL  string   `json:"slack_url,omitempty"`
-	EmailTo   []string `json:"email_to,omitempty"`
+	Enabled  bool     `json:"enabled"`
+	Channels []string `json:"channels"` // slack, email, webhook
+	Webhooks []string `json:"webhooks,omitempty"`
+	SlackURL string   `json:"slack_url,omitempty"`
+	EmailTo  []string `json:"email_to,omitempty"`
 }
 
 // PRMetrics represents metrics for pull request operations
 type PRMetrics struct {
-	TotalCreated    int64                    `json:"total_created"`
-	TotalMerged     int64                    `json:"total_merged"`
-	TotalClosed     int64                    `json:"total_closed"`
-	AverageTime     time.Duration            `json:"average_time"`
-	ByThreatType    map[string]int64         `json:"by_threat_type"`
-	ByRepository    map[string]int64         `json:"by_repository"`
-	SuccessRate     float64                  `json:"success_rate"`
-	LastUpdated     time.Time                `json:"last_updated"`
+	TotalCreated int64            `json:"total_created"`
+	TotalMerged  int64            `json:"total_merged"`
+	TotalClosed  int64            `json:"total_closed"`
+	AverageTime  time.Duration    `json:"average_time"`
+	ByThreatType map[string]int64 `json:"by_threat_type"`
+	ByRepository map[string]int64 `json:"by_repository"`
+	SuccessRate  float64          `json:"success_rate"`
+	LastUpdated  time.Time        `json:"last_updated"`
 }
 
 // PRWorkflow represents a workflow for pull request processing
@@ -77,14 +77,14 @@ type PRWorkflow struct {
 
 // WorkflowStep represents a step in a PR workflow
 type WorkflowStep struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"` // action, condition, notification
-	Action      string                 `json:"action"`
-	Parameters  map[string]interface{} `json:"parameters,omitempty"`
-	Conditions  []string               `json:"conditions,omitempty"`
-	Timeout     time.Duration          `json:"timeout,omitempty"`
-	RetryCount  int                    `json:"retry_count,omitempty"`
+	ID         string                 `json:"id"`
+	Name       string                 `json:"name"`
+	Type       string                 `json:"type"` // action, condition, notification
+	Action     string                 `json:"action"`
+	Parameters map[string]interface{} `json:"parameters,omitempty"`
+	Conditions []string               `json:"conditions,omitempty"`
+	Timeout    time.Duration          `json:"timeout,omitempty"`
+	RetryCount int                    `json:"retry_count,omitempty"`
 }
 
 // WorkflowTrigger represents a trigger for a PR workflow
@@ -134,14 +134,14 @@ type RateLimitConfig struct {
 
 // PRAuditLog represents audit logging for PR operations
 type PRAuditLog struct {
-	ID          string                 `json:"id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Action      string                 `json:"action"`
-	PRID        string                 `json:"pr_id,omitempty"`
-	Repository  string                 `json:"repository"`
-	User        string                 `json:"user"`
-	ThreatType  string                 `json:"threat_type,omitempty"`
-	Details     map[string]interface{} `json:"details,omitempty"`
-	Result      string                 `json:"result"` // success, failure, pending
-	Error       string                 `json:"error,omitempty"`
+	ID         string                 `json:"id"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Action     string                 `json:"action"`
+	PRID       string                 `json:"pr_id,omitempty"`
+	Repository string                 `json:"repository"`
+	User       string                 `json:"user"`
+	ThreatType string                 `json:"threat_type,omitempty"`
+	Details    map[string]interface{} `json:"details,omitempty"`
+	Result     string                 `json:"result"` // success, failure, pending
+	Error      string                 `json:"error,omitempty"`
 }

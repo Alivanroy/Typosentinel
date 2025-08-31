@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/gin-gonic/gin"
 )
 
 // SupplyChainHandlers contains handlers for supply chain security endpoints
@@ -44,11 +44,11 @@ type SupplyChainScanResult struct {
 
 // Request/Response types
 type ScanRequest struct {
-	PackageName    string            `json:"package_name"`
-	Version        string            `json:"version,omitempty"`
-	Registry       string            `json:"registry,omitempty"`
-	ScanOptions    ScanOptions       `json:"scan_options,omitempty"`
-	Metadata       map[string]string `json:"metadata,omitempty"`
+	PackageName string            `json:"package_name"`
+	Version     string            `json:"version,omitempty"`
+	Registry    string            `json:"registry,omitempty"`
+	ScanOptions ScanOptions       `json:"scan_options,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
 type ScanOptions struct {
@@ -61,11 +61,11 @@ type ScanOptions struct {
 }
 
 type ScanResponse struct {
-	AnalysisID    string                  `json:"analysis_id"`
-	Status        string                  `json:"status"`
-	StartTime     time.Time               `json:"start_time"`
-	Result        *SupplyChainScanResult  `json:"result,omitempty"`
-	Message       string                  `json:"message,omitempty"`
+	AnalysisID string                 `json:"analysis_id"`
+	Status     string                 `json:"status"`
+	StartTime  time.Time              `json:"start_time"`
+	Result     *SupplyChainScanResult `json:"result,omitempty"`
+	Message    string                 `json:"message,omitempty"`
 }
 
 type GraphAnalyzeRequest struct {
@@ -142,14 +142,14 @@ type SupplyChainRiskScore struct {
 }
 
 type SupplyChainScanMetadata struct {
-	ScanID           string                 `json:"scan_id"`
-	ScanType         string                 `json:"scan_type"`
-	DetectorsUsed    []string               `json:"detectors_used"`
-	ScanDuration     time.Duration          `json:"scan_duration"`
-	PackagesScanned  int                    `json:"packages_scanned"`
-	FindingsCount    map[string]int         `json:"findings_count"`
-	Configuration    map[string]interface{} `json:"configuration"`
-	Timestamp        time.Time              `json:"timestamp"`
+	ScanID          string                 `json:"scan_id"`
+	ScanType        string                 `json:"scan_type"`
+	DetectorsUsed   []string               `json:"detectors_used"`
+	ScanDuration    time.Duration          `json:"scan_duration"`
+	PackagesScanned int                    `json:"packages_scanned"`
+	FindingsCount   map[string]int         `json:"findings_count"`
+	Configuration   map[string]interface{} `json:"configuration"`
+	Timestamp       time.Time              `json:"timestamp"`
 }
 
 type RiskFactor struct {
@@ -314,7 +314,7 @@ func (h *SupplyChainHandlers) HandleGraphAnalyze(c *gin.Context) {
 			PackagesScanned: len(scanResult.Packages),
 			Timestamp:       time.Now(),
 			Configuration: map[string]interface{}{
-				"target":     req.Target,
+				"target":    req.Target,
 				"max_depth": req.Options.MaxDepth,
 			},
 		},
@@ -373,12 +373,12 @@ func (h *SupplyChainHandlers) HandleGraphGenerate(c *gin.Context) {
 	}
 
 	response := map[string]interface{}{
-		"target":           req.Target,
-		"format":           req.Options.Format,
-		"graph_content":    graphContent,
-		"nodes_count":      len(scanResult.Packages),
-		"generation_time":  time.Now(),
-		"options":          req.Options,
+		"target":          req.Target,
+		"format":          req.Options.Format,
+		"graph_content":   graphContent,
+		"nodes_count":     len(scanResult.Packages),
+		"generation_time": time.Now(),
+		"options":         req.Options,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -406,7 +406,7 @@ func (h *SupplyChainHandlers) HandleGraphExport(c *gin.Context) {
 
 	// Create mock export result for demonstration
 	exportID := "export-" + time.Now().Format("20060102-150405")
-	
+
 	// Export graph in requested format
 	var exportContent string
 	var contentType string
@@ -457,15 +457,15 @@ func (h *SupplyChainHandlers) HandleGraphStats(c *gin.Context) {
 
 	// Calculate comprehensive statistics
 	stats := map[string]interface{}{
-		"analysis_id":      analysisID,
-		"total_packages":   len(result.Packages),
-		"direct_deps":      h.countDirectDependencies(result.Packages),
-		"transitive_deps":  h.countTransitiveDependencies(result.Packages),
-		"max_depth":        h.calculateMaxDepth(result.Packages),
-		"risk_distribution": h.calculateRiskDistribution(result.Packages),
+		"analysis_id":         analysisID,
+		"total_packages":      len(result.Packages),
+		"direct_deps":         h.countDirectDependencies(result.Packages),
+		"transitive_deps":     h.countTransitiveDependencies(result.Packages),
+		"max_depth":           h.calculateMaxDepth(result.Packages),
+		"risk_distribution":   h.calculateRiskDistribution(result.Packages),
 		"ecosystem_breakdown": h.calculateEcosystemBreakdown(result.Packages),
 		"vulnerability_stats": h.calculateVulnerabilityStats(result.Packages),
-		"generated_at":     time.Now(),
+		"generated_at":        time.Now(),
 	}
 
 	c.JSON(http.StatusOK, stats)
@@ -484,8 +484,8 @@ func (h *SupplyChainHandlers) convertToGraphNodes(packages []*types.Package) []t
 				License:   "", // License not available in Package type
 			},
 			RiskScore:  pkg.RiskScore,
-			Centrality: 0.0, // Default centrality
-			Depth:      0, // Depth not available in Package type
+			Centrality: 0.0,    // Default centrality
+			Depth:      0,      // Depth not available in Package type
 			Direct:     i < 10, // Assume first 10 are direct dependencies
 		}
 		nodes = append(nodes, node)
@@ -519,9 +519,9 @@ func (h *SupplyChainHandlers) calculateGraphStats(packages []*types.Package) typ
 		MaxDepth:       h.calculateMaxDepth(packages),
 		DirectDeps:     h.countDirectDependencies(packages),
 		TransitiveDeps: h.countTransitiveDependencies(packages),
-		CyclicDeps:     0, // Simplified
+		CyclicDeps:     0,   // Simplified
 		AverageRisk:    0.0, // Default
-		HighRiskNodes:  0, // Default
+		HighRiskNodes:  0,   // Default
 	}
 }
 
@@ -530,19 +530,19 @@ func (h *SupplyChainHandlers) calculateEnhancedGraphStats(packages []*types.Pack
 	totalRisk := 0.0
 	highRiskCount := 0
 	cyclicDeps := h.detectCyclicDependencies(packages)
-	
+
 	for _, pkg := range packages {
 		totalRisk += pkg.RiskScore
 		if pkg.RiskScore > 0.7 {
 			highRiskCount++
 		}
 	}
-	
+
 	averageRisk := 0.0
 	if len(packages) > 0 {
 		averageRisk = totalRisk / float64(len(packages))
 	}
-	
+
 	return types.GraphStats{
 		TotalNodes:     len(packages),
 		TotalEdges:     h.calculateActualEdges(packages),
@@ -628,10 +628,10 @@ func (h *SupplyChainHandlers) exportAsCSV(result *SupplyChainScanResult) string 
 	// Simplified CSV export
 	csv := "name,version,ecosystem,risk_score\n"
 	for _, pkg := range result.Packages {
-		csv += fmt.Sprintf("%s,%s,%s,%.2f\n", 
-			pkg.Name, 
-			pkg.Version, 
-			pkg.Type, 
+		csv += fmt.Sprintf("%s,%s,%s,%.2f\n",
+			pkg.Name,
+			pkg.Version,
+			pkg.Type,
 			pkg.RiskScore)
 	}
 	return csv
@@ -658,8 +658,6 @@ func (h *SupplyChainHandlers) calculateMaxDepth(packages []*types.Package) int {
 	return 5
 }
 
-
-
 func (h *SupplyChainHandlers) calculateEcosystemBreakdown(packages []*types.Package) map[string]int {
 	breakdown := make(map[string]int)
 	for _, pkg := range packages {
@@ -675,7 +673,7 @@ func (h *SupplyChainHandlers) calculateVulnerabilityStats(packages []*types.Pack
 		"medium":   0,
 		"low":      0,
 	}
-	
+
 	for _, pkg := range packages {
 		for _, threat := range pkg.Threats {
 			switch threat.Severity {
@@ -690,7 +688,7 @@ func (h *SupplyChainHandlers) calculateVulnerabilityStats(packages []*types.Pack
 			}
 		}
 	}
-	
+
 	return stats
 }
 
@@ -703,7 +701,7 @@ func (h *SupplyChainHandlers) applyCentralityAnalysis(nodes []types.GraphNode, e
 	for _, edge := range edges {
 		adjacency[edge.From] = append(adjacency[edge.From], edge.To)
 	}
-	
+
 	// Calculate betweenness centrality (simplified)
 	for i := range nodes {
 		nodes[i].Centrality = h.calculateBetweennessCentrality(nodes[i].ID, adjacency)
@@ -717,7 +715,7 @@ func (h *SupplyChainHandlers) applyRiskPropagation(nodes []types.GraphNode, edge
 	for _, edge := range edges {
 		dependencies[edge.To] = append(dependencies[edge.To], edge.From)
 	}
-	
+
 	// Propagate risk scores
 	for i := range nodes {
 		propagatedRisk := nodes[i].RiskScore
@@ -742,10 +740,10 @@ func (h *SupplyChainHandlers) applyAnomalyDetection(nodes []types.GraphNode, edg
 		totalRisk += node.RiskScore
 		totalCentrality += node.Centrality
 	}
-	
+
 	avgRisk := totalRisk / float64(len(nodes))
 	avgCentrality := totalCentrality / float64(len(nodes))
-	
+
 	// Mark anomalous nodes
 	for i := range nodes {
 		if nodes[i].RiskScore > avgRisk*2 || nodes[i].Centrality > avgCentrality*2 {
@@ -763,14 +761,14 @@ func (h *SupplyChainHandlers) applyCommunityDetection(nodes []types.GraphNode, e
 	// Simple community detection based on package ecosystems
 	communities := make(map[string]int)
 	communityID := 0
-	
+
 	for i := range nodes {
 		ecosystem := nodes[i].Package.Ecosystem
 		if _, exists := communities[ecosystem]; !exists {
 			communities[ecosystem] = communityID
 			communityID++
 		}
-		
+
 		if nodes[i].Metadata == nil {
 			nodes[i].Metadata = make(map[string]interface{})
 		}
@@ -787,7 +785,7 @@ func (h *SupplyChainHandlers) performEnhancedRiskAnalysis(packages []*types.Pack
 	vulnerablePaths := h.findVulnerablePaths(packages)
 	riskFactors := h.analyzeRiskFactors(packages)
 	riskDistribution := h.calculateRiskDistribution(packages)
-	
+
 	return &types.GraphRiskAnalysis{
 		OverallRisk:      overallRisk,
 		RiskScore:        riskScore,
@@ -801,7 +799,7 @@ func (h *SupplyChainHandlers) performEnhancedRiskAnalysis(packages []*types.Pack
 // generateRecommendations creates actionable recommendations
 func (h *SupplyChainHandlers) generateRecommendations(packages []*types.Package, riskAnalysis *types.GraphRiskAnalysis) []types.Recommendation {
 	recommendations := make([]types.Recommendation, 0)
-	
+
 	// High-risk package recommendations
 	for _, pkg := range packages {
 		if pkg.RiskScore > 0.8 {
@@ -819,12 +817,12 @@ func (h *SupplyChainHandlers) generateRecommendations(packages []*types.Package,
 						Required:    true,
 					},
 				},
-				Impact:      "High security risk reduction",
-				Effort:      types.EffortMedium,
+				Impact: "High security risk reduction",
+				Effort: types.EffortMedium,
 			})
 		}
 	}
-	
+
 	// Vulnerability recommendations
 	if len(riskAnalysis.VulnerablePaths) > 0 {
 		recommendations = append(recommendations, types.Recommendation{
@@ -841,11 +839,11 @@ func (h *SupplyChainHandlers) generateRecommendations(packages []*types.Package,
 					Required:    true,
 				},
 			},
-			Impact:      "Vulnerability mitigation",
-			Effort:      types.EffortLow,
+			Impact: "Vulnerability mitigation",
+			Effort: types.EffortLow,
 		})
 	}
-	
+
 	return recommendations
 }
 
@@ -871,7 +869,7 @@ func (h *SupplyChainHandlers) calculateRiskScore(packages []*types.Package) floa
 
 func (h *SupplyChainHandlers) calculateRiskDistribution(packages []*types.Package) map[types.RiskLevel]int {
 	distribution := make(map[types.RiskLevel]int)
-	
+
 	for _, pkg := range packages {
 		var riskLevel types.RiskLevel
 		switch {
@@ -886,7 +884,7 @@ func (h *SupplyChainHandlers) calculateRiskDistribution(packages []*types.Packag
 		}
 		distribution[riskLevel]++
 	}
-	
+
 	return distribution
 }
 

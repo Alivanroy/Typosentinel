@@ -23,12 +23,12 @@ type EventBus struct {
 
 // BusMetrics tracks event bus performance metrics
 type BusMetrics struct {
-	EventsPublished   int64
-	EventsDelivered   int64
-	EventsDropped     int64
-	SubscriberErrors  int64
-	AverageLatency    time.Duration
-	mu                sync.RWMutex
+	EventsPublished  int64
+	EventsDelivered  int64
+	EventsDropped    int64
+	SubscriberErrors int64
+	AverageLatency   time.Duration
+	mu               sync.RWMutex
 }
 
 // NewEventBus creates a new event bus instance
@@ -225,7 +225,14 @@ func (eb *EventBus) GetMetrics() BusMetrics {
 	eb.metrics.mu.RLock()
 	defer eb.metrics.mu.RUnlock()
 
-	return *eb.metrics
+	return BusMetrics{
+		EventsPublished:  eb.metrics.EventsPublished,
+		EventsDelivered:  eb.metrics.EventsDelivered,
+		EventsDropped:    eb.metrics.EventsDropped,
+		SubscriberErrors: eb.metrics.SubscriberErrors,
+		AverageLatency:   eb.metrics.AverageLatency,
+		// Note: mu field is intentionally omitted to avoid copying the mutex
+	}
 }
 
 // updateMetrics safely updates metrics

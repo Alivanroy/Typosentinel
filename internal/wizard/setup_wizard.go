@@ -118,15 +118,15 @@ func (w *SetupWizard) detectAndConfirmProject(projectPath string) (*config.Proje
 	fmt.Printf("📍 Project Path: %s\n", projectPath)
 	fmt.Printf("🔍 Detected Type: %s\n", config.GetProjectTypeDescription(projectInfo.Type))
 	fmt.Printf("📊 Project Size: %s (%d files estimated)\n", projectInfo.Size, w.estimateFileCount(projectInfo.Size))
-	
+
 	if len(projectInfo.Languages) > 0 {
 		fmt.Printf("💻 Languages: %s\n", strings.Join(projectInfo.Languages, ", "))
 	}
-	
+
 	if projectInfo.HasCI {
 		color.New(color.FgGreen).Println("✅ CI/CD configuration detected")
 	}
-	
+
 	if projectInfo.IsMonorepo {
 		color.New(color.FgBlue).Println("📦 Monorepo structure detected")
 	}
@@ -157,7 +157,7 @@ func (w *SetupWizard) selectSecurityLevel(projectInfo *config.ProjectInfo) confi
 
 	// Recommend based on project characteristics
 	recommended := w.recommendPreset(projectInfo)
-	
+
 	fmt.Println("Available security presets:")
 	fmt.Println()
 
@@ -270,7 +270,7 @@ func (w *SetupWizard) saveConfiguration(cfg *config.Config, projectPath string) 
 
 	// Determine config file path
 	configPath := filepath.Join(projectPath, ".typosentinel.yaml")
-	
+
 	// Check if config already exists
 	if _, err := os.Stat(configPath); err == nil {
 		if !w.ui.AskYesNo("Configuration file already exists. Overwrite?", false) {
@@ -445,7 +445,7 @@ func (w *SetupWizard) getPresetIndex(preset config.SecurityPreset) int {
 // manualProjectConfiguration allows manual project configuration
 func (w *SetupWizard) manualProjectConfiguration() *config.ProjectInfo {
 	color.New(color.FgYellow).Println("🔧 Manual Project Configuration")
-	
+
 	projectTypes := []config.ProjectType{
 		config.ProjectTypeNodeJS,
 		config.ProjectTypePython,

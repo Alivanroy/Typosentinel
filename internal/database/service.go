@@ -79,32 +79,32 @@ type Repository struct {
 
 // ScanJob represents a scan job record
 type ScanJob struct {
-	ID             string                 `json:"id"`
-	OrgID          string                 `json:"org_id"`
-	JobType        string                 `json:"job_type"`
-	Configuration  map[string]interface{} `json:"configuration"`
-	Status         string                 `json:"status"`
-	Progress       float64                `json:"progress"`
-	StartedAt      *time.Time             `json:"started_at"`
-	CompletedAt    *time.Time             `json:"completed_at"`
-	EstimatedTime  *time.Duration         `json:"estimated_time"`
-	ActualTime     *time.Duration         `json:"actual_time"`
-	TotalRepos     int                    `json:"total_repos"`
-	ScannedRepos   int                    `json:"scanned_repos"`
-	FailedRepos    int                    `json:"failed_repos"`
-	TotalThreats   int                    `json:"total_threats"`
-	CriticalThreats int                   `json:"critical_threats"`
-	HighThreats    int                    `json:"high_threats"`
-	MediumThreats  int                    `json:"medium_threats"`
-	LowThreats     int                    `json:"low_threats"`
-	WorkerID       *string                `json:"worker_id"`
-	RetryCount     int                    `json:"retry_count"`
-	MaxRetries     int                    `json:"max_retries"`
-	ErrorMessage   *string                `json:"error_message"`
-	ErrorDetails   map[string]interface{} `json:"error_details"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
-	Metadata       map[string]interface{} `json:"metadata"`
+	ID              string                 `json:"id"`
+	OrgID           string                 `json:"org_id"`
+	JobType         string                 `json:"job_type"`
+	Configuration   map[string]interface{} `json:"configuration"`
+	Status          string                 `json:"status"`
+	Progress        float64                `json:"progress"`
+	StartedAt       *time.Time             `json:"started_at"`
+	CompletedAt     *time.Time             `json:"completed_at"`
+	EstimatedTime   *time.Duration         `json:"estimated_time"`
+	ActualTime      *time.Duration         `json:"actual_time"`
+	TotalRepos      int                    `json:"total_repos"`
+	ScannedRepos    int                    `json:"scanned_repos"`
+	FailedRepos     int                    `json:"failed_repos"`
+	TotalThreats    int                    `json:"total_threats"`
+	CriticalThreats int                    `json:"critical_threats"`
+	HighThreats     int                    `json:"high_threats"`
+	MediumThreats   int                    `json:"medium_threats"`
+	LowThreats      int                    `json:"low_threats"`
+	WorkerID        *string                `json:"worker_id"`
+	RetryCount      int                    `json:"retry_count"`
+	MaxRetries      int                    `json:"max_retries"`
+	ErrorMessage    *string                `json:"error_message"`
+	ErrorDetails    map[string]interface{} `json:"error_details"`
+	CreatedAt       time.Time              `json:"created_at"`
+	UpdatedAt       time.Time              `json:"updated_at"`
+	Metadata        map[string]interface{} `json:"metadata"`
 }
 
 // NewDatabaseService creates a new database service
@@ -469,78 +469,78 @@ func (ds *DatabaseService) GetRepositoryCount(ctx context.Context) (int64, error
 // GetScanJobStats returns scan job statistics
 func (ds *DatabaseService) GetScanJobStats(ctx context.Context) (*ScanJobStats, error) {
 	stats := &ScanJobStats{}
-	
+
 	// Get total scans
 	err := ds.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM scan_jobs`).Scan(&stats.TotalScans)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get completed scans
 	err = ds.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM scan_jobs WHERE status = 'completed'`).Scan(&stats.CompletedScans)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get failed scans
 	err = ds.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM scan_jobs WHERE status = 'failed'`).Scan(&stats.FailedScans)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get running scans
 	err = ds.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM scan_jobs WHERE status = 'running'`).Scan(&stats.RunningScans)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return stats, nil
 }
 
 // GetThreatStats returns threat statistics
 func (ds *DatabaseService) GetThreatStats(ctx context.Context) (*ThreatStats, error) {
 	stats := &ThreatStats{}
-	
+
 	// Get total threats from scan jobs
 	err := ds.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(total_threats), 0) FROM scan_jobs`).Scan(&stats.TotalThreats)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get critical threats
 	err = ds.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(critical_threats), 0) FROM scan_jobs`).Scan(&stats.CriticalThreats)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get high threats
 	err = ds.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(high_threats), 0) FROM scan_jobs`).Scan(&stats.HighThreats)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get medium threats
 	err = ds.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(medium_threats), 0) FROM scan_jobs`).Scan(&stats.MediumThreats)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get low threats
 	err = ds.db.QueryRowContext(ctx, `SELECT COALESCE(SUM(low_threats), 0) FROM scan_jobs`).Scan(&stats.LowThreats)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Calculate average risk score (simplified)
 	if stats.TotalThreats > 0 {
 		criticalWeight := float64(stats.CriticalThreats) * 1.0
 		highWeight := float64(stats.HighThreats) * 0.8
 		mediumWeight := float64(stats.MediumThreats) * 0.6
 		lowWeight := float64(stats.LowThreats) * 0.3
-		
+
 		stats.AverageRiskScore = (criticalWeight + highWeight + mediumWeight + lowWeight) / float64(stats.TotalThreats)
 	}
-	
+
 	return stats, nil
 }
 
@@ -553,20 +553,20 @@ func (ds *DatabaseService) GetThreatTrend(ctx context.Context, duration time.Dur
 			COALESCE(SUM(CASE WHEN created_at >= NOW() - INTERVAL '14 days' AND created_at < NOW() - INTERVAL '7 days' THEN total_threats ELSE 0 END), 0) as previous
 		FROM scan_jobs
 	`
-	
+
 	var recent, previous int64
 	err := ds.db.QueryRowContext(ctx, query).Scan(&recent, &previous)
 	if err != nil {
 		return 0, err
 	}
-	
+
 	if previous == 0 {
 		if recent > 0 {
 			return 100.0, nil // 100% increase if no previous data
 		}
 		return 0.0, nil
 	}
-	
+
 	trend := float64(recent-previous) / float64(previous) * 100
 	return trend, nil
 }
@@ -590,7 +590,7 @@ func (ds *DatabaseService) GetRepositoryPlatformStats(ctx context.Context) (map[
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	stats := make(map[string]int64)
 	for rows.Next() {
 		var platform string
@@ -600,7 +600,7 @@ func (ds *DatabaseService) GetRepositoryPlatformStats(ctx context.Context) (map[
 		}
 		stats[platform] = count
 	}
-	
+
 	return stats, rows.Err()
 }
 
@@ -613,14 +613,14 @@ func (ds *DatabaseService) GetThreatsByType() (map[string]int64, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	threatsByType := map[string]int64{
 		"critical": stats.CriticalThreats,
 		"high":     stats.HighThreats,
 		"medium":   stats.MediumThreats,
 		"low":      stats.LowThreats,
 	}
-	
+
 	return threatsByType, nil
 }
 
@@ -658,7 +658,7 @@ func (ds *DatabaseService) GetRepositoryLanguageStats(ctx context.Context) (map[
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	stats := make(map[string]int64)
 	for rows.Next() {
 		var language string
@@ -668,7 +668,7 @@ func (ds *DatabaseService) GetRepositoryLanguageStats(ctx context.Context) (map[
 		}
 		stats[language] = count
 	}
-	
+
 	return stats, rows.Err()
 }
 
@@ -683,31 +683,31 @@ func (ds *DatabaseService) GetRecentScans(ctx context.Context, limit int) ([]*En
 		ORDER BY completed_at DESC 
 		LIMIT $1
 	`
-	
+
 	rows, err := ds.db.QueryContext(ctx, query, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var scans []*EnterpriseScanSummary
 	for rows.Next() {
 		scan := &EnterpriseScanSummary{}
 		var duration *float64
-		
-		err := rows.Scan(&scan.ID, &scan.JobType, &scan.Status, &scan.ThreatCount, 
+
+		err := rows.Scan(&scan.ID, &scan.JobType, &scan.Status, &scan.ThreatCount,
 			&duration, &scan.StartedAt, &scan.CompletedAt)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if duration != nil {
 			scan.Duration = int64(*duration)
 		}
-		
+
 		scans = append(scans, scan)
 	}
-	
+
 	return scans, rows.Err()
 }
 
@@ -721,33 +721,33 @@ func (ds *DatabaseService) GetScanTrends(ctx context.Context, duration time.Dura
 		GROUP BY hour
 		ORDER BY hour
 	`
-	
+
 	startTime := time.Now().Add(-duration)
 	rows, err := ds.db.QueryContext(ctx, query, startTime)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var trends []*TrendDataPoint
 	for rows.Next() {
 		var timestamp time.Time
 		var count int64
-		
+
 		if err := rows.Scan(&timestamp, &count); err != nil {
 			return nil, err
 		}
-		
+
 		trends = append(trends, &TrendDataPoint{
 			Timestamp: timestamp,
 			Value:     float64(count),
 			Label:     timestamp.Format("15:04"),
 		})
 	}
-	
+
 	// If no data found, return empty slice instead of mock data
 	// This allows the dashboard to handle empty data gracefully
-	
+
 	return trends, rows.Err()
 }
 
@@ -789,13 +789,13 @@ func (ds *DatabaseService) GetTopThreats(limit int) ([]ThreatSummary, error) {
 		ORDER BY count DESC
 		LIMIT $1
 	`
-	
+
 	rows, err := ds.db.QueryContext(context.Background(), query, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var threats []ThreatSummary
 	for rows.Next() {
 		var threat ThreatSummary
@@ -804,7 +804,7 @@ func (ds *DatabaseService) GetTopThreats(limit int) ([]ThreatSummary, error) {
 		}
 		threats = append(threats, threat)
 	}
-	
+
 	// If no data found, return empty slice instead of mock data
 	return threats, rows.Err()
 }
@@ -817,13 +817,13 @@ func (ds *DatabaseService) GetMitigationStatus() (map[string]int, error) {
 		FROM policy_violations 
 		GROUP BY status
 	`
-	
+
 	rows, err := ds.db.QueryContext(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	status := make(map[string]int)
 	for rows.Next() {
 		var statusName string
@@ -833,7 +833,7 @@ func (ds *DatabaseService) GetMitigationStatus() (map[string]int, error) {
 		}
 		status[statusName] = count
 	}
-	
+
 	// Ensure all expected statuses are present
 	if _, exists := status["open"]; !exists {
 		status["open"] = 0
@@ -844,7 +844,7 @@ func (ds *DatabaseService) GetMitigationStatus() (map[string]int, error) {
 	if _, exists := status["resolved"]; !exists {
 		status["resolved"] = 0
 	}
-	
+
 	return status, rows.Err()
 }
 
@@ -859,32 +859,32 @@ func (ds *DatabaseService) GetSecurityTrends(days int) ([]TrendDataPoint, error)
 		GROUP BY day
 		ORDER BY day
 	`
-	
+
 	startTime := time.Now().AddDate(0, 0, -days)
 	rows, err := ds.db.QueryContext(context.Background(), query, startTime)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var trends []TrendDataPoint
 	for rows.Next() {
 		var timestamp time.Time
 		var count int64
-		
+
 		if err := rows.Scan(&timestamp, &count); err != nil {
 			return nil, err
 		}
-		
+
 		trends = append(trends, TrendDataPoint{
 			Timestamp: timestamp,
 			Value:     float64(count),
 			Label:     timestamp.Format("Jan 02"),
 		})
 	}
-	
+
 	// Return actual data only - no mock data fallback
-	
+
 	return trends, nil
 }
 

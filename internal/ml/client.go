@@ -20,17 +20,18 @@ type Client struct {
 
 // ModelInfo contains information about an ML model
 type ModelInfo struct {
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Description  string                 `json:"description"`
-	Type         string                 `json:"type"`
-	TrainedAt    time.Time              `json:"trained_at"`
-	Accuracy     float64                `json:"accuracy"`
-	Precision    float64                `json:"precision"`
-	Recall       float64                `json:"recall"`
-	F1Score      float64                `json:"f1_score"`
-	FeatureCount int                    `json:"feature_count"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	Name           string                 `json:"name"`
+	Version        string                 `json:"version"`
+	Description    string                 `json:"description"`
+	Type           string                 `json:"type"`
+	TrainedAt      time.Time              `json:"trained_at"`
+	Accuracy       float64                `json:"accuracy"`
+	Precision      float64                `json:"precision"`
+	Recall         float64                `json:"recall"`
+	F1Score        float64                `json:"f1_score"`
+	FeatureCount   int                    `json:"feature_count"`
+	ParameterCount int                    `json:"parameter_count"`
+	Metadata       map[string]interface{} `json:"metadata"`
 }
 
 // SimilarityRequest represents a request to find similar packages

@@ -647,7 +647,7 @@ func (zd *ZeroDayDetectorImpl) analyzeBehavioralPatterns(ctx context.Context, pk
 		if targetSystems, ok := pkg.Metadata.Metadata["target_systems"].([]string); ok {
 			foundICS := false
 			foundCriticalInfra := false
-			
+
 			for _, target := range targetSystems {
 				if target == "siemens_plc" || target == "scada_systems" || target == "industrial_control" || target == "industrial_networks" {
 					if !foundICS {
@@ -666,7 +666,7 @@ func (zd *ZeroDayDetectorImpl) analyzeBehavioralPatterns(ctx context.Context, pk
 						foundICS = true
 					}
 				}
-				
+
 				if target == "critical_infrastructure" || target == "nuclear_facilities" || target == "power_plants" || target == "manufacturing_systems" {
 					if !foundCriticalInfra {
 						findings = append(findings, ZeroDayFinding{
@@ -1492,8 +1492,6 @@ func (zd *ZeroDayDetectorImpl) detectSuspiciousNetworkActivity(ctx context.Conte
 	return findings
 }
 
-
-
 // Detection helper methods
 
 func (zd *ZeroDayDetectorImpl) hasSuspiciousInstallScript(pkg *types.Package) bool {
@@ -1514,13 +1512,13 @@ func (zd *ZeroDayDetectorImpl) hasSuspiciousInstallScript(pkg *types.Package) bo
 		if script, ok := scriptContent.(string); ok {
 			scriptLower := strings.ToLower(script)
 			suspiciousCount := 0
-			
+
 			for _, pattern := range suspiciousPatterns {
 				if strings.Contains(scriptLower, pattern) {
 					suspiciousCount++
 				}
 			}
-			
+
 			// Consider suspicious if multiple patterns are found
 			return suspiciousCount >= 3
 		}
@@ -1557,18 +1555,18 @@ func (zd *ZeroDayDetectorImpl) hasObfuscatedCode(pkg *types.Package) bool {
 		if code, ok := codeContent.(string); ok {
 			codeLower := strings.ToLower(code)
 			obfuscationCount := 0
-			
+
 			for _, indicator := range obfuscationIndicators {
 				if strings.Contains(codeLower, strings.ToLower(indicator)) {
 					obfuscationCount++
 				}
 			}
-			
+
 			// Check for high entropy strings (potential obfuscation)
 			if zd.hasHighEntropyStrings(code) {
 				obfuscationCount += 2
 			}
-			
+
 			// Consider obfuscated if multiple indicators are found
 			return obfuscationCount >= 3
 		}
@@ -1596,13 +1594,13 @@ func (zd *ZeroDayDetectorImpl) calculateStringEntropy(s string) float64 {
 	if len(s) == 0 {
 		return 0
 	}
-	
+
 	// Count character frequencies
 	freq := make(map[rune]int)
 	for _, char := range s {
 		freq[char]++
 	}
-	
+
 	// Calculate entropy
 	entropy := 0.0
 	length := float64(len(s))
@@ -1612,7 +1610,7 @@ func (zd *ZeroDayDetectorImpl) calculateStringEntropy(s string) float64 {
 			entropy -= p * (math.Log2(p))
 		}
 	}
-	
+
 	return entropy
 }
 
@@ -1640,7 +1638,7 @@ func (zd *ZeroDayDetectorImpl) hasSuspiciousNetworkActivity(pkg *types.Package) 
 			}
 		}
 	}
-	
+
 	// Check for runtime behaviors related to network
 	if runtimeBehaviors, ok := pkg.Metadata.Metadata["runtime_behaviors"].([]string); ok {
 		for _, behavior := range runtimeBehaviors {
@@ -1655,23 +1653,23 @@ func (zd *ZeroDayDetectorImpl) hasSuspiciousNetworkActivity(pkg *types.Package) 
 
 func (zd *ZeroDayDetectorImpl) hasEncodedURLs(code string) bool {
 	// Look for base64 encoded URLs (common obfuscation technique)
-	
+
 	// Find potential base64 strings
 	base64Pattern := regexp.MustCompile(`[A-Za-z0-9+/]{20,}={0,2}`)
 	matches := base64Pattern.FindAllString(code, -1)
-	
+
 	for _, match := range matches {
 		// Try to decode and check if it contains URL patterns
 		if decoded, err := base64.StdEncoding.DecodeString(match); err == nil {
 			decodedStr := string(decoded)
-			if strings.Contains(decodedStr, "http") || 
-			   strings.Contains(decodedStr, "ftp") ||
-			   strings.Contains(decodedStr, "://") {
+			if strings.Contains(decodedStr, "http") ||
+				strings.Contains(decodedStr, "ftp") ||
+				strings.Contains(decodedStr, "://") {
 				return true
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -1696,20 +1694,20 @@ func (zd *ZeroDayDetectorImpl) hasDataExfiltrationPatterns(pkg *types.Package) b
 		// File system access
 		"fs.readFile", "readFileSync", "open(", "read(",
 		"os.environ", "process.env", "getenv(",
-		
+
 		// Credential harvesting
 		"password", "passwd", "secret", "token", "key",
 		"credential", "auth", "login", "session",
-		
+
 		// System information gathering
 		"os.platform", "os.hostname", "os.userInfo",
 		"process.platform", "navigator.userAgent",
 		"system(", "exec(", "spawn(", "shell_exec",
-		
+
 		// Network exfiltration
 		"POST", "PUT", "upload", "send", "transmit",
 		"webhook", "api/", "endpoint",
-		
+
 		// Data encoding/compression (for steganography)
 		"btoa(", "atob(", "base64", "compress", "zip",
 		"encrypt", "encode", "stringify",
@@ -1720,11 +1718,11 @@ func (zd *ZeroDayDetectorImpl) hasDataExfiltrationPatterns(pkg *types.Package) b
 		".ssh/", ".aws/", ".docker/", ".kube/",
 		"id_rsa", "id_dsa", "private", "certificate",
 		"config", "credentials", "keychain",
-		
+
 		// Browser data
 		"cookies", "localStorage", "sessionStorage",
 		"history", "bookmarks", "saved_passwords",
-		
+
 		// System files
 		"/etc/passwd", "/etc/shadow", "hosts",
 		"registry", "SAM", "SYSTEM",
@@ -1734,33 +1732,33 @@ func (zd *ZeroDayDetectorImpl) hasDataExfiltrationPatterns(pkg *types.Package) b
 		if code, ok := codeContent.(string); ok {
 			codeLower := strings.ToLower(code)
 			exfiltrationScore := 0
-			
+
 			// Check for exfiltration patterns
 			for _, pattern := range exfiltrationPatterns {
 				if strings.Contains(codeLower, strings.ToLower(pattern)) {
 					exfiltrationScore++
 				}
 			}
-			
+
 			// Check for sensitive data access patterns
 			for _, pattern := range sensitiveDataPatterns {
 				if strings.Contains(codeLower, strings.ToLower(pattern)) {
 					exfiltrationScore += 2 // Weight sensitive data access more heavily
 				}
 			}
-			
+
 			// Check for combination of file access + network activity
-			hasFileAccess := strings.Contains(codeLower, "readfile") || 
-							strings.Contains(codeLower, "open(") ||
-							strings.Contains(codeLower, "read(")
+			hasFileAccess := strings.Contains(codeLower, "readfile") ||
+				strings.Contains(codeLower, "open(") ||
+				strings.Contains(codeLower, "read(")
 			hasNetworkActivity := strings.Contains(codeLower, "http") ||
-								strings.Contains(codeLower, "post") ||
-								strings.Contains(codeLower, "send")
-			
+				strings.Contains(codeLower, "post") ||
+				strings.Contains(codeLower, "send")
+
 			if hasFileAccess && hasNetworkActivity {
 				exfiltrationScore += 3
 			}
-			
+
 			return exfiltrationScore >= 4
 		}
 	}
@@ -2067,8 +2065,8 @@ func (zd *ZeroDayDetectorImpl) hasSuspiciousProcessBehavior(pkg *types.Package) 
 	if pkg.Metadata != nil && pkg.Metadata.Metadata != nil {
 		if runtimeBehaviors, ok := pkg.Metadata.Metadata["runtime_behaviors"].([]string); ok {
 			for _, behavior := range runtimeBehaviors {
-				if behavior == "process_injection" || behavior == "memory_manipulation" || 
-				   behavior == "service_installation" || behavior == "scheduled_task_creation" {
+				if behavior == "process_injection" || behavior == "memory_manipulation" ||
+					behavior == "service_installation" || behavior == "scheduled_task_creation" {
 					return true
 				}
 			}
@@ -2082,8 +2080,8 @@ func (zd *ZeroDayDetectorImpl) hasEvasionTechniques(pkg *types.Package) bool {
 	if pkg.Metadata != nil && pkg.Metadata.Metadata != nil {
 		if evasionBehaviors, ok := pkg.Metadata.Metadata["evasion_behaviors"].([]string); ok {
 			for _, behavior := range evasionBehaviors {
-				if behavior == "anti_vm_checks" || behavior == "debugger_detection" || 
-				   behavior == "sandbox_evasion" || behavior == "process_hollowing" {
+				if behavior == "anti_vm_checks" || behavior == "debugger_detection" ||
+					behavior == "sandbox_evasion" || behavior == "process_hollowing" {
 					return true
 				}
 			}

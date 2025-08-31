@@ -1115,7 +1115,8 @@ type MalwareClassifier struct{}
 type AnomalyDetector struct{}
 type TypoDetector struct{}
 type ReputationAnalyzer struct{}
-type EnsembleModel struct{}
+
+// EnsembleModel type defined in deep_learning_models.go
 
 // Model implementations
 func NewSimilarityModel() (*SimilarityModel, error)       { return &SimilarityModel{}, nil }
@@ -1129,7 +1130,7 @@ func NewEnsembleModel(weights map[string]float64) (*EnsembleModel, error) {
 
 func (sm *SimilarityModel) AnalyzeSimilarity(ctx context.Context, features *EnhancedPackageFeatures) ([]EnhancedSimilarityResult, error) {
 	var results []EnhancedSimilarityResult
-	
+
 	// Popular packages database for similarity comparison
 	popularPackages := map[string][]string{
 		"npm": {
@@ -1158,10 +1159,10 @@ func (sm *SimilarityModel) AnalyzeSimilarity(ctx context.Context, features *Enha
 			"github.com/spf13/cobra", "github.com/spf13/viper", "gorm.io/gorm",
 		},
 	}
-	
+
 	packageName := features.Name
 	registry := features.Registry
-	
+
 	// Get popular packages for the registry
 	packages, exists := popularPackages[registry]
 	if !exists {
@@ -1170,22 +1171,22 @@ func (sm *SimilarityModel) AnalyzeSimilarity(ctx context.Context, features *Enha
 			packages = append(packages, pkgs...)
 		}
 	}
-	
+
 	// Calculate similarity with popular packages
 	for _, popular := range packages {
 		if packageName == popular {
 			continue // Skip exact matches
 		}
-		
+
 		// Calculate multiple similarity metrics
 		levenshtein := sm.calculateLevenshteinSimilarity(packageName, popular)
 		jaroWinkler := sm.calculateJaroWinklerSimilarity(packageName, popular)
 		phonetic := sm.calculatePhoneticSimilarity(packageName, popular)
 		semantic := sm.calculateSemanticSimilarity(packageName, popular)
-		
+
 		// Weighted combination of similarities
 		combinedSimilarity := (levenshtein*0.3 + jaroWinkler*0.4 + phonetic*0.2 + semantic*0.1)
-		
+
 		// Only include results above threshold
 		if combinedSimilarity > 0.7 {
 			result := EnhancedSimilarityResult{
@@ -1195,11 +1196,11 @@ func (sm *SimilarityModel) AnalyzeSimilarity(ctx context.Context, features *Enha
 				Confidence:      sm.calculateConfidence(combinedSimilarity, len(packageName), len(popular)),
 				Reason:          fmt.Sprintf("High similarity (%.2f) with popular package %s", combinedSimilarity, popular),
 			}
-			
+
 			results = append(results, result)
 		}
 	}
-	
+
 	// Sort by similarity score (descending)
 	for i := 0; i < len(results)-1; i++ {
 		for j := i + 1; j < len(results); j++ {
@@ -1208,12 +1209,12 @@ func (sm *SimilarityModel) AnalyzeSimilarity(ctx context.Context, features *Enha
 			}
 		}
 	}
-	
+
 	// Limit to top 10 results
 	if len(results) > 10 {
 		results = results[:10]
 	}
-	
+
 	return results, nil
 }
 
@@ -1233,19 +1234,19 @@ func (sm *SimilarityModel) calculateEditDistance(s1, s2 string) int {
 	if len(s2) == 0 {
 		return len(s1)
 	}
-	
+
 	matrix := make([][]int, len(s1)+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len(s2)+1)
 	}
-	
+
 	for i := 0; i <= len(s1); i++ {
 		matrix[i][0] = i
 	}
 	for j := 0; j <= len(s2); j++ {
 		matrix[0][j] = j
 	}
-	
+
 	for i := 1; i <= len(s1); i++ {
 		for j := 1; j <= len(s2); j++ {
 			cost := 0
@@ -1259,7 +1260,7 @@ func (sm *SimilarityModel) calculateEditDistance(s1, s2 string) int {
 			)
 		}
 	}
-	
+
 	return matrix[len(s1)][len(s2)]
 }
 
@@ -1267,28 +1268,28 @@ func (sm *SimilarityModel) calculateJaroWinklerSimilarity(s1, s2 string) float64
 	if s1 == s2 {
 		return 1.0
 	}
-	
+
 	len1, len2 := len(s1), len(s2)
 	if len1 == 0 || len2 == 0 {
 		return 0.0
 	}
-	
+
 	matchWindow := sm.max(len1, len2)/2 - 1
 	if matchWindow < 0 {
 		matchWindow = 0
 	}
-	
+
 	s1Matches := make([]bool, len1)
 	s2Matches := make([]bool, len2)
-	
+
 	matches := 0
 	transpositions := 0
-	
+
 	// Find matches
 	for i := 0; i < len1; i++ {
 		start := sm.max(0, i-matchWindow)
 		end := sm.min(i+matchWindow+1, len2)
-		
+
 		for j := start; j < end; j++ {
 			if s2Matches[j] || s1[i] != s2[j] {
 				continue
@@ -1299,11 +1300,11 @@ func (sm *SimilarityModel) calculateJaroWinklerSimilarity(s1, s2 string) float64
 			break
 		}
 	}
-	
+
 	if matches == 0 {
 		return 0.0
 	}
-	
+
 	// Count transpositions
 	k := 0
 	for i := 0; i < len1; i++ {
@@ -1318,9 +1319,9 @@ func (sm *SimilarityModel) calculateJaroWinklerSimilarity(s1, s2 string) float64
 		}
 		k++
 	}
-	
+
 	jaro := (float64(matches)/float64(len1) + float64(matches)/float64(len2) + float64(matches-transpositions/2)/float64(matches)) / 3.0
-	
+
 	// Calculate prefix length for Jaro-Winkler
 	prefix := 0
 	for i := 0; i < sm.min(len1, len2) && i < 4; i++ {
@@ -1330,7 +1331,7 @@ func (sm *SimilarityModel) calculateJaroWinklerSimilarity(s1, s2 string) float64
 			break
 		}
 	}
-	
+
 	return jaro + (0.1 * float64(prefix) * (1.0 - jaro))
 }
 
@@ -1338,18 +1339,18 @@ func (sm *SimilarityModel) calculatePhoneticSimilarity(s1, s2 string) float64 {
 	// Simple phonetic similarity based on consonant patterns
 	consonants1 := sm.extractConsonants(s1)
 	consonants2 := sm.extractConsonants(s2)
-	
+
 	if consonants1 == consonants2 {
 		return 1.0
 	}
-	
+
 	return sm.calculateLevenshteinSimilarity(consonants1, consonants2)
 }
 
 func (sm *SimilarityModel) extractConsonants(s string) string {
 	vowels := "aeiouAEIOU"
 	var consonants []rune
-	
+
 	for _, r := range s {
 		isVowel := false
 		for _, v := range vowels {
@@ -1362,7 +1363,7 @@ func (sm *SimilarityModel) extractConsonants(s string) string {
 			consonants = append(consonants, r)
 		}
 	}
-	
+
 	return string(consonants)
 }
 
@@ -1370,32 +1371,32 @@ func (sm *SimilarityModel) calculateSemanticSimilarity(s1, s2 string) float64 {
 	// Simple semantic similarity based on common prefixes/suffixes
 	commonPrefixes := []string{"lib", "node", "py", "go", "js", "react", "vue", "angular"}
 	commonSuffixes := []string{"js", "py", "go", "lib", "util", "utils", "core", "api"}
-	
+
 	score := 0.0
-	
+
 	// Check for common prefixes
 	for _, prefix := range commonPrefixes {
 		if (len(s1) > len(prefix) && s1[:len(prefix)] == prefix) &&
-		   (len(s2) > len(prefix) && s2[:len(prefix)] == prefix) {
+			(len(s2) > len(prefix) && s2[:len(prefix)] == prefix) {
 			score += 0.3
 			break
 		}
 	}
-	
+
 	// Check for common suffixes
 	for _, suffix := range commonSuffixes {
 		if (len(s1) >= len(suffix) && s1[len(s1)-len(suffix):] == suffix) &&
-		   (len(s2) >= len(suffix) && s2[len(s2)-len(suffix):] == suffix) {
+			(len(s2) >= len(suffix) && s2[len(s2)-len(suffix):] == suffix) {
 			score += 0.3
 			break
 		}
 	}
-	
+
 	// Check for common substrings
 	if sm.hasCommonSubstring(s1, s2, 3) {
 		score += 0.4
 	}
-	
+
 	return sm.minFloat(score, 1.0)
 }
 
@@ -1410,10 +1411,10 @@ func (sm *SimilarityModel) hasCommonSubstring(s1, s2 string, minLen int) bool {
 }
 
 func (sm *SimilarityModel) contains(s, substr string) bool {
-	return len(s) >= len(substr) && s != substr && 
-		   (len(s) > len(substr) && (s[:len(substr)] == substr || 
-		    s[len(s)-len(substr):] == substr || 
-		    sm.containsSubstring(s, substr)))
+	return len(s) >= len(substr) && s != substr &&
+		(len(s) > len(substr) && (s[:len(substr)] == substr ||
+			s[len(s)-len(substr):] == substr ||
+			sm.containsSubstring(s, substr)))
 }
 
 func (sm *SimilarityModel) containsSubstring(s, substr string) bool {
@@ -1429,7 +1430,7 @@ func (sm *SimilarityModel) calculateConfidence(similarity float64, len1, len2 in
 	// Higher confidence for similar length strings with high similarity
 	lengthDiff := float64(sm.abs(len1 - len2))
 	maxLen := float64(sm.max(len1, len2))
-	
+
 	lengthSimilarity := 1.0 - (lengthDiff / maxLen)
 	return (similarity + lengthSimilarity) / 2.0
 }
@@ -1474,11 +1475,11 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		FeatureImportance:    make(map[string]float64),
 		ClassificationReason: "",
 	}
-	
+
 	var riskScore float64
 	var reasons []string
 	var featureImportance = make(map[string]float64)
-	
+
 	// Analyze package name for suspicious patterns
 	nameScore := mc.analyzePackageName(features.Name)
 	if nameScore > 0.3 {
@@ -1486,7 +1487,7 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["package_name"] = nameScore
 		riskScore += nameScore * 0.2
 	}
-	
+
 	// Analyze author/maintainer reputation
 	authorScore := mc.analyzeAuthorReputation(features.Author, features.Maintainers)
 	if authorScore > 0.4 {
@@ -1494,7 +1495,7 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["author_reputation"] = authorScore
 		riskScore += authorScore * 0.15
 	}
-	
+
 	// Analyze version patterns
 	versionScore := mc.analyzeVersionPatterns(features.Version, features.CreationDate, features.LastUpdated)
 	if versionScore > 0.3 {
@@ -1502,7 +1503,7 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["version_patterns"] = versionScore
 		riskScore += versionScore * 0.1
 	}
-	
+
 	// Analyze dependencies
 	depScore := mc.analyzeDependencies(features.Dependencies, features.DevDependencies)
 	if depScore > 0.3 {
@@ -1510,7 +1511,7 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["dependencies"] = depScore
 		riskScore += depScore * 0.15
 	}
-	
+
 	// Analyze scripts and file structure
 	scriptScore := mc.analyzeScripts(features.Scripts, features.FileStructure)
 	if scriptScore > 0.4 {
@@ -1518,7 +1519,7 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["scripts"] = scriptScore
 		riskScore += scriptScore * 0.25
 	}
-	
+
 	// Analyze metadata quality
 	metadataScore := mc.analyzeMetadata(features.Description, features.Keywords, features.License, features.Homepage, features.Repository)
 	if metadataScore > 0.3 {
@@ -1526,7 +1527,7 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["metadata"] = metadataScore
 		riskScore += metadataScore * 0.1
 	}
-	
+
 	// Analyze behavioral metrics
 	behaviorScore := mc.analyzeBehavioralMetrics(features.BehavioralMetrics)
 	if behaviorScore > 0.3 {
@@ -1534,11 +1535,11 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 		featureImportance["behavior"] = behaviorScore
 		riskScore += behaviorScore * 0.05
 	}
-	
+
 	// Determine malware type and family
 	malwareType := "none"
 	malwareFamily := ""
-	
+
 	if riskScore > 0.8 {
 		classification.IsMalware = true
 		malwareType = "high_confidence_malware"
@@ -1552,63 +1553,63 @@ func (mc *MalwareClassifier) ClassifyMalware(ctx context.Context, features *Enha
 	} else if riskScore > 0.2 {
 		malwareType = "low_risk"
 	}
-	
+
 	// Build classification reason
 	classificationReason := "Clean package"
 	if len(reasons) > 0 {
 		classificationReason = fmt.Sprintf("Risk factors: %s", strings.Join(reasons, ", "))
 	}
-	
+
 	classification.Confidence = riskScore
 	classification.MalwareType = malwareType
 	classification.MalwareFamily = malwareFamily
 	classification.FeatureImportance = featureImportance
 	classification.ClassificationReason = classificationReason
-	
+
 	return classification, nil
 }
 
 // Helper methods for MalwareClassifier
 func (mc *MalwareClassifier) analyzePackageName(name string) float64 {
 	score := 0.0
-	
+
 	// Check for suspicious patterns in package names
 	suspiciousPatterns := []string{
 		"test", "temp", "demo", "sample", "fake", "malicious", "evil",
 		"hack", "crack", "exploit", "virus", "trojan", "backdoor",
 		"stealer", "keylog", "bitcoin", "crypto", "wallet", "miner",
 	}
-	
+
 	nameLower := strings.ToLower(name)
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(nameLower, pattern) {
 			score += 0.3
 		}
 	}
-	
+
 	// Check for random-looking names
 	if len(name) > 10 && mc.isRandomLooking(name) {
 		score += 0.2
 	}
-	
+
 	// Check for typosquatting patterns
 	if mc.hasTyposquattingPatterns(name) {
 		score += 0.4
 	}
-	
+
 	return mc.clampScore(score)
 }
 
 func (mc *MalwareClassifier) analyzeAuthorReputation(author string, maintainers []string) float64 {
 	score := 0.0
-	
+
 	// Check author reputation
 	if author == "" {
 		score += 0.3
 	} else if mc.isSuspiciousAuthor(author) {
 		score += 0.5
 	}
-	
+
 	// Check maintainers
 	if len(maintainers) == 0 {
 		score += 0.2
@@ -1620,48 +1621,48 @@ func (mc *MalwareClassifier) analyzeAuthorReputation(author string, maintainers 
 			}
 		}
 	}
-	
+
 	return mc.clampScore(score)
 }
 
 func (mc *MalwareClassifier) analyzeVersionPatterns(version string, creationDate, lastUpdated time.Time) float64 {
 	score := 0.0
-	
+
 	// Check for suspicious version patterns
 	if version == "" {
 		score += 0.2
 	} else if strings.HasPrefix(version, "0.0.") || version == "1.0.0" {
 		score += 0.1
 	}
-	
+
 	// Check creation and update patterns
 	if !creationDate.IsZero() && !lastUpdated.IsZero() {
 		daysSinceCreation := time.Since(creationDate).Hours() / 24
 		daysSinceUpdate := time.Since(lastUpdated).Hours() / 24
-		
+
 		// Very new packages are suspicious
 		if daysSinceCreation < 1 {
 			score += 0.3
 		}
-		
+
 		// Packages not updated for a long time but recently created
 		if daysSinceCreation < 30 && daysSinceUpdate > 30 {
 			score += 0.2
 		}
 	}
-	
+
 	return mc.clampScore(score)
 }
 
 func (mc *MalwareClassifier) analyzeDependencies(deps, devDeps []Dependency) float64 {
 	score := 0.0
-	
+
 	// Check for suspicious dependencies
 	suspiciousDeps := []string{
 		"child_process", "fs-extra", "node-pty", "keytar", "electron",
 		"puppeteer", "selenium", "crypto", "bitcoin", "wallet",
 	}
-	
+
 	allDeps := append(deps, devDeps...)
 	for _, dep := range allDeps {
 		for _, suspicious := range suspiciousDeps {
@@ -1674,25 +1675,25 @@ func (mc *MalwareClassifier) analyzeDependencies(deps, devDeps []Dependency) flo
 			score += dep.RiskScore * 0.5
 		}
 	}
-	
+
 	// Too many dependencies is suspicious
 	if len(allDeps) > 50 {
 		score += 0.2
 	}
-	
+
 	return mc.clampScore(score)
 }
 
 func (mc *MalwareClassifier) analyzeScripts(scripts map[string]string, fileStructure FileStructure) float64 {
 	score := 0.0
-	
+
 	// Check for suspicious scripts
 	suspiciousScriptPatterns := []string{
 		"curl", "wget", "eval", "exec", "spawn", "child_process",
 		"fs.readFile", "fs.writeFile", "process.env", "Buffer.from",
 		"atob", "btoa", "base64", "crypto", "bitcoin",
 	}
-	
+
 	for _, script := range scripts {
 		scriptLower := strings.ToLower(script)
 		for _, pattern := range suspiciousScriptPatterns {
@@ -1701,52 +1702,52 @@ func (mc *MalwareClassifier) analyzeScripts(scripts map[string]string, fileStruc
 			}
 		}
 	}
-	
+
 	// Check file structure for suspicious files
 	if len(fileStructure.SuspiciousFiles) > 0 {
 		score += 0.3
 	}
-	
+
 	// Check for unusual file patterns
 	if fileStructure.BinaryFiles > fileStructure.TotalFiles/2 {
 		score += 0.2
 	}
-	
+
 	if fileStructure.HiddenFiles > 5 {
 		score += 0.1
 	}
-	
+
 	return mc.clampScore(score)
 }
 
 func (mc *MalwareClassifier) analyzeMetadata(description string, keywords []string, license, homepage, repository string) float64 {
 	score := 0.0
-	
+
 	// Check for missing or poor metadata
 	if description == "" {
 		score += 0.2
 	} else if len(description) < 20 {
 		score += 0.1
 	}
-	
+
 	if license == "" {
 		score += 0.1
 	}
-	
+
 	if homepage == "" && repository == "" {
 		score += 0.2
 	}
-	
+
 	if len(keywords) == 0 {
 		score += 0.1
 	}
-	
+
 	// Check for suspicious keywords
 	suspiciousKeywords := []string{
 		"hack", "crack", "exploit", "malware", "virus", "trojan",
 		"stealer", "keylog", "bitcoin", "crypto", "miner",
 	}
-	
+
 	for _, keyword := range keywords {
 		keywordLower := strings.ToLower(keyword)
 		for _, suspicious := range suspiciousKeywords {
@@ -1755,45 +1756,45 @@ func (mc *MalwareClassifier) analyzeMetadata(description string, keywords []stri
 			}
 		}
 	}
-	
+
 	return mc.clampScore(score)
 }
 
 func (mc *MalwareClassifier) analyzeBehavioralMetrics(metrics BehavioralMetrics) float64 {
 	score := 0.0
-	
+
 	// Analyze behavioral metrics
 	if metrics.AnomalyScore > 0.5 {
 		score += metrics.AnomalyScore * 0.3
 	}
-	
+
 	// Check installation behavior
 	if metrics.InstallationBehavior.NetworkActivity {
 		score += 0.2
 	}
-	
+
 	if metrics.InstallationBehavior.SuspiciousCommands > 0 {
 		score += 0.3
 	}
-	
+
 	// Check runtime behavior
 	if metrics.RuntimeBehavior.AntiAnalysisTechniques {
 		score += 0.4
 	}
-	
+
 	if metrics.RuntimeBehavior.PersistenceMechanisms {
 		score += 0.3
 	}
-	
+
 	// Check network behavior
 	if metrics.NetworkBehavior.DataExfiltration {
 		score += 0.5
 	}
-	
+
 	if metrics.NetworkBehavior.C2Communication {
 		score += 0.6
 	}
-	
+
 	return mc.clampScore(score)
 }
 
@@ -1801,10 +1802,10 @@ func (mc *MalwareClassifier) analyzeBehavioralMetrics(metrics BehavioralMetrics)
 func (mc *MalwareClassifier) isRandomLooking(name string) bool {
 	vowels := "aeiou"
 	consonants := "bcdfghjklmnpqrstvwxyz"
-	
+
 	vowelCount := 0
 	consonantCount := 0
-	
+
 	for _, char := range strings.ToLower(name) {
 		if strings.ContainsRune(vowels, char) {
 			vowelCount++
@@ -1812,12 +1813,12 @@ func (mc *MalwareClassifier) isRandomLooking(name string) bool {
 			consonantCount++
 		}
 	}
-	
+
 	total := vowelCount + consonantCount
 	if total == 0 {
 		return true
 	}
-	
+
 	vowelRatio := float64(vowelCount) / float64(total)
 	return vowelRatio < 0.1 || vowelRatio > 0.8
 }
@@ -1828,13 +1829,13 @@ func (mc *MalwareClassifier) hasTyposquattingPatterns(name string) bool {
 		"react", "lodash", "express", "angular", "vue", "webpack",
 		"babel", "typescript", "eslint", "prettier", "axios", "moment",
 	}
-	
+
 	for _, popular := range popularPackages {
 		if name != popular && mc.calculateEditDistance(name, popular) <= 2 && len(name) > 3 {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -1843,14 +1844,14 @@ func (mc *MalwareClassifier) isSuspiciousAuthor(author string) bool {
 		"test", "temp", "fake", "anonymous", "unknown", "admin",
 		"root", "user", "hacker", "cracker",
 	}
-	
+
 	authorLower := strings.ToLower(author)
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(authorLower, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -1861,19 +1862,19 @@ func (mc *MalwareClassifier) calculateEditDistance(s1, s2 string) int {
 	if len(s2) == 0 {
 		return len(s1)
 	}
-	
+
 	matrix := make([][]int, len(s1)+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len(s2)+1)
 	}
-	
+
 	for i := 0; i <= len(s1); i++ {
 		matrix[i][0] = i
 	}
 	for j := 0; j <= len(s2); j++ {
 		matrix[0][j] = j
 	}
-	
+
 	for i := 1; i <= len(s1); i++ {
 		for j := 1; j <= len(s2); j++ {
 			cost := 0
@@ -1887,7 +1888,7 @@ func (mc *MalwareClassifier) calculateEditDistance(s1, s2 string) int {
 			)
 		}
 	}
-	
+
 	return matrix[len(s1)][len(s2)]
 }
 
@@ -1921,45 +1922,45 @@ func (ad *AnomalyDetector) DetectAnomalies(ctx context.Context, features *Enhanc
 		AnomalousFeatures: []string{},
 		BaselineDeviation: 0.0,
 	}
-	
+
 	var anomalyScore float64
 	var anomalousFeatures []string
-	
+
 	// Check package size anomalies (using lines of code as size metric)
 	sizeDeviation := ad.analyzeSizeAnomaly(int64(features.CodeMetrics.LinesOfCode), features.Registry)
 	if sizeDeviation > 0.3 {
 		anomalyScore += sizeDeviation * 0.2
 		anomalousFeatures = append(anomalousFeatures, "unusual_package_size")
 	}
-	
+
 	// Check version pattern anomalies
 	versionDeviation := ad.analyzeVersionAnomaly(features.Version, features.CreationDate)
 	if versionDeviation > 0.3 {
 		anomalyScore += versionDeviation * 0.15
 		anomalousFeatures = append(anomalousFeatures, "unusual_version_pattern")
 	}
-	
+
 	// Check dependency anomalies
 	depDeviation := ad.analyzeDependencyAnomaly(features.Dependencies, features.Registry)
 	if depDeviation > 0.3 {
 		anomalyScore += depDeviation * 0.2
 		anomalousFeatures = append(anomalousFeatures, "unusual_dependency_patterns")
 	}
-	
+
 	// Check metadata anomalies
 	metadataDeviation := ad.analyzeMetadataAnomaly(features.Description, features.Keywords, features.License)
 	if metadataDeviation > 0.3 {
 		anomalyScore += metadataDeviation * 0.15
 		anomalousFeatures = append(anomalousFeatures, "unusual_metadata_patterns")
 	}
-	
+
 	// Check behavioral anomalies
 	behaviorDeviation := ad.analyzeBehavioralAnomaly(features.BehavioralMetrics)
 	if behaviorDeviation > 0.4 {
 		anomalyScore += behaviorDeviation * 0.3
 		anomalousFeatures = append(anomalousFeatures, "unusual_behavioral_patterns")
 	}
-	
+
 	// Determine anomaly type and confidence
 	anomalyType := "none"
 	if anomalyScore > 0.7 {
@@ -1971,13 +1972,13 @@ func (ad *AnomalyDetector) DetectAnomalies(ctx context.Context, features *Enhanc
 	} else if anomalyScore > 0.3 {
 		anomalyType = "low_anomaly"
 	}
-	
+
 	detection.AnomalyScore = anomalyScore
 	detection.AnomalyType = anomalyType
 	detection.Confidence = anomalyScore
 	detection.AnomalousFeatures = anomalousFeatures
 	detection.BaselineDeviation = anomalyScore
-	
+
 	return detection, nil
 }
 
@@ -1985,40 +1986,40 @@ func (ad *AnomalyDetector) DetectAnomalies(ctx context.Context, features *Enhanc
 func (ad *AnomalyDetector) analyzeSizeAnomaly(size int64, registry string) float64 {
 	// Expected size ranges by registry (in bytes)
 	expectedSizes := map[string]struct{ min, max int64 }{
-		"npm":   {1000, 10000000},     // 1KB to 10MB
-		"pypi":  {5000, 50000000},     // 5KB to 50MB
-		"maven": {10000, 100000000},   // 10KB to 100MB
-		"go":    {1000, 20000000},     // 1KB to 20MB
+		"npm":   {1000, 10000000},   // 1KB to 10MB
+		"pypi":  {5000, 50000000},   // 5KB to 50MB
+		"maven": {10000, 100000000}, // 10KB to 100MB
+		"go":    {1000, 20000000},   // 1KB to 20MB
 	}
-	
+
 	expected, exists := expectedSizes[registry]
 	if !exists {
 		expected = expectedSizes["npm"] // Default
 	}
-	
+
 	if size < expected.min {
 		return float64(expected.min-size) / float64(expected.min)
 	}
 	if size > expected.max {
 		return float64(size-expected.max) / float64(expected.max)
 	}
-	
+
 	return 0.0
 }
 
 func (ad *AnomalyDetector) analyzeVersionAnomaly(version string, creationDate time.Time) float64 {
 	score := 0.0
-	
+
 	// Check for unusual version patterns
 	if strings.Contains(version, "alpha") || strings.Contains(version, "beta") || strings.Contains(version, "rc") {
 		score += 0.2
 	}
-	
+
 	// Check for very high version numbers
 	if strings.HasPrefix(version, "999") || strings.HasPrefix(version, "1000") {
 		score += 0.5
 	}
-	
+
 	// Check for version-date mismatch
 	if !creationDate.IsZero() {
 		daysSinceCreation := time.Since(creationDate).Hours() / 24
@@ -2026,13 +2027,13 @@ func (ad *AnomalyDetector) analyzeVersionAnomaly(version string, creationDate ti
 			score += 0.3 // New package with high version
 		}
 	}
-	
+
 	return ad.clampScore(score)
 }
 
 func (ad *AnomalyDetector) analyzeDependencyAnomaly(deps []Dependency, registry string) float64 {
 	score := 0.0
-	
+
 	// Expected dependency counts by registry
 	expectedDepCounts := map[string]int{
 		"npm":   15,
@@ -2040,21 +2041,21 @@ func (ad *AnomalyDetector) analyzeDependencyAnomaly(deps []Dependency, registry 
 		"maven": 10,
 		"go":    5,
 	}
-	
+
 	expected, exists := expectedDepCounts[registry]
 	if !exists {
 		expected = 10 // Default
 	}
-	
+
 	depCount := len(deps)
-	
+
 	// Too many or too few dependencies
 	if depCount > expected*3 {
 		score += 0.4
 	} else if depCount == 0 && registry != "go" {
 		score += 0.3
 	}
-	
+
 	// Check for circular dependencies
 	depNames := make(map[string]bool)
 	for _, dep := range deps {
@@ -2063,25 +2064,25 @@ func (ad *AnomalyDetector) analyzeDependencyAnomaly(deps []Dependency, registry 
 		}
 		depNames[dep.Name] = true
 	}
-	
+
 	return ad.clampScore(score)
 }
 
 func (ad *AnomalyDetector) analyzeMetadataAnomaly(description string, keywords []string, license string) float64 {
 	score := 0.0
-	
+
 	// Check description anomalies
 	if len(description) > 1000 {
 		score += 0.2 // Unusually long description
 	} else if len(description) < 10 && description != "" {
 		score += 0.3 // Unusually short description
 	}
-	
+
 	// Check keyword anomalies
 	if len(keywords) > 20 {
 		score += 0.2 // Too many keywords
 	}
-	
+
 	// Check for unusual licenses
 	commonLicenses := []string{"MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "ISC"}
 	isCommonLicense := false
@@ -2094,32 +2095,32 @@ func (ad *AnomalyDetector) analyzeMetadataAnomaly(description string, keywords [
 	if !isCommonLicense && license != "" {
 		score += 0.1
 	}
-	
+
 	return ad.clampScore(score)
 }
 
 func (ad *AnomalyDetector) analyzeBehavioralAnomaly(metrics BehavioralMetrics) float64 {
 	score := 0.0
-	
+
 	// High anomaly score from behavioral analysis
 	if metrics.AnomalyScore > 0.5 {
 		score += metrics.AnomalyScore * 0.5
 	}
-	
+
 	// Unusual installation behavior
 	if metrics.InstallationBehavior.NetworkActivity {
 		score += 0.3
 	}
-	
+
 	if metrics.InstallationBehavior.SuspiciousCommands > 2 {
 		score += 0.4
 	}
-	
+
 	// Unusual runtime behavior
 	if metrics.RuntimeBehavior.AntiAnalysisTechniques {
 		score += 0.5
 	}
-	
+
 	return ad.clampScore(score)
 }
 
@@ -2138,7 +2139,7 @@ func (mc *MalwareClassifier) hasSuspiciousFiles(fileStructure map[string]interfa
 		".env", "config.json", "private.key", "wallet.dat",
 		"keylog", "stealer", "backdoor", "trojan",
 	}
-	
+
 	for filename := range fileStructure {
 		filenameLower := strings.ToLower(filename)
 		for _, suspicious := range suspiciousFiles {
@@ -2147,23 +2148,23 @@ func (mc *MalwareClassifier) hasSuspiciousFiles(fileStructure map[string]interfa
 			}
 		}
 	}
-	
+
 	return false
 }
 
 func (ad *AnomalyDetector) detectVersionAnomalies(version string, creationDate, lastUpdated time.Time) float64 {
 	var anomalyScore float64
-	
+
 	// Check for unusual version patterns
 	if version == "" {
 		return 0.3 // Missing version is suspicious
 	}
-	
+
 	// Check for pre-release versions (higher anomaly)
 	if strings.Contains(version, "alpha") || strings.Contains(version, "beta") || strings.Contains(version, "rc") {
 		anomalyScore += 0.2
 	}
-	
+
 	// Check for very high version numbers (potential typosquatting)
 	versionParts := strings.Split(version, ".")
 	if len(versionParts) > 0 {
@@ -2173,7 +2174,7 @@ func (ad *AnomalyDetector) detectVersionAnomalies(version string, creationDate, 
 			}
 		}
 	}
-	
+
 	// Check for rapid version updates
 	if !creationDate.IsZero() && !lastUpdated.IsZero() {
 		timeDiff := lastUpdated.Sub(creationDate)
@@ -2182,39 +2183,39 @@ func (ad *AnomalyDetector) detectVersionAnomalies(version string, creationDate, 
 			anomalyScore += 0.3
 		}
 	}
-	
+
 	return anomalyScore
 }
 func (td *TypoDetector) DetectTyposquatting(ctx context.Context, features *EnhancedPackageFeatures) (*TypoDetection, error) {
 	if features == nil {
 		return &TypoDetection{}, nil
 	}
-	
+
 	packageName := features.Name
 	registry := features.Registry
-	
+
 	// Get popular packages for the registry
 	popularPackages := td.getPopularPackages(registry)
-	
+
 	var bestMatch string
 	var highestSimilarity float64
 	var typoType string
 	var editDistance int
 	var suspiciousPatterns []string
-	
+
 	// Check against popular packages
 	for _, popular := range popularPackages {
 		if packageName == popular {
 			// Exact match with popular package - not typosquatting
 			continue
 		}
-		
+
 		// Calculate edit distance
 		distance := td.calculateEditDistance(packageName, popular)
-		
+
 		// Calculate similarity score
 		similarity := 1.0 - float64(distance)/float64(max(len(packageName), len(popular)))
-		
+
 		if similarity > highestSimilarity && similarity > 0.7 {
 			highestSimilarity = similarity
 			bestMatch = popular
@@ -2222,19 +2223,19 @@ func (td *TypoDetector) DetectTyposquatting(ctx context.Context, features *Enhan
 			typoType = td.determineTypoType(packageName, popular)
 		}
 	}
-	
+
 	// Check for suspicious patterns
 	suspiciousPatterns = td.detectSuspiciousPatterns(packageName)
-	
+
 	// Determine if it's typosquatting
 	isTyposquatting := false
 	confidence := 0.0
-	
+
 	if highestSimilarity > 0.8 && editDistance <= 3 {
 		isTyposquatting = true
 		confidence = highestSimilarity
 	}
-	
+
 	// Additional checks for suspicious patterns
 	if len(suspiciousPatterns) > 0 {
 		confidence += 0.2
@@ -2242,12 +2243,12 @@ func (td *TypoDetector) DetectTyposquatting(ctx context.Context, features *Enhan
 			isTyposquatting = true
 		}
 	}
-	
+
 	// Normalize confidence
 	if confidence > 1.0 {
 		confidence = 1.0
 	}
-	
+
 	return &TypoDetection{
 		IsTyposquatting:    isTyposquatting,
 		TargetPackage:      bestMatch,
@@ -2264,13 +2265,13 @@ func (td *TypoDetector) getPopularPackages(registry string) []string {
 	// Return a list of popular packages for the given registry
 	// This would typically be loaded from a database or configuration
 	popularPackages := map[string][]string{
-		"npm": {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular", "jquery", "moment", "chalk", "commander", "debug", "fs-extra", "glob", "rimraf", "mkdirp", "yargs"},
-		"pypi": {"requests", "numpy", "pandas", "flask", "django", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "seaborn", "beautifulsoup4", "selenium", "pillow", "opencv-python", "sqlalchemy", "fastapi", "pydantic", "click", "pytest", "black"},
-		"rubygems": {"rails", "bundler", "rake", "rspec", "puma", "nokogiri", "devise", "activerecord", "activesupport", "thor", "json", "minitest", "rack", "sinatra", "capistrano", "sidekiq", "redis", "pg", "mysql2", "sqlite3"},
+		"npm":       {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular", "jquery", "moment", "chalk", "commander", "debug", "fs-extra", "glob", "rimraf", "mkdirp", "yargs"},
+		"pypi":      {"requests", "numpy", "pandas", "flask", "django", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "seaborn", "beautifulsoup4", "selenium", "pillow", "opencv-python", "sqlalchemy", "fastapi", "pydantic", "click", "pytest", "black"},
+		"rubygems":  {"rails", "bundler", "rake", "rspec", "puma", "nokogiri", "devise", "activerecord", "activesupport", "thor", "json", "minitest", "rack", "sinatra", "capistrano", "sidekiq", "redis", "pg", "mysql2", "sqlite3"},
 		"packagist": {"symfony/symfony", "laravel/framework", "guzzlehttp/guzzle", "monolog/monolog", "phpunit/phpunit", "doctrine/orm", "twig/twig", "swiftmailer/swiftmailer", "psr/log", "composer/composer"},
 		"crates.io": {"serde", "tokio", "clap", "rand", "regex", "log", "env_logger", "chrono", "uuid", "reqwest", "anyhow", "thiserror", "futures", "async-trait", "diesel", "actix-web", "hyper", "warp", "sqlx", "rayon"},
 	}
-	
+
 	if packages, exists := popularPackages[registry]; exists {
 		return packages
 	}
@@ -2285,33 +2286,33 @@ func (td *TypoDetector) calculateEditDistance(s1, s2 string) int {
 	if len(s2) == 0 {
 		return len(s1)
 	}
-	
+
 	matrix := make([][]int, len(s1)+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len(s2)+1)
 	}
-	
+
 	for i := 0; i <= len(s1); i++ {
 		matrix[i][0] = i
 	}
 	for j := 0; j <= len(s2); j++ {
 		matrix[0][j] = j
 	}
-	
+
 	for i := 1; i <= len(s1); i++ {
 		for j := 1; j <= len(s2); j++ {
 			cost := 0
 			if s1[i-1] != s2[j-1] {
 				cost = 1
 			}
-			
+
 			matrix[i][j] = min(
 				min(matrix[i-1][j]+1, matrix[i][j-1]+1), // deletion, insertion
-				matrix[i-1][j-1]+cost,                    // substitution
+				matrix[i-1][j-1]+cost,                   // substitution
 			)
 		}
 	}
-	
+
 	return matrix[len(s1)][len(s2)]
 }
 
@@ -2341,20 +2342,20 @@ func (td *TypoDetector) determineTypoType(typo, original string) string {
 
 func (td *TypoDetector) detectSuspiciousPatterns(packageName string) []string {
 	var patterns []string
-	
+
 	// Check for common typosquatting patterns
 	if strings.Contains(packageName, "0") || strings.Contains(packageName, "1") {
 		patterns = append(patterns, "number_substitution")
 	}
-	
+
 	if strings.Contains(packageName, "-") && strings.Count(packageName, "-") > 2 {
 		patterns = append(patterns, "excessive_hyphens")
 	}
-	
+
 	if strings.Contains(packageName, "_") && strings.Count(packageName, "_") > 2 {
 		patterns = append(patterns, "excessive_underscores")
 	}
-	
+
 	// Check for mixed case in unusual patterns
 	hasUpper := false
 	hasLower := false
@@ -2369,7 +2370,7 @@ func (td *TypoDetector) detectSuspiciousPatterns(packageName string) []string {
 	if hasUpper && hasLower && len(packageName) < 10 {
 		patterns = append(patterns, "unusual_casing")
 	}
-	
+
 	// Check for repeated characters
 	for i := 0; i < len(packageName)-1; i++ {
 		if packageName[i] == packageName[i+1] {
@@ -2377,7 +2378,7 @@ func (td *TypoDetector) detectSuspiciousPatterns(packageName string) []string {
 			break
 		}
 	}
-	
+
 	return patterns
 }
 
@@ -2385,13 +2386,13 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 	if features == nil {
 		return &EnhancedReputationAnalysis{}, nil
 	}
-	
+
 	var trustScore float64 = 0.5 // Start with neutral score
 	var riskFactors []string
 	var positiveIndicators []string
 	var communityTrust float64
 	var maintainerReputation float64
-	
+
 	// Analyze download statistics
 	if features.Downloads > 0 {
 		// Higher download count increases trust
@@ -2406,7 +2407,7 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 			riskFactors = append(riskFactors, "low_download_count")
 		}
 	}
-	
+
 	// Analyze GitHub stars and community engagement
 	if features.Stars > 0 {
 		if features.Stars > 10000 {
@@ -2418,7 +2419,7 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 		}
 		communityTrust = math.Min(1.0, float64(features.Stars)/10000.0)
 	}
-	
+
 	// Analyze package age and stability
 	if !features.CreationDate.IsZero() {
 		packageAge := time.Since(features.CreationDate)
@@ -2430,7 +2431,7 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 			riskFactors = append(riskFactors, "very_new_package")
 		}
 	}
-	
+
 	// Analyze maintainer information
 	if features.Author != "" {
 		// Check for known maintainer patterns
@@ -2446,7 +2447,7 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 			maintainerReputation = 0.5
 		}
 	}
-	
+
 	// Analyze version patterns
 	if features.Version != "" {
 		if ra.hasStableVersionPattern(features.Version) {
@@ -2457,7 +2458,7 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 			riskFactors = append(riskFactors, "unstable_versioning")
 		}
 	}
-	
+
 	// Analyze dependencies
 	if len(features.Dependencies) > 0 {
 		suspiciousDeps := ra.countSuspiciousDependencies(features.Dependencies)
@@ -2465,26 +2466,26 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 			trustScore -= float64(suspiciousDeps) * 0.1
 			riskFactors = append(riskFactors, "suspicious_dependencies")
 		}
-		
+
 		if len(features.Dependencies) > 50 {
 			trustScore -= 0.1
 			riskFactors = append(riskFactors, "excessive_dependencies")
 		}
 	}
-	
+
 	// Check for security indicators - using available fields
 	if features.SecurityMetrics.VulnerabilityCount > 0 {
 		trustScore -= float64(features.SecurityMetrics.VulnerabilityCount) * 0.05
 		riskFactors = append(riskFactors, "known_vulnerabilities")
 	}
-	
+
 	// Normalize trust score
 	if trustScore > 1.0 {
 		trustScore = 1.0
 	} else if trustScore < 0.0 {
 		trustScore = 0.0
 	}
-	
+
 	// Determine overall reputation level
 	reputationLevel := "unknown"
 	if trustScore >= 0.8 {
@@ -2498,7 +2499,7 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 	} else {
 		reputationLevel = "very_poor"
 	}
-	
+
 	return &EnhancedReputationAnalysis{
 		ReputationScore:      trustScore,
 		TrustLevel:           reputationLevel,
@@ -2514,13 +2515,13 @@ func (ra *ReputationAnalyzer) AnalyzeReputation(ctx context.Context, features *E
 func (ra *ReputationAnalyzer) isKnownMaintainer(author string) bool {
 	// List of known trusted maintainers/organizations
 	trustedMaintainers := []string{
-		"facebook", "google", "microsoft", "mozilla", "nodejs", "expressjs", "lodash", 
+		"facebook", "google", "microsoft", "mozilla", "nodejs", "expressjs", "lodash",
 		"sindresorhus", "tj", "substack", "isaacs", "feross", "mikeal", "dominictarr",
 		"rails", "rubygems", "bundler", "rspec", "puma", "nokogiri", "devise",
 		"symfony", "laravel", "guzzle", "monolog", "phpunit", "doctrine", "twig",
 		"rust-lang", "serde-rs", "tokio-rs", "clap-rs", "actix", "diesel-rs",
 	}
-	
+
 	authorLower := strings.ToLower(author)
 	for _, trusted := range trustedMaintainers {
 		if strings.Contains(authorLower, trusted) {
@@ -2533,12 +2534,12 @@ func (ra *ReputationAnalyzer) isKnownMaintainer(author string) bool {
 func (ra *ReputationAnalyzer) isSuspiciousMaintainer(author string) bool {
 	// Check for suspicious patterns in maintainer names
 	authorLower := strings.ToLower(author)
-	
+
 	// Check for random-looking names
 	if len(author) > 15 && ra.hasHighEntropy(author) {
 		return true
 	}
-	
+
 	// Check for suspicious keywords
 	suspiciousKeywords := []string{"hack", "crack", "exploit", "malware", "virus", "trojan"}
 	for _, keyword := range suspiciousKeywords {
@@ -2546,7 +2547,7 @@ func (ra *ReputationAnalyzer) isSuspiciousMaintainer(author string) bool {
 			return true
 		}
 	}
-	
+
 	// Check for excessive numbers or special characters
 	digitCount := 0
 	specialCount := 0
@@ -2557,11 +2558,11 @@ func (ra *ReputationAnalyzer) isSuspiciousMaintainer(author string) bool {
 			specialCount++
 		}
 	}
-	
+
 	if digitCount > len(author)/2 || specialCount > 3 {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -2571,14 +2572,14 @@ func (ra *ReputationAnalyzer) hasHighEntropy(s string) bool {
 	for _, r := range s {
 		charCount[r]++
 	}
-	
+
 	entropy := 0.0
 	length := float64(len(s))
 	for _, count := range charCount {
 		p := float64(count) / length
 		entropy -= p * math.Log2(p)
 	}
-	
+
 	// High entropy threshold (randomness indicator)
 	return entropy > 3.5
 }
@@ -2589,20 +2590,20 @@ func (ra *ReputationAnalyzer) hasStableVersionPattern(version string) bool {
 	if semverRegex.MatchString(version) {
 		return true
 	}
-	
+
 	// Check for other stable patterns
 	stablePatterns := []string{
-		`^\d+\.\d+$`,           // Major.Minor
-		`^\d+\.\d+\.\d+$`,      // Major.Minor.Patch
-		`^\d+\.\d+\.\d+-\w+$`,  // With pre-release
+		`^\d+\.\d+$`,          // Major.Minor
+		`^\d+\.\d+\.\d+$`,     // Major.Minor.Patch
+		`^\d+\.\d+\.\d+-\w+$`, // With pre-release
 	}
-	
+
 	for _, pattern := range stablePatterns {
 		if matched, _ := regexp.MatchString(pattern, version); matched {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -2612,7 +2613,7 @@ func (ra *ReputationAnalyzer) countSuspiciousDependencies(dependencies []Depende
 		if dep.Suspicious || dep.RiskScore > 0.7 {
 			suspiciousCount++
 		}
-		
+
 		// Check for suspicious dependency names
 		depNameLower := strings.ToLower(dep.Name)
 		suspiciousNames := []string{"hack", "crack", "exploit", "malware", "virus", "trojan", "backdoor"}
@@ -2630,7 +2631,7 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 	if result == nil {
 		return &EnsembleResults{}, nil
 	}
-	
+
 	// Initialize ensemble results
 	ensembleResult := &EnsembleResults{
 		FinalScore:          0.0,
@@ -2640,20 +2641,20 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 		DisagreementFactors: []string{},
 		Confidence:          0.0,
 	}
-	
+
 	// Define model weights based on their reliability and performance
 	weights := map[string]float64{
-		"similarity":    0.25,
-		"malware":       0.30,
-		"anomaly":       0.20,
-		"typo":          0.15,
-		"reputation":    0.10,
+		"similarity": 0.25,
+		"malware":    0.30,
+		"anomaly":    0.20,
+		"typo":       0.15,
+		"reputation": 0.10,
 	}
-	
+
 	// Collect individual model scores
 	modelScores := make(map[string]float64)
 	modelConfidences := make(map[string]float64)
-	
+
 	// Similarity model contribution
 	if len(result.SimilarityResults) > 0 {
 		maxSimilarity := 0.0
@@ -2665,7 +2666,7 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 		modelScores["similarity"] = maxSimilarity
 		modelConfidences["similarity"] = 0.8 // Default confidence
 	}
-	
+
 	// Malware classification contribution
 	if result.MalwareClassification.IsMalware {
 		modelScores["malware"] = result.MalwareClassification.Confidence
@@ -2674,7 +2675,7 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 		modelScores["malware"] = 1.0 - result.MalwareClassification.Confidence
 		modelConfidences["malware"] = result.MalwareClassification.Confidence
 	}
-	
+
 	// Anomaly detection contribution
 	if result.AnomalyDetection.IsAnomalous {
 		modelScores["anomaly"] = result.AnomalyDetection.AnomalyScore
@@ -2683,7 +2684,7 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 		modelScores["anomaly"] = 1.0 - result.AnomalyDetection.AnomalyScore
 		modelConfidences["anomaly"] = result.AnomalyDetection.Confidence
 	}
-	
+
 	// Typosquatting detection contribution
 	if result.TypoDetection.IsTyposquatting {
 		modelScores["typo"] = result.TypoDetection.Confidence
@@ -2692,52 +2693,52 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 		modelScores["typo"] = 1.0 - result.TypoDetection.Confidence
 		modelConfidences["typo"] = result.TypoDetection.Confidence
 	}
-	
+
 	// Reputation analysis contribution
 	modelScores["reputation"] = 1.0 - result.ReputationAnalysis.ReputationScore // Invert reputation score to risk score
-	modelConfidences["reputation"] = 0.7 // Default confidence for reputation
-	
+	modelConfidences["reputation"] = 0.7                                        // Default confidence for reputation
+
 	// Calculate weighted ensemble score
 	var weightedSum float64
 	var totalWeight float64
 	var confidenceSum float64
 	var consensusCount int
-	
+
 	for model, score := range modelScores {
 		weight := weights[model]
 		confidence := modelConfidences[model]
-		
+
 		// Adjust weight based on confidence
 		adjustedWeight := weight * confidence
-		
+
 		weightedSum += score * adjustedWeight
 		totalWeight += adjustedWeight
 		confidenceSum += confidence
-		
+
 		if score > 0.5 { // Model indicates risk
 			consensusCount++
 		}
-		
+
 		ensembleResult.ModelScores[model] = score
 		ensembleResult.ModelWeights[model] = adjustedWeight
 	}
-	
+
 	// Calculate final scores
 	if totalWeight > 0 {
 		ensembleResult.FinalScore = weightedSum / totalWeight
 	}
-	
+
 	if len(modelScores) > 0 {
 		ensembleResult.Confidence = confidenceSum / float64(len(modelScores))
 		ensembleResult.ConsensusLevel = float64(consensusCount) / float64(len(modelScores))
 	}
-	
+
 	// Identify disagreement factors
 	scores := make([]float64, 0, len(modelScores))
 	for _, score := range modelScores {
 		scores = append(scores, score)
 	}
-	
+
 	// Calculate standard deviation to measure consensus
 	mean := ensembleResult.FinalScore
 	var variance float64
@@ -2746,17 +2747,17 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 	}
 	variance /= float64(len(scores))
 	stdDev := math.Sqrt(variance)
-	
+
 	if stdDev > 0.3 {
 		ensembleResult.DisagreementFactors = append(ensembleResult.DisagreementFactors, "High variance between model scores")
 	}
-	if math.Abs(modelScores["malware"] - modelScores["similarity"]) > 0.4 {
+	if math.Abs(modelScores["malware"]-modelScores["similarity"]) > 0.4 {
 		ensembleResult.DisagreementFactors = append(ensembleResult.DisagreementFactors, "Malware and similarity models disagree")
 	}
-	if math.Abs(modelScores["typo"] - modelScores["reputation"]) > 0.5 {
+	if math.Abs(modelScores["typo"]-modelScores["reputation"]) > 0.5 {
 		ensembleResult.DisagreementFactors = append(ensembleResult.DisagreementFactors, "Typo and reputation models disagree")
 	}
-	
+
 	return ensembleResult, nil
 }
 
@@ -2764,7 +2765,7 @@ func (em *EnsembleModel) CombineResults(ctx context.Context, result *MLDetection
 func (sm *SimilarityModel) Update(ctx context.Context) error {
 	// Update similarity model with latest package data
 	// In a real implementation, this would retrain the model with new data
-	
+
 	// Simulate model update process
 	select {
 	case <-ctx.Done():
@@ -2772,14 +2773,14 @@ func (sm *SimilarityModel) Update(ctx context.Context) error {
 	default:
 		// Update internal parameters based on recent similarity calculations
 		// This could involve updating thresholds, weights, or retraining embeddings
-		
+
 		// For now, we'll just update the last update timestamp
 		// In production, this would involve:
 		// 1. Fetching new training data
 		// 2. Recomputing similarity matrices
 		// 3. Updating model parameters
 		// 4. Validating model performance
-		
+
 		return nil
 	}
 }
@@ -2796,7 +2797,7 @@ func (mc *MalwareClassifier) Update(ctx context.Context) error {
 		// 3. Retrain classification models
 		// 4. Update detection patterns
 		// 5. Validate model accuracy
-		
+
 		return nil
 	}
 }
@@ -2813,27 +2814,25 @@ func (ad *AnomalyDetector) Update(ctx context.Context) error {
 		// 3. Incorporate feedback from false positives/negatives
 		// 4. Retrain anomaly detection models
 		// 5. Update statistical distributions
-		
+
 		return nil
 	}
 }
-
-
 
 // detectFileStructureAnomalies analyzes file structure for anomalies
 func (ad *AnomalyDetector) detectFileStructureAnomalies(fileStructure *FileStructure) float64 {
 	if fileStructure == nil {
 		return 0.0
 	}
-	
+
 	var anomalyScore float64
-	
+
 	// Check for suspicious file ratios
 	totalFiles := fileStructure.TotalFiles
 	if totalFiles == 0 {
 		return 0.3 // Empty package is suspicious
 	}
-	
+
 	// Check for high ratio of binary files
 	if totalFiles > 0 {
 		binaryRatio := float64(fileStructure.BinaryFiles) / float64(totalFiles)
@@ -2841,7 +2840,7 @@ func (ad *AnomalyDetector) detectFileStructureAnomalies(fileStructure *FileStruc
 			anomalyScore += binaryRatio * 0.5
 		}
 	}
-	
+
 	// Check for hidden files
 	if fileStructure.HiddenFiles > 0 {
 		hiddenRatio := float64(fileStructure.HiddenFiles) / float64(totalFiles)
@@ -2849,18 +2848,18 @@ func (ad *AnomalyDetector) detectFileStructureAnomalies(fileStructure *FileStruc
 			anomalyScore += hiddenRatio * 0.3
 		}
 	}
-	
+
 	// Check for suspicious files
 	if len(fileStructure.SuspiciousFiles) > 0 {
 		suspiciousRatio := float64(len(fileStructure.SuspiciousFiles)) / float64(totalFiles)
 		anomalyScore += suspiciousRatio * 0.7
 	}
-	
+
 	// Check for unusual extensions
 	if len(fileStructure.UnusualExtensions) > 0 {
 		anomalyScore += float64(len(fileStructure.UnusualExtensions)) * 0.1
 	}
-	
+
 	// Check for large files
 	if len(fileStructure.LargeFiles) > 0 {
 		largeFileRatio := float64(len(fileStructure.LargeFiles)) / float64(totalFiles)
@@ -2868,22 +2867,22 @@ func (ad *AnomalyDetector) detectFileStructureAnomalies(fileStructure *FileStruc
 			anomalyScore += largeFileRatio * 0.3
 		}
 	}
-	
+
 	// Check for lack of test files in a substantial package
 	if totalFiles > 10 && fileStructure.TestFiles == 0 {
 		anomalyScore += 0.2
 	}
-	
+
 	// Check for lack of documentation in a substantial package
 	if totalFiles > 10 && fileStructure.DocumentationFiles == 0 {
 		anomalyScore += 0.1
 	}
-	
+
 	// Normalize score
 	if anomalyScore > 1.0 {
 		anomalyScore = 1.0
 	}
-	
+
 	return anomalyScore
 }
 
@@ -2893,12 +2892,12 @@ func (ad *AnomalyDetector) isRandomLookingFilename(filename string) bool {
 	base := filepath.Base(filename)
 	ext := filepath.Ext(base)
 	name := strings.TrimSuffix(base, ext)
-	
+
 	// Skip if it's too short
 	if len(name) < 5 {
 		return false
 	}
-	
+
 	// Check for high entropy (randomness)
 	var upperCount, lowerCount, digitCount, otherCount int
 	for _, r := range name {
@@ -2913,7 +2912,7 @@ func (ad *AnomalyDetector) isRandomLookingFilename(filename string) bool {
 			otherCount++
 		}
 	}
-	
+
 	// Calculate character type diversity
 	charTypes := 0
 	if upperCount > 0 {
@@ -2928,7 +2927,7 @@ func (ad *AnomalyDetector) isRandomLookingFilename(filename string) bool {
 	if otherCount > 0 {
 		charTypes++
 	}
-	
+
 	// Check for high character type diversity and significant length
 	if charTypes >= 3 && len(name) >= 8 {
 		// Check for lack of dictionary words
@@ -2936,7 +2935,7 @@ func (ad *AnomalyDetector) isRandomLookingFilename(filename string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -2944,25 +2943,25 @@ func (ad *AnomalyDetector) isRandomLookingFilename(filename string) bool {
 func (ad *AnomalyDetector) containsCommonSubstring(s string) bool {
 	commonWords := []string{"test", "util", "helper", "index", "main", "app", "lib", "src", "core", "base", "common"}
 	s = strings.ToLower(s)
-	
+
 	for _, word := range commonWords {
 		if strings.Contains(s, word) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // detectDependencyAnomalies analyzes dependencies for anomalies
 func (ad *AnomalyDetector) detectDependencyAnomalies(dependencies []Dependency, devDependencies []Dependency) float64 {
 	var anomalyScore float64
-	
+
 	// Check for too many dependencies
 	if len(dependencies) > 50 {
 		anomalyScore += 0.2
 	}
-	
+
 	// Check for suspicious dependencies
 	suspiciousCount := 0
 	for _, dep := range dependencies {
@@ -2970,30 +2969,30 @@ func (ad *AnomalyDetector) detectDependencyAnomalies(dependencies []Dependency, 
 		if strings.Contains(dep.Version, "*") || strings.Contains(dep.Version, "latest") {
 			suspiciousCount++
 		}
-		
+
 		// Check for dependencies with random-looking names
 		if ad.isRandomLookingName(dep.Name) {
 			suspiciousCount++
 		}
 	}
-	
+
 	if len(dependencies) > 0 {
 		suspiciousRatio := float64(suspiciousCount) / float64(len(dependencies))
 		if suspiciousRatio > 0.1 { // More than 10% suspicious dependencies
 			anomalyScore += suspiciousRatio * 0.5
 		}
 	}
-	
+
 	// Check for no dev dependencies in a large project
 	if len(dependencies) > 10 && len(devDependencies) == 0 {
 		anomalyScore += 0.2
 	}
-	
+
 	// Normalize score
 	if anomalyScore > 1.0 {
 		anomalyScore = 1.0
 	}
-	
+
 	return anomalyScore
 }
 
@@ -3003,7 +3002,7 @@ func (ad *AnomalyDetector) isRandomLookingName(name string) bool {
 	if len(name) < 5 {
 		return false
 	}
-	
+
 	// Check for high entropy (randomness)
 	var upperCount, lowerCount, digitCount, otherCount int
 	for _, r := range name {
@@ -3018,7 +3017,7 @@ func (ad *AnomalyDetector) isRandomLookingName(name string) bool {
 			otherCount++
 		}
 	}
-	
+
 	// Calculate character type diversity
 	charTypes := 0
 	if upperCount > 0 {
@@ -3033,7 +3032,7 @@ func (ad *AnomalyDetector) isRandomLookingName(name string) bool {
 	if otherCount > 0 {
 		charTypes++
 	}
-	
+
 	// Check for high character type diversity and significant length
 	if charTypes >= 3 && len(name) >= 8 {
 		// Check for lack of dictionary words
@@ -3041,27 +3040,27 @@ func (ad *AnomalyDetector) isRandomLookingName(name string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // detectMetadataAnomalies analyzes package metadata for anomalies
 func (ad *AnomalyDetector) detectMetadataAnomalies(features *EnhancedPackageFeatures) float64 {
 	var anomalyScore float64
-	
+
 	// Check for missing essential metadata
 	if features.Author == "" {
 		anomalyScore += 0.3
 	}
-	
+
 	if features.Description == "" {
 		anomalyScore += 0.2
 	}
-	
+
 	if features.Homepage == "" && features.Repository == "" {
 		anomalyScore += 0.2
 	}
-	
+
 	// Check for suspicious keywords
 	suspiciousKeywords := []string{"hack", "crack", "password", "steal", "token", "secret", "credentials"}
 	for _, keyword := range features.Keywords {
@@ -3072,17 +3071,17 @@ func (ad *AnomalyDetector) detectMetadataAnomalies(features *EnhancedPackageFeat
 			}
 		}
 	}
-	
+
 	// Check for very short description
 	if len(features.Description) > 0 && len(features.Description) < 20 {
 		anomalyScore += 0.2
 	}
-	
+
 	// Normalize score
 	if anomalyScore > 1.0 {
 		anomalyScore = 1.0
 	}
-	
+
 	return anomalyScore
 }
 
@@ -3091,101 +3090,101 @@ func (ad *AnomalyDetector) detectBehavioralAnomalies(metrics *BehavioralMetrics)
 	if metrics == nil {
 		return 0.0
 	}
-	
+
 	var anomalyScore float64
-	
+
 	// Check process behavior anomalies
 	// Check for suspicious commands
 	if len(metrics.ProcessBehavior.SuspiciousCommands) > 0 {
 		anomalyScore += float64(len(metrics.ProcessBehavior.SuspiciousCommands)) * 0.3
 	}
-	
+
 	// Check for privilege escalation
 	if metrics.ProcessBehavior.PrivilegeEscalation {
 		anomalyScore += 0.8
 	}
-	
+
 	// Check for code injection techniques
 	if metrics.ProcessBehavior.CodeInjection {
 		anomalyScore += 0.7
 	}
-	
+
 	if metrics.ProcessBehavior.Hollowing {
 		anomalyScore += 0.7
 	}
-	
+
 	if metrics.ProcessBehavior.DLLInjection {
 		anomalyScore += 0.6
 	}
-	
+
 	// Check for excessive child processes
 	if metrics.ProcessBehavior.ChildProcesses > 10 {
 		anomalyScore += 0.3
 	}
-	
+
 	// Check network behavior anomalies
 	// Check for excessive connections
 	if metrics.NetworkBehavior.OutboundConnections > 50 {
 		anomalyScore += 0.3
 	}
-	
+
 	// Check for suspicious hosts
 	if len(metrics.NetworkBehavior.SuspiciousHosts) > 0 {
 		anomalyScore += float64(len(metrics.NetworkBehavior.SuspiciousHosts)) * 0.2
 	}
-	
+
 	// Check for unusual ports
 	if len(metrics.NetworkBehavior.UnusualPorts) > 0 {
 		anomalyScore += float64(len(metrics.NetworkBehavior.UnusualPorts)) * 0.1
 	}
-	
+
 	// Check for data exfiltration
 	if metrics.NetworkBehavior.DataExfiltration {
 		anomalyScore += 0.8
 	}
-	
+
 	// Check for C2 communication
 	if metrics.NetworkBehavior.C2Communication {
 		anomalyScore += 0.9
 	}
-	
+
 	// Check for DNS tunneling
 	if metrics.NetworkBehavior.DNSTunneling {
 		anomalyScore += 0.6
 	}
-	
+
 	// Check runtime behavior
 	if metrics.RuntimeBehavior.AntiAnalysisTechniques {
 		anomalyScore += 0.7
 	}
-	
+
 	if metrics.RuntimeBehavior.PersistenceMechanisms {
 		anomalyScore += 0.6
 	}
-	
+
 	// Check for excessive resource usage
 	if metrics.RuntimeBehavior.CPUUsage > 80.0 {
 		anomalyScore += 0.2
 	}
-	
+
 	if metrics.RuntimeBehavior.MemoryUsage > 80.0 {
 		anomalyScore += 0.2
 	}
-	
+
 	// Check file system behavior
 	if metrics.FileSystemBehavior.SystemFileAccess {
 		anomalyScore += 0.5
 	}
-	
+
 	if len(metrics.FileSystemBehavior.SuspiciousLocations) > 0 {
 		anomalyScore += float64(len(metrics.FileSystemBehavior.SuspiciousLocations)) * 0.2
 	}
-	
+
 	// Normalize score
 	if anomalyScore > 1.0 {
 		anomalyScore = 1.0
 	}
-	
+
 	return anomalyScore
 }
 
@@ -3194,64 +3193,64 @@ func (ad *AnomalyDetector) detectSecurityAnomalies(metrics *SecurityMetrics) flo
 	if metrics == nil {
 		return 0.0
 	}
-	
+
 	var anomalyScore float64
-	
+
 	// Check for high vulnerability count
 	if metrics.VulnerabilityCount > 3 {
 		anomalyScore += 0.2 + float64(metrics.VulnerabilityCount-3)*0.05
 	}
-	
+
 	// Check for high severity vulnerabilities
 	if metrics.HighSeverityVulns > 0 {
 		anomalyScore += 0.2 + float64(metrics.HighSeverityVulns)*0.1
 	}
-	
+
 	// Check for critical severity vulnerabilities
 	if metrics.CriticalSeverityVulns > 0 {
 		anomalyScore += 0.3 + float64(metrics.CriticalSeverityVulns)*0.15
 	}
-	
+
 	// Check for suspicious patterns
 	if metrics.SuspiciousPatterns > 0 {
 		anomalyScore += 0.2 + float64(metrics.SuspiciousPatterns)*0.05
 	}
-	
+
 	// Check for obfuscated code
 	if metrics.ObfuscatedCode {
 		anomalyScore += 0.4
 	}
-	
+
 	// Check for excessive network calls
 	if metrics.NetworkCalls > 10 {
 		anomalyScore += 0.1 + float64(metrics.NetworkCalls-10)*0.01
 	}
-	
+
 	// Check for excessive file system access
 	if metrics.FileSystemAccess > 20 {
 		anomalyScore += 0.1 + float64(metrics.FileSystemAccess-20)*0.005
 	}
-	
+
 	// Check for process execution
 	if metrics.ProcessExecution > 5 {
 		anomalyScore += 0.2 + float64(metrics.ProcessExecution-5)*0.05
 	}
-	
+
 	// Check for dangerous functions
 	if metrics.DangerousFunctions > 0 {
 		anomalyScore += 0.3 + float64(metrics.DangerousFunctions)*0.1
 	}
-	
+
 	// Check for low security score
 	if metrics.SecurityScore < 0.5 {
 		anomalyScore += (0.5 - metrics.SecurityScore) * 0.5
 	}
-	
+
 	// Normalize score
 	if anomalyScore > 1.0 {
 		anomalyScore = 1.0
 	}
-	
+
 	return anomalyScore
 }
 func (td *TypoDetector) Update(ctx context.Context) error {
@@ -3266,7 +3265,7 @@ func (td *TypoDetector) Update(ctx context.Context) error {
 		// 3. Update similarity algorithms and thresholds
 		// 4. Incorporate new typosquatting techniques
 		// 5. Retrain character-level models
-		
+
 		return nil
 	}
 }
@@ -3283,7 +3282,7 @@ func (ra *ReputationAnalyzer) Update(ctx context.Context) error {
 		// 3. Refresh security advisory feeds
 		// 4. Update download statistics and trends
 		// 5. Incorporate community feedback and reports
-		
+
 		return nil
 	}
 }

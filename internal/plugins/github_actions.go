@@ -618,8 +618,8 @@ func (ga *GitHubActionsPlugin) createSecurityIssue(ctx context.Context, client *
 	body := ga.formatSecurityIssueBody(pkg, threat)
 
 	issue := map[string]interface{}{
-		"title": title,
-		"body":  body,
+		"title":  title,
+		"body":   body,
 		"labels": []string{"security", "vulnerability", threat.Severity.String()},
 	}
 

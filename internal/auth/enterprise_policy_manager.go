@@ -33,29 +33,29 @@ type EnterprisePolicyManager struct {
 
 // PolicyEnforcement manages policy enforcement settings
 type PolicyEnforcement struct {
-	Enabled              bool                       `json:"enabled"`
-	StrictMode           bool                       `json:"strict_mode"`           // Block on any policy violation
-	GracePeriod          time.Duration              `json:"grace_period"`          // Grace period for new policies
-	NotificationChannels []NotificationChannel      `json:"notification_channels"`
+	Enabled              bool                        `json:"enabled"`
+	StrictMode           bool                        `json:"strict_mode"`  // Block on any policy violation
+	GracePeriod          time.Duration               `json:"grace_period"` // Grace period for new policies
+	NotificationChannels []NotificationChannel       `json:"notification_channels"`
 	ApprovalWorkflows    map[string]ApprovalWorkflow `json:"approval_workflows"`
-	AuditSettings        AuditSettings              `json:"audit_settings"`
+	AuditSettings        AuditSettings               `json:"audit_settings"`
 }
 
 // NotificationChannel represents a notification channel
 type NotificationChannel struct {
-	Type     string            `json:"type"`     // email, slack, webhook, teams
+	Type     string            `json:"type"` // email, slack, webhook, teams
 	Enabled  bool              `json:"enabled"`
 	Settings map[string]string `json:"settings"`
 }
 
 // ApprovalWorkflow defines approval requirements for policy actions
 type ApprovalWorkflow struct {
-	Required         bool     `json:"required"`
-	MinApprovers     int      `json:"min_approvers"`
-	RequiredRoles    []string `json:"required_roles"`
+	Required         bool          `json:"required"`
+	MinApprovers     int           `json:"min_approvers"`
+	RequiredRoles    []string      `json:"required_roles"`
 	TimeoutDuration  time.Duration `json:"timeout_duration"`
-	EscalationRoles  []string `json:"escalation_roles"`
-	AutoApproveRoles []string `json:"auto_approve_roles"`
+	EscalationRoles  []string      `json:"escalation_roles"`
+	AutoApproveRoles []string      `json:"auto_approve_roles"`
 }
 
 // AuditSettings defines audit logging settings
@@ -69,20 +69,20 @@ type AuditSettings struct {
 
 // PolicyViolation represents a policy violation
 type PolicyViolation struct {
-	ID               string                     `json:"id"`
-	PolicyID         string                     `json:"policy_id"`
-	PolicyName       string                     `json:"policy_name"`
-	Severity         string                     `json:"severity"`
-	Description      string                     `json:"description"`
-	Context          *PolicyEvaluationContext   `json:"context"`
-	Result           *PolicyEvaluationResult    `json:"result"`
-	Status           ViolationStatus            `json:"status"`
-	ApprovalRequired bool                       `json:"approval_required"`
-	Approvals        []PolicyApproval           `json:"approvals"`
-	Remediation      *RemediationAction         `json:"remediation"`
-	CreatedAt        time.Time                  `json:"created_at"`
-	ResolvedAt       *time.Time                 `json:"resolved_at"`
-	Metadata         map[string]interface{}     `json:"metadata"`
+	ID               string                   `json:"id"`
+	PolicyID         string                   `json:"policy_id"`
+	PolicyName       string                   `json:"policy_name"`
+	Severity         string                   `json:"severity"`
+	Description      string                   `json:"description"`
+	Context          *PolicyEvaluationContext `json:"context"`
+	Result           *PolicyEvaluationResult  `json:"result"`
+	Status           ViolationStatus          `json:"status"`
+	ApprovalRequired bool                     `json:"approval_required"`
+	Approvals        []PolicyApproval         `json:"approvals"`
+	Remediation      *RemediationAction       `json:"remediation"`
+	CreatedAt        time.Time                `json:"created_at"`
+	ResolvedAt       *time.Time               `json:"resolved_at"`
+	Metadata         map[string]interface{}   `json:"metadata"`
 }
 
 // ViolationStatus represents the status of a policy violation
@@ -99,19 +99,19 @@ const (
 
 // PolicyApproval represents an approval for a policy violation
 type PolicyApproval struct {
-	ID          string    `json:"id"`
-	ApproverID  string    `json:"approver_id"`
-	Approver    string    `json:"approver"`
-	Decision    string    `json:"decision"` // approved, rejected
-	Reason      string    `json:"reason"`
-	ApprovedAt  time.Time `json:"approved_at"`
-	ExpiresAt   *time.Time `json:"expires_at"`
+	ID         string     `json:"id"`
+	ApproverID string     `json:"approver_id"`
+	Approver   string     `json:"approver"`
+	Decision   string     `json:"decision"` // approved, rejected
+	Reason     string     `json:"reason"`
+	ApprovedAt time.Time  `json:"approved_at"`
+	ExpiresAt  *time.Time `json:"expires_at"`
 }
 
 // RemediationAction represents an action to remediate a policy violation
 type RemediationAction struct {
-	Type        string                 `json:"type"`        // block, quarantine, notify, manual
-	Status      string                 `json:"status"`      // pending, in_progress, completed, failed
+	Type        string                 `json:"type"`   // block, quarantine, notify, manual
+	Status      string                 `json:"status"` // pending, in_progress, completed, failed
 	Description string                 `json:"description"`
 	Actions     []string               `json:"actions"`
 	AssignedTo  string                 `json:"assigned_to"`
@@ -169,7 +169,7 @@ func (epm *EnterprisePolicyManager) initializeDefaultTemplates() {
 		Action: PolicyActionBlock,
 		Parameters: map[string]string{
 			"block_deployment": "true",
-			"notify_security": "true",
+			"notify_security":  "true",
 		},
 		Notifications: []string{"security-team@company.com"},
 		CreatedAt:     time.Now(),
@@ -193,7 +193,7 @@ func (epm *EnterprisePolicyManager) initializeDefaultTemplates() {
 		Action: PolicyActionRequireApproval,
 		Parameters: map[string]string{
 			"approval_timeout": "48h",
-			"escalation_time": "24h",
+			"escalation_time":  "24h",
 		},
 		Approvers: []string{"security_admin", "security_analyst"},
 		CreatedAt: time.Now(),
@@ -221,7 +221,7 @@ func (epm *EnterprisePolicyManager) initializeDefaultTemplates() {
 		},
 		Action: PolicyActionRequireApproval,
 		Parameters: map[string]string{
-			"require_spdx": "true",
+			"require_spdx":      "true",
 			"enhanced_scanning": "true",
 		},
 		Approvers: []string{"security_admin"},
@@ -250,7 +250,7 @@ func (epm *EnterprisePolicyManager) initializeDefaultTemplates() {
 		},
 		Action: PolicyActionNotify,
 		Parameters: map[string]string{
-			"warning_level": "medium",
+			"warning_level":  "medium",
 			"require_review": "true",
 		},
 		Notifications: []string{"dev-team@company.com"},
@@ -387,13 +387,13 @@ func (epm *EnterprisePolicyManager) createViolation(result *PolicyEvaluationResu
 		ctx := context.Background()
 		if err := epm.violationStore.CreateViolation(ctx, violation); err != nil {
 			if epm.logger != nil {
-				epm.logger.Error("Failed to store policy violation", 
+				epm.logger.Error("Failed to store policy violation",
 					"violation_id", violation.ID,
 					"error", err.Error())
 			}
 		} else {
 			if epm.logger != nil {
-				epm.logger.Info("Policy violation stored successfully", 
+				epm.logger.Info("Policy violation stored successfully",
 					"violation_id", violation.ID,
 					"policy_id", violation.PolicyID,
 					"severity", violation.Severity)
@@ -454,12 +454,12 @@ func (epm *EnterprisePolicyManager) hasValidApproval(violation *PolicyViolation,
 func (epm *EnterprisePolicyManager) logAuditTrail(ctx context.Context, evalCtx *PolicyEvaluationContext, result *EnforcementResult) {
 	if epm.logger != nil {
 		auditData := map[string]interface{}{
-			"user_id":         evalCtx.User.ID,
-			"environment":     evalCtx.Environment,
-			"allowed":         result.Allowed,
-			"violations":      len(result.Violations),
+			"user_id":          evalCtx.User.ID,
+			"environment":      evalCtx.Environment,
+			"allowed":          result.Allowed,
+			"violations":       len(result.Violations),
 			"required_actions": result.RequiredActions,
-			"timestamp":       result.EvaluatedAt,
+			"timestamp":        result.EvaluatedAt,
 		}
 
 		if evalCtx.Package != nil {
@@ -482,7 +482,7 @@ func (epm *EnterprisePolicyManager) sendNotifications(ctx context.Context, resul
 	// For now, just log the notification requirement
 	if epm.logger != nil {
 		for _, violation := range result.Violations {
-			epm.logger.Info("Policy violation notification", 
+			epm.logger.Info("Policy violation notification",
 				"violation_id", violation.ID,
 				"policy_name", violation.PolicyName,
 				"severity", violation.Severity)
@@ -560,7 +560,7 @@ func (epm *EnterprisePolicyManager) UpdateEnforcementSettings(settings *PolicyEn
 	epm.enforcement = settings
 
 	if epm.logger != nil {
-		epm.logger.Info("Policy enforcement settings updated", 
+		epm.logger.Info("Policy enforcement settings updated",
 			"enabled", settings.Enabled,
 			"strict_mode", settings.StrictMode)
 	}

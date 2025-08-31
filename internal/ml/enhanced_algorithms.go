@@ -16,21 +16,21 @@ import (
 
 // SimilarityAnalysisResult holds the results of advanced similarity analysis
 type SimilarityAnalysisResult struct {
-	PackageName       string                   `json:"package_name"`
-	AnalysisTime      time.Time               `json:"analysis_time"`
-	MaxSimilarity     float64                 `json:"max_similarity"`
-	BestMatch         EnhancedSimilarPackage  `json:"best_match"`
-	SimilarPackages   []EnhancedSimilarPackage `json:"similar_packages"`
-	IsTyposquatting   bool                    `json:"is_typosquatting"`
-	TyposquattingScore float64                `json:"typosquatting_score"`
+	PackageName        string                   `json:"package_name"`
+	AnalysisTime       time.Time                `json:"analysis_time"`
+	MaxSimilarity      float64                  `json:"max_similarity"`
+	BestMatch          EnhancedSimilarPackage   `json:"best_match"`
+	SimilarPackages    []EnhancedSimilarPackage `json:"similar_packages"`
+	IsTyposquatting    bool                     `json:"is_typosquatting"`
+	TyposquattingScore float64                  `json:"typosquatting_score"`
 }
 
 // EnhancedSimilarPackage represents an enhanced similar package analysis
 type EnhancedSimilarPackage struct {
 	Name              string            `json:"name"`
 	SimilarityMetrics SimilarityMetrics `json:"similarity_metrics"`
-	TyposquattingRisk float64          `json:"typosquatting_risk"`
-	ConfidenceScore   float64          `json:"confidence_score"`
+	TyposquattingRisk float64           `json:"typosquatting_risk"`
+	ConfidenceScore   float64           `json:"confidence_score"`
 }
 
 // SimilarityMetrics holds multiple similarity algorithm results
@@ -47,11 +47,11 @@ type SimilarityMetrics struct {
 
 // MaliciousDetectionResult holds the results of malicious package detection
 type MaliciousDetectionResult struct {
-	PackageName     string                      `json:"package_name"`
-	AnalysisTime    time.Time                  `json:"analysis_time"`
-	MaliciousScore  float64                    `json:"malicious_score"`
-	IsMalicious     bool                       `json:"is_malicious"`
-	ConfidenceLevel float64                    `json:"confidence_level"`
+	PackageName     string                       `json:"package_name"`
+	AnalysisTime    time.Time                    `json:"analysis_time"`
+	MaliciousScore  float64                      `json:"malicious_score"`
+	IsMalicious     bool                         `json:"is_malicious"`
+	ConfidenceLevel float64                      `json:"confidence_level"`
 	Indicators      []EnhancedMaliciousIndicator `json:"indicators"`
 }
 
@@ -76,11 +76,11 @@ type EnhancedMLAlgorithms struct {
 // NewEnhancedMLAlgorithms creates a new instance of enhanced ML algorithms
 func NewEnhancedMLAlgorithms(config Config) *EnhancedMLAlgorithms {
 	return &EnhancedMLAlgorithms{
-		config:               config,
-		knownMaliciousHashes: initializeMaliciousHashes(),
-		suspiciousPatterns:   initializeSuspiciousPatterns(),
+		config:                config,
+		knownMaliciousHashes:  initializeMaliciousHashes(),
+		suspiciousPatterns:    initializeSuspiciousPatterns(),
 		typosquattingPatterns: initializeTyposquattingPatterns(),
-		featureWeights:       initializeFeatureWeights(),
+		featureWeights:        initializeFeatureWeights(),
 	}
 }
 
@@ -101,7 +101,7 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 		}
 
 		similarity := ema.calculateMultiAlgorithmSimilarity(pkg.Name, popular)
-		
+
 		if similarity.OverallScore > 0.3 { // Only include meaningful similarities
 			enhancedSim := EnhancedSimilarPackage{
 				Name:              popular,
@@ -109,9 +109,9 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 				TyposquattingRisk: ema.assessTyposquattingRisk(pkg.Name, popular),
 				ConfidenceScore:   ema.calculateConfidenceScore(similarity),
 			}
-			
+
 			result.SimilarPackages = append(result.SimilarPackages, enhancedSim)
-			
+
 			if similarity.OverallScore > maxSimilarity {
 				maxSimilarity = similarity.OverallScore
 				bestMatch = enhancedSim
@@ -121,8 +121,8 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 
 	// Sort by similarity score
 	sort.Slice(result.SimilarPackages, func(i, j int) bool {
-		return result.SimilarPackages[i].SimilarityMetrics.OverallScore > 
-			   result.SimilarPackages[j].SimilarityMetrics.OverallScore
+		return result.SimilarPackages[i].SimilarityMetrics.OverallScore >
+			result.SimilarPackages[j].SimilarityMetrics.OverallScore
 	})
 
 	// Keep only top 10 most similar
@@ -132,7 +132,7 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 
 	result.MaxSimilarity = maxSimilarity
 	result.BestMatch = bestMatch
-	
+
 	// Enhanced typosquatting detection
 	typosquattingRisk := 0.0
 	for _, similar := range result.SimilarPackages {
@@ -144,7 +144,7 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 			}
 		}
 	}
-	
+
 	// Additional typosquatting checks for common patterns
 	if typosquattingRisk < 0.6 {
 		for _, popularPkg := range popularPackages {
@@ -160,20 +160,20 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 					typosquattingRisk = math.Max(typosquattingRisk, 0.8)
 				}
 			}
-			
+
 			// Check for single character deletion
 			if len(pkg.Name) == len(popularPkg)-1 {
 				similarity := ema.normalizedLevenshteinSimilarity(pkg.Name, popularPkg)
 				if similarity > 0.8 {
 					typosquattingRisk = math.Max(typosquattingRisk, 0.8)
 				}
-				
+
 				// Special case: check if it's just the last character removed
 				if len(popularPkg) > 0 && pkg.Name == popularPkg[:len(popularPkg)-1] {
 					typosquattingRisk = math.Max(typosquattingRisk, 0.9)
 				}
 			}
-			
+
 			// Check for single character insertion
 			if len(pkg.Name) == len(popularPkg)+1 {
 				similarity := ema.normalizedLevenshteinSimilarity(pkg.Name, popularPkg)
@@ -183,7 +183,7 @@ func (ema *EnhancedMLAlgorithms) AdvancedSimilarityAnalysis(pkg *types.Package, 
 			}
 		}
 	}
-	
+
 	result.IsTyposquatting = typosquattingRisk > 0.6 || (maxSimilarity > 0.7 && bestMatch.TyposquattingRisk > 0.6)
 	result.TyposquattingScore = typosquattingRisk
 
@@ -217,13 +217,13 @@ func (ema *EnhancedMLAlgorithms) calculateMultiAlgorithmSimilarity(name1, name2 
 
 	// Calculate weighted overall score with enhanced typosquatting detection
 	weights := map[string]float64{
-		"levenshtein": 0.25,
+		"levenshtein":  0.25,
 		"jaro_winkler": 0.20,
-		"cosine": 0.15,
-		"jaccard": 0.10,
-		"phonetic": 0.10,
-		"structural": 0.10,
-		"semantic": 0.10,
+		"cosine":       0.15,
+		"jaccard":      0.10,
+		"phonetic":     0.10,
+		"structural":   0.10,
+		"semantic":     0.10,
 	}
 
 	// Check for potential typosquatting (single character difference)
@@ -233,7 +233,7 @@ func (ema *EnhancedMLAlgorithms) calculateMultiAlgorithmSimilarity(name1, name2 
 
 	// Adjust weights for typosquatting cases
 	if isLikelyTyposquatting {
-		weights["levenshtein"] = 0.4  // Increase Levenshtein weight
+		weights["levenshtein"] = 0.4 // Increase Levenshtein weight
 		weights["jaro_winkler"] = 0.25
 		weights["cosine"] = 0.15
 		weights["jaccard"] = 0.08
@@ -242,14 +242,14 @@ func (ema *EnhancedMLAlgorithms) calculateMultiAlgorithmSimilarity(name1, name2 
 		weights["semantic"] = 0.03
 	}
 
-	metrics.OverallScore = 
+	metrics.OverallScore =
 		metrics.LevenshteinSimilarity*weights["levenshtein"] +
-		metrics.JaroWinklerSimilarity*weights["jaro_winkler"] +
-		metrics.CosineSimilarity*weights["cosine"] +
-		metrics.JaccardSimilarity*weights["jaccard"] +
-		metrics.PhoneticSimilarity*weights["phonetic"] +
-		metrics.StructuralSimilarity*weights["structural"] +
-		metrics.SemanticSimilarity*weights["semantic"]
+			metrics.JaroWinklerSimilarity*weights["jaro_winkler"] +
+			metrics.CosineSimilarity*weights["cosine"] +
+			metrics.JaccardSimilarity*weights["jaccard"] +
+			metrics.PhoneticSimilarity*weights["phonetic"] +
+			metrics.StructuralSimilarity*weights["structural"] +
+			metrics.SemanticSimilarity*weights["semantic"]
 
 	return metrics
 }
@@ -325,14 +325,14 @@ func (ema *EnhancedMLAlgorithms) normalizedLevenshteinSimilarity(s1, s2 string) 
 	if s1 == s2 {
 		return 1.0
 	}
-	
+
 	distance := ema.levenshteinDistance(s1, s2)
 	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
-	
+
 	if maxLen == 0 {
 		return 1.0
 	}
-	
+
 	return 1.0 - (float64(distance) / maxLen)
 }
 
@@ -428,9 +428,9 @@ func (ema *EnhancedMLAlgorithms) jaroWinklerSimilarity(s1, s2 string) float64 {
 	}
 
 	// Calculate Jaro similarity
-	jaro := (float64(matches)/float64(len1) + 
-			 float64(matches)/float64(len2) + 
-			 float64(matches-transpositions/2)/float64(matches)) / 3.0
+	jaro := (float64(matches)/float64(len1) +
+		float64(matches)/float64(len2) +
+		float64(matches-transpositions/2)/float64(matches)) / 3.0
 
 	// Calculate common prefix length (up to 4 characters)
 	prefixLength := 0
@@ -527,12 +527,12 @@ func (ema *EnhancedMLAlgorithms) structuralSimilarity(s1, s2 string) float64 {
 func (ema *EnhancedMLAlgorithms) semanticSimilarity(s1, s2 string) float64 {
 	// Simple semantic analysis based on common programming terms and patterns
 	semanticTerms := map[string][]string{
-		"web":      {"http", "server", "client", "api", "rest", "web"},
-		"data":     {"json", "xml", "csv", "data", "parse", "format"},
-		"crypto":   {"hash", "encrypt", "crypto", "secure", "auth"},
-		"util":     {"util", "helper", "tool", "lib", "common"},
-		"test":     {"test", "mock", "spec", "assert", "check"},
-		"log":      {"log", "debug", "trace", "monitor"},
+		"web":    {"http", "server", "client", "api", "rest", "web"},
+		"data":   {"json", "xml", "csv", "data", "parse", "format"},
+		"crypto": {"hash", "encrypt", "crypto", "secure", "auth"},
+		"util":   {"util", "helper", "tool", "lib", "common"},
+		"test":   {"test", "mock", "spec", "assert", "check"},
+		"log":    {"log", "debug", "trace", "monitor"},
 	}
 
 	score := 0.0
@@ -559,47 +559,47 @@ func (ema *EnhancedMLAlgorithms) semanticSimilarity(s1, s2 string) float64 {
 
 func (ema *EnhancedMLAlgorithms) assessTyposquattingRisk(name1, name2 string) float64 {
 	risk := 0.0
-	
+
 	// Calculate similarity first
 	similarity := ema.normalizedLevenshteinSimilarity(name1, name2)
-	
+
 	// High similarity indicates potential typosquatting
 	if similarity > 0.8 {
 		risk += 0.6
 	} else if similarity > 0.7 {
 		risk += 0.4
 	}
-	
+
 	// Check for specific typosquatting patterns
 	lenDiff := int(math.Abs(float64(len(name1) - len(name2))))
-	
+
 	// Single character difference (deletion, insertion, substitution)
 	if lenDiff <= 1 && similarity > 0.8 {
 		risk += 0.4
 	}
-	
+
 	// Check for common typosquatting patterns
 	for _, pattern := range ema.typosquattingPatterns {
 		if pattern.MatchString(name1) {
 			risk += 0.2
 		}
 	}
-	
+
 	// Check for character substitutions
 	if ema.hasCharacterSubstitutions(name1, name2) {
 		risk += 0.3
 	}
-	
+
 	// Check for insertion/deletion patterns
 	if ema.hasInsertionDeletionPatterns(name1, name2) {
 		risk += 0.3
 	}
-	
+
 	// Special case: if one name is a substring of another with high similarity
 	if (strings.Contains(name2, name1) || strings.Contains(name1, name2)) && similarity > 0.7 {
 		risk += 0.3
 	}
-	
+
 	return math.Min(risk, 1.0)
 }
 
@@ -611,19 +611,19 @@ func (ema *EnhancedMLAlgorithms) calculateConfidenceScore(metrics SimilarityMetr
 		metrics.CosineSimilarity,
 		metrics.JaccardSimilarity,
 	}
-	
+
 	mean := 0.0
 	for _, score := range scores {
 		mean += score
 	}
 	mean /= float64(len(scores))
-	
+
 	variance := 0.0
 	for _, score := range scores {
 		variance += math.Pow(score-mean, 2)
 	}
 	variance /= float64(len(scores))
-	
+
 	// Lower variance means higher confidence
 	confidence := 1.0 - math.Min(variance, 1.0)
 	return confidence
@@ -631,63 +631,63 @@ func (ema *EnhancedMLAlgorithms) calculateConfidenceScore(metrics SimilarityMetr
 
 func (ema *EnhancedMLAlgorithms) patternBasedDetection(pkg *types.Package) float64 {
 	score := 0.0
-	
+
 	// Check against suspicious patterns
 	for _, pattern := range ema.suspiciousPatterns {
 		if pattern.MatchString(pkg.Name) {
 			score += 0.2
 		}
 	}
-	
+
 	// Check for suspicious naming conventions
 	if ema.hasSuspiciousNaming(pkg.Name) {
 		score += 0.3
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
 func (ema *EnhancedMLAlgorithms) behavioralAnalysis(pkg *types.Package) float64 {
 	score := 0.0
-	
+
 	// Analyze package metadata for suspicious behavior indicators
 	if pkg.Metadata != nil {
 		if ema.hasSuspiciousDescription(pkg.Metadata.Description) {
 			score += 0.3
 		}
-		
+
 		if ema.hasSuspiciousAuthor(pkg.Metadata.Author) {
 			score += 0.2
 		}
-		
+
 		if ema.hasSuspiciousVersion(pkg.Version) {
 			score += 0.2
 		}
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
 func (ema *EnhancedMLAlgorithms) metadataAnalysis(pkg *types.Package) float64 {
 	score := 0.0
-	
+
 	if pkg.Metadata == nil {
 		return 0.5 // Missing metadata is suspicious
 	}
-	
+
 	// Check for minimal or suspicious metadata
 	if len(pkg.Metadata.Description) < 10 {
 		score += 0.3
 	}
-	
+
 	if pkg.Metadata.Author == "" {
 		score += 0.2
 	}
-	
+
 	if ema.hasGenericDescription(pkg.Metadata.Description) {
 		score += 0.3
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -695,14 +695,14 @@ func (ema *EnhancedMLAlgorithms) calculateMaliciousConfidence(result MaliciousDe
 	if len(result.Indicators) == 0 {
 		return 0.0
 	}
-	
+
 	// Higher confidence with more indicators and higher scores
 	avgScore := 0.0
 	for _, indicator := range result.Indicators {
 		avgScore += indicator.Score
 	}
 	avgScore /= float64(len(result.Indicators))
-	
+
 	// Confidence increases with number of indicators and average score
 	confidence := (float64(len(result.Indicators))/5.0)*0.5 + avgScore*0.5
 	return math.Min(confidence, 1.0)

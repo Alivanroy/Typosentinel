@@ -24,27 +24,27 @@ type DefaultAuditLogger struct {
 type AuditConfig struct {
 	Enabled         bool   `json:"enabled"`
 	LogFile         string `json:"log_file"`
-	MaxFileSize     int64  `json:"max_file_size"`     // in bytes
-	MaxBackups      int    `json:"max_backups"`       // number of backup files to keep
-	MaxAge          int    `json:"max_age"`           // days to keep log files
-	Compress        bool   `json:"compress"`          // compress backup files
-	IncludeMetadata bool   `json:"include_metadata"`  // include detailed metadata
-	Format          string `json:"format"`            // "json" or "text"
+	MaxFileSize     int64  `json:"max_file_size"`    // in bytes
+	MaxBackups      int    `json:"max_backups"`      // number of backup files to keep
+	MaxAge          int    `json:"max_age"`          // days to keep log files
+	Compress        bool   `json:"compress"`         // compress backup files
+	IncludeMetadata bool   `json:"include_metadata"` // include detailed metadata
+	Format          string `json:"format"`           // "json" or "text"
 }
 
 // AuditEntry represents an audit log entry
 type AuditEntry struct {
-	Timestamp   time.Time              `json:"timestamp"`
-	EventType   string                 `json:"event_type"`
-	EventID     string                 `json:"event_id"`
-	UserID      string                 `json:"user_id,omitempty"`
-	Resource    string                 `json:"resource"`
-	Action      string                 `json:"action"`
-	Result      string                 `json:"result"`
-	Severity    string                 `json:"severity"`
-	Message     string                 `json:"message"`
-	Details     map[string]interface{} `json:"details,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Timestamp time.Time              `json:"timestamp"`
+	EventType string                 `json:"event_type"`
+	EventID   string                 `json:"event_id"`
+	UserID    string                 `json:"user_id,omitempty"`
+	Resource  string                 `json:"resource"`
+	Action    string                 `json:"action"`
+	Result    string                 `json:"result"`
+	Severity  string                 `json:"severity"`
+	Message   string                 `json:"message"`
+	Details   map[string]interface{} `json:"details,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // NewDefaultAuditLogger creates a new default audit logger
@@ -108,10 +108,10 @@ func (al *DefaultAuditLogger) LogViolation(violation *auth.PolicyViolation) erro
 		Severity:  violation.Severity,
 		Message:   fmt.Sprintf("Policy violation detected: %s", violation.Description),
 		Details: map[string]interface{}{
-			"policy_id":    violation.PolicyID,
-			"policy_name":  violation.PolicyName,
-			"created_at":   violation.CreatedAt,
-			"status":       string(violation.Status),
+			"policy_id":   violation.PolicyID,
+			"policy_name": violation.PolicyName,
+			"created_at":  violation.CreatedAt,
+			"status":      string(violation.Status),
 		},
 	}
 
@@ -167,9 +167,9 @@ func (al *DefaultAuditLogger) LogRemediation(violation *auth.PolicyViolation, ac
 
 	if al.config.IncludeMetadata {
 		entry.Metadata = map[string]interface{}{
-			"status":       action.Status,
-			"description":  action.Description,
-			"assigned_to":  action.AssignedTo,
+			"status":      action.Status,
+			"description": action.Description,
+			"assigned_to": action.AssignedTo,
 		}
 		if action.Metadata != nil {
 			entry.Metadata["action_metadata"] = action.Metadata
@@ -265,7 +265,7 @@ func (al *DefaultAuditLogger) rotateLog() error {
 	for i := al.config.MaxBackups - 1; i >= 1; i-- {
 		oldName := fmt.Sprintf("%s.%d", al.config.LogFile, i)
 		newName := fmt.Sprintf("%s.%d", al.config.LogFile, i+1)
-		
+
 		if _, err := os.Stat(oldName); err == nil {
 			if err := os.Rename(oldName, newName); err != nil {
 				return fmt.Errorf("failed to rotate log file %s to %s: %w", oldName, newName, err)
@@ -305,7 +305,7 @@ func (al *DefaultAuditLogger) rotateLog() error {
 // cleanupOldBackups removes old backup files based on MaxBackups and MaxAge
 func (al *DefaultAuditLogger) cleanupOldBackups() {
 	// Remove backups beyond MaxBackups
-	for i := al.config.MaxBackups + 1; i <= al.config.MaxBackups + 10; i++ {
+	for i := al.config.MaxBackups + 1; i <= al.config.MaxBackups+10; i++ {
 		backupName := fmt.Sprintf("%s.%d", al.config.LogFile, i)
 		if _, err := os.Stat(backupName); err == nil {
 			os.Remove(backupName)
@@ -315,7 +315,7 @@ func (al *DefaultAuditLogger) cleanupOldBackups() {
 	// Remove backups older than MaxAge days
 	if al.config.MaxAge > 0 {
 		cutoff := time.Now().AddDate(0, 0, -al.config.MaxAge)
-		
+
 		for i := 1; i <= al.config.MaxBackups; i++ {
 			backupName := fmt.Sprintf("%s.%d", al.config.LogFile, i)
 			if fileInfo, err := os.Stat(backupName); err == nil {

@@ -17,18 +17,18 @@ import (
 type DIRTAlgorithm struct {
 	config  *DIRTConfig
 	metrics *AlgorithmMetrics
-	
+
 	// Dependency graph and analysis
 	dependencyGraph *DependencyGraph
 	riskCalculator  *RiskCalculator
 	impactAnalyzer  *ImpactAnalyzer
-	
+
 	// Vulnerability database
 	vulnDatabase *VulnerabilityDatabase
-	
+
 	// Risk propagation models
 	propagationModel *PropagationModel
-	
+
 	// Synchronization for concurrent access
 	mu sync.RWMutex
 }
@@ -39,21 +39,21 @@ type DIRTConfig struct {
 	CriticalRiskThreshold float64 `json:"critical_risk_threshold"`
 	HighRiskThreshold     float64 `json:"high_risk_threshold"`
 	MediumRiskThreshold   float64 `json:"medium_risk_threshold"`
-	
+
 	// Propagation parameters
-	MaxPropagationDepth   int     `json:"max_propagation_depth"`
-	DecayFactor          float64 `json:"decay_factor"`
-	TransitiveWeight     float64 `json:"transitive_weight"`
-	
+	MaxPropagationDepth int     `json:"max_propagation_depth"`
+	DecayFactor         float64 `json:"decay_factor"`
+	TransitiveWeight    float64 `json:"transitive_weight"`
+
 	// Analysis parameters
-	EnableCascadeAnalysis    bool `json:"enable_cascade_analysis"`
-	EnableHiddenRiskDetection bool `json:"enable_hidden_risk_detection"`
+	EnableCascadeAnalysis      bool `json:"enable_cascade_analysis"`
+	EnableHiddenRiskDetection  bool `json:"enable_hidden_risk_detection"`
 	EnableImpactQuantification bool `json:"enable_impact_quantification"`
-	
+
 	// Performance parameters
-	MaxDependencies      int           `json:"max_dependencies"`
-	AnalysisTimeout      time.Duration `json:"analysis_timeout"`
-	CacheEnabled         bool          `json:"cache_enabled"`
+	MaxDependencies int           `json:"max_dependencies"`
+	AnalysisTimeout time.Duration `json:"analysis_timeout"`
+	CacheEnabled    bool          `json:"cache_enabled"`
 }
 
 // DependencyGraph represents the dependency structure
@@ -64,12 +64,12 @@ type DependencyGraph struct {
 
 // DependencyNode represents a single dependency
 type DependencyNode struct {
-	Name         string                 `json:"name"`
-	Version      string                 `json:"version"`
-	Type         string                 `json:"type"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	RiskScore    float64                `json:"risk_score"`
-	Vulnerabilities []Vulnerability     `json:"vulnerabilities"`
+	Name            string                 `json:"name"`
+	Version         string                 `json:"version"`
+	Type            string                 `json:"type"`
+	Metadata        map[string]interface{} `json:"metadata"`
+	RiskScore       float64                `json:"risk_score"`
+	Vulnerabilities []Vulnerability        `json:"vulnerabilities"`
 }
 
 // DependencyEdge represents a dependency relationship
@@ -83,12 +83,12 @@ type DependencyEdge struct {
 
 // Vulnerability represents a security vulnerability
 type Vulnerability struct {
-	ID          string             `json:"id"`
-	CVSS        float64            `json:"cvss"`
-	Severity    string             `json:"severity"`
-	Description string             `json:"description"`
+	ID          string              `json:"id"`
+	CVSS        float64             `json:"cvss"`
+	Severity    string              `json:"severity"`
+	Description string              `json:"description"`
 	Impact      VulnerabilityImpact `json:"impact"`
-	Exploitable bool               `json:"exploitable"`
+	Exploitable bool                `json:"exploitable"`
 }
 
 // VulnerabilityImpact describes the impact of a vulnerability
@@ -96,7 +96,7 @@ type VulnerabilityImpact struct {
 	Confidentiality string `json:"confidentiality"`
 	Integrity       string `json:"integrity"`
 	Availability    string `json:"availability"`
-	Scope          string `json:"scope"`
+	Scope           string `json:"scope"`
 }
 
 // RiskCalculator handles risk computation
@@ -112,10 +112,10 @@ type ImpactAnalyzer struct {
 
 // ImpactModel represents different impact calculation models
 type ImpactModel struct {
-	Name        string                 `json:"name"`
-	Weights     map[string]float64     `json:"weights"`
-	Thresholds  map[string]float64     `json:"thresholds"`
-	Parameters  map[string]interface{} `json:"parameters"`
+	Name       string                 `json:"name"`
+	Weights    map[string]float64     `json:"weights"`
+	Thresholds map[string]float64     `json:"thresholds"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 // VulnerabilityDatabase manages vulnerability data
@@ -132,14 +132,14 @@ type PropagationModel struct {
 
 // RiskAssessment contains the complete risk assessment results
 type RiskAssessment struct {
-	OverallRisk      float64                    `json:"overall_risk"`
-	DirectRisks      []DirectRisk               `json:"direct_risks"`
-	TransitiveRisks  []TransitiveRisk           `json:"transitive_risks"`
-	CascadeRisks     []CascadeRisk              `json:"cascade_risks"`
-	HiddenRisks      []HiddenRisk               `json:"hidden_risks"`
-	ImpactAnalysis   *ImpactAnalysis            `json:"impact_analysis"`
-	Recommendations  []string                   `json:"recommendations"`
-	Metadata         map[string]interface{}     `json:"metadata"`
+	OverallRisk     float64                `json:"overall_risk"`
+	DirectRisks     []DirectRisk           `json:"direct_risks"`
+	TransitiveRisks []TransitiveRisk       `json:"transitive_risks"`
+	CascadeRisks    []CascadeRisk          `json:"cascade_risks"`
+	HiddenRisks     []HiddenRisk           `json:"hidden_risks"`
+	ImpactAnalysis  *ImpactAnalysis        `json:"impact_analysis"`
+	Recommendations []string               `json:"recommendations"`
+	Metadata        map[string]interface{} `json:"metadata"`
 }
 
 // DirectRisk represents direct vulnerability risks
@@ -152,20 +152,20 @@ type DirectRisk struct {
 
 // TransitiveRisk represents risks from transitive dependencies
 type TransitiveRisk struct {
-	Path        []string        `json:"path"`
-	Depth       int             `json:"depth"`
-	RiskScore   float64         `json:"risk_score"`
-	Propagated  bool            `json:"propagated"`
-	Source      string          `json:"source"`
-	Target      string          `json:"target"`
+	Path       []string `json:"path"`
+	Depth      int      `json:"depth"`
+	RiskScore  float64  `json:"risk_score"`
+	Propagated bool     `json:"propagated"`
+	Source     string   `json:"source"`
+	Target     string   `json:"target"`
 }
 
 // CascadeRisk represents cascading failure risks
 type CascadeRisk struct {
-	TriggerDependency string    `json:"trigger_dependency"`
-	AffectedPath      []string  `json:"affected_path"`
-	CascadeDepth      int       `json:"cascade_depth"`
-	ImpactScore       float64   `json:"impact_score"`
+	TriggerDependency  string   `json:"trigger_dependency"`
+	AffectedPath       []string `json:"affected_path"`
+	CascadeDepth       int      `json:"cascade_depth"`
+	ImpactScore        float64  `json:"impact_score"`
 	FailureProbability float64  `json:"failure_probability"`
 }
 
@@ -180,10 +180,10 @@ type HiddenRisk struct {
 
 // ImpactAnalysis contains quantified impact analysis
 type ImpactAnalysis struct {
-	BusinessImpact    float64 `json:"business_impact"`
-	SecurityImpact    float64 `json:"security_impact"`
-	OperationalImpact float64 `json:"operational_impact"`
-	FinancialImpact   float64 `json:"financial_impact"`
+	BusinessImpact     float64 `json:"business_impact"`
+	SecurityImpact     float64 `json:"security_impact"`
+	OperationalImpact  float64 `json:"operational_impact"`
+	FinancialImpact    float64 `json:"financial_impact"`
 	ReputationalImpact float64 `json:"reputational_impact"`
 }
 
@@ -191,28 +191,28 @@ type ImpactAnalysis struct {
 func NewDIRTAlgorithm(config *DIRTConfig) *DIRTAlgorithm {
 	if config == nil {
 		config = &DIRTConfig{
-			CriticalRiskThreshold:     8.0,
-			HighRiskThreshold:         6.0,
-			MediumRiskThreshold:       4.0,
-			MaxPropagationDepth:       10,
-			DecayFactor:              0.8,
-			TransitiveWeight:         0.6,
-			EnableCascadeAnalysis:     true,
-			EnableHiddenRiskDetection: true,
+			CriticalRiskThreshold:      8.0,
+			HighRiskThreshold:          6.0,
+			MediumRiskThreshold:        4.0,
+			MaxPropagationDepth:        10,
+			DecayFactor:                0.8,
+			TransitiveWeight:           0.6,
+			EnableCascadeAnalysis:      true,
+			EnableHiddenRiskDetection:  true,
 			EnableImpactQuantification: true,
-			MaxDependencies:          1000,
-			AnalysisTimeout:          30 * time.Second,
-			CacheEnabled:             true,
+			MaxDependencies:            1000,
+			AnalysisTimeout:            30 * time.Second,
+			CacheEnabled:               true,
 		}
 	}
-	
+
 	dirt := &DIRTAlgorithm{
 		config: config,
 		metrics: &AlgorithmMetrics{
 			LastUpdated: time.Now(),
 		},
 	}
-	
+
 	dirt.initializeComponents()
 	return dirt
 }
@@ -224,7 +224,7 @@ func (d *DIRTAlgorithm) Name() string {
 }
 
 func (d *DIRTAlgorithm) Tier() AlgorithmTier {
-	return TierG
+	return TierCore
 }
 
 func (d *DIRTAlgorithm) Description() string {
@@ -245,56 +245,45 @@ func (d *DIRTAlgorithm) GetMetrics() *AlgorithmMetrics {
 	return d.metrics
 }
 
-func (d *DIRTAlgorithm) Analyze(ctx context.Context, input interface{}) (*AnalysisResult, error) {
+func (d *DIRTAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
 	startTime := time.Now()
-	
-	pkg, ok := input.(*types.Package)
-	if !ok {
-		return nil, fmt.Errorf("DIRT: invalid input type, expected *types.Package")
+
+	result := &AlgorithmResult{
+		Algorithm: d.Name(),
+		Timestamp: startTime,
+		Packages:  packages,
+		Findings:  make([]Finding, 0),
+		Metadata:  make(map[string]interface{}),
 	}
-	
-	result := &AnalysisResult{
-		AlgorithmName:  d.Name(),
-		Tier:          d.Tier(),
-		Timestamp:     startTime,
-		AttackVectors: []string{
-			"Cascading Vulnerability Propagation",
-			"Hidden Transitive Risks",
-			"Dependency Chain Attacks",
-			"Supply Chain Poisoning",
-		},
-		Findings: make([]Finding, 0),
-		Metadata: make(map[string]interface{}),
+
+	// Analyze each package
+	for _, packageName := range packages {
+		// Create a mock package for analysis
+		pkg := &types.Package{
+			Name:    packageName,
+			Version: "unknown",
+		}
+
+		// Build dependency graph
+		err := d.buildDependencyGraph(ctx, pkg)
+		if err != nil {
+			return nil, fmt.Errorf("DIRT: failed to build dependency graph: %w", err)
+		}
+
+		// Perform comprehensive risk assessment
+		riskAssessment, err := d.performRiskAssessment(ctx, pkg)
+		if err != nil {
+			return nil, fmt.Errorf("DIRT: failed to perform risk assessment: %w", err)
+		}
+
+		// Generate findings based on risk assessment
+		d.generateFindings(result, riskAssessment)
 	}
-	
-	// Build dependency graph
-	err := d.buildDependencyGraph(ctx, pkg)
-	if err != nil {
-		return nil, fmt.Errorf("DIRT: failed to build dependency graph: %w", err)
-	}
-	
-	// Perform comprehensive risk assessment
-	riskAssessment, err := d.performRiskAssessment(ctx, pkg)
-	if err != nil {
-		return nil, fmt.Errorf("DIRT: failed to perform risk assessment: %w", err)
-	}
-	
-	// Calculate overall threat score
-	result.ThreatScore = riskAssessment.OverallRisk / 10.0 // Normalize to 0-1
-	result.Confidence = d.calculateConfidence(riskAssessment)
-	
-	// Generate findings based on risk assessment
-	d.generateFindings(result, riskAssessment)
-	
+
 	// Add metadata
-	result.Metadata["risk_assessment"] = riskAssessment
 	result.Metadata["dependency_count"] = len(d.dependencyGraph.nodes)
-	result.Metadata["direct_risks"] = len(riskAssessment.DirectRisks)
-	result.Metadata["transitive_risks"] = len(riskAssessment.TransitiveRisks)
-	result.Metadata["cascade_risks"] = len(riskAssessment.CascadeRisks)
-	result.Metadata["hidden_risks"] = len(riskAssessment.HiddenRisks)
-	
-	result.ProcessingTime = time.Since(startTime)
+	result.Metadata["packages_count"] = len(packages)
+	result.Metadata["processing_time_ms"] = time.Since(startTime).Milliseconds()
 	return result, nil
 }
 
@@ -305,7 +294,7 @@ func (d *DIRTAlgorithm) initializeComponents() {
 		nodes: make(map[string]*DependencyNode),
 		edges: make(map[string][]*DependencyEdge),
 	}
-	
+
 	d.riskCalculator = &RiskCalculator{
 		baseRiskWeights: map[string]float64{
 			"critical": 10.0,
@@ -319,22 +308,22 @@ func (d *DIRTAlgorithm) initializeComponents() {
 			"cascade":    0.8,
 		},
 	}
-	
+
 	d.impactAnalyzer = &ImpactAnalyzer{
 		impactModels: make(map[string]*ImpactModel),
 	}
-	
+
 	d.vulnDatabase = &VulnerabilityDatabase{
 		vulnerabilities: make(map[string][]Vulnerability),
 		lastUpdated:     time.Now(),
 	}
-	
+
 	d.propagationModel = &PropagationModel{
 		decayFunction: func(depth int, distance float64) float64 {
 			return math.Pow(d.config.DecayFactor, float64(depth)) * math.Exp(-distance/10.0)
 		},
 	}
-	
+
 	d.initializeImpactModels()
 	d.loadVulnerabilityData()
 }
@@ -354,7 +343,7 @@ func (d *DIRTAlgorithm) initializeImpactModels() {
 			"medium":   4.0,
 		},
 	}
-	
+
 	// Security Impact Model
 	d.impactAnalyzer.impactModels["security"] = &ImpactModel{
 		Name: "Security Impact",
@@ -374,37 +363,37 @@ func (d *DIRTAlgorithm) initializeImpactModels() {
 func (d *DIRTAlgorithm) loadVulnerabilityData() {
 	// Load vulnerability data from various sources
 	// This would typically connect to CVE databases, security advisories, etc.
-	
+
 	// Sample vulnerability data
 	sampleVulns := []Vulnerability{
 		{
-			ID:       "CVE-2023-12345",
-			CVSS:     9.8,
-			Severity: "CRITICAL",
+			ID:          "CVE-2023-12345",
+			CVSS:        9.8,
+			Severity:    "CRITICAL",
 			Description: "Remote code execution vulnerability",
 			Impact: VulnerabilityImpact{
 				Confidentiality: "HIGH",
 				Integrity:       "HIGH",
 				Availability:    "HIGH",
-				Scope:          "CHANGED",
+				Scope:           "CHANGED",
 			},
 			Exploitable: true,
 		},
 	}
-	
+
 	d.vulnDatabase.vulnerabilities["sample-package"] = sampleVulns
 }
 
 func (d *DIRTAlgorithm) buildDependencyGraph(ctx context.Context, pkg *types.Package) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	// Create a fresh dependency graph for this analysis
 	d.dependencyGraph = &DependencyGraph{
 		nodes: make(map[string]*DependencyNode),
 		edges: make(map[string][]*DependencyEdge),
 	}
-	
+
 	// Create root node
 	rootNode := &DependencyNode{
 		Name:            pkg.Name,
@@ -414,9 +403,9 @@ func (d *DIRTAlgorithm) buildDependencyGraph(ctx context.Context, pkg *types.Pac
 		RiskScore:       0.0,
 		Vulnerabilities: make([]Vulnerability, 0),
 	}
-	
+
 	d.dependencyGraph.nodes[pkg.Name] = rootNode
-	
+
 	// Build dependency tree (simplified implementation)
 	if pkg.Dependencies != nil {
 		for _, dep := range pkg.Dependencies {
@@ -426,7 +415,7 @@ func (d *DIRTAlgorithm) buildDependencyGraph(ctx context.Context, pkg *types.Pac
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -434,7 +423,7 @@ func (d *DIRTAlgorithm) addDependencyNodeUnsafe(ctx context.Context, dep *types.
 	if depth > d.config.MaxPropagationDepth {
 		return nil
 	}
-	
+
 	// Create dependency node
 	depNode := &DependencyNode{
 		Name:            dep.Name,
@@ -444,9 +433,9 @@ func (d *DIRTAlgorithm) addDependencyNodeUnsafe(ctx context.Context, dep *types.
 		RiskScore:       0.0,
 		Vulnerabilities: d.getVulnerabilities(dep.Name),
 	}
-	
+
 	d.dependencyGraph.nodes[dep.Name] = depNode
-	
+
 	// Create edge
 	edge := &DependencyEdge{
 		From:         parent,
@@ -455,12 +444,12 @@ func (d *DIRTAlgorithm) addDependencyNodeUnsafe(ctx context.Context, dep *types.
 		Weight:       1.0,
 		Critical:     !dep.Development, // Consider non-dev dependencies as critical
 	}
-	
+
 	d.dependencyGraph.edges[parent] = append(d.dependencyGraph.edges[parent], edge)
-	
+
 	// Note: Transitive dependencies would be handled by the dependency resolver
 	// For now, we only handle direct dependencies from the Package.Dependencies slice
-	
+
 	return nil
 }
 
@@ -480,58 +469,58 @@ func (d *DIRTAlgorithm) performRiskAssessment(ctx context.Context, pkg *types.Pa
 		Recommendations: make([]string, 0),
 		Metadata:        make(map[string]interface{}),
 	}
-	
+
 	// Analyze direct risks
 	d.analyzeDirectRisks(assessment)
-	
+
 	// Analyze transitive risks
 	if d.config.EnableCascadeAnalysis {
 		d.analyzeTransitiveRisks(assessment)
 	}
-	
+
 	// Analyze cascade risks
 	if d.config.EnableCascadeAnalysis {
 		d.analyzeCascadeRisks(assessment)
 	}
-	
+
 	// Detect hidden risks
 	if d.config.EnableHiddenRiskDetection {
 		d.detectHiddenRisks(assessment)
 	}
-	
+
 	// Quantify impact
 	if d.config.EnableImpactQuantification {
 		assessment.ImpactAnalysis = d.quantifyImpact(assessment)
 	}
-	
+
 	// Calculate overall risk
 	assessment.OverallRisk = d.calculateOverallRisk(assessment)
-	
+
 	// Generate recommendations
 	d.generateRecommendations(assessment)
-	
+
 	return assessment, nil
 }
 
 func (d *DIRTAlgorithm) analyzeDirectRisks(assessment *RiskAssessment) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-	
+
 	for _, node := range d.dependencyGraph.nodes {
 		if len(node.Vulnerabilities) > 0 {
 			riskScore := d.calculateDirectRiskScore(node.Vulnerabilities)
-			
+
 			directRisk := DirectRisk{
 				Dependency:      node.Name,
 				Vulnerabilities: node.Vulnerabilities,
 				RiskScore:       riskScore,
 				Severity:        d.getSeverityFromScore(riskScore),
 			}
-			
+
 			assessment.DirectRisks = append(assessment.DirectRisks, directRisk)
 		}
 	}
-	
+
 	// Sort by risk score
 	sort.Slice(assessment.DirectRisks, func(i, j int) bool {
 		return assessment.DirectRisks[i].RiskScore > assessment.DirectRisks[j].RiskScore
@@ -542,15 +531,15 @@ func (d *DIRTAlgorithm) analyzeTransitiveRisks(assessment *RiskAssessment) {
 	// Analyze risks that propagate through dependency chains
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-	
+
 	for nodeName, node := range d.dependencyGraph.nodes {
 		if len(node.Vulnerabilities) > 0 {
 			paths := d.findDependencyPaths(nodeName)
-			
+
 			for _, path := range paths {
 				if len(path) > 1 { // Transitive dependency
 					riskScore := d.calculateTransitiveRiskScore(node.Vulnerabilities, len(path))
-					
+
 					transitiveRisk := TransitiveRisk{
 						Path:       path,
 						Depth:      len(path) - 1,
@@ -559,7 +548,7 @@ func (d *DIRTAlgorithm) analyzeTransitiveRisks(assessment *RiskAssessment) {
 						Source:     path[0],
 						Target:     path[len(path)-1],
 					}
-					
+
 					assessment.TransitiveRisks = append(assessment.TransitiveRisks, transitiveRisk)
 				}
 			}
@@ -571,11 +560,11 @@ func (d *DIRTAlgorithm) analyzeCascadeRisks(assessment *RiskAssessment) {
 	// Analyze potential cascading failures
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-	
+
 	for nodeName, node := range d.dependencyGraph.nodes {
 		if len(node.Vulnerabilities) > 0 {
 			cascadeImpact := d.calculateCascadeImpact(nodeName)
-			
+
 			if cascadeImpact.ImpactScore > d.config.MediumRiskThreshold {
 				assessment.CascadeRisks = append(assessment.CascadeRisks, cascadeImpact)
 			}
@@ -585,19 +574,19 @@ func (d *DIRTAlgorithm) analyzeCascadeRisks(assessment *RiskAssessment) {
 
 func (d *DIRTAlgorithm) detectHiddenRisks(assessment *RiskAssessment) {
 	// Detect various types of hidden risks
-	
+
 	// 1. Orphaned dependencies
 	orphanedRisks := d.detectOrphanedDependencies()
 	assessment.HiddenRisks = append(assessment.HiddenRisks, orphanedRisks...)
-	
+
 	// 2. Version conflicts
 	conflictRisks := d.detectVersionConflicts()
 	assessment.HiddenRisks = append(assessment.HiddenRisks, conflictRisks...)
-	
+
 	// 3. Circular dependencies
 	circularRisks := d.detectCircularDependencies()
 	assessment.HiddenRisks = append(assessment.HiddenRisks, circularRisks...)
-	
+
 	// 4. Unmaintained dependencies
 	unmaintainedRisks := d.detectUnmaintainedDependencies()
 	assessment.HiddenRisks = append(assessment.HiddenRisks, unmaintainedRisks...)
@@ -605,102 +594,120 @@ func (d *DIRTAlgorithm) detectHiddenRisks(assessment *RiskAssessment) {
 
 func (d *DIRTAlgorithm) quantifyImpact(assessment *RiskAssessment) *ImpactAnalysis {
 	impact := &ImpactAnalysis{}
-	
+
 	// Calculate different types of impact
 	impact.BusinessImpact = d.calculateBusinessImpact(assessment)
 	impact.SecurityImpact = d.calculateSecurityImpact(assessment)
 	impact.OperationalImpact = d.calculateOperationalImpact(assessment)
 	impact.FinancialImpact = d.calculateFinancialImpact(assessment)
 	impact.ReputationalImpact = d.calculateReputationalImpact(assessment)
-	
+
 	return impact
 }
 
 func (d *DIRTAlgorithm) calculateOverallRisk(assessment *RiskAssessment) float64 {
 	var totalRisk float64
-	
+
 	// Weight different risk types
 	for _, risk := range assessment.DirectRisks {
 		totalRisk += risk.RiskScore * 1.0 // Direct risks have full weight
 	}
-	
+
 	for _, risk := range assessment.TransitiveRisks {
 		totalRisk += risk.RiskScore * d.config.TransitiveWeight
 	}
-	
+
 	for _, risk := range assessment.CascadeRisks {
 		totalRisk += risk.ImpactScore * 0.8 // Cascade risks are weighted
 	}
-	
+
 	for _, risk := range assessment.HiddenRisks {
 		totalRisk += risk.RiskScore * 0.5 // Hidden risks have lower weight
 	}
-	
+
 	// Normalize based on number of dependencies
 	d.mu.RLock()
 	nodeCount := len(d.dependencyGraph.nodes)
 	d.mu.RUnlock()
-	
+
 	if nodeCount > 0 {
 		totalRisk = totalRisk / float64(nodeCount)
 	}
-	
+
 	return math.Min(totalRisk, 10.0) // Cap at 10.0
 }
 
-func (d *DIRTAlgorithm) generateFindings(result *AnalysisResult, assessment *RiskAssessment) {
+func (d *DIRTAlgorithm) generateFindings(result *AlgorithmResult, assessment *RiskAssessment) {
 	// Generate findings for direct risks
 	for _, risk := range assessment.DirectRisks {
 		if risk.RiskScore > d.config.MediumRiskThreshold {
 			finding := Finding{
-				Type:        "DIRECT_VULNERABILITY_RISK",
-				Severity:    risk.Severity,
-				Description: fmt.Sprintf("Direct dependency '%s' has %d vulnerabilities with risk score %.2f", risk.Dependency, len(risk.Vulnerabilities), risk.RiskScore),
-				Evidence: map[string]interface{}{
-					"dependency":      risk.Dependency,
-					"vulnerabilities": risk.Vulnerabilities,
-					"risk_score":      risk.RiskScore,
+				ID:         fmt.Sprintf("dirt-direct-%s", risk.Dependency),
+				Package:    risk.Dependency,
+				Type:       "DIRECT_VULNERABILITY_RISK",
+				Severity:   risk.Severity,
+				Message:    fmt.Sprintf("Direct dependency '%s' has %d vulnerabilities with risk score %.2f", risk.Dependency, len(risk.Vulnerabilities), risk.RiskScore),
+				Confidence: 0.9,
+				Evidence: []Evidence{
+					{
+						Type:        "vulnerability_count",
+						Description: "Number of vulnerabilities found",
+						Value:       len(risk.Vulnerabilities),
+						Score:       risk.RiskScore,
+					},
 				},
-				Remediation: "Update dependency to a patched version or find alternative",
+				DetectedAt:      time.Now(),
+				DetectionMethod: "DIRT_DIRECT_ANALYSIS",
 			}
 			result.Findings = append(result.Findings, finding)
 		}
 	}
-	
+
 	// Generate findings for cascade risks
 	for _, risk := range assessment.CascadeRisks {
 		if risk.ImpactScore > d.config.HighRiskThreshold {
 			finding := Finding{
-				Type:        "CASCADE_RISK",
-				Severity:    d.getSeverityFromScore(risk.ImpactScore),
-				Description: fmt.Sprintf("Cascading failure risk from '%s' affecting %d dependencies", risk.TriggerDependency, len(risk.AffectedPath)),
-				Evidence: map[string]interface{}{
-					"trigger":           risk.TriggerDependency,
-					"affected_path":     risk.AffectedPath,
-					"cascade_depth":     risk.CascadeDepth,
-					"impact_score":      risk.ImpactScore,
-					"failure_probability": risk.FailureProbability,
+				ID:         fmt.Sprintf("dirt-cascade-%s", risk.TriggerDependency),
+				Package:    risk.TriggerDependency,
+				Type:       "CASCADE_RISK",
+				Severity:   d.getSeverityFromScore(risk.ImpactScore),
+				Message:    fmt.Sprintf("Cascading failure risk from '%s' affecting %d dependencies", risk.TriggerDependency, len(risk.AffectedPath)),
+				Confidence: 0.8,
+				Evidence: []Evidence{
+					{
+						Type:        "cascade_impact",
+						Description: "Cascade impact analysis",
+						Value:       risk.ImpactScore,
+						Score:       risk.ImpactScore,
+					},
 				},
-				Remediation: "Implement circuit breakers and fallback mechanisms",
+				DetectedAt:      time.Now(),
+				DetectionMethod: "DIRT_CASCADE_ANALYSIS",
 			}
 			result.Findings = append(result.Findings, finding)
 		}
 	}
-	
+
 	// Generate findings for hidden risks
 	for _, risk := range assessment.HiddenRisks {
 		if risk.RiskScore > d.config.MediumRiskThreshold {
 			finding := Finding{
-				Type:        "HIDDEN_RISK",
-				Severity:    d.getSeverityFromScore(risk.RiskScore),
-				Description: fmt.Sprintf("Hidden risk detected: %s", risk.Description),
-				Evidence: map[string]interface{}{
-					"risk_type":        risk.Type,
-					"detection_method": risk.DetectionMethod,
-					"evidence":         risk.Evidence,
-					"risk_score":       risk.RiskScore,
+				ID:         fmt.Sprintf("dirt-hidden-%s", risk.Type),
+				Package:    "unknown",
+				Type:       "HIDDEN_RISK",
+				Severity:   d.getSeverityFromScore(risk.RiskScore),
+				Message:    fmt.Sprintf("Hidden risk detected: %s", risk.Description),
+				Confidence: 0.7,
+				Evidence: []Evidence{
+					{
+						Type:        "hidden_risk",
+						Description: risk.DetectionMethod,
+						Value:       risk.RiskScore,
+						Score:       risk.RiskScore,
+					},
 				},
-				Remediation: "Review dependency management practices and implement monitoring",
+				DetectedAt:      time.Now(),
+				DetectionMethod: "DIRT_HIDDEN_ANALYSIS",
 			}
 			result.Findings = append(result.Findings, finding)
 		}
@@ -711,7 +718,7 @@ func (d *DIRTAlgorithm) generateFindings(result *AnalysisResult, assessment *Ris
 
 func (d *DIRTAlgorithm) calculateConfidence(assessment *RiskAssessment) float64 {
 	baseConfidence := 0.8
-	
+
 	// Increase confidence based on data quality
 	if len(assessment.DirectRisks) > 0 {
 		baseConfidence += 0.1
@@ -722,7 +729,7 @@ func (d *DIRTAlgorithm) calculateConfidence(assessment *RiskAssessment) float64 
 	if assessment.ImpactAnalysis != nil {
 		baseConfidence += 0.05
 	}
-	
+
 	return math.Min(baseConfidence, 1.0)
 }
 
@@ -815,4 +822,26 @@ func (d *DIRTAlgorithm) generateRecommendations(assessment *RiskAssessment) {
 	if len(assessment.HiddenRisks) > 0 {
 		assessment.Recommendations = append(assessment.Recommendations, "Review dependency management practices")
 	}
+}
+
+// Reset resets the algorithm state
+func (d *DIRTAlgorithm) Reset() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	// Reset metrics
+	d.metrics = &AlgorithmMetrics{
+		ProcessingTime: 0,
+	}
+
+	// Reset dependency graph
+	d.dependencyGraph = &DependencyGraph{
+		nodes: make(map[string]*DependencyNode),
+		edges: make(map[string][]*DependencyEdge),
+	}
+
+	// Reinitialize components
+	d.initializeComponents()
+
+	return nil
 }

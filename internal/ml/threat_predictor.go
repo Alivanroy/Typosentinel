@@ -14,32 +14,17 @@ type ThreatPredictor struct {
 
 // PredictorConfig configures the threat predictor
 type PredictorConfig struct {
-	ModelPath       string        `json:"model_path"`
-	ConfidenceThreshold float64   `json:"confidence_threshold"`
-	MaxPredictions  int           `json:"max_predictions"`
-	Timeout         time.Duration `json:"timeout"`
-	Enabled         bool          `json:"enabled"`
+	ModelPath           string        `json:"model_path"`
+	ConfidenceThreshold float64       `json:"confidence_threshold"`
+	MaxPredictions      int           `json:"max_predictions"`
+	Timeout             time.Duration `json:"timeout"`
+	Enabled             bool          `json:"enabled"`
 }
 
 // ThreatPrediction represents a threat prediction result
-type ThreatPrediction struct {
-	ThreatType   string    `json:"threat_type"`
-	ThreatScore  float64   `json:"threat_score"`
-	Confidence   float64   `json:"confidence"`
-	Severity     string    `json:"severity"`
-	Description  string    `json:"description"`
-	Timestamp    time.Time `json:"timestamp"`
-	ModelVersion string    `json:"model_version"`
-}
+// ThreatPrediction struct moved to inference_engine.go to avoid duplication
 
-// ModelMetrics represents ML model performance metrics
-type ModelMetrics struct {
-	Accuracy    float64   `json:"accuracy"`
-	Precision   float64   `json:"precision"`
-	Recall      float64   `json:"recall"`
-	F1Score     float64   `json:"f1_score"`
-	LastUpdated time.Time `json:"last_updated"`
-}
+// ModelMetrics struct moved to deep_learning_models.go to avoid duplication
 
 // TrainingSample represents a training data sample
 type TrainingSample struct {
@@ -60,13 +45,14 @@ func (tp *ThreatPredictor) PredictThreats(ctx context.Context, pkg *types.Packag
 	// Stub implementation
 	return []*ThreatPrediction{
 		{
-			ThreatType:   "typosquatting",
-			ThreatScore:  0.85,
-			Confidence:   0.85,
-			Severity:     "medium",
-			Description:  "Potential typosquatting detected",
-			Timestamp:    time.Now(),
-			ModelVersion: "1.0.0",
+			IsThreat:        true,
+			ThreatType:      "typosquatting",
+			Severity:        "medium",
+			Score:           0.85,
+			Categories:      []string{"typosquatting"},
+			Indicators:      []ThreatIndicator{},
+			Recommendations: []string{"Verify package authenticity"},
+			RiskFactors:     map[string]float64{"name_similarity": 0.85},
 		},
 	}, nil
 }
@@ -109,11 +95,10 @@ func (tp *ThreatPredictor) TrainModels(ctx context.Context) error {
 // GetModelMetrics returns model performance metrics
 func (tp *ThreatPredictor) GetModelMetrics() *ModelMetrics {
 	return &ModelMetrics{
-		Accuracy:    0.92,
-		Precision:   0.89,
-		Recall:      0.87,
-		F1Score:     0.88,
-		LastUpdated: time.Now(),
+		Accuracy:  0.92,
+		Precision: 0.89,
+		Recall:    0.87,
+		F1Score:   0.88,
 	}
 }
 

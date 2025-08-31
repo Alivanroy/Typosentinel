@@ -13,16 +13,16 @@ type PerformanceOptimizer struct {
 	policyCache     map[string]*CacheEntry
 	validationCache map[string]*CacheEntry
 	rateLimitCache  map[string]*CacheEntry
-	
+
 	// Connection pooling
 	connectionPool sync.Pool
-	
+
 	// Metrics
 	metrics *SecurityPerformanceMetrics
-	
+
 	// Configuration
 	config *PerformanceConfig
-	
+
 	// Synchronization
 	mu sync.RWMutex
 }
@@ -37,53 +37,53 @@ type CacheEntry struct {
 // PerformanceConfig holds performance optimization settings
 type PerformanceConfig struct {
 	// Cache settings
-	PolicyCacheTTL      time.Duration `yaml:"policy_cache_ttl" default:"5m"`
-	ValidationCacheTTL  time.Duration `yaml:"validation_cache_ttl" default:"1m"`
-	RateLimitCacheTTL   time.Duration `yaml:"rate_limit_cache_ttl" default:"30s"`
-	
+	PolicyCacheTTL     time.Duration `yaml:"policy_cache_ttl" default:"5m"`
+	ValidationCacheTTL time.Duration `yaml:"validation_cache_ttl" default:"1m"`
+	RateLimitCacheTTL  time.Duration `yaml:"rate_limit_cache_ttl" default:"30s"`
+
 	// Cache sizes
 	PolicyCacheSize     int `yaml:"policy_cache_size" default:"1000"`
 	ValidationCacheSize int `yaml:"validation_cache_size" default:"5000"`
 	RateLimitCacheSize  int `yaml:"rate_limit_cache_size" default:"10000"`
-	
+
 	// Performance thresholds
-	MaxProcessingTime   time.Duration `yaml:"max_processing_time" default:"100ms"`
-	MaxMemoryUsage      int64         `yaml:"max_memory_usage" default:"104857600"` // 100MB
-	
+	MaxProcessingTime time.Duration `yaml:"max_processing_time" default:"100ms"`
+	MaxMemoryUsage    int64         `yaml:"max_memory_usage" default:"104857600"` // 100MB
+
 	// Optimization flags
-	EnableCaching       bool `yaml:"enable_caching" default:"true"`
-	EnablePooling       bool `yaml:"enable_pooling" default:"true"`
-	EnableMetrics       bool `yaml:"enable_metrics" default:"true"`
-	EnableCompression   bool `yaml:"enable_compression" default:"true"`
+	EnableCaching     bool `yaml:"enable_caching" default:"true"`
+	EnablePooling     bool `yaml:"enable_pooling" default:"true"`
+	EnableMetrics     bool `yaml:"enable_metrics" default:"true"`
+	EnableCompression bool `yaml:"enable_compression" default:"true"`
 }
 
 // SecurityPerformanceMetrics holds performance metrics for security components
 type SecurityPerformanceMetrics struct {
 	// Processing time metrics
-	PolicyEvaluationCount    int64
-	PolicyEvaluationTime     time.Duration
-	ValidationCount          int64
-	ValidationTime           time.Duration
-	RateLimitCheckCount      int64
-	RateLimitCheckTime       time.Duration
-	EncryptionCount          int64
-	EncryptionTime           time.Duration
-	
+	PolicyEvaluationCount int64
+	PolicyEvaluationTime  time.Duration
+	ValidationCount       int64
+	ValidationTime        time.Duration
+	RateLimitCheckCount   int64
+	RateLimitCheckTime    time.Duration
+	EncryptionCount       int64
+	EncryptionTime        time.Duration
+
 	// Cache metrics
-	PolicyCacheHits          int64
-	PolicyCacheMisses        int64
-	ValidationCacheHits      int64
-	ValidationCacheMisses    int64
-	
+	PolicyCacheHits       int64
+	PolicyCacheMisses     int64
+	ValidationCacheHits   int64
+	ValidationCacheMisses int64
+
 	// Performance metrics
-	TotalProcessingTime      time.Duration
-	MemoryUsed               int64
-	ConcurrentRequests       int64
-	
+	TotalProcessingTime time.Duration
+	MemoryUsed          int64
+	ConcurrentRequests  int64
+
 	// Error metrics
-	SecurityErrors           int64
-	TimeoutErrors            int64
-	
+	SecurityErrors int64
+	TimeoutErrors  int64
+
 	// Synchronization
 	mu sync.RWMutex
 }
@@ -179,7 +179,7 @@ func (po *PerformanceOptimizer) OptimizePolicyEvaluation(ctx context.Context, po
 			return entry.Value, result, nil
 		}
 		po.mu.RUnlock()
-		
+
 		if po.metrics != nil {
 			po.metrics.mu.Lock()
 			po.metrics.PolicyCacheMisses++
@@ -212,20 +212,20 @@ func (po *PerformanceOptimizer) OptimizePolicyEvaluation(ctx context.Context, po
 			}
 			po.mu.Unlock()
 		}
-		
+
 		result.ProcessingTime = time.Since(start)
 		result.CacheHit = false
 		result.Optimized = true
-		
+
 		if po.metrics != nil {
 			po.metrics.mu.Lock()
 			po.metrics.PolicyEvaluationCount++
 			po.metrics.PolicyEvaluationTime += result.ProcessingTime
 			po.metrics.mu.Unlock()
 		}
-		
+
 		return evalResult, result, nil
-		
+
 	case err := <-errorChan:
 		if po.metrics != nil {
 			po.metrics.mu.Lock()
@@ -233,7 +233,7 @@ func (po *PerformanceOptimizer) OptimizePolicyEvaluation(ctx context.Context, po
 			po.metrics.mu.Unlock()
 		}
 		return nil, result, err
-		
+
 	case <-time.After(po.config.MaxProcessingTime):
 		if po.metrics != nil {
 			po.metrics.mu.Lock()
@@ -241,7 +241,7 @@ func (po *PerformanceOptimizer) OptimizePolicyEvaluation(ctx context.Context, po
 			po.metrics.mu.Unlock()
 		}
 		return nil, result, ErrProcessingTimeout
-		
+
 	case <-ctx.Done():
 		return nil, result, ctx.Err()
 	}
@@ -268,7 +268,7 @@ func (po *PerformanceOptimizer) OptimizeValidation(ctx context.Context, validati
 			return entry.Value.(bool), result, nil
 		}
 		po.mu.RUnlock()
-		
+
 		if po.metrics != nil {
 			po.metrics.mu.Lock()
 			po.metrics.ValidationCacheMisses++
@@ -373,15 +373,15 @@ func (po *PerformanceOptimizer) GetMetrics() map[string]interface{} {
 	defer po.mu.RUnlock()
 
 	metrics := make(map[string]interface{})
-	
+
 	if po.policyCache != nil {
 		metrics["policy_cache_items"] = len(po.policyCache)
 	}
-	
+
 	if po.validationCache != nil {
 		metrics["validation_cache_items"] = len(po.validationCache)
 	}
-	
+
 	if po.rateLimitCache != nil {
 		metrics["rate_limit_cache_items"] = len(po.rateLimitCache)
 	}
@@ -403,7 +403,7 @@ func (po *PerformanceOptimizer) GetMetrics() map[string]interface{} {
 	}
 
 	metrics["config"] = po.config
-	
+
 	return metrics
 }
 
@@ -415,11 +415,11 @@ func (po *PerformanceOptimizer) ClearCaches() {
 	if po.policyCache != nil {
 		po.policyCache = make(map[string]*CacheEntry)
 	}
-	
+
 	if po.validationCache != nil {
 		po.validationCache = make(map[string]*CacheEntry)
 	}
-	
+
 	if po.rateLimitCache != nil {
 		po.rateLimitCache = make(map[string]*CacheEntry)
 	}
@@ -464,9 +464,9 @@ func (po *PerformanceOptimizer) CleanupExpiredEntries() {
 func (po *PerformanceOptimizer) UpdateConfig(config *PerformanceConfig) {
 	po.mu.Lock()
 	defer po.mu.Unlock()
-	
+
 	po.config = config
-	
+
 	// Reinitialize caches if needed
 	if config.EnableCaching {
 		if po.policyCache == nil {

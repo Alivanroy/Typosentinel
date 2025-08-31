@@ -26,14 +26,14 @@ type MonitoringService struct {
 
 // MonitoringConfig holds monitoring configuration
 type MonitoringConfig struct {
-	Enabled         bool                    `yaml:"enabled" json:"enabled"`
-	MetricsInterval time.Duration           `yaml:"metrics_interval" json:"metrics_interval"`
-	HealthInterval  time.Duration           `yaml:"health_interval" json:"health_interval"`
-	SlackConfig     *SlackConfig            `yaml:"slack" json:"slack"`
-	EmailConfig     *EmailConfig            `yaml:"email" json:"email"`
-	WebhookURL      string                  `yaml:"webhook_url" json:"webhook_url"`
-	CustomMetrics   []CustomMetricConfig    `yaml:"custom_metrics" json:"custom_metrics"`
-	AlertThresholds map[string]float64      `yaml:"alert_thresholds" json:"alert_thresholds"`
+	Enabled         bool                 `yaml:"enabled" json:"enabled"`
+	MetricsInterval time.Duration        `yaml:"metrics_interval" json:"metrics_interval"`
+	HealthInterval  time.Duration        `yaml:"health_interval" json:"health_interval"`
+	SlackConfig     *SlackConfig         `yaml:"slack" json:"slack"`
+	EmailConfig     *EmailConfig         `yaml:"email" json:"email"`
+	WebhookURL      string               `yaml:"webhook_url" json:"webhook_url"`
+	CustomMetrics   []CustomMetricConfig `yaml:"custom_metrics" json:"custom_metrics"`
+	AlertThresholds map[string]float64   `yaml:"alert_thresholds" json:"alert_thresholds"`
 }
 
 // SlackConfig holds Slack notification configuration
@@ -45,19 +45,19 @@ type SlackConfig struct {
 
 // EmailConfig holds email notification configuration
 type EmailConfig struct {
-	SMTPHost     string   `yaml:"smtp_host" json:"smtp_host"`
-	SMTPPort     int      `yaml:"smtp_port" json:"smtp_port"`
-	Username     string   `yaml:"username" json:"username"`
-	Password     string   `yaml:"password" json:"password"`
-	FromAddress  string   `yaml:"from_address" json:"from_address"`
-	ToAddresses  []string `yaml:"to_addresses" json:"to_addresses"`
+	SMTPHost    string   `yaml:"smtp_host" json:"smtp_host"`
+	SMTPPort    int      `yaml:"smtp_port" json:"smtp_port"`
+	Username    string   `yaml:"username" json:"username"`
+	Password    string   `yaml:"password" json:"password"`
+	FromAddress string   `yaml:"from_address" json:"from_address"`
+	ToAddresses []string `yaml:"to_addresses" json:"to_addresses"`
 }
 
 // CustomMetricConfig defines custom metric configuration
 type CustomMetricConfig struct {
-	Name      string  `yaml:"name" json:"name"`
-	Type      string  `yaml:"type" json:"type"`
-	Threshold float64 `yaml:"threshold" json:"threshold"`
+	Name      string        `yaml:"name" json:"name"`
+	Type      string        `yaml:"type" json:"type"`
+	Threshold float64       `yaml:"threshold" json:"threshold"`
 	Interval  time.Duration `yaml:"interval" json:"interval"`
 }
 
@@ -77,9 +77,9 @@ type HealthStatus struct {
 
 // SystemHealth represents overall system health
 type SystemHealth struct {
-	OverallStatus string                    `json:"overall_status"`
-	Checks        map[string]HealthStatus   `json:"checks"`
-	Timestamp     time.Time                 `json:"timestamp"`
+	OverallStatus string                  `json:"overall_status"`
+	Checks        map[string]HealthStatus `json:"checks"`
+	Timestamp     time.Time               `json:"timestamp"`
 }
 
 // Alert represents a monitoring alert
@@ -200,7 +200,7 @@ func (ms *MonitoringService) GetSystemHealth() SystemHealth {
 // RecordMetric records a custom metric
 func (ms *MonitoringService) RecordMetric(name, metricType string, value float64) {
 	tags := make(interfaces.MetricTags)
-	
+
 	switch metricType {
 	case "counter":
 		ms.metrics.IncrementCounter(name, tags)
@@ -270,7 +270,7 @@ func (ms *MonitoringService) collectSystemMetrics() {
 	runtime.ReadMemStats(&m)
 
 	tags := make(interfaces.MetricTags)
-	
+
 	ms.metrics.SetGauge("memory.alloc", float64(m.Alloc), tags)
 	ms.metrics.SetGauge("memory.total_alloc", float64(m.TotalAlloc), tags)
 	ms.metrics.SetGauge("memory.sys", float64(m.Sys), tags)
@@ -294,7 +294,7 @@ func (ms *MonitoringService) runAllHealthChecks() {
 		status := check.Check(context.Background())
 		if !status.Healthy {
 			ms.logger.Warn("Health check failed", map[string]interface{}{
-				"check": name,
+				"check":   name,
 				"message": status.Message,
 			})
 		}
@@ -418,7 +418,7 @@ func getDiskSpace(path string) (available, total float64, err error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	
+
 	// Simplified implementation - in a real scenario, you'd use platform-specific calls
 	// For now, return mock values to satisfy the interface
 	available = 100.0 // GB

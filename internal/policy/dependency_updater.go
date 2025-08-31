@@ -64,7 +64,7 @@ func NewDefaultDependencyUpdater(
 			SupportedRegistries:  []string{"npm", "pypi", "maven", "nuget", "gem", "cargo", "go"},
 		}
 	}
-	
+
 	return &DefaultDependencyUpdater{
 		vulnerabilityDB: vulnDB,
 		registryClient:  registryClient,
@@ -79,7 +79,7 @@ func (d *DefaultDependencyUpdater) UpdateDependency(ctx context.Context, pkg *ty
 	if err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
-	
+
 	if !validation.Valid {
 		return &UpdateResult{
 			Package:    pkg,
@@ -227,20 +227,20 @@ func (d *DefaultDependencyUpdater) ValidateUpdate(ctx context.Context, pkg *type
 
 func (d *DefaultDependencyUpdater) filterVersions(pkg *types.Package, versions []string) []string {
 	var filtered []string
-	
+
 	for _, version := range versions {
 		// Skip prerelease versions if configured
 		if d.config.ExcludePrerelease && d.isPrereleaseVersion(version) {
 			continue
 		}
-		
+
 		// Check version constraints
 		constraints := d.checkVersionConstraints(pkg.Version, version)
 		if constraints.allowed {
 			filtered = append(filtered, version)
 		}
 	}
-	
+
 	return filtered
 }
 
@@ -286,20 +286,20 @@ func (d *DefaultDependencyUpdater) checkVersionConstraints(currentVersion, newVe
 	// Parse versions (simplified)
 	currentParts := strings.Split(currentVersion, ".")
 	newParts := strings.Split(newVersion, ".")
-	
+
 	if len(currentParts) < 3 || len(newParts) < 3 {
 		return versionConstraints{
 			allowed: true,
 			reason:  "Version format not recognized, allowing update",
 		}
 	}
-	
+
 	// Extract major, minor, patch versions
 	currentMajor := currentParts[0]
 	currentMinor := currentParts[1]
 	newMajor := newParts[0]
 	newMinor := newParts[1]
-	
+
 	// Check major version changes
 	if currentMajor != newMajor {
 		if !d.config.AllowMajorUpdates {
@@ -314,7 +314,7 @@ func (d *DefaultDependencyUpdater) checkVersionConstraints(currentVersion, newVe
 			breakingChanges: true,
 		}
 	}
-	
+
 	// Check minor version changes
 	if currentMinor != newMinor {
 		if !d.config.AllowMinorUpdates {
@@ -328,7 +328,7 @@ func (d *DefaultDependencyUpdater) checkVersionConstraints(currentVersion, newVe
 			reason:  "Minor version update allowed",
 		}
 	}
-	
+
 	// Patch version changes
 	if !d.config.AllowPatchUpdates {
 		return versionConstraints{
@@ -336,7 +336,7 @@ func (d *DefaultDependencyUpdater) checkVersionConstraints(currentVersion, newVe
 			reason:  "Patch version updates not allowed",
 		}
 	}
-	
+
 	return versionConstraints{
 		allowed: true,
 		reason:  "Patch version update allowed",
@@ -345,7 +345,7 @@ func (d *DefaultDependencyUpdater) checkVersionConstraints(currentVersion, newVe
 
 func (d *DefaultDependencyUpdater) updateDependencyFiles(pkg *types.Package, newVersion string) ([]string, error) {
 	var changedFiles []string
-	
+
 	// Update based on registry type
 	switch pkg.Registry {
 	case "npm":
@@ -354,38 +354,38 @@ func (d *DefaultDependencyUpdater) updateDependencyFiles(pkg *types.Package, new
 			return nil, err
 		}
 		changedFiles = append(changedFiles, files...)
-		
+
 	case "pypi":
 		files, err := d.updatePythonDependencies(pkg, newVersion)
 		if err != nil {
 			return nil, err
 		}
 		changedFiles = append(changedFiles, files...)
-		
+
 	case "maven":
 		files, err := d.updateMavenDependencies(pkg, newVersion)
 		if err != nil {
 			return nil, err
 		}
 		changedFiles = append(changedFiles, files...)
-		
+
 	case "nuget":
 		files, err := d.updateNugetDependencies(pkg, newVersion)
 		if err != nil {
 			return nil, err
 		}
 		changedFiles = append(changedFiles, files...)
-		
+
 	default:
 		return nil, fmt.Errorf("unsupported registry: %s", pkg.Registry)
 	}
-	
+
 	return changedFiles, nil
 }
 
 func (d *DefaultDependencyUpdater) updateNpmDependencies(pkg *types.Package, newVersion string) ([]string, error) {
 	var changedFiles []string
-	
+
 	// Update package.json
 	packageJSONPath := "package.json"
 	if _, err := os.Stat(packageJSONPath); err == nil {
@@ -395,7 +395,7 @@ func (d *DefaultDependencyUpdater) updateNpmDependencies(pkg *types.Package, new
 		}
 		changedFiles = append(changedFiles, packageJSONPath)
 	}
-	
+
 	// Update package-lock.json if it exists
 	packageLockPath := "package-lock.json"
 	if _, err := os.Stat(packageLockPath); err == nil {
@@ -403,7 +403,7 @@ func (d *DefaultDependencyUpdater) updateNpmDependencies(pkg *types.Package, new
 		// This is a simplified version
 		changedFiles = append(changedFiles, packageLockPath)
 	}
-	
+
 	return changedFiles, nil
 }
 
@@ -412,39 +412,39 @@ func (d *DefaultDependencyUpdater) updateNpmPackageJSON(filePath, packageName, n
 	if err != nil {
 		return err
 	}
-	
+
 	var packageJSON map[string]interface{}
 	err = json.Unmarshal(data, &packageJSON)
 	if err != nil {
 		return err
 	}
-	
+
 	// Update dependencies
 	if deps, ok := packageJSON["dependencies"].(map[string]interface{}); ok {
 		if _, exists := deps[packageName]; exists {
 			deps[packageName] = newVersion
 		}
 	}
-	
+
 	// Update devDependencies
 	if devDeps, ok := packageJSON["devDependencies"].(map[string]interface{}); ok {
 		if _, exists := devDeps[packageName]; exists {
 			devDeps[packageName] = newVersion
 		}
 	}
-	
+
 	// Write back to file
 	updatedData, err := json.MarshalIndent(packageJSON, "", "  ")
 	if err != nil {
 		return err
 	}
-	
+
 	return ioutil.WriteFile(filePath, updatedData, 0644)
 }
 
 func (d *DefaultDependencyUpdater) updatePythonDependencies(pkg *types.Package, newVersion string) ([]string, error) {
 	var changedFiles []string
-	
+
 	// Update requirements.txt
 	requirementsPath := "requirements.txt"
 	if _, err := os.Stat(requirementsPath); err == nil {
@@ -454,7 +454,7 @@ func (d *DefaultDependencyUpdater) updatePythonDependencies(pkg *types.Package, 
 		}
 		changedFiles = append(changedFiles, requirementsPath)
 	}
-	
+
 	// Update setup.py if it exists
 	setupPyPath := "setup.py"
 	if _, err := os.Stat(setupPyPath); err == nil {
@@ -462,7 +462,7 @@ func (d *DefaultDependencyUpdater) updatePythonDependencies(pkg *types.Package, 
 		// This would need a proper Python AST parser in a real implementation
 		changedFiles = append(changedFiles, setupPyPath)
 	}
-	
+
 	return changedFiles, nil
 }
 
@@ -471,7 +471,7 @@ func (d *DefaultDependencyUpdater) updateRequirementsTxt(filePath, packageName, 
 	if err != nil {
 		return err
 	}
-	
+
 	lines := strings.Split(string(data), "\n")
 	for i, line := range lines {
 		line = strings.TrimSpace(line)
@@ -481,14 +481,14 @@ func (d *DefaultDependencyUpdater) updateRequirementsTxt(filePath, packageName, 
 			break
 		}
 	}
-	
+
 	updatedContent := strings.Join(lines, "\n")
 	return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
 }
 
 func (d *DefaultDependencyUpdater) updateMavenDependencies(pkg *types.Package, newVersion string) ([]string, error) {
 	var changedFiles []string
-	
+
 	// Update pom.xml
 	pomPath := "pom.xml"
 	if _, err := os.Stat(pomPath); err == nil {
@@ -498,7 +498,7 @@ func (d *DefaultDependencyUpdater) updateMavenDependencies(pkg *types.Package, n
 		}
 		changedFiles = append(changedFiles, pomPath)
 	}
-	
+
 	// Look for other pom.xml files in subdirectories
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -513,11 +513,11 @@ func (d *DefaultDependencyUpdater) updateMavenDependencies(pkg *types.Package, n
 		}
 		return nil
 	})
-	
+
 	if err != nil {
 		return changedFiles, fmt.Errorf("error walking directory tree: %w", err)
 	}
-	
+
 	return changedFiles, nil
 }
 
@@ -526,42 +526,42 @@ func (d *DefaultDependencyUpdater) updateMavenPomXML(filePath, packageName, newV
 	if err != nil {
 		return err
 	}
-	
+
 	content := string(data)
-	
+
 	// Parse Maven coordinates (groupId:artifactId)
 	parts := strings.Split(packageName, ":")
 	if len(parts) != 2 {
 		return fmt.Errorf("invalid Maven package name format: %s (expected groupId:artifactId)", packageName)
 	}
 	groupId, artifactId := parts[0], parts[1]
-	
+
 	// Simple regex-based replacement for Maven dependencies
 	// This is a simplified approach - a production system would use proper XML parsing
-	dependencyPattern := fmt.Sprintf(`(<dependency>\s*<groupId>%s</groupId>\s*<artifactId>%s</artifactId>\s*<version>)[^<]+(</version>)`, 
+	dependencyPattern := fmt.Sprintf(`(<dependency>\s*<groupId>%s</groupId>\s*<artifactId>%s</artifactId>\s*<version>)[^<]+(</version>)`,
 		regexp.QuoteMeta(groupId), regexp.QuoteMeta(artifactId))
-	
+
 	re := regexp.MustCompile(dependencyPattern)
 	updatedContent := re.ReplaceAllString(content, fmt.Sprintf("${1}%s${2}", newVersion))
-	
+
 	// Also handle property-based versions
-	propertyPattern := fmt.Sprintf(`(<properties>[\s\S]*<%s\.version>)[^<]+(</[^>]*\.version>[\s\S]*</properties>)`, 
+	propertyPattern := fmt.Sprintf(`(<properties>[\s\S]*<%s\.version>)[^<]+(</[^>]*\.version>[\s\S]*</properties>)`,
 		regexp.QuoteMeta(artifactId))
-	
+
 	propertyRe := regexp.MustCompile(propertyPattern)
 	updatedContent = propertyRe.ReplaceAllString(updatedContent, fmt.Sprintf("${1}%s${2}", newVersion))
-	
+
 	// Write back to file if changes were made
 	if updatedContent != content {
 		return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
 	}
-	
+
 	return nil
 }
 
 func (d *DefaultDependencyUpdater) updateNugetDependencies(pkg *types.Package, newVersion string) ([]string, error) {
 	var changedFiles []string
-	
+
 	// Find .csproj files recursively
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -576,11 +576,11 @@ func (d *DefaultDependencyUpdater) updateNugetDependencies(pkg *types.Package, n
 		}
 		return nil
 	})
-	
+
 	if err != nil {
 		return changedFiles, fmt.Errorf("error walking directory tree: %w", err)
 	}
-	
+
 	// Also check for packages.config files (legacy NuGet format)
 	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -595,11 +595,11 @@ func (d *DefaultDependencyUpdater) updateNugetDependencies(pkg *types.Package, n
 		}
 		return nil
 	})
-	
+
 	if err != nil {
 		return changedFiles, fmt.Errorf("error walking directory tree for packages.config: %w", err)
 	}
-	
+
 	return changedFiles, nil
 }
 
@@ -608,28 +608,28 @@ func (d *DefaultDependencyUpdater) updateNugetCsproj(filePath, packageName, newV
 	if err != nil {
 		return err
 	}
-	
+
 	content := string(data)
-	
+
 	// Update PackageReference elements (modern .NET Core/.NET 5+ format)
-	packageRefPattern := fmt.Sprintf(`(<PackageReference\s+Include="%s"\s+Version=")[^"]+("[\s/>])`, 
+	packageRefPattern := fmt.Sprintf(`(<PackageReference\s+Include="%s"\s+Version=")[^"]+("[\s/>])`,
 		regexp.QuoteMeta(packageName))
-	
+
 	re := regexp.MustCompile(packageRefPattern)
 	updatedContent := re.ReplaceAllString(content, fmt.Sprintf("${1}%s${2}", newVersion))
-	
+
 	// Also handle the format where Version is on a separate line
-	multiLinePattern := fmt.Sprintf(`(<PackageReference\s+Include="%s"[\s\S]*?<Version>)[^<]+(</Version>)`, 
+	multiLinePattern := fmt.Sprintf(`(<PackageReference\s+Include="%s"[\s\S]*?<Version>)[^<]+(</Version>)`,
 		regexp.QuoteMeta(packageName))
-	
+
 	multiLineRe := regexp.MustCompile(multiLinePattern)
 	updatedContent = multiLineRe.ReplaceAllString(updatedContent, fmt.Sprintf("${1}%s${2}", newVersion))
-	
+
 	// Write back to file if changes were made
 	if updatedContent != content {
 		return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
 	}
-	
+
 	return nil
 }
 
@@ -638,20 +638,20 @@ func (d *DefaultDependencyUpdater) updateNugetPackagesConfig(filePath, packageNa
 	if err != nil {
 		return err
 	}
-	
+
 	content := string(data)
-	
+
 	// Update package elements in packages.config (legacy format)
-	packagePattern := fmt.Sprintf(`(<package\s+id="%s"\s+version=")[^"]+("[\s/>])`, 
+	packagePattern := fmt.Sprintf(`(<package\s+id="%s"\s+version=")[^"]+("[\s/>])`,
 		regexp.QuoteMeta(packageName))
-	
+
 	re := regexp.MustCompile(packagePattern)
 	updatedContent := re.ReplaceAllString(content, fmt.Sprintf("${1}%s${2}", newVersion))
-	
+
 	// Write back to file if changes were made
 	if updatedContent != content {
 		return ioutil.WriteFile(filePath, []byte(updatedContent), 0644)
 	}
-	
+
 	return nil
 }

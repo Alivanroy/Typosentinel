@@ -38,7 +38,7 @@ func NewUserRepositoryWithService(dbService interface{}, logger *logger.Logger) 
 	type DBProvider interface {
 		GetDB() *sql.DB
 	}
-	
+
 	if provider, ok := dbService.(DBProvider); ok {
 		db := provider.GetDB()
 		if db == nil {
@@ -48,6 +48,6 @@ func NewUserRepositoryWithService(dbService interface{}, logger *logger.Logger) 
 			db: db,
 		}, nil
 	}
-	
+
 	return nil, fmt.Errorf("database service does not provide GetDB method")
 }

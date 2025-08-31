@@ -8,13 +8,13 @@ import (
 
 // DefaultMetricsCollector implements the MetricsCollector interface
 type DefaultMetricsCollector struct {
-	mu                    sync.RWMutex
-	scanDurations         map[string][]time.Duration
-	scanResults           map[string]map[bool]int64
+	mu                     sync.RWMutex
+	scanDurations          map[string][]time.Duration
+	scanResults            map[string]map[bool]int64
 	repositoriesDiscovered map[string]int64
-	policyViolations      map[string]int64
-	scanCounters          map[string]map[string]int64
-	logger                *log.Logger
+	policyViolations       map[string]int64
+	scanCounters           map[string]map[string]int64
+	logger                 *log.Logger
 }
 
 // NewDefaultMetricsCollector creates a new metrics collector
@@ -23,12 +23,12 @@ func NewDefaultMetricsCollector(logger *log.Logger) *DefaultMetricsCollector {
 		logger = log.New(log.Writer(), "[MetricsCollector] ", log.LstdFlags)
 	}
 	return &DefaultMetricsCollector{
-		scanDurations:         make(map[string][]time.Duration),
-		scanResults:           make(map[string]map[bool]int64),
+		scanDurations:          make(map[string][]time.Duration),
+		scanResults:            make(map[string]map[bool]int64),
 		repositoriesDiscovered: make(map[string]int64),
-		policyViolations:      make(map[string]int64),
-		scanCounters:          make(map[string]map[string]int64),
-		logger:                logger,
+		policyViolations:       make(map[string]int64),
+		scanCounters:           make(map[string]map[string]int64),
+		logger:                 logger,
 	}
 }
 

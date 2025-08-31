@@ -619,7 +619,7 @@ func (eil *EnterpriseIntegrationLayer) generateOutput(ctx context.Context, resul
 func (eil *EnterpriseIntegrationLayer) generateRiskAssessment(threat *types.Threat, prediction *ml.ThreatPrediction) *RiskAssessment {
 	riskScore := 0.5 // Default
 	if prediction != nil {
-		riskScore = prediction.ThreatScore
+		riskScore = prediction.Score
 	}
 
 	return &RiskAssessment{

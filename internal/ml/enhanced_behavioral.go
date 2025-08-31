@@ -10,56 +10,56 @@ import (
 
 // EnhancedBehavioralAnalyzer provides advanced behavioral analysis capabilities
 type EnhancedBehavioralAnalyzer struct {
-	config                *EnhancedBehavioralConfig
-	patternDetector       *BehavioralPatternDetector
-	anomalyDetector       *BehavioralAnomalyDetector
-	riskAssessment        *BehavioralRiskAssessment
-	baselineManager       *BehavioralBaselineManager
-	threatIntelligence    *ThreatIntelligenceEngine
-	lastUpdate            time.Time
+	config             *EnhancedBehavioralConfig
+	patternDetector    *BehavioralPatternDetector
+	anomalyDetector    *BehavioralAnomalyDetector
+	riskAssessment     *BehavioralRiskAssessment
+	baselineManager    *BehavioralBaselineManager
+	threatIntelligence *ThreatIntelligenceEngine
+	lastUpdate         time.Time
 }
 
 // EnhancedBehavioralConfig contains configuration for enhanced behavioral analysis
 type EnhancedBehavioralConfig struct {
 	// Detection thresholds
-	SuspiciousScoreThreshold    float64 `yaml:"suspicious_score_threshold"`
-	AnomalyScoreThreshold       float64 `yaml:"anomaly_score_threshold"`
-	RiskScoreThreshold          float64 `yaml:"risk_score_threshold"`
-	
+	SuspiciousScoreThreshold float64 `yaml:"suspicious_score_threshold"`
+	AnomalyScoreThreshold    float64 `yaml:"anomaly_score_threshold"`
+	RiskScoreThreshold       float64 `yaml:"risk_score_threshold"`
+
 	// Analysis weights
-	InstallBehaviorWeight       float64 `yaml:"install_behavior_weight"`
-	RuntimeBehaviorWeight       float64 `yaml:"runtime_behavior_weight"`
-	NetworkBehaviorWeight       float64 `yaml:"network_behavior_weight"`
-	FileSystemBehaviorWeight    float64 `yaml:"file_system_behavior_weight"`
-	ProcessBehaviorWeight       float64 `yaml:"process_behavior_weight"`
-	
+	InstallBehaviorWeight    float64 `yaml:"install_behavior_weight"`
+	RuntimeBehaviorWeight    float64 `yaml:"runtime_behavior_weight"`
+	NetworkBehaviorWeight    float64 `yaml:"network_behavior_weight"`
+	FileSystemBehaviorWeight float64 `yaml:"file_system_behavior_weight"`
+	ProcessBehaviorWeight    float64 `yaml:"process_behavior_weight"`
+
 	// Feature flags
-	EnablePatternDetection      bool    `yaml:"enable_pattern_detection"`
-	EnableAnomalyDetection      bool    `yaml:"enable_anomaly_detection"`
-	EnableRiskAssessment        bool    `yaml:"enable_risk_assessment"`
-	EnableThreatIntelligence    bool    `yaml:"enable_threat_intelligence"`
-	EnableBaselineComparison    bool    `yaml:"enable_baseline_comparison"`
-	
+	EnablePatternDetection   bool `yaml:"enable_pattern_detection"`
+	EnableAnomalyDetection   bool `yaml:"enable_anomaly_detection"`
+	EnableRiskAssessment     bool `yaml:"enable_risk_assessment"`
+	EnableThreatIntelligence bool `yaml:"enable_threat_intelligence"`
+	EnableBaselineComparison bool `yaml:"enable_baseline_comparison"`
+
 	// Advanced features
-	EnableDynamicAnalysis       bool    `yaml:"enable_dynamic_analysis"`
-	EnableNetworkMonitoring     bool    `yaml:"enable_network_monitoring"`
-	EnableFileSystemMonitoring  bool    `yaml:"enable_file_system_monitoring"`
-	EnableProcessMonitoring     bool    `yaml:"enable_process_monitoring"`
-	
+	EnableDynamicAnalysis      bool `yaml:"enable_dynamic_analysis"`
+	EnableNetworkMonitoring    bool `yaml:"enable_network_monitoring"`
+	EnableFileSystemMonitoring bool `yaml:"enable_file_system_monitoring"`
+	EnableProcessMonitoring    bool `yaml:"enable_process_monitoring"`
+
 	// Update intervals
-	PatternUpdateInterval       time.Duration `yaml:"pattern_update_interval"`
-	BaselineUpdateInterval      time.Duration `yaml:"baseline_update_interval"`
-	ThreatIntelUpdateInterval   time.Duration `yaml:"threat_intel_update_interval"`
+	PatternUpdateInterval     time.Duration `yaml:"pattern_update_interval"`
+	BaselineUpdateInterval    time.Duration `yaml:"baseline_update_interval"`
+	ThreatIntelUpdateInterval time.Duration `yaml:"threat_intel_update_interval"`
 }
 
 // BehavioralPatternDetector detects behavioral patterns in packages
 type BehavioralPatternDetector struct {
-	patterns            []BehavioralPattern
-	suspiciousCommands  []string
-	maliciousPatterns   []string
-	networkPatterns     []string
-	fileSystemPatterns  []string
-	processPatterns     []string
+	patterns           []BehavioralPattern
+	suspiciousCommands []string
+	maliciousPatterns  []string
+	networkPatterns    []string
+	fileSystemPatterns []string
+	processPatterns    []string
 }
 
 // BehavioralPattern represents a detected behavioral pattern
@@ -77,9 +77,9 @@ type BehavioralPattern struct {
 
 // BehavioralAnomalyDetector detects anomalous behaviors
 type BehavioralAnomalyDetector struct {
-	baselineMetrics     map[string]float64
-	anomalyThresholds   map[string]float64
-	detectionModels     []AnomalyDetectionModel
+	baselineMetrics   map[string]float64
+	anomalyThresholds map[string]float64
+	detectionModels   []AnomalyDetectionModel
 }
 
 // AnomalyDetectionModel represents an anomaly detection model
@@ -93,45 +93,45 @@ type AnomalyDetectionModel struct {
 
 // BehavioralRiskAssessment provides risk assessment capabilities
 type BehavioralRiskAssessment struct {
-	riskFactors     []RiskFactor
-	riskModels      []RiskModel
-	riskThresholds  map[string]float64
+	riskFactors    []RiskFactor
+	riskModels     []RiskModel
+	riskThresholds map[string]float64
 }
 
 // Note: RiskFactor is already defined in analyzer.go
 
 // RiskModel represents a risk assessment model
 type RiskModel struct {
-	Name        string            `json:"name"`
-	Type        string            `json:"type"`
+	Name        string             `json:"name"`
+	Type        string             `json:"type"`
 	Weights     map[string]float64 `json:"weights"`
-	Accuracy    float64           `json:"accuracy"`
-	LastTrained time.Time         `json:"last_trained"`
+	Accuracy    float64            `json:"accuracy"`
+	LastTrained time.Time          `json:"last_trained"`
 }
 
 // BehavioralBaselineManager manages behavioral baselines
 type BehavioralBaselineManager struct {
-	baselines       map[string]BehavioralBaseline
-	updateInterval  time.Duration
-	lastUpdate      time.Time
+	baselines      map[string]BehavioralBaseline
+	updateInterval time.Duration
+	lastUpdate     time.Time
 }
 
 // BehavioralBaseline represents a behavioral baseline
 type BehavioralBaseline struct {
-	PackageType     string             `json:"package_type"`
-	Registry        string             `json:"registry"`
-	Metrics         map[string]float64 `json:"metrics"`
-	SampleSize      int                `json:"sample_size"`
-	LastUpdated     time.Time          `json:"last_updated"`
-	Confidence      float64            `json:"confidence"`
+	PackageType string             `json:"package_type"`
+	Registry    string             `json:"registry"`
+	Metrics     map[string]float64 `json:"metrics"`
+	SampleSize  int                `json:"sample_size"`
+	LastUpdated time.Time          `json:"last_updated"`
+	Confidence  float64            `json:"confidence"`
 }
 
 // ThreatIntelligenceEngine provides threat intelligence integration
 type ThreatIntelligenceEngine struct {
-	sources         []ThreatIntelSource
-	indicators      []ThreatIndicator
-	lastUpdate      time.Time
-	updateInterval  time.Duration
+	sources        []ThreatIntelSource
+	indicators     []ThreatIndicator
+	lastUpdate     time.Time
+	updateInterval time.Duration
 }
 
 // ThreatIntelSource represents a threat intelligence source
@@ -209,26 +209,26 @@ func NewEnhancedBehavioralAnalyzer(config *EnhancedBehavioralConfig) (*EnhancedB
 // DefaultEnhancedBehavioralConfig returns the default configuration
 func DefaultEnhancedBehavioralConfig() *EnhancedBehavioralConfig {
 	return &EnhancedBehavioralConfig{
-		SuspiciousScoreThreshold:    0.7,
-		AnomalyScoreThreshold:       0.8,
-		RiskScoreThreshold:          0.75,
-		InstallBehaviorWeight:       0.25,
-		RuntimeBehaviorWeight:       0.30,
-		NetworkBehaviorWeight:       0.25,
-		FileSystemBehaviorWeight:    0.15,
-		ProcessBehaviorWeight:       0.05,
-		EnablePatternDetection:      true,
-		EnableAnomalyDetection:      true,
-		EnableRiskAssessment:        true,
-		EnableThreatIntelligence:    true,
-		EnableBaselineComparison:    true,
-		EnableDynamicAnalysis:       true,
-		EnableNetworkMonitoring:     true,
-		EnableFileSystemMonitoring:  true,
-		EnableProcessMonitoring:     true,
-		PatternUpdateInterval:       24 * time.Hour,
-		BaselineUpdateInterval:      7 * 24 * time.Hour,
-		ThreatIntelUpdateInterval:   6 * time.Hour,
+		SuspiciousScoreThreshold:   0.7,
+		AnomalyScoreThreshold:      0.8,
+		RiskScoreThreshold:         0.75,
+		InstallBehaviorWeight:      0.25,
+		RuntimeBehaviorWeight:      0.30,
+		NetworkBehaviorWeight:      0.25,
+		FileSystemBehaviorWeight:   0.15,
+		ProcessBehaviorWeight:      0.05,
+		EnablePatternDetection:     true,
+		EnableAnomalyDetection:     true,
+		EnableRiskAssessment:       true,
+		EnableThreatIntelligence:   true,
+		EnableBaselineComparison:   true,
+		EnableDynamicAnalysis:      true,
+		EnableNetworkMonitoring:    true,
+		EnableFileSystemMonitoring: true,
+		EnableProcessMonitoring:    true,
+		PatternUpdateInterval:      24 * time.Hour,
+		BaselineUpdateInterval:     7 * 24 * time.Hour,
+		ThreatIntelUpdateInterval:  6 * time.Hour,
 	}
 }
 
@@ -438,8 +438,8 @@ func (eba *EnhancedBehavioralAnalyzer) calculateConfidence(result *BehavioralAna
 	confidence := 0.5
 
 	// Increase confidence based on number of indicators
-	totalIndicators := len(result.SuspiciousBehaviors) + len(result.RiskFactors) + 
-					  len(result.BehaviorPatterns) + len(result.AnomalousActivities)
+	totalIndicators := len(result.SuspiciousBehaviors) + len(result.RiskFactors) +
+		len(result.BehaviorPatterns) + len(result.AnomalousActivities)
 
 	if totalIndicators > 0 {
 		confidence += float64(totalIndicators) * 0.05
@@ -512,7 +512,7 @@ func (eba *EnhancedBehavioralAnalyzer) detectRuntimePatterns(features *EnhancedP
 
 	for _, pattern := range antiAnalysisPatterns {
 		if strings.Contains(strings.ToLower(features.Description), pattern) ||
-		   strings.Contains(strings.ToLower(features.Name), pattern) {
+			strings.Contains(strings.ToLower(features.Name), pattern) {
 			patterns = append(patterns, "anti_analysis_technique")
 			break
 		}
@@ -550,9 +550,9 @@ func (eba *EnhancedBehavioralAnalyzer) detectNetworkPatterns(features *EnhancedP
 
 	// Check for suspicious URLs
 	suspiciousURLPatterns := []string{
-		`\d+\.\d+\.\d+\.\d+`, // IP addresses
+		`\d+\.\d+\.\d+\.\d+`,          // IP addresses
 		`bit\.ly`, `tinyurl`, `t\.co`, // URL shorteners
-		`[a-z0-9]{20,}\.com`, // Long random domains
+		`[a-z0-9]{20,}\.com`,      // Long random domains
 		`\.tk$`, `\.ml$`, `\.ga$`, // Suspicious TLDs
 	}
 
@@ -775,13 +775,13 @@ func (eba *EnhancedBehavioralAnalyzer) updateThreatIntelligence(ctx context.Cont
 // GetMetrics returns metrics for the enhanced behavioral analyzer
 func (eba *EnhancedBehavioralAnalyzer) GetMetrics(ctx context.Context) (map[string]interface{}, error) {
 	return map[string]interface{}{
-		"patterns_detected":     len(eba.patternDetector.patterns),
-		"threat_indicators":     len(eba.threatIntelligence.indicators),
-		"baseline_metrics":      len(eba.anomalyDetector.baselineMetrics),
-		"last_update":          eba.lastUpdate,
-		"accuracy":             0.92,
-		"precision":            0.89,
-		"recall":               0.87,
-		"f1_score":             0.88,
+		"patterns_detected": len(eba.patternDetector.patterns),
+		"threat_indicators": len(eba.threatIntelligence.indicators),
+		"baseline_metrics":  len(eba.anomalyDetector.baselineMetrics),
+		"last_update":       eba.lastUpdate,
+		"accuracy":          0.92,
+		"precision":         0.89,
+		"recall":            0.87,
+		"f1_score":          0.88,
 	}, nil
 }

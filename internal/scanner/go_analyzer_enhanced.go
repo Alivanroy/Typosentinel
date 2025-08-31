@@ -653,7 +653,7 @@ func (a *EnhancedGoAnalyzer) validateChecksum(pkg *types.Package, checksum strin
 
 	// Fetch expected checksum from Go proxy
 	proxyURL := fmt.Sprintf("https://sum.golang.org/lookup/%s@%s", pkg.Name, pkg.Version)
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(proxyURL)
 	if err != nil {
@@ -829,7 +829,7 @@ func (a *EnhancedGoAnalyzer) extractRepositoryURL(modulePath string) string {
 	if modulePath == "" {
 		return ""
 	}
-	
+
 	// Handle common Go module hosting patterns
 	if strings.HasPrefix(modulePath, "github.com/") {
 		parts := strings.Split(modulePath, "/")
@@ -952,15 +952,15 @@ func (a *EnhancedGoAnalyzer) hasVulnerableVersionPattern(version string) bool {
 // getReplacementModule returns the recommended replacement for deprecated modules
 func (a *EnhancedGoAnalyzer) getReplacementModule(moduleName string) string {
 	replacements := map[string]string{
-		"github.com/dgrijalva/jwt-go":     "github.com/golang-jwt/jwt/v4",
-		"github.com/satori/go.uuid":       "github.com/google/uuid",
-		"github.com/pborman/uuid":         "github.com/google/uuid",
-		"github.com/nu7hatch/gouuid":      "github.com/google/uuid",
-		"github.com/gofrs/uuid":           "github.com/google/uuid",
-		"gopkg.in/yaml.v2":                "gopkg.in/yaml.v3",
-		"github.com/golang/protobuf":      "google.golang.org/protobuf",
-		"github.com/coreos/go-etcd":       "go.etcd.io/etcd/client/v3",
-		"github.com/docker/docker":        "github.com/docker/docker/client",
+		"github.com/dgrijalva/jwt-go": "github.com/golang-jwt/jwt/v4",
+		"github.com/satori/go.uuid":   "github.com/google/uuid",
+		"github.com/pborman/uuid":     "github.com/google/uuid",
+		"github.com/nu7hatch/gouuid":  "github.com/google/uuid",
+		"github.com/gofrs/uuid":       "github.com/google/uuid",
+		"gopkg.in/yaml.v2":            "gopkg.in/yaml.v3",
+		"github.com/golang/protobuf":  "google.golang.org/protobuf",
+		"github.com/coreos/go-etcd":   "go.etcd.io/etcd/client/v3",
+		"github.com/docker/docker":    "github.com/docker/docker/client",
 	}
 
 	return replacements[moduleName]

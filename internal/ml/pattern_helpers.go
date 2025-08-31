@@ -14,7 +14,7 @@ func countConsecutiveConsonants(s string) int {
 	consonants := "bcdfghjklmnpqrstvwxyz"
 	max := 0
 	current := 0
-	
+
 	for _, c := range s {
 		if strings.ContainsRune(consonants, c) {
 			current++
@@ -25,7 +25,7 @@ func countConsecutiveConsonants(s string) int {
 			current = 0
 		}
 	}
-	
+
 	return max
 }
 
@@ -35,7 +35,7 @@ func countConsecutiveVowels(s string) int {
 	vowels := "aeiou"
 	max := 0
 	current := 0
-	
+
 	for _, c := range s {
 		if strings.ContainsRune(vowels, c) {
 			current++
@@ -46,7 +46,7 @@ func countConsecutiveVowels(s string) int {
 			current = 0
 		}
 	}
-	
+
 	return max
 }
 
@@ -55,7 +55,7 @@ func countConsecutiveDigits(s string) int {
 	digits := "0123456789"
 	max := 0
 	current := 0
-	
+
 	for _, c := range s {
 		if strings.ContainsRune(digits, c) {
 			current++
@@ -66,7 +66,7 @@ func countConsecutiveDigits(s string) int {
 			current = 0
 		}
 	}
-	
+
 	return max
 }
 
@@ -91,7 +91,7 @@ func hasHomoglyphs(s string) bool {
 		'g': {'9'},
 		'9': {'g'},
 	}
-	
+
 	for i := 0; i < len(s)-1; i++ {
 		if substitutes, exists := homoglyphs[rune(s[i])]; exists {
 			for _, substitute := range substitutes {
@@ -104,7 +104,7 @@ func hasHomoglyphs(s string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -113,11 +113,11 @@ func hasMixedCase(s string) bool {
 	if len(s) < 3 {
 		return false
 	}
-	
+
 	upperCount := 0
 	lowerCount := 0
 	alternating := 0
-	
+
 	for i, c := range s {
 		if c >= 'A' && c <= 'Z' {
 			upperCount++
@@ -131,23 +131,23 @@ func hasMixedCase(s string) bool {
 			}
 		}
 	}
-	
+
 	// Unusual if mixed case with alternating pattern or random capitalization
-	return (upperCount > 0 && lowerCount > 0) && 
-	       (alternating >= 2 || (upperCount < lowerCount && upperCount > 0 && upperCount < len(s)/3))
+	return (upperCount > 0 && lowerCount > 0) &&
+		(alternating >= 2 || (upperCount < lowerCount && upperCount > 0 && upperCount < len(s)/3))
 }
 
 // hasUnusualCharacters checks if a string contains unusual characters
 func hasUnusualCharacters(s string) bool {
 	unusualChars := "~`!@#$%^&*()_+={}[]|\\:;\"'<>,.?/"
 	count := 0
-	
+
 	for _, c := range s {
 		if strings.ContainsRune(unusualChars, c) {
 			count++
 		}
 	}
-	
+
 	return count > 1 || (count > 0 && len(s) < 6)
 }
 
@@ -162,7 +162,7 @@ func hasSuspiciousPattern(s string) bool {
 			}
 		}
 	}
-	
+
 	// Check for alternating characters
 	if len(s) >= 4 {
 		alternating := true
@@ -176,7 +176,7 @@ func hasSuspiciousPattern(s string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -188,13 +188,13 @@ func hasCommonPrefix(s string) bool {
 		"python-", "django-", "flask-", "numpy-", "pandas-", "tensorflow-",
 		"pytorch-", "scikit-", "go-", "gin-", "echo-", "fiber-", "mux-",
 	}
-	
+
 	for _, prefix := range commonPrefixes {
 		if strings.HasPrefix(strings.ToLower(s), prefix) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -206,26 +206,26 @@ func hasCommonSuffix(s string) bool {
 		"-ui", "-core", "-common", "-shared", "-util", "-tools", "-plugin",
 		"-extension", "-module", "-package", "-wrapper", "-bundle", "-kit",
 	}
-	
+
 	for _, suffix := range commonSuffixes {
 		if strings.HasSuffix(strings.ToLower(s), suffix) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 // hasRepeatedCharacters checks if a string has unusual repeated characters
 func hasRepeatedCharacters(s string) bool {
 	s = strings.ToLower(s)
-	
+
 	for i := 0; i < len(s)-2; i++ {
 		if s[i] == s[i+1] && s[i] == s[i+2] {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -235,7 +235,7 @@ func hasKeyboardPattern(s string) bool {
 		"qwert", "asdfg", "zxcvb", "yuiop", "hjkl", "nm",
 		"12345", "67890", "poiuy", "lkjhg", "mnbvc",
 	}
-	
+
 	s = strings.ToLower(s)
 	for _, pattern := range keyboardPatterns {
 		if strings.Contains(s, pattern) {
@@ -247,7 +247,7 @@ func hasKeyboardPattern(s string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -266,7 +266,7 @@ func isUnusualVersion(version string) bool {
 	if len(version) < 3 {
 		return true
 	}
-	
+
 	// Check for versions with unusual characters
 	unusualChars := "~`!@#$%^&*()_+={}[]|\\:;\"'<>?/"
 	for _, c := range version {
@@ -274,7 +274,7 @@ func isUnusualVersion(version string) bool {
 			return true
 		}
 	}
-	
+
 	// Check for versions with unusual format
 	validVersionPattern := regexp.MustCompile(`^\d+(\.\d+)*(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?$`)
 	return !validVersionPattern.MatchString(version)
@@ -298,13 +298,13 @@ func hasSuspiciousTerms(s string) bool {
 		"free", "cracked", "nulled", "patched", "keygen", "serial",
 		"bypass", "inject", "payload", "rootkit", "ransomware", "spyware",
 	}
-	
+
 	for _, term := range suspiciousTerms {
 		if strings.Contains(s, term) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -326,14 +326,14 @@ func hasUnusualCharacterCombinations(s string) bool {
 		"0o", "o0", "1l", "l1", "1i", "i1", "5s", "s5",
 		"rn", "vv", "cl", "nn", "m", "gq", "vy",
 	}
-	
+
 	s = strings.ToLower(s)
 	for _, combo := range unusualCombinations {
 		if strings.Contains(s, combo) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -344,13 +344,13 @@ func hasDeceptivePrefix(s string) bool {
 		"official-", "original-", "real-", "true-", "genuine-",
 		"auth-", "secure-", "safe-", "trusted-", "verified-",
 	}
-	
+
 	for _, prefix := range deceptivePrefixes {
 		if strings.HasPrefix(s, prefix) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -361,13 +361,13 @@ func hasDeceptiveSuffix(s string) bool {
 		"-official", "-original", "-real", "-true", "-genuine",
 		"-auth", "-secure", "-safe", "-trusted", "-verified",
 	}
-	
+
 	for _, suffix := range deceptiveSuffixes {
 		if strings.HasSuffix(s, suffix) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -378,7 +378,7 @@ func hasSuspiciousDependencies(deps map[string]string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -389,7 +389,7 @@ func hasUnusualDependencyVersions(deps map[string]string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -398,7 +398,7 @@ func calculatePackageAgeDays(createdAt time.Time) int {
 	if createdAt.IsZero() {
 		return 0
 	}
-	
+
 	return int(time.Since(createdAt).Hours() / 24)
 }
 
@@ -407,7 +407,7 @@ func calculateDaysSinceLastUpdate(updatedAt time.Time) int {
 	if updatedAt.IsZero() {
 		return 0
 	}
-	
+
 	return int(time.Since(updatedAt).Hours() / 24)
 }
 
@@ -416,20 +416,20 @@ func calculateUpdateFrequency(updateHistory []time.Time) float64 {
 	if len(updateHistory) < 2 {
 		return 0.0
 	}
-	
+
 	// Sort the update history (assuming it's already sorted)
 	totalDays := 0.0
 	for i := 1; i < len(updateHistory); i++ {
 		duration := updateHistory[i].Sub(updateHistory[i-1])
 		totalDays += duration.Hours() / 24
 	}
-	
+
 	// Average days between updates
 	avgDays := totalDays / float64(len(updateHistory)-1)
 	if avgDays == 0 {
 		return 0.0
 	}
-	
+
 	// Return updates per month
 	return 30.0 / avgDays
 }

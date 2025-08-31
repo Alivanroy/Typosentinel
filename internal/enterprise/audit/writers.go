@@ -1,18 +1,17 @@
 package audit
 
 import (
+	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log/syslog"
+	_ "github.com/lib/pq" // PostgreSQL driver
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-	"bytes"
-	"database/sql"
-	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 // FileAuditWriter writes audit logs to files
@@ -80,12 +79,12 @@ func (f *FileAuditWriter) Name() string {
 type DatabaseAuditWriter struct {
 	connectionString string
 	tableName        string
-	db              *sql.DB
-	buffer          []*AuditEntry
-	bufferSize      int
-	maxRetries      int
-	retryDelay      time.Duration
-	mu              sync.Mutex
+	db               *sql.DB
+	buffer           []*AuditEntry
+	bufferSize       int
+	maxRetries       int
+	retryDelay       time.Duration
+	mu               sync.Mutex
 }
 
 // NewDatabaseAuditWriter creates a new database audit writer
@@ -132,11 +131,11 @@ func NewDatabaseAuditWriter(settings map[string]interface{}) (AuditWriter, error
 	return &DatabaseAuditWriter{
 		connectionString: connStr,
 		tableName:        tableName,
-		db:              db,
-		buffer:          make([]*AuditEntry, 0, bufferSize),
-		bufferSize:      bufferSize,
-		maxRetries:      maxRetries,
-		retryDelay:      retryDelay,
+		db:               db,
+		buffer:           make([]*AuditEntry, 0, bufferSize),
+		bufferSize:       bufferSize,
+		maxRetries:       maxRetries,
+		retryDelay:       retryDelay,
 	}, nil
 }
 
@@ -166,13 +165,13 @@ func (d *DatabaseAuditWriter) flushBuffer() error {
 	}
 
 	var lastErr error
-	
+
 	// Retry logic for database operations
 	for attempt := 0; attempt <= d.maxRetries; attempt++ {
 		if attempt > 0 {
 			// Wait before retrying
 			time.Sleep(d.retryDelay * time.Duration(attempt))
-			
+
 			// Test connection before retry
 			if err := d.db.Ping(); err != nil {
 				lastErr = fmt.Errorf("database connection lost: %w", err)
@@ -188,7 +187,7 @@ func (d *DatabaseAuditWriter) flushBuffer() error {
 		}
 
 		lastErr = err
-		
+
 		// Check if error is retryable
 		if !d.isRetryableError(err) {
 			break
@@ -255,9 +254,9 @@ func (d *DatabaseAuditWriter) isRetryableError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	errStr := strings.ToLower(err.Error())
-	
+
 	// Common retryable database errors
 	retryableErrors := []string{
 		"connection refused",
@@ -270,13 +269,13 @@ func (d *DatabaseAuditWriter) isRetryableError(err error) bool {
 		"server shutdown",
 		"too many connections",
 	}
-	
+
 	for _, retryable := range retryableErrors {
 		if strings.Contains(errStr, retryable) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -291,114 +290,25 @@ func (d *DatabaseAuditWriter) Name() string {
 // CleanupExpiredLogs removes audit logs older than the specified retention period
 func (d *DatabaseAuditWriter) CleanupExpiredLogs(retentionPeriod time.Duration) error {
 	cutoffTime := time.Now().Add(-retentionPeriod)
-	
+
 	query := `DELETE FROM audit_logs WHERE timestamp < $1`
-	
+
 	result, err := d.db.Exec(query, cutoffTime)
 	if err != nil {
 		return fmt.Errorf("failed to cleanup expired audit logs: %w", err)
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get cleanup result: %w", err)
 	}
-	
+
 	if rowsAffected > 0 {
 		// Log the cleanup operation (but avoid infinite recursion)
 		fmt.Printf("Cleaned up %d expired audit log entries older than %v\n", rowsAffected, retentionPeriod)
 	}
-	
+
 	return nil
-}
-
-// SyslogAuditWriter writes audit logs to syslog
-type SyslogAuditWriter struct {
-	writer   *syslog.Writer
-	facility syslog.Priority
-	tag      string
-}
-
-// NewSyslogAuditWriter creates a new syslog audit writer
-func NewSyslogAuditWriter(settings map[string]interface{}) (AuditWriter, error) {
-	facility := syslog.LOG_LOCAL0
-	if f, ok := settings["facility"].(string); ok {
-		switch strings.ToLower(f) {
-		case "local0":
-			facility = syslog.LOG_LOCAL0
-		case "local1":
-			facility = syslog.LOG_LOCAL1
-		case "local2":
-			facility = syslog.LOG_LOCAL2
-		case "local3":
-			facility = syslog.LOG_LOCAL3
-		case "local4":
-			facility = syslog.LOG_LOCAL4
-		case "local5":
-			facility = syslog.LOG_LOCAL5
-		case "local6":
-			facility = syslog.LOG_LOCAL6
-		case "local7":
-			facility = syslog.LOG_LOCAL7
-		case "auth":
-			facility = syslog.LOG_AUTH
-		case "authpriv":
-			facility = syslog.LOG_AUTHPRIV
-		case "daemon":
-			facility = syslog.LOG_DAEMON
-		}
-	}
-
-	tag := "typosentinel-audit"
-	if t, ok := settings["tag"].(string); ok {
-		tag = t
-	}
-
-	writer, err := syslog.New(facility|syslog.LOG_INFO, tag)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create syslog writer: %w", err)
-	}
-
-	return &SyslogAuditWriter{
-		writer:   writer,
-		facility: facility,
-		tag:      tag,
-	}, nil
-}
-
-func (s *SyslogAuditWriter) Write(entry *AuditEntry) error {
-	data, err := json.Marshal(entry)
-	if err != nil {
-		return fmt.Errorf("failed to marshal audit entry: %w", err)
-	}
-
-	message := fmt.Sprintf("AUDIT: %s", string(data))
-
-	switch entry.Severity {
-	case AuditSeverityInfo:
-		return s.writer.Info(message)
-	case AuditSeverityWarning:
-		return s.writer.Warning(message)
-	case AuditSeverityError:
-		return s.writer.Err(message)
-	case AuditSeverityCritical:
-		return s.writer.Crit(message)
-	default:
-		return s.writer.Info(message)
-	}
-}
-
-func (s *SyslogAuditWriter) Flush() error {
-	// Syslog doesn't need explicit flushing
-	return nil
-}
-
-func (s *SyslogAuditWriter) Close() error {
-	return s.writer.Close()
-}
-
-func (s *SyslogAuditWriter) Name() string {
-	return "syslog"
 }
 
 // WebhookAuditWriter sends audit logs to a webhook endpoint

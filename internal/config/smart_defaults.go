@@ -13,15 +13,15 @@ import (
 type ProjectType string
 
 const (
-	ProjectTypeNodeJS     ProjectType = "nodejs"
-	ProjectTypePython     ProjectType = "python"
-	ProjectTypeGo         ProjectType = "go"
-	ProjectTypeRust       ProjectType = "rust"
-	ProjectTypeJava       ProjectType = "java"
-	ProjectTypeRuby       ProjectType = "ruby"
-	ProjectTypePHP        ProjectType = "php"
-	ProjectTypeMultiLang  ProjectType = "multilang"
-	ProjectTypeUnknown    ProjectType = "unknown"
+	ProjectTypeNodeJS    ProjectType = "nodejs"
+	ProjectTypePython    ProjectType = "python"
+	ProjectTypeGo        ProjectType = "go"
+	ProjectTypeRust      ProjectType = "rust"
+	ProjectTypeJava      ProjectType = "java"
+	ProjectTypeRuby      ProjectType = "ruby"
+	ProjectTypePHP       ProjectType = "php"
+	ProjectTypeMultiLang ProjectType = "multilang"
+	ProjectTypeUnknown   ProjectType = "unknown"
 )
 
 // SecurityPreset represents predefined security configurations
@@ -50,10 +50,10 @@ type ProjectInfo struct {
 type ProjectSize string
 
 const (
-	SizeSmall  ProjectSize = "small"   // < 100 files
-	SizeMedium ProjectSize = "medium"  // 100-1000 files
-	SizeLarge  ProjectSize = "large"   // 1000-10000 files
-	SizeHuge   ProjectSize = "huge"    // > 10000 files
+	SizeSmall  ProjectSize = "small"  // < 100 files
+	SizeMedium ProjectSize = "medium" // 100-1000 files
+	SizeLarge  ProjectSize = "large"  // 1000-10000 files
+	SizeHuge   ProjectSize = "huge"   // > 10000 files
 )
 
 // SmartDefaultsEngine generates intelligent configuration defaults
@@ -224,7 +224,7 @@ func (pd *ProjectDetector) estimateDependencyCount(projectPath string, dependenc
 	// This is a simplified estimation
 	// In a real implementation, we would parse the actual dependency files
 	baseCount := len(dependencyFiles) * 20 // Rough estimate
-	
+
 	// Adjust based on project type and size
 	if len(dependencyFiles) > 2 {
 		baseCount *= 2 // Likely more complex project
@@ -235,12 +235,12 @@ func (pd *ProjectDetector) estimateDependencyCount(projectPath string, dependenc
 
 // EnvironmentInfo contains detected environment characteristics
 type EnvironmentInfo struct {
-	IsCI          bool
-	IsContainer   bool
-	IsProduction  bool
-	CPUCores      int
-	MemoryGB      int
-	IsCloudEnv    bool
+	IsCI         bool
+	IsContainer  bool
+	IsProduction bool
+	CPUCores     int
+	MemoryGB     int
+	IsCloudEnv   bool
 }
 
 // DetectEnvironment detects the current runtime environment
@@ -444,13 +444,13 @@ func (s *SmartDefaultsEngine) generatePoliciesConfig(preset SecurityPreset) Poli
 func (s *SmartDefaultsEngine) calculateOptimalWorkers(cpuCores int) int {
 	// Use 2x CPU cores for I/O bound operations, but cap at reasonable limits
 	workers := cpuCores * 2
-	
+
 	if workers < 2 {
 		workers = 2
 	} else if workers > 20 {
 		workers = 20
 	}
-	
+
 	return workers
 }
 

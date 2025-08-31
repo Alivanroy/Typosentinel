@@ -11,66 +11,66 @@ import (
 
 // GracefulDegradationManager manages system stability under high load
 type GracefulDegradationManager struct {
-	config              *GracefulDegradationConfig
-	loadShedder         *LoadShedder
-	backpressureManager *BackpressureManager
-	fallbackManager     *FallbackManager
+	config               *GracefulDegradationConfig
+	loadShedder          *LoadShedder
+	backpressureManager  *BackpressureManager
+	fallbackManager      *FallbackManager
 	serviceHealthMonitor *ServiceHealthMonitor
-	resourceMonitor     *GracefulResourceMonitor
-	metrics             *DegradationMetrics
-	logger              *log.Logger
-	mu                  sync.RWMutex
-	shutdownChan        chan struct{}
-	active              int32
+	resourceMonitor      *GracefulResourceMonitor
+	metrics              *DegradationMetrics
+	logger               *log.Logger
+	mu                   sync.RWMutex
+	shutdownChan         chan struct{}
+	active               int32
 }
 
 // GracefulDegradationConfig defines configuration for graceful degradation
 type GracefulDegradationConfig struct {
 	// Load shedding configuration
-	EnableLoadShedding     bool          `yaml:"enable_load_shedding" default:"true"`
-	LoadSheddingThreshold  float64       `yaml:"load_shedding_threshold" default:"0.8"`
-	CriticalThreshold      float64       `yaml:"critical_threshold" default:"0.95"`
-	SheddingRate           float64       `yaml:"shedding_rate" default:"0.1"`
-	MaxSheddingRate        float64       `yaml:"max_shedding_rate" default:"0.5"`
+	EnableLoadShedding    bool    `yaml:"enable_load_shedding" default:"true"`
+	LoadSheddingThreshold float64 `yaml:"load_shedding_threshold" default:"0.8"`
+	CriticalThreshold     float64 `yaml:"critical_threshold" default:"0.95"`
+	SheddingRate          float64 `yaml:"shedding_rate" default:"0.1"`
+	MaxSheddingRate       float64 `yaml:"max_shedding_rate" default:"0.5"`
 
 	// Backpressure configuration
-	EnableBackpressure     bool          `yaml:"enable_backpressure" default:"true"`
-	BackpressureThreshold  float64       `yaml:"backpressure_threshold" default:"0.7"`
-	MaxQueueSize           int           `yaml:"max_queue_size" default:"10000"`
-	QueueTimeout           time.Duration `yaml:"queue_timeout" default:"30s"`
+	EnableBackpressure    bool          `yaml:"enable_backpressure" default:"true"`
+	BackpressureThreshold float64       `yaml:"backpressure_threshold" default:"0.7"`
+	MaxQueueSize          int           `yaml:"max_queue_size" default:"10000"`
+	QueueTimeout          time.Duration `yaml:"queue_timeout" default:"30s"`
 
 	// Fallback configuration
-	EnableFallbacks        bool          `yaml:"enable_fallbacks" default:"true"`
-	FallbackTimeout        time.Duration `yaml:"fallback_timeout" default:"5s"`
-	CacheOnlyMode          bool          `yaml:"cache_only_mode" default:"false"`
-	ReducedFeatureSet      bool          `yaml:"reduced_feature_set" default:"true"`
+	EnableFallbacks   bool          `yaml:"enable_fallbacks" default:"true"`
+	FallbackTimeout   time.Duration `yaml:"fallback_timeout" default:"5s"`
+	CacheOnlyMode     bool          `yaml:"cache_only_mode" default:"false"`
+	ReducedFeatureSet bool          `yaml:"reduced_feature_set" default:"true"`
 
 	// Resource monitoring
-	MonitoringInterval     time.Duration `yaml:"monitoring_interval" default:"1s"`
-	CPUThreshold           float64       `yaml:"cpu_threshold" default:"80.0"`
-	MemoryThreshold        int64         `yaml:"memory_threshold" default:"1073741824"` // 1GB
-	GoroutineThreshold     int           `yaml:"goroutine_threshold" default:"10000"`
+	MonitoringInterval time.Duration `yaml:"monitoring_interval" default:"1s"`
+	CPUThreshold       float64       `yaml:"cpu_threshold" default:"80.0"`
+	MemoryThreshold    int64         `yaml:"memory_threshold" default:"1073741824"` // 1GB
+	GoroutineThreshold int           `yaml:"goroutine_threshold" default:"10000"`
 
 	// Service health
-	HealthCheckInterval    time.Duration `yaml:"health_check_interval" default:"5s"`
-	UnhealthyThreshold     int           `yaml:"unhealthy_threshold" default:"3"`
-	RecoveryThreshold      int           `yaml:"recovery_threshold" default:"5"`
+	HealthCheckInterval time.Duration `yaml:"health_check_interval" default:"5s"`
+	UnhealthyThreshold  int           `yaml:"unhealthy_threshold" default:"3"`
+	RecoveryThreshold   int           `yaml:"recovery_threshold" default:"5"`
 
 	// Adaptive behavior
-	AdaptiveMode           bool          `yaml:"adaptive_mode" default:"true"`
-	AdaptationInterval     time.Duration `yaml:"adaptation_interval" default:"10s"`
-	LearningRate           float64       `yaml:"learning_rate" default:"0.1"`
+	AdaptiveMode       bool          `yaml:"adaptive_mode" default:"true"`
+	AdaptationInterval time.Duration `yaml:"adaptation_interval" default:"10s"`
+	LearningRate       float64       `yaml:"learning_rate" default:"0.1"`
 }
 
 // LoadShedder implements intelligent load shedding
 type LoadShedder struct {
-	config           *GracefulDegradationConfig
-	currentLoad      float64
-	sheddingRate     float64
-	requestCounter   int64
-	droppedCounter   int64
-	prioritizer      *RequestPrioritizer
-	mu               sync.RWMutex
+	config         *GracefulDegradationConfig
+	currentLoad    float64
+	sheddingRate   float64
+	requestCounter int64
+	droppedCounter int64
+	prioritizer    *RequestPrioritizer
+	mu             sync.RWMutex
 }
 
 // RequestPrioritizer prioritizes requests during load shedding
@@ -91,14 +91,14 @@ type BackpressureManager struct {
 
 // Request represents a request in the backpressure queue
 type Request struct {
-	ID          string
-	Type        string
-	Priority    int
-	Payload     interface{}
-	Callback    func(interface{}, error)
-	Timeout     time.Duration
-	CreatedAt   time.Time
-	Context     context.Context
+	ID        string
+	Type      string
+	Priority  int
+	Payload   interface{}
+	Callback  func(interface{}, error)
+	Timeout   time.Duration
+	CreatedAt time.Time
+	Context   context.Context
 }
 
 // FallbackManager manages fallback mechanisms
@@ -128,11 +128,11 @@ type FallbackCacheEntry struct {
 
 // ServiceHealthMonitor monitors service health
 type ServiceHealthMonitor struct {
-	config           *GracefulDegradationConfig
-	services         map[string]*ServiceHealth
-	healthCheckers   map[string]HealthChecker
-	overallHealth    ServiceHealthStatus
-	mu               sync.RWMutex
+	config         *GracefulDegradationConfig
+	services       map[string]*ServiceHealth
+	healthCheckers map[string]HealthChecker
+	overallHealth  ServiceHealthStatus
+	mu             sync.RWMutex
 }
 
 // ServiceHealth tracks health of individual services
@@ -175,19 +175,19 @@ type GracefulResourceMonitor struct {
 
 // DegradationMetrics tracks degradation metrics
 type DegradationMetrics struct {
-	TotalRequests        int64     `json:"total_requests"`
-	DroppedRequests      int64     `json:"dropped_requests"`
-	QueuedRequests       int64     `json:"queued_requests"`
-	FallbackRequests     int64     `json:"fallback_requests"`
-	LoadSheddingRate     float64   `json:"load_shedding_rate"`
-	BackpressureRate     float64   `json:"backpressure_rate"`
-	FallbackRate         float64   `json:"fallback_rate"`
-	AverageResponseTime  time.Duration `json:"average_response_time"`
-	SystemLoad           float64   `json:"system_load"`
-	HealthScore          float64   `json:"health_score"`
-	DegradationLevel     int       `json:"degradation_level"`
-	LastUpdated          time.Time `json:"last_updated"`
-	mu                   sync.RWMutex
+	TotalRequests       int64         `json:"total_requests"`
+	DroppedRequests     int64         `json:"dropped_requests"`
+	QueuedRequests      int64         `json:"queued_requests"`
+	FallbackRequests    int64         `json:"fallback_requests"`
+	LoadSheddingRate    float64       `json:"load_shedding_rate"`
+	BackpressureRate    float64       `json:"backpressure_rate"`
+	FallbackRate        float64       `json:"fallback_rate"`
+	AverageResponseTime time.Duration `json:"average_response_time"`
+	SystemLoad          float64       `json:"system_load"`
+	HealthScore         float64       `json:"health_score"`
+	DegradationLevel    int           `json:"degradation_level"`
+	LastUpdated         time.Time     `json:"last_updated"`
+	mu                  sync.RWMutex
 }
 
 // DegradationLevel represents the current degradation level
@@ -323,8 +323,8 @@ func (gdm *GracefulDegradationManager) processPackageScan(ctx context.Context, r
 	// Simulate package scan processing
 	time.Sleep(time.Millisecond * 50) // Simulate processing time
 	return map[string]interface{}{
-		"scan_result": "clean",
-		"issues":      []string{},
+		"scan_result":  "clean",
+		"issues":       []string{},
 		"processed_at": time.Now(),
 	}, nil
 }
@@ -358,9 +358,22 @@ func (gdm *GracefulDegradationManager) GetMetrics() *DegradationMetrics {
 	gdm.metrics.mu.RLock()
 	defer gdm.metrics.mu.RUnlock()
 
-	// Create a copy to avoid race conditions
-	metrics := *gdm.metrics
-	return &metrics
+	// Create a copy to avoid race conditions without copying the mutex
+	metrics := &DegradationMetrics{
+		TotalRequests:       gdm.metrics.TotalRequests,
+		DroppedRequests:     gdm.metrics.DroppedRequests,
+		QueuedRequests:      gdm.metrics.QueuedRequests,
+		FallbackRequests:    gdm.metrics.FallbackRequests,
+		LoadSheddingRate:    gdm.metrics.LoadSheddingRate,
+		BackpressureRate:    gdm.metrics.BackpressureRate,
+		FallbackRate:        gdm.metrics.FallbackRate,
+		AverageResponseTime: gdm.metrics.AverageResponseTime,
+		SystemLoad:          gdm.metrics.SystemLoad,
+		HealthScore:         gdm.metrics.HealthScore,
+		DegradationLevel:    gdm.metrics.DegradationLevel,
+		LastUpdated:         gdm.metrics.LastUpdated,
+	}
+	return metrics
 }
 
 // GetDegradationLevel returns current degradation level
@@ -388,28 +401,28 @@ func (gdm *GracefulDegradationManager) GetDegradationLevel() DegradationLevel {
 // DefaultGracefulDegradationConfig returns default configuration
 func DefaultGracefulDegradationConfig() *GracefulDegradationConfig {
 	return &GracefulDegradationConfig{
-		EnableLoadShedding:     true,
-		LoadSheddingThreshold:  0.8,
-		CriticalThreshold:      0.95,
-		SheddingRate:           0.1,
-		MaxSheddingRate:        0.5,
-		EnableBackpressure:     true,
-		BackpressureThreshold:  0.7,
-		MaxQueueSize:           10000,
-		QueueTimeout:           30 * time.Second,
-		EnableFallbacks:        true,
-		FallbackTimeout:        5 * time.Second,
-		CacheOnlyMode:          false,
-		ReducedFeatureSet:      true,
-		MonitoringInterval:     time.Second,
-		CPUThreshold:           80.0,
-		MemoryThreshold:        1024 * 1024 * 1024, // 1GB
-		GoroutineThreshold:     10000,
-		HealthCheckInterval:    5 * time.Second,
-		UnhealthyThreshold:     3,
-		RecoveryThreshold:      5,
-		AdaptiveMode:           true,
-		AdaptationInterval:     10 * time.Second,
-		LearningRate:           0.1,
+		EnableLoadShedding:    true,
+		LoadSheddingThreshold: 0.8,
+		CriticalThreshold:     0.95,
+		SheddingRate:          0.1,
+		MaxSheddingRate:       0.5,
+		EnableBackpressure:    true,
+		BackpressureThreshold: 0.7,
+		MaxQueueSize:          10000,
+		QueueTimeout:          30 * time.Second,
+		EnableFallbacks:       true,
+		FallbackTimeout:       5 * time.Second,
+		CacheOnlyMode:         false,
+		ReducedFeatureSet:     true,
+		MonitoringInterval:    time.Second,
+		CPUThreshold:          80.0,
+		MemoryThreshold:       1024 * 1024 * 1024, // 1GB
+		GoroutineThreshold:    10000,
+		HealthCheckInterval:   5 * time.Second,
+		UnhealthyThreshold:    3,
+		RecoveryThreshold:     5,
+		AdaptiveMode:          true,
+		AdaptationInterval:    10 * time.Second,
+		LearningRate:          0.1,
 	}
 }

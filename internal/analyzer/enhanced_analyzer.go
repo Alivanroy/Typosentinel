@@ -138,7 +138,7 @@ func (ea *EnhancedAnalyzer) EnhancedScan(path string, options *EnhancedScanOptio
 
 		if securityResult != nil {
 			allSecurityResults = append(allSecurityResults, securityResult)
-			
+
 			// Aggregate results
 			enhancedResult.AdvancedThreats = append(enhancedResult.AdvancedThreats, securityResult.DetectedThreats...)
 			enhancedResult.SecurityRecommendations = append(enhancedResult.SecurityRecommendations, securityResult.SecurityRecommendations...)

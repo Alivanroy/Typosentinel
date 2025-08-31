@@ -1202,14 +1202,14 @@ func (ed *EnterpriseDashboard) collectVulnerabilityTrends(ctx context.Context, s
 // collectScanTrends collects scan trend data from database
 func (ed *EnterpriseDashboard) collectScanTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
 	duration := time.Duration(numPoints) * interval
-	
+
 	// Get real scan trends from database
 	dbTrends, err := ed.dbService.GetScanTrends(ctx, duration, numPoints)
 	if err != nil {
 		ed.logger.Error("Failed to get scan trends", map[string]interface{}{"error": err})
 		return []*TrendDataPoint{} // Return empty slice on error
 	}
-	
+
 	// Convert database trends to dashboard format
 	trends := make([]*TrendDataPoint, len(dbTrends))
 	for i, trend := range dbTrends {
@@ -1219,14 +1219,14 @@ func (ed *EnterpriseDashboard) collectScanTrends(ctx context.Context, startTime 
 			Label:     "Scans",
 		}
 	}
-	
+
 	return trends
 }
 
 // collectThreatTrends collects threat trend data from database
 func (ed *EnterpriseDashboard) collectThreatTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
 	duration := time.Duration(numPoints) * interval
-	
+
 	// Get real security trends from database (which includes threat data)
 	// Convert duration to days for the database call
 	days := int(duration.Hours() / 24)
@@ -1238,7 +1238,7 @@ func (ed *EnterpriseDashboard) collectThreatTrends(ctx context.Context, startTim
 		ed.logger.Error("Failed to get threat trends", map[string]interface{}{"error": err})
 		return []*TrendDataPoint{} // Return empty slice on error
 	}
-	
+
 	// Convert database trends to dashboard format
 	trends := make([]*TrendDataPoint, len(dbTrends))
 	for i, trend := range dbTrends {
@@ -1248,26 +1248,26 @@ func (ed *EnterpriseDashboard) collectThreatTrends(ctx context.Context, startTim
 			Label:     "Threats",
 		}
 	}
-	
+
 	return trends
 }
 
 // collectRepositoryTrends collects repository trend data from database
 func (ed *EnterpriseDashboard) collectRepositoryTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
 	trends := make([]*TrendDataPoint, 0, numPoints)
-	
+
 	// Get current repository count as baseline
 	totalRepos, err := ed.dbService.GetRepositoryCount(ctx)
 	if err != nil {
 		ed.logger.Error("Failed to get repository count", map[string]interface{}{"error": err})
 		return []*TrendDataPoint{} // Return empty slice on error
 	}
-	
+
 	// Since we don't have historical repository data, create a trend based on current count
 	// This shows the current state across the time period
 	for i := 0; i < numPoints; i++ {
 		timestamp := startTime.Add(time.Duration(i) * interval)
-		
+
 		trends = append(trends, &TrendDataPoint{
 			Timestamp: timestamp,
 			Value:     float64(totalRepos),
@@ -1281,17 +1281,17 @@ func (ed *EnterpriseDashboard) collectRepositoryTrends(ctx context.Context, star
 // collectPerformanceTrends collects performance trend data from system metrics
 func (ed *EnterpriseDashboard) collectPerformanceTrends(ctx context.Context, startTime time.Time, interval time.Duration, numPoints int) []*TrendDataPoint {
 	trends := make([]*TrendDataPoint, 0, numPoints)
-	
+
 	// Get current system metrics for baseline
 	resourceUsage := collectResourceUsage()
-	
+
 	for i := 0; i < numPoints; i++ {
 		timestamp := startTime.Add(time.Duration(i) * interval)
-		
+
 		// Use actual CPU usage as performance metric
 		// Convert CPU usage percentage to response time approximation
 		cpuBasedResponseTime := resourceUsage.CPUUsage * 5.0 // Scale CPU % to response time
-		
+
 		trends = append(trends, &TrendDataPoint{
 			Timestamp: timestamp,
 			Value:     math.Max(50, cpuBasedResponseTime), // Minimum 50ms
@@ -1309,14 +1309,14 @@ func (ed *EnterpriseDashboard) collectComplianceTrends(ctx context.Context, star
 	if days < 1 {
 		days = 1
 	}
-	
+
 	// Get real compliance trends from database
 	dbTrends, err := ed.dbService.GetComplianceTrends(ctx, days)
 	if err != nil {
 		ed.logger.Error("Failed to get compliance trends", map[string]interface{}{"error": err})
 		return []*TrendDataPoint{} // Return empty slice on error
 	}
-	
+
 	// Convert database trends to dashboard format
 	trends := make([]*TrendDataPoint, len(dbTrends))
 	for i, trend := range dbTrends {
@@ -1326,7 +1326,7 @@ func (ed *EnterpriseDashboard) collectComplianceTrends(ctx context.Context, star
 			Label:     "Compliance Score",
 		}
 	}
-	
+
 	return trends
 }
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+  <title>Dependency Graph Analysis</title>
+  <rect width="100%" height="100%" fill="#f8f9fa"/>
+  <text x="400" y="30" text-anchor="middle" font-size="20" font-weight="bold">Dependency Graph: .</text>
+  <circle cx="400" cy="100" r="30" fill="#007bff" stroke="#0056b3" stroke-width="2"/>
+  <text x="400" y="105" text-anchor="middle" fill="white" font-size="12">28 pkg</text>
+  <circle cx="200" cy="200" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="200" y="205" text-anchor="middle" font-size="10">@eslint/</text>
+  <line x1="400" y1="130" x2="200" y2="180" stroke="#666" stroke-width="1"/>
+  <circle cx="400" cy="200" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="400" y="205" text-anchor="middle" font-size="10">@types/r</text>
+  <line x1="400" y1="130" x2="400" y2="180" stroke="#666" stroke-width="1"/>
+  <circle cx="600" cy="200" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="600" y="205" text-anchor="middle" font-size="10">@types/r</text>
+  <line x1="400" y1="130" x2="600" y2="180" stroke="#666" stroke-width="1"/>
+  <circle cx="200" cy="300" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="200" y="305" text-anchor="middle" font-size="10">eslint-p</text>
+  <line x1="400" y1="130" x2="200" y2="280" stroke="#666" stroke-width="1"/>
+  <circle cx="400" cy="300" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="400" y="305" text-anchor="middle" font-size="10">eslint-p</text>
+  <line x1="400" y1="130" x2="400" y2="280" stroke="#666" stroke-width="1"/>
+  <circle cx="600" cy="300" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="600" y="305" text-anchor="middle" font-size="10">globals</text>
+  <line x1="400" y1="130" x2="600" y2="280" stroke="#666" stroke-width="1"/>
+  <circle cx="200" cy="400" r="20" fill="#dc3545" stroke="#666" stroke-width="1"/>
+  <text x="200" y="405" text-anchor="middle" font-size="10">react-do</text>
+  <line x1="400" y1="130" x2="200" y2="380" stroke="#666" stroke-width="1"/>
+  <circle cx="400" cy="400" r="20" fill="#ffc107" stroke="#666" stroke-width="1"/>
+  <text x="400" y="405" text-anchor="middle" font-size="10">react-ro</text>
+  <line x1="400" y1="130" x2="400" y2="380" stroke="#666" stroke-width="1"/>
+  <circle cx="600" cy="400" r="20" fill="#dc3545" stroke="#666" stroke-width="1"/>
+  <text x="600" y="405" text-anchor="middle" font-size="10">typescri</text>
+  <line x1="400" y1="130" x2="600" y2="380" stroke="#666" stroke-width="1"/>
+</svg>

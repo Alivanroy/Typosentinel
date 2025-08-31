@@ -39,6 +39,7 @@ type FeatureExtractor interface {
 type TrainingData struct {
 	Features []float64              `json:"features"`
 	Label    float64                `json:"label"`
+	Weight   float64                `json:"weight"`
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
@@ -54,7 +55,7 @@ func NewMLPipeline(config *config.Config) *MLPipeline {
 	return &MLPipeline{
 		config:   config,
 		models:   make(map[string]MLModel),
-		features: NewAdvancedFeatureExtractor(),
+		features: NewAdvancedFeatureExtractor(DefaultFeatureExtractionConfig()),
 	}
 }
 

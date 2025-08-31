@@ -24,20 +24,20 @@ type NuGetClient struct {
 type NuGetSearchResponse struct {
 	TotalHits int `json:"totalHits"`
 	Data      []struct {
-		ID          string `json:"id"`
-		Version     string `json:"version"`
-		Description string `json:"description"`
-		Summary     string `json:"summary"`
-		Title       string `json:"title"`
-		IconURL     string `json:"iconUrl"`
-		LicenseURL  string `json:"licenseUrl"`
-		ProjectURL  string `json:"projectUrl"`
-		Tags        []string `json:"tags"`
-		Authors     []string `json:"authors"`
-		Owners      []string `json:"owners"`
-		TotalDownloads int64 `json:"totalDownloads"`
-		Verified    bool     `json:"verified"`
-		Versions    []struct {
+		ID             string   `json:"id"`
+		Version        string   `json:"version"`
+		Description    string   `json:"description"`
+		Summary        string   `json:"summary"`
+		Title          string   `json:"title"`
+		IconURL        string   `json:"iconUrl"`
+		LicenseURL     string   `json:"licenseUrl"`
+		ProjectURL     string   `json:"projectUrl"`
+		Tags           []string `json:"tags"`
+		Authors        []string `json:"authors"`
+		Owners         []string `json:"owners"`
+		TotalDownloads int64    `json:"totalDownloads"`
+		Verified       bool     `json:"verified"`
+		Versions       []struct {
 			Version   string `json:"version"`
 			Downloads int64  `json:"downloads"`
 		} `json:"versions"`
@@ -47,18 +47,18 @@ type NuGetSearchResponse struct {
 // NuGetPackageInfo represents detailed package information
 type NuGetPackageInfo struct {
 	CatalogEntry struct {
-		ID          string   `json:"id"`
-		Version     string   `json:"version"`
-		Description string   `json:"description"`
-		Summary     string   `json:"summary"`
-		Title       string   `json:"title"`
-		IconURL     string   `json:"iconUrl"`
-		LicenseURL  string   `json:"licenseUrl"`
-		ProjectURL  string   `json:"projectUrl"`
-		Published   string   `json:"published"`
-		Authors     string   `json:"authors"`
-		Owners      string   `json:"owners"`
-		Tags        string   `json:"tags"`
+		ID               string `json:"id"`
+		Version          string `json:"version"`
+		Description      string `json:"description"`
+		Summary          string `json:"summary"`
+		Title            string `json:"title"`
+		IconURL          string `json:"iconUrl"`
+		LicenseURL       string `json:"licenseUrl"`
+		ProjectURL       string `json:"projectUrl"`
+		Published        string `json:"published"`
+		Authors          string `json:"authors"`
+		Owners           string `json:"owners"`
+		Tags             string `json:"tags"`
 		DependencyGroups []struct {
 			TargetFramework string `json:"targetFramework"`
 			Dependencies    []struct {
@@ -67,8 +67,8 @@ type NuGetPackageInfo struct {
 			} `json:"dependencies"`
 		} `json:"dependencyGroups"`
 	} `json:"catalogEntry"`
-	PackageContent   string `json:"packageContent"`
-	Registration     string `json:"registration"`
+	PackageContent string `json:"packageContent"`
+	Registration   string `json:"registration"`
 }
 
 // NewNuGetClient creates a new NuGet client
@@ -86,7 +86,7 @@ func NewNuGetClient() *NuGetClient {
 // GetPackageInfo retrieves package information from NuGet.org
 func (c *NuGetClient) GetPackageInfo(ctx context.Context, packageName, version string) (*types.PackageMetadata, error) {
 	cacheKey := fmt.Sprintf("%s:%s", packageName, version)
-	
+
 	// Check cache first
 	if entry, exists := c.cache[cacheKey]; exists {
 		if time.Since(entry.Timestamp) < c.cacheTTL {
@@ -153,18 +153,18 @@ func (c *NuGetClient) GetPackageInfo(ctx context.Context, packageName, version s
 
 	// Convert to PackageMetadata
 	metadata := &types.PackageMetadata{
-		Name:        packageName,
-		Version:     version,
-		Description: packageInfo.CatalogEntry.Description,
-		Homepage:    packageInfo.CatalogEntry.ProjectURL,
-		Registry:    "nuget",
-		Author:      packageInfo.CatalogEntry.Authors,
-		License:     "", // License info would need separate API call
-		Keywords:    keywords,
+		Name:         packageName,
+		Version:      version,
+		Description:  packageInfo.CatalogEntry.Description,
+		Homepage:     packageInfo.CatalogEntry.ProjectURL,
+		Registry:     "nuget",
+		Author:       packageInfo.CatalogEntry.Authors,
+		License:      "", // License info would need separate API call
+		Keywords:     keywords,
 		Dependencies: dependencies,
-		Maintainers: maintainers,
-		Downloads:   0, // Download stats would need separate API call
-		LastUpdated: lastUpdated,
+		Maintainers:  maintainers,
+		Downloads:    0, // Download stats would need separate API call
+		LastUpdated:  lastUpdated,
 	}
 
 	// Use summary if description is empty
@@ -215,18 +215,18 @@ func (c *NuGetClient) SearchPackages(ctx context.Context, query string) ([]*type
 		maintainers = append(maintainers, pkg.Owners...)
 
 		packageMetadata := &types.PackageMetadata{
-			Name:        pkg.ID,
-			Version:     pkg.Version,
-			Description: pkg.Description,
-			Registry:    "nuget",
-			Homepage:    pkg.ProjectURL,
-			Author:      strings.Join(pkg.Authors, ", "),
-			License:     "", // License info not available in search results
-			Keywords:    pkg.Tags,
+			Name:         pkg.ID,
+			Version:      pkg.Version,
+			Description:  pkg.Description,
+			Registry:     "nuget",
+			Homepage:     pkg.ProjectURL,
+			Author:       strings.Join(pkg.Authors, ", "),
+			License:      "", // License info not available in search results
+			Keywords:     pkg.Tags,
 			Dependencies: []string{}, // Dependencies not available in search results
-			Maintainers: maintainers,
-			Downloads:   pkg.TotalDownloads,
-			LastUpdated: nil, // Not available in search results
+			Maintainers:  maintainers,
+			Downloads:    pkg.TotalDownloads,
+			LastUpdated:  nil, // Not available in search results
 		}
 
 		// Use summary if description is empty

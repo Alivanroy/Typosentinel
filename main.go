@@ -58,7 +58,7 @@ malicious packages, and vulnerabilities in software dependencies across multiple
 TypoSentinel automatically detects project types (Node.js, Python, Go, Rust, Java, .NET, PHP, Ruby)
 based on manifest files and creates appropriate registry connectors. Use --recursive for monorepos
 and multi-project directories. Specify --package-manager to limit scanning to specific ecosystems.`,
-		Args:  cobra.MaximumNArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := "."
 			if len(args) > 0 {
@@ -113,13 +113,13 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 				VulnerabilityDBs:       vulnerabilityDBs,
 				VulnConfigPath:         vulnConfig,
 				// Recursive scanning options
-				Recursive:              recursive,
-				WorkspaceAware:         workspaceAware,
-				ConsolidateReport:      consolidateReport,
-				PackageManagers:        packageManagers,
+				Recursive:         recursive,
+				WorkspaceAware:    workspaceAware,
+				ConsolidateReport: consolidateReport,
+				PackageManagers:   packageManagers,
 				// Enhanced supply chain analysis options
-				EnableSupplyChain:      enableSupplyChain,
-				AdvancedAnalysis:       advancedAnalysis,
+				EnableSupplyChain: enableSupplyChain,
+				AdvancedAnalysis:  advancedAnalysis,
 			}
 
 			// Perform scan
@@ -384,19 +384,19 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 			log.Printf("[MAIN DEBUG] CORS config from environment: Enabled=%v, AllowedOrigins=%v", cfg.Server.CORS.Enabled, cfg.Server.CORS.AllowedOrigins)
 			log.Printf("[MAIN DEBUG] CORS AllowedMethods=%v", cfg.Server.CORS.AllowedMethods)
 			log.Printf("[MAIN DEBUG] CORS AllowedHeaders=%v", cfg.Server.CORS.AllowedHeaders)
-			
+
 			// Debug viper values directly
 			log.Printf("[VIPER DEBUG] server.cors.enabled: %v", viper.Get("server.cors.enabled"))
 			log.Printf("[VIPER DEBUG] server.cors.allowed_origins: %v", viper.Get("server.cors.allowed_origins"))
 			log.Printf("[VIPER DEBUG] server.cors.allowed_methods: %v", viper.Get("server.cors.allowed_methods"))
 			log.Printf("[VIPER DEBUG] server.cors.allowed_headers: %v", viper.Get("server.cors.allowed_headers"))
-			
+
 			// Debug environment detection
 			log.Printf("[ENV DEBUG] Environment detected: '%s'", cfg.App.Environment)
 			log.Printf("[ENV DEBUG] app.environment from viper: '%s'", viper.GetString("app.environment"))
 			log.Printf("[ENV DEBUG] TYPOSENTINEL_APP_ENVIRONMENT env var: '%s'", os.Getenv("TYPOSENTINEL_APP_ENVIRONMENT"))
 			log.Printf("[MAIN DEBUG] ===== END CORS CONFIGURATION DEBUG =====")
-			
+
 			restConfig := config.RESTAPIConfig{
 				Enabled:  true,
 				Host:     cfg.Server.Host,
@@ -659,7 +659,7 @@ to identify complex threat patterns and relationships between packages.`,
 			threshold, _ := cmd.Flags().GetFloat64("threshold")
 			maxDepth, _ := cmd.Flags().GetInt("max-depth")
 			includeMetrics, _ := cmd.Flags().GetBool("include-metrics")
-			
+
 			// Create GTR config
 			config := &edge.GTRConfig{
 				MinRiskThreshold:     threshold,
@@ -668,54 +668,43 @@ to identify complex threat patterns and relationships between packages.`,
 				EnableCycleDetection: true,
 			}
 			algorithm := edge.NewGTRAlgorithm(config)
-			
+
 			fmt.Printf("🔍 GTR Algorithm Analysis\n")
 			fmt.Printf("Packages: %v\n", args)
 			fmt.Printf("Threshold: %.2f, Max Depth: %d\n", threshold, maxDepth)
-			
+
 			ctx := context.Background()
 			for _, pkgName := range args {
-				// Create a basic package structure
-				pkg := &types.Package{
-					Name:     pkgName,
-					Version:  "latest",
-					Registry: "npm",
-				}
-				
-				result, err := algorithm.Analyze(ctx, pkg)
+				// Convert package name to slice for new interface
+				packages := []string{pkgName}
+
+				result, err := algorithm.Analyze(ctx, packages)
 				if err != nil {
 					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
 					continue
 				}
-				
+
 				switch outputFormat {
 				case "json":
 					data, _ := json.MarshalIndent(result, "", "  ")
 					fmt.Println(string(data))
 				default:
 					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
-					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
-					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
-					
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
 					if includeMetrics && result.Metadata != nil {
 						fmt.Printf("Metadata:\n")
 						for key, value := range result.Metadata {
 							fmt.Printf("  %s: %v\n", key, value)
 						}
 					}
-					
-					if len(result.AttackVectors) > 0 {
-						fmt.Printf("Attack Vectors:\n")
-						for _, vector := range result.AttackVectors {
-							fmt.Printf("  - %s\n", vector)
-						}
-					}
-					
+
 					if len(result.Findings) > 0 {
 						fmt.Printf("Findings:\n")
 						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
 						}
 					}
 				}
@@ -736,20 +725,20 @@ of package dependencies and network relationships for comprehensive threat detec
 			maxDepth, _ := cmd.Flags().GetInt("max-depth")
 			similarity, _ := cmd.Flags().GetFloat64("similarity")
 			includeFeatures, _ := cmd.Flags().GetBool("include-features")
-			
+
 			// Create RUNT config
 			config := &edge.RUNTConfig{
-				OverallThreshold:     similarity,
-				MinPackageLength:     2,
-				MaxPackageLength:     100,
+				OverallThreshold:      similarity,
+				MinPackageLength:      2,
+				MaxPackageLength:      100,
 				EnableUnicodeAnalysis: true,
 			}
 			algorithm := edge.NewRUNTAlgorithm(config)
-			
+
 			fmt.Printf("🌐 RUNT Algorithm Analysis\n")
 			fmt.Printf("Packages: %v\n", args)
 			fmt.Printf("Max Depth: %d, Similarity: %.2f\n", maxDepth, similarity)
-			
+
 			ctx := context.Background()
 			for _, pkgName := range args {
 				// Create a basic package structure
@@ -758,41 +747,34 @@ of package dependencies and network relationships for comprehensive threat detec
 					Version:  "latest",
 					Registry: "npm",
 				}
-				
-				result, err := algorithm.Analyze(ctx, pkg)
+
+				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
 				if err != nil {
 					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
 					continue
 				}
-				
+
 				switch outputFormat {
 				case "json":
 					data, _ := json.MarshalIndent(result, "", "  ")
 					fmt.Println(string(data))
 				default:
 					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
-					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
-					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
-					
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
 					if includeFeatures && result.Metadata != nil {
 						fmt.Printf("Features:\n")
 						for key, value := range result.Metadata {
 							fmt.Printf("  %s: %v\n", key, value)
 						}
 					}
-					
-					if len(result.AttackVectors) > 0 {
-						fmt.Printf("Attack Vectors:\n")
-						for _, vector := range result.AttackVectors {
-							fmt.Printf("  - %s\n", vector)
-						}
-					}
-					
+
 					if len(result.Findings) > 0 {
 						fmt.Printf("Findings:\n")
 						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
 						}
 					}
 				}
@@ -813,7 +795,7 @@ and adaptive clustering techniques for intelligent threat pattern recognition.`,
 			clusters, _ := cmd.Flags().GetInt("clusters")
 			adaptiveMode, _ := cmd.Flags().GetBool("adaptive")
 			includeCorrelation, _ := cmd.Flags().GetBool("include-correlation")
-			
+
 			// Create AICC config
 			config := &edge.AICCConfig{
 				MaxChainDepth:     clusters,
@@ -823,11 +805,11 @@ and adaptive clustering techniques for intelligent threat pattern recognition.`,
 				PolicyStrictness:  "medium",
 			}
 			algorithm := edge.NewAICCAlgorithm(config)
-			
+
 			fmt.Printf("🤖 AICC Algorithm Analysis\n")
 			fmt.Printf("Packages: %v\n", args)
 			fmt.Printf("Clusters: %d, Adaptive: %v\n", clusters, adaptiveMode)
-			
+
 			ctx := context.Background()
 			for _, pkgName := range args {
 				// Create a basic package structure
@@ -836,41 +818,36 @@ and adaptive clustering techniques for intelligent threat pattern recognition.`,
 					Version:  "latest",
 					Registry: "npm",
 				}
-				
-				result, err := algorithm.Analyze(ctx, pkg)
+
+				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
 				if err != nil {
 					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
 					continue
 				}
-				
+
 				switch outputFormat {
 				case "json":
 					data, _ := json.MarshalIndent(result, "", "  ")
 					fmt.Println(string(data))
 				default:
 					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
-					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
-					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
-					
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
 					if includeCorrelation && result.Metadata != nil {
 						fmt.Printf("Correlation Metrics:\n")
 						for key, value := range result.Metadata {
 							fmt.Printf("  %s: %v\n", key, value)
 						}
 					}
-					
-					if len(result.AttackVectors) > 0 {
-						fmt.Printf("Attack Vectors:\n")
-						for _, vector := range result.AttackVectors {
-							fmt.Printf("  - %s\n", vector)
-						}
-					}
-					
+
+					// AttackVectors field removed from AlgorithmResult
+
 					if len(result.Findings) > 0 {
 						fmt.Printf("Findings:\n")
 						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
 						}
 					}
 				}
@@ -891,21 +868,21 @@ impact propagation for comprehensive supply chain risk assessment.`,
 			maxDepth, _ := cmd.Flags().GetInt("max-depth")
 			riskThreshold, _ := cmd.Flags().GetFloat64("risk-threshold")
 			includeGraph, _ := cmd.Flags().GetBool("include-graph")
-			
+
 			// Create DIRT config
 			config := &edge.DIRTConfig{
 				MaxPropagationDepth:       maxDepth,
 				HighRiskThreshold:         riskThreshold,
 				EnableCascadeAnalysis:     true,
 				EnableHiddenRiskDetection: true,
-				CacheEnabled:             true,
+				CacheEnabled:              true,
 			}
 			algorithm := edge.NewDIRTAlgorithm(config)
-			
+
 			fmt.Printf("⛏️  DIRT Algorithm Analysis\n")
 			fmt.Printf("Packages: %v\n", args)
 			fmt.Printf("Max Depth: %d, Risk Threshold: %.2f\n", maxDepth, riskThreshold)
-			
+
 			ctx := context.Background()
 			for _, pkgName := range args {
 				// Create a basic package structure
@@ -914,41 +891,36 @@ impact propagation for comprehensive supply chain risk assessment.`,
 					Version:  "latest",
 					Registry: "npm",
 				}
-				
-				result, err := algorithm.Analyze(ctx, pkg)
+
+				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
 				if err != nil {
 					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
 					continue
 				}
-				
+
 				switch outputFormat {
 				case "json":
 					data, _ := json.MarshalIndent(result, "", "  ")
 					fmt.Println(string(data))
 				default:
 					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Threat Score: %.4f\n", result.ThreatScore)
-					fmt.Printf("Confidence: %.2f%%\n", result.Confidence*100)
-					fmt.Printf("Processing Time: %v\n", result.ProcessingTime)
-					
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
 					if includeGraph && result.Metadata != nil {
 						fmt.Printf("Dependency Graph Metrics:\n")
 						for key, value := range result.Metadata {
 							fmt.Printf("  %s: %v\n", key, value)
 						}
 					}
-					
-					if len(result.AttackVectors) > 0 {
-						fmt.Printf("Attack Vectors:\n")
-						for _, vector := range result.AttackVectors {
-							fmt.Printf("  - %s\n", vector)
-						}
-					}
-					
+
+					// AttackVectors field removed from AlgorithmResult
+
 					if len(result.Findings) > 0 {
 						fmt.Printf("Findings:\n")
 						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Description)
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
 						}
 					}
 				}
@@ -966,14 +938,14 @@ impact propagation for comprehensive supply chain risk assessment.`,
 			packages, _ := cmd.Flags().GetInt("packages")
 			workers, _ := cmd.Flags().GetInt("workers")
 			iterations, _ := cmd.Flags().GetInt("iterations")
-			
+
 			fmt.Printf("🚀 Edge Algorithms Benchmark\n")
 			fmt.Printf("Packages: %d, Workers: %d, Iterations: %d\n", packages, workers, iterations)
-			
+
 			// This would call the benchmark functionality
 			fmt.Println("Running comprehensive benchmark...")
 			fmt.Println("Note: Use examples/full_benchmark for detailed benchmarking")
-			
+
 			return nil
 		},
 	}
@@ -999,11 +971,256 @@ impact propagation for comprehensive supply chain risk assessment.`,
 	edgeBenchmarkCmd.Flags().Int("workers", 4, "Number of concurrent workers")
 	edgeBenchmarkCmd.Flags().Int("iterations", 3, "Number of benchmark iterations")
 
+	// QUANTUM Algorithm command
+	var quantumCmd = &cobra.Command{
+		Use:   "quantum [packages...]",
+		Short: "Quantum-inspired threat detection algorithm",
+		Long: `QUANTUM uses quantum-inspired computing principles including superposition,
+entanglement, and quantum gates for advanced threat pattern recognition.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			qubits, _ := cmd.Flags().GetInt("qubits")
+			entanglement, _ := cmd.Flags().GetBool("entanglement")
+			superposition, _ := cmd.Flags().GetBool("superposition")
+
+			// Create QUANTUM config
+			config := &edge.QUANTUMConfig{
+				QubitCount:                qubits,
+				CoherenceTime:             1000 * time.Microsecond,
+				DecoherenceRate:           0.01,
+				MaxEntanglementDepth:      8,
+				EntanglementThreshold:     0.7,
+				SuperpositionStates:       256,
+				AmplitudePrecision:        1e-10,
+				MeasurementBasis:          "computational",
+				ObservationWindow:         1 * time.Second,
+				ThreatThreshold:           0.8,
+				AnomalyThreshold:          0.6,
+				QuantumAdvantageThreshold: 0.9,
+			}
+			algorithm := edge.NewQUANTUMAlgorithm(config)
+
+			fmt.Printf("⚛️  QUANTUM Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Qubits: %d, Entanglement: %v, Superposition: %v\n", qubits, entanglement, superposition)
+
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+
+				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
+					// AttackVectors field removed from AlgorithmResult
+
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// NEURAL Algorithm command
+	var neuralCmd = &cobra.Command{
+		Use:   "neural [packages...]",
+		Short: "Neural ensemble threat detection algorithm",
+		Long: `NEURAL uses ensemble neural networks with consensus mechanisms
+for multi-vector threat analysis and adaptive learning.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			networks, _ := cmd.Flags().GetInt("networks")
+			consensus, _ := cmd.Flags().GetBool("consensus")
+			learning, _ := cmd.Flags().GetBool("learning")
+
+			// Create NEURAL config
+			config := &edge.NEURALConfig{
+				NetworkCount:         networks,
+				EnsembleMethod:       "bagging",
+				VotingStrategy:       "weighted_average",
+				HiddenLayers:         []int{128, 64, 32},
+				ActivationFunction:   "relu",
+				DropoutRate:          0.2,
+				LearningRate:         0.001,
+				BatchSize:            32,
+				Epochs:               100,
+				ValidationSplit:      0.2,
+				FeatureDimensions:    256,
+				FeatureNormalization: "standard",
+				FeatureSelection:     true,
+				ThreatThreshold:      0.7,
+				ConsensusThreshold:   0.8,
+				ConfidenceThreshold:  0.6,
+				AdaptiveLearning:     learning,
+			}
+			algorithm := edge.NewNEURALAlgorithm(config)
+
+			fmt.Printf("🧠 NEURAL Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Networks: %d, Consensus: %v, Learning: %v\n", networks, consensus, learning)
+
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+
+				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
+					// AttackVectors field removed from AlgorithmResult
+
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// ADAPTIVE Algorithm command
+	var adaptiveCmd = &cobra.Command{
+		Use:   "adaptive [packages...]",
+		Short: "Adaptive learning threat detection algorithm",
+		Long: `ADAPTIVE uses real-time learning and adaptation mechanisms
+for evolving threat landscapes and pattern recognition.`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get flags
+			adaptation, _ := cmd.Flags().GetBool("adaptation")
+			memory, _ := cmd.Flags().GetInt("memory")
+			forgetting, _ := cmd.Flags().GetBool("forgetting")
+
+			// Create ADAPTIVE config
+			config := &edge.ADAPTIVEConfig{
+				LearningRate:         0.01,
+				AdaptationRate:       0.05,
+				ForgetRate:           0.001,
+				MemoryCapacity:       memory,
+				PatternWindow:        100,
+				PatternThreshold:     0.8,
+				NoveltyThreshold:     0.7,
+				PerformanceThreshold: 0.85,
+				DriftThreshold:       0.1,
+				FeedbackWeight:       0.3,
+				FeedbackDecay:        0.95,
+				FeedbackAggregation:  "weighted_average",
+				UpdateStrategy:       "incremental",
+				BatchSize:            32,
+				ThreatThreshold:      0.7,
+				ConfidenceThreshold:  0.6,
+				AdaptiveThreshold:    adaptation,
+			}
+			algorithm := edge.NewADAPTIVEAlgorithm(config)
+
+			fmt.Printf("🔄 ADAPTIVE Algorithm Analysis\n")
+			fmt.Printf("Packages: %v\n", args)
+			fmt.Printf("Adaptation: %v, Memory: %d, Forgetting: %v\n", adaptation, memory, forgetting)
+
+			ctx := context.Background()
+			for _, pkgName := range args {
+				// Create a basic package structure
+				pkg := &types.Package{
+					Name:     pkgName,
+					Version:  "latest",
+					Registry: "npm",
+				}
+
+				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
+				if err != nil {
+					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
+					continue
+				}
+
+				switch outputFormat {
+				case "json":
+					data, _ := json.MarshalIndent(result, "", "  ")
+					fmt.Println(string(data))
+				default:
+					fmt.Printf("\n📦 Package: %s\n", pkgName)
+					fmt.Printf("Algorithm: %s\n", result.Algorithm)
+					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
+					fmt.Printf("Findings: %d\n", len(result.Findings))
+
+					// AttackVectors field removed from AlgorithmResult
+
+					if len(result.Findings) > 0 {
+						fmt.Printf("Findings:\n")
+						for _, finding := range result.Findings {
+							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
+						}
+					}
+				}
+			}
+			return nil
+		},
+	}
+
+	// Add flags to new edge algorithm commands
+	quantumCmd.Flags().Int("qubits", 8, "Number of qubits for quantum analysis")
+	quantumCmd.Flags().Bool("entanglement", true, "Enable quantum entanglement")
+	quantumCmd.Flags().Bool("superposition", true, "Enable quantum superposition")
+
+	neuralCmd.Flags().Int("networks", 5, "Number of neural networks in ensemble")
+	neuralCmd.Flags().Bool("consensus", true, "Enable consensus mechanism")
+	neuralCmd.Flags().Bool("learning", true, "Enable adaptive learning")
+
+	adaptiveCmd.Flags().Bool("adaptation", true, "Enable real-time adaptation")
+	adaptiveCmd.Flags().Int("memory", 1000, "Memory buffer size")
+	adaptiveCmd.Flags().Bool("forgetting", true, "Enable memory forgetting")
+
 	// Add subcommands to edge command
 	edgeCmd.AddCommand(gtrCmd)
 	edgeCmd.AddCommand(runtCmd)
 	edgeCmd.AddCommand(aiccCmd)
 	edgeCmd.AddCommand(dirtCmd)
+	edgeCmd.AddCommand(quantumCmd)
+	edgeCmd.AddCommand(neuralCmd)
+	edgeCmd.AddCommand(adaptiveCmd)
 	edgeCmd.AddCommand(edgeBenchmarkCmd)
 
 	// Dependency Graph command group
@@ -1031,8 +1248,6 @@ impact propagation for comprehensive supply chain risk assessment.`,
 			return performDependencyGraphAnalysis(path, maxDepth, includeDev, outputFormat, verbose)
 		},
 	}
-
-
 
 	// Graph Export command
 	var graphExportCmd = &cobra.Command{
@@ -1110,7 +1325,7 @@ impact propagation for comprehensive supply chain risk assessment.`,
 
 	// Add flags to graph commands
 	graphCmd.PersistentFlags().Bool("include-dev", false, "Include development dependencies")
-	
+
 	graphGenerateCmd.Flags().Int("max-depth", 10, "Maximum dependency depth to analyze")
 	graphGenerateCmd.Flags().String("format", "table", "Output format (table, json, dot, svg)")
 
@@ -1279,7 +1494,7 @@ func outputAnalysisResultTable(result *detector.CheckPackageResult) {
 func outputSBOM(result *analyzer.ScanResult, format string) {
 	// Convert analyzer.ScanResult to scanner.ScanResults
 	scanResults := convertToScannerResults(result)
-	
+
 	// Create formatter options
 	options := output.FormatterOptions{
 		Format:      output.OutputFormat(format),
@@ -1288,10 +1503,10 @@ func outputSBOM(result *analyzer.ScanResult, format string) {
 		Verbose:     false,
 		Indent:      "  ",
 	}
-	
+
 	var sbomData []byte
 	var err error
-	
+
 	switch format {
 	case "spdx":
 		formatter := output.NewSPDXFormatter()
@@ -1303,12 +1518,12 @@ func outputSBOM(result *analyzer.ScanResult, format string) {
 		fmt.Printf("Unsupported SBOM format: %s\n", format)
 		return
 	}
-	
+
 	if err != nil {
 		fmt.Printf("Error generating %s SBOM: %v\n", format, err)
 		return
 	}
-	
+
 	fmt.Println(string(sbomData))
 }
 
@@ -1316,7 +1531,7 @@ func outputSBOM(result *analyzer.ScanResult, format string) {
 func outputSBOMWithFile(result *analyzer.ScanResult, format, outputFile string) {
 	// Convert analyzer.ScanResult to scanner.ScanResults
 	scanResults := convertToScannerResults(result)
-	
+
 	// Create formatter options
 	options := output.FormatterOptions{
 		Format:      output.OutputFormat(format),
@@ -1325,10 +1540,10 @@ func outputSBOMWithFile(result *analyzer.ScanResult, format, outputFile string) 
 		Verbose:     false,
 		Indent:      "  ",
 	}
-	
+
 	var sbomData []byte
 	var err error
-	
+
 	switch format {
 	case "spdx":
 		formatter := output.NewSPDXFormatter()
@@ -1340,12 +1555,12 @@ func outputSBOMWithFile(result *analyzer.ScanResult, format, outputFile string) 
 		fmt.Printf("Unsupported SBOM format: %s\n", format)
 		return
 	}
-	
+
 	if err != nil {
 		fmt.Printf("Error generating %s SBOM: %v\n", format, err)
 		return
 	}
-	
+
 	if outputFile != "" {
 		err = os.WriteFile(outputFile, sbomData, 0644)
 		if err != nil {
@@ -1361,14 +1576,14 @@ func outputSBOMWithFile(result *analyzer.ScanResult, format, outputFile string) 
 // convertToScannerResults converts analyzer.ScanResult to scanner.ScanResults
 func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
 	var scanResults []scanner.ScanResult
-	
+
 	// Group threats by package
 	packageThreats := make(map[string][]scanner.Threat)
 	packageMap := make(map[string]*types.Package)
-	
+
 	for _, threat := range result.Threats {
 		packageName := threat.Package
-		
+
 		// Create a basic package if we don't have one
 		if _, exists := packageMap[packageName]; !exists {
 			packageMap[packageName] = &types.Package{
@@ -1382,7 +1597,7 @@ func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
 				},
 			}
 		}
-		
+
 		// Convert analyzer threat to scanner threat
 		scannerThreat := scanner.Threat{
 			Type:           string(threat.Type),
@@ -1394,10 +1609,10 @@ func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
 			Source:         threat.DetectionMethod,
 			Confidence:     threat.Confidence,
 		}
-		
+
 		packageThreats[packageName] = append(packageThreats[packageName], scannerThreat)
 	}
-	
+
 	// Create scan results for each package
 	for packageName, threats := range packageThreats {
 		scanResult := scanner.ScanResult{
@@ -1406,7 +1621,7 @@ func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
 		}
 		scanResults = append(scanResults, scanResult)
 	}
-	
+
 	// If no threats found, create a result for the scanned path
 	if len(scanResults) == 0 {
 		scanResult := scanner.ScanResult{
@@ -1422,7 +1637,7 @@ func convertToScannerResults(result *analyzer.ScanResult) *scanner.ScanResults {
 		}
 		scanResults = append(scanResults, scanResult)
 	}
-	
+
 	return &scanner.ScanResults{
 		Results: scanResults,
 	}
@@ -1452,9 +1667,9 @@ func saveScanToDatabase(result *analyzer.ScanResult, scanPath string) error {
 
 	// Debug logging
 	if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
-		logFile.WriteString(fmt.Sprintf("=== DB CONFIG: Type=%s, Host=%s, Port=%d, Database=%s ===\n", 
+		logFile.WriteString(fmt.Sprintf("=== DB CONFIG: Type=%s, Host=%s, Port=%d, Database=%s ===\n",
 			dbConfig.Type, dbConfig.Host, dbConfig.Port, dbConfig.Database))
-		logFile.WriteString(fmt.Sprintf("=== SCAN RESULT: Threats=%d, TotalPackages=%d ===\n", 
+		logFile.WriteString(fmt.Sprintf("=== SCAN RESULT: Threats=%d, TotalPackages=%d ===\n",
 			len(result.Threats), result.TotalPackages))
 		logFile.Close()
 	}
@@ -1486,9 +1701,9 @@ func saveScanToDatabase(result *analyzer.ScanResult, scanPath string) error {
 		Threats:     convertThreatsToDatabase(result.Threats),
 		Duration:    int64(result.Duration.Seconds()),
 		Metadata: map[string]interface{}{
-			"path":          scanPath,
+			"path":           scanPath,
 			"total_packages": result.TotalPackages,
-			"warnings":      len(result.Warnings),
+			"warnings":       len(result.Warnings),
 		},
 	}
 
@@ -1499,7 +1714,7 @@ func saveScanToDatabase(result *analyzer.ScanResult, scanPath string) error {
 	// Create scan in database
 	ctx := context.Background()
 	if logFile, logErr := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); logErr == nil {
-		logFile.WriteString(fmt.Sprintf("=== CREATING SCAN: ID=%s, Package=%s, Threats=%d ===\n", 
+		logFile.WriteString(fmt.Sprintf("=== CREATING SCAN: ID=%s, Package=%s, Threats=%d ===\n",
 			packageScan.ID, packageScan.PackageName, len(packageScan.Threats)))
 		logFile.Close()
 	}
@@ -1524,22 +1739,22 @@ func generateDOTContentFromResult(result *analyzer.ScanResult) string {
 	content.WriteString("digraph DependencyGraph {\n")
 	content.WriteString("  rankdir=TB;\n")
 	content.WriteString("  node [shape=box, style=filled];\n\n")
-	
+
 	// Add root node
-	content.WriteString(fmt.Sprintf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n", 
+	content.WriteString(fmt.Sprintf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n",
 		result.Path, result.Path, result.TotalPackages))
-	
+
 	// Add threat nodes
 	for i, threat := range result.Threats {
 		color := "lightcoral"
 		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
 			color = "red"
 		}
-		content.WriteString(fmt.Sprintf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n", 
+		content.WriteString(fmt.Sprintf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n",
 			i, color, threat.Package, threat.Type))
 		content.WriteString(fmt.Sprintf("  \"%s\" -> \"threat_%d\";\n", result.Path, i))
 	}
-	
+
 	content.WriteString("}\n")
 	return content.String()
 }
@@ -1550,17 +1765,17 @@ func generateAndSaveSVGToFile(result *analyzer.ScanResult, outputFile string, ve
 	content.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 	content.WriteString("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\">\n")
 	content.WriteString("  <title>Dependency Graph Analysis</title>\n")
-	
+
 	// Background
 	content.WriteString("  <rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>\n")
-	
+
 	// Title
 	content.WriteString(fmt.Sprintf("  <text x=\"400\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path))
-	
+
 	// Root node
 	content.WriteString("  <circle cx=\"400\" cy=\"100\" r=\"30\" fill=\"#007bff\" stroke=\"#0056b3\" stroke-width=\"2\"/>\n")
 	content.WriteString(fmt.Sprintf("  <text x=\"400\" y=\"105\" text-anchor=\"middle\" fill=\"white\" font-size=\"12\">%d pkg</text>\n", result.TotalPackages))
-	
+
 	// Threat nodes
 	y := 200
 	for i, threat := range result.Threats {
@@ -1568,21 +1783,21 @@ func generateAndSaveSVGToFile(result *analyzer.ScanResult, outputFile string, ve
 		if i > 0 && i%3 == 0 {
 			y += 100
 		}
-		
+
 		color := "#ffc107" // warning
 		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
 			color = "#dc3545" // danger
 		}
-		
+
 		content.WriteString(fmt.Sprintf("  <circle cx=\"%d\" cy=\"%d\" r=\"20\" fill=\"%s\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y, color))
 		content.WriteString(fmt.Sprintf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\">%s</text>\n", x, y+5, threat.Package[:min(len(threat.Package), 8)]))
-		
+
 		// Connection line
 		content.WriteString(fmt.Sprintf("  <line x1=\"400\" y1=\"130\" x2=\"%d\" y2=\"%d\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y-20))
 	}
-	
+
 	content.WriteString("</svg>\n")
-	
+
 	return os.WriteFile(outputFile, []byte(content.String()), 0644)
 }
 
@@ -1607,10 +1822,10 @@ func outputInteractiveGraph(result *analyzer.ScanResult, scanPath string, verbos
 		MinRiskScore:    0.0,
 		OutputDirectory: "./output",
 	}
-	
+
 	// Create visualizer
 	visualizer := visualization.NewGraphVisualizer(config)
-	
+
 	// Generate output filename
 	baseName := filepath.Base(scanPath)
 	if baseName == "." {
@@ -1618,7 +1833,7 @@ func outputInteractiveGraph(result *analyzer.ScanResult, scanPath string, verbos
 	}
 	timestamp := time.Now().Format("20060102-150405")
 	outputPath := filepath.Join("./output", fmt.Sprintf("%s-interactive-%s.html", baseName, timestamp))
-	
+
 	// Generate interactive graph
 	return visualizer.GenerateInteractiveGraph(result, outputPath)
 }
@@ -1636,10 +1851,10 @@ func outputAdvancedSVG(result *analyzer.ScanResult, scanPath string, verbose boo
 		MinRiskScore:    0.0,
 		OutputDirectory: "./output",
 	}
-	
+
 	// Create visualizer
 	visualizer := visualization.NewGraphVisualizer(config)
-	
+
 	// Generate output filename
 	baseName := filepath.Base(scanPath)
 	if baseName == "." {
@@ -1647,7 +1862,7 @@ func outputAdvancedSVG(result *analyzer.ScanResult, scanPath string, verbose boo
 	}
 	timestamp := time.Now().Format("20060102-150405")
 	outputPath := filepath.Join("./output", fmt.Sprintf("%s-advanced-%s.svg", baseName, timestamp))
-	
+
 	// Generate advanced SVG
 	return visualizer.GenerateAdvancedSVG(result, outputPath)
 }
@@ -1751,10 +1966,10 @@ func buildDependencyGraphFromScanResult(result *analyzer.ScanResult) (*scanner.D
 	for _, pkg := range packageMap {
 		riskScore := determineRiskScore(result.Threats, pkg.Name)
 		node := scanner.DependencyNode{
-			ID:       pkg.Name,
-			Package:  pkg,
-			Level:    1,
-			Direct:   true,
+			ID:      pkg.Name,
+			Package: pkg,
+			Level:   1,
+			Direct:  true,
 			RiskData: &scanner.NodeRiskData{
 				RiskScore:    riskScore,
 				ThreatCount:  countThreatsForPackage(result.Threats, pkg.Name),
@@ -1904,9 +2119,9 @@ func printDetailedDepthAnalysis(result *scanner.DepthAnalysisResult) {
 		fmt.Printf("🔍 Critical Dependency Paths:\n")
 		for i, path := range result.CriticalPaths {
 			fmt.Printf("   %d. %s (Depth: %d, Risk Score: %.2f)\n", i+1, strings.Join(path.Path, " → "), path.Depth, path.RiskScore)
-		if path.Criticality != "" {
-			fmt.Printf("      Criticality: %s\n", path.Criticality)
-		}
+			if path.Criticality != "" {
+				fmt.Printf("      Criticality: %s\n", path.Criticality)
+			}
 		}
 		fmt.Println()
 	}
@@ -1916,9 +2131,9 @@ func printDetailedDepthAnalysis(result *scanner.DepthAnalysisResult) {
 		fmt.Printf("🕳️  Deep Dependencies (Depth > 5):\n")
 		for i, dep := range result.DeepDependencies {
 			fmt.Printf("   %d. %s (Depth: %d)\n", i+1, dep.PackageName, dep.Depth)
-		if !dep.Maintenance.LastUpdate.IsZero() {
-			fmt.Printf("      Last Update: %s\n", dep.Maintenance.LastUpdate.Format("2006-01-02"))
-		}
+			if !dep.Maintenance.LastUpdate.IsZero() {
+				fmt.Printf("      Last Update: %s\n", dep.Maintenance.LastUpdate.Format("2006-01-02"))
+			}
 		}
 		fmt.Println()
 	}
@@ -1967,7 +2182,7 @@ func saveDepthAnalysisToFile(result *scanner.DepthAnalysisResult, scanPath strin
 func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, outputFormat string, verbose bool) error {
 	// Initialize configuration
 	cfg := createDefaultConfig()
-	
+
 	// Configure supply chain settings
 	if cfg.SupplyChain == nil {
 		cfg.SupplyChain = &config.SupplyChainConfig{}
@@ -1980,17 +2195,17 @@ func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, 
 		ConfusionDetection:      true,
 		SupplyChainRiskAnalysis: true,
 	}
-	
+
 	// Initialize analyzer
 	analyzerInstance, err := analyzer.New(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to initialize analyzer: %w", err)
 	}
-	
+
 	fmt.Printf("🔍 Analyzing dependency graph for: %s\n", path)
 	fmt.Printf("📊 Configuration: Max Depth=%d, Include Dev=%v, Output=%s\n", maxDepth, includeDev, outputFormat)
 	fmt.Println()
-	
+
 	// Perform scan with supply chain analysis
 	scanOptions := &analyzer.ScanOptions{
 		OutputFormat:           outputFormat,
@@ -1998,12 +2213,12 @@ func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, 
 		EnableSupplyChain:      true,
 		AdvancedAnalysis:       true,
 	}
-	
+
 	result, err := analyzerInstance.Scan(path, scanOptions)
 	if err != nil {
 		return fmt.Errorf("failed to perform dependency graph analysis: %w", err)
 	}
-	
+
 	// Display results based on output format
 	switch outputFormat {
 	case "json":
@@ -2028,7 +2243,7 @@ func outputDependencyGraphJSON(result *analyzer.ScanResult, verbose bool) error 
 	if result == nil {
 		return fmt.Errorf("no scan result available")
 	}
-	
+
 	// Create dependency graph summary
 	graphSummary := map[string]interface{}{
 		"scan_id":        result.ScanID,
@@ -2041,17 +2256,17 @@ func outputDependencyGraphJSON(result *analyzer.ScanResult, verbose bool) error 
 		"summary":        result.Summary,
 		"metadata":       result.Metadata,
 	}
-	
+
 	if verbose {
 		graphSummary["detailed_threats"] = result.Threats
 		graphSummary["detailed_warnings"] = result.Warnings
 	}
-	
+
 	data, err := json.MarshalIndent(graphSummary, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
-	
+
 	fmt.Println(string(data))
 	return nil
 }
@@ -2062,22 +2277,22 @@ func outputDependencyGraphDOT(result *analyzer.ScanResult, verbose bool) error {
 	fmt.Println("  rankdir=TB;")
 	fmt.Println("  node [shape=box, style=filled];")
 	fmt.Println()
-	
+
 	// Add root node
-	fmt.Printf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n", 
+	fmt.Printf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n",
 		result.Path, result.Path, result.TotalPackages)
-	
+
 	// Add threat nodes
 	for i, threat := range result.Threats {
 		color := "lightcoral"
 		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
 			color = "red"
 		}
-		fmt.Printf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n", 
+		fmt.Printf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n",
 			i, color, threat.Package, threat.Type)
 		fmt.Printf("  \"%s\" -> \"threat_%d\";\n", result.Path, i)
 	}
-	
+
 	fmt.Println("}")
 	return nil
 }
@@ -2087,17 +2302,17 @@ func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
 	fmt.Println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
 	fmt.Println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\">")
 	fmt.Println("  <title>Dependency Graph Analysis</title>")
-	
+
 	// Background
 	fmt.Println("  <rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>")
-	
+
 	// Title
 	fmt.Printf("  <text x=\"400\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path)
-	
+
 	// Root node
 	fmt.Println("  <circle cx=\"400\" cy=\"100\" r=\"30\" fill=\"#007bff\" stroke=\"#0056b3\" stroke-width=\"2\"/>")
 	fmt.Printf("  <text x=\"400\" y=\"105\" text-anchor=\"middle\" fill=\"white\" font-size=\"12\">%d pkg</text>\n", result.TotalPackages)
-	
+
 	// Threat nodes
 	y := 200
 	for i, threat := range result.Threats {
@@ -2105,20 +2320,20 @@ func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
 		if i > 0 && i%3 == 0 {
 			y += 100
 		}
-		
+
 		color := "#ffc107" // warning
 		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
 			color = "#dc3545" // danger
 		}
-		
+
 		fmt.Printf("  <circle cx=\"%d\" cy=\"%d\" r=\"25\" fill=\"%s\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y, color)
 		fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\">%s</text>\n", x, y-5, threat.Package)
 		fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"8\">%s</text>\n", x, y+8, threat.Severity)
-		
+
 		// Connection line
 		fmt.Printf("  <line x1=\"400\" y1=\"130\" x2=\"%d\" y2=\"%d\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y-25)
 	}
-	
+
 	// Legend
 	fmt.Println("  <text x=\"50\" y=\"550\" font-size=\"12\" font-weight=\"bold\">Legend:</text>")
 	fmt.Println("  <circle cx=\"70\" cy=\"570\" r=\"8\" fill=\"#007bff\"/>")
@@ -2127,7 +2342,7 @@ func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
 	fmt.Println("  <text x=\"215\" y=\"575\" font-size=\"10\">High/Critical Threat</text>")
 	fmt.Println("  <circle cx=\"350\" cy=\"570\" r=\"8\" fill=\"#ffc107\"/>")
 	fmt.Println("  <text x=\"365\" y=\"575\" font-size=\"10\">Medium/Low Threat</text>")
-	
+
 	fmt.Println("</svg>")
 	return nil
 }
@@ -2143,7 +2358,7 @@ func outputDependencyGraphTable(result *analyzer.ScanResult, verbose bool) error
 	fmt.Printf("⚠️  Threats Found: %d\n", len(result.Threats))
 	fmt.Printf("🔔 Warnings: %d\n", len(result.Warnings))
 	fmt.Println()
-	
+
 	if len(result.Threats) > 0 {
 		fmt.Println("🚨 DETECTED THREATS:")
 		fmt.Println("────────────────────")
@@ -2158,7 +2373,7 @@ func outputDependencyGraphTable(result *analyzer.ScanResult, verbose bool) error
 			fmt.Println()
 		}
 	}
-	
+
 	if len(result.Warnings) > 0 && verbose {
 		fmt.Println("⚠️  WARNINGS:")
 		fmt.Println("─────────────")
@@ -2167,7 +2382,7 @@ func outputDependencyGraphTable(result *analyzer.ScanResult, verbose bool) error
 		}
 		fmt.Println()
 	}
-	
+
 	// Display summary
 	// Always output summary since ScanSummary is not a pointer
 	fmt.Println("📊 ANALYSIS SUMMARY:")
@@ -2179,7 +2394,7 @@ func outputDependencyGraphTable(result *analyzer.ScanResult, verbose bool) error
 	fmt.Printf("Total Warnings: %d\n", result.Summary.TotalWarnings)
 	fmt.Printf("Clean Packages: %d\n", result.Summary.CleanPackages)
 	fmt.Println()
-	
+
 	// Display metadata if verbose
 	if verbose && result.Metadata != nil {
 		fmt.Println("🔧 METADATA:")
@@ -2189,6 +2404,6 @@ func outputDependencyGraphTable(result *analyzer.ScanResult, verbose bool) error
 		}
 		fmt.Println()
 	}
-	
+
 	return nil
 }

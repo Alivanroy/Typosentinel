@@ -1,0 +1,402 @@
+# CI/CD Test Configuration for TypoSentinel Enterprise Environment
+# This file defines comprehensive testing scenarios and validation rules
+
+test_config:
+  version: "1.0"
+  environment: "enterprise-test"
+  
+  # Global test settings
+  global:
+    timeout_seconds: 300
+    retry_attempts: 3
+    parallel_execution: true
+    max_workers: 4
+    output_format: "json"
+    verbose_logging: true
+    
+  # Security thresholds for different environments
+  security_thresholds:
+    development:
+      critical: 0
+      high: 10
+      medium: 50
+      low: 100
+    staging:
+      critical: 0
+      high: 5
+      medium: 20
+      low: 50
+    production:
+      critical: 0
+      high: 0
+      medium: 5
+      low: 10
+      
+  # Test scenarios definition
+  test_scenarios:
+    
+    # Basic security scanning tests
+    basic_security:
+      name: "Basic Security Scanning"
+      description: "Test fundamental security scanning capabilities"
+      enabled: true
+      priority: "high"
+      
+      tests:
+        - name: "single_service_scan"
+          description: "Scan individual services"
+          services: ["frontend", "backend", "auth-service", "payment-service"]
+          flags: ["--output", "json", "--include-dev", "--workspace-aware"]
+          expected_exit_code: 0
+          validation:
+            - type: "threat_count"
+              max_critical: 0
+              max_high: 5
+            - type: "scan_duration"
+              max_seconds: 30
+            - type: "output_format"
+              format: "json"
+              required_fields: ["summary", "threats", "metadata"]
+              
+        - name: "enterprise_wide_scan"
+          description: "Full enterprise environment scan"
+          path: "enterprise-env"
+          flags: ["--output", "json", "--workspace-aware", "--include-dev"]
+          expected_exit_code: 0
+          validation:
+            - type: "package_coverage"
+              min_packages: 100
+            - type: "service_coverage"
+              required_services: 6
+            - type: "threat_detection"
+              expected_typosquatting: 4
+              
+    # Performance and scalability tests
+    performance:
+      name: "Performance & Scalability"
+      description: "Test performance under various load conditions"
+      enabled: true
+      priority: "medium"
+      
+      tests:
+        - name: "edge_algorithm_benchmark"
+          description: "Benchmark edge algorithms"
+          command: "benchmark"
+          subcommand: "edge"
+          path: "enterprise-env"
+          flags: ["--iterations", "10", "--packages", "50", "--workers", "8"]
+          validation:
+            - type: "performance"
+              max_duration_ms: 5000
+              min_throughput_packages_per_second: 10
+              
+        - name: "aicc_algorithm_test"
+          description: "Test AICC algorithm on suspicious packages"
+          command: "test"
+          subcommand: "aicc"
+          flags: ["--packages", "reqeusts,beautifulsoup4,numpyy,pandass", "--correlation", "--adaptive"]
+          validation:
+            - type: "algorithm_accuracy"
+              min_confidence: 0.8
+              expected_threat_score: 0.5
+              
+        - name: "dependency_graph_generation"
+          description: "Generate and validate dependency graphs"
+          command: "graph"
+          subcommand: "generate"
+          path: "enterprise-env"
+          flags: ["--format", "svg", "--include-dev", "--max-depth", "3"]
+          validation:
+            - type: "file_output"
+              expected_files: ["dependency-graph.svg"]
+              min_file_size: 1000
+              
+    # Multi-service integration tests
+    multi_service:
+      name: "Multi-Service Integration"
+      description: "Test cross-service dependency analysis"
+      enabled: true
+      priority: "high"
+      
+      tests:
+        - name: "workspace_aware_scanning"
+          description: "Test workspace-aware multi-service scanning"
+          path: "enterprise-env"
+          flags: ["--workspace-aware", "--include-dev"]
+          validation:
+            - type: "service_isolation"
+              check_independent_manifests: true
+            - type: "cross_service_dependencies"
+              max_shared_dependencies: 20
+              
+        - name: "dependency_graph_analysis"
+          description: "Analyze cross-service dependencies"
+          command: "graph"
+          subcommand: "analyze"
+          path: "enterprise-env"
+          validation:
+            - type: "graph_metrics"
+              min_nodes: 100
+              max_depth: 5
+              check_cycles: true
+              
+    # Failure scenario tests
+    failure_scenarios:
+      name: "Failure Scenarios"
+      description: "Test error handling and edge cases"
+      enabled: true
+      priority: "medium"
+      
+      tests:
+        - name: "invalid_path_handling"
+          description: "Test handling of invalid paths"
+          path: "/nonexistent/path"
+          expected_exit_code: 1
+          validation:
+            - type: "error_handling"
+              expected_error_type: "path_not_found"
+              
+        - name: "malformed_manifest_handling"
+          description: "Test handling of malformed package.json"
+          setup:
+            - create_temp_dir: "test-malformed"
+            - create_file:
+                path: "test-malformed/package.json"
+                content: '{"name": "test", "dependencies": {'
+          path: "test-malformed"
+          expected_exit_code: 1
+          validation:
+            - type: "error_handling"
+              expected_error_type: "json_parse_error"
+          cleanup:
+            - remove_temp_dir: "test-malformed"
+            
+        - name: "network_timeout_simulation"
+          description: "Test network timeout handling"
+          environment:
+            NPM_REGISTRY: "http://invalid-registry.example.com"
+          path: "frontend"
+          timeout_seconds: 30
+          expected_exit_code: 1
+          validation:
+            - type: "error_handling"
+              expected_error_type: "network_timeout"
+              
+        - name: "memory_limit_test"
+          description: "Test behavior under memory constraints"
+          setup:
+            - create_large_dependency_tree:
+                path: "test-large"
+                dependency_count: 1000
+          path: "test-large"
+          timeout_seconds: 30
+          validation:
+            - type: "resource_handling"
+              max_memory_mb: 512
+          cleanup:
+            - remove_temp_dir: "test-large"
+            
+    # Security gate enforcement tests
+    security_gates:
+      name: "Security Gate Enforcement"
+      description: "Test security gate logic and enforcement"
+      enabled: true
+      priority: "critical"
+      
+      tests:
+        - name: "critical_threat_blocking"
+          description: "Verify critical threats block deployment"
+          setup:
+            - inject_critical_threat:
+                service: "test-service"
+                threat_type: "malicious_package"
+          validation:
+            - type: "security_gate"
+              expected_status: "FAILED"
+              block_deployment: true
+              
+        - name: "high_threat_warning"
+          description: "Verify high threat count triggers warnings"
+          setup:
+            - inject_multiple_threats:
+                service: "test-service"
+                threat_type: "high"
+                count: 15
+          validation:
+            - type: "security_gate"
+              expected_status: "WARNING"
+              allow_deployment: true
+              require_approval: true
+              
+        - name: "clean_scan_approval"
+          description: "Verify clean scans pass security gates"
+          path: "backend"  # Known clean service
+          validation:
+            - type: "security_gate"
+              expected_status: "PASSED"
+              allow_deployment: true
+              
+  # Validation rules
+  validation_rules:
+    
+    # Threat count validation
+    threat_count:
+      critical:
+        max: 0
+        action: "fail"
+      high:
+        max: 10
+        action: "warn"
+      medium:
+        max: 50
+        action: "info"
+        
+    # Performance validation
+    performance:
+      scan_duration:
+        max_seconds: 60
+        action: "warn"
+      memory_usage:
+        max_mb: 1024
+        action: "warn"
+      throughput:
+        min_packages_per_second: 5
+        action: "warn"
+        
+    # Output validation
+    output_format:
+      json:
+        required_fields: ["summary", "threats", "metadata", "scan_options"]
+        threat_fields: ["type", "severity", "package", "description"]
+      svg:
+        min_file_size: 1000
+        valid_xml: true
+        
+    # Coverage validation
+    coverage:
+      min_packages: 100
+      min_services: 6
+      required_package_managers: ["npm", "go"]
+      
+  # Test data and fixtures
+  test_data:
+    
+    # Known vulnerable packages for testing
+    vulnerable_packages:
+      - name: "reqeusts"
+        type: "typosquatting"
+        target: "requests"
+        severity: "high"
+      - name: "beautifulsoup4"
+        type: "suspicious"
+        severity: "medium"
+      - name: "numpyy"
+        type: "typosquatting"
+        target: "numpy"
+        severity: "high"
+      - name: "pandass"
+        type: "typosquatting"
+        target: "pandas"
+        severity: "high"
+        
+    # Clean packages for baseline testing
+    clean_packages:
+      - "express"
+      - "lodash"
+      - "react"
+      - "axios"
+      - "github.com/gin-gonic/gin"
+      - "github.com/golang-jwt/jwt/v5"
+      
+    # Performance test packages
+    performance_packages:
+      count: 50
+      mix:
+        clean: 40
+        suspicious: 8
+        vulnerable: 2
+        
+  # Reporting configuration
+  reporting:
+    
+    # Output formats
+    formats:
+      - "json"
+      - "html"
+      - "markdown"
+      
+    # Report sections
+    sections:
+      - "executive_summary"
+      - "test_results"
+      - "performance_metrics"
+      - "security_findings"
+      - "recommendations"
+      
+    # Notification settings
+    notifications:
+      slack:
+        enabled: true
+        webhook_env: "SLACK_WEBHOOK_URL"
+        channels:
+          - "#security-alerts"
+          - "#ci-cd-results"
+      email:
+        enabled: false
+        recipients:
+          - "security-team@company.com"
+          - "devops-team@company.com"
+          
+  # Integration settings
+  integrations:
+    
+    # GitHub integration
+    github:
+      pr_comments: true
+      status_checks: true
+      artifact_upload: true
+      retention_days: 90
+      
+    # CI/CD platforms
+    cicd:
+      github_actions: true
+      gitlab_ci: false
+      jenkins: false
+      azure_devops: false
+      
+    # Security tools
+    security_tools:
+      sonarqube: false
+      snyk: false
+      whitesource: false
+      
+  # Environment-specific overrides
+  environments:
+    
+    development:
+      security_thresholds:
+        critical: 0
+        high: 20
+        medium: 100
+      performance_requirements:
+        max_scan_time: 120
+        
+    staging:
+      security_thresholds:
+        critical: 0
+        high: 5
+        medium: 30
+      performance_requirements:
+        max_scan_time: 60
+        
+    production:
+      security_thresholds:
+        critical: 0
+        high: 0
+        medium: 5
+      performance_requirements:
+        max_scan_time: 30
+      additional_validations:
+        - "supply_chain_verification"
+        - "attestation_checking"
+        - "provenance_validation"

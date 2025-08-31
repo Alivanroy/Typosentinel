@@ -65,7 +65,7 @@ func NewSecurityManagerWithUserRepository(logger *logger.Logger, rbacEngine *aut
 
 	// Create security components
 	middleware := NewSecurityMiddleware(config, logger, rbacEngine)
-	
+
 	// Create a default in-memory token store (this should be injected in real usage)
 	tokenStore := NewInMemoryTokenStore()
 	authService := NewAuthService(config, logger, rbacEngine, userRepository, tokenStore)
@@ -288,10 +288,10 @@ func (sm *SecurityManager) SecurityHealthCheck() map[string]interface{} {
 // GetSecurityMetrics returns security-related metrics
 func (sm *SecurityManager) GetSecurityMetrics() map[string]interface{} {
 	metrics := map[string]interface{}{
-		"active_sessions":  len(sm.authService.sessions),
-		"rate_limiters":    len(sm.middleware.rateLimiters),
-		"login_attempts":   len(sm.middleware.loginAttempts),
-		"revoked_tokens":   len(sm.middleware.revokedTokens),
+		"active_sessions": len(sm.authService.sessions),
+		"rate_limiters":   len(sm.middleware.rateLimiters),
+		"login_attempts":  len(sm.middleware.loginAttempts),
+		"revoked_tokens":  len(sm.middleware.revokedTokens),
 		"configuration": map[string]interface{}{
 			"jwt_enabled":        sm.config.JWT.SecretKey != "",
 			"rate_limiting":      sm.config.RateLimit.GlobalEnabled,

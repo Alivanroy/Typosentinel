@@ -133,7 +133,7 @@ func (d *DockerSetup) checkDockerAvailable() error {
 // generateDockerfile creates an optimized Dockerfile for TypoSentinel
 func (d *DockerSetup) generateDockerfile() error {
 	dockerfilePath := filepath.Join(d.projectPath, "Dockerfile")
-	
+
 	// Check if Dockerfile already exists
 	if _, err := os.Stat(dockerfilePath); err == nil {
 		d.printInfo("ℹ️  Dockerfile already exists, skipping generation")
@@ -204,7 +204,7 @@ CMD ["./typosentinel", "serve", "--config", "/app/config/config.yaml"]
 // generateDockerCompose creates a docker-compose.yml for easy setup
 func (d *DockerSetup) generateDockerCompose() error {
 	composePath := filepath.Join(d.projectPath, "docker-compose.yml")
-	
+
 	// Check if docker-compose.yml already exists
 	if _, err := os.Stat(composePath); err == nil {
 		d.printInfo("ℹ️  docker-compose.yml already exists, skipping generation")
@@ -271,9 +271,9 @@ volumes:
 // buildImage builds the Docker image
 func (d *DockerSetup) buildImage(ctx context.Context, imageName string) error {
 	d.printStep("🔨 Building Docker image...")
-	
+
 	cmd := exec.CommandContext(ctx, "docker", "build", "-t", imageName, d.projectPath)
-	
+
 	if d.verbose {
 		cmd.Stdout = d.output
 		cmd.Stderr = d.output
@@ -333,7 +333,7 @@ func (d *DockerSetup) startContainer(ctx context.Context, imageName string) (str
 // waitForService waits for the service to be ready
 func (d *DockerSetup) waitForService(ctx context.Context, port int) error {
 	d.printStep("⏳ Waiting for service to be ready...")
-	
+
 	timeout := time.After(60 * time.Second)
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -392,14 +392,14 @@ func (d *DockerSetup) printSetupComplete(result *SetupResult) {
 	fmt.Fprintf(d.output, "   📁 Config Directory: %s\n", result.ConfigPath)
 	fmt.Fprintf(d.output, "   📝 Logs Directory: %s\n", result.LogsPath)
 	fmt.Fprintf(d.output, "   ⏱️  Setup Duration: %v\n", result.SetupDuration.Round(time.Second))
-	
+
 	fmt.Fprintf(d.output, "\n%s\n", color.YellowString("🚀 Quick Commands:"))
 	fmt.Fprintf(d.output, "   View logs:    docker logs typosentinel-quick\n")
 	fmt.Fprintf(d.output, "   Stop service: docker stop typosentinel-quick\n")
 	fmt.Fprintf(d.output, "   Start service: docker start typosentinel-quick\n")
 	fmt.Fprintf(d.output, "   Remove setup: docker rm -f typosentinel-quick\n")
-	
-	fmt.Fprintf(d.output, "\n%s %s\n", 
-		color.GreenString("✨"), 
+
+	fmt.Fprintf(d.output, "\n%s %s\n",
+		color.GreenString("✨"),
 		"Open your browser and navigate to the Web Interface URL above!")
 }

@@ -20,32 +20,32 @@ type AICCAlgorithm struct {
 
 // AICCConfig holds configuration for the AICC algorithm
 type AICCConfig struct {
-	MaxChainDepth     int     `yaml:"max_chain_depth"`
-	MinTrustScore     float64 `yaml:"min_trust_score"`
-	RequireTimestamps bool    `yaml:"require_timestamps"`
-	AllowSelfSigned   bool    `yaml:"allow_self_signed"`
+	MaxChainDepth     int           `yaml:"max_chain_depth"`
+	MinTrustScore     float64       `yaml:"min_trust_score"`
+	RequireTimestamps bool          `yaml:"require_timestamps"`
+	AllowSelfSigned   bool          `yaml:"allow_self_signed"`
 	MaxClockSkew      time.Duration `yaml:"max_clock_skew"`
-	PolicyStrictness  string  `yaml:"policy_strictness"`
+	PolicyStrictness  string        `yaml:"policy_strictness"`
 }
 
 // AICCMetrics tracks AICC algorithm performance
 type AICCMetrics struct {
 	AttestationsProcessed int64         `json:"attestations_processed"`
-	ChainsAnalyzed       int64         `json:"chains_analyzed"`
-	ViolationsDetected   int64         `json:"violations_detected"`
-	ForgeriesDetected    int64         `json:"forgeries_detected"`
-	ProcessingTime       time.Duration `json:"processing_time"`
-	TotalAnalyses        int64         `json:"total_analyses"`
-	AverageLatency       time.Duration `json:"average_latency"`
-	TruePositives        int64         `json:"true_positives"`
-	FalsePositives       int64         `json:"false_positives"`
-	TrueNegatives        int64         `json:"true_negatives"`
-	FalseNegatives       int64         `json:"false_negatives"`
-	Accuracy             float64       `json:"accuracy"`
-	Precision            float64       `json:"precision"`
-	Recall               float64       `json:"recall"`
-	F1Score              float64       `json:"f1_score"`
-	LastUpdated          time.Time     `json:"last_updated"`
+	ChainsAnalyzed        int64         `json:"chains_analyzed"`
+	ViolationsDetected    int64         `json:"violations_detected"`
+	ForgeriesDetected     int64         `json:"forgeries_detected"`
+	ProcessingTime        time.Duration `json:"processing_time"`
+	TotalAnalyses         int64         `json:"total_analyses"`
+	AverageLatency        time.Duration `json:"average_latency"`
+	TruePositives         int64         `json:"true_positives"`
+	FalsePositives        int64         `json:"false_positives"`
+	TrueNegatives         int64         `json:"true_negatives"`
+	FalseNegatives        int64         `json:"false_negatives"`
+	Accuracy              float64       `json:"accuracy"`
+	Precision             float64       `json:"precision"`
+	Recall                float64       `json:"recall"`
+	F1Score               float64       `json:"f1_score"`
+	LastUpdated           time.Time     `json:"last_updated"`
 }
 
 // Attestation represents a single attestation record
@@ -88,7 +88,7 @@ func (a *AICCAlgorithm) Name() string {
 
 // Tier returns the algorithm tier
 func (a *AICCAlgorithm) Tier() AlgorithmTier {
-	return TierG // Production-Ready
+	return TierCore // Production-Ready
 }
 
 // Description returns the algorithm description
@@ -113,22 +113,19 @@ func (a *AICCAlgorithm) Configure(config map[string]interface{}) error {
 // GetMetrics returns algorithm metrics
 func (a *AICCAlgorithm) GetMetrics() *AlgorithmMetrics {
 	return &AlgorithmMetrics{
-		TotalAnalyses:  a.metrics.TotalAnalyses,
-		AverageLatency: a.metrics.AverageLatency,
-		TruePositives:  a.metrics.TruePositives,
-		FalsePositives: a.metrics.FalsePositives,
-		TrueNegatives:  a.metrics.TrueNegatives,
-		FalseNegatives: a.metrics.FalseNegatives,
-		Accuracy:       a.metrics.Accuracy,
-		Precision:      a.metrics.Precision,
-		Recall:         a.metrics.Recall,
-		F1Score:        a.metrics.F1Score,
-		LastUpdated:    a.metrics.LastUpdated,
+		PackagesProcessed: int(a.metrics.TotalAnalyses),
+		ThreatsDetected:   int(a.metrics.ViolationsDetected),
+		ProcessingTime:    a.metrics.ProcessingTime,
+		Accuracy:          a.metrics.Accuracy,
+		Precision:         a.metrics.Precision,
+		Recall:            a.metrics.Recall,
+		F1Score:           a.metrics.F1Score,
+		LastUpdated:       a.metrics.LastUpdated,
 	}
 }
 
 // Analyze performs attestation consistency analysis on a package
-func (a *AICCAlgorithm) Analyze(ctx context.Context, input interface{}) (*AnalysisResult, error) {
+func (a *AICCAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
 	startTime := time.Now()
 	defer func() {
 		a.metrics.ProcessingTime += time.Since(startTime)
@@ -136,21 +133,23 @@ func (a *AICCAlgorithm) Analyze(ctx context.Context, input interface{}) (*Analys
 		a.metrics.LastUpdated = time.Now()
 	}()
 
-	pkg, ok := input.(*types.Package)
-	if !ok {
-		return nil, fmt.Errorf("input must be a *types.Package")
+	if len(packages) == 0 {
+		return nil, fmt.Errorf("no packages provided")
 	}
 
-	result := &AnalysisResult{
-		AlgorithmName:  a.Name(),
-		Tier:          a.Tier(),
-		ThreatScore:   0.0,
-		Confidence:    0.0,
-		AttackVectors: make([]string, 0),
-		Findings:      make([]Finding, 0),
-		Metadata:      make(map[string]interface{}),
-		ProcessingTime: 0,
-		Timestamp:     time.Now(),
+	result := &AlgorithmResult{
+		Algorithm: a.Name(),
+		Timestamp: time.Now(),
+		Packages:  packages,
+		Findings:  make([]Finding, 0),
+		Metadata:  make(map[string]interface{}),
+	}
+
+	// Create a basic package structure for analysis
+	pkg := &types.Package{
+		Name:     packages[0],
+		Version:  "latest",
+		Registry: "npm",
 	}
 
 	// Extract attestations from package metadata
@@ -161,15 +160,19 @@ func (a *AICCAlgorithm) Analyze(ctx context.Context, input interface{}) (*Analys
 
 	if len(attestations) == 0 {
 		result.Findings = append(result.Findings, Finding{
-			Type:        "missing_attestations",
-			Severity:    "MEDIUM",
-			Description: "Package lacks attestation records, reducing trust and verifiability",
-			Evidence:    map[string]interface{}{"details": "No attestation metadata found"},
-			Remediation: "Add proper attestation records to improve package trust",
+			ID:              fmt.Sprintf("aicc-%d", time.Now().UnixNano()),
+			Package:         pkg.Name,
+			Type:            "missing_attestations",
+			Severity:        "MEDIUM",
+			Message:         "Package lacks attestation records, reducing trust and verifiability",
+			Confidence:      0.9,
+			Evidence:        []Evidence{{Type: "metadata", Description: "No attestation metadata found", Value: "missing", Score: 0.9}},
+			DetectedAt:      time.Now(),
+			DetectionMethod: "AICC",
 		})
-		result.ThreatScore = 0.5
-		result.Confidence = 0.9
-		result.AttackVectors = append(result.AttackVectors, "attestation_forgery", "supply_chain_tampering")
+		result.Metadata["threat_score"] = 0.5
+		result.Metadata["confidence"] = 0.9
+		result.Metadata["attack_vectors"] = []string{"attestation_forgery", "supply_chain_tampering"}
 		a.metrics.ViolationsDetected++
 		return result, nil
 	}
@@ -182,38 +185,41 @@ func (a *AICCAlgorithm) Analyze(ctx context.Context, input interface{}) (*Analys
 	for _, attestation := range attestations {
 		findings := a.validateAttestation(ctx, attestation)
 		result.Findings = append(result.Findings, findings...)
-		
+
 		if attestation.Verified {
 			validAttestations++
 			threatScore += (1.0 - attestation.TrustScore) // Higher trust = lower threat
 			totalConfidence += attestation.TrustScore
 		}
-		
+
 		a.metrics.AttestationsProcessed++
 	}
 
 	// Calculate overall scores
+	var finalThreatScore float64
 	if validAttestations > 0 {
-		result.ThreatScore = threatScore / float64(validAttestations)
-		result.Confidence = totalConfidence / float64(validAttestations)
+		finalThreatScore = threatScore / float64(validAttestations)
+		result.Metadata["confidence"] = totalConfidence / float64(validAttestations)
 	} else {
-		result.ThreatScore = 1.0 // High threat if no valid attestations
-		result.Confidence = 0.8
+		finalThreatScore = 1.0 // High threat if no valid attestations
+		result.Metadata["confidence"] = 0.8
 	}
 
 	// Add attack vectors based on findings
+	attackVectors := make([]string, 0)
 	if len(result.Findings) > 0 {
-		result.AttackVectors = append(result.AttackVectors, "attestation_chain_forgery")
+		attackVectors = append(attackVectors, "attestation_chain_forgery")
 	}
-	if result.ThreatScore > 0.7 {
-		result.AttackVectors = append(result.AttackVectors, "policy_violation", "trust_degradation")
+	if finalThreatScore > 0.7 {
+		attackVectors = append(attackVectors, "policy_violation", "trust_degradation")
 	}
 
 	// Update metrics
+	result.Metadata["threat_score"] = finalThreatScore
+	result.Metadata["attack_vectors"] = attackVectors
 	result.Metadata["attestation_count"] = len(attestations)
 	result.Metadata["valid_attestations"] = validAttestations
 	result.Metadata["processing_time_ms"] = time.Since(startTime).Milliseconds()
-	result.ProcessingTime = time.Since(startTime)
 
 	return result, nil
 }
@@ -229,7 +235,7 @@ func (a *AICCAlgorithm) extractAttestations(pkg *types.Package) ([]*Attestation,
 
 	// Try to extract from different metadata fields
 	metadataMap := make(map[string]interface{})
-	
+
 	// Convert metadata to map for easier access
 	if pkg.Metadata.Description != "" {
 		metadataMap["description"] = pkg.Metadata.Description
@@ -285,20 +291,28 @@ func (a *AICCAlgorithm) validateAttestation(ctx context.Context, attestation *At
 	// Validate signature
 	if attestation.Signature == "" {
 		findings = append(findings, Finding{
-			Type:        "missing_signature",
-			Severity:    "HIGH",
-			Description: "Attestation lacks digital signature",
-			Evidence:    map[string]interface{}{"attestation_id": attestation.ID},
-			Remediation: "Add digital signature to attestation",
+			ID:              fmt.Sprintf("aicc-%d", time.Now().UnixNano()),
+			Package:         attestation.Subject,
+			Type:            "missing_signature",
+			Severity:        "HIGH",
+			Message:         "Attestation lacks digital signature",
+			Confidence:      0.95,
+			Evidence:        []Evidence{{Type: "attestation", Description: "Missing signature", Value: attestation.ID, Score: 0.95}},
+			DetectedAt:      time.Now(),
+			DetectionMethod: "AICC",
 		})
 		a.metrics.ViolationsDetected++
 	} else if !a.validateSignature(attestation) {
 		findings = append(findings, Finding{
-			Type:        "invalid_signature",
-			Severity:    "CRITICAL",
-			Description: "Attestation signature validation failed",
-			Evidence:    map[string]interface{}{"attestation_id": attestation.ID, "signature": attestation.Signature},
-			Remediation: "Verify signature with trusted certificate authority",
+			ID:              fmt.Sprintf("aicc-%d", time.Now().UnixNano()),
+			Package:         attestation.Subject,
+			Type:            "invalid_signature",
+			Severity:        "CRITICAL",
+			Message:         "Attestation signature validation failed",
+			Confidence:      0.98,
+			Evidence:        []Evidence{{Type: "signature", Description: "Invalid signature", Value: attestation.Signature, Score: 0.98}},
+			DetectedAt:      time.Now(),
+			DetectionMethod: "AICC",
 		})
 		a.metrics.ForgeriesDetected++
 	}
@@ -307,22 +321,30 @@ func (a *AICCAlgorithm) validateAttestation(ctx context.Context, attestation *At
 	if a.config.RequireTimestamps {
 		if attestation.Timestamp.IsZero() {
 			findings = append(findings, Finding{
-				Type:        "missing_timestamp",
-				Severity:    "MEDIUM",
-				Description: "Attestation lacks timestamp",
-				Evidence:    map[string]interface{}{"attestation_id": attestation.ID},
-				Remediation: "Add timestamp to attestation for temporal validation",
+				ID:              fmt.Sprintf("aicc-%d", time.Now().UnixNano()),
+				Package:         attestation.Subject,
+				Type:            "missing_timestamp",
+				Severity:        "MEDIUM",
+				Message:         "Attestation lacks timestamp",
+				Confidence:      0.9,
+				Evidence:        []Evidence{{Type: "timestamp", Description: "Missing timestamp", Value: attestation.ID, Score: 0.9}},
+				DetectedAt:      time.Now(),
+				DetectionMethod: "AICC",
 			})
 		} else {
 			// Check for clock skew
 			now := time.Now()
 			if attestation.Timestamp.After(now.Add(a.config.MaxClockSkew)) {
 				findings = append(findings, Finding{
-					Type:        "future_timestamp",
-					Severity:    "MEDIUM",
-					Description: "Attestation timestamp is in the future",
-					Evidence:    map[string]interface{}{"attestation_id": attestation.ID, "timestamp": attestation.Timestamp.Format(time.RFC3339)},
-					Remediation: "Check system clock synchronization",
+					ID:              fmt.Sprintf("aicc-%d", time.Now().UnixNano()),
+					Package:         attestation.Subject,
+					Type:            "future_timestamp",
+					Severity:        "MEDIUM",
+					Message:         "Attestation timestamp is in the future",
+					Confidence:      0.85,
+					Evidence:        []Evidence{{Type: "timestamp", Description: "Future timestamp", Value: attestation.Timestamp.Format(time.RFC3339), Score: 0.85}},
+					DetectedAt:      time.Now(),
+					DetectionMethod: "AICC",
 				})
 			}
 		}
@@ -331,11 +353,15 @@ func (a *AICCAlgorithm) validateAttestation(ctx context.Context, attestation *At
 	// Validate trust score
 	if attestation.TrustScore < a.config.MinTrustScore {
 		findings = append(findings, Finding{
-			Type:        "low_trust_score",
-			Severity:    "MEDIUM",
-			Description: "Attestation has low trust score",
-			Evidence:    map[string]interface{}{"attestation_id": attestation.ID, "trust_score": attestation.TrustScore, "min_required": a.config.MinTrustScore},
-			Remediation: "Improve attestation quality or use trusted attestation sources",
+			ID:              fmt.Sprintf("aicc-%d", time.Now().UnixNano()),
+			Package:         attestation.Subject,
+			Type:            "low_trust_score",
+			Severity:        "MEDIUM",
+			Message:         "Attestation has low trust score",
+			Confidence:      0.8,
+			Evidence:        []Evidence{{Type: "trust_score", Description: "Low trust score", Value: attestation.TrustScore, Score: 0.8}},
+			DetectedAt:      time.Now(),
+			DetectionMethod: "AICC",
 		})
 	}
 
@@ -374,4 +400,12 @@ func (a *AICCAlgorithm) validateSignature(attestation *Attestation) bool {
 
 	// More sophisticated validation would go here
 	return len(attestation.Signature) > 20 // Simple length check
+}
+
+// Reset resets the AICC algorithm's metrics and state
+func (a *AICCAlgorithm) Reset() error {
+	a.metrics = &AICCMetrics{
+		LastUpdated: time.Now(),
+	}
+	return nil
 }

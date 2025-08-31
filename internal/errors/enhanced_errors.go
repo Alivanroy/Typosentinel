@@ -33,12 +33,12 @@ const (
 // EnhancedError provides user-friendly error messages with context and suggestions
 type EnhancedError struct {
 	// Core error information
-	Code        string
-	Message     string
-	Category    ErrorCategory
-	Severity    ErrorSeverity
-	Cause       error
-	Context     map[string]interface{}
+	Code     string
+	Message  string
+	Category ErrorCategory
+	Severity ErrorSeverity
+	Cause    error
+	Context  map[string]interface{}
 
 	// User-friendly information
 	UserMessage   string

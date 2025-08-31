@@ -1,0 +1,254 @@
+{
+  "test_timestamp": "2025-08-24 00:59:15",
+  "model_path": "./models/enhanced_threat_detection_model.json",
+  "model_info": {
+    "model_type": "ensemble_neural_network",
+    "parameter_count": 1250000,
+    "model_size_mb": 5.0
+  },
+  "test_results": [
+    {
+      "test_name": "Registry Test: express (npm)",
+      "passed": true,
+      "confidence": 0.6,
+      "processing_time": 8.273124694824219e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Threat Type: none, Registry: npm"
+    },
+    {
+      "test_name": "Registry Test: expresss (npm)",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 3.790855407714844e-05,
+      "expected": "Malicious",
+      "predicted": "Malicious",
+      "details": "Threat Type: typosquatting, Registry: npm"
+    },
+    {
+      "test_name": "Registry Test: requests (pypi)",
+      "passed": true,
+      "confidence": 0.6,
+      "processing_time": 2.765655517578125e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Threat Type: none, Registry: pypi"
+    },
+    {
+      "test_name": "Registry Test: crypto-miner-py (pypi)",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 2.47955322265625e-05,
+      "expected": "Malicious",
+      "predicted": "Malicious",
+      "details": "Threat Type: cryptomining, Registry: pypi"
+    },
+    {
+      "test_name": "Registry Test: spring-boot-starter (maven)",
+      "passed": true,
+      "confidence": 0.6,
+      "processing_time": 2.4557113647460938e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Threat Type: none, Registry: maven"
+    },
+    {
+      "test_name": "Registry Test: rails (rubygems)",
+      "passed": true,
+      "confidence": 0.6,
+      "processing_time": 2.1219253540039062e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Threat Type: none, Registry: rubygems"
+    },
+    {
+      "test_name": "Registry Test: serde (crates.io)",
+      "passed": true,
+      "confidence": 0.6,
+      "processing_time": 2.09808349609375e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Threat Type: none, Registry: crates.io"
+    },
+    {
+      "test_name": "Registry Test: gin (go)",
+      "passed": true,
+      "confidence": 0.6,
+      "processing_time": 1.9311904907226562e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Threat Type: none, Registry: go"
+    },
+    {
+      "test_name": "Threat Type: typosquatting",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 3.552436828613281e-05,
+      "expected": "typosquatting",
+      "predicted": "typosquatting",
+      "details": "Package: typo-express, Registry: npm"
+    },
+    {
+      "test_name": "Threat Type: malware",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 2.09808349609375e-05,
+      "expected": "malware",
+      "predicted": "malware",
+      "details": "Package: malware-package, Registry: pypi"
+    },
+    {
+      "test_name": "Threat Type: cryptomining",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 2.1457672119140625e-05,
+      "expected": "cryptomining",
+      "predicted": "cryptomining",
+      "details": "Package: crypto-miner, Registry: npm"
+    },
+    {
+      "test_name": "Threat Type: backdoor",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 2.2411346435546875e-05,
+      "expected": "backdoor",
+      "predicted": "backdoor",
+      "details": "Package: backdoor-tool, Registry: pypi"
+    },
+    {
+      "test_name": "Threat Type: exploit",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 4.887580871582031e-05,
+      "expected": "exploit",
+      "predicted": "exploit",
+      "details": "Package: exploit-kit, Registry: rubygems"
+    },
+    {
+      "test_name": "Threat Type: trojan",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 2.9802322387695312e-05,
+      "expected": "trojan",
+      "predicted": "backdoor",
+      "details": "Package: trojan-horse, Registry: maven"
+    },
+    {
+      "test_name": "Threat Type: suspicious",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 6.175041198730469e-05,
+      "expected": "suspicious",
+      "predicted": "suspicious",
+      "details": "Package: suspicious-lib, Registry: crates.io"
+    },
+    {
+      "test_name": "Threat Type: supply_chain",
+      "passed": false,
+      "confidence": 0.8,
+      "processing_time": 3.0517578125e-05,
+      "expected": "supply_chain",
+      "predicted": "none",
+      "details": "Package: supply-chain-attack, Registry: go"
+    },
+    {
+      "test_name": "Average Processing Time",
+      "passed": true,
+      "confidence": 1.0,
+      "processing_time": 1.40380859375e-05,
+      "expected": "<= 0.001s",
+      "predicted": "0.000014s",
+      "details": "Target: 0.001s, Actual: 0.000014s"
+    },
+    {
+      "test_name": "Maximum Processing Time",
+      "passed": true,
+      "confidence": 1.0,
+      "processing_time": 7.224082946777344e-05,
+      "expected": "<= 0.005s",
+      "predicted": "0.000072s",
+      "details": "Target: 0.005s, Actual: 0.000072s"
+    },
+    {
+      "test_name": "Throughput Test",
+      "passed": true,
+      "confidence": 1.0,
+      "processing_time": 1.40380859375e-05,
+      "expected": "High throughput",
+      "predicted": "71235 packages/second",
+      "details": "Processed 100 packages in 0.001s"
+    },
+    {
+      "test_name": "Edge Case: Empty package name",
+      "passed": false,
+      "confidence": 0.6,
+      "processing_time": 4.601478576660156e-05,
+      "expected": "Malicious",
+      "predicted": "Benign",
+      "details": "Package: , Threat: none"
+    },
+    {
+      "test_name": "Edge Case: Single character name",
+      "passed": false,
+      "confidence": 0.6,
+      "processing_time": 5.888938903808594e-05,
+      "expected": "Malicious",
+      "predicted": "Benign",
+      "details": "Package: a, Threat: none"
+    },
+    {
+      "test_name": "Edge Case: Very long package name",
+      "passed": false,
+      "confidence": 0.8,
+      "processing_time": 7.033348083496094e-05,
+      "expected": "Malicious",
+      "predicted": "Benign",
+      "details": "Package: very-long-package-name-that-exceeds-normal-length-limits-and-might-be-suspicious, Threat: none"
+    },
+    {
+      "test_name": "Edge Case: Numeric package name",
+      "passed": false,
+      "confidence": 0.6,
+      "processing_time": 3.6716461181640625e-05,
+      "expected": "Malicious",
+      "predicted": "Benign",
+      "details": "Package: 123456, Threat: none"
+    },
+    {
+      "test_name": "Edge Case: Empty author field",
+      "passed": false,
+      "confidence": 0.6,
+      "processing_time": 5.602836608886719e-05,
+      "expected": "Malicious",
+      "predicted": "Benign",
+      "details": "Package: normal-package, Threat: none"
+    },
+    {
+      "test_name": "Edge Case: Zero downloads",
+      "passed": true,
+      "confidence": 0.95,
+      "processing_time": 5.841255187988281e-05,
+      "expected": "Malicious",
+      "predicted": "Malicious",
+      "details": "Package: zero-downloads, Threat: typosquatting"
+    },
+    {
+      "test_name": "Edge Case: No keywords",
+      "passed": true,
+      "confidence": 0.8,
+      "processing_time": 5.459785461425781e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Package: no-keywords, Threat: none"
+    },
+    {
+      "test_name": "Edge Case: No dependencies",
+      "passed": true,
+      "confidence": 0.8,
+      "processing_time": 4.3392181396484375e-05,
+      "expected": "Benign",
+      "predicted": "Benign",
+      "details": "Package: no-deps, Threat: none"
+    }
+  ]
+}

@@ -42,11 +42,11 @@ func NewRedisRateLimiter(redisURL string) (*RedisRateLimiter, error) {
 	}
 
 	client := redis.NewClient(opts)
-	
+
 	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := client.Ping(ctx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
@@ -59,10 +59,10 @@ func NewMemoryRateLimiter() *MemoryRateLimiter {
 	limiter := &MemoryRateLimiter{
 		buckets: make(map[string]*bucket),
 	}
-	
+
 	// Start cleanup goroutine
 	go limiter.cleanup()
-	
+
 	return limiter
 }
 
@@ -89,17 +89,17 @@ func (r *RedisRateLimiter) Allow(ctx context.Context, key string, limit int, win
 			return 0
 		end
 	`
-	
+
 	result, err := r.client.Eval(ctx, script, []string{key}, limit, int(window.Seconds()), time.Now().Unix()).Result()
 	if err != nil {
 		return false, fmt.Errorf("Redis rate limit check failed: %w", err)
 	}
-	
+
 	allowed, ok := result.(int64)
 	if !ok {
 		return false, fmt.Errorf("unexpected Redis response type")
 	}
-	
+
 	return allowed == 1, nil
 }
 
@@ -117,12 +117,12 @@ func (r *RedisRateLimiter) GetUsage(ctx context.Context, key string) (int, error
 	if err != nil {
 		return 0, err
 	}
-	
+
 	count, err := strconv.Atoi(result)
 	if err != nil {
 		return 0, fmt.Errorf("invalid count value in Redis: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -130,10 +130,10 @@ func (r *RedisRateLimiter) GetUsage(ctx context.Context, key string) (int, error
 func (m *MemoryRateLimiter) Allow(ctx context.Context, key string, limit int, window time.Duration) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	now := time.Now()
 	b, exists := m.buckets[key]
-	
+
 	if !exists || now.After(b.resetTime) {
 		// Create new bucket or reset expired bucket
 		m.buckets[key] = &bucket{
@@ -143,11 +143,11 @@ func (m *MemoryRateLimiter) Allow(ctx context.Context, key string, limit int, wi
 		}
 		return true, nil
 	}
-	
+
 	if b.count >= limit {
 		return false, nil
 	}
-	
+
 	b.count++
 	return true, nil
 }
@@ -156,7 +156,7 @@ func (m *MemoryRateLimiter) Allow(ctx context.Context, key string, limit int, wi
 func (m *MemoryRateLimiter) Reset(ctx context.Context, key string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	delete(m.buckets, key)
 	return nil
 }
@@ -165,16 +165,16 @@ func (m *MemoryRateLimiter) Reset(ctx context.Context, key string) error {
 func (m *MemoryRateLimiter) GetUsage(ctx context.Context, key string) (int, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	b, exists := m.buckets[key]
 	if !exists {
 		return 0, nil
 	}
-	
+
 	if time.Now().After(b.resetTime) {
 		return 0, nil
 	}
-	
+
 	return b.count, nil
 }
 
@@ -182,7 +182,7 @@ func (m *MemoryRateLimiter) GetUsage(ctx context.Context, key string) (int, erro
 func (m *MemoryRateLimiter) cleanup() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		m.mu.Lock()
 		now := time.Now()
@@ -197,8 +197,8 @@ func (m *MemoryRateLimiter) cleanup() {
 
 // FallbackRateLimiter combines Redis and memory rate limiters with fallback
 type FallbackRateLimiter struct {
-	primary   RateLimiter
-	fallback  RateLimiter
+	primary     RateLimiter
+	fallback    RateLimiter
 	useFallback bool
 }
 
@@ -206,7 +206,7 @@ type FallbackRateLimiter struct {
 func NewFallbackRateLimiter(redisURL string) *FallbackRateLimiter {
 	var primary RateLimiter
 	useFallback := false
-	
+
 	if redisURL != "" {
 		redis, err := NewRedisRateLimiter(redisURL)
 		if err == nil {
@@ -217,13 +217,13 @@ func NewFallbackRateLimiter(redisURL string) *FallbackRateLimiter {
 	} else {
 		useFallback = true
 	}
-	
+
 	fallback := NewMemoryRateLimiter()
-	
+
 	if useFallback {
 		primary = fallback
 	}
-	
+
 	return &FallbackRateLimiter{
 		primary:     primary,
 		fallback:    fallback,

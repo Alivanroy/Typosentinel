@@ -33,8 +33,8 @@ func (ers *EnhancedReputationSystem) analyzeThreatIntelligence(ctx context.Conte
 			FirstSeen:   match.FirstSeen,
 			LastSeen:    time.Now(),
 			Metadata: map[string]interface{}{
-				"threat_id":   match.ThreatID,
-				"match_type":  match.MatchType,
+				"threat_id":  match.ThreatID,
+				"match_type": match.MatchType,
 			},
 		}
 		results = append(results, result)
@@ -484,15 +484,15 @@ func (ers *EnhancedReputationSystem) analyzeCommunity(pkg *types.Package, metric
 // analyzeSecurityMetrics performs security-specific analysis
 func (ers *EnhancedReputationSystem) analyzeSecurityMetrics(pkg *types.Package, metrics *PackageMetrics) SecurityAnalysisResult {
 	result := SecurityAnalysisResult{
-		VulnerabilityCount:    0,
-		CriticalVulns:         0,
-		HighVulns:             0,
-		LastSecurityUpdate:    time.Now().AddDate(-1, 0, 0), // Default to 1 year ago
-		SecurityScore:         0.8, // Default good score
-		HasSecurityPolicy:     false,
-		SignedReleases:        false,
-		SecurityAudits:        0,
-		ComplianceScore:       0.5,
+		VulnerabilityCount: 0,
+		CriticalVulns:      0,
+		HighVulns:          0,
+		LastSecurityUpdate: time.Now().AddDate(-1, 0, 0), // Default to 1 year ago
+		SecurityScore:      0.8,                          // Default good score
+		HasSecurityPolicy:  false,
+		SignedReleases:     false,
+		SecurityAudits:     0,
+		ComplianceScore:    0.5,
 	}
 
 	// Analyze package for security indicators

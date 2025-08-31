@@ -221,7 +221,7 @@ func (c *PyPIClient) GetPopularPackages(limit int) ([]string, error) {
 
 	// Use PyPI's stats API to get popular packages
 	// Note: PyPI doesn't have a direct "popular packages" endpoint, so we'll use a combination approach
-	
+
 	// First, try to get trending packages from PyPI's RSS feed
 	trendingPackages, err := c.getTrendingPackages()
 	if err != nil {
@@ -245,7 +245,7 @@ func (c *PyPIClient) GetPopularPackages(limit int) ([]string, error) {
 func (c *PyPIClient) getTrendingPackages() ([]string, error) {
 	// PyPI RSS feed for new releases
 	rssURL := "https://pypi.org/rss/updates.xml"
-	
+
 	resp, err := c.client.Get(rssURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch RSS feed: %w", err)
@@ -269,7 +269,7 @@ func (c *PyPIClient) getTrendingPackages() ([]string, error) {
 
 	var packages []string
 	seen := make(map[string]bool)
-	
+
 	for _, match := range matches {
 		if len(match) > 1 {
 			packageName := match[1]
@@ -341,24 +341,24 @@ func isValidPackageName(name string) bool {
 	if len(name) < 2 || len(name) > 100 {
 		return false
 	}
-	
+
 	// Check for valid characters (letters, numbers, hyphens, underscores, dots)
 	validName := regexp.MustCompile(`^[a-zA-Z0-9\-_\.]+$`)
 	if !validName.MatchString(name) {
 		return false
 	}
-	
+
 	// Filter out common false positives
 	invalidPatterns := []string{
 		"^test", "^example", "^demo", "^sample",
 		"^tmp", "^temp", "^debug", "^dev",
 	}
-	
+
 	for _, pattern := range invalidPatterns {
 		if matched, _ := regexp.MatchString(pattern, strings.ToLower(name)); matched {
 			return false
 		}
 	}
-	
+
 	return true
 }

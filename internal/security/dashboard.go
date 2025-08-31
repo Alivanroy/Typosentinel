@@ -11,26 +11,26 @@ import (
 
 // SecurityDashboard provides a web interface for security monitoring
 type SecurityDashboard struct {
-	auditLogger   *AuditLogger
-	policyEngine  *PolicyEngine
-	rateLimiter   *RateLimiter
+	auditLogger    *AuditLogger
+	policyEngine   *PolicyEngine
+	rateLimiter    *RateLimiter
 	inputValidator *InputValidator
-	encryptionSvc *EncryptionService
+	encryptionSvc  *EncryptionService
 }
 
 // DashboardMetrics represents security metrics for the dashboard
 type DashboardMetrics struct {
-	TotalRequests       int64                    `json:"total_requests"`
-	BlockedRequests     int64                    `json:"blocked_requests"`
-	SecurityViolations  int64                    `json:"security_violations"`
-	ActivePolicies      int                      `json:"active_policies"`
-	RateLimitViolations int64                    `json:"rate_limit_violations"`
-	InputValidationFails int64                   `json:"input_validation_fails"`
-	TopThreats          []ThreatSummary          `json:"top_threats"`
-	RecentEvents        []SecurityEventSummary   `json:"recent_events"`
-	PolicyStats         map[string]PolicyStats   `json:"policy_stats"`
-	SystemHealth        SystemHealthStatus       `json:"system_health"`
-	Timestamp           time.Time                `json:"timestamp"`
+	TotalRequests        int64                  `json:"total_requests"`
+	BlockedRequests      int64                  `json:"blocked_requests"`
+	SecurityViolations   int64                  `json:"security_violations"`
+	ActivePolicies       int                    `json:"active_policies"`
+	RateLimitViolations  int64                  `json:"rate_limit_violations"`
+	InputValidationFails int64                  `json:"input_validation_fails"`
+	TopThreats           []ThreatSummary        `json:"top_threats"`
+	RecentEvents         []SecurityEventSummary `json:"recent_events"`
+	PolicyStats          map[string]PolicyStats `json:"policy_stats"`
+	SystemHealth         SystemHealthStatus     `json:"system_health"`
+	Timestamp            time.Time              `json:"timestamp"`
 }
 
 // ThreatSummary represents a threat summary
@@ -44,14 +44,14 @@ type ThreatSummary struct {
 
 // SecurityEventSummary represents a security event summary
 type SecurityEventSummary struct {
-	ID          string                 `json:"id"`
-	Type        string                 `json:"type"`
-	Severity    string                 `json:"severity"`
-	Message     string                 `json:"message"`
-	UserID      string                 `json:"user_id"`
-	IPAddress   string                 `json:"ip_address"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Details     map[string]interface{} `json:"details"`
+	ID        string                 `json:"id"`
+	Type      string                 `json:"type"`
+	Severity  string                 `json:"severity"`
+	Message   string                 `json:"message"`
+	UserID    string                 `json:"user_id"`
+	IPAddress string                 `json:"ip_address"`
+	Timestamp time.Time              `json:"timestamp"`
+	Details   map[string]interface{} `json:"details"`
 }
 
 // PolicyStats represents policy statistics
@@ -66,16 +66,16 @@ type PolicyStats struct {
 
 // SystemHealthStatus represents system health
 type SystemHealthStatus struct {
-	Status           string             `json:"status"`
-	SecurityScore    int                `json:"security_score"`
-	LastHealthCheck  time.Time          `json:"last_health_check"`
-	Components       map[string]string  `json:"components"`
-	Recommendations  []string           `json:"recommendations"`
+	Status          string            `json:"status"`
+	SecurityScore   int               `json:"security_score"`
+	LastHealthCheck time.Time         `json:"last_health_check"`
+	Components      map[string]string `json:"components"`
+	Recommendations []string          `json:"recommendations"`
 }
 
 // NewSecurityDashboard creates a new security dashboard
-func NewSecurityDashboard(auditLogger *AuditLogger, policyEngine *PolicyEngine, 
-	rateLimiter *RateLimiter, inputValidator *InputValidator, 
+func NewSecurityDashboard(auditLogger *AuditLogger, policyEngine *PolicyEngine,
+	rateLimiter *RateLimiter, inputValidator *InputValidator,
 	encryptionSvc *EncryptionService) *SecurityDashboard {
 	return &SecurityDashboard{
 		auditLogger:    auditLogger,
@@ -119,7 +119,7 @@ func (sd *SecurityDashboard) handleMetrics(w http.ResponseWriter, r *http.Reques
 	}
 
 	metrics := sd.collectMetrics()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(metrics)
@@ -142,7 +142,7 @@ func (sd *SecurityDashboard) handleEvents(w http.ResponseWriter, r *http.Request
 	}
 
 	events := sd.getRecentEvents(limit)
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(events)
@@ -163,12 +163,12 @@ func (sd *SecurityDashboard) handlePolicies(w http.ResponseWriter, r *http.Reque
 			http.Error(w, "Invalid policy data", http.StatusBadRequest)
 			return
 		}
-		
+
 		if err := sd.policyEngine.AddPolicy(&policy); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		
+
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]string{"status": "created"})
 	default:
@@ -184,7 +184,7 @@ func (sd *SecurityDashboard) handleHealth(w http.ResponseWriter, r *http.Request
 	}
 
 	health := sd.checkSystemHealth()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(health)
@@ -198,7 +198,7 @@ func (sd *SecurityDashboard) handleThreats(w http.ResponseWriter, r *http.Reques
 	}
 
 	threats := sd.analyzeThreats()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(threats)
@@ -219,12 +219,12 @@ func (sd *SecurityDashboard) handleConfig(w http.ResponseWriter, r *http.Request
 			http.Error(w, "Invalid configuration data", http.StatusBadRequest)
 			return
 		}
-		
+
 		if err := sd.updateSecurityConfig(config); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
 	default:
@@ -235,8 +235,8 @@ func (sd *SecurityDashboard) handleConfig(w http.ResponseWriter, r *http.Request
 // collectMetrics collects security metrics
 func (sd *SecurityDashboard) collectMetrics() *DashboardMetrics {
 	metrics := &DashboardMetrics{
-		Timestamp:    time.Now(),
-		PolicyStats:  make(map[string]PolicyStats),
+		Timestamp:   time.Now(),
+		PolicyStats: make(map[string]PolicyStats),
 	}
 
 	// Collect basic metrics (would be implemented with actual data sources)
@@ -249,12 +249,12 @@ func (sd *SecurityDashboard) collectMetrics() *DashboardMetrics {
 	// Collect policy metrics
 	policies := sd.policyEngine.GetPolicies()
 	metrics.ActivePolicies = len(policies)
-	
+
 	for id, policy := range policies {
 		metrics.PolicyStats[id] = PolicyStats{
-			PolicyID:    id,
-			PolicyName:  policy.Name,
-			Enabled:     policy.Enabled,
+			PolicyID:   id,
+			PolicyName: policy.Name,
+			Enabled:    policy.Enabled,
 			// These would be collected from actual metrics storage
 			Evaluations:   sd.getPolicyEvaluations(id),
 			Violations:    sd.getPolicyViolations(id),
@@ -340,12 +340,12 @@ func (sd *SecurityDashboard) checkSystemHealth() SystemHealthStatus {
 
 	// Add recommendations
 	if unhealthyComponents > 0 {
-		health.Recommendations = append(health.Recommendations, 
+		health.Recommendations = append(health.Recommendations,
 			"Check unhealthy security components")
 	}
 
 	if health.SecurityScore < 80 {
-		health.Recommendations = append(health.Recommendations, 
+		health.Recommendations = append(health.Recommendations,
 			"Review and update security policies")
 	}
 
@@ -387,15 +387,15 @@ func (sd *SecurityDashboard) analyzeThreats() []ThreatSummary {
 }
 
 // Helper methods for metrics collection (would be implemented with actual data sources)
-func (sd *SecurityDashboard) getTotalRequests() int64 { return 10000 }
-func (sd *SecurityDashboard) getBlockedRequests() int64 { return 150 }
-func (sd *SecurityDashboard) getSecurityViolations() int64 { return 75 }
-func (sd *SecurityDashboard) getRateLimitViolations() int64 { return 25 }
-func (sd *SecurityDashboard) getInputValidationFails() int64 { return 50 }
+func (sd *SecurityDashboard) getTotalRequests() int64                    { return 10000 }
+func (sd *SecurityDashboard) getBlockedRequests() int64                  { return 150 }
+func (sd *SecurityDashboard) getSecurityViolations() int64               { return 75 }
+func (sd *SecurityDashboard) getRateLimitViolations() int64              { return 25 }
+func (sd *SecurityDashboard) getInputValidationFails() int64             { return 50 }
 func (sd *SecurityDashboard) getPolicyEvaluations(policyID string) int64 { return 1000 }
-func (sd *SecurityDashboard) getPolicyViolations(policyID string) int64 { return 10 }
-func (sd *SecurityDashboard) getPolicyLastTriggered(policyID string) time.Time { 
-	return time.Now().Add(-1 * time.Hour) 
+func (sd *SecurityDashboard) getPolicyViolations(policyID string) int64  { return 10 }
+func (sd *SecurityDashboard) getPolicyLastTriggered(policyID string) time.Time {
+	return time.Now().Add(-1 * time.Hour)
 }
 
 func (sd *SecurityDashboard) getTopThreats() []ThreatSummary {
@@ -458,7 +458,7 @@ func (sd *SecurityDashboard) updateSecurityConfig(config map[string]interface{})
 	// For now, just validate the config
 	requiredKeys := []string{
 		"audit_logging_enabled",
-		"rate_limiting_enabled", 
+		"rate_limiting_enabled",
 		"input_validation_enabled",
 		"encryption_enabled",
 	}
@@ -471,7 +471,7 @@ func (sd *SecurityDashboard) updateSecurityConfig(config map[string]interface{})
 
 	// Log configuration change
 	if sd.auditLogger != nil {
-		sd.auditLogger.LogConfigChange("system", "127.0.0.1", "SECURITY_CONFIG", 
+		sd.auditLogger.LogConfigChange("system", "127.0.0.1", "SECURITY_CONFIG",
 			"previous_config", "updated_config", config)
 	}
 

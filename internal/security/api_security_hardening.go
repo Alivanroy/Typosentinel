@@ -17,43 +17,43 @@ import (
 
 // APISecurityHardening provides advanced API security features
 type APISecurityHardening struct {
-	config              *APISecurityConfig
-	inputValidator      *InputValidator
-	attackDetector      *AttackDetector
-	requestAnalyzer     *RequestAnalyzer
-	responseFilter      *ResponseFilter
-	sessionManager      *SessionManager
-	auditLogger         *AuditLogger
-	blacklistManager    *BlacklistManager
-	anomalyDetector     *AnomalyDetector
-	mu                  sync.RWMutex
-	enabled             bool
+	config           *APISecurityConfig
+	inputValidator   *InputValidator
+	attackDetector   *AttackDetector
+	requestAnalyzer  *RequestAnalyzer
+	responseFilter   *ResponseFilter
+	sessionManager   *SessionManager
+	auditLogger      *AuditLogger
+	blacklistManager *BlacklistManager
+	anomalyDetector  *AnomalyDetector
+	mu               sync.RWMutex
+	enabled          bool
 }
 
 // APISecurityConfig holds configuration for API security hardening
 type APISecurityConfig struct {
-	Enabled                    bool                    `json:"enabled"`
-	MaxRequestSize             int64                   `json:"max_request_size"`
-	MaxHeaderSize              int64                   `json:"max_header_size"`
-	MaxQueryParams             int                     `json:"max_query_params"`
-	MaxJSONDepth               int                     `json:"max_json_depth"`
-	RequestTimeout             time.Duration           `json:"request_timeout"`
-	EnableRequestSigning       bool                    `json:"enable_request_signing"`
-	EnableAdvancedValidation   bool                    `json:"enable_advanced_validation"`
-	EnableAttackDetection      bool                    `json:"enable_attack_detection"`
-	EnableAnomalyDetection     bool                    `json:"enable_anomaly_detection"`
-	EnableResponseFiltering    bool                    `json:"enable_response_filtering"`
-	EnableAuditLogging         bool                    `json:"enable_audit_logging"`
-	BlacklistConfig            BlacklistConfig         `json:"blacklist_config"`
-	RateLimitConfig            RateLimitConfig         `json:"rate_limit_config"`
-	SessionConfig              SessionConfig           `json:"session_config"`
-	CSRFProtection             CSRFConfig              `json:"csrf_protection"`
-	ContentSecurityPolicy      CSPConfig               `json:"content_security_policy"`
-	AdvancedHeaders            map[string]string       `json:"advanced_headers"`
-	TrustedProxies             []string                `json:"trusted_proxies"`
-	AllowedContentTypes        []string                `json:"allowed_content_types"`
-	BlockedUserAgents          []string                `json:"blocked_user_agents"`
-	GeoBlocking                GeoBlockingConfig       `json:"geo_blocking"`
+	Enabled                  bool              `json:"enabled"`
+	MaxRequestSize           int64             `json:"max_request_size"`
+	MaxHeaderSize            int64             `json:"max_header_size"`
+	MaxQueryParams           int               `json:"max_query_params"`
+	MaxJSONDepth             int               `json:"max_json_depth"`
+	RequestTimeout           time.Duration     `json:"request_timeout"`
+	EnableRequestSigning     bool              `json:"enable_request_signing"`
+	EnableAdvancedValidation bool              `json:"enable_advanced_validation"`
+	EnableAttackDetection    bool              `json:"enable_attack_detection"`
+	EnableAnomalyDetection   bool              `json:"enable_anomaly_detection"`
+	EnableResponseFiltering  bool              `json:"enable_response_filtering"`
+	EnableAuditLogging       bool              `json:"enable_audit_logging"`
+	BlacklistConfig          BlacklistConfig   `json:"blacklist_config"`
+	RateLimitConfig          RateLimitConfig   `json:"rate_limit_config"`
+	SessionConfig            SessionConfig     `json:"session_config"`
+	CSRFProtection           CSRFConfig        `json:"csrf_protection"`
+	ContentSecurityPolicy    CSPConfig         `json:"content_security_policy"`
+	AdvancedHeaders          map[string]string `json:"advanced_headers"`
+	TrustedProxies           []string          `json:"trusted_proxies"`
+	AllowedContentTypes      []string          `json:"allowed_content_types"`
+	BlockedUserAgents        []string          `json:"blocked_user_agents"`
+	GeoBlocking              GeoBlockingConfig `json:"geo_blocking"`
 }
 
 // Using AttackDetector from attack_detector.go
@@ -62,19 +62,19 @@ type APISecurityConfig struct {
 
 // RequestMetrics tracks request characteristics
 type RequestMetrics struct {
-	Timestamp           time.Time
-	Method              string
-	Path                string
-	UserAgent           string
-	ContentLength       int64
-	Headers             map[string]string
-	QueryParams         map[string]string
-	BodyHash            string
-	ResponseTime        time.Duration
-	StatusCode          int
-	Fingerprint         string
-	AnomalyScore        float64
-	ThreatLevel         string
+	Timestamp     time.Time
+	Method        string
+	Path          string
+	UserAgent     string
+	ContentLength int64
+	Headers       map[string]string
+	QueryParams   map[string]string
+	BodyHash      string
+	ResponseTime  time.Duration
+	StatusCode    int
+	Fingerprint   string
+	AnomalyScore  float64
+	ThreatLevel   string
 }
 
 // Using ResponseFilter from existing security components
@@ -83,34 +83,34 @@ type RequestMetrics struct {
 
 // SessionManager manages secure sessions
 type SessionManager struct {
-	sessions            map[string]*SecureSession
-	config              *SessionConfig
-	cleanupTicker       *time.Ticker
-	mu                  sync.RWMutex
+	sessions      map[string]*SecureSession
+	config        *SessionConfig
+	cleanupTicker *time.Ticker
+	mu            sync.RWMutex
 }
 
 // SecureSession represents a secure session
 type SecureSession struct {
-	ID                  string
-	UserID              string
-	CreatedAt           time.Time
-	LastAccessed        time.Time
-	ExpiresAt           time.Time
-	IPAddress           string
-	UserAgent           string
-	CSRFToken           string
-	Permissions         []string
-	Metadata            map[string]interface{}
-	SecurityFlags       SecurityFlags
+	ID            string
+	UserID        string
+	CreatedAt     time.Time
+	LastAccessed  time.Time
+	ExpiresAt     time.Time
+	IPAddress     string
+	UserAgent     string
+	CSRFToken     string
+	Permissions   []string
+	Metadata      map[string]interface{}
+	SecurityFlags SecurityFlags
 }
 
 // SecurityFlags tracks session security state
 type SecurityFlags struct {
-	RequireReauth       bool
-	SuspiciousActivity  bool
-	LocationChanged     bool
-	DeviceChanged       bool
-	ElevatedPrivileges  bool
+	RequireReauth      bool
+	SuspiciousActivity bool
+	LocationChanged    bool
+	DeviceChanged      bool
+	ElevatedPrivileges bool
 }
 
 // Using SessionConfig from security_config.go
@@ -119,64 +119,64 @@ type SecurityFlags struct {
 
 // BlacklistManager manages IP and pattern blacklists
 type BlacklistManager struct {
-	ipBlacklist         map[string]BlacklistEntry
-	patternBlacklist    map[string]BlacklistEntry
-	userAgentBlacklist  map[string]BlacklistEntry
-	config              *BlacklistConfig
-	mu                  sync.RWMutex
+	ipBlacklist        map[string]BlacklistEntry
+	patternBlacklist   map[string]BlacklistEntry
+	userAgentBlacklist map[string]BlacklistEntry
+	config             *BlacklistConfig
+	mu                 sync.RWMutex
 }
 
 // BlacklistEntry represents a blacklist entry
 type BlacklistEntry struct {
-	Value               string
-	Reason              string
-	AddedAt             time.Time
-	ExpiresAt           *time.Time
-	Severity            string
-	Source              string
-	HitCount            int
-	LastHit             time.Time
+	Value     string
+	Reason    string
+	AddedAt   time.Time
+	ExpiresAt *time.Time
+	Severity  string
+	Source    string
+	HitCount  int
+	LastHit   time.Time
 }
 
 // BlacklistConfig configures blacklist management
 type BlacklistConfig struct {
-	Enabled             bool          `json:"enabled"`
-	AutoBlacklist       bool          `json:"auto_blacklist"`
-	Threshold           int           `json:"threshold"`
-	Duration            time.Duration `json:"duration"`
-	Whitelist           []string      `json:"whitelist"`
-	ExternalSources     []string      `json:"external_sources"`
-	UpdateInterval      time.Duration `json:"update_interval"`
+	Enabled         bool          `json:"enabled"`
+	AutoBlacklist   bool          `json:"auto_blacklist"`
+	Threshold       int           `json:"threshold"`
+	Duration        time.Duration `json:"duration"`
+	Whitelist       []string      `json:"whitelist"`
+	ExternalSources []string      `json:"external_sources"`
+	UpdateInterval  time.Duration `json:"update_interval"`
 }
 
 // Using AnomalyDetector from behavioral_analyzer.go
 
 // CSRFConfig configures CSRF protection
 type CSRFConfig struct {
-	Enabled             bool     `json:"enabled"`
-	TokenLength         int      `json:"token_length"`
-	TokenTimeout        int      `json:"token_timeout"`
-	ExemptPaths         []string `json:"exempt_paths"`
-	HeaderName          string   `json:"header_name"`
-	FieldName           string   `json:"field_name"`
+	Enabled      bool     `json:"enabled"`
+	TokenLength  int      `json:"token_length"`
+	TokenTimeout int      `json:"token_timeout"`
+	ExemptPaths  []string `json:"exempt_paths"`
+	HeaderName   string   `json:"header_name"`
+	FieldName    string   `json:"field_name"`
 }
 
 // CSPConfig configures Content Security Policy
 type CSPConfig struct {
-	Enabled             bool              `json:"enabled"`
-	Directives          map[string]string `json:"directives"`
-	ReportOnly          bool              `json:"report_only"`
-	ReportURI           string            `json:"report_uri"`
+	Enabled    bool              `json:"enabled"`
+	Directives map[string]string `json:"directives"`
+	ReportOnly bool              `json:"report_only"`
+	ReportURI  string            `json:"report_uri"`
 }
 
 // GeoBlockingConfig configures geographical blocking
 type GeoBlockingConfig struct {
-	Enabled             bool     `json:"enabled"`
-	BlockedCountries    []string `json:"blocked_countries"`
-	AllowedCountries    []string `json:"allowed_countries"`
-	BlockTor            bool     `json:"block_tor"`
-	BlockVPN            bool     `json:"block_vpn"`
-	BlockDatacenters    bool     `json:"block_datacenters"`
+	Enabled          bool     `json:"enabled"`
+	BlockedCountries []string `json:"blocked_countries"`
+	AllowedCountries []string `json:"allowed_countries"`
+	BlockTor         bool     `json:"block_tor"`
+	BlockVPN         bool     `json:"block_vpn"`
+	BlockDatacenters bool     `json:"block_datacenters"`
 }
 
 // RateLimitConfig configures advanced rate limiting
@@ -192,9 +192,9 @@ func NewAPISecurityHardening(config *APISecurityConfig) *APISecurityHardening {
 	}
 
 	ash := &APISecurityHardening{
-		config:          config,
-		inputValidator:  NewInputValidator(),
-		enabled:         config.Enabled,
+		config:         config,
+		inputValidator: NewInputValidator(),
+		enabled:        config.Enabled,
 	}
 
 	if config.EnableAttackDetection {
@@ -234,8 +234,8 @@ func (ash *APISecurityHardening) SecurityHardeningMiddleware() gin.HandlerFunc {
 		if blocked, reason := ash.preRequestChecks(c); blocked {
 			ash.logSecurityEvent(c, "request_blocked", "high", reason, nil)
 			c.JSON(http.StatusForbidden, gin.H{
-				"error": "Request blocked",
-				"reason": reason,
+				"error":      "Request blocked",
+				"reason":     reason,
 				"request_id": requestID,
 			})
 			c.Abort()
@@ -247,8 +247,8 @@ func (ash *APISecurityHardening) SecurityHardeningMiddleware() gin.HandlerFunc {
 			if err := ash.performAdvancedValidation(c); err != nil {
 				ash.logSecurityEvent(c, "validation_failed", "medium", err.Error(), nil)
 				c.JSON(http.StatusBadRequest, gin.H{
-					"error": "Invalid request",
-					"details": err.Error(),
+					"error":      "Invalid request",
+					"details":    err.Error(),
 					"request_id": requestID,
 				})
 				c.Abort()
@@ -428,8 +428,8 @@ func (ash *APISecurityHardening) detectAttacks(c *gin.Context) (bool, string) {
 func (ash *APISecurityHardening) handleAttackDetection(c *gin.Context, attackType, requestID string) {
 	ash.logSecurityEvent(c, "attack_detected", "high", attackType, map[string]interface{}{
 		"attack_type": attackType,
-		"endpoint": c.Request.URL.Path,
-		"method": c.Request.Method,
+		"endpoint":    c.Request.URL.Path,
+		"method":      c.Request.Method,
 	})
 
 	// Auto-blacklist if configured
@@ -444,7 +444,7 @@ func (ash *APISecurityHardening) handleAttackDetection(c *gin.Context, attackTyp
 	}
 
 	c.JSON(http.StatusForbidden, gin.H{
-		"error": "Security violation detected",
+		"error":      "Security violation detected",
 		"request_id": requestID,
 	})
 	c.Abort()
@@ -705,18 +705,18 @@ func isValidHostname(hostname string) bool {
 
 func getDefaultAPISecurityConfig() *APISecurityConfig {
 	return &APISecurityConfig{
-		Enabled:                    true,
-		MaxRequestSize:             10 * 1024 * 1024, // 10MB
-		MaxHeaderSize:              8 * 1024,         // 8KB
-		MaxQueryParams:             100,
-		MaxJSONDepth:               10,
-		RequestTimeout:             30 * time.Second,
-		EnableRequestSigning:       false,
-		EnableAdvancedValidation:   true,
-		EnableAttackDetection:      true,
-		EnableAnomalyDetection:     true,
-		EnableResponseFiltering:    true,
-		EnableAuditLogging:         true,
+		Enabled:                  true,
+		MaxRequestSize:           10 * 1024 * 1024, // 10MB
+		MaxHeaderSize:            8 * 1024,         // 8KB
+		MaxQueryParams:           100,
+		MaxJSONDepth:             10,
+		RequestTimeout:           30 * time.Second,
+		EnableRequestSigning:     false,
+		EnableAdvancedValidation: true,
+		EnableAttackDetection:    true,
+		EnableAnomalyDetection:   true,
+		EnableResponseFiltering:  true,
+		EnableAuditLogging:       true,
 		BlacklistConfig: BlacklistConfig{
 			Enabled:       true,
 			AutoBlacklist: true,

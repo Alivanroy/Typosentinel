@@ -40,57 +40,57 @@ type RepositoryManager interface {
 
 // UpdateResult represents the result of a dependency update
 type UpdateResult struct {
-	Package     *types.Package `json:"package"`
-	OldVersion  string         `json:"old_version"`
-	NewVersion  string         `json:"new_version"`
-	Success     bool           `json:"success"`
-	ChangedFiles []string      `json:"changed_files"`
-	Error       string         `json:"error,omitempty"`
+	Package      *types.Package `json:"package"`
+	OldVersion   string         `json:"old_version"`
+	NewVersion   string         `json:"new_version"`
+	Success      bool           `json:"success"`
+	ChangedFiles []string       `json:"changed_files"`
+	Error        string         `json:"error,omitempty"`
 }
 
 // SafeVersionResult represents a safe version recommendation
 type SafeVersionResult struct {
-	Package         *types.Package `json:"package"`
-	RecommendedVersion string      `json:"recommended_version"`
-	Reason          string         `json:"reason"`
-	Confidence      float64        `json:"confidence"`
-	Alternatives    []string       `json:"alternatives,omitempty"`
+	Package            *types.Package `json:"package"`
+	RecommendedVersion string         `json:"recommended_version"`
+	Reason             string         `json:"reason"`
+	Confidence         float64        `json:"confidence"`
+	Alternatives       []string       `json:"alternatives,omitempty"`
 }
 
 // ValidationResult represents validation of a dependency update
 type ValidationResult struct {
-	Valid       bool     `json:"valid"`
-	Reason      string   `json:"reason"`
-	Warnings    []string `json:"warnings,omitempty"`
-	BreakingChanges bool `json:"breaking_changes"`
+	Valid           bool     `json:"valid"`
+	Reason          string   `json:"reason"`
+	Warnings        []string `json:"warnings,omitempty"`
+	BreakingChanges bool     `json:"breaking_changes"`
 }
 
 // PRRequest represents a pull request creation request
 type PRRequest struct {
-	Repository    *Repository           `json:"repository"`
-	ThreatType    types.ThreatType      `json:"threat_type"`
-	Violation     *auth.PolicyViolation `json:"violation"`
-	Changes       []FileChange          `json:"changes"`
-	Title         string                `json:"title"`
-	Description   string                `json:"description"`
-	BranchName    string                `json:"branch_name"`
-	Assignees     []string              `json:"assignees,omitempty"`
-	Reviewers     []string              `json:"reviewers,omitempty"`
+	Repository  *Repository           `json:"repository"`
+	ThreatType  types.ThreatType      `json:"threat_type"`
+	Violation   *auth.PolicyViolation `json:"violation"`
+	Changes     []FileChange          `json:"changes"`
+	Title       string                `json:"title"`
+	Description string                `json:"description"`
+	BranchName  string                `json:"branch_name"`
+	Assignees   []string              `json:"assignees,omitempty"`
+	Reviewers   []string              `json:"reviewers,omitempty"`
 }
 
 // PRResult represents the result of pull request creation
 type PRResult struct {
-	PRNumber    int    `json:"pr_number"`
-	PRURL       string `json:"pr_url"`
-	BranchName  string `json:"branch_name"`
-	Success     bool   `json:"success"`
-	Error       string `json:"error,omitempty"`
+	PRNumber   int    `json:"pr_number"`
+	PRURL      string `json:"pr_url"`
+	BranchName string `json:"branch_name"`
+	Success    bool   `json:"success"`
+	Error      string `json:"error,omitempty"`
 }
 
 // PRTemplate represents a pull request template
 type PRTemplate struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
 	Labels      []string `json:"labels"`
 	Assignees   []string `json:"assignees,omitempty"`
 	Reviewers   []string `json:"reviewers,omitempty"`
@@ -98,11 +98,11 @@ type PRTemplate struct {
 
 // Repository represents a code repository
 type Repository struct {
-	URL         string `json:"url"`
-	Owner       string `json:"owner"`
-	Name        string `json:"name"`
+	URL           string `json:"url"`
+	Owner         string `json:"owner"`
+	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
-	ClonePath   string `json:"clone_path"`
+	ClonePath     string `json:"clone_path"`
 }
 
 // FileChange represents a file modification
@@ -187,7 +187,7 @@ func (e *EnhancedRemediationEngine) executeEnhancedRemediationByThreatType(ctx c
 // executeTyposquattingRemediation handles typosquatting threats
 func (e *EnhancedRemediationEngine) executeTyposquattingRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	e.updateStepStatus(status, "analyze_typosquatting", "running")
-	
+
 	// Extract package information
 	pkg := e.extractPackageFromViolation(violation)
 	if pkg == nil {
@@ -235,8 +235,8 @@ func (e *EnhancedRemediationEngine) executeTyposquattingRemediation(ctx context.
 		Completed:   true,
 		CompletedAt: time.Now(),
 		Metadata: map[string]interface{}{
-			"action_type":         "typosquatting_replacement",
-			"malicious_package":   pkg.Name,
+			"action_type":        "typosquatting_replacement",
+			"malicious_package":  pkg.Name,
 			"legitimate_package": legitimatePackage,
 			"pr_url":             prResult.PRURL,
 			"pr_number":          prResult.PRNumber,
@@ -247,7 +247,7 @@ func (e *EnhancedRemediationEngine) executeTyposquattingRemediation(ctx context.
 // executeMaliciousPackageRemediation handles malicious package threats
 func (e *EnhancedRemediationEngine) executeMaliciousPackageRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	e.updateStepStatus(status, "quarantine_package", "running")
-	
+
 	pkg := e.extractPackageFromViolation(violation)
 	if pkg == nil {
 		return nil, fmt.Errorf("could not extract package information")
@@ -292,8 +292,8 @@ func (e *EnhancedRemediationEngine) executeMaliciousPackageRemediation(ctx conte
 			"action_type":       "malicious_package_removal",
 			"malicious_package": pkg.Name,
 			"quarantined":       true,
-			"pr_url":           prResult.PRURL,
-			"pr_number":        prResult.PRNumber,
+			"pr_url":            prResult.PRURL,
+			"pr_number":         prResult.PRNumber,
 		},
 	}, nil
 }
@@ -301,7 +301,7 @@ func (e *EnhancedRemediationEngine) executeMaliciousPackageRemediation(ctx conte
 // executeVulnerabilityRemediation handles vulnerable package threats
 func (e *EnhancedRemediationEngine) executeVulnerabilityRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	e.updateStepStatus(status, "analyze_vulnerability", "running")
-	
+
 	pkg := e.extractPackageFromViolation(violation)
 	if pkg == nil {
 		return nil, fmt.Errorf("could not extract package information")
@@ -343,10 +343,10 @@ func (e *EnhancedRemediationEngine) executeVulnerabilityRemediation(ctx context.
 		Completed:   true,
 		CompletedAt: time.Now(),
 		Metadata: map[string]interface{}{
-			"action_type":          "vulnerability_update",
-			"vulnerable_package":   pkg.Name,
-			"current_version":      pkg.Version,
-			"recommended_version":  safeVersionResult.RecommendedVersion,
+			"action_type":         "vulnerability_update",
+			"vulnerable_package":  pkg.Name,
+			"current_version":     pkg.Version,
+			"recommended_version": safeVersionResult.RecommendedVersion,
 			"pr_url":              prResult.PRURL,
 			"pr_number":           prResult.PRNumber,
 		},
@@ -368,15 +368,15 @@ func (e *EnhancedRemediationEngine) extractPackageFromViolation(violation *auth.
 	if violation.Metadata == nil {
 		return nil
 	}
-	
+
 	name, _ := violation.Metadata["package_name"].(string)
 	version, _ := violation.Metadata["package_version"].(string)
 	registry, _ := violation.Metadata["package_registry"].(string)
-	
+
 	if name == "" {
 		return nil
 	}
-	
+
 	return &types.Package{
 		Name:     name,
 		Version:  version,
@@ -387,25 +387,25 @@ func (e *EnhancedRemediationEngine) extractPackageFromViolation(violation *auth.
 func (e *EnhancedRemediationEngine) findLegitimateAlternative(pkg *types.Package) string {
 	// Simple heuristic - remove common typosquatting patterns
 	name := pkg.Name
-	
+
 	// Common typosquatting patterns
 	patterns := map[string]string{
-		"expres":     "express",
-		"lodas":      "lodash",
-		"reqeust":    "request",
-		"momnet":     "moment",
-		"chalkk":     "chalk",
-		"axios-":     "axios",
-		"react-":     "react",
-		"vue-":       "vue",
+		"expres":  "express",
+		"lodas":   "lodash",
+		"reqeust": "request",
+		"momnet":  "moment",
+		"chalkk":  "chalk",
+		"axios-":  "axios",
+		"react-":  "react",
+		"vue-":    "vue",
 	}
-	
+
 	for typo, legitimate := range patterns {
 		if strings.Contains(name, typo) {
 			return legitimate
 		}
 	}
-	
+
 	// If no pattern match, return empty (manual review needed)
 	return ""
 }
@@ -464,7 +464,7 @@ func (e *EnhancedRemediationEngine) notifyDevelopmentTeam(ctx context.Context, v
 
 func (e *EnhancedRemediationEngine) createEnhancedRemediationSteps(violation *auth.PolicyViolation) []RemediationStep {
 	threatType := e.extractThreatType(violation)
-	
+
 	switch threatType {
 	case types.ThreatTypeTyposquatting:
 		return []RemediationStep{
@@ -509,7 +509,7 @@ func (e *EnhancedRemediationEngine) executeReputationRemediation(ctx context.Con
 
 func (e *EnhancedRemediationEngine) executeSuspiciousPackageRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	e.updateStepStatus(status, "review_package", "running")
-	
+
 	pkg := e.extractPackageFromViolation(violation)
 	if pkg == nil {
 		return nil, fmt.Errorf("could not extract package information")

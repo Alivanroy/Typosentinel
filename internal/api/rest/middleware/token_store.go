@@ -19,9 +19,9 @@ type TokenInfo struct {
 
 // InMemoryTokenStore provides an in-memory implementation of TokenStore for testing
 type InMemoryTokenStore struct {
-	tokens   map[string]*TokenInfo
-	revoked  map[string]bool
-	mutex    sync.RWMutex
+	tokens  map[string]*TokenInfo
+	revoked map[string]bool
+	mutex   sync.RWMutex
 }
 
 // NewInMemoryTokenStore creates a new in-memory token store

@@ -16,17 +16,17 @@ import (
 
 // IntegrationManager handles external system integrations
 type IntegrationManager struct {
-	config *IntegrationConfig
+	config  *IntegrationConfig
 	clients map[string]IntegrationClient
 }
 
 // IntegrationConfig defines configuration for external integrations
 type IntegrationConfig struct {
-	SIEM     *SIEMConfig     `json:"siem,omitempty"`
-	Ticketing *TicketingConfig `json:"ticketing,omitempty"`
-	CICD     *CICDConfig     `json:"cicd,omitempty"`
-	Slack    *ExtendedSlackConfig    `json:"slack,omitempty"`
-	Webhooks []ExtendedWebhookConfig `json:"webhooks,omitempty"`
+	SIEM      *SIEMConfig             `json:"siem,omitempty"`
+	Ticketing *TicketingConfig        `json:"ticketing,omitempty"`
+	CICD      *CICDConfig             `json:"cicd,omitempty"`
+	Slack     *ExtendedSlackConfig    `json:"slack,omitempty"`
+	Webhooks  []ExtendedWebhookConfig `json:"webhooks,omitempty"`
 }
 
 // SIEMConfig defines SIEM integration settings
@@ -56,16 +56,16 @@ type SIEMRetryConfig struct {
 
 // TicketingConfig defines ticketing system integration
 type TicketingConfig struct {
-	Enabled     bool   `json:"enabled"`
-	Type        string `json:"type"` // jira, servicenow, github
-	Endpoint    string `json:"endpoint"`
-	Username    string `json:"username"`
-	APIKey      string `json:"api_key"`
-	Project     string `json:"project"`
-	IssueType   string `json:"issue_type,omitempty"`
-	Priority    string `json:"priority,omitempty"`
-	AutoCreate  bool   `json:"auto_create,omitempty"`
-	Threshold   string `json:"threshold,omitempty"` // high, critical
+	Enabled    bool   `json:"enabled"`
+	Type       string `json:"type"` // jira, servicenow, github
+	Endpoint   string `json:"endpoint"`
+	Username   string `json:"username"`
+	APIKey     string `json:"api_key"`
+	Project    string `json:"project"`
+	IssueType  string `json:"issue_type,omitempty"`
+	Priority   string `json:"priority,omitempty"`
+	AutoCreate bool   `json:"auto_create,omitempty"`
+	Threshold  string `json:"threshold,omitempty"` // high, critical
 }
 
 // CICDConfig defines CI/CD integration settings
@@ -88,11 +88,11 @@ type ExtendedSlackConfig struct {
 // ExtendedWebhookConfig extends WebhookConfig with additional fields for integration
 type ExtendedWebhookConfig struct {
 	WebhookConfig
-	Name     string        `json:"name"`
-	Method   string        `json:"method,omitempty"`
-	Events   []string      `json:"events"`
-	Retries  int           `json:"retries,omitempty"`
-	Timeout  time.Duration `json:"timeout,omitempty"`
+	Name    string        `json:"name"`
+	Method  string        `json:"method,omitempty"`
+	Events  []string      `json:"events"`
+	Retries int           `json:"retries,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty"`
 }
 
 // IntegrationClient interface for external system clients
@@ -160,8 +160,8 @@ func (im *IntegrationManager) SendScanResult(ctx context.Context, result *reposi
 		ScanID:     result.ScanID,
 		Message:    fmt.Sprintf("Scan completed for %s", result.Repository.FullName),
 		Details: map[string]interface{}{
-			"status":    result.Status,
-			"duration":  result.Duration,
+			"status":     result.Status,
+			"duration":   result.Duration,
 			"start_time": result.StartTime,
 			"end_time":   result.EndTime,
 		},
@@ -286,25 +286,25 @@ func (im *IntegrationManager) GetActiveIntegrations() []string {
 
 // SIEM Client Implementation
 type SIEMClient struct {
-	config       *SIEMConfig
-	client       *http.Client
-	eventQueue   chan *IntegrationEvent
-	batchBuffer  []*IntegrationEvent
-	mu           sync.RWMutex
-	running      bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	metrics      *SIEMMetrics
+	config      *SIEMConfig
+	client      *http.Client
+	eventQueue  chan *IntegrationEvent
+	batchBuffer []*IntegrationEvent
+	mu          sync.RWMutex
+	running     bool
+	ctx         context.Context
+	cancel      context.CancelFunc
+	metrics     *SIEMMetrics
 }
 
 // SIEMMetrics tracks SIEM client performance
 type SIEMMetrics struct {
-	EventsSent     int64     `json:"events_sent"`
-	EventsDropped  int64     `json:"events_dropped"`
-	RetryAttempts  int64     `json:"retry_attempts"`
-	LastEventTime  time.Time `json:"last_event_time"`
-	LastError      string    `json:"last_error,omitempty"`
-	mu             sync.RWMutex
+	EventsSent    int64     `json:"events_sent"`
+	EventsDropped int64     `json:"events_dropped"`
+	RetryAttempts int64     `json:"retry_attempts"`
+	LastEventTime time.Time `json:"last_event_time"`
+	LastError     string    `json:"last_error,omitempty"`
+	mu            sync.RWMutex
 }
 
 func NewSIEMClient(config *SIEMConfig) *SIEMClient {

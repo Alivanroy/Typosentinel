@@ -49,17 +49,17 @@ type OAuth2TokenResponse struct {
 
 // OAuth2UserInfo represents user information from OAuth2 provider
 type OAuth2UserInfo struct {
-	Sub           string `json:"sub"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Name          string `json:"name"`
-	GivenName     string `json:"given_name"`
-	FamilyName    string `json:"family_name"`
-	Picture       string `json:"picture"`
-	Locale        string `json:"locale"`
-	PreferredUsername string `json:"preferred_username"`
-	Groups        []string `json:"groups,omitempty"`
-	Roles         []string `json:"roles,omitempty"`
+	Sub               string   `json:"sub"`
+	Email             string   `json:"email"`
+	EmailVerified     bool     `json:"email_verified"`
+	Name              string   `json:"name"`
+	GivenName         string   `json:"given_name"`
+	FamilyName        string   `json:"family_name"`
+	Picture           string   `json:"picture"`
+	Locale            string   `json:"locale"`
+	PreferredUsername string   `json:"preferred_username"`
+	Groups            []string `json:"groups,omitempty"`
+	Roles             []string `json:"roles,omitempty"`
 }
 
 // NewOAuth2Provider creates a new OAuth2 provider
@@ -110,10 +110,10 @@ func (p *OAuth2Provider) GetAuthURL(state string) (string, error) {
 // ExchangeCode exchanges authorization code for access token
 func (p *OAuth2Provider) ExchangeCode(code, state string) (*SSOToken, error) {
 	data := url.Values{
-		"grant_type":   {"authorization_code"},
-		"code":         {code},
-		"redirect_uri": {p.redirectURL},
-		"client_id":    {p.clientID},
+		"grant_type":    {"authorization_code"},
+		"code":          {code},
+		"redirect_uri":  {p.redirectURL},
+		"client_id":     {p.clientID},
 		"client_secret": {p.clientSecret},
 	}
 
@@ -325,14 +325,14 @@ func ValidateOAuth2Config(config OAuth2Config) error {
 // CreateOAuth2ProviderFromConfig creates an OAuth2 provider from configuration
 func CreateOAuth2ProviderFromConfig(name string, providerConfig ProviderConfig, logger *logrus.Logger) (*OAuth2Provider, error) {
 	settings := providerConfig.Settings
-	
+
 	getString := func(key string) string {
 		if val, ok := settings[key].(string); ok {
 			return val
 		}
 		return ""
 	}
-	
+
 	getStringSlice := func(key string) []string {
 		if val, ok := settings[key].([]interface{}); ok {
 			result := make([]string, len(val))
@@ -348,7 +348,7 @@ func CreateOAuth2ProviderFromConfig(name string, providerConfig ProviderConfig, 
 		}
 		return []string{}
 	}
-	
+
 	oauth2Config := OAuth2Config{
 		ClientID:     getString("client_id"),
 		ClientSecret: getString("client_secret"),

@@ -14,15 +14,15 @@ import (
 
 // EnhancedScanScheduler provides advanced scheduling capabilities for repository scanning
 type EnhancedScanScheduler struct {
-	scheduler       *ScanScheduler
+	scheduler        *ScanScheduler
 	discoveryService *repository.DiscoveryService
-	repoManager     repository.RepositoryManager
-	config          *config.RepositoryConfig
-	cron            *cron.Cron
-	mu              sync.RWMutex
-	running         bool
-	stopChan        chan struct{}
-	logger          *log.Logger
+	repoManager      repository.RepositoryManager
+	config           *config.RepositoryConfig
+	cron             *cron.Cron
+	mu               sync.RWMutex
+	running          bool
+	stopChan         chan struct{}
+	logger           *log.Logger
 
 	// Enhanced features
 	policyEngine    PolicyEngine
@@ -66,34 +66,34 @@ type AuditLogger interface {
 
 // ScanPolicy represents a scanning policy
 type ScanPolicy struct {
-	ID                string                 `json:"id"`
-	Name              string                 `json:"name"`
-	Description       string                 `json:"description"`
-	Enabled           bool                   `json:"enabled"`
-	Priority          int                    `json:"priority"`
-	Schedule          string                 `json:"schedule"`
-	Targets           []ScanTarget           `json:"targets"`
-	ScanOptions       repository.ScanOptions `json:"scan_options"`
-	OutputFormats     []string               `json:"output_formats"`
-	Notifications     []NotificationConfig   `json:"notifications"`
-	RetryPolicy       RetryPolicy            `json:"retry_policy"`
-	Timeout           time.Duration          `json:"timeout"`
-	Concurrency       int                    `json:"concurrency"`
-	Filters           []RepositoryFilter     `json:"filters"`
-	Metadata          map[string]interface{} `json:"metadata"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
-	CreatedBy         string                 `json:"created_by"`
+	ID            string                 `json:"id"`
+	Name          string                 `json:"name"`
+	Description   string                 `json:"description"`
+	Enabled       bool                   `json:"enabled"`
+	Priority      int                    `json:"priority"`
+	Schedule      string                 `json:"schedule"`
+	Targets       []ScanTarget           `json:"targets"`
+	ScanOptions   repository.ScanOptions `json:"scan_options"`
+	OutputFormats []string               `json:"output_formats"`
+	Notifications []NotificationConfig   `json:"notifications"`
+	RetryPolicy   RetryPolicy            `json:"retry_policy"`
+	Timeout       time.Duration          `json:"timeout"`
+	Concurrency   int                    `json:"concurrency"`
+	Filters       []RepositoryFilter     `json:"filters"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	CreatedAt     time.Time              `json:"created_at"`
+	UpdatedAt     time.Time              `json:"updated_at"`
+	CreatedBy     string                 `json:"created_by"`
 }
 
 // NotificationConfig represents notification configuration
 type NotificationConfig struct {
-	Type      string                 `json:"type"`      // email, slack, webhook, etc.
-	Target    string                 `json:"target"`    // email address, webhook URL, etc.
-	Events    []string               `json:"events"`    // scan_started, scan_completed, scan_failed, etc.
-	Template  string                 `json:"template"`  // notification template
-	Enabled   bool                   `json:"enabled"`
-	Metadata  map[string]interface{} `json:"metadata"`
+	Type     string                 `json:"type"`     // email, slack, webhook, etc.
+	Target   string                 `json:"target"`   // email address, webhook URL, etc.
+	Events   []string               `json:"events"`   // scan_started, scan_completed, scan_failed, etc.
+	Template string                 `json:"template"` // notification template
+	Enabled  bool                   `json:"enabled"`
+	Metadata map[string]interface{} `json:"metadata"`
 }
 
 // RetryPolicy represents retry configuration
@@ -106,55 +106,55 @@ type RetryPolicy struct {
 
 // RepositoryFilter represents repository filtering criteria
 type RepositoryFilter struct {
-	Languages    []string `json:"languages,omitempty"`
-	MinStars     int      `json:"min_stars,omitempty"`
-	MaxStars     int      `json:"max_stars,omitempty"`
-	MinSize      int64    `json:"min_size,omitempty"`
-	MaxSize      int64    `json:"max_size,omitempty"`
-	IncludeForks bool     `json:"include_forks"`
-	IncludePrivate bool   `json:"include_private"`
-	IncludeArchived bool  `json:"include_archived"`
-	NamePatterns []string `json:"name_patterns,omitempty"`
-	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
-	LastUpdatedAfter *time.Time `json:"last_updated_after,omitempty"`
+	Languages         []string   `json:"languages,omitempty"`
+	MinStars          int        `json:"min_stars,omitempty"`
+	MaxStars          int        `json:"max_stars,omitempty"`
+	MinSize           int64      `json:"min_size,omitempty"`
+	MaxSize           int64      `json:"max_size,omitempty"`
+	IncludeForks      bool       `json:"include_forks"`
+	IncludePrivate    bool       `json:"include_private"`
+	IncludeArchived   bool       `json:"include_archived"`
+	NamePatterns      []string   `json:"name_patterns,omitempty"`
+	ExcludePatterns   []string   `json:"exclude_patterns,omitempty"`
+	LastUpdatedAfter  *time.Time `json:"last_updated_after,omitempty"`
 	LastUpdatedBefore *time.Time `json:"last_updated_before,omitempty"`
 }
 
 // EnhancedScanResult extends ScanResult with additional metadata
 type EnhancedScanResult struct {
 	*repository.ScanResult
-	PolicyViolations []PolicyViolation     `json:"policy_violations"`
-	Metrics          ScanMetrics           `json:"metrics"`
-	AuditTrail       []AuditEvent          `json:"audit_trail"`
+	PolicyViolations []PolicyViolation      `json:"policy_violations"`
+	Metrics          ScanMetrics            `json:"metrics"`
+	AuditTrail       []AuditEvent           `json:"audit_trail"`
 	Metadata         map[string]interface{} `json:"metadata"`
 }
 
 // PolicyViolation represents a policy violation
 type PolicyViolation struct {
-	PolicyID    string    `json:"policy_id"`
-	RuleID      string    `json:"rule_id"`
-	Severity    string    `json:"severity"`
-	Message     string    `json:"message"`
-	Repository  string    `json:"repository"`
-	File        string    `json:"file,omitempty"`
-	Line        int       `json:"line,omitempty"`
-	Timestamp   time.Time `json:"timestamp"`
+	PolicyID   string    `json:"policy_id"`
+	RuleID     string    `json:"rule_id"`
+	Severity   string    `json:"severity"`
+	Message    string    `json:"message"`
+	Repository string    `json:"repository"`
+	File       string    `json:"file,omitempty"`
+	Line       int       `json:"line,omitempty"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // ScanMetrics represents scan performance metrics
 type ScanMetrics struct {
-	StartTime         time.Time     `json:"start_time"`
-	EndTime           time.Time     `json:"end_time"`
-	Duration          time.Duration `json:"duration"`
-	RepositoriesScanned int         `json:"repositories_scanned"`
-	FilesScanned      int           `json:"files_scanned"`
-	PackagesAnalyzed  int           `json:"packages_analyzed"`
-	VulnerabilitiesFound int        `json:"vulnerabilities_found"`
-	PolicyViolations  int           `json:"policy_violations"`
-	ErrorCount        int           `json:"error_count"`
-	WarningCount      int           `json:"warning_count"`
-	CPUUsage          float64       `json:"cpu_usage"`
-	MemoryUsage       int64         `json:"memory_usage"`
+	StartTime            time.Time     `json:"start_time"`
+	EndTime              time.Time     `json:"end_time"`
+	Duration             time.Duration `json:"duration"`
+	RepositoriesScanned  int           `json:"repositories_scanned"`
+	FilesScanned         int           `json:"files_scanned"`
+	PackagesAnalyzed     int           `json:"packages_analyzed"`
+	VulnerabilitiesFound int           `json:"vulnerabilities_found"`
+	PolicyViolations     int           `json:"policy_violations"`
+	ErrorCount           int           `json:"error_count"`
+	WarningCount         int           `json:"warning_count"`
+	CPUUsage             float64       `json:"cpu_usage"`
+	MemoryUsage          int64         `json:"memory_usage"`
 }
 
 // AuditEvent represents an audit event
@@ -434,12 +434,12 @@ func (es *EnhancedScanScheduler) scheduleRepositoryScan(ctx context.Context, rep
 			Type:         "repository",
 			Repositories: []string{repo.FullName},
 		}},
-		Options:    policy.ScanOptions,
-		Output:     []OutputConfig{{Format: "json"}},
-		Policies:   []PolicyConfig{{Name: policy.ID, Enabled: true}},
-		Enabled:    true,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		Options:   policy.ScanOptions,
+		Output:    []OutputConfig{{Format: "json"}},
+		Policies:  []PolicyConfig{{Name: policy.ID, Enabled: true}},
+		Enabled:   true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	return es.scheduler.AddSchedule(scan)
@@ -466,7 +466,7 @@ func (es *EnhancedScanScheduler) executePolicyBasedScan(ctx context.Context, pol
 	scanErr := es.scheduler.TriggerSchedule(scan.ID)
 	if scanErr != nil {
 		es.logger.Printf("Failed to execute policy-based scan %s: %v", policy.ID, scanErr)
-		
+
 		// Send failure notification
 		if es.notificationMgr != nil {
 			es.notificationMgr.SendScanFailed(scan, scanErr)
@@ -535,9 +535,9 @@ func (es *EnhancedScanScheduler) getDefaultScanPolicy() *ScanPolicy {
 		Priority:    1,
 		Schedule:    "0 2 * * *", // Daily at 2 AM
 		ScanOptions: repository.ScanOptions{
-			DeepScan:    true,
-			IncludeDev:  false,
-			Timeout:     30 * time.Minute,
+			DeepScan:   true,
+			IncludeDev: false,
+			Timeout:    30 * time.Minute,
 		},
 		OutputFormats: []string{"json", "sarif"},
 		Timeout:       30 * time.Minute,
@@ -606,12 +606,12 @@ func (es *EnhancedScanScheduler) GetEnhancedStats() map[string]interface{} {
 	defer es.mu.RUnlock()
 
 	stats := map[string]interface{}{
-		"running":              es.running,
-		"discovery_enabled":    es.config.Discovery.Enabled,
+		"running":               es.running,
+		"discovery_enabled":     es.config.Discovery.Enabled,
 		"policy_engine_enabled": es.policyEngine != nil,
 		"notifications_enabled": es.notificationMgr != nil,
-		"metrics_enabled":      es.metrics != nil,
-		"audit_enabled":        es.auditLogger != nil,
+		"metrics_enabled":       es.metrics != nil,
+		"audit_enabled":         es.auditLogger != nil,
 	}
 
 	// Add discovery stats if available

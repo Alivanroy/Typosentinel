@@ -1,0 +1,19 @@
+{
+  "test_suite": "Multi-Branch Security Testing",
+  "timestamp": "",
+  "environment": {
+    "test_directory": "",
+    "typosentinel_binary": "",
+    "enterprise_directory": "",
+    "git_available": false
+  },
+  "branch_scenarios": [],
+  "test_results": [],
+  "summary": {
+    "total_tests": 0,
+    "passed": 0,
+    "failed": 0,
+    "success_rate": 0,
+    "branches_tested": 0
+  }
+}

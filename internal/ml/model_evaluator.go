@@ -1,19 +1,25 @@
 package ml
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 )
 
-// ModelEvaluator provides comprehensive model evaluation capabilities
+// ModelEvaluator provides model evaluation functionality
 type ModelEvaluator struct {
 	metrics []EvaluationMetric
+	mu      sync.RWMutex
+	running bool
+	cancel  context.CancelFunc
+	config  *EvaluationConfig
 }
 
 // EvaluationMetric defines a metric for model evaluation
@@ -29,6 +35,20 @@ type CrossValidator struct {
 	seed  int64
 }
 
+// CrossValidationResult contains cross-validation results
+type CrossValidationResult struct {
+	FoldResults   []*FoldResult `json:"fold_results"`
+	MeanAccuracy  float64       `json:"mean_accuracy"`
+	StdAccuracy   float64       `json:"std_accuracy"`
+	MeanPrecision float64       `json:"mean_precision"`
+	StdPrecision  float64       `json:"std_precision"`
+	MeanRecall    float64       `json:"mean_recall"`
+	StdRecall     float64       `json:"std_recall"`
+	MeanF1Score   float64       `json:"mean_f1_score"`
+	StdF1Score    float64       `json:"std_f1_score"`
+	OverallScore  float64       `json:"overall_score"`
+}
+
 // NewModelEvaluator creates a new model evaluator with standard metrics
 func NewModelEvaluator() *ModelEvaluator {
 	return &ModelEvaluator{
@@ -37,7 +57,6 @@ func NewModelEvaluator() *ModelEvaluator {
 			&PrecisionMetric{},
 			&RecallMetric{},
 			&F1ScoreMetric{},
-			&AUCMetric{},
 		},
 	}
 }
@@ -94,7 +113,7 @@ func (me *ModelEvaluator) EvaluateModel(model MLModel, testData []TrainingData) 
 }
 
 // ValidateModel performs k-fold cross-validation
-func (cv *CrossValidator) ValidateModel(model MLModel, data []TrainingData, config *TrainingConfig) (*ValidationResult, error) {
+func (cv *CrossValidator) ValidateModel(model MLModel, data []TrainingData, config *TrainingConfig) (*CrossValidationResult, error) {
 	if len(data) < cv.folds {
 		return nil, fmt.Errorf("insufficient data for %d-fold validation: need at least %d samples, got %d", cv.folds, cv.folds, len(data))
 	}
@@ -208,9 +227,9 @@ func (cv *CrossValidator) createModelCopy(model MLModel, trainingConfig *Trainin
 }
 
 // aggregateResults aggregates cross-validation results
-func (cv *CrossValidator) aggregateResults(foldResults []*FoldResult) *ValidationResult {
+func (cv *CrossValidator) aggregateResults(foldResults []*FoldResult) *CrossValidationResult {
 	if len(foldResults) == 0 {
-		return &ValidationResult{}
+		return &CrossValidationResult{}
 	}
 
 	// Filter out nil results
@@ -222,7 +241,7 @@ func (cv *CrossValidator) aggregateResults(foldResults []*FoldResult) *Validatio
 	}
 
 	if len(validResults) == 0 {
-		return &ValidationResult{FoldResults: foldResults}
+		return &CrossValidationResult{FoldResults: foldResults}
 	}
 
 	// Calculate means and standard deviations
@@ -238,7 +257,7 @@ func (cv *CrossValidator) aggregateResults(foldResults []*FoldResult) *Validatio
 		f1Scores[i] = result.Metrics.F1Score
 	}
 
-	return &ValidationResult{
+	return &CrossValidationResult{
 		FoldResults:   foldResults,
 		MeanAccuracy:  cv.calculateMean(accuracies),
 		StdAccuracy:   cv.calculateStd(accuracies),
@@ -308,7 +327,7 @@ func (cv *CrossValidator) calculateOverallScore(accuracies, precisions, recalls,
 // AccuracyMetric calculates classification accuracy
 type AccuracyMetric struct{}
 
-func (m *AccuracyMetric) Name() string { return "accuracy" }
+func (m *AccuracyMetric) Name() string        { return "accuracy" }
 func (m *AccuracyMetric) Description() string { return "Classification accuracy" }
 
 func (m *AccuracyMetric) Calculate(predictions, labels []float64) float64 {
@@ -337,7 +356,7 @@ func (m *AccuracyMetric) Calculate(predictions, labels []float64) float64 {
 // PrecisionMetric calculates precision
 type PrecisionMetric struct{}
 
-func (m *PrecisionMetric) Name() string { return "precision" }
+func (m *PrecisionMetric) Name() string        { return "precision" }
 func (m *PrecisionMetric) Description() string { return "Precision (positive predictive value)" }
 
 func (m *PrecisionMetric) Calculate(predictions, labels []float64) float64 {
@@ -369,7 +388,7 @@ func (m *PrecisionMetric) Calculate(predictions, labels []float64) float64 {
 // RecallMetric calculates recall (sensitivity)
 type RecallMetric struct{}
 
-func (m *RecallMetric) Name() string { return "recall" }
+func (m *RecallMetric) Name() string        { return "recall" }
 func (m *RecallMetric) Description() string { return "Recall (sensitivity)" }
 
 func (m *RecallMetric) Calculate(predictions, labels []float64) float64 {
@@ -402,7 +421,9 @@ func (m *RecallMetric) Calculate(predictions, labels []float64) float64 {
 type F1ScoreMetric struct{}
 
 func (m *F1ScoreMetric) Name() string { return "f1_score" }
-func (m *F1ScoreMetric) Description() string { return "F1 score (harmonic mean of precision and recall)" }
+func (m *F1ScoreMetric) Description() string {
+	return "F1 score (harmonic mean of precision and recall)"
+}
 
 func (m *F1ScoreMetric) Calculate(predictions, labels []float64) float64 {
 	precision := (&PrecisionMetric{}).Calculate(predictions, labels)
@@ -418,7 +439,7 @@ func (m *F1ScoreMetric) Calculate(predictions, labels []float64) float64 {
 // AUCMetric calculates Area Under the ROC Curve
 type AUCMetric struct{}
 
-func (m *AUCMetric) Name() string { return "auc" }
+func (m *AUCMetric) Name() string        { return "auc" }
 func (m *AUCMetric) Description() string { return "Area Under the ROC Curve" }
 
 func (m *AUCMetric) Calculate(predictions, labels []float64) float64 {

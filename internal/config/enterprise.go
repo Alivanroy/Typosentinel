@@ -9,56 +9,56 @@ import (
 
 // EnterpriseConfig holds enterprise-specific configuration
 type EnterpriseConfig struct {
-	Enabled    bool                        `yaml:"enabled" json:"enabled"`
-	License    LicenseConfig              `yaml:"license" json:"license"`
-	Cache      *CacheConfig               `yaml:"cache" json:"cache"`
-	Monitoring *monitoring.MonitoringConfig `yaml:"monitoring" json:"monitoring"`
-	EnterpriseSecurity   EnterpriseSecurityConfig             `yaml:"enterprise_security" json:"enterprise_security"`
-	Audit      AuditConfig                `yaml:"audit" json:"audit"`
-	EnterpriseRateLimit  EnterpriseRateLimitConfig            `yaml:"enterprise_rate_limit" json:"enterprise_rate_limit"`
-	SSO        SSOConfig                  `yaml:"sso" json:"sso"`
-	Reporting  ReportingConfig            `yaml:"reporting" json:"reporting"`
-	Repository RepositoryConfig          `yaml:"repository" json:"repository"`
+	Enabled             bool                         `yaml:"enabled" json:"enabled"`
+	License             LicenseConfig                `yaml:"license" json:"license"`
+	Cache               *CacheConfig                 `yaml:"cache" json:"cache"`
+	Monitoring          *monitoring.MonitoringConfig `yaml:"monitoring" json:"monitoring"`
+	EnterpriseSecurity  EnterpriseSecurityConfig     `yaml:"enterprise_security" json:"enterprise_security"`
+	Audit               AuditConfig                  `yaml:"audit" json:"audit"`
+	EnterpriseRateLimit EnterpriseRateLimitConfig    `yaml:"enterprise_rate_limit" json:"enterprise_rate_limit"`
+	SSO                 SSOConfig                    `yaml:"sso" json:"sso"`
+	Reporting           ReportingConfig              `yaml:"reporting" json:"reporting"`
+	Repository          RepositoryConfig             `yaml:"repository" json:"repository"`
 }
 
 // LicenseConfig holds license configuration
 type LicenseConfig struct {
-	Key        string    `yaml:"key" json:"key"`
-	Type       string    `yaml:"type" json:"type"` // "trial", "standard", "premium", "enterprise"
-	ExpiresAt  time.Time `yaml:"expires_at" json:"expires_at"`
-	MaxUsers   int       `yaml:"max_users" json:"max_users"`
-	MaxScans   int       `yaml:"max_scans" json:"max_scans"`
-	Features   []string  `yaml:"features" json:"features"`
-	Validated  bool      `yaml:"-" json:"-"`
+	Key       string    `yaml:"key" json:"key"`
+	Type      string    `yaml:"type" json:"type"` // "trial", "standard", "premium", "enterprise"
+	ExpiresAt time.Time `yaml:"expires_at" json:"expires_at"`
+	MaxUsers  int       `yaml:"max_users" json:"max_users"`
+	MaxScans  int       `yaml:"max_scans" json:"max_scans"`
+	Features  []string  `yaml:"features" json:"features"`
+	Validated bool      `yaml:"-" json:"-"`
 }
 
 // EnterpriseSecurityConfig holds security-related configuration
 type EnterpriseSecurityConfig struct {
-	EnterpriseEncryption    EnterpriseEncryptionConfig    `yaml:"encryption" json:"encryption"`
-	Authentication AuthConfig        `yaml:"authentication" json:"authentication"`
-	Authorization  AuthzConfig       `yaml:"authorization" json:"authorization"`
-	EnterpriseTLS           EnterpriseTLSConfig         `yaml:"tls" json:"tls"`
-	Secrets       SecretsConfig     `yaml:"secrets" json:"secrets"`
+	EnterpriseEncryption EnterpriseEncryptionConfig `yaml:"encryption" json:"encryption"`
+	Authentication       AuthConfig                 `yaml:"authentication" json:"authentication"`
+	Authorization        AuthzConfig                `yaml:"authorization" json:"authorization"`
+	EnterpriseTLS        EnterpriseTLSConfig        `yaml:"tls" json:"tls"`
+	Secrets              SecretsConfig              `yaml:"secrets" json:"secrets"`
 }
 
 // EnterpriseEncryptionConfig holds encryption settings
 type EnterpriseEncryptionConfig struct {
-	Enabled   bool   `yaml:"enabled" json:"enabled"`
-	Algorithm string `yaml:"algorithm" json:"algorithm"` // "AES-256-GCM", "ChaCha20-Poly1305"
-	KeyFile   string `yaml:"key_file" json:"key_file"`
+	Enabled   bool          `yaml:"enabled" json:"enabled"`
+	Algorithm string        `yaml:"algorithm" json:"algorithm"` // "AES-256-GCM", "ChaCha20-Poly1305"
+	KeyFile   string        `yaml:"key_file" json:"key_file"`
 	Rotation  time.Duration `yaml:"rotation" json:"rotation"`
 }
 
 // AuthConfig holds authentication configuration
 type AuthConfig struct {
-	Enabled      bool          `yaml:"enabled" json:"enabled"`
-	Method       string        `yaml:"method" json:"method"` // "jwt", "oauth2", "ldap", "saml"
-	JWT          EnterpriseJWTConfig     `yaml:"jwt" json:"jwt"`
-	OAuth2       OAuth2Config  `yaml:"oauth2" json:"oauth2"`
-	LDAP         LDAPConfig    `yaml:"ldap" json:"ldap"`
-	SAML         SAMLConfig    `yaml:"saml" json:"saml"`
-	SessionTimeout time.Duration `yaml:"session_timeout" json:"session_timeout"`
-	MFA          MFAConfig     `yaml:"mfa" json:"mfa"`
+	Enabled        bool                `yaml:"enabled" json:"enabled"`
+	Method         string              `yaml:"method" json:"method"` // "jwt", "oauth2", "ldap", "saml"
+	JWT            EnterpriseJWTConfig `yaml:"jwt" json:"jwt"`
+	OAuth2         OAuth2Config        `yaml:"oauth2" json:"oauth2"`
+	LDAP           LDAPConfig          `yaml:"ldap" json:"ldap"`
+	SAML           SAMLConfig          `yaml:"saml" json:"saml"`
+	SessionTimeout time.Duration       `yaml:"session_timeout" json:"session_timeout"`
+	MFA            MFAConfig           `yaml:"mfa" json:"mfa"`
 }
 
 // EnterpriseJWTConfig holds JWT configuration
@@ -94,11 +94,11 @@ type LDAPConfig struct {
 
 // SAMLConfig holds SAML configuration
 type SAMLConfig struct {
-	EntityID     string `yaml:"entity_id" json:"entity_id"`
-	SSOURL       string `yaml:"sso_url" json:"sso_url"`
-	Certificate  string `yaml:"certificate" json:"certificate"`
-	PrivateKey   string `yaml:"private_key" json:"-"`
-	MetadataURL  string `yaml:"metadata_url" json:"metadata_url"`
+	EntityID    string `yaml:"entity_id" json:"entity_id"`
+	SSOURL      string `yaml:"sso_url" json:"sso_url"`
+	Certificate string `yaml:"certificate" json:"certificate"`
+	PrivateKey  string `yaml:"private_key" json:"-"`
+	MetadataURL string `yaml:"metadata_url" json:"metadata_url"`
 }
 
 // MFAConfig holds multi-factor authentication configuration
@@ -110,9 +110,9 @@ type MFAConfig struct {
 
 // AuthzConfig holds authorization configuration
 type AuthzConfig struct {
-	Enabled bool          `yaml:"enabled" json:"enabled"`
-	Model   string        `yaml:"model" json:"model"` // "rbac", "abac", "acl"
-	Roles   []RoleConfig  `yaml:"roles" json:"roles"`
+	Enabled  bool           `yaml:"enabled" json:"enabled"`
+	Model    string         `yaml:"model" json:"model"` // "rbac", "abac", "acl"
+	Roles    []RoleConfig   `yaml:"roles" json:"roles"`
 	Policies []PolicyConfig `yaml:"policies" json:"policies"`
 }
 
@@ -126,30 +126,30 @@ type RoleConfig struct {
 
 // PolicyConfig defines an authorization policy
 type PolicyConfig struct {
-	Name      string            `yaml:"name" json:"name"`
-	Effect    string            `yaml:"effect" json:"effect"` // "allow", "deny"
-	Actions   []string          `yaml:"actions" json:"actions"`
-	Resources []string          `yaml:"resources" json:"resources"`
+	Name       string            `yaml:"name" json:"name"`
+	Effect     string            `yaml:"effect" json:"effect"` // "allow", "deny"
+	Actions    []string          `yaml:"actions" json:"actions"`
+	Resources  []string          `yaml:"resources" json:"resources"`
 	Conditions map[string]string `yaml:"conditions" json:"conditions"`
 }
 
 // EnterpriseTLSConfig holds TLS configuration
 type EnterpriseTLSConfig struct {
-	Enabled    bool   `yaml:"enabled" json:"enabled"`
-	CertFile   string `yaml:"cert_file" json:"cert_file"`
-	KeyFile    string `yaml:"key_file" json:"key_file"`
-	CAFile     string `yaml:"ca_file" json:"ca_file"`
-	MinVersion string `yaml:"min_version" json:"min_version"`
+	Enabled      bool     `yaml:"enabled" json:"enabled"`
+	CertFile     string   `yaml:"cert_file" json:"cert_file"`
+	KeyFile      string   `yaml:"key_file" json:"key_file"`
+	CAFile       string   `yaml:"ca_file" json:"ca_file"`
+	MinVersion   string   `yaml:"min_version" json:"min_version"`
 	CipherSuites []string `yaml:"cipher_suites" json:"cipher_suites"`
 }
 
 // SecretsConfig holds secrets management configuration
 type SecretsConfig struct {
-	Provider string            `yaml:"provider" json:"provider"` // "vault", "aws", "azure", "gcp"
-	Vault    VaultConfig       `yaml:"vault" json:"vault"`
-	AWS      AWSSecretsConfig  `yaml:"aws" json:"aws"`
+	Provider string             `yaml:"provider" json:"provider"` // "vault", "aws", "azure", "gcp"
+	Vault    VaultConfig        `yaml:"vault" json:"vault"`
+	AWS      AWSSecretsConfig   `yaml:"aws" json:"aws"`
 	Azure    AzureSecretsConfig `yaml:"azure" json:"azure"`
-	GCP      GCPSecretsConfig  `yaml:"gcp" json:"gcp"`
+	GCP      GCPSecretsConfig   `yaml:"gcp" json:"gcp"`
 }
 
 // VaultConfig holds HashiCorp Vault configuration
@@ -184,15 +184,15 @@ type GCPSecretsConfig struct {
 
 // AuditConfig holds audit logging configuration
 type AuditConfig struct {
-	Enabled    bool          `yaml:"enabled" json:"enabled"`
-	Level      string        `yaml:"level" json:"level"` // "basic", "detailed", "full"
-	Destination string       `yaml:"destination" json:"destination"` // "file", "database", "syslog", "webhook"
-	File       FileAuditConfig `yaml:"file" json:"file"`
-	Database   DBAuditConfig `yaml:"database" json:"database"`
-	Syslog     SyslogAuditConfig `yaml:"syslog" json:"syslog"`
-	Webhook    WebhookAuditConfig `yaml:"webhook" json:"webhook"`
-	Retention  time.Duration `yaml:"retention" json:"retention"`
-	Compression bool         `yaml:"compression" json:"compression"`
+	Enabled     bool               `yaml:"enabled" json:"enabled"`
+	Level       string             `yaml:"level" json:"level"`             // "basic", "detailed", "full"
+	Destination string             `yaml:"destination" json:"destination"` // "file", "database", "syslog", "webhook"
+	File        FileAuditConfig    `yaml:"file" json:"file"`
+	Database    DBAuditConfig      `yaml:"database" json:"database"`
+	Syslog      SyslogAuditConfig  `yaml:"syslog" json:"syslog"`
+	Webhook     WebhookAuditConfig `yaml:"webhook" json:"webhook"`
+	Retention   time.Duration      `yaml:"retention" json:"retention"`
+	Compression bool               `yaml:"compression" json:"compression"`
 }
 
 // FileAuditConfig holds file-based audit configuration
@@ -205,10 +205,10 @@ type FileAuditConfig struct {
 
 // DBAuditConfig holds database audit configuration
 type DBAuditConfig struct {
-	Driver   string `yaml:"driver" json:"driver"`
-	DSN      string `yaml:"dsn" json:"-"`
-	Table    string `yaml:"table" json:"table"`
-	BatchSize int   `yaml:"batch_size" json:"batch_size"`
+	Driver    string `yaml:"driver" json:"driver"`
+	DSN       string `yaml:"dsn" json:"-"`
+	Table     string `yaml:"table" json:"table"`
+	BatchSize int    `yaml:"batch_size" json:"batch_size"`
 }
 
 // SyslogAuditConfig holds syslog audit configuration
@@ -229,10 +229,10 @@ type WebhookAuditConfig struct {
 
 // EnterpriseRateLimitConfig holds rate limiting configuration
 type EnterpriseRateLimitConfig struct {
-	Enabled   bool              `yaml:"enabled" json:"enabled"`
-	Global    GlobalRateLimit   `yaml:"global" json:"global"`
-	PerUser   PerUserRateLimit  `yaml:"per_user" json:"per_user"`
-	PerIP     PerIPRateLimit    `yaml:"per_ip" json:"per_ip"`
+	Enabled   bool                `yaml:"enabled" json:"enabled"`
+	Global    GlobalRateLimit     `yaml:"global" json:"global"`
+	PerUser   PerUserRateLimit    `yaml:"per_user" json:"per_user"`
+	PerIP     PerIPRateLimit      `yaml:"per_ip" json:"per_ip"`
 	Endpoints []EndpointRateLimit `yaml:"endpoints" json:"endpoints"`
 }
 
@@ -264,18 +264,18 @@ type EndpointRateLimit struct {
 
 // SSOConfig holds single sign-on configuration
 type SSOConfig struct {
-	Enabled   bool              `yaml:"enabled" json:"enabled"`
-	Providers []SSOProvider    `yaml:"providers" json:"providers"`
-	Default   string           `yaml:"default" json:"default"`
-	Mapping   UserMapping      `yaml:"mapping" json:"mapping"`
+	Enabled   bool          `yaml:"enabled" json:"enabled"`
+	Providers []SSOProvider `yaml:"providers" json:"providers"`
+	Default   string        `yaml:"default" json:"default"`
+	Mapping   UserMapping   `yaml:"mapping" json:"mapping"`
 }
 
 // SSOProvider defines an SSO provider
 type SSOProvider struct {
-	Name     string            `yaml:"name" json:"name"`
-	Type     string            `yaml:"type" json:"type"` // "oidc", "saml", "oauth2"
-	Config   map[string]interface{} `yaml:"config" json:"config"`
-	Enabled  bool              `yaml:"enabled" json:"enabled"`
+	Name    string                 `yaml:"name" json:"name"`
+	Type    string                 `yaml:"type" json:"type"` // "oidc", "saml", "oauth2"
+	Config  map[string]interface{} `yaml:"config" json:"config"`
+	Enabled bool                   `yaml:"enabled" json:"enabled"`
 }
 
 // UserMapping defines how to map SSO user attributes
@@ -289,20 +289,20 @@ type UserMapping struct {
 
 // ReportingConfig holds reporting configuration
 type ReportingConfig struct {
-	Enabled    bool                `yaml:"enabled" json:"enabled"`
-	Scheduled  []ScheduledReport   `yaml:"scheduled" json:"scheduled"`
-	Templates  []ReportTemplate    `yaml:"templates" json:"templates"`
-	Delivery   ReportDelivery      `yaml:"delivery" json:"delivery"`
-	Retention  time.Duration       `yaml:"retention" json:"retention"`
+	Enabled   bool              `yaml:"enabled" json:"enabled"`
+	Scheduled []ScheduledReport `yaml:"scheduled" json:"scheduled"`
+	Templates []ReportTemplate  `yaml:"templates" json:"templates"`
+	Delivery  ReportDelivery    `yaml:"delivery" json:"delivery"`
+	Retention time.Duration     `yaml:"retention" json:"retention"`
 }
 
 // ScheduledReport defines a scheduled report
 type ScheduledReport struct {
-	Name      string   `yaml:"name" json:"name"`
-	Template  string   `yaml:"template" json:"template"`
-	Schedule  string   `yaml:"schedule" json:"schedule"` // Cron expression
+	Name       string   `yaml:"name" json:"name"`
+	Template   string   `yaml:"template" json:"template"`
+	Schedule   string   `yaml:"schedule" json:"schedule"` // Cron expression
 	Recipients []string `yaml:"recipients" json:"recipients"`
-	Enabled   bool     `yaml:"enabled" json:"enabled"`
+	Enabled    bool     `yaml:"enabled" json:"enabled"`
 }
 
 // ReportTemplate defines a report template
@@ -323,11 +323,11 @@ type ReportDelivery struct {
 
 // EmailDelivery holds email delivery configuration
 type EmailDelivery struct {
-	Enabled  bool   `yaml:"enabled" json:"enabled"`
+	Enabled  bool       `yaml:"enabled" json:"enabled"`
 	SMTP     SMTPConfig `yaml:"smtp" json:"smtp"`
-	From     string `yaml:"from" json:"from"`
-	Subject  string `yaml:"subject" json:"subject"`
-	Template string `yaml:"template" json:"template"`
+	From     string     `yaml:"from" json:"from"`
+	Subject  string     `yaml:"subject" json:"subject"`
+	Template string     `yaml:"template" json:"template"`
 }
 
 // SMTPConfig holds SMTP configuration

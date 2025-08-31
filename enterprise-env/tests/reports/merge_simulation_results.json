@@ -1,0 +1,26 @@
+time="2025-08-23T00:03:16+02:00" level=info msg="Starting scan scan_1755900196 for path: C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/merge_simulation.json"
+time="2025-08-23T00:03:16+02:00" level=warning msg="Auto-detection failed: no supported projects found in C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/merge_simulation.json"
+time="2025-08-23T00:03:16+02:00" level=info msg="No dependency files found in C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/merge_simulation.json"
+2025/08/23 00:03:16 [DEBUG] Database config - Type: 'sqlite', Database: './data/typosentinel.db'
+2025/08/23 00:03:16 [DEBUG] Database config - Host: 'localhost', Port: 5432, Username: 'typosentinel', SSLMode: 'disable'
+2025/08/23 00:03:16 [DEBUG] Opening SQLite database: ./data/typosentinel.db
+2025/08/23 00:03:16 Warning: Failed to save scan to database: failed to initialize OSS service: failed to ping database: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+{
+  "scan_id": "scan_1755900196",
+  "timestamp": "2025-08-23T00:03:16.5016959+02:00",
+  "duration": 1052400,
+  "path": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/merge_simulation.json",
+  "total_packages": 0,
+  "threats": [],
+  "warnings": [],
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 0,
+    "medium_threats": 0,
+    "low_threats": 0,
+    "total_warnings": 0,
+    "clean_packages": 0,
+    "conflict_count": 0
+  },
+  "metadata": {}
+}

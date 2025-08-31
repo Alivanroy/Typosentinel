@@ -43,13 +43,13 @@ type ScanOptions struct {
 	VulnerabilityDBs       []string
 	VulnConfigPath         string
 	// Recursive scanning options
-	Recursive              bool
-	WorkspaceAware         bool
-	ConsolidateReport      bool
-	PackageManagers        []string
+	Recursive         bool
+	WorkspaceAware    bool
+	ConsolidateReport bool
+	PackageManagers   []string
 	// Supply chain analysis options
-	EnableSupplyChain      bool
-	AdvancedAnalysis       bool
+	EnableSupplyChain bool
+	AdvancedAnalysis  bool
 }
 
 // ScanResult contains the results of a security scan
@@ -994,14 +994,14 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 	var vulnManager *vulnerability.Manager
 	if options.CheckVulnerabilities {
 		logrus.Info("Vulnerability checking enabled, initializing vulnerability manager")
-		
+
 		// Validate vulnerability database names
 		validDBs := map[string]bool{
 			"osv":    true,
 			"github": true,
 			"nvd":    true,
 		}
-		
+
 		var validatedDBs []string
 		for _, dbName := range options.VulnerabilityDBs {
 			if validDBs[dbName] {
@@ -1010,11 +1010,11 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 				return nil, nil, fmt.Errorf("invalid vulnerability database: %s. Valid options are: osv, github, nvd", dbName)
 			}
 		}
-		
+
 		if len(validatedDBs) == 0 {
 			return nil, nil, fmt.Errorf("no valid vulnerability databases specified")
 		}
-		
+
 		// Create manager configuration
 		managerConfig := &vulnerability.ManagerConfig{
 			ParallelQueries: true,
@@ -1074,31 +1074,31 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 				logrus.Warnf("Enhanced supply chain analysis failed for %s: %v", dep.Name, err)
 			} else if len(enhancedResults) > 0 {
 				enhancedResult := enhancedResults[0]
-				
+
 				// Convert enhanced result to standard threat if not filtered
 				if !enhancedResult.IsFiltered && enhancedResult.ConfidenceScore > 0.5 {
 					threat := types.Threat{
-						Package:            enhancedResult.Package,
-						Registry:           enhancedResult.Registry,
-						Type:               types.ThreatType(enhancedResult.ThreatType),
-						Severity:           a.convertStringSeverity(enhancedResult.Severity),
-						Description:        fmt.Sprintf("Enhanced supply chain threat detected: %s", enhancedResult.ThreatType),
-						Recommendation:     strings.Join(enhancedResult.Recommendations, "; "),
-						Confidence:         enhancedResult.ConfidenceScore,
-						DetectedAt:         time.Now(),
-						DetectionMethod:    "enhanced_supply_chain",
+						Package:         enhancedResult.Package,
+						Registry:        enhancedResult.Registry,
+						Type:            types.ThreatType(enhancedResult.ThreatType),
+						Severity:        a.convertStringSeverity(enhancedResult.Severity),
+						Description:     fmt.Sprintf("Enhanced supply chain threat detected: %s", enhancedResult.ThreatType),
+						Recommendation:  strings.Join(enhancedResult.Recommendations, "; "),
+						Confidence:      enhancedResult.ConfidenceScore,
+						DetectedAt:      time.Now(),
+						DetectionMethod: "enhanced_supply_chain",
 						Metadata: map[string]interface{}{
-							"supply_chain_risk":    enhancedResult.SupplyChainRisk,
-							"false_positive_risk":  enhancedResult.FalsePositiveRisk,
-							"filter_reasons":       enhancedResult.FilterReasons,
-							"evidence":             enhancedResult.Evidence,
+							"supply_chain_risk":   enhancedResult.SupplyChainRisk,
+							"false_positive_risk": enhancedResult.FalsePositiveRisk,
+							"filter_reasons":      enhancedResult.FilterReasons,
+							"evidence":            enhancedResult.Evidence,
 						},
 					}
 					allThreats = append(allThreats, threat)
-					logrus.Infof("Enhanced supply chain threat detected for %s: %s (confidence: %.2f)", 
+					logrus.Infof("Enhanced supply chain threat detected for %s: %s (confidence: %.2f)",
 						dep.Name, enhancedResult.ThreatType, enhancedResult.ConfidenceScore)
 				} else if enhancedResult.IsFiltered {
-					logrus.Debugf("Package %s filtered by enhanced supply chain analysis: %v", 
+					logrus.Debugf("Package %s filtered by enhanced supply chain analysis: %v",
 						dep.Name, enhancedResult.FilterReasons)
 				}
 			}
@@ -1133,13 +1133,13 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 						}
 					}
 				}
-				
+
 				// Generate proposed correction
 				proposedCorrection := fmt.Sprintf("Update %s to a patched version that addresses %s", dep.Name, vuln.ID)
 				if fixedVersion != "" {
 					proposedCorrection = fmt.Sprintf("Update %s from version %s to %s or later", dep.Name, dep.Version, fixedVersion)
 				}
-				
+
 				threat := types.Threat{
 					Package:            dep.Name,
 					Version:            dep.Version,
@@ -1159,11 +1159,11 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 					CVE:                vuln.CVE,
 					Metadata: map[string]interface{}{
 						"vulnerability_id": vuln.ID,
-						"cvss_score":      vuln.CVSSScore,
-						"published":       vuln.Published,
-						"modified":        vuln.Modified,
-						"source":          vuln.Source,
-						"aliases":         vuln.Aliases,
+						"cvss_score":       vuln.CVSSScore,
+						"published":        vuln.Published,
+						"modified":         vuln.Modified,
+						"source":           vuln.Source,
+						"aliases":          vuln.Aliases,
 					},
 				}
 				allThreats = append(allThreats, threat)
@@ -1304,8 +1304,8 @@ func (a *Analyzer) scanRecursive(rootPath string, options *ScanOptions, result *
 func (a *Analyzer) findProjectDirectories(rootPath string, options *ScanOptions) ([]string, error) {
 	var projectDirs []string
 	manifestFiles := []string{
-		"package.json",      // npm
-		"requirements.txt",  // pip
+		"package.json",     // npm
+		"requirements.txt", // pip
 		"Pipfile",          // pipenv
 		"pyproject.toml",   // poetry
 		"pom.xml",          // maven
@@ -1326,12 +1326,12 @@ func (a *Analyzer) findProjectDirectories(rootPath string, options *ScanOptions)
 		// Skip hidden directories and common non-project directories
 		if info.IsDir() {
 			dirName := filepath.Base(path)
-			if strings.HasPrefix(dirName, ".") || 
-			   dirName == "node_modules" || 
-			   dirName == "vendor" || 
-			   dirName == "target" || 
-			   dirName == "build" || 
-			   dirName == "dist" {
+			if strings.HasPrefix(dirName, ".") ||
+				dirName == "node_modules" ||
+				dirName == "vendor" ||
+				dirName == "target" ||
+				dirName == "build" ||
+				dirName == "dist" {
 				return filepath.SkipDir
 			}
 			return nil

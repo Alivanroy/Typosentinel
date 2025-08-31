@@ -65,9 +65,9 @@ func (al *DefaultAuditLogger) LogScanScheduled(scan *ScheduledScan, user string)
 		Action:    "schedule",
 		Result:    "success",
 		Metadata: map[string]interface{}{
-			"scan_name":   scan.Name,
-			"schedule":    scan.Schedule,
-			"enabled":     scan.Enabled,
+			"scan_name":    scan.Name,
+			"schedule":     scan.Schedule,
+			"enabled":      scan.Enabled,
 			"target_count": len(scan.Targets),
 		},
 	}
@@ -165,9 +165,9 @@ func (al *DefaultAuditLogger) LogDiscoveryEvent(platform string, repoCount int, 
 		Action:    "discover",
 		Result:    "success",
 		Metadata: map[string]interface{}{
-			"platform":         platform,
+			"platform":           platform,
 			"repositories_found": repoCount,
-			"duration":         duration.String(),
+			"duration":           duration.String(),
 		},
 	}
 

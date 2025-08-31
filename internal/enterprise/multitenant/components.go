@@ -133,15 +133,15 @@ func (rm *ResourceManager) CleanupTenantResources(ctx context.Context, tenant *T
 func (rm *ResourceManager) GetTenantUsage(ctx context.Context, tenant *Tenant) (*TenantUsage, error) {
 	// This would typically query actual usage from monitoring systems
 	return &TenantUsage{
-		TenantID:            tenant.ID,
-		RepositoryCount:     10,
-		ScansToday:          50,
-		UserCount:           5,
-		StorageUsedGB:       2.5,
-		APICallsThisHour:    100,
-		PolicyCount:         3,
-		IntegrationCount:    2,
-		LastScanTime:        time.Now().Add(-1 * time.Hour),
+		TenantID:         tenant.ID,
+		RepositoryCount:  10,
+		ScansToday:       50,
+		UserCount:        5,
+		StorageUsedGB:    2.5,
+		APICallsThisHour: 100,
+		PolicyCount:      3,
+		IntegrationCount: 2,
+		LastScanTime:     time.Now().Add(-1 * time.Hour),
 		QuotaUtilization: map[string]float64{
 			"repositories": 0.1,  // 10/100
 			"scans":        0.05, // 50/1000

@@ -12,13 +12,13 @@ import (
 
 // EnhancedPatternRecognizer provides advanced pattern recognition for sophisticated hiding techniques
 type EnhancedPatternRecognizer struct {
-	advancedPatterns     map[string]*AdvancedDetectionPattern
-	machineLearnedRules  map[string]*MLPattern
-	contextualAnalyzers  map[string]*ContextualAnalyzer
-	frequencyAnalyzers   map[string]*FrequencyAnalyzer
-	entropyDetectors     map[string]*EntropyDetector
-	adaptiveThresholds   map[string]*AdaptiveThreshold
-	mu                   sync.RWMutex
+	advancedPatterns    map[string]*AdvancedDetectionPattern
+	machineLearnedRules map[string]*MLPattern
+	contextualAnalyzers map[string]*ContextualAnalyzer
+	frequencyAnalyzers  map[string]*FrequencyAnalyzer
+	entropyDetectors    map[string]*EntropyDetector
+	adaptiveThresholds  map[string]*AdaptiveThreshold
+	mu                  sync.RWMutex
 	lastUpdate          time.Time
 	learningEnabled     bool
 	sensitivityLevel    float64
@@ -44,206 +44,206 @@ type AdvancedDetectionPattern struct {
 
 // PatternSignature represents a multi-dimensional pattern signature
 type PatternSignature struct {
-	SignatureType       string    `json:"signature_type"`
-	Dimensions          []float64 `json:"dimensions"`
-	Tolerance           float64   `json:"tolerance"`
-	Weight              float64   `json:"weight"`
-	MinMatchPercentage  float64   `json:"min_match_percentage"`
+	SignatureType      string    `json:"signature_type"`
+	Dimensions         []float64 `json:"dimensions"`
+	Tolerance          float64   `json:"tolerance"`
+	Weight             float64   `json:"weight"`
+	MinMatchPercentage float64   `json:"min_match_percentage"`
 }
 
 // EnhancedContextRule defines enhanced contextual detection rules
 type EnhancedContextRule struct {
-	RuleID              string                 `json:"rule_id"`
-	Condition           string                 `json:"condition"`
-	Action              string                 `json:"action"`
-	Parameters          map[string]interface{} `json:"parameters"`
-	Weight              float64                `json:"weight"`
-	Priority            int                    `json:"priority"`
+	RuleID     string                 `json:"rule_id"`
+	Condition  string                 `json:"condition"`
+	Action     string                 `json:"action"`
+	Parameters map[string]interface{} `json:"parameters"`
+	Weight     float64                `json:"weight"`
+	Priority   int                    `json:"priority"`
 }
 
 // FrequencyProfile defines frequency domain characteristics
 type FrequencyProfile struct {
-	DominantFrequencies []float64 `json:"dominant_frequencies"`
-	Harmonics           []float64 `json:"harmonics"`
-	SpectralDensity     []float64 `json:"spectral_density"`
-	BandwidthProfile    []float64 `json:"bandwidth_profile"`
+	DominantFrequencies  []float64 `json:"dominant_frequencies"`
+	Harmonics            []float64 `json:"harmonics"`
+	SpectralDensity      []float64 `json:"spectral_density"`
+	BandwidthProfile     []float64 `json:"bandwidth_profile"`
 	PhaseCharacteristics []float64 `json:"phase_characteristics"`
 }
 
 // EntropyProfile defines entropy characteristics for detection
 type EntropyProfile struct {
-	BaselineEntropy     float64   `json:"baseline_entropy"`
-	EntropyVariance     float64   `json:"entropy_variance"`
-	LocalEntropy        []float64 `json:"local_entropy"`
-	ConditionalEntropy  []float64 `json:"conditional_entropy"`
-	MutualInformation   []float64 `json:"mutual_information"`
+	BaselineEntropy    float64   `json:"baseline_entropy"`
+	EntropyVariance    float64   `json:"entropy_variance"`
+	LocalEntropy       []float64 `json:"local_entropy"`
+	ConditionalEntropy []float64 `json:"conditional_entropy"`
+	MutualInformation  []float64 `json:"mutual_information"`
 }
 
 // MLPattern represents a machine-learned pattern
 type MLPattern struct {
-	PatternID           string                 `json:"pattern_id"`
-	ModelType           string                 `json:"model_type"`
-	FeatureVector       []float64              `json:"feature_vector"`
-	Weights             []float64              `json:"weights"`
-	Bias                float64                `json:"bias"`
-	ConfidenceFunction  string                 `json:"confidence_function"`
-	LearningRate        float64                `json:"learning_rate"`
-	AdaptationEnabled   bool                   `json:"adaptation_enabled"`
-	LastTraining        time.Time              `json:"last_training"`
-	Accuracy            float64                `json:"accuracy"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	PatternID          string                 `json:"pattern_id"`
+	ModelType          string                 `json:"model_type"`
+	FeatureVector      []float64              `json:"feature_vector"`
+	Weights            []float64              `json:"weights"`
+	Bias               float64                `json:"bias"`
+	ConfidenceFunction string                 `json:"confidence_function"`
+	LearningRate       float64                `json:"learning_rate"`
+	AdaptationEnabled  bool                   `json:"adaptation_enabled"`
+	LastTraining       time.Time              `json:"last_training"`
+	Accuracy           float64                `json:"accuracy"`
+	Metadata           map[string]interface{} `json:"metadata"`
 }
 
 // ContextualAnalyzer analyzes patterns within specific contexts
 type ContextualAnalyzer struct {
-	AnalyzerID          string                 `json:"analyzer_id"`
-	ContextType         string                 `json:"context_type"`
-	ContextRules        []EnhancedContextRule  `json:"context_rules"`
-	DependencyGraph     map[string][]string    `json:"dependency_graph"`
-	SemanticRules       []SemanticRule         `json:"semantic_rules"`
-	ConfidenceModifier  float64                `json:"confidence_modifier"`
-	Enabled             bool                   `json:"enabled"`
+	AnalyzerID         string                `json:"analyzer_id"`
+	ContextType        string                `json:"context_type"`
+	ContextRules       []EnhancedContextRule `json:"context_rules"`
+	DependencyGraph    map[string][]string   `json:"dependency_graph"`
+	SemanticRules      []SemanticRule        `json:"semantic_rules"`
+	ConfidenceModifier float64               `json:"confidence_modifier"`
+	Enabled            bool                  `json:"enabled"`
 }
 
 // SemanticRule defines semantic analysis rules
 type SemanticRule struct {
-	RuleID              string         `json:"rule_id"`
-	SemanticPattern     string         `json:"semantic_pattern"`
-	RegexPattern        *regexp.Regexp `json:"-"`
-	SemanticWeight      float64        `json:"semantic_weight"`
-	ContextSensitive    bool           `json:"context_sensitive"`
+	RuleID           string         `json:"rule_id"`
+	SemanticPattern  string         `json:"semantic_pattern"`
+	RegexPattern     *regexp.Regexp `json:"-"`
+	SemanticWeight   float64        `json:"semantic_weight"`
+	ContextSensitive bool           `json:"context_sensitive"`
 }
 
 // FrequencyAnalyzer performs frequency domain analysis
 type FrequencyAnalyzer struct {
-	AnalyzerID          string                 `json:"analyzer_id"`
-	SamplingRate        float64                `json:"sampling_rate"`
-	WindowFunction      string                 `json:"window_function"`
-	FFTSize             int                    `json:"fft_size"`
-	OverlapRatio        float64                `json:"overlap_ratio"`
-	FrequencyBands      []FrequencyBand        `json:"frequency_bands"`
-	SpectralFeatures    []SpectralFeature      `json:"spectral_features"`
-	AnomalyDetection    bool                   `json:"anomaly_detection"`
+	AnalyzerID       string            `json:"analyzer_id"`
+	SamplingRate     float64           `json:"sampling_rate"`
+	WindowFunction   string            `json:"window_function"`
+	FFTSize          int               `json:"fft_size"`
+	OverlapRatio     float64           `json:"overlap_ratio"`
+	FrequencyBands   []FrequencyBand   `json:"frequency_bands"`
+	SpectralFeatures []SpectralFeature `json:"spectral_features"`
+	AnomalyDetection bool              `json:"anomaly_detection"`
 }
 
 // FrequencyBand defines frequency band characteristics
 type FrequencyBand struct {
-	BandID              string    `json:"band_id"`
-	LowFreq             float64   `json:"low_freq"`
-	HighFreq            float64   `json:"high_freq"`
-	ExpectedPower       float64   `json:"expected_power"`
-	ToleranceRange      float64   `json:"tolerance_range"`
-	AnomalyThreshold    float64   `json:"anomaly_threshold"`
+	BandID           string  `json:"band_id"`
+	LowFreq          float64 `json:"low_freq"`
+	HighFreq         float64 `json:"high_freq"`
+	ExpectedPower    float64 `json:"expected_power"`
+	ToleranceRange   float64 `json:"tolerance_range"`
+	AnomalyThreshold float64 `json:"anomaly_threshold"`
 }
 
 // SpectralFeature defines spectral analysis features
 type SpectralFeature struct {
-	FeatureID           string    `json:"feature_id"`
-	FeatureType         string    `json:"feature_type"`
-	ExtractionMethod    string    `json:"extraction_method"`
-	Normalization       bool      `json:"normalization"`
-	Weight              float64   `json:"weight"`
+	FeatureID        string  `json:"feature_id"`
+	FeatureType      string  `json:"feature_type"`
+	ExtractionMethod string  `json:"extraction_method"`
+	Normalization    bool    `json:"normalization"`
+	Weight           float64 `json:"weight"`
 }
 
 // EntropyDetector performs entropy-based anomaly detection
 type EntropyDetector struct {
-	DetectorID          string                 `json:"detector_id"`
-	EntropyType         string                 `json:"entropy_type"`
-	WindowSize          int                    `json:"window_size"`
-	BaselineEntropy     float64                `json:"baseline_entropy"`
-	EntropyThreshold    float64                `json:"entropy_threshold"`
-	AdaptiveBaseline    bool                   `json:"adaptive_baseline"`
-	CompressionRatio    float64                `json:"compression_ratio"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	DetectorID       string                 `json:"detector_id"`
+	EntropyType      string                 `json:"entropy_type"`
+	WindowSize       int                    `json:"window_size"`
+	BaselineEntropy  float64                `json:"baseline_entropy"`
+	EntropyThreshold float64                `json:"entropy_threshold"`
+	AdaptiveBaseline bool                   `json:"adaptive_baseline"`
+	CompressionRatio float64                `json:"compression_ratio"`
+	Metadata         map[string]interface{} `json:"metadata"`
 }
 
 // AdaptiveThreshold manages dynamic thresholds
 type AdaptiveThreshold struct {
-	ThresholdID         string                 `json:"threshold_id"`
-	CurrentThreshold    float64                `json:"current_threshold"`
-	BaselineThreshold   float64                `json:"baseline_threshold"`
-	AdaptationRate      float64                `json:"adaptation_rate"`
-	MinThreshold        float64                `json:"min_threshold"`
-	MaxThreshold        float64                `json:"max_threshold"`
-	LearningWindow      time.Duration          `json:"learning_window"`
-	StabilityFactor     float64                `json:"stability_factor"`
-	LastUpdate          time.Time              `json:"last_update"`
+	ThresholdID       string        `json:"threshold_id"`
+	CurrentThreshold  float64       `json:"current_threshold"`
+	BaselineThreshold float64       `json:"baseline_threshold"`
+	AdaptationRate    float64       `json:"adaptation_rate"`
+	MinThreshold      float64       `json:"min_threshold"`
+	MaxThreshold      float64       `json:"max_threshold"`
+	LearningWindow    time.Duration `json:"learning_window"`
+	StabilityFactor   float64       `json:"stability_factor"`
+	LastUpdate        time.Time     `json:"last_update"`
 }
 
 // EnhancedDetectionResult represents enhanced detection results
 type EnhancedDetectionResult struct {
-	DetectionID         string                 `json:"detection_id"`
-	Timestamp           time.Time              `json:"timestamp"`
-	DetectedPatterns    []DetectedPattern      `json:"detected_patterns"`
-	MLPredictions       []MLPrediction         `json:"ml_predictions"`
-	ContextualFindings  []ContextualFinding    `json:"contextual_findings"`
-	FrequencyAnomalies  []FrequencyAnomaly     `json:"frequency_anomalies"`
-	EntropyAnomalies    []EntropyAnomaly       `json:"entropy_anomalies"`
-	OverallConfidence   float64                `json:"overall_confidence"`
-	RiskScore           float64                `json:"risk_score"`
-	Severity            types.Severity         `json:"severity"`
-	Recommendations     []string               `json:"recommendations"`
-	Metadata            map[string]interface{} `json:"metadata"`
+	DetectionID        string                 `json:"detection_id"`
+	Timestamp          time.Time              `json:"timestamp"`
+	DetectedPatterns   []DetectedPattern      `json:"detected_patterns"`
+	MLPredictions      []MLPrediction         `json:"ml_predictions"`
+	ContextualFindings []ContextualFinding    `json:"contextual_findings"`
+	FrequencyAnomalies []FrequencyAnomaly     `json:"frequency_anomalies"`
+	EntropyAnomalies   []EntropyAnomaly       `json:"entropy_anomalies"`
+	OverallConfidence  float64                `json:"overall_confidence"`
+	RiskScore          float64                `json:"risk_score"`
+	Severity           types.Severity         `json:"severity"`
+	Recommendations    []string               `json:"recommendations"`
+	Metadata           map[string]interface{} `json:"metadata"`
 }
 
 // DetectedPattern represents a detected sophisticated pattern
 type DetectedPattern struct {
-	PatternID           string                 `json:"pattern_id"`
-	PatternName         string                 `json:"pattern_name"`
-	Technique           string                 `json:"technique"`
-	Confidence          float64                `json:"confidence"`
-	Severity            types.Severity         `json:"severity"`
-	Evidence            []Evidence             `json:"evidence"`
-	Context             map[string]interface{} `json:"context"`
+	PatternID   string                 `json:"pattern_id"`
+	PatternName string                 `json:"pattern_name"`
+	Technique   string                 `json:"technique"`
+	Confidence  float64                `json:"confidence"`
+	Severity    types.Severity         `json:"severity"`
+	Evidence    []Evidence             `json:"evidence"`
+	Context     map[string]interface{} `json:"context"`
 }
 
 // Evidence represents detection evidence
 type Evidence struct {
-	EvidenceType        string                 `json:"evidence_type"`
-	Description         string                 `json:"description"`
-	Confidence          float64                `json:"confidence"`
-	Data                map[string]interface{} `json:"data"`
+	EvidenceType string                 `json:"evidence_type"`
+	Description  string                 `json:"description"`
+	Confidence   float64                `json:"confidence"`
+	Data         map[string]interface{} `json:"data"`
 }
 
 // MLPrediction represents machine learning predictions
 type MLPrediction struct {
-	PredictionID        string                 `json:"prediction_id"`
-	ModelType           string                 `json:"model_type"`
-	PredictedClass      string                 `json:"predicted_class"`
-	Confidence          float64                `json:"confidence"`
-	FeatureImportance   map[string]float64     `json:"feature_importance"`
-	Uncertainty         float64                `json:"uncertainty"`
+	PredictionID      string             `json:"prediction_id"`
+	ModelType         string             `json:"model_type"`
+	PredictedClass    string             `json:"predicted_class"`
+	Confidence        float64            `json:"confidence"`
+	FeatureImportance map[string]float64 `json:"feature_importance"`
+	Uncertainty       float64            `json:"uncertainty"`
 }
 
 // ContextualFinding represents contextual analysis findings
 type ContextualFinding struct {
-	FindingID           string                 `json:"finding_id"`
-	ContextType         string                 `json:"context_type"`
-	Description         string                 `json:"description"`
-	Confidence          float64                `json:"confidence"`
-	SemanticMatch       float64                `json:"semantic_match"`
-	Dependencies        []string               `json:"dependencies"`
+	FindingID     string   `json:"finding_id"`
+	ContextType   string   `json:"context_type"`
+	Description   string   `json:"description"`
+	Confidence    float64  `json:"confidence"`
+	SemanticMatch float64  `json:"semantic_match"`
+	Dependencies  []string `json:"dependencies"`
 }
 
 // FrequencyAnomaly represents frequency domain anomalies
 type FrequencyAnomaly struct {
-	AnomalyID           string                 `json:"anomaly_id"`
-	FrequencyBand       string                 `json:"frequency_band"`
-	AnomalyType         string                 `json:"anomaly_type"`
-	Deviation           float64                `json:"deviation"`
-	Significance        float64                `json:"significance"`
-	SpectralFeatures    map[string]float64     `json:"spectral_features"`
+	AnomalyID        string             `json:"anomaly_id"`
+	FrequencyBand    string             `json:"frequency_band"`
+	AnomalyType      string             `json:"anomaly_type"`
+	Deviation        float64            `json:"deviation"`
+	Significance     float64            `json:"significance"`
+	SpectralFeatures map[string]float64 `json:"spectral_features"`
 }
 
 // EntropyAnomaly represents entropy-based anomalies
 type EntropyAnomaly struct {
-	AnomalyID           string                 `json:"anomaly_id"`
-	EntropyType         string                 `json:"entropy_type"`
-	ExpectedEntropy     float64                `json:"expected_entropy"`
-	ObservedEntropy     float64                `json:"observed_entropy"`
-	Deviation           float64                `json:"deviation"`
-	CompressionRatio    float64                `json:"compression_ratio"`
-	Significance        float64                `json:"significance"`
+	AnomalyID        string  `json:"anomaly_id"`
+	EntropyType      string  `json:"entropy_type"`
+	ExpectedEntropy  float64 `json:"expected_entropy"`
+	ObservedEntropy  float64 `json:"observed_entropy"`
+	Deviation        float64 `json:"deviation"`
+	CompressionRatio float64 `json:"compression_ratio"`
+	Significance     float64 `json:"significance"`
 }
 
 // NewEnhancedPatternRecognizer creates a new enhanced pattern recognizer
@@ -255,9 +255,9 @@ func NewEnhancedPatternRecognizer() *EnhancedPatternRecognizer {
 		frequencyAnalyzers:  make(map[string]*FrequencyAnalyzer),
 		entropyDetectors:    make(map[string]*EntropyDetector),
 		adaptiveThresholds:  make(map[string]*AdaptiveThreshold),
-		lastUpdate:         time.Now(),
-		learningEnabled:    true,
-		sensitivityLevel:   0.95,
+		lastUpdate:          time.Now(),
+		learningEnabled:     true,
+		sensitivityLevel:    0.95,
 	}
 
 	// Initialize default patterns and analyzers
@@ -277,7 +277,7 @@ func (epr *EnhancedPatternRecognizer) AnalyzeAdvancedPatterns(ctx context.Contex
 	defer epr.mu.Unlock()
 
 	result := &EnhancedDetectionResult{
-		DetectionID:         epr.generateDetectionID(),
+		DetectionID:        epr.generateDetectionID(),
 		Timestamp:          time.Now(),
 		DetectedPatterns:   make([]DetectedPattern, 0),
 		MLPredictions:      make([]MLPrediction, 0),

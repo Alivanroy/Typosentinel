@@ -52,16 +52,16 @@ type ThreatResult struct {
 
 // ScanSummary represents a scan summary for dashboard
 type ScanSummary struct {
-	ID           string                   `json:"id"`
-	PackageName  string                   `json:"package_name"`
-	Registry     string                   `json:"registry"`
-	Status       string                   `json:"status"`
-	RiskLevel    string                   `json:"risk_level"`
-	ThreatCount  int                      `json:"threat_count"`
-	Duration     int64                    `json:"duration"`
-	StartedAt    time.Time                `json:"started_at"`
-	CompletedAt  *time.Time               `json:"completed_at"`
-	Threats      []map[string]interface{} `json:"threats,omitempty"`
+	ID          string                   `json:"id"`
+	PackageName string                   `json:"package_name"`
+	Registry    string                   `json:"registry"`
+	Status      string                   `json:"status"`
+	RiskLevel   string                   `json:"risk_level"`
+	ThreatCount int                      `json:"threat_count"`
+	Duration    int64                    `json:"duration"`
+	StartedAt   time.Time                `json:"started_at"`
+	CompletedAt *time.Time               `json:"completed_at"`
+	Threats     []map[string]interface{} `json:"threats,omitempty"`
 }
 
 // NewOSSService creates a new OSS database service with PostgreSQL or SQLite
@@ -112,7 +112,7 @@ func NewOSSService(dbConfig *config.DatabaseConfig) (*OSSService, error) {
 // initSchema creates the database tables if they don't exist
 func (s *OSSService) initSchema() error {
 	var scanTableSQL string
-	
+
 	// Create package_scans table with database-specific syntax
 	if s.config.Type == "sqlite" {
 		scanTableSQL = `
@@ -381,7 +381,7 @@ func (s *OSSService) GetRecentScans(ctx context.Context, limit int) ([]*ScanSumm
 		if completedAt.Valid {
 			scan.CompletedAt = &completedAt.Time
 		}
-		
+
 		// Parse threats JSON
 		if threatsJSON.Valid && threatsJSON.String != "" {
 			var threats []map[string]interface{}

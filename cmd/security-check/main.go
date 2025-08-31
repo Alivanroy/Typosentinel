@@ -32,7 +32,7 @@ func main() {
 		fmt.Println("✅ Production security configuration is valid!")
 	} else {
 		fmt.Println("⚠️  Development environment detected - running basic checks...")
-		
+
 		// Basic checks for development
 		jwtSecret := os.Getenv("TYPOSENTINEL_JWT_SECRET")
 		if jwtSecret != "" {
@@ -68,7 +68,7 @@ func main() {
 	// Generate sample secure configuration
 	fmt.Println("\n🔧 Sample Secure Configuration:")
 	fmt.Println("===============================")
-	
+
 	jwtSecret, err := validator.GenerateSecureSecret(32)
 	if err != nil {
 		log.Printf("Failed to generate JWT secret: %v", err)

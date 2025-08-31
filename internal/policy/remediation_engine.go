@@ -19,58 +19,58 @@ type RemediationEngine interface {
 
 // RemediationResult represents the result of a remediation action
 type RemediationResult struct {
-	ID          string    `json:"id"`
-	Status      string    `json:"status"`
-	Message     string    `json:"message"`
-	Completed   bool      `json:"completed"`
-	CompletedAt time.Time `json:"completed_at"`
-	Error       string    `json:"error,omitempty"`
+	ID          string                 `json:"id"`
+	Status      string                 `json:"status"`
+	Message     string                 `json:"message"`
+	Completed   bool                   `json:"completed"`
+	CompletedAt time.Time              `json:"completed_at"`
+	Error       string                 `json:"error,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // RemediationStatus represents the current status of a remediation
 type RemediationStatus struct {
-	ID          string    `json:"id"`
-	Status      string    `json:"status"`
-	Progress    float64   `json:"progress"`
-	StartedAt   time.Time `json:"started_at"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Error       string    `json:"error,omitempty"`
+	ID          string            `json:"id"`
+	Status      string            `json:"status"`
+	Progress    float64           `json:"progress"`
+	StartedAt   time.Time         `json:"started_at"`
+	CompletedAt *time.Time        `json:"completed_at,omitempty"`
+	Error       string            `json:"error,omitempty"`
 	Steps       []RemediationStep `json:"steps"`
 }
 
 // RemediationStep represents a step in the remediation process
 type RemediationStep struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	StartedAt   *time.Time `json:"started_at,omitempty"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Error       string    `json:"error,omitempty"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Status      string                 `json:"status"`
+	StartedAt   *time.Time             `json:"started_at,omitempty"`
+	CompletedAt *time.Time             `json:"completed_at,omitempty"`
+	Error       string                 `json:"error,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // DefaultRemediationEngine provides a default implementation
 type DefaultRemediationEngine struct {
-	config            *RemediationConfig
-	activeRemediations map[string]*RemediationStatus
+	config              *RemediationConfig
+	activeRemediations  map[string]*RemediationStatus
 	notificationService NotificationService
-	auditLogger        AuditLogger
+	auditLogger         AuditLogger
 }
 
 // RemediationConfig contains configuration for the remediation engine
 type RemediationConfig struct {
-	Enabled                bool          `json:"enabled"`
-	Timeout                time.Duration `json:"timeout"`
-	MaxConcurrentActions   int           `json:"max_concurrent_actions"`
-	RetryAttempts          int           `json:"retry_attempts"`
-	RetryDelay             time.Duration `json:"retry_delay"`
-	SupportedActions       []string      `json:"supported_actions"`
-	RequireApproval        bool          `json:"require_approval"`
-	ApprovalTimeout        time.Duration `json:"approval_timeout"`
-	NotificationChannels   []string      `json:"notification_channels"`
-	AuditEnabled           bool          `json:"audit_enabled"`
+	Enabled              bool          `json:"enabled"`
+	Timeout              time.Duration `json:"timeout"`
+	MaxConcurrentActions int           `json:"max_concurrent_actions"`
+	RetryAttempts        int           `json:"retry_attempts"`
+	RetryDelay           time.Duration `json:"retry_delay"`
+	SupportedActions     []string      `json:"supported_actions"`
+	RequireApproval      bool          `json:"require_approval"`
+	ApprovalTimeout      time.Duration `json:"approval_timeout"`
+	NotificationChannels []string      `json:"notification_channels"`
+	AuditEnabled         bool          `json:"audit_enabled"`
 }
 
 // NewDefaultRemediationEngine creates a new default remediation engine
@@ -233,7 +233,7 @@ func (e *DefaultRemediationEngine) executeRemediationByType(ctx context.Context,
 func (e *DefaultRemediationEngine) executeBlockRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	// Simulate blocking action
 	e.updateStepStatus(status, "block_deployment", "running")
-	
+
 	// Simulate some processing time
 	select {
 	case <-time.After(2 * time.Second):
@@ -246,7 +246,7 @@ func (e *DefaultRemediationEngine) executeBlockRemediation(ctx context.Context, 
 	status.Progress = 0.5
 
 	e.updateStepStatus(status, "notify_stakeholders", "running")
-	
+
 	// Simulate notification
 	select {
 	case <-time.After(1 * time.Second):
@@ -275,7 +275,7 @@ func (e *DefaultRemediationEngine) executeBlockRemediation(ctx context.Context, 
 func (e *DefaultRemediationEngine) executeQuarantineRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	// Simulate quarantine action
 	e.updateStepStatus(status, "isolate_package", "running")
-	
+
 	select {
 	case <-time.After(3 * time.Second):
 		// Continue
@@ -287,7 +287,7 @@ func (e *DefaultRemediationEngine) executeQuarantineRemediation(ctx context.Cont
 	status.Progress = 0.7
 
 	e.updateStepStatus(status, "update_access_controls", "running")
-	
+
 	select {
 	case <-time.After(1 * time.Second):
 		// Continue
@@ -316,7 +316,7 @@ func (e *DefaultRemediationEngine) executeQuarantineRemediation(ctx context.Cont
 func (e *DefaultRemediationEngine) executeNotifyRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	// Simulate notification action
 	e.updateStepStatus(status, "send_notifications", "running")
-	
+
 	select {
 	case <-time.After(1 * time.Second):
 		// Continue
@@ -334,7 +334,7 @@ func (e *DefaultRemediationEngine) executeNotifyRemediation(ctx context.Context,
 		Completed:   true,
 		CompletedAt: time.Now(),
 		Metadata: map[string]interface{}{
-			"action_type":      "notify",
+			"action_type":        "notify",
 			"notifications_sent": time.Now(),
 		},
 	}, nil
@@ -344,7 +344,7 @@ func (e *DefaultRemediationEngine) executeNotifyRemediation(ctx context.Context,
 func (e *DefaultRemediationEngine) executeRemoveRemediation(ctx context.Context, violation *auth.PolicyViolation, status *RemediationStatus) (*RemediationResult, error) {
 	// Simulate remove action
 	e.updateStepStatus(status, "backup_package", "running")
-	
+
 	select {
 	case <-time.After(2 * time.Second):
 		// Continue
@@ -356,7 +356,7 @@ func (e *DefaultRemediationEngine) executeRemoveRemediation(ctx context.Context,
 	status.Progress = 0.3
 
 	e.updateStepStatus(status, "remove_package", "running")
-	
+
 	select {
 	case <-time.After(2 * time.Second):
 		// Continue
@@ -368,7 +368,7 @@ func (e *DefaultRemediationEngine) executeRemoveRemediation(ctx context.Context,
 	status.Progress = 0.8
 
 	e.updateStepStatus(status, "update_dependencies", "running")
-	
+
 	select {
 	case <-time.After(1 * time.Second):
 		// Continue
@@ -386,8 +386,8 @@ func (e *DefaultRemediationEngine) executeRemoveRemediation(ctx context.Context,
 		Completed:   true,
 		CompletedAt: time.Now(),
 		Metadata: map[string]interface{}{
-			"action_type": "remove",
-			"removed_at":  time.Now(),
+			"action_type":     "remove",
+			"removed_at":      time.Now(),
 			"backup_location": "/backups/packages",
 		},
 	}, nil

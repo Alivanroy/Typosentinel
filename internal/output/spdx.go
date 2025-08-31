@@ -19,28 +19,28 @@ type SPDXFormatter struct {
 
 // SPDXDocument represents an SPDX document
 type SPDXDocument struct {
-	SPDXVersion       string              `json:"spdxVersion"`
-	DataLicense       string              `json:"dataLicense"`
-	SPDXID            string              `json:"SPDXID"`
-	DocumentName      string              `json:"documentName"`
-	DocumentNamespace string              `json:"documentNamespace"`
-	CreationInfo      SPDXCreationInfo    `json:"creationInfo"`
-	Packages          []SPDXPackage       `json:"packages"`
-	Relationships     []SPDXRelationship  `json:"relationships"`
-	Annotations       []SPDXAnnotation    `json:"annotations,omitempty"`
+	SPDXVersion       string             `json:"spdxVersion"`
+	DataLicense       string             `json:"dataLicense"`
+	SPDXID            string             `json:"SPDXID"`
+	DocumentName      string             `json:"documentName"`
+	DocumentNamespace string             `json:"documentNamespace"`
+	CreationInfo      SPDXCreationInfo   `json:"creationInfo"`
+	Packages          []SPDXPackage      `json:"packages"`
+	Relationships     []SPDXRelationship `json:"relationships"`
+	Annotations       []SPDXAnnotation   `json:"annotations,omitempty"`
 	// Enterprise extensions
-	EnterpriseInfo    *SPDXEnterpriseInfo `json:"enterpriseInfo,omitempty"`
+	EnterpriseInfo *SPDXEnterpriseInfo `json:"enterpriseInfo,omitempty"`
 }
 
 // SPDXEnterpriseInfo contains enterprise-specific metadata
 type SPDXEnterpriseInfo struct {
-	OrganizationID       string                    `json:"organizationId,omitempty"`
-	TenantID             string                    `json:"tenantId,omitempty"`
-	ScanPolicy           *SPDXScanPolicy           `json:"scanPolicy,omitempty"`
-	ComplianceFrameworks []string                  `json:"complianceFrameworks,omitempty"`
-	RiskAssessment       *SPDXRiskAssessment       `json:"riskAssessment,omitempty"`
-	AuditInfo            *SPDXAuditInfo            `json:"auditInfo,omitempty"`
-	ScanContext          *SPDXScanContext          `json:"scanContext,omitempty"`
+	OrganizationID       string              `json:"organizationId,omitempty"`
+	TenantID             string              `json:"tenantId,omitempty"`
+	ScanPolicy           *SPDXScanPolicy     `json:"scanPolicy,omitempty"`
+	ComplianceFrameworks []string            `json:"complianceFrameworks,omitempty"`
+	RiskAssessment       *SPDXRiskAssessment `json:"riskAssessment,omitempty"`
+	AuditInfo            *SPDXAuditInfo      `json:"auditInfo,omitempty"`
+	ScanContext          *SPDXScanContext    `json:"scanContext,omitempty"`
 }
 
 // SPDXScanPolicy represents the scan policy used
@@ -91,22 +91,22 @@ type SPDXCreationInfo struct {
 
 // SPDXPackage represents a software package
 type SPDXPackage struct {
-	SPDXID               string                    `json:"SPDXID"`
-	Name                 string                    `json:"name"`
-	DownloadLocation     string                    `json:"downloadLocation"`
-	FilesAnalyzed        bool                      `json:"filesAnalyzed"`
-	LicenseConcluded     string                    `json:"licenseConcluded"`
-	LicenseDeclared      string                    `json:"licenseDeclared"`
-	CopyrightText        string                    `json:"copyrightText"`
-	VersionInfo          string                    `json:"versionInfo,omitempty"`
-	Supplier             string                    `json:"supplier,omitempty"`
-	Originator           string                    `json:"originator,omitempty"`
-	Homepage             string                    `json:"homepage,omitempty"`
-	Description          string                    `json:"description,omitempty"`
-	ExternalRefs         []SPDXExternalRef         `json:"externalRefs,omitempty"`
-	AttributionTexts     []string                  `json:"attributionTexts,omitempty"`
-	Annotations          []SPDXAnnotation          `json:"annotations,omitempty"`
-	SecurityVulnerabilities []SPDXVulnerability    `json:"securityVulnerabilities,omitempty"`
+	SPDXID                  string              `json:"SPDXID"`
+	Name                    string              `json:"name"`
+	DownloadLocation        string              `json:"downloadLocation"`
+	FilesAnalyzed           bool                `json:"filesAnalyzed"`
+	LicenseConcluded        string              `json:"licenseConcluded"`
+	LicenseDeclared         string              `json:"licenseDeclared"`
+	CopyrightText           string              `json:"copyrightText"`
+	VersionInfo             string              `json:"versionInfo,omitempty"`
+	Supplier                string              `json:"supplier,omitempty"`
+	Originator              string              `json:"originator,omitempty"`
+	Homepage                string              `json:"homepage,omitempty"`
+	Description             string              `json:"description,omitempty"`
+	ExternalRefs            []SPDXExternalRef   `json:"externalRefs,omitempty"`
+	AttributionTexts        []string            `json:"attributionTexts,omitempty"`
+	Annotations             []SPDXAnnotation    `json:"annotations,omitempty"`
+	SecurityVulnerabilities []SPDXVulnerability `json:"securityVulnerabilities,omitempty"`
 }
 
 // SPDXExternalRef represents an external reference
@@ -127,9 +127,9 @@ type SPDXRelationship struct {
 
 // SPDXAnnotation represents an annotation
 type SPDXAnnotation struct {
-	AnnotationType string `json:"annotationType"`
-	Annotator      string `json:"annotator"`
-	AnnotationDate string `json:"annotationDate"`
+	AnnotationType    string `json:"annotationType"`
+	Annotator         string `json:"annotator"`
+	AnnotationDate    string `json:"annotationDate"`
 	AnnotationComment string `json:"annotationComment"`
 }
 
@@ -186,12 +186,12 @@ func (f *SPDXFormatter) createSPDXDocument(results *scanner.ScanResults) *SPDXDo
 		DocumentName:      "Typosentinel Security Scan",
 		DocumentNamespace: documentNamespace,
 		CreationInfo: SPDXCreationInfo{
-			Created:  now,
-			Creators: []string{"Tool: Typosentinel"},
+			Created:            now,
+			Creators:           []string{"Tool: Typosentinel"},
 			LicenseListVersion: "3.19",
 		},
-		Packages:      f.createPackages(results),
-		Relationships: f.createRelationships(results),
+		Packages:       f.createPackages(results),
+		Relationships:  f.createRelationships(results),
 		EnterpriseInfo: f.EnterpriseInfo,
 	}
 
@@ -318,20 +318,20 @@ func (f *SPDXFormatter) createPackageURLFromResult(result scanner.ScanResult) st
 	// Basic PURL format: pkg:type/namespace/name@version
 	pkgType := "generic"
 	switch result.Package.Registry {
-		case "npm":
-			pkgType = "npm"
-		case "pypi":
-			pkgType = "pypi"
-		case "maven":
-			pkgType = "maven"
-		case "nuget":
-			pkgType = "nuget"
-		case "gem":
-			pkgType = "gem"
-		case "cargo":
-			pkgType = "cargo"
-		case "go":
-			pkgType = "golang"
+	case "npm":
+		pkgType = "npm"
+	case "pypi":
+		pkgType = "pypi"
+	case "maven":
+		pkgType = "maven"
+	case "nuget":
+		pkgType = "nuget"
+	case "gem":
+		pkgType = "gem"
+	case "cargo":
+		pkgType = "cargo"
+	case "go":
+		pkgType = "golang"
 	}
 
 	purl := fmt.Sprintf("pkg:%s/%s", pkgType, result.Package.Name)
@@ -341,8 +341,6 @@ func (f *SPDXFormatter) createPackageURLFromResult(result scanner.ScanResult) st
 
 	return purl
 }
-
-
 
 // sanitizeID sanitizes a string for use as an SPDX ID
 func (f *SPDXFormatter) sanitizeID(s string) string {

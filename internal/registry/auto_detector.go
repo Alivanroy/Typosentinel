@@ -43,7 +43,7 @@ func (ad *AutoDetector) DetectProjectType(projectPath string) (*scanner.ProjectI
 			fmt.Printf("Debug: %s detector failed for %s: %v\n", projectType, projectPath, err)
 		}
 	}
-	
+
 	return nil, fmt.Errorf("no supported project type detected in %s", projectPath)
 }
 
@@ -53,13 +53,13 @@ func (ad *AutoDetector) DetectAndCreateConnector(projectPath string) (Connector,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Map project type to registry type
 	registryType := ad.mapProjectTypeToRegistry(projectInfo.Type)
 	if registryType == "" {
 		return nil, fmt.Errorf("unsupported project type: %s", projectInfo.Type)
 	}
-	
+
 	// Create connector using factory
 	return ad.factory.CreateConnectorFromType(registryType)
 }
@@ -67,12 +67,12 @@ func (ad *AutoDetector) DetectAndCreateConnector(projectPath string) (Connector,
 // DetectAllProjectTypes scans a directory and detects all project types
 func (ad *AutoDetector) DetectAllProjectTypes(rootPath string) ([]*scanner.ProjectInfo, error) {
 	var projects []*scanner.ProjectInfo
-	
+
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Continue walking despite errors
 		}
-		
+
 		// Skip hidden directories and common non-project directories
 		if info.IsDir() {
 			dirName := filepath.Base(path)
@@ -86,7 +86,7 @@ func (ad *AutoDetector) DetectAllProjectTypes(rootPath string) ([]*scanner.Proje
 				dirName == ".git" {
 				return filepath.SkipDir
 			}
-			
+
 			// Try to detect project in this directory
 			if projectInfo, err := ad.DetectProjectType(path); err == nil {
 				projects = append(projects, projectInfo)
@@ -94,31 +94,31 @@ func (ad *AutoDetector) DetectAllProjectTypes(rootPath string) ([]*scanner.Proje
 				return filepath.SkipDir
 			}
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk directory tree: %w", err)
 	}
-	
+
 	if len(projects) == 0 {
 		return nil, fmt.Errorf("no supported projects found in %s", rootPath)
 	}
-	
+
 	return projects, nil
 }
 
 // CreateConnectorsForProjects creates registry connectors for multiple detected projects
 func (ad *AutoDetector) CreateConnectorsForProjects(projects []*scanner.ProjectInfo) (map[string]Connector, error) {
 	connectors := make(map[string]Connector)
-	
+
 	for _, project := range projects {
 		registryType := ad.mapProjectTypeToRegistry(project.Type)
 		if registryType == "" {
 			continue // Skip unsupported project types
 		}
-		
+
 		// Create connector if not already created
 		if _, exists := connectors[registryType]; !exists {
 			connector, err := ad.factory.CreateConnectorFromType(registryType)
@@ -128,7 +128,7 @@ func (ad *AutoDetector) CreateConnectorsForProjects(projects []*scanner.ProjectI
 			connectors[registryType] = connector
 		}
 	}
-	
+
 	return connectors, nil
 }
 
@@ -168,7 +168,7 @@ func (ad *AutoDetector) GetSupportedProjectTypes() []string {
 // GetRegistryForManifestFile determines registry type from manifest file name
 func (ad *AutoDetector) GetRegistryForManifestFile(manifestFile string) string {
 	filename := filepath.Base(manifestFile)
-	
+
 	switch filename {
 	case "package.json", "package-lock.json", "yarn.lock":
 		return "npm"
@@ -196,29 +196,29 @@ func (ad *AutoDetector) GetRegistryForManifestFile(manifestFile string) string {
 // ScanForManifestFiles scans a directory for manifest files and returns registry types
 func (ad *AutoDetector) ScanForManifestFiles(rootPath string) (map[string][]string, error) {
 	registryFiles := make(map[string][]string)
-	
+
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Continue walking despite errors
 		}
-		
+
 		// Skip directories and hidden files
 		if info.IsDir() || strings.HasPrefix(info.Name(), ".") {
 			return nil
 		}
-		
+
 		// Check if this is a manifest file
 		registryType := ad.GetRegistryForManifestFile(path)
 		if registryType != "" {
 			registryFiles[registryType] = append(registryFiles[registryType], path)
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan for manifest files: %w", err)
 	}
-	
+
 	return registryFiles, nil
 }

@@ -10,37 +10,18 @@ import (
 	"time"
 )
 
-// AdvancedFeatureExtractor implements sophisticated feature extraction for ML models
-type AdvancedFeatureExtractor struct {
-	config              *config.Config
-	popularPackages     map[string][]string // Registry -> package names
-	suspiciousKeywords  []string
-	domainReputations   map[string]float64
-	licenseScores       map[string]float64
-	normalizationParams *NormalizationParams
-}
+// AdvancedFeatureExtractor type defined in advanced_feature_extractor.go
 
-// NormalizationParams contains parameters for feature normalization
-type NormalizationParams struct {
-	Means   []float64 `json:"means"`
-	StdDevs []float64 `json:"std_devs"`
-	Mins    []float64 `json:"mins"`
-	Maxs    []float64 `json:"maxs"`
-}
+// NormalizationParams type defined in advanced_feature_extractor.go
 
-// NewAdvancedFeatureExtractor creates a new advanced feature extractor
-func NewAdvancedFeatureExtractor() *AdvancedFeatureExtractor {
-	return &AdvancedFeatureExtractor{
-		popularPackages:     make(map[string][]string),
-		domainReputations:   make(map[string]float64),
-		licenseScores:       make(map[string]float64),
-		normalizationParams: &NormalizationParams{},
-	}
-}
+// NewAdvancedFeatureExtractor function defined in advanced_feature_extractor.go
 
 // Initialize initializes the feature extractor with configuration and data
 func (e *AdvancedFeatureExtractor) Initialize(config *config.Config) error {
-	e.config = config
+	// Use default feature extraction config since we're getting a different config type
+	if e.config == nil {
+		e.config = DefaultFeatureExtractionConfig()
+	}
 
 	// Initialize popular packages lists
 	e.initializePopularPackages()
@@ -61,84 +42,9 @@ func (e *AdvancedFeatureExtractor) Initialize(config *config.Config) error {
 	return nil
 }
 
-// ExtractFeatures extracts comprehensive features from a package
-func (e *AdvancedFeatureExtractor) ExtractFeatures(pkg *types.Package) (*PackageFeatures, error) {
-	logger.TraceFunction("AdvancedFeatureExtractor.ExtractFeatures")
+// ExtractFeatures method moved to advanced_feature_extractor.go to avoid duplication
 
-	features := &PackageFeatures{
-		Registry:    pkg.Registry,
-		PackageType: pkg.Type,
-	}
-
-	// Extract basic package features
-	e.extractBasicFeatures(pkg, features)
-
-	// Extract reputation features
-	e.extractReputationFeatures(pkg, features)
-
-	// Extract security features
-	e.extractSecurityFeatures(pkg, features)
-
-	// Extract behavioral features
-	e.extractBehavioralFeatures(pkg, features)
-
-	return features, nil
-}
-
-// GetFeatureNames returns the names of all extracted features
-func (e *AdvancedFeatureExtractor) GetFeatureNames() []string {
-	return []string{
-		"name_length",
-		"version_complexity",
-		"description_length",
-		"dependency_count",
-		"download_count",
-		"star_count",
-		"fork_count",
-		"contributor_count",
-		"age_in_days",
-		"typosquatting_score",
-		"suspicious_keywords",
-		"version_spoofing",
-		"domain_reputation",
-		"update_frequency",
-		"maintainer_count",
-		"issue_count",
-		"license_score",
-	}
-}
-
-// NormalizeFeatures normalizes features for ML model input
-func (e *AdvancedFeatureExtractor) NormalizeFeatures(features *PackageFeatures) []float64 {
-	// Convert features to slice
-	rawFeatures := []float64{
-		float64(features.NameLength),
-		features.VersionComplexity,
-		float64(features.DescriptionLength),
-		float64(features.DependencyCount),
-		float64(features.DownloadCount),
-		float64(features.StarCount),
-		float64(features.ForkCount),
-		float64(features.ContributorCount),
-		float64(features.AgeInDays),
-		features.TyposquattingScore,
-		float64(features.SuspiciousKeywords),
-		features.VersionSpoofing,
-		features.DomainReputation,
-		features.UpdateFrequency,
-		float64(features.MaintainerCount),
-		float64(features.IssueCount),
-		features.LicenseScore,
-	}
-
-	// Apply normalization
-	normalized := make([]float64, len(rawFeatures))
-	for i, value := range rawFeatures {
-		normalized[i] = e.normalizeValue(value, i)
-	}
-
-	return normalized
-}
+// GetFeatureNames and NormalizeFeatures methods are implemented in advanced_feature_extractor.go
 
 // extractBasicFeatures extracts basic package characteristics
 func (e *AdvancedFeatureExtractor) extractBasicFeatures(pkg *types.Package, features *PackageFeatures) {
@@ -198,19 +104,7 @@ func (e *AdvancedFeatureExtractor) extractReputationFeatures(pkg *types.Package,
 }
 
 // extractSecurityFeatures extracts security-related features
-func (e *AdvancedFeatureExtractor) extractSecurityFeatures(pkg *types.Package, features *PackageFeatures) {
-	// Typosquatting score
-	features.TyposquattingScore = e.calculateTyposquattingScore(pkg.Name, pkg.Registry)
-
-	// Suspicious keywords score
-	features.SuspiciousKeywords = int(e.calculateSuspiciousKeywordsScore(pkg))
-
-	// Version spoofing score
-	features.VersionSpoofing = e.calculateVersionSpoofingScore(pkg.Version)
-
-	// Domain reputation score
-	features.DomainReputation = e.calculateDomainReputationScore(pkg.Name)
-}
+// extractSecurityFeatures method moved to advanced_feature_extractor.go for comprehensive security analysis
 
 // extractBehavioralFeatures extracts behavioral features
 func (e *AdvancedFeatureExtractor) extractBehavioralFeatures(pkg *types.Package, features *PackageFeatures) {

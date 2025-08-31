@@ -63,16 +63,16 @@ type SSOManager struct {
 
 // SSOSession represents an active SSO session
 type SSOSession struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"user_id"`
-	Provider    string    `json:"provider"`
-	Token       *SSOToken `json:"token"`
-	User        *SSOUser  `json:"user"`
-	CreatedAt   time.Time `json:"created_at"`
-	LastAccess  time.Time `json:"last_access"`
-	ExpiresAt   time.Time `json:"expires_at"`
-	IPAddress   string    `json:"ip_address"`
-	UserAgent   string    `json:"user_agent"`
+	ID         string    `json:"id"`
+	UserID     string    `json:"user_id"`
+	Provider   string    `json:"provider"`
+	Token      *SSOToken `json:"token"`
+	User       *SSOUser  `json:"user"`
+	CreatedAt  time.Time `json:"created_at"`
+	LastAccess time.Time `json:"last_access"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	IPAddress  string    `json:"ip_address"`
+	UserAgent  string    `json:"user_agent"`
 }
 
 // SSOConfig contains SSO configuration
@@ -85,20 +85,20 @@ type SSOConfig struct {
 
 // SSOSessionConfig configures SSO sessions
 type SSOSessionConfig struct {
-	Timeout        time.Duration `json:"timeout" yaml:"timeout"`
-	RefreshWindow  time.Duration `json:"refresh_window" yaml:"refresh_window"`
+	Timeout         time.Duration `json:"timeout" yaml:"timeout"`
+	RefreshWindow   time.Duration `json:"refresh_window" yaml:"refresh_window"`
 	CleanupInterval time.Duration `json:"cleanup_interval" yaml:"cleanup_interval"`
-	SecureCookies  bool          `json:"secure_cookies" yaml:"secure_cookies"`
-	SameSite       string        `json:"same_site" yaml:"same_site"`
+	SecureCookies   bool          `json:"secure_cookies" yaml:"secure_cookies"`
+	SameSite        string        `json:"same_site" yaml:"same_site"`
 }
 
 // SSOSecurityConfig configures SSO security settings
 type SSOSecurityConfig struct {
-	StateTimeout    time.Duration `json:"state_timeout" yaml:"state_timeout"`
-	CSRFProtection  bool          `json:"csrf_protection" yaml:"csrf_protection"`
-	AllowedDomains  []string      `json:"allowed_domains" yaml:"allowed_domains"`
-	RequireHTTPS    bool          `json:"require_https" yaml:"require_https"`
-	TrustedProxies  []string      `json:"trusted_proxies" yaml:"trusted_proxies"`
+	StateTimeout   time.Duration `json:"state_timeout" yaml:"state_timeout"`
+	CSRFProtection bool          `json:"csrf_protection" yaml:"csrf_protection"`
+	AllowedDomains []string      `json:"allowed_domains" yaml:"allowed_domains"`
+	RequireHTTPS   bool          `json:"require_https" yaml:"require_https"`
+	TrustedProxies []string      `json:"trusted_proxies" yaml:"trusted_proxies"`
 }
 
 // NewSSOManager creates a new SSO manager

@@ -61,9 +61,9 @@ type ThreatInfo struct {
 // EventMetadata contains additional metadata about the event
 type EventMetadata struct {
 	DetectionMethod string            `json:"detection_method"`
-	Tags           []string          `json:"tags,omitempty"`
-	CustomFields   map[string]string `json:"custom_fields,omitempty"`
-	CorrelationID  string            `json:"correlation_id,omitempty"`
+	Tags            []string          `json:"tags,omitempty"`
+	CustomFields    map[string]string `json:"custom_fields,omitempty"`
+	CorrelationID   string            `json:"correlation_id,omitempty"`
 }
 
 // EventSubscriber defines the interface for event subscribers

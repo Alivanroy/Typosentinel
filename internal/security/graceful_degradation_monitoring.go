@@ -168,17 +168,17 @@ func (gdm *GracefulDegradationManager) GetSystemStatus() map[string]interface{} 
 	degradationLevel := gdm.GetDegradationLevel()
 
 	return map[string]interface{}{
-		"degradation_level":    degradationLevel,
-		"system_load":         metrics.SystemLoad,
-		"health_score":        metrics.HealthScore,
-		"load_shedding_rate":  metrics.LoadSheddingRate,
-		"fallback_rate":       metrics.FallbackRate,
-		"total_requests":      metrics.TotalRequests,
-		"dropped_requests":    metrics.DroppedRequests,
-		"fallback_requests":   metrics.FallbackRequests,
+		"degradation_level":     degradationLevel,
+		"system_load":           metrics.SystemLoad,
+		"health_score":          metrics.HealthScore,
+		"load_shedding_rate":    metrics.LoadSheddingRate,
+		"fallback_rate":         metrics.FallbackRate,
+		"total_requests":        metrics.TotalRequests,
+		"dropped_requests":      metrics.DroppedRequests,
+		"fallback_requests":     metrics.FallbackRequests,
 		"average_response_time": metrics.AverageResponseTime,
-		"cache_only_mode":     gdm.fallbackManager.cacheOnlyMode,
-		"reduced_features":    gdm.fallbackManager.reducedFeatures,
-		"last_updated":        metrics.LastUpdated,
+		"cache_only_mode":       gdm.fallbackManager.cacheOnlyMode,
+		"reduced_features":      gdm.fallbackManager.reducedFeatures,
+		"last_updated":          metrics.LastUpdated,
 	}
 }

@@ -13,37 +13,37 @@ import (
 
 // ComplianceReporter handles compliance reporting and assessment
 type ComplianceReporter struct {
-	config ComplianceConfig
-	logger *log.Logger
+	config    ComplianceConfig
+	logger    *log.Logger
 	standards map[string]*ComplianceStandard
 }
 
 // ComplianceConfig holds compliance reporting configuration
 type ComplianceConfig struct {
-	Enabled           bool                       `json:"enabled"`
-	Standards         []string                   `json:"standards"`         // SOX, PCI-DSS, HIPAA, etc.
-	ReportFormats     []string                   `json:"report_formats"`    // JSON, PDF, CSV, XML
-	OutputDirectory   string                     `json:"output_directory"`
-	Schedule          string                     `json:"schedule"`          // cron expression
-	RetentionDays     int                        `json:"retention_days"`
-	Notifications     []ComplianceNotification   `json:"notifications"`
-	CustomPolicies    []CompliancePolicy         `json:"custom_policies"`
-	Thresholds        ComplianceThresholds       `json:"thresholds"`
-	IncludeMetadata   bool                       `json:"include_metadata"`
-	EncryptReports    bool                       `json:"encrypt_reports"`
-	DigitalSignature  bool                       `json:"digital_signature"`
+	Enabled          bool                     `json:"enabled"`
+	Standards        []string                 `json:"standards"`      // SOX, PCI-DSS, HIPAA, etc.
+	ReportFormats    []string                 `json:"report_formats"` // JSON, PDF, CSV, XML
+	OutputDirectory  string                   `json:"output_directory"`
+	Schedule         string                   `json:"schedule"` // cron expression
+	RetentionDays    int                      `json:"retention_days"`
+	Notifications    []ComplianceNotification `json:"notifications"`
+	CustomPolicies   []CompliancePolicy       `json:"custom_policies"`
+	Thresholds       ComplianceThresholds     `json:"thresholds"`
+	IncludeMetadata  bool                     `json:"include_metadata"`
+	EncryptReports   bool                     `json:"encrypt_reports"`
+	DigitalSignature bool                     `json:"digital_signature"`
 }
 
 // ComplianceStandard defines a compliance standard
 type ComplianceStandard struct {
-	ID           string              `json:"id"`
-	Name         string              `json:"name"`
-	Version      string              `json:"version"`
-	Description  string              `json:"description"`
+	ID           string                  `json:"id"`
+	Name         string                  `json:"name"`
+	Version      string                  `json:"version"`
+	Description  string                  `json:"description"`
 	Requirements []ComplianceRequirement `json:"requirements"`
-	Categories   []string            `json:"categories"`
-	Severity     string              `json:"severity"`
-	Mandatory    bool                `json:"mandatory"`
+	Categories   []string                `json:"categories"`
+	Severity     string                  `json:"severity"`
+	Mandatory    bool                    `json:"mandatory"`
 }
 
 // ComplianceRequirement defines a specific compliance requirement
@@ -60,29 +60,29 @@ type ComplianceRequirement struct {
 
 // ComplianceNotification defines notification settings
 type ComplianceNotification struct {
-	Type      string   `json:"type"`      // email, slack, webhook
-	Targets   []string `json:"targets"`
-	Events    []string `json:"events"`    // violation, report_generated, threshold_exceeded
-	Template  string   `json:"template"`
-	Enabled   bool     `json:"enabled"`
+	Type     string   `json:"type"` // email, slack, webhook
+	Targets  []string `json:"targets"`
+	Events   []string `json:"events"` // violation, report_generated, threshold_exceeded
+	Template string   `json:"template"`
+	Enabled  bool     `json:"enabled"`
 }
 
 // CompliancePolicy defines custom compliance policies
 type CompliancePolicy struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Rules       []ComplianceRule  `json:"rules"`
+	ID          string             `json:"id"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	Rules       []ComplianceRule   `json:"rules"`
 	Actions     []ComplianceAction `json:"actions"`
-	Enabled     bool              `json:"enabled"`
-	Priority    int               `json:"priority"`
+	Enabled     bool               `json:"enabled"`
+	Priority    int                `json:"priority"`
 }
 
 // ComplianceRule defines a compliance rule
 type ComplianceRule struct {
 	ID        string                 `json:"id"`
-	Type      string                 `json:"type"`      // threat_count, vulnerability_score, package_age
-	Operator  string                 `json:"operator"`  // gt, lt, eq, contains
+	Type      string                 `json:"type"`     // threat_count, vulnerability_score, package_age
+	Operator  string                 `json:"operator"` // gt, lt, eq, contains
 	Value     interface{}            `json:"value"`
 	Condition string                 `json:"condition"` // and, or
 	Metadata  map[string]interface{} `json:"metadata"`
@@ -90,7 +90,7 @@ type ComplianceRule struct {
 
 // ComplianceAction defines actions to take on rule violations
 type ComplianceAction struct {
-	Type       string                 `json:"type"`       // block, warn, notify, quarantine
+	Type       string                 `json:"type"` // block, warn, notify, quarantine
 	Parameters map[string]interface{} `json:"parameters"`
 	Enabled    bool                   `json:"enabled"`
 }
@@ -106,26 +106,26 @@ type ComplianceThresholds struct {
 
 // ComplianceReport represents a compliance assessment report
 type ComplianceReport struct {
-	ID               string                    `json:"id"`
-	Timestamp        time.Time                 `json:"timestamp"`
-	Standard         string                    `json:"standard"`
-	Version          string                    `json:"version"`
-	Scope            ComplianceScope           `json:"scope"`
-	Summary          ComplianceSummary         `json:"summary"`
-	Findings         []ComplianceFinding       `json:"findings"`
+	ID               string                     `json:"id"`
+	Timestamp        time.Time                  `json:"timestamp"`
+	Standard         string                     `json:"standard"`
+	Version          string                     `json:"version"`
+	Scope            ComplianceScope            `json:"scope"`
+	Summary          ComplianceSummary          `json:"summary"`
+	Findings         []ComplianceFinding        `json:"findings"`
 	Recommendations  []ComplianceRecommendation `json:"recommendations"`
-	Metadata         map[string]interface{}    `json:"metadata"`
-	GeneratedBy      string                    `json:"generated_by"`
-	ReportFormat     string                    `json:"report_format"`
-	DigitalSignature string                    `json:"digital_signature,omitempty"`
+	Metadata         map[string]interface{}     `json:"metadata"`
+	GeneratedBy      string                     `json:"generated_by"`
+	ReportFormat     string                     `json:"report_format"`
+	DigitalSignature string                     `json:"digital_signature,omitempty"`
 }
 
 // ComplianceScope defines the scope of compliance assessment
 type ComplianceScope struct {
-	Repositories []string  `json:"repositories"`
-	TimeRange    TimeRange `json:"time_range"`
-	Platforms    []string  `json:"platforms"`
-	Organizations []string `json:"organizations"`
+	Repositories  []string  `json:"repositories"`
+	TimeRange     TimeRange `json:"time_range"`
+	Platforms     []string  `json:"platforms"`
+	Organizations []string  `json:"organizations"`
 }
 
 // TimeRange defines a time range for compliance assessment
@@ -136,32 +136,32 @@ type TimeRange struct {
 
 // ComplianceSummary provides an overview of compliance status
 type ComplianceSummary struct {
-	OverallScore        float64 `json:"overall_score"`
-	ComplianceLevel     string  `json:"compliance_level"`
-	TotalRequirements   int     `json:"total_requirements"`
-	MetRequirements     int     `json:"met_requirements"`
-	FailedRequirements  int     `json:"failed_requirements"`
-	CriticalViolations  int     `json:"critical_violations"`
-	HighViolations      int     `json:"high_violations"`
-	MediumViolations    int     `json:"medium_violations"`
-	LowViolations       int     `json:"low_violations"`
-	TotalRepositories   int     `json:"total_repositories"`
-	CompliantRepositories int   `json:"compliant_repositories"`
-	RiskScore           float64 `json:"risk_score"`
+	OverallScore          float64 `json:"overall_score"`
+	ComplianceLevel       string  `json:"compliance_level"`
+	TotalRequirements     int     `json:"total_requirements"`
+	MetRequirements       int     `json:"met_requirements"`
+	FailedRequirements    int     `json:"failed_requirements"`
+	CriticalViolations    int     `json:"critical_violations"`
+	HighViolations        int     `json:"high_violations"`
+	MediumViolations      int     `json:"medium_violations"`
+	LowViolations         int     `json:"low_violations"`
+	TotalRepositories     int     `json:"total_repositories"`
+	CompliantRepositories int     `json:"compliant_repositories"`
+	RiskScore             float64 `json:"risk_score"`
 }
 
 // ComplianceFinding represents a compliance finding
 type ComplianceFinding struct {
-	ID           string                 `json:"id"`
-	RequirementID string                `json:"requirement_id"`
-	Repository   string                 `json:"repository"`
-	Severity     string                 `json:"severity"`
-	Status       string                 `json:"status"`
-	Description  string                 `json:"description"`
-	Evidence     []string               `json:"evidence"`
-	Remediation  string                 `json:"remediation"`
-	Timestamp    time.Time              `json:"timestamp"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	ID            string                 `json:"id"`
+	RequirementID string                 `json:"requirement_id"`
+	Repository    string                 `json:"repository"`
+	Severity      string                 `json:"severity"`
+	Status        string                 `json:"status"`
+	Description   string                 `json:"description"`
+	Evidence      []string               `json:"evidence"`
+	Remediation   string                 `json:"remediation"`
+	Timestamp     time.Time              `json:"timestamp"`
+	Metadata      map[string]interface{} `json:"metadata"`
 }
 
 // ComplianceRecommendation provides remediation recommendations

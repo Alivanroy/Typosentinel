@@ -13,14 +13,14 @@ import (
 
 // SecurityConfig holds all security-related configuration
 type SecurityConfig struct {
-	JWT                JWTSecurityConfig     `json:"jwt"`
-	Authentication     AuthSecurityConfig    `json:"authentication"`
-	RateLimit          RateLimitSecurityConfig `json:"rate_limit"`
-	RBAC               RBACSecurityConfig    `json:"rbac"`
-	Encryption         EncryptionConfig      `json:"encryption"`
-	SessionManagement  SessionConfig         `json:"session_management"`
-	Session            SessionConfig         `json:"session"`
-	AuditLogging       AuditConfig           `json:"audit_logging"`
+	JWT               JWTSecurityConfig       `json:"jwt"`
+	Authentication    AuthSecurityConfig      `json:"authentication"`
+	RateLimit         RateLimitSecurityConfig `json:"rate_limit"`
+	RBAC              RBACSecurityConfig      `json:"rbac"`
+	Encryption        EncryptionConfig        `json:"encryption"`
+	SessionManagement SessionConfig           `json:"session_management"`
+	Session           SessionConfig           `json:"session"`
+	AuditLogging      AuditConfig             `json:"audit_logging"`
 }
 
 // JWTSecurityConfig contains JWT security settings
@@ -56,13 +56,13 @@ type AuthSecurityConfig struct {
 
 // RateLimitSecurityConfig contains rate limiting security settings
 type RateLimitSecurityConfig struct {
-	GlobalEnabled         bool                    `json:"global_enabled"`
-	GlobalRequestsPerSec  int                     `json:"global_requests_per_sec"`
-	GlobalBurstSize       int                     `json:"global_burst_size"`
-	EndpointLimits        map[string]EndpointLimit `json:"endpoint_limits"`
-	IPWhitelist           []string                `json:"ip_whitelist"`
-	IPBlacklist           []string                `json:"ip_blacklist"`
-	EnableDDoSProtection  bool                    `json:"enable_ddos_protection"`
+	GlobalEnabled        bool                     `json:"global_enabled"`
+	GlobalRequestsPerSec int                      `json:"global_requests_per_sec"`
+	GlobalBurstSize      int                      `json:"global_burst_size"`
+	EndpointLimits       map[string]EndpointLimit `json:"endpoint_limits"`
+	IPWhitelist          []string                 `json:"ip_whitelist"`
+	IPBlacklist          []string                 `json:"ip_blacklist"`
+	EnableDDoSProtection bool                     `json:"enable_ddos_protection"`
 }
 
 // EndpointLimit defines rate limits for specific endpoints
@@ -74,40 +74,40 @@ type EndpointLimit struct {
 
 // RBACSecurityConfig contains RBAC security settings
 type RBACSecurityConfig struct {
-	Enabled                bool     `json:"enabled"`
-	DefaultRole            string   `json:"default_role"`
-	AdminRoles             []string `json:"admin_roles"`
-	RequireExplicitPermissions bool `json:"require_explicit_permissions"`
-	MaxRoleInheritanceDepth    int  `json:"max_role_inheritance_depth"`
+	Enabled                    bool     `json:"enabled"`
+	DefaultRole                string   `json:"default_role"`
+	AdminRoles                 []string `json:"admin_roles"`
+	RequireExplicitPermissions bool     `json:"require_explicit_permissions"`
+	MaxRoleInheritanceDepth    int      `json:"max_role_inheritance_depth"`
 }
 
 // EncryptionConfig contains encryption settings
 type EncryptionConfig struct {
-	Algorithm           string `json:"algorithm"`
-	KeySize             int    `json:"key_size"`
-	EncryptionKey       string `json:"encryption_key"`
-	RotationInterval    time.Duration `json:"rotation_interval"`
-	EncryptSensitiveData bool  `json:"encrypt_sensitive_data"`
-	UseArgon2           bool   `json:"use_argon2"`
+	Algorithm            string        `json:"algorithm"`
+	KeySize              int           `json:"key_size"`
+	EncryptionKey        string        `json:"encryption_key"`
+	RotationInterval     time.Duration `json:"rotation_interval"`
+	EncryptSensitiveData bool          `json:"encrypt_sensitive_data"`
+	UseArgon2            bool          `json:"use_argon2"`
 }
 
 // SessionConfig contains session management settings
 type SessionConfig struct {
-	CookieSecure     bool          `json:"cookie_secure"`
-	CookieHTTPOnly   bool          `json:"cookie_http_only"`
-	CookieSameSite   string        `json:"cookie_same_site"`
-	SessionTimeout   time.Duration `json:"session_timeout"`
-	IdleTimeout      time.Duration `json:"idle_timeout"`
-	MaxConcurrentSessions int      `json:"max_concurrent_sessions"`
+	CookieSecure          bool          `json:"cookie_secure"`
+	CookieHTTPOnly        bool          `json:"cookie_http_only"`
+	CookieSameSite        string        `json:"cookie_same_site"`
+	SessionTimeout        time.Duration `json:"session_timeout"`
+	IdleTimeout           time.Duration `json:"idle_timeout"`
+	MaxConcurrentSessions int           `json:"max_concurrent_sessions"`
 }
 
 // AuditConfig contains audit logging settings
 type AuditConfig struct {
-	Enabled           bool     `json:"enabled"`
-	LogLevel          string   `json:"log_level"`
-	LogSensitiveData  bool     `json:"log_sensitive_data"`
-	RetentionDays     int      `json:"retention_days"`
-	AuditEvents       []string `json:"audit_events"`
+	Enabled          bool     `json:"enabled"`
+	LogLevel         string   `json:"log_level"`
+	LogSensitiveData bool     `json:"log_sensitive_data"`
+	RetentionDays    int      `json:"retention_days"`
+	AuditEvents      []string `json:"audit_events"`
 }
 
 // LoadSecurityConfig loads security configuration from environment variables
@@ -340,7 +340,7 @@ func parseStringSlice(key string) []string {
 
 func loadEndpointLimits() map[string]EndpointLimit {
 	limits := make(map[string]EndpointLimit)
-	
+
 	// Default endpoint limits
 	limits["/api/v1/scan"] = EndpointLimit{
 		RequestsPerSecond: 10,
@@ -357,6 +357,6 @@ func loadEndpointLimits() map[string]EndpointLimit {
 		BurstSize:         60,
 		WindowDuration:    time.Minute,
 	}
-	
+
 	return limits
 }

@@ -18,11 +18,11 @@ type SARIF struct {
 
 // Run represents a single run of the analysis tool
 type Run struct {
-	Tool         Tool           `json:"tool"`
-	Results      []Result       `json:"results"`
-	Artifacts    []Artifact     `json:"artifacts,omitempty"`
-	Invocations  []Invocation   `json:"invocations,omitempty"`
-	Properties   *Properties    `json:"properties,omitempty"`
+	Tool        Tool         `json:"tool"`
+	Results     []Result     `json:"results"`
+	Artifacts   []Artifact   `json:"artifacts,omitempty"`
+	Invocations []Invocation `json:"invocations,omitempty"`
+	Properties  *Properties  `json:"properties,omitempty"`
 }
 
 // Tool represents the analysis tool information
@@ -42,14 +42,14 @@ type Driver struct {
 
 // Rule represents a rule definition
 type Rule struct {
-	ID               string           `json:"id"`
-	Name             string           `json:"name,omitempty"`
-	ShortDescription *Message         `json:"shortDescription,omitempty"`
-	FullDescription  *Message         `json:"fullDescription,omitempty"`
-	Help             *Message         `json:"help,omitempty"`
-	HelpUri          string           `json:"helpUri,omitempty"`
-	Properties       *RuleProperties  `json:"properties,omitempty"`
-	DefaultConfiguration *Configuration `json:"defaultConfiguration,omitempty"`
+	ID                   string          `json:"id"`
+	Name                 string          `json:"name,omitempty"`
+	ShortDescription     *Message        `json:"shortDescription,omitempty"`
+	FullDescription      *Message        `json:"fullDescription,omitempty"`
+	Help                 *Message        `json:"help,omitempty"`
+	HelpUri              string          `json:"helpUri,omitempty"`
+	Properties           *RuleProperties `json:"properties,omitempty"`
+	DefaultConfiguration *Configuration  `json:"defaultConfiguration,omitempty"`
 }
 
 // RuleProperties represents rule-specific properties
@@ -68,13 +68,13 @@ type Configuration struct {
 
 // Result represents a single analysis result
 type Result struct {
-	RuleID      string       `json:"ruleId"`
-	RuleIndex   int          `json:"ruleIndex,omitempty"`
-	Message     Message      `json:"message"`
-	Level       string       `json:"level"`
-	Locations   []Location   `json:"locations,omitempty"`
+	RuleID              string               `json:"ruleId"`
+	RuleIndex           int                  `json:"ruleIndex,omitempty"`
+	Message             Message              `json:"message"`
+	Level               string               `json:"level"`
+	Locations           []Location           `json:"locations,omitempty"`
 	PartialFingerprints *PartialFingerprints `json:"partialFingerprints,omitempty"`
-	Properties  *ResultProperties `json:"properties,omitempty"`
+	Properties          *ResultProperties    `json:"properties,omitempty"`
 }
 
 // Message represents a message with text
@@ -110,9 +110,9 @@ type Region struct {
 
 // LogicalLocation represents a logical location
 type LogicalLocation struct {
-	Name             string `json:"name,omitempty"`
+	Name               string `json:"name,omitempty"`
 	FullyQualifiedName string `json:"fullyQualifiedName,omitempty"`
-	Kind             string `json:"kind,omitempty"`
+	Kind               string `json:"kind,omitempty"`
 }
 
 // PartialFingerprints represents partial fingerprints for result matching
@@ -131,84 +131,84 @@ type EvidenceInfo struct {
 
 // ResultProperties represents result-specific properties
 type ResultProperties struct {
-	Severity         string                 `json:"severity,omitempty"`
-	Confidence       string                 `json:"confidence,omitempty"`
-	PackageName      string                 `json:"packageName,omitempty"`
-	PackageVersion   string                 `json:"packageVersion,omitempty"`
-	VulnerabilityID  string                 `json:"vulnerabilityId,omitempty"`
-	ThreatType       string                 `json:"threatType,omitempty"`
-	Registry         string                 `json:"registry,omitempty"`
-	DetectionMethod  string                 `json:"detectionMethod,omitempty"`
-	SimilarTo        string                 `json:"similarTo,omitempty"`
-	Recommendation   string                 `json:"recommendation,omitempty"`
-	CVEs             []string               `json:"cves,omitempty"`
-	References       []string               `json:"references,omitempty"`
-	Evidence         []EvidenceInfo         `json:"evidence,omitempty"`
-	ThreatMetadata   map[string]interface{} `json:"threatMetadata,omitempty"`
-	RiskScore        float64                `json:"riskScore,omitempty"`
+	Severity        string                 `json:"severity,omitempty"`
+	Confidence      string                 `json:"confidence,omitempty"`
+	PackageName     string                 `json:"packageName,omitempty"`
+	PackageVersion  string                 `json:"packageVersion,omitempty"`
+	VulnerabilityID string                 `json:"vulnerabilityId,omitempty"`
+	ThreatType      string                 `json:"threatType,omitempty"`
+	Registry        string                 `json:"registry,omitempty"`
+	DetectionMethod string                 `json:"detectionMethod,omitempty"`
+	SimilarTo       string                 `json:"similarTo,omitempty"`
+	Recommendation  string                 `json:"recommendation,omitempty"`
+	CVEs            []string               `json:"cves,omitempty"`
+	References      []string               `json:"references,omitempty"`
+	Evidence        []EvidenceInfo         `json:"evidence,omitempty"`
+	ThreatMetadata  map[string]interface{} `json:"threatMetadata,omitempty"`
+	RiskScore       float64                `json:"riskScore,omitempty"`
 }
 
 // Artifact represents a file or other artifact
 type Artifact struct {
-	Location    *ArtifactLocation `json:"location"`
-	Length      int64             `json:"length,omitempty"`
-	MimeType    string            `json:"mimeType,omitempty"`
-	Hashes      map[string]string `json:"hashes,omitempty"`
-	LastModifiedTimeUtc string    `json:"lastModifiedTimeUtc,omitempty"`
+	Location            *ArtifactLocation `json:"location"`
+	Length              int64             `json:"length,omitempty"`
+	MimeType            string            `json:"mimeType,omitempty"`
+	Hashes              map[string]string `json:"hashes,omitempty"`
+	LastModifiedTimeUtc string            `json:"lastModifiedTimeUtc,omitempty"`
 }
 
 // Invocation represents a tool invocation
 type Invocation struct {
-	ExecutionSuccessful bool      `json:"executionSuccessful"`
-	StartTimeUtc        string    `json:"startTimeUtc,omitempty"`
-	EndTimeUtc          string    `json:"endTimeUtc,omitempty"`
-	ExitCode            int       `json:"exitCode,omitempty"`
-	CommandLine         string    `json:"commandLine,omitempty"`
-	Arguments           []string  `json:"arguments,omitempty"`
+	ExecutionSuccessful bool              `json:"executionSuccessful"`
+	StartTimeUtc        string            `json:"startTimeUtc,omitempty"`
+	EndTimeUtc          string            `json:"endTimeUtc,omitempty"`
+	ExitCode            int               `json:"exitCode,omitempty"`
+	CommandLine         string            `json:"commandLine,omitempty"`
+	Arguments           []string          `json:"arguments,omitempty"`
 	WorkingDirectory    *ArtifactLocation `json:"workingDirectory,omitempty"`
 }
 
 // Properties represents additional properties
 type Properties struct {
-	RepositoryURL string            `json:"repositoryUrl,omitempty"`
-	Branch        string            `json:"branch,omitempty"`
-	CommitSHA     string            `json:"commitSha,omitempty"`
-	ScanType      string            `json:"scanType,omitempty"`
+	RepositoryURL string                 `json:"repositoryUrl,omitempty"`
+	Branch        string                 `json:"branch,omitempty"`
+	CommitSHA     string                 `json:"commitSha,omitempty"`
+	ScanType      string                 `json:"scanType,omitempty"`
 	Metrics       map[string]interface{} `json:"metrics,omitempty"`
 	// Enterprise metadata
-	Enterprise    *EnterpriseMetadata `json:"enterprise,omitempty"`
+	Enterprise *EnterpriseMetadata `json:"enterprise,omitempty"`
 }
 
 // EnterpriseMetadata represents enterprise-specific metadata
 type EnterpriseMetadata struct {
-	OrganizationID   string            `json:"organizationId,omitempty"`
-	TenantID         string            `json:"tenantId,omitempty"`
-	ScannerVersion   string            `json:"scannerVersion,omitempty"`
-	PolicyVersion    string            `json:"policyVersion,omitempty"`
-	ComplianceFrameworks []string      `json:"complianceFrameworks,omitempty"`
-	RiskScore        float64           `json:"riskScore,omitempty"`
-	ScanContext      *ScanContext      `json:"scanContext,omitempty"`
-	AuditTrail       *AuditTrail       `json:"auditTrail,omitempty"`
+	OrganizationID       string       `json:"organizationId,omitempty"`
+	TenantID             string       `json:"tenantId,omitempty"`
+	ScannerVersion       string       `json:"scannerVersion,omitempty"`
+	PolicyVersion        string       `json:"policyVersion,omitempty"`
+	ComplianceFrameworks []string     `json:"complianceFrameworks,omitempty"`
+	RiskScore            float64      `json:"riskScore,omitempty"`
+	ScanContext          *ScanContext `json:"scanContext,omitempty"`
+	AuditTrail           *AuditTrail  `json:"auditTrail,omitempty"`
 }
 
 // ScanContext represents the context in which the scan was performed
 type ScanContext struct {
-	InitiatedBy      string            `json:"initiatedBy,omitempty"`
-	ScanReason       string            `json:"scanReason,omitempty"`
-	ScheduledScan    bool              `json:"scheduledScan"`
-	CICDPipeline     string            `json:"cicdPipeline,omitempty"`
-	Environment      string            `json:"environment,omitempty"`
-	ProjectID        string            `json:"projectId,omitempty"`
+	InitiatedBy   string `json:"initiatedBy,omitempty"`
+	ScanReason    string `json:"scanReason,omitempty"`
+	ScheduledScan bool   `json:"scheduledScan"`
+	CICDPipeline  string `json:"cicdPipeline,omitempty"`
+	Environment   string `json:"environment,omitempty"`
+	ProjectID     string `json:"projectId,omitempty"`
 }
 
 // AuditTrail represents audit information for compliance
 type AuditTrail struct {
-	ScanID           string            `json:"scanId,omitempty"`
-	ApprovalStatus   string            `json:"approvalStatus,omitempty"`
-	ApprovedBy       string            `json:"approvedBy,omitempty"`
-	ApprovalTime     string            `json:"approvalTime,omitempty"`
-	RetentionPolicy  string            `json:"retentionPolicy,omitempty"`
-	DataClassification string          `json:"dataClassification,omitempty"`
+	ScanID             string `json:"scanId,omitempty"`
+	ApprovalStatus     string `json:"approvalStatus,omitempty"`
+	ApprovedBy         string `json:"approvedBy,omitempty"`
+	ApprovalTime       string `json:"approvalTime,omitempty"`
+	RetentionPolicy    string `json:"retentionPolicy,omitempty"`
+	DataClassification string `json:"dataClassification,omitempty"`
 }
 
 // SARIFFormatter implements SARIF output format
@@ -245,7 +245,7 @@ func NewEnterpriseSARIFFormatter(repoURL, branch, commitSHA, scanType string, en
 // Format converts scan results to SARIF format
 func (f *SARIFFormatter) Format(results *analyzer.ScanResult) ([]byte, error) {
 	startTime := time.Now().UTC()
-	
+
 	sarif := &SARIF{
 		Version: "2.1.0",
 		Schema:  "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -261,8 +261,8 @@ func (f *SARIFFormatter) Format(results *analyzer.ScanResult) ([]byte, error) {
 						Rules:           f.generateRules(),
 					},
 				},
-				Results:     f.convertResults(results),
-				Artifacts:   f.generateArtifacts(results),
+				Results:   f.convertResults(results),
+				Artifacts: f.generateArtifacts(results),
 				Invocations: []Invocation{
 					{
 						ExecutionSuccessful: true,
@@ -278,12 +278,12 @@ func (f *SARIFFormatter) Format(results *analyzer.ScanResult) ([]byte, error) {
 					CommitSHA:     f.CommitSHA,
 					ScanType:      f.ScanType,
 					Metrics: map[string]interface{}{
-						"totalPackages":     results.TotalPackages,
-						"totalThreats":      len(results.Threats),
-						"criticalIssues":    f.countBySeverity(results, "critical"),
-						"highIssues":        f.countBySeverity(results, "high"),
-						"mediumIssues":      f.countBySeverity(results, "medium"),
-						"lowIssues":         f.countBySeverity(results, "low"),
+						"totalPackages":  results.TotalPackages,
+						"totalThreats":   len(results.Threats),
+						"criticalIssues": f.countBySeverity(results, "critical"),
+						"highIssues":     f.countBySeverity(results, "high"),
+						"mediumIssues":   f.countBySeverity(results, "medium"),
+						"lowIssues":      f.countBySeverity(results, "low"),
 					},
 					Enterprise: f.EnterpriseMetadata,
 				},
@@ -298,8 +298,8 @@ func (f *SARIFFormatter) Format(results *analyzer.ScanResult) ([]byte, error) {
 func (f *SARIFFormatter) generateRules() []Rule {
 	return []Rule{
 		{
-			ID:   "TYPO_SQUATTING",
-			Name: "Typosquatting Detection",
+			ID:               "TYPO_SQUATTING",
+			Name:             "Typosquatting Detection",
 			ShortDescription: &Message{Text: "Potential typosquatting package detected"},
 			FullDescription:  &Message{Text: "This package name is similar to a popular package and may be a typosquatting attempt"},
 			Help:             &Message{Text: "Verify the package name and publisher before using. Consider using the official package instead."},
@@ -314,8 +314,8 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			DefaultConfiguration: &Configuration{Level: "warning"},
 		},
 		{
-			ID:   "MALICIOUS_PACKAGE",
-			Name: "Malicious Package Detection",
+			ID:               "MALICIOUS_PACKAGE",
+			Name:             "Malicious Package Detection",
 			ShortDescription: &Message{Text: "Potentially malicious package detected"},
 			FullDescription:  &Message{Text: "This package has been identified as potentially malicious based on various indicators"},
 			Help:             &Message{Text: "Remove this package immediately and scan your system for potential compromise."},
@@ -330,8 +330,8 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			DefaultConfiguration: &Configuration{Level: "error"},
 		},
 		{
-			ID:   "VULNERABILITY",
-			Name: "Known Vulnerability",
+			ID:               "VULNERABILITY",
+			Name:             "Known Vulnerability",
 			ShortDescription: &Message{Text: "Package contains known vulnerabilities"},
 			FullDescription:  &Message{Text: "This package version contains known security vulnerabilities"},
 			Help:             &Message{Text: "Update to a patched version or find an alternative package."},
@@ -346,8 +346,8 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			DefaultConfiguration: &Configuration{Level: "warning"},
 		},
 		{
-			ID:   "SUSPICIOUS_BEHAVIOR",
-			Name: "Suspicious Package Behavior",
+			ID:               "SUSPICIOUS_BEHAVIOR",
+			Name:             "Suspicious Package Behavior",
 			ShortDescription: &Message{Text: "Package exhibits suspicious behavior"},
 			FullDescription:  &Message{Text: "This package exhibits behavior patterns that may indicate malicious intent"},
 			Help:             &Message{Text: "Review the package source code and consider alternatives."},
@@ -368,9 +368,9 @@ func (f *SARIFFormatter) generateRules() []Rule {
 func (f *SARIFFormatter) convertResults(scanResult *analyzer.ScanResult) []Result {
 	var results []Result
 	ruleMap := map[string]int{
-		"TYPO_SQUATTING":     0,
-		"MALICIOUS_PACKAGE":  1,
-		"VULNERABILITY":      2,
+		"TYPO_SQUATTING":      0,
+		"MALICIOUS_PACKAGE":   1,
+		"VULNERABILITY":       2,
 		"SUSPICIOUS_BEHAVIOR": 3,
 	}
 
@@ -378,7 +378,7 @@ func (f *SARIFFormatter) convertResults(scanResult *analyzer.ScanResult) []Resul
 	for _, threat := range scanResult.Threats {
 		ruleID := f.determineRuleIDFromThreat(threat)
 		level := f.determineSeverityLevel(threat.Severity.String())
-		
+
 		result := Result{
 			RuleID:    ruleID,
 			RuleIndex: ruleMap[ruleID],
@@ -418,7 +418,7 @@ func (f *SARIFFormatter) convertResults(scanResult *analyzer.ScanResult) []Resul
 				RiskScore:       f.calculateRiskScore(threat),
 			},
 		}
-		
+
 		results = append(results, result)
 	}
 
@@ -531,7 +531,7 @@ func (f *SARIFFormatter) convertEvidence(evidence []types.Evidence) []EvidenceIn
 // calculateRiskScore calculates a risk score based on threat properties
 func (f *SARIFFormatter) calculateRiskScore(threat types.Threat) float64 {
 	baseScore := threat.Confidence
-	
+
 	// Adjust score based on severity
 	switch threat.Severity.String() {
 	case "critical":
@@ -545,16 +545,16 @@ func (f *SARIFFormatter) calculateRiskScore(threat types.Threat) float64 {
 	default:
 		baseScore *= 0.2
 	}
-	
+
 	// Adjust for CVEs
 	if len(threat.CVEs) > 0 {
 		baseScore *= 1.2
 	}
-	
+
 	// Ensure score is between 0 and 1
 	if baseScore > 1.0 {
 		baseScore = 1.0
 	}
-	
+
 	return baseScore
 }

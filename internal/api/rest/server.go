@@ -63,7 +63,6 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 	// Add middleware
 	r.Use(gin.Recovery())
 
-
 	// Add CORS middleware if configured
 	if cfg.CORS != nil {
 		log.Printf("CORS configuration loaded: Enabled=%v, AllowedOrigins=%v", cfg.CORS.Enabled, cfg.CORS.AllowedOrigins)
@@ -491,14 +490,14 @@ func (s *Server) getAllIntegrations(c *gin.Context) {
 // connectIntegration connects a specific integration
 func (s *Server) connectIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
-	
+
 	// TODO: Implement actual integration connection logic
 	// This would involve:
 	// 1. Validating the integration ID
 	// 2. Handling authentication (API keys, OAuth, etc.)
 	// 3. Testing the connection
 	// 4. Storing connection details securely
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Integration %s connected successfully", integrationID),
 		"status":  "connected",
@@ -508,13 +507,13 @@ func (s *Server) connectIntegration(c *gin.Context) {
 // disconnectIntegration disconnects a specific integration
 func (s *Server) disconnectIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
-	
+
 	// TODO: Implement actual integration disconnection logic
 	// This would involve:
 	// 1. Validating the integration ID
 	// 2. Removing stored credentials
 	// 3. Cleaning up any active connections
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Integration %s disconnected successfully", integrationID),
 		"status":  "disconnected",
@@ -524,13 +523,13 @@ func (s *Server) disconnectIntegration(c *gin.Context) {
 // getIntegrationStatus returns the status of a specific integration
 func (s *Server) getIntegrationStatus(c *gin.Context) {
 	integrationID := c.Param("id")
-	
+
 	// TODO: Implement actual status checking logic
 	// This would involve:
 	// 1. Checking connection health
 	// 2. Validating credentials
 	// 3. Testing API endpoints
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"id":         integrationID,
 		"status":     "connected",
@@ -545,19 +544,19 @@ func (s *Server) getIntegrationStatus(c *gin.Context) {
 // configureIntegration updates configuration for a specific integration
 func (s *Server) configureIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
-	
+
 	var config map[string]interface{}
 	if err := c.ShouldBindJSON(&config); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid configuration data"})
 		return
 	}
-	
+
 	// TODO: Implement actual configuration update logic
 	// This would involve:
 	// 1. Validating configuration parameters
 	// 2. Updating stored configuration
 	// 3. Applying changes to active connections
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Integration %s configured successfully", integrationID),
 		"config":  config,
@@ -567,13 +566,13 @@ func (s *Server) configureIntegration(c *gin.Context) {
 // getIntegrationActivity returns activity logs for a specific integration
 func (s *Server) getIntegrationActivity(c *gin.Context) {
 	integrationID := c.Param("id")
-	
+
 	// TODO: Implement actual activity log retrieval
 	// This would involve:
 	// 1. Querying activity logs from database
 	// 2. Filtering by integration ID
 	// 3. Pagination and sorting
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"integrationId": integrationID,
 		"activities": []map[string]interface{}{
@@ -647,14 +646,14 @@ func (s *Server) readinessCheck(c *gin.Context) {
 // handleCORSPreflight handles CORS preflight OPTIONS requests
 func (s *Server) handleCORSPreflight(c *gin.Context) {
 	log.Printf("[CORS DEBUG] Custom OPTIONS handler called for path: %s", c.Request.URL.Path)
-	
+
 	// Set CORS headers for preflight requests
 	c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
 	c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, X-Requested-With")
 	c.Header("Access-Control-Allow-Credentials", "true")
 	c.Header("Access-Control-Max-Age", "86400")
-	
+
 	log.Printf("[CORS DEBUG] Returning 204 No Content for OPTIONS request")
 	c.AbortWithStatus(http.StatusNoContent)
 }
@@ -665,7 +664,7 @@ func (s *Server) handleCORSPreflight(c *gin.Context) {
 type AnalyzePackageRequest struct {
 	Ecosystem string `json:"ecosystem" binding:"required" validate:"required,oneof=npm pypi rubygems maven"`
 	Name      string `json:"name" binding:"required" validate:"required,package_name"`
-	Version   string `json:"version,omitempty" validate:"omitempty,version"` 
+	Version   string `json:"version,omitempty" validate:"omitempty,version"`
 	Options   struct {
 		IncludeML           bool `json:"include_ml,omitempty"`
 		IncludeVulns        bool `json:"include_vulnerabilities,omitempty"`
@@ -1022,15 +1021,15 @@ func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
 			"name":      req.Name,
 			"version":   req.Version,
 		},
-		"vulnerabilities":     vulnerabilities,
-		"threats":            threats,
-		"warnings":           warnings,
-		"scan_time":          startTime.UTC(),
-		"scan_duration":      scanDuration.String(),
+		"vulnerabilities":       vulnerabilities,
+		"threats":               threats,
+		"warnings":              warnings,
+		"scan_time":             startTime.UTC(),
+		"scan_duration":         scanDuration.String(),
 		"vulnerabilities_count": len(vulnerabilities),
-		"threats_count":      len(threats),
-		"warnings_count":     len(warnings),
-		"scan_status":        "completed",
+		"threats_count":         len(threats),
+		"warnings_count":        len(warnings),
+		"scan_status":           "completed",
 	}
 
 	if scanError != nil {
@@ -1042,8 +1041,6 @@ func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
-
-
 
 // BatchVulnerabilityScanRequest represents a batch vulnerability scan request
 type BatchVulnerabilityScanRequest struct {
@@ -1114,12 +1111,12 @@ func (s *Server) batchScanVulnerabilities(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"results":       results,
-		"total":         len(req.Packages),
-		"total_threats": totalThreats,
+		"results":        results,
+		"total":          len(req.Packages),
+		"total_threats":  totalThreats,
 		"total_warnings": totalWarnings,
-		"scan_id":       fmt.Sprintf("batch_%d", time.Now().Unix()),
-		"scan_status":   "completed",
+		"scan_id":        fmt.Sprintf("batch_%d", time.Now().Unix()),
+		"scan_status":    "completed",
 	})
 }
 
@@ -1140,7 +1137,7 @@ func (s *Server) getVulnerabilityScanStatus(c *gin.Context) {
 	var results map[string]interface{}
 
 	now := time.Now()
-	
+
 	// Simulate different scan states based on scan ID
 	switch {
 	case strings.HasSuffix(scanID, "running"):
@@ -1161,7 +1158,7 @@ func (s *Server) getVulnerabilityScanStatus(c *gin.Context) {
 		completed := now.Add(-8 * time.Minute)
 		completedAt = &completed
 		results = map[string]interface{}{
-			"error":           "Network timeout during vulnerability database lookup",
+			"error":            "Network timeout during vulnerability database lookup",
 			"packages_scanned": 8,
 			"total_packages":   27,
 		}
@@ -1417,25 +1414,25 @@ func (s *Server) trainMLModels(c *gin.Context) {
 	go func() {
 		// Simulate training process
 		log.Printf("Starting ML model training with ID: %s", trainingID)
-		
+
 		// In a real implementation, this would:
 		// 1. Collect training data from various sources
 		// 2. Preprocess and validate the data
 		// 3. Train the specified model type
 		// 4. Evaluate model performance
 		// 5. Update the model if performance is satisfactory
-		
+
 		time.Sleep(2 * time.Second) // Simulate training time
-		
+
 		log.Printf("ML model training completed for ID: %s", trainingID)
 	}()
 
 	c.JSON(http.StatusAccepted, gin.H{
-		"message":     "Training started successfully",
-		"training_id": trainingID,
-		"status":      "started",
-		"model_type":  request.ModelType,
-		"timestamp":   time.Now().UTC(),
+		"message":            "Training started successfully",
+		"training_id":        trainingID,
+		"status":             "started",
+		"model_type":         request.ModelType,
+		"timestamp":          time.Now().UTC(),
 		"estimated_duration": "2-5 minutes",
 	})
 }
@@ -1500,24 +1497,24 @@ func (s *Server) clearCache(c *gin.Context) {
 		}
 		// Clear registry caches
 		clearedCaches = append(clearedCaches, "registry_cache")
-		
+
 	case "analysis":
 		if s.analyzer != nil {
 			clearedCaches = append(clearedCaches, "analysis_cache")
 		} else {
 			errors = append(errors, "Analyzer not available")
 		}
-		
+
 	case "ml":
 		if s.mlPipeline != nil {
 			clearedCaches = append(clearedCaches, "ml_cache")
 		} else {
 			errors = append(errors, "ML pipeline not available")
 		}
-		
+
 	case "registry":
 		clearedCaches = append(clearedCaches, "registry_cache")
-		
+
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid cache_type. Valid options: all, analysis, registry, ml",
@@ -1550,20 +1547,20 @@ func (s *Server) getConfiguration(c *gin.Context) {
 // ConfigurationUpdateRequest represents a configuration update request
 type ConfigurationUpdateRequest struct {
 	API struct {
-		Port                int                    `json:"port,omitempty" validate:"omitempty,min=1,max=65535"`
-		Host                string                 `json:"host,omitempty" validate:"omitempty,hostname|ip"`
-		EnableTLS           *bool                  `json:"enable_tls,omitempty"`
-		TLSCertFile         string                 `json:"tls_cert_file,omitempty" validate:"omitempty,filepath"`
-		TLSKeyFile          string                 `json:"tls_key_file,omitempty" validate:"omitempty,filepath"`
-		ReadTimeout         *int                   `json:"read_timeout,omitempty" validate:"omitempty,min=1,max=300"`
-		WriteTimeout        *int                   `json:"write_timeout,omitempty" validate:"omitempty,min=1,max=300"`
-		MaxRequestSize      *int64                 `json:"max_request_size,omitempty" validate:"omitempty,min=1024,max=104857600"`
-		EnableCORS          *bool                  `json:"enable_cors,omitempty"`
-		CORSAllowedOrigins  []string               `json:"cors_allowed_origins,omitempty" validate:"omitempty,dive,url"`
-		RateLimitEnabled    *bool                  `json:"rate_limit_enabled,omitempty"`
-		RateLimitRequests   *int                   `json:"rate_limit_requests,omitempty" validate:"omitempty,min=1,max=10000"`
-		RateLimitWindow     *int                   `json:"rate_limit_window,omitempty" validate:"omitempty,min=1,max=3600"`
-		Authentication      map[string]interface{} `json:"authentication,omitempty"`
+		Port               int                    `json:"port,omitempty" validate:"omitempty,min=1,max=65535"`
+		Host               string                 `json:"host,omitempty" validate:"omitempty,hostname|ip"`
+		EnableTLS          *bool                  `json:"enable_tls,omitempty"`
+		TLSCertFile        string                 `json:"tls_cert_file,omitempty" validate:"omitempty,filepath"`
+		TLSKeyFile         string                 `json:"tls_key_file,omitempty" validate:"omitempty,filepath"`
+		ReadTimeout        *int                   `json:"read_timeout,omitempty" validate:"omitempty,min=1,max=300"`
+		WriteTimeout       *int                   `json:"write_timeout,omitempty" validate:"omitempty,min=1,max=300"`
+		MaxRequestSize     *int64                 `json:"max_request_size,omitempty" validate:"omitempty,min=1024,max=104857600"`
+		EnableCORS         *bool                  `json:"enable_cors,omitempty"`
+		CORSAllowedOrigins []string               `json:"cors_allowed_origins,omitempty" validate:"omitempty,dive,url"`
+		RateLimitEnabled   *bool                  `json:"rate_limit_enabled,omitempty"`
+		RateLimitRequests  *int                   `json:"rate_limit_requests,omitempty" validate:"omitempty,min=1,max=10000"`
+		RateLimitWindow    *int                   `json:"rate_limit_window,omitempty" validate:"omitempty,min=1,max=3600"`
+		Authentication     map[string]interface{} `json:"authentication,omitempty"`
 	} `json:"api,omitempty"`
 	Scanner struct {
 		MaxConcurrentScans *int     `json:"max_concurrent_scans,omitempty" validate:"omitempty,min=1,max=100"`
@@ -1573,16 +1570,16 @@ type ConfigurationUpdateRequest struct {
 		CacheTTL           *int     `json:"cache_ttl,omitempty" validate:"omitempty,min=60,max=86400"`
 	} `json:"scanner,omitempty"`
 	Security struct {
-		EnableMLDetection     *bool    `json:"enable_ml_detection,omitempty"`
-		ThreatThreshold       *float64 `json:"threat_threshold,omitempty" validate:"omitempty,min=0,max=1"`
-		EnableBehavioralAnalysis *bool `json:"enable_behavioral_analysis,omitempty"`
-		QuarantineEnabled     *bool    `json:"quarantine_enabled,omitempty"`
+		EnableMLDetection        *bool    `json:"enable_ml_detection,omitempty"`
+		ThreatThreshold          *float64 `json:"threat_threshold,omitempty" validate:"omitempty,min=0,max=1"`
+		EnableBehavioralAnalysis *bool    `json:"enable_behavioral_analysis,omitempty"`
+		QuarantineEnabled        *bool    `json:"quarantine_enabled,omitempty"`
 	} `json:"security,omitempty"`
 	Logging struct {
-		Level          string `json:"level,omitempty" validate:"omitempty,oneof=debug info warn error"`
-		Format         string `json:"format,omitempty" validate:"omitempty,oneof=json text"`
-		EnableAudit    *bool  `json:"enable_audit,omitempty"`
-		RetentionDays  *int   `json:"retention_days,omitempty" validate:"omitempty,min=1,max=365"`
+		Level         string `json:"level,omitempty" validate:"omitempty,oneof=debug info warn error"`
+		Format        string `json:"format,omitempty" validate:"omitempty,oneof=json text"`
+		EnableAudit   *bool  `json:"enable_audit,omitempty"`
+		RetentionDays *int   `json:"retention_days,omitempty" validate:"omitempty,min=1,max=365"`
 	} `json:"logging,omitempty"`
 }
 
@@ -1591,7 +1588,7 @@ func (s *Server) updateConfiguration(c *gin.Context) {
 	var req ConfigurationUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid configuration format",
+			"error":   "Invalid configuration format",
 			"details": err.Error(),
 		})
 		return
@@ -1600,7 +1597,7 @@ func (s *Server) updateConfiguration(c *gin.Context) {
 	// Validate configuration changes
 	if err := s.validateConfigurationUpdate(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Configuration validation failed",
+			"error":   "Configuration validation failed",
 			"details": err.Error(),
 		})
 		return
@@ -1608,10 +1605,10 @@ func (s *Server) updateConfiguration(c *gin.Context) {
 
 	// Apply configuration changes
 	updatedFields := s.applyConfigurationChanges(&req)
-	
+
 	if len(updatedFields) == 0 {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "No configuration changes detected",
+			"message":        "No configuration changes detected",
 			"updated_fields": updatedFields,
 		})
 		return
@@ -1624,17 +1621,17 @@ func (s *Server) updateConfiguration(c *gin.Context) {
 	if err := s.persistConfiguration(); err != nil {
 		log.Printf("Failed to persist configuration: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to persist configuration changes",
+			"error":   "Failed to persist configuration changes",
 			"details": err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Configuration updated successfully",
-		"updated_fields": updatedFields,
+		"message":          "Configuration updated successfully",
+		"updated_fields":   updatedFields,
 		"restart_required": s.requiresRestart(updatedFields),
-		"timestamp": time.Now().UTC(),
+		"timestamp":        time.Now().UTC(),
 	})
 }
 
@@ -1811,15 +1808,15 @@ func isValidHostname(hostname string) bool {
 	if len(hostname) == 0 || len(hostname) > 253 {
 		return false
 	}
-	
+
 	// Simple hostname validation
 	for _, char := range hostname {
-		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || 
-			 (char >= '0' && char <= '9') || char == '-' || char == '.') {
+		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') || char == '-' || char == '.') {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -1911,7 +1908,7 @@ func (s *Server) getPerformanceMetrics(c *gin.Context) {
 			var totalDuration int64
 			var validScans int64
 			var successfulScans int64
-			
+
 			for _, scan := range recentScans {
 				if scan.Duration > 0 {
 					totalDuration += scan.Duration
@@ -1921,19 +1918,19 @@ func (s *Server) getPerformanceMetrics(c *gin.Context) {
 					}
 				}
 			}
-			
+
 			if validScans > 0 {
 				apiResponseTime = float64(totalDuration) / float64(validScans) / 1000.0 // Convert to seconds
-				dashboardResponseTime = apiResponseTime * 0.8 // Dashboard is typically faster
-				throughputPerSecond = float64(validScans) / (7 * 24 * 3600) // Scans per second over 7 days
+				dashboardResponseTime = apiResponseTime * 0.8                           // Dashboard is typically faster
+				throughputPerSecond = float64(validScans) / (7 * 24 * 3600)             // Scans per second over 7 days
 				errorRate = (1.0 - float64(successfulScans)/float64(validScans)) * 100
 			}
 		}
-		
+
 		// Simulate resource usage based on scan activity
-		cpuUsage = 45.0 + (float64(len(recentScans)) / 100.0 * 20.0) // 45-65% based on activity
+		cpuUsage = 45.0 + (float64(len(recentScans)) / 100.0 * 20.0)    // 45-65% based on activity
 		memoryUsage = 60.0 + (float64(len(recentScans)) / 100.0 * 15.0) // 60-75% based on activity
-		diskUsage = 35.0 + (float64(len(recentScans)) / 100.0 * 10.0) // 35-45% based on activity
+		diskUsage = 35.0 + (float64(len(recentScans)) / 100.0 * 10.0)   // 35-45% based on activity
 	} else {
 		// Fallback to mock data if database not available
 		apiResponseTime = 0.245
@@ -2000,7 +1997,7 @@ func (s *Server) updateDatabase(c *gin.Context) {
 // getAllDatabases returns list of all databases
 func (s *Server) getAllDatabases(c *gin.Context) {
 	databases := []map[string]interface{}{}
-	
+
 	// Check if we have a database connection
 	if s.ossDB != nil {
 		// Get database configuration from environment
@@ -2008,7 +2005,7 @@ func (s *Server) getAllDatabases(c *gin.Context) {
 		dbHost := getEnvOrDefault("TYPOSENTINEL_DB_HOST", "localhost")
 		dbPort := getEnvIntOrDefault("TYPOSENTINEL_DB_PORT", 5432)
 		dbName := getEnvOrDefault("TYPOSENTINEL_DB_NAME", "./data/typosentinel.db")
-		
+
 		// Only show PostgreSQL databases (skip SQLite as it's just a file)
 		if dbType == "postgres" {
 			database := map[string]interface{}{
@@ -2027,18 +2024,18 @@ func (s *Server) getAllDatabases(c *gin.Context) {
 			databases = append(databases, database)
 		}
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"databases": databases})
 }
 
 // getDatabaseInstanceStatus returns status of a specific database instance
 func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 	id := c.Param("id")
-	
+
 	// Get real database performance metrics if available
 	var performanceMetrics gin.H
 	var cacheMetrics gin.H
-	
+
 	if s.ossDB != nil {
 		// Try to get real database statistics
 		db := s.ossDB.GetDB()
@@ -2046,7 +2043,7 @@ func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 			// Get database statistics from pg_stat_database
 			var queriesPerSec, avgQueryTime, cacheHitRate float64
 			var totalQueries, cacheHits, cacheReads int64
-			
+
 			// Query PostgreSQL statistics
 			err := db.QueryRow(`
 				SELECT 
@@ -2056,11 +2053,11 @@ func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 				FROM pg_stat_database 
 				WHERE datname = current_database()
 			`).Scan(&totalQueries, &cacheHits, &cacheReads)
-			
+
 			if err == nil {
 				// Calculate metrics
 				queriesPerSec = float64(totalQueries) / 3600.0 // Approximate queries per second
-				avgQueryTime = 15.2 + rand.Float64()*10.0 // Simulated with some variance
+				avgQueryTime = 15.2 + rand.Float64()*10.0      // Simulated with some variance
 				if cacheReads > 0 {
 					cacheHitRate = (float64(cacheHits) / float64(cacheReads)) * 100.0
 				}
@@ -2070,13 +2067,13 @@ func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 				avgQueryTime = 15.2 + rand.Float64()*10.0
 				cacheHitRate = 94.5 + rand.Float64()*4.0
 			}
-			
+
 			performanceMetrics = gin.H{
 				"queriesPerSec": queriesPerSec,
 				"avgQueryTime":  avgQueryTime,
 				"cacheHitRate":  cacheHitRate,
 			}
-			
+
 			// Cache metrics
 			cacheMetrics = gin.H{
 				"cacheSize":        "256 MB",
@@ -2093,7 +2090,7 @@ func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 				"avgQueryTime":  18.7 + rand.Float64()*8.0,
 				"cacheHitRate":  96.2 + rand.Float64()*3.0,
 			}
-			
+
 			cacheMetrics = gin.H{
 				"cacheSize":        "256 MB",
 				"cacheUsed":        "192 MB",
@@ -2110,7 +2107,7 @@ func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 			"avgQueryTime":  16.4 + rand.Float64()*6.0,
 			"cacheHitRate":  95.8 + rand.Float64()*3.5,
 		}
-		
+
 		cacheMetrics = gin.H{
 			"cacheSize":        "256 MB",
 			"cacheUsed":        "189 MB",
@@ -2120,26 +2117,26 @@ func (s *Server) getDatabaseInstanceStatus(c *gin.Context) {
 			"cacheMisses":      int64(310 + rand.Intn(80)),
 		}
 	}
-	
+
 	// Return comprehensive database status with performance and cache metrics
 	c.JSON(http.StatusOK, gin.H{
 		"id":                 id,
 		"status":             "healthy",
 		"connections":        45 + rand.Intn(20),
 		"maxConnections":     100,
-		"cpuUsage":          23.5 + rand.Float64()*15.0,
-		"memoryUsage":       67.2 + rand.Float64()*10.0,
-		"diskUsage":         45.8 + rand.Float64()*8.0,
-		"lastCheck":         time.Now().Format(time.RFC3339),
+		"cpuUsage":           23.5 + rand.Float64()*15.0,
+		"memoryUsage":        67.2 + rand.Float64()*10.0,
+		"diskUsage":          45.8 + rand.Float64()*8.0,
+		"lastCheck":          time.Now().Format(time.RFC3339),
 		"performanceMetrics": performanceMetrics,
-		"cacheMetrics":      cacheMetrics,
+		"cacheMetrics":       cacheMetrics,
 	})
 }
 
 // getDatabaseRecentQueries returns recent database queries
 func (s *Server) getDatabaseRecentQueries(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
-	
+
 	// Try to get real recent queries if database connection is available
 	if s.ossDB != nil {
 		db := s.ossDB.GetDB()
@@ -2157,29 +2154,29 @@ func (s *Server) getDatabaseRecentQueries(c *gin.Context) {
 				ORDER BY last_exec DESC 
 				LIMIT $1
 			`
-			
+
 			rows, err := db.Query(query, limit)
 			if err == nil {
 				defer rows.Close()
 				var queries []gin.H
-				
+
 				for rows.Next() {
 					var queryText string
 					var avgTime, totalTime float64
 					var calls int64
-					
+
 					err := rows.Scan(&queryText, &avgTime, &calls, &totalTime)
 					if err == nil {
 						queries = append(queries, gin.H{
-							"query":    queryText,
-							"duration": fmt.Sprintf("%.1fms", avgTime),
-							"calls":    calls,
+							"query":     queryText,
+							"duration":  fmt.Sprintf("%.1fms", avgTime),
+							"calls":     calls,
 							"totalTime": fmt.Sprintf("%.1fms", totalTime),
 							"timestamp": time.Now().Add(-time.Duration(len(queries)) * time.Minute).Format(time.RFC3339),
 						})
 					}
 				}
-				
+
 				if len(queries) > 0 {
 					c.JSON(http.StatusOK, gin.H{"queries": queries})
 					return
@@ -2187,7 +2184,7 @@ func (s *Server) getDatabaseRecentQueries(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	// Fallback to mock data if no real data available
 	mockQueries := []gin.H{
 		{
@@ -2219,14 +2216,14 @@ func (s *Server) getDatabaseRecentQueries(c *gin.Context) {
 			"timestamp": time.Now().Add(-12 * time.Minute).Format(time.RFC3339),
 		},
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"queries": mockQueries})
 }
 
 // getDatabaseActivity returns database activity logs
 func (s *Server) getDatabaseActivity(c *gin.Context) {
 	activities := []map[string]interface{}{}
-	
+
 	// Check if we have a database connection
 	if s.ossDB != nil {
 		dbType := getEnvOrDefault("TYPOSENTINEL_DB_TYPE", "sqlite")
@@ -2240,7 +2237,7 @@ func (s *Server) getDatabaseActivity(c *gin.Context) {
 				"status":      "success",
 				"database":    getEnvOrDefault("TYPOSENTINEL_DB_NAME", "typosentinel"),
 			})
-			
+
 			activities = append(activities, map[string]interface{}{
 				"id":          "activity-2",
 				"type":        "schema_check",
@@ -2251,14 +2248,14 @@ func (s *Server) getDatabaseActivity(c *gin.Context) {
 			})
 		}
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"activities": activities})
 }
 
 // getDatabaseSecurity returns database security status
 func (s *Server) getDatabaseSecurity(c *gin.Context) {
 	securityChecks := []map[string]interface{}{}
-	
+
 	// Check if we have a database connection
 	if s.ossDB != nil {
 		dbType := getEnvOrDefault("TYPOSENTINEL_DB_TYPE", "sqlite")
@@ -2266,7 +2263,7 @@ func (s *Server) getDatabaseSecurity(c *gin.Context) {
 			sslMode := getEnvOrDefault("TYPOSENTINEL_DB_SSLMODE", "disable")
 			dbPassword := getEnvOrDefault("TYPOSENTINEL_DB_PASSWORD", "")
 			dbHost := getEnvOrDefault("TYPOSENTINEL_DB_HOST", "localhost")
-			
+
 			// SSL/TLS Security Check
 			sslStatus := "warning"
 			sslMessage := "SSL is disabled - connection is not encrypted"
@@ -2274,17 +2271,17 @@ func (s *Server) getDatabaseSecurity(c *gin.Context) {
 				sslStatus = "success"
 				sslMessage = "SSL is enabled - connection is encrypted"
 			}
-			
+
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "ssl-check",
-				"name":        "SSL/TLS Encryption",
-				"status":      sslStatus,
-				"message":     sslMessage,
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "encryption",
-				"severity":    "high",
+				"id":        "ssl-check",
+				"name":      "SSL/TLS Encryption",
+				"status":    sslStatus,
+				"message":   sslMessage,
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "encryption",
+				"severity":  "high",
 			})
-			
+
 			// Password Strength Check
 			passwordStatus := "warning"
 			passwordMessage := "Weak password detected - consider using a stronger password"
@@ -2295,17 +2292,17 @@ func (s *Server) getDatabaseSecurity(c *gin.Context) {
 				passwordStatus = "error"
 				passwordMessage = "Very weak password - immediate action required"
 			}
-			
+
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "password-check",
-				"name":        "Password Strength",
-				"status":      passwordStatus,
-				"message":     passwordMessage,
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "authentication",
-				"severity":    "high",
+				"id":        "password-check",
+				"name":      "Password Strength",
+				"status":    passwordStatus,
+				"message":   passwordMessage,
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "authentication",
+				"severity":  "high",
 			})
-			
+
 			// Network Security Check
 			networkStatus := "warning"
 			networkMessage := "Database accessible from external networks"
@@ -2313,63 +2310,63 @@ func (s *Server) getDatabaseSecurity(c *gin.Context) {
 				networkStatus = "success"
 				networkMessage = "Database restricted to localhost"
 			}
-			
+
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "network-check",
-				"name":        "Network Access",
-				"status":      networkStatus,
-				"message":     networkMessage,
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "network",
-				"severity":    "medium",
+				"id":        "network-check",
+				"name":      "Network Access",
+				"status":    networkStatus,
+				"message":   networkMessage,
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "network",
+				"severity":  "medium",
 			})
-			
+
 			// Connection Security Check
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "connection-check",
-				"name":        "Database Connection",
-				"status":      "success",
-				"message":     "Database connection is active and healthy",
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "connectivity",
-				"severity":    "low",
+				"id":        "connection-check",
+				"name":      "Database Connection",
+				"status":    "success",
+				"message":   "Database connection is active and healthy",
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "connectivity",
+				"severity":  "low",
 			})
-			
+
 			// Backup Status Check (simulated)
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "backup-check",
-				"name":        "Backup Status",
-				"status":      "warning",
-				"message":     "No recent backup detected - configure automated backups",
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "backup",
-				"severity":    "medium",
+				"id":        "backup-check",
+				"name":      "Backup Status",
+				"status":    "warning",
+				"message":   "No recent backup detected - configure automated backups",
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "backup",
+				"severity":  "medium",
 			})
-			
+
 			// Privilege Escalation Check
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "privilege-check",
-				"name":        "User Privileges",
-				"status":      "success",
-				"message":     "Database user has appropriate privileges",
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "authorization",
-				"severity":    "high",
+				"id":        "privilege-check",
+				"name":      "User Privileges",
+				"status":    "success",
+				"message":   "Database user has appropriate privileges",
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "authorization",
+				"severity":  "high",
 			})
-			
+
 			// Connection Limit Check
 			securityChecks = append(securityChecks, map[string]interface{}{
-				"id":          "connection-limit-check",
-				"name":        "Connection Limits",
-				"status":      "success",
-				"message":     "Connection limits are properly configured",
-				"lastCheck":   time.Now().Format(time.RFC3339),
-				"category":    "performance",
-				"severity":    "medium",
+				"id":        "connection-limit-check",
+				"name":      "Connection Limits",
+				"status":    "success",
+				"message":   "Connection limits are properly configured",
+				"lastCheck": time.Now().Format(time.RFC3339),
+				"category":  "performance",
+				"severity":  "medium",
 			})
 		}
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"securityChecks": securityChecks})
 }
 
@@ -2389,16 +2386,16 @@ func (s *Server) getDashboardActivity(c *gin.Context) {
 			for i, scan := range recentScans {
 				activityType := "scan_completed"
 				status := "clean"
-				
+
 				if scan.ThreatCount > 0 {
 					activityType = "threat_detected"
 					status = "suspicious"
 				}
-				
+
 				if scan.Status == "failed" {
 					status = "failed"
 				}
-				
+
 				activityItem := gin.H{
 					"id":        i + 1,
 					"type":      activityType,
@@ -2408,14 +2405,14 @@ func (s *Server) getDashboardActivity(c *gin.Context) {
 					"timestamp": scan.StartedAt,
 					"duration":  fmt.Sprintf("%ds", scan.Duration),
 				}
-				
+
 				// Add threat-specific fields
 				if scan.ThreatCount > 0 {
 					activityItem["severity"] = scan.RiskLevel
 					activityItem["threat_type"] = "security_issue"
 					activityItem["threats"] = scan.ThreatCount
 				}
-				
+
 				activity = append(activity, activityItem)
 			}
 		}
@@ -2620,7 +2617,7 @@ func (s *Server) getScanResults(c *gin.Context) {
 				if riskScore > 10 {
 					riskScore = 10
 				}
-				
+
 				// Count threats by severity from the threats JSON
 				criticalCount, highCount, mediumCount, lowCount := 0, 0, 0, 0
 				if scan.Threats != nil {
@@ -2639,10 +2636,10 @@ func (s *Server) getScanResults(c *gin.Context) {
 						}
 					}
 				}
-				
+
 				// Calculate total threats from individual counts
 				totalThreats := criticalCount + highCount + mediumCount + lowCount
-				
+
 				scanResult := gin.H{
 					"id":           scan.ID,
 					"target":       scan.PackageName,
@@ -2654,23 +2651,29 @@ func (s *Server) getScanResults(c *gin.Context) {
 					"duration":     fmt.Sprintf("%ds", scan.Duration),
 					"createdAt":    scan.StartedAt,
 				}
-				
+
 				// Add summary with proper threat counts by severity
 				scanResult["summary"] = gin.H{
 					"totalPackages":   1,
 					"scannedPackages": 1,
-					"cleanPackages":   func() int { if scan.ThreatCount == 0 { return 1 } else { return 0 } }(),
+					"cleanPackages": func() int {
+						if scan.ThreatCount == 0 {
+							return 1
+						} else {
+							return 0
+						}
+					}(),
 					"criticalThreats": criticalCount,
 					"highThreats":     highCount,
 					"mediumThreats":   mediumCount,
 					"lowThreats":      lowCount,
 				}
-				
+
 				// Add error if scan failed
 				if scan.Status == "failed" {
 					scanResult["error"] = "Scan failed during processing"
 				}
-				
+
 				scanResults = append(scanResults, scanResult)
 			}
 		} else {
@@ -2958,7 +2961,7 @@ func (s *Server) getAllReports(c *gin.Context) {
 			"author":        "System",
 			"tags":          []string{"security", "weekly", "automated"},
 			"metrics": map[string]interface{}{
-				"vulnerabilities":         42,
+				"vulnerabilities":        42,
 				"critical":               8,
 				"high":                   15,
 				"medium":                 12,
@@ -2980,7 +2983,7 @@ func (s *Server) getAllReports(c *gin.Context) {
 			"author":        "System",
 			"tags":          []string{"vulnerability", "summary", "automated"},
 			"metrics": map[string]interface{}{
-				"vulnerabilities":         67,
+				"vulnerabilities":        67,
 				"critical":               12,
 				"high":                   23,
 				"medium":                 18,
@@ -3002,7 +3005,7 @@ func (s *Server) getAllReports(c *gin.Context) {
 			"author":        "System",
 			"tags":          []string{"compliance", "regulatory", "automated"},
 			"metrics": map[string]interface{}{
-				"vulnerabilities":         0,
+				"vulnerabilities":        0,
 				"critical":               0,
 				"high":                   0,
 				"medium":                 0,
@@ -3020,10 +3023,10 @@ func (s *Server) getAllReports(c *gin.Context) {
 // generateReport generates a new report
 func (s *Server) generateReport(c *gin.Context) {
 	var req struct {
-		Title       string `json:"title" binding:"required"`
-		Type        string `json:"type" binding:"required"`
-		Format      string `json:"format"`
-		Description string `json:"description"`
+		Title       string                 `json:"title" binding:"required"`
+		Type        string                 `json:"type" binding:"required"`
+		Format      string                 `json:"format"`
+		Description string                 `json:"description"`
 		Filters     map[string]interface{} `json:"filters"`
 	}
 
@@ -3274,13 +3277,43 @@ func (s *Server) getReportsFromDB(ctx context.Context) ([]map[string]interface{}
 			"tags":        []string{scan.Registry, severity, "automated"},
 			"metrics": map[string]interface{}{
 				"vulnerabilities": scan.ThreatCount,
-				"critical": func() int { if scan.RiskLevel == "critical" { return scan.ThreatCount } else { return 0 } }(),
-				"high":     func() int { if scan.RiskLevel == "high" { return scan.ThreatCount } else { return 0 } }(),
-				"medium":   func() int { if scan.RiskLevel == "medium" { return scan.ThreatCount } else { return 0 } }(),
-				"low":      func() int { if scan.RiskLevel == "low" { return scan.ThreatCount } else { return 0 } }(),
+				"critical": func() int {
+					if scan.RiskLevel == "critical" {
+						return scan.ThreatCount
+					} else {
+						return 0
+					}
+				}(),
+				"high": func() int {
+					if scan.RiskLevel == "high" {
+						return scan.ThreatCount
+					} else {
+						return 0
+					}
+				}(),
+				"medium": func() int {
+					if scan.RiskLevel == "medium" {
+						return scan.ThreatCount
+					} else {
+						return 0
+					}
+				}(),
+				"low": func() int {
+					if scan.RiskLevel == "low" {
+						return scan.ThreatCount
+					} else {
+						return 0
+					}
+				}(),
 				"scans":    1,
 				"packages": 1,
-				"fixedVersionsAvailable": func() int { if scan.ThreatCount > 0 { return scan.ThreatCount / 2 } else { return 0 } }(),
+				"fixedVersionsAvailable": func() int {
+					if scan.ThreatCount > 0 {
+						return scan.ThreatCount / 2
+					} else {
+						return 0
+					}
+				}(),
 			},
 			"summary": fmt.Sprintf("Scan of %s package completed with %d threats detected", scan.PackageName, scan.ThreatCount),
 		}
@@ -3296,7 +3329,7 @@ func (s *Server) getAnalytics(c *gin.Context) {
 	// Try to get analytics data from database if available
 	if s.ossDB != nil {
 		ctx := c.Request.Context()
-		
+
 		// Get scan trends from database
 		recentScans, err := s.ossDB.GetRecentScans(ctx, 100)
 		if err == nil && len(recentScans) > 0 {
@@ -3304,35 +3337,35 @@ func (s *Server) getAnalytics(c *gin.Context) {
 			scanTrends := make([]map[string]interface{}, 0)
 			severityDistribution := make([]map[string]interface{}, 0)
 			topVulnerablePackages := make([]map[string]interface{}, 0)
-			
+
 			// Group scans by date for trends
 			dateScans := make(map[string]int)
 			dateVulns := make(map[string]int)
 			severityCounts := make(map[string]int)
 			packageVulns := make(map[string]int)
-			
+
 			// Calculate summary metrics
 			totalScans := len(recentScans)
 			totalVulnerabilities := 0
 			totalDuration := time.Duration(0)
 			completedScans := 0
-			
+
 			for _, scan := range recentScans {
 				if !scan.StartedAt.IsZero() {
 					date := scan.StartedAt.Format("2006-01-02")
 					dateScans[date]++
 					dateVulns[date] += int(scan.ThreatCount)
-					
+
 					// Count by risk level (severity)
 					if scan.RiskLevel != "" {
 						severityCounts[scan.RiskLevel]++
 					}
-					
+
 					// Count vulnerabilities by package
 					if scan.PackageName != "" && scan.ThreatCount > 0 {
 						packageVulns[scan.PackageName] += int(scan.ThreatCount)
 					}
-					
+
 					// Calculate totals for summary metrics
 					totalVulnerabilities += int(scan.ThreatCount)
 					if !scan.CompletedAt.IsZero() && !scan.StartedAt.IsZero() {
@@ -3342,7 +3375,7 @@ func (s *Server) getAnalytics(c *gin.Context) {
 					}
 				}
 			}
-			
+
 			// Convert to response format
 			for date, scans := range dateScans {
 				scanTrends = append(scanTrends, map[string]interface{}{
@@ -3351,14 +3384,14 @@ func (s *Server) getAnalytics(c *gin.Context) {
 					"vulnerabilities": dateVulns[date],
 				})
 			}
-			
+
 			for severity, count := range severityCounts {
 				severityDistribution = append(severityDistribution, map[string]interface{}{
 					"severity": severity,
 					"count":    count,
 				})
 			}
-			
+
 			// Get top 10 vulnerable packages
 			type packageVuln struct {
 				name  string
@@ -3368,7 +3401,7 @@ func (s *Server) getAnalytics(c *gin.Context) {
 			for pkg, count := range packageVulns {
 				packages = append(packages, packageVuln{name: pkg, count: count})
 			}
-			
+
 			// Sort by vulnerability count (simple bubble sort for small data)
 			for i := 0; i < len(packages); i++ {
 				for j := i + 1; j < len(packages); j++ {
@@ -3377,7 +3410,7 @@ func (s *Server) getAnalytics(c *gin.Context) {
 					}
 				}
 			}
-			
+
 			// Take top 10
 			for i, pkg := range packages {
 				if i >= 10 {
@@ -3388,35 +3421,35 @@ func (s *Server) getAnalytics(c *gin.Context) {
 					"vulnerabilities": pkg.count,
 				})
 			}
-			
+
 			// Calculate average response time
 			avgResponseTime := float64(0)
 			if completedScans > 0 {
 				avgResponseTime = totalDuration.Hours() / float64(completedScans)
 			}
-			
+
 			// Calculate security score (simplified: 10 - (vulnerabilities per scan))
 			securityScore := float64(10)
 			if totalScans > 0 {
 				vulnsPerScan := float64(totalVulnerabilities) / float64(totalScans)
 				securityScore = math.Max(0, 10-vulnsPerScan)
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
-				"scanTrends":             scanTrends,
-				"severityDistribution":   severityDistribution,
+				"scanTrends":            scanTrends,
+				"severityDistribution":  severityDistribution,
 				"topVulnerablePackages": topVulnerablePackages,
 				"summary": map[string]interface{}{
 					"totalVulnerabilities": totalVulnerabilities,
-					"securityScore":         securityScore,
-					"scansPerformed":        totalScans,
-					"avgResponseTime":       avgResponseTime,
+					"securityScore":        securityScore,
+					"scansPerformed":       totalScans,
+					"avgResponseTime":      avgResponseTime,
 				},
 			})
 			return
 		}
 	}
-	
+
 	// Fallback to mock data
 	c.JSON(http.StatusOK, gin.H{
 		"scanTrends": []map[string]interface{}{
@@ -3443,9 +3476,9 @@ func (s *Server) getAnalytics(c *gin.Context) {
 		},
 		"summary": map[string]interface{}{
 			"totalVulnerabilities": 74,
-			"securityScore":         8.4,
-			"scansPerformed":        341,
-			"avgResponseTime":       2.3,
+			"securityScore":        8.4,
+			"scansPerformed":       341,
+			"avgResponseTime":      2.3,
 		},
 	})
 }
@@ -3492,26 +3525,32 @@ func (s *Server) getAllVulnerabilities(c *gin.Context) {
 							}
 
 							vuln := map[string]interface{}{
-								"id":               fmt.Sprintf("%s-%d", scan.ID, i),
-								"title":            threat.Description,
-								"package":          scan.PackageName,
-								"version":          fullScan.Version,
-								"severity":         threat.Severity,
-								"score":            score,
-								"description":      threat.Description,
-								"publishedDate":    scan.StartedAt.Format(time.RFC3339),
-								"lastModified":     func() string { if scan.CompletedAt != nil { return scan.CompletedAt.Format(time.RFC3339) } else { return scan.StartedAt.Format(time.RFC3339) } }(),
-								"status":           vulnStatus,
-								"type":             threat.Type,
-								"source":           threat.Source,
-								"confidence":       threat.Confidence,
-								"registry":         scan.Registry,
-								"scanId":           scan.ID,
-								"affectedVersions": threat.AffectedVersions,
-								"fixedVersion":     threat.FixedVersion,
+								"id":            fmt.Sprintf("%s-%d", scan.ID, i),
+								"title":         threat.Description,
+								"package":       scan.PackageName,
+								"version":       fullScan.Version,
+								"severity":      threat.Severity,
+								"score":         score,
+								"description":   threat.Description,
+								"publishedDate": scan.StartedAt.Format(time.RFC3339),
+								"lastModified": func() string {
+									if scan.CompletedAt != nil {
+										return scan.CompletedAt.Format(time.RFC3339)
+									} else {
+										return scan.StartedAt.Format(time.RFC3339)
+									}
+								}(),
+								"status":             vulnStatus,
+								"type":               threat.Type,
+								"source":             threat.Source,
+								"confidence":         threat.Confidence,
+								"registry":           scan.Registry,
+								"scanId":             scan.ID,
+								"affectedVersions":   threat.AffectedVersions,
+								"fixedVersion":       threat.FixedVersion,
 								"proposedCorrection": threat.ProposedCorrection,
-								"cve":              threat.CVE,
-								"references":       threat.References,
+								"cve":                threat.CVE,
+								"references":         threat.References,
 							}
 
 							// Apply filters

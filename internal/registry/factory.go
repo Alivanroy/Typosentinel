@@ -28,12 +28,12 @@ func NewFactory() *Factory {
 // CreateConnector creates a connector for the specified registry type
 func (f *Factory) CreateConnector(registryType string, registry *Registry) (Connector, error) {
 	registryType = strings.ToLower(registryType)
-	
+
 	createFunc, exists := f.supportedRegistries[registryType]
 	if !exists {
 		return nil, fmt.Errorf("unsupported registry type: %s", registryType)
 	}
-	
+
 	return createFunc(registry), nil
 }
 
@@ -69,7 +69,7 @@ func (f *Factory) ValidateRegistryType(registryType string) bool {
 // CreateConnectorFromType creates a connector with default registry configuration
 func (f *Factory) CreateConnectorFromType(registryType string) (Connector, error) {
 	registryType = strings.ToLower(registryType)
-	
+
 	// Create default registry configuration based on type
 	registry := &Registry{
 		Name:    registryType,
@@ -77,7 +77,7 @@ func (f *Factory) CreateConnectorFromType(registryType string) (Connector, error
 		Enabled: true,
 		Timeout: 30,
 	}
-	
+
 	// Set default URLs for each registry type
 	switch registryType {
 	case "npm":
@@ -97,6 +97,6 @@ func (f *Factory) CreateConnectorFromType(registryType string) (Connector, error
 	default:
 		return nil, fmt.Errorf("unsupported registry type: %s", registryType)
 	}
-	
+
 	return f.CreateConnector(registryType, registry)
 }

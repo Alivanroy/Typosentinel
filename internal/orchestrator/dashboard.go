@@ -14,54 +14,54 @@ import (
 
 // Dashboard provides a web interface for monitoring and managing the orchestrator
 type Dashboard struct {
-	config     *DashboardConfig
+	config      *DashboardConfig
 	coordinator *ScanCoordinator
-	metrics    *DashboardMetrics
-	server     *http.Server
+	metrics     *DashboardMetrics
+	server      *http.Server
 }
 
 // DashboardConfig defines dashboard configuration
 type DashboardConfig struct {
-	Enabled       bool   `json:"enabled"`
-	Port          int    `json:"port"`
-	Host          string `json:"host"`
-	BasePath      string `json:"base_path"`
-	AuthEnabled   bool   `json:"auth_enabled"`
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	TLSEnabled    bool   `json:"tls_enabled"`
-	CertFile      string `json:"cert_file"`
-	KeyFile       string `json:"key_file"`
-	RefreshRate   int    `json:"refresh_rate"` // seconds
-	MaxHistory    int    `json:"max_history"`  // number of historical records to keep
+	Enabled     bool   `json:"enabled"`
+	Port        int    `json:"port"`
+	Host        string `json:"host"`
+	BasePath    string `json:"base_path"`
+	AuthEnabled bool   `json:"auth_enabled"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	TLSEnabled  bool   `json:"tls_enabled"`
+	CertFile    string `json:"cert_file"`
+	KeyFile     string `json:"key_file"`
+	RefreshRate int    `json:"refresh_rate"` // seconds
+	MaxHistory  int    `json:"max_history"`  // number of historical records to keep
 }
 
 // DashboardMetrics holds dashboard-specific metrics
 type DashboardMetrics struct {
-	ActiveScans       int                    `json:"active_scans"`
-	CompletedScans    int                    `json:"completed_scans"`
-	FailedScans       int                    `json:"failed_scans"`
-	TotalRepositories int                    `json:"total_repositories"`
-	TotalThreats      int                    `json:"total_threats"`
-	AverageRiskScore  float64                `json:"average_risk_score"`
-	SystemHealth      string                 `json:"system_health"`
-	Uptime            time.Duration          `json:"uptime"`
-	LastUpdated       time.Time              `json:"last_updated"`
-	ScanHistory       []ScanHistoryEntry     `json:"scan_history"`
-	ThreatTrends      []ThreatTrendEntry     `json:"threat_trends"`
-	PerformanceStats  PerformanceStats       `json:"performance_stats"`
-	IntegrationStatus map[string]string      `json:"integration_status"`
+	ActiveScans       int                `json:"active_scans"`
+	CompletedScans    int                `json:"completed_scans"`
+	FailedScans       int                `json:"failed_scans"`
+	TotalRepositories int                `json:"total_repositories"`
+	TotalThreats      int                `json:"total_threats"`
+	AverageRiskScore  float64            `json:"average_risk_score"`
+	SystemHealth      string             `json:"system_health"`
+	Uptime            time.Duration      `json:"uptime"`
+	LastUpdated       time.Time          `json:"last_updated"`
+	ScanHistory       []ScanHistoryEntry `json:"scan_history"`
+	ThreatTrends      []ThreatTrendEntry `json:"threat_trends"`
+	PerformanceStats  PerformanceStats   `json:"performance_stats"`
+	IntegrationStatus map[string]string  `json:"integration_status"`
 }
 
 // ScanHistoryEntry represents a historical scan record
 type ScanHistoryEntry struct {
-	Timestamp    time.Time `json:"timestamp"`
-	ScanID       string    `json:"scan_id"`
-	Repository   string    `json:"repository"`
-	Status       string    `json:"status"`
-	Duration     int64     `json:"duration_ms"`
-	ThreatCount  int       `json:"threat_count"`
-	RiskScore    float64   `json:"risk_score"`
+	Timestamp   time.Time `json:"timestamp"`
+	ScanID      string    `json:"scan_id"`
+	Repository  string    `json:"repository"`
+	Status      string    `json:"status"`
+	Duration    int64     `json:"duration_ms"`
+	ThreatCount int       `json:"threat_count"`
+	RiskScore   float64   `json:"risk_score"`
 }
 
 // ThreatTrendEntry represents threat trend data
@@ -73,12 +73,12 @@ type ThreatTrendEntry struct {
 
 // PerformanceStats holds performance statistics
 type PerformanceStats struct {
-	AverageScanTime   float64 `json:"average_scan_time_ms"`
-	ScansPerHour      float64 `json:"scans_per_hour"`
-	MemoryUsage       int64   `json:"memory_usage_mb"`
-	CPUUsage          float64 `json:"cpu_usage_percent"`
-	DiskUsage         int64   `json:"disk_usage_mb"`
-	NetworkBandwidth  int64   `json:"network_bandwidth_mbps"`
+	AverageScanTime  float64 `json:"average_scan_time_ms"`
+	ScansPerHour     float64 `json:"scans_per_hour"`
+	MemoryUsage      int64   `json:"memory_usage_mb"`
+	CPUUsage         float64 `json:"cpu_usage_percent"`
+	DiskUsage        int64   `json:"disk_usage_mb"`
+	NetworkBandwidth int64   `json:"network_bandwidth_mbps"`
 }
 
 // ScanningMetrics represents current scanning metrics
@@ -107,7 +107,7 @@ func NewDashboard(config *DashboardConfig, coordinator *ScanCoordinator) *Dashbo
 	if config.MaxHistory == 0 {
 		config.MaxHistory = 1000
 	}
-	
+
 	return &Dashboard{
 		config:      config,
 		coordinator: coordinator,
@@ -324,8 +324,8 @@ func (d *Dashboard) handleRepositories(w http.ResponseWriter, r *http.Request) {
 
 	// This would typically fetch from the orchestrator
 	repos := map[string]interface{}{
-		"total":      d.metrics.TotalRepositories,
-		"scanned":    d.metrics.CompletedScans,
+		"total":        d.metrics.TotalRepositories,
+		"scanned":      d.metrics.CompletedScans,
 		"with_threats": d.metrics.TotalThreats,
 	}
 

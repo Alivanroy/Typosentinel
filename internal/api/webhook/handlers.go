@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/gin-gonic/gin"
 )
 
 // WebhookHandler handles incoming webhook requests for scan triggers
@@ -58,18 +58,18 @@ type ScanTrigger interface {
 
 // ScanRequest represents a scan request
 type ScanRequest struct {
-	ID          string                 `json:"id"`
-	Repository  string                 `json:"repository"`
-	Branch      string                 `json:"branch"`
-	Commit      string                 `json:"commit"`
-	Paths       []string               `json:"paths"`
-	Trigger     string                 `json:"trigger"`
-	Provider    string                 `json:"provider"`
-	Event       string                 `json:"event"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	Priority    string                 `json:"priority"`
-	Callback    string                 `json:"callback"`
-	Timeout     time.Duration          `json:"timeout"`
+	ID         string                 `json:"id"`
+	Repository string                 `json:"repository"`
+	Branch     string                 `json:"branch"`
+	Commit     string                 `json:"commit"`
+	Paths      []string               `json:"paths"`
+	Trigger    string                 `json:"trigger"`
+	Provider   string                 `json:"provider"`
+	Event      string                 `json:"event"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	Priority   string                 `json:"priority"`
+	Callback   string                 `json:"callback"`
+	Timeout    time.Duration          `json:"timeout"`
 }
 
 // ScanResponse represents a scan response
@@ -103,13 +103,13 @@ type GitHubWebhookPayload struct {
 		CloneURL string `json:"clone_url"`
 		HTMLURL  string `json:"html_url"`
 	} `json:"repository"`
-	Ref    string `json:"ref"`
-	Before string `json:"before"`
-	After  string `json:"after"`
+	Ref     string `json:"ref"`
+	Before  string `json:"before"`
+	After   string `json:"after"`
 	Commits []struct {
-		ID      string `json:"id"`
-		Message string `json:"message"`
-		Added   []string `json:"added"`
+		ID       string   `json:"id"`
+		Message  string   `json:"message"`
+		Added    []string `json:"added"`
 		Modified []string `json:"modified"`
 		Removed  []string `json:"removed"`
 	} `json:"commits"`
@@ -130,18 +130,18 @@ type GitHubWebhookPayload struct {
 type GitLabWebhookPayload struct {
 	ObjectKind string `json:"object_kind"`
 	Project    struct {
-		Name            string `json:"name"`
+		Name              string `json:"name"`
 		PathWithNamespace string `json:"path_with_namespace"`
-		WebURL          string `json:"web_url"`
-		HTTPURLToRepo   string `json:"http_url_to_repo"`
+		WebURL            string `json:"web_url"`
+		HTTPURLToRepo     string `json:"http_url_to_repo"`
 	} `json:"project"`
-	Ref    string `json:"ref"`
-	Before string `json:"before"`
-	After  string `json:"after"`
+	Ref     string `json:"ref"`
+	Before  string `json:"before"`
+	After   string `json:"after"`
 	Commits []struct {
-		ID      string   `json:"id"`
-		Message string   `json:"message"`
-		Added   []string `json:"added"`
+		ID       string   `json:"id"`
+		Message  string   `json:"message"`
+		Added    []string `json:"added"`
 		Modified []string `json:"modified"`
 		Removed  []string `json:"removed"`
 	} `json:"commits"`
@@ -194,17 +194,17 @@ func (h *WebhookHandler) RegisterRoutes(router *gin.Engine) {
 	{
 		// Generic webhook endpoint
 		webhookGroup.POST("/scan", h.handleGenericWebhook)
-		
+
 		// Provider-specific endpoints
 		webhookGroup.POST("/github", h.handleGitHubWebhook)
 		webhookGroup.POST("/gitlab", h.handleGitLabWebhook)
 		webhookGroup.POST("/bitbucket", h.handleBitbucketWebhook)
 		webhookGroup.POST("/azure", h.handleAzureWebhook)
-		
+
 		// Scan status endpoints
 		webhookGroup.GET("/scan/:id/status", h.handleScanStatus)
 		webhookGroup.POST("/scan/:id/cancel", h.handleCancelScan)
-		
+
 		// Health check
 		webhookGroup.GET("/health", h.handleHealth)
 	}
@@ -399,8 +399,8 @@ func (h *WebhookHandler) handleGitLabWebhook(c *gin.Context) {
 		Provider:   "gitlab",
 		Event:      eventType,
 		Metadata: map[string]interface{}{
-			"project_name": payload.Project.PathWithNamespace,
-			"project_url":  payload.Project.WebURL,
+			"project_name":  payload.Project.PathWithNamespace,
+			"project_url":   payload.Project.WebURL,
 			"before_commit": payload.Before,
 			"after_commit":  payload.After,
 			"commits_count": len(payload.Commits),
@@ -508,7 +508,7 @@ func (h *WebhookHandler) handleBitbucketWebhook(c *gin.Context) {
 					"author": payload.Actor.Username,
 					"url":    payload.Repository.Links.HTML.Href,
 				},
-				Timeout:    30 * time.Second,
+				Timeout: 30 * time.Second,
 			}
 
 			if len(change.Commits) > 0 {
@@ -541,9 +541,9 @@ func (h *WebhookHandler) handleAzureWebhook(c *gin.Context) {
 
 	// Parse Azure DevOps webhook payload
 	var payload struct {
-		EventType    string `json:"eventType"`
+		EventType      string `json:"eventType"`
 		SubscriptionId string `json:"subscriptionId"`
-		Resource     struct {
+		Resource       struct {
 			Repository struct {
 				Name    string `json:"name"`
 				Project struct {
@@ -553,7 +553,7 @@ func (h *WebhookHandler) handleAzureWebhook(c *gin.Context) {
 				WebURL    string `json:"webUrl"`
 			} `json:"repository"`
 			RefUpdates []struct {
-				Name     string `json:"name"`
+				Name        string `json:"name"`
 				OldObjectId string `json:"oldObjectId"`
 				NewObjectId string `json:"newObjectId"`
 			} `json:"refUpdates"`
@@ -598,8 +598,8 @@ func (h *WebhookHandler) handleAzureWebhook(c *gin.Context) {
 				continue
 			}
 
-			repositoryName := fmt.Sprintf("%s/%s", 
-				payload.Resource.Repository.Project.Name, 
+			repositoryName := fmt.Sprintf("%s/%s",
+				payload.Resource.Repository.Project.Name,
 				payload.Resource.Repository.Name)
 
 			scanRequest := &ScanRequest{
@@ -615,7 +615,7 @@ func (h *WebhookHandler) handleAzureWebhook(c *gin.Context) {
 					"url":      payload.Resource.Repository.WebURL,
 					"project":  payload.Resource.Repository.Project.Name,
 				},
-				Timeout:    30 * time.Second,
+				Timeout: 30 * time.Second,
 			}
 
 			h.processScanRequest(c, scanRequest)

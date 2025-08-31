@@ -500,7 +500,7 @@ func (atm *AdaptiveThresholdManager) calculateFeatureContributions(pkg *types.Pa
 		// Calculate feature contributions based on model weights and package characteristics
 		for feature, weight := range model.FeatureWeights {
 			var featureValue float64
-			
+
 			switch feature {
 			case "name_similarity":
 				// Calculate name similarity contribution
@@ -536,7 +536,7 @@ func (atm *AdaptiveThresholdManager) calculateFeatureContributions(pkg *types.Pa
 				// Default feature value
 				featureValue = 0.5
 			}
-			
+
 			// Weight the feature value
 			contributions[feature] = weight * featureValue
 		}
@@ -550,7 +550,7 @@ func (atm *AdaptiveThresholdManager) calculateNameSimilarityScore(name string) f
 	if len(name) < 3 {
 		return 0.8 // Very short names are suspicious
 	}
-	
+
 	// Check for common typosquatting patterns
 	suspiciousPatterns := []string{"0", "1", "l", "I", "o", "O"}
 	score := 0.0
@@ -559,7 +559,7 @@ func (atm *AdaptiveThresholdManager) calculateNameSimilarityScore(name string) f
 			score += 0.2
 		}
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -567,13 +567,13 @@ func (atm *AdaptiveThresholdManager) calculateVersionPatternScore(version string
 	if version == "" {
 		return 0.7 // Missing version is suspicious
 	}
-	
+
 	// Check for semantic versioning
 	semverRegex := regexp.MustCompile(`^\d+\.\d+\.\d+`)
 	if semverRegex.MatchString(version) {
 		return 0.1 // Good versioning pattern
 	}
-	
+
 	return 0.5 // Neutral score for other patterns
 }
 
@@ -581,12 +581,12 @@ func (atm *AdaptiveThresholdManager) calculateAuthorReputationScore(author strin
 	if author == "" {
 		return 0.6 // Missing author is somewhat suspicious
 	}
-	
+
 	// Simple heuristics for author reputation
 	if len(author) < 3 {
 		return 0.8 // Very short author names are suspicious
 	}
-	
+
 	// Check for random-looking names
 	digitCount := 0
 	for _, r := range author {
@@ -594,11 +594,11 @@ func (atm *AdaptiveThresholdManager) calculateAuthorReputationScore(author strin
 			digitCount++
 		}
 	}
-	
+
 	if digitCount > len(author)/2 {
 		return 0.7 // Too many digits in author name
 	}
-	
+
 	return 0.2 // Normal author name
 }
 
@@ -606,13 +606,13 @@ func (atm *AdaptiveThresholdManager) normalizeDownloadCount(downloads int64) flo
 	if downloads == 0 {
 		return 0.8 // No downloads is suspicious
 	}
-	
+
 	// Logarithmic normalization
 	normalizedScore := math.Log10(float64(downloads)) / 10.0
 	if normalizedScore > 1.0 {
 		normalizedScore = 1.0
 	}
-	
+
 	// Invert score (higher downloads = lower suspicion)
 	return 1.0 - normalizedScore
 }
@@ -621,12 +621,12 @@ func (atm *AdaptiveThresholdManager) calculateDependencyRiskScore(dependencies [
 	if len(dependencies) == 0 {
 		return 0.3 // No dependencies might be suspicious for some packages
 	}
-	
+
 	// Simple risk calculation based on dependency count
 	if len(dependencies) > 50 {
 		return 0.7 // Too many dependencies
 	}
-	
+
 	return 0.2 // Normal dependency count
 }
 
@@ -634,9 +634,9 @@ func (atm *AdaptiveThresholdManager) calculateAgeFactorScore(createdAt time.Time
 	if createdAt.IsZero() {
 		return 0.5 // Unknown age
 	}
-	
+
 	age := time.Since(createdAt)
-	
+
 	// Very new packages are more suspicious
 	if age.Hours() < 24 {
 		return 0.8 // Less than 1 day old
@@ -645,7 +645,7 @@ func (atm *AdaptiveThresholdManager) calculateAgeFactorScore(createdAt time.Time
 	} else if age.Hours() < 720 { // Less than 1 month
 		return 0.4
 	}
-	
+
 	return 0.2 // Mature package
 }
 

@@ -17,33 +17,33 @@ type SAMLProvider struct {
 
 // SAMLConfig holds SAML provider configuration
 type SAMLConfig struct {
-	EntityID                string `json:"entity_id"`
-	SSOURL                  string `json:"sso_url"`
-	SLOURL                  string `json:"slo_url"`
-	Certificate             string `json:"certificate"`
-	PrivateKey              string `json:"private_key"`
-	IDPMetadataURL          string `json:"idp_metadata_url"`
-	IDPEntityID             string `json:"idp_entity_id"`
-	IDPSSOURL               string `json:"idp_sso_url"`
-	IDPSLOURL               string `json:"idp_slo_url"`
-	IDPCertificate          string `json:"idp_certificate"`
-	NameIDFormat            string `json:"name_id_format"`
-	SignRequests            bool   `json:"sign_requests"`
-	WantAssertionsSigned    bool   `json:"want_assertions_signed"`
-	WantResponseSigned      bool   `json:"want_response_signed"`
-	AllowUnencryptedAssertion bool `json:"allow_unencrypted_assertion"`
-	AttributeMapping        map[string]string `json:"attribute_mapping"`
+	EntityID                  string            `json:"entity_id"`
+	SSOURL                    string            `json:"sso_url"`
+	SLOURL                    string            `json:"slo_url"`
+	Certificate               string            `json:"certificate"`
+	PrivateKey                string            `json:"private_key"`
+	IDPMetadataURL            string            `json:"idp_metadata_url"`
+	IDPEntityID               string            `json:"idp_entity_id"`
+	IDPSSOURL                 string            `json:"idp_sso_url"`
+	IDPSLOURL                 string            `json:"idp_slo_url"`
+	IDPCertificate            string            `json:"idp_certificate"`
+	NameIDFormat              string            `json:"name_id_format"`
+	SignRequests              bool              `json:"sign_requests"`
+	WantAssertionsSigned      bool              `json:"want_assertions_signed"`
+	WantResponseSigned        bool              `json:"want_response_signed"`
+	AllowUnencryptedAssertion bool              `json:"allow_unencrypted_assertion"`
+	AttributeMapping          map[string]string `json:"attribute_mapping"`
 }
 
 // SAMLResponse represents a SAML response
 type SAMLResponse struct {
-	XMLName      xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:protocol Response"`
-	ID           string   `xml:"ID,attr"`
-	Version      string   `xml:"Version,attr"`
-	IssueInstant string   `xml:"IssueInstant,attr"`
-	Destination  string   `xml:"Destination,attr"`
-	Issuer       SAMLIssuer `xml:"urn:oasis:names:tc:SAML:2.0:assertion Issuer"`
-	Status       SAMLStatus `xml:"urn:oasis:names:tc:SAML:2.0:protocol Status"`
+	XMLName      xml.Name      `xml:"urn:oasis:names:tc:SAML:2.0:protocol Response"`
+	ID           string        `xml:"ID,attr"`
+	Version      string        `xml:"Version,attr"`
+	IssueInstant string        `xml:"IssueInstant,attr"`
+	Destination  string        `xml:"Destination,attr"`
+	Issuer       SAMLIssuer    `xml:"urn:oasis:names:tc:SAML:2.0:assertion Issuer"`
+	Status       SAMLStatus    `xml:"urn:oasis:names:tc:SAML:2.0:protocol Status"`
 	Assertion    SAMLAssertion `xml:"urn:oasis:names:tc:SAML:2.0:assertion Assertion"`
 }
 
@@ -55,7 +55,7 @@ type SAMLIssuer struct {
 
 // SAMLStatus represents the SAML status
 type SAMLStatus struct {
-	XMLName    xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:protocol Status"`
+	XMLName    xml.Name       `xml:"urn:oasis:names:tc:SAML:2.0:protocol Status"`
 	StatusCode SAMLStatusCode `xml:"urn:oasis:names:tc:SAML:2.0:protocol StatusCode"`
 }
 
@@ -67,20 +67,20 @@ type SAMLStatusCode struct {
 
 // SAMLAssertion represents a SAML assertion
 type SAMLAssertion struct {
-	XMLName            xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion Assertion"`
-	ID                 string   `xml:"ID,attr"`
-	Version            string   `xml:"Version,attr"`
-	IssueInstant       string   `xml:"IssueInstant,attr"`
-	Issuer             SAMLIssuer `xml:"urn:oasis:names:tc:SAML:2.0:assertion Issuer"`
-	Subject            SAMLSubject `xml:"urn:oasis:names:tc:SAML:2.0:assertion Subject"`
-	Conditions         SAMLConditions `xml:"urn:oasis:names:tc:SAML:2.0:assertion Conditions"`
+	XMLName            xml.Name               `xml:"urn:oasis:names:tc:SAML:2.0:assertion Assertion"`
+	ID                 string                 `xml:"ID,attr"`
+	Version            string                 `xml:"Version,attr"`
+	IssueInstant       string                 `xml:"IssueInstant,attr"`
+	Issuer             SAMLIssuer             `xml:"urn:oasis:names:tc:SAML:2.0:assertion Issuer"`
+	Subject            SAMLSubject            `xml:"urn:oasis:names:tc:SAML:2.0:assertion Subject"`
+	Conditions         SAMLConditions         `xml:"urn:oasis:names:tc:SAML:2.0:assertion Conditions"`
 	AttributeStatement SAMLAttributeStatement `xml:"urn:oasis:names:tc:SAML:2.0:assertion AttributeStatement"`
 }
 
 // SAMLSubject represents the SAML subject
 type SAMLSubject struct {
-	XMLName             xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion Subject"`
-	NameID              SAMLNameID `xml:"urn:oasis:names:tc:SAML:2.0:assertion NameID"`
+	XMLName             xml.Name                `xml:"urn:oasis:names:tc:SAML:2.0:assertion Subject"`
+	NameID              SAMLNameID              `xml:"urn:oasis:names:tc:SAML:2.0:assertion NameID"`
 	SubjectConfirmation SAMLSubjectConfirmation `xml:"urn:oasis:names:tc:SAML:2.0:assertion SubjectConfirmation"`
 }
 
@@ -93,9 +93,9 @@ type SAMLNameID struct {
 
 // SAMLSubjectConfirmation represents SAML subject confirmation
 type SAMLSubjectConfirmation struct {
-	XMLName                      xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion SubjectConfirmation"`
-	Method                       string   `xml:"Method,attr"`
-	SubjectConfirmationData      SAMLSubjectConfirmationData `xml:"urn:oasis:names:tc:SAML:2.0:assertion SubjectConfirmationData"`
+	XMLName                 xml.Name                    `xml:"urn:oasis:names:tc:SAML:2.0:assertion SubjectConfirmation"`
+	Method                  string                      `xml:"Method,attr"`
+	SubjectConfirmationData SAMLSubjectConfirmationData `xml:"urn:oasis:names:tc:SAML:2.0:assertion SubjectConfirmationData"`
 }
 
 // SAMLSubjectConfirmationData represents SAML subject confirmation data
@@ -107,15 +107,15 @@ type SAMLSubjectConfirmationData struct {
 
 // SAMLConditions represents SAML conditions
 type SAMLConditions struct {
-	XMLName                xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion Conditions"`
-	NotBefore              string   `xml:"NotBefore,attr"`
-	NotOnOrAfter           string   `xml:"NotOnOrAfter,attr"`
-	AudienceRestriction    SAMLAudienceRestriction `xml:"urn:oasis:names:tc:SAML:2.0:assertion AudienceRestriction"`
+	XMLName             xml.Name                `xml:"urn:oasis:names:tc:SAML:2.0:assertion Conditions"`
+	NotBefore           string                  `xml:"NotBefore,attr"`
+	NotOnOrAfter        string                  `xml:"NotOnOrAfter,attr"`
+	AudienceRestriction SAMLAudienceRestriction `xml:"urn:oasis:names:tc:SAML:2.0:assertion AudienceRestriction"`
 }
 
 // SAMLAudienceRestriction represents SAML audience restriction
 type SAMLAudienceRestriction struct {
-	XMLName  xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion AudienceRestriction"`
+	XMLName  xml.Name     `xml:"urn:oasis:names:tc:SAML:2.0:assertion AudienceRestriction"`
 	Audience SAMLAudience `xml:"urn:oasis:names:tc:SAML:2.0:assertion Audience"`
 }
 
@@ -127,15 +127,15 @@ type SAMLAudience struct {
 
 // SAMLAttributeStatement represents SAML attribute statement
 type SAMLAttributeStatement struct {
-	XMLName    xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion AttributeStatement"`
+	XMLName    xml.Name        `xml:"urn:oasis:names:tc:SAML:2.0:assertion AttributeStatement"`
 	Attributes []SAMLAttribute `xml:"urn:oasis:names:tc:SAML:2.0:assertion Attribute"`
 }
 
 // SAMLAttribute represents a SAML attribute
 type SAMLAttribute struct {
-	XMLName        xml.Name `xml:"urn:oasis:names:tc:SAML:2.0:assertion Attribute"`
-	Name           string   `xml:"Name,attr"`
-	NameFormat     string   `xml:"NameFormat,attr"`
+	XMLName        xml.Name           `xml:"urn:oasis:names:tc:SAML:2.0:assertion Attribute"`
+	Name           string             `xml:"Name,attr"`
+	NameFormat     string             `xml:"NameFormat,attr"`
 	AttributeValue SAMLAttributeValue `xml:"urn:oasis:names:tc:SAML:2.0:assertion AttributeValue"`
 }
 

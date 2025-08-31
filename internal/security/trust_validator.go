@@ -21,46 +21,46 @@ import (
 // - Compliance certification forgery (ISO certified framework)
 // - Community manipulation (grassroots endorsed tool)
 type TrustValidator struct {
-	config                *TrustValidatorConfig
-	authorityValidator    *AuthorityValidator
-	maintainerValidator   *MaintainerValidator
-	corporateValidator    *CorporateValidator
-	researcherValidator   *ResearcherValidator
-	complianceValidator   *ComplianceValidator
-	communityValidator    *CommunityValidator
-	socialEngineering     *SocialEngineeringDetector
-	logger                logger.Logger
+	config              *TrustValidatorConfig
+	authorityValidator  *AuthorityValidator
+	maintainerValidator *MaintainerValidator
+	corporateValidator  *CorporateValidator
+	researcherValidator *ResearcherValidator
+	complianceValidator *ComplianceValidator
+	communityValidator  *CommunityValidator
+	socialEngineering   *SocialEngineeringDetector
+	logger              logger.Logger
 }
 
 // TrustValidatorConfig configures trust validation parameters
 type TrustValidatorConfig struct {
-	EnableAuthorityValidation    bool          `yaml:"enable_authority_validation"`    // true
-	EnableMaintainerValidation   bool          `yaml:"enable_maintainer_validation"`   // true
-	EnableCorporateValidation    bool          `yaml:"enable_corporate_validation"`    // true
-	EnableResearcherValidation   bool          `yaml:"enable_researcher_validation"`   // true
-	EnableComplianceValidation   bool          `yaml:"enable_compliance_validation"`   // true
-	EnableCommunityValidation    bool          `yaml:"enable_community_validation"`    // true
-	EnableSocialEngineering      bool          `yaml:"enable_social_engineering"`      // true
-	TrustThreshold               float64       `yaml:"trust_threshold"`                // 0.7
-	SuspicionThreshold           float64       `yaml:"suspicion_threshold"`            // 0.3
-	ValidationTimeout            time.Duration `yaml:"validation_timeout"`             // 30s
-	RequireMultipleValidation    bool          `yaml:"require_multiple_validation"`    // true
-	ZeroTrustMode                bool          `yaml:"zero_trust_mode"`                // false
-	Enabled                      bool          `yaml:"enabled"`                        // true
+	EnableAuthorityValidation  bool          `yaml:"enable_authority_validation"`  // true
+	EnableMaintainerValidation bool          `yaml:"enable_maintainer_validation"` // true
+	EnableCorporateValidation  bool          `yaml:"enable_corporate_validation"`  // true
+	EnableResearcherValidation bool          `yaml:"enable_researcher_validation"` // true
+	EnableComplianceValidation bool          `yaml:"enable_compliance_validation"` // true
+	EnableCommunityValidation  bool          `yaml:"enable_community_validation"`  // true
+	EnableSocialEngineering    bool          `yaml:"enable_social_engineering"`    // true
+	TrustThreshold             float64       `yaml:"trust_threshold"`              // 0.7
+	SuspicionThreshold         float64       `yaml:"suspicion_threshold"`          // 0.3
+	ValidationTimeout          time.Duration `yaml:"validation_timeout"`           // 30s
+	RequireMultipleValidation  bool          `yaml:"require_multiple_validation"`  // true
+	ZeroTrustMode              bool          `yaml:"zero_trust_mode"`              // false
+	Enabled                    bool          `yaml:"enabled"`                      // true
 }
 
 // TrustValidationResult represents trust validation results
 type TrustValidationResult struct {
-	PackageName           string                     `json:"package_name"`
-	OverallTrustScore     float64                    `json:"overall_trust_score"`
-	SuspicionScore        float64                    `json:"suspicion_score"`
-	TrustLevel            string                     `json:"trust_level"`
+	PackageName           string                           `json:"package_name"`
+	OverallTrustScore     float64                          `json:"overall_trust_score"`
+	SuspicionScore        float64                          `json:"suspicion_score"`
+	TrustLevel            string                           `json:"trust_level"`
 	ValidationResults     map[string]TrustValidationDetail `json:"validation_results"`
-	SocialEngineeringRisk *SocialEngineeringRisk     `json:"social_engineering_risk"`
-	TrustFactors          []TrustFactor              `json:"trust_factors"`
-	RedFlags              []RedFlag                  `json:"red_flags"`
-	Recommendations       []string                   `json:"recommendations"`
-	Metadata              map[string]interface{}     `json:"metadata"`
+	SocialEngineeringRisk *SocialEngineeringRisk           `json:"social_engineering_risk"`
+	TrustFactors          []TrustFactor                    `json:"trust_factors"`
+	RedFlags              []RedFlag                        `json:"red_flags"`
+	Recommendations       []string                         `json:"recommendations"`
+	Metadata              map[string]interface{}           `json:"metadata"`
 }
 
 // TrustValidationDetail represents individual validation results
@@ -76,11 +76,11 @@ type TrustValidationDetail struct {
 
 // SocialEngineeringRisk represents social engineering risk assessment
 type SocialEngineeringRisk struct {
-	RiskLevel           string                 `json:"risk_level"`
-	ConfidenceScore     float64                `json:"confidence_score"`
-	DetectedTechniques  []string               `json:"detected_techniques"`
+	RiskLevel             string                 `json:"risk_level"`
+	ConfidenceScore       float64                `json:"confidence_score"`
+	DetectedTechniques    []string               `json:"detected_techniques"`
 	PsychologicalTriggers []PsychologicalTrigger `json:"psychological_triggers"`
-	ManipulationTactics []ManipulationTactic   `json:"manipulation_tactics"`
+	ManipulationTactics   []ManipulationTactic   `json:"manipulation_tactics"`
 }
 
 // PsychologicalTrigger represents psychological manipulation triggers
@@ -93,19 +93,19 @@ type PsychologicalTrigger struct {
 
 // ManipulationTactic represents manipulation tactics
 type ManipulationTactic struct {
-	Tactic      string  `json:"tactic"`
-	Description string  `json:"description"`
+	Tactic      string   `json:"tactic"`
+	Description string   `json:"description"`
 	Indicators  []string `json:"indicators"`
-	Confidence  float64 `json:"confidence"`
+	Confidence  float64  `json:"confidence"`
 }
 
 // TrustFactor represents factors contributing to trust
 type TrustFactor struct {
-	Factor      string  `json:"factor"`
-	Weight      float64 `json:"weight"`
-	Score       float64 `json:"score"`
+	Factor      string   `json:"factor"`
+	Weight      float64  `json:"weight"`
+	Score       float64  `json:"score"`
 	Evidence    []string `json:"evidence"`
-	Reliability string  `json:"reliability"`
+	Reliability string   `json:"reliability"`
 }
 
 // RedFlag represents trust red flags
@@ -132,17 +132,17 @@ type AuthorityInfo struct {
 
 // Maintainer validation structures
 type MaintainerValidator struct {
-	maintainerProfiles map[string]MaintainerProfile
+	maintainerProfiles  map[string]MaintainerProfile
 	reputationThreshold float64
 }
 
 type MaintainerProfile struct {
-	Username       string
-	Email          string
-	Reputation     float64
-	PackageCount   int
-	AccountAge     time.Duration
-	Verified       bool
+	Username           string
+	Email              string
+	Reputation         float64
+	PackageCount       int
+	AccountAge         time.Duration
+	Verified           bool
 	SuspiciousActivity bool
 }
 
@@ -153,17 +153,17 @@ type CorporateValidator struct {
 }
 
 type CorporateEntity struct {
-	Name         string
-	Domain       string
-	Verified     bool
-	Employees    int
-	Founded      time.Time
-	Legitimacy   float64
+	Name       string
+	Domain     string
+	Verified   bool
+	Employees  int
+	Founded    time.Time
+	Legitimacy float64
 }
 
 // Researcher validation structures
 type ResearcherValidator struct {
-	researcherProfiles map[string]ResearcherProfile
+	researcherProfiles   map[string]ResearcherProfile
 	academicInstitutions map[string]bool
 }
 
@@ -198,7 +198,7 @@ type ComplianceStandard struct {
 
 // Community validation structures
 type CommunityValidator struct {
-	communityMetrics map[string]CommunityMetrics
+	communityMetrics  map[string]CommunityMetrics
 	astroturfDetector *AstroturfDetector
 }
 
@@ -225,12 +225,12 @@ type BotDetectionRule struct {
 
 // Social engineering detection structures
 type SocialEngineeringDetector struct {
-	urgencyPatterns    []string
-	authorityPatterns  []string
-	scarcityPatterns   []string
+	urgencyPatterns     []string
+	authorityPatterns   []string
+	scarcityPatterns    []string
 	socialProofPatterns []string
 	reciprocityPatterns []string
-	commitmentPatterns []string
+	commitmentPatterns  []string
 }
 
 // NewTrustValidator creates a new trust validator
@@ -361,7 +361,7 @@ func (tv *TrustValidator) validateAuthority(ctx context.Context, pkg *types.Pack
 
 	// Check for authority impersonation patterns
 	packageInfo := tv.extractPackageInfo(pkg)
-	
+
 	// Look for government/authority claims
 	authorityPatterns := []string{
 		"(?i)(federal|government|official|nist|cisa|fbi|nsa|dhs)",
@@ -408,17 +408,17 @@ func (tv *TrustValidator) validateMaintainer(ctx context.Context, pkg *types.Pac
 
 	// Extract maintainer information
 	maintainerInfo := tv.extractMaintainerInfo(pkg)
-	
+
 	// Check maintainer reputation
 	if profile, exists := tv.maintainerValidator.maintainerProfiles[maintainerInfo]; exists {
 		result.Score = profile.Reputation
 		result.Evidence = append(result.Evidence, fmt.Sprintf("Maintainer reputation: %.2f", profile.Reputation))
-		
+
 		if profile.SuspiciousActivity {
 			result.Warnings = append(result.Warnings, "Maintainer has suspicious activity history")
 			result.Score *= 0.5
 		}
-		
+
 		if profile.Verified {
 			result.Evidence = append(result.Evidence, "Verified maintainer account")
 			result.Score += 0.2
@@ -444,7 +444,7 @@ func (tv *TrustValidator) validateCorporate(ctx context.Context, pkg *types.Pack
 	}
 
 	packageInfo := tv.extractPackageInfo(pkg)
-	
+
 	// Look for corporate backing claims
 	corporatePatterns := []string{
 		"(?i)(enterprise|corporation|inc|ltd|llc)",
@@ -455,7 +455,7 @@ func (tv *TrustValidator) validateCorporate(ctx context.Context, pkg *types.Pack
 	for _, pattern := range corporatePatterns {
 		if matched, _ := regexp.MatchString(pattern, packageInfo); matched {
 			result.Evidence = append(result.Evidence, "Corporate backing claim detected")
-			
+
 			// Validate against known corporate entities
 			for entityName, entity := range tv.corporateValidator.corporateEntities {
 				if strings.Contains(strings.ToLower(packageInfo), strings.ToLower(entityName)) {
@@ -491,7 +491,7 @@ func (tv *TrustValidator) validateResearcher(ctx context.Context, pkg *types.Pac
 	}
 
 	packageInfo := tv.extractPackageInfo(pkg)
-	
+
 	// Look for researcher claims
 	researcherPatterns := []string{
 		"(?i)(security researcher|vulnerability|cve|exploit)",
@@ -502,7 +502,7 @@ func (tv *TrustValidator) validateResearcher(ctx context.Context, pkg *types.Pac
 	for _, pattern := range researcherPatterns {
 		if matched, _ := regexp.MatchString(pattern, packageInfo); matched {
 			result.Evidence = append(result.Evidence, "Researcher claim detected")
-			
+
 			// Validate against known researchers
 			for researcherName, profile := range tv.researcherValidator.researcherProfiles {
 				if strings.Contains(strings.ToLower(packageInfo), strings.ToLower(researcherName)) {
@@ -537,7 +537,7 @@ func (tv *TrustValidator) validateCompliance(ctx context.Context, pkg *types.Pac
 	}
 
 	packageInfo := tv.extractPackageInfo(pkg)
-	
+
 	// Look for compliance claims
 	compliancePatterns := []string{
 		"(?i)(iso 27001|soc 2|fips 140|common criteria)",
@@ -548,7 +548,7 @@ func (tv *TrustValidator) validateCompliance(ctx context.Context, pkg *types.Pac
 	for _, pattern := range compliancePatterns {
 		if matched, _ := regexp.MatchString(pattern, packageInfo); matched {
 			result.Evidence = append(result.Evidence, "Compliance claim detected")
-			
+
 			// Validate against known standards
 			for standardName, standard := range tv.complianceValidator.complianceStandards {
 				if strings.Contains(strings.ToLower(packageInfo), strings.ToLower(standardName)) {
@@ -584,16 +584,16 @@ func (tv *TrustValidator) validateCommunity(ctx context.Context, pkg *types.Pack
 
 	// Get community metrics
 	metrics := tv.getCommunityMetrics(pkg)
-	
+
 	// Detect astroturfing
 	astroturfScore := tv.communityValidator.astroturfDetector.detectAstroturfing(pkg)
-	
+
 	result.Score = metrics.CommunityScore * (1.0 - astroturfScore)
-	
+
 	if astroturfScore > 0.5 {
 		result.Warnings = append(result.Warnings, "Potential astroturfing detected")
 	}
-	
+
 	if metrics.Authenticity < 0.5 {
 		result.Warnings = append(result.Warnings, "Low community authenticity")
 	}
@@ -608,7 +608,7 @@ func (tv *TrustValidator) validateCommunity(ctx context.Context, pkg *types.Pack
 // detectSocialEngineering detects social engineering techniques
 func (tv *TrustValidator) detectSocialEngineering(ctx context.Context, pkg *types.Package) *SocialEngineeringRisk {
 	packageInfo := tv.extractPackageInfo(pkg)
-	
+
 	risk := &SocialEngineeringRisk{
 		DetectedTechniques:    []string{},
 		PsychologicalTriggers: []PsychologicalTrigger{},
@@ -644,7 +644,7 @@ func (tv *TrustValidator) detectSocialEngineering(ctx context.Context, pkg *type
 	// Calculate overall risk
 	riskScore := float64(len(risk.DetectedTechniques)) * 0.2
 	risk.ConfidenceScore = riskScore
-	
+
 	if riskScore > 0.8 {
 		risk.RiskLevel = "critical"
 	} else if riskScore > 0.6 {
@@ -668,17 +668,17 @@ func (tv *TrustValidator) extractPackageInfo(pkg *types.Package) string {
 func (tv *TrustValidator) extractMaintainerInfo(pkg *types.Package) string {
 	// Extract maintainer information from package metadata
 	maintainerInfo := []string{}
-	
+
 	// Check for metadata fields
 	if pkg.Metadata != nil {
 		if pkg.Metadata.Author != "" {
 			maintainerInfo = append(maintainerInfo, "author:"+pkg.Metadata.Author)
 		}
-		
+
 		if len(pkg.Metadata.Maintainers) > 0 {
 			maintainerInfo = append(maintainerInfo, "maintainers:"+strings.Join(pkg.Metadata.Maintainers, ","))
 		}
-		
+
 		if pkg.Metadata.Repository != "" {
 			// Extract owner from repository URL
 			parts := strings.Split(pkg.Metadata.Repository, "/")
@@ -688,18 +688,18 @@ func (tv *TrustValidator) extractMaintainerInfo(pkg *types.Package) string {
 			}
 		}
 	}
-	
+
 	if len(maintainerInfo) == 0 {
 		return "unknown"
 	}
-	
+
 	return strings.Join(maintainerInfo, "; ")
 }
 
 func (tv *TrustValidator) getCommunityMetrics(pkg *types.Package) CommunityMetrics {
 	// Get community metrics for the package based on available data
 	metrics := CommunityMetrics{}
-	
+
 	// Calculate community score based on metadata
 	if pkg.Metadata != nil && pkg.Metadata.Downloads > 0 {
 		// Normalize download count to 0-1 scale (log scale for large numbers)
@@ -708,31 +708,31 @@ func (tv *TrustValidator) getCommunityMetrics(pkg *types.Package) CommunityMetri
 	} else {
 		metrics.CommunityScore = 0.1 // Low score for packages with no downloads
 	}
-	
+
 	// Calculate authenticity based on package age and consistency
 	authenticity := 0.5 // Base authenticity score
-	
+
 	// Increase authenticity for older packages (more established)
 	if pkg.Metadata != nil && !pkg.Metadata.CreatedAt.IsZero() {
 		age := time.Since(pkg.Metadata.CreatedAt)
 		ageScore := math.Min(age.Hours()/(24*365), 1.0) // Max 1 year for full score
 		authenticity += ageScore * 0.3
 	}
-	
+
 	// Increase authenticity if package has consistent metadata
 	if pkg.Metadata != nil && pkg.Metadata.Author != "" && pkg.Metadata.Description != "" && pkg.Metadata.Repository != "" {
 		authenticity += 0.2
 	}
-	
+
 	// Decrease authenticity for suspicious patterns
 	if strings.Contains(strings.ToLower(pkg.Name), "test") ||
 		strings.Contains(strings.ToLower(pkg.Name), "temp") ||
 		strings.Contains(strings.ToLower(pkg.Name), "fake") {
 		authenticity -= 0.3
 	}
-	
+
 	metrics.Authenticity = math.Max(0.0, math.Min(authenticity, 1.0))
-	
+
 	return metrics
 }
 
@@ -780,7 +780,7 @@ func (tv *TrustValidator) determineTrustLevel(result *TrustValidationResult) str
 
 func (tv *TrustValidator) extractTrustFactors(result *TrustValidationResult) []TrustFactor {
 	factors := []TrustFactor{}
-	
+
 	for validationType, validation := range result.ValidationResults {
 		factor := TrustFactor{
 			Factor:      validationType,
@@ -797,7 +797,7 @@ func (tv *TrustValidator) extractTrustFactors(result *TrustValidationResult) []T
 
 func (tv *TrustValidator) extractRedFlags(result *TrustValidationResult) []RedFlag {
 	flags := []RedFlag{}
-	
+
 	for _, validation := range result.ValidationResults {
 		for _, warning := range validation.Warnings {
 			flag := RedFlag{
@@ -894,7 +894,7 @@ func NewAstroturfDetector() *AstroturfDetector {
 
 func (ad *AstroturfDetector) detectAstroturfing(pkg *types.Package) float64 {
 	suspicionScore := 0.0
-	
+
 	// Check for suspicious naming patterns
 	suspiciousNames := []string{"test", "temp", "fake", "demo", "sample", "example"}
 	for _, pattern := range suspiciousNames {
@@ -902,12 +902,12 @@ func (ad *AstroturfDetector) detectAstroturfing(pkg *types.Package) float64 {
 			suspicionScore += 0.2
 		}
 	}
-	
+
 	// Check for rapid version releases (suspicious pattern)
 	if pkg.Version != "" && strings.Count(pkg.Version, ".") > 3 {
 		suspicionScore += 0.1
 	}
-	
+
 	// Check for suspicious description terms
 	if pkg.Metadata != nil && pkg.Metadata.Description != "" {
 		suspiciousTerms := []string{"urgent", "critical", "must have", "revolutionary", "game changer"}
@@ -917,7 +917,7 @@ func (ad *AstroturfDetector) detectAstroturfing(pkg *types.Package) float64 {
 			}
 		}
 	}
-	
+
 	// Check for unusual download patterns (very high downloads for new packages)
 	if pkg.Metadata != nil && !pkg.Metadata.CreatedAt.IsZero() && pkg.Metadata.Downloads > 0 {
 		age := time.Since(pkg.Metadata.CreatedAt)
@@ -925,7 +925,7 @@ func (ad *AstroturfDetector) detectAstroturfing(pkg *types.Package) float64 {
 			suspicionScore += 0.4
 		}
 	}
-	
+
 	return math.Min(suspicionScore, 1.0)
 }
 

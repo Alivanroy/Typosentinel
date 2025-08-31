@@ -41,12 +41,12 @@ const (
 
 // RateLimitMetrics tracks rate limiting metrics
 type RateLimitMetrics struct {
-	totalRequests     int64
-	allowedRequests   int64
-	blockedRequests   int64
-	ddosBlocks        int64
+	totalRequests       int64
+	allowedRequests     int64
+	blockedRequests     int64
+	ddosBlocks          int64
 	circuitBreakerTrips int64
-	mutex             sync.RWMutex
+	mutex               sync.RWMutex
 }
 
 // RateLimiter provides rate limiting functionality
@@ -55,19 +55,19 @@ type RateLimiter struct {
 	localLimits map[string]*rate.Limiter
 	mutex       sync.RWMutex
 	config      *RateLimitConfig
-	
+
 	// Connection tracking
 	activeConnections map[string]int
 	connectionMutex   sync.RWMutex
-	
+
 	// DDoS protection
-	ddosTracker     map[string]*DDoSTracker
-	ddosMutex       sync.RWMutex
-	
+	ddosTracker map[string]*DDoSTracker
+	ddosMutex   sync.RWMutex
+
 	// Circuit breaker
 	circuitBreakers map[string]*CircuitBreaker
 	circuitMutex    sync.RWMutex
-	
+
 	// Metrics
 	metrics *RateLimitMetrics
 }
@@ -104,42 +104,42 @@ type RateLimitConfig struct {
 	SlowlorisTimeout         time.Duration `yaml:"slowloris_timeout" default:"10s"`
 
 	// DDoS Protection
-	EnableDDoSProtection     bool          `yaml:"enable_ddos_protection" default:"true"`
-	DDoSThreshold           int           `yaml:"ddos_threshold" default:"100"`
-	DDoSWindowDuration      time.Duration `yaml:"ddos_window_duration" default:"1m"`
-	DDoSBlockDuration       time.Duration `yaml:"ddos_block_duration" default:"10m"`
-	SuspiciousPatternDetection bool       `yaml:"suspicious_pattern_detection" default:"true"`
+	EnableDDoSProtection       bool          `yaml:"enable_ddos_protection" default:"true"`
+	DDoSThreshold              int           `yaml:"ddos_threshold" default:"100"`
+	DDoSWindowDuration         time.Duration `yaml:"ddos_window_duration" default:"1m"`
+	DDoSBlockDuration          time.Duration `yaml:"ddos_block_duration" default:"10m"`
+	SuspiciousPatternDetection bool          `yaml:"suspicious_pattern_detection" default:"true"`
 
 	// Advanced settings
 	EnableDistributed bool          `yaml:"enable_distributed" default:"false"`
 	CleanupInterval   time.Duration `yaml:"cleanup_interval" default:"5m"`
 	MaxMemoryUsage    int64         `yaml:"max_memory_usage" default:"100000000"` // 100MB
-	
+
 	// Whitelist/Blacklist
 	WhitelistedIPs []string `yaml:"whitelisted_ips"`
 	BlacklistedIPs []string `yaml:"blacklisted_ips"`
-	
+
 	// Adaptive rate limiting
 	EnableAdaptive     bool    `yaml:"enable_adaptive" default:"true"`
 	AdaptiveThreshold  float64 `yaml:"adaptive_threshold" default:"0.8"`
 	AdaptiveMultiplier float64 `yaml:"adaptive_multiplier" default:"0.5"`
 
 	// Circuit breaker
-	EnableCircuitBreaker bool          `yaml:"enable_circuit_breaker" default:"true"`
-	CircuitBreakerThreshold int        `yaml:"circuit_breaker_threshold" default:"50"`
-	CircuitBreakerTimeout   time.Duration `yaml:"circuit_breaker_timeout" default:"30s"`
+	EnableCircuitBreaker       bool          `yaml:"enable_circuit_breaker" default:"true"`
+	CircuitBreakerThreshold    int           `yaml:"circuit_breaker_threshold" default:"50"`
+	CircuitBreakerTimeout      time.Duration `yaml:"circuit_breaker_timeout" default:"30s"`
 	CircuitBreakerRecoveryTime time.Duration `yaml:"circuit_breaker_recovery_time" default:"5m"`
 }
 
 // RateLimitResult represents the result of a rate limit check
 type RateLimitResult struct {
-	Allowed       bool          `json:"allowed"`
-	Limit         int           `json:"limit"`
-	Remaining     int           `json:"remaining"`
-	ResetTime     time.Time     `json:"reset_time"`
-	RetryAfter    time.Duration `json:"retry_after,omitempty"`
-	LimitType     string        `json:"limit_type"`
-	Identifier    string        `json:"identifier"`
+	Allowed    bool          `json:"allowed"`
+	Limit      int           `json:"limit"`
+	Remaining  int           `json:"remaining"`
+	ResetTime  time.Time     `json:"reset_time"`
+	RetryAfter time.Duration `json:"retry_after,omitempty"`
+	LimitType  string        `json:"limit_type"`
+	Identifier string        `json:"identifier"`
 }
 
 // RateLimitType represents different types of rate limits
@@ -174,12 +174,12 @@ func NewRateLimiter(config *RateLimitConfig, redisClient *redis.Client) *RateLim
 // CheckRateLimit checks if a request should be allowed
 func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, userID, apiKey string) (*RateLimitResult, error) {
 	clientIP := rl.getClientIP(req)
-	
+
 	// Update metrics
 	rl.metrics.mutex.Lock()
 	rl.metrics.totalRequests++
 	rl.metrics.mutex.Unlock()
-	
+
 	// Check blacklist first
 	if rl.isBlacklisted(clientIP) {
 		rl.updateMetrics(false, "blacklisted")
@@ -200,7 +200,7 @@ func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, us
 			Identifier: clientIP,
 		}, nil
 	}
-	
+
 	// Check DDoS protection
 	if rl.config.EnableDDoSProtection {
 		if blocked, retryAfter := rl.checkDDoSProtection(clientIP); blocked {
@@ -213,7 +213,7 @@ func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, us
 			}, nil
 		}
 	}
-	
+
 	// Check circuit breaker
 	if rl.config.EnableCircuitBreaker {
 		if blocked, retryAfter := rl.checkCircuitBreaker(clientIP); blocked {
@@ -226,7 +226,7 @@ func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, us
 			}, nil
 		}
 	}
-	
+
 	// Check connection limits
 	if rl.config.MaxConcurrentConnections > 0 {
 		if !rl.checkConnectionLimit(clientIP) {
@@ -292,7 +292,7 @@ func (rl *RateLimiter) CheckRateLimit(ctx context.Context, req *http.Request, us
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if !result.Allowed {
 			return result, nil
 		}
@@ -318,7 +318,7 @@ func (rl *RateLimiter) checkLimit(ctx context.Context, limitType RateLimitType, 
 // checkLocalLimit checks rate limit using local memory
 func (rl *RateLimiter) checkLocalLimit(limitType RateLimitType, identifier string, limit, burst int) (*RateLimitResult, error) {
 	key := fmt.Sprintf("%s:%s", limitType, identifier)
-	
+
 	rl.mutex.Lock()
 	limiter, exists := rl.localLimits[key]
 	if !exists {
@@ -329,7 +329,7 @@ func (rl *RateLimiter) checkLocalLimit(limitType RateLimitType, identifier strin
 
 	now := time.Now()
 	reservation := limiter.ReserveN(now, 1)
-	
+
 	if !reservation.OK() {
 		return &RateLimitResult{
 			Allowed:    false,
@@ -377,7 +377,7 @@ func (rl *RateLimiter) checkDistributedLimit(ctx context.Context, limitType Rate
 	key := fmt.Sprintf("ratelimit:%s:%s", limitType, identifier)
 	now := time.Now()
 	windowStart := now.Truncate(window)
-	
+
 	// Sliding window log implementation
 	script := `
 		local key = KEYS[1]
@@ -407,22 +407,22 @@ func (rl *RateLimiter) checkDistributedLimit(ctx context.Context, limitType Rate
 			return {0, 0, reset_time}
 		end
 	`
-	
-	result, err := rl.redis.Eval(ctx, script, []string{key}, 
-		windowStart.Unix(), 
-		int64(window.Seconds()), 
-		limit, 
+
+	result, err := rl.redis.Eval(ctx, script, []string{key},
+		windowStart.Unix(),
+		int64(window.Seconds()),
+		limit,
 		now.Unix()).Result()
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("redis rate limit check failed: %w", err)
 	}
-	
+
 	resultSlice := result.([]interface{})
 	allowed := resultSlice[0].(int64) == 1
 	remaining := int(resultSlice[1].(int64))
 	resetTime := time.Unix(resultSlice[2].(int64), 0)
-	
+
 	var retryAfter time.Duration
 	if !allowed {
 		retryAfter = time.Until(resetTime)
@@ -430,7 +430,7 @@ func (rl *RateLimiter) checkDistributedLimit(ctx context.Context, limitType Rate
 			retryAfter = 0
 		}
 	}
-	
+
 	return &RateLimitResult{
 		Allowed:    allowed,
 		Limit:      limit,
@@ -451,18 +451,18 @@ func (rl *RateLimiter) getClientIP(req *http.Request) string {
 			return strings.TrimSpace(ips[0])
 		}
 	}
-	
+
 	// Check X-Real-IP header
 	if xri := req.Header.Get("X-Real-IP"); xri != "" {
 		return strings.TrimSpace(xri)
 	}
-	
+
 	// Fall back to RemoteAddr
 	ip, _, err := net.SplitHostPort(req.RemoteAddr)
 	if err != nil {
 		return req.RemoteAddr
 	}
-	
+
 	return ip
 }
 
@@ -477,7 +477,7 @@ func (rl *RateLimiter) isWhitelisted(ip string) bool {
 		if ip == whitelistedIP {
 			return true
 		}
-		
+
 		// Check CIDR ranges
 		if strings.Contains(whitelistedIP, "/") {
 			_, network, err := net.ParseCIDR(whitelistedIP)
@@ -495,7 +495,7 @@ func (rl *RateLimiter) isBlacklisted(ip string) bool {
 		if ip == blacklistedIP {
 			return true
 		}
-		
+
 		// Check CIDR ranges
 		if strings.Contains(blacklistedIP, "/") {
 			_, network, err := net.ParseCIDR(blacklistedIP)
@@ -511,7 +511,7 @@ func (rl *RateLimiter) isBlacklisted(ip string) bool {
 func (rl *RateLimiter) cleanupRoutine() {
 	ticker := time.NewTicker(rl.config.CleanupInterval)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		rl.cleanup()
 	}
@@ -521,7 +521,7 @@ func (rl *RateLimiter) cleanupRoutine() {
 func (rl *RateLimiter) cleanup() {
 	rl.mutex.Lock()
 	defer rl.mutex.Unlock()
-	
+
 	// Simple cleanup: remove entries if we have too many
 	if len(rl.localLimits) > 10000 {
 		// Keep only the most recent 5000 entries
@@ -542,7 +542,7 @@ func (rl *RateLimiter) RateLimitMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			
+
 			// Extract user ID and API key from request
 			userID := r.Header.Get("X-User-ID")
 			apiKey := r.Header.Get("X-API-Key")
@@ -552,24 +552,24 @@ func (rl *RateLimiter) RateLimitMiddleware() func(http.Handler) http.Handler {
 					apiKey = strings.TrimPrefix(apiKey, "Bearer ")
 				}
 			}
-			
+
 			result, err := rl.CheckRateLimit(ctx, r, userID, apiKey)
 			if err != nil {
 				http.Error(w, "Rate limit check failed", http.StatusInternalServerError)
 				return
 			}
-			
+
 			// Set rate limit headers
 			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(result.Limit))
 			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(result.Remaining))
 			w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(result.ResetTime.Unix(), 10))
-			
+
 			if !result.Allowed {
 				w.Header().Set("Retry-After", strconv.FormatInt(int64(result.RetryAfter.Seconds()), 10))
 				http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -579,23 +579,23 @@ func (rl *RateLimiter) RateLimitMiddleware() func(http.Handler) http.Handler {
 func (rl *RateLimiter) GetStats() map[string]interface{} {
 	rl.mutex.RLock()
 	defer rl.mutex.RUnlock()
-	
+
 	stats := map[string]interface{}{
 		"local_limiters_count": len(rl.localLimits),
 		"distributed_enabled":  rl.config.EnableDistributed,
 		"cleanup_interval":     rl.config.CleanupInterval.String(),
 	}
-	
+
 	// Add Redis stats if available
 	if rl.redis != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		
+
 		if info, err := rl.redis.Info(ctx, "memory").Result(); err == nil {
 			stats["redis_memory_info"] = info
 		}
 	}
-	
+
 	return stats
 }
 
@@ -603,9 +603,9 @@ func (rl *RateLimiter) GetStats() map[string]interface{} {
 func (rl *RateLimiter) UpdateConfig(config *RateLimitConfig) {
 	rl.mutex.Lock()
 	defer rl.mutex.Unlock()
-	
+
 	rl.config = config
-	
+
 	// Clear local limiters to apply new limits
 	rl.localLimits = make(map[string]*rate.Limiter)
 }
@@ -614,7 +614,7 @@ func (rl *RateLimiter) UpdateConfig(config *RateLimitConfig) {
 func (rl *RateLimiter) updateMetrics(allowed bool, reason string) {
 	rl.metrics.mutex.Lock()
 	defer rl.metrics.mutex.Unlock()
-	
+
 	if allowed {
 		rl.metrics.allowedRequests++
 	} else {
@@ -632,7 +632,7 @@ func (rl *RateLimiter) updateMetrics(allowed bool, reason string) {
 func (rl *RateLimiter) checkDDoSProtection(clientIP string) (bool, time.Duration) {
 	rl.ddosMutex.Lock()
 	defer rl.ddosMutex.Unlock()
-	
+
 	tracker, exists := rl.ddosTracker[clientIP]
 	if !exists {
 		tracker = &DDoSTracker{
@@ -642,36 +642,36 @@ func (rl *RateLimiter) checkDDoSProtection(clientIP string) (bool, time.Duration
 		rl.ddosTracker[clientIP] = tracker
 		return false, 0
 	}
-	
+
 	// Check if currently blocked
 	if tracker.blocked && time.Now().Before(tracker.blockUntil) {
 		return true, time.Until(tracker.blockUntil)
 	}
-	
+
 	// Reset block if expired
 	if tracker.blocked && time.Now().After(tracker.blockUntil) {
 		tracker.blocked = false
 		tracker.requestCount = 0
 		tracker.lastReset = time.Now()
 	}
-	
+
 	// Reset counter if window expired
 	if time.Since(tracker.lastReset) > rl.config.DDoSWindowDuration {
 		tracker.requestCount = 1
 		tracker.lastReset = time.Now()
 		return false, 0
 	}
-	
+
 	// Increment request count
 	tracker.requestCount++
-	
+
 	// Check if threshold exceeded
 	if tracker.requestCount > rl.config.DDoSThreshold {
 		tracker.blocked = true
 		tracker.blockUntil = time.Now().Add(rl.config.DDoSBlockDuration)
 		return true, rl.config.DDoSBlockDuration
 	}
-	
+
 	return false, 0
 }
 
@@ -679,7 +679,7 @@ func (rl *RateLimiter) checkDDoSProtection(clientIP string) (bool, time.Duration
 func (rl *RateLimiter) checkCircuitBreaker(clientIP string) (bool, time.Duration) {
 	rl.circuitMutex.Lock()
 	defer rl.circuitMutex.Unlock()
-	
+
 	cb, exists := rl.circuitBreakers[clientIP]
 	if !exists {
 		cb = &CircuitBreaker{
@@ -688,7 +688,7 @@ func (rl *RateLimiter) checkCircuitBreaker(clientIP string) (bool, time.Duration
 		rl.circuitBreakers[clientIP] = cb
 		return false, 0
 	}
-	
+
 	switch cb.state {
 	case CircuitBreakerOpen:
 		if time.Now().After(cb.nextAttempt) {
@@ -696,11 +696,11 @@ func (rl *RateLimiter) checkCircuitBreaker(clientIP string) (bool, time.Duration
 			return false, 0
 		}
 		return true, time.Until(cb.nextAttempt)
-		
+
 	case CircuitBreakerHalfOpen:
 		// Allow one request to test
 		return false, 0
-		
+
 	default: // CircuitBreakerClosed
 		return false, 0
 	}
@@ -710,12 +710,12 @@ func (rl *RateLimiter) checkCircuitBreaker(clientIP string) (bool, time.Duration
 func (rl *RateLimiter) checkConnectionLimit(clientIP string) bool {
 	rl.connectionMutex.Lock()
 	defer rl.connectionMutex.Unlock()
-	
+
 	currentConnections := rl.activeConnections[clientIP]
 	if currentConnections >= rl.config.MaxConcurrentConnections {
 		return false
 	}
-	
+
 	rl.activeConnections[clientIP]++
 	return true
 }
@@ -724,7 +724,7 @@ func (rl *RateLimiter) checkConnectionLimit(clientIP string) bool {
 func (rl *RateLimiter) ReleaseConnection(clientIP string) {
 	rl.connectionMutex.Lock()
 	defer rl.connectionMutex.Unlock()
-	
+
 	if rl.activeConnections[clientIP] > 0 {
 		rl.activeConnections[clientIP]--
 		if rl.activeConnections[clientIP] == 0 {
@@ -737,7 +737,7 @@ func (rl *RateLimiter) ReleaseConnection(clientIP string) {
 func (rl *RateLimiter) RecordFailure(clientIP string) {
 	rl.circuitMutex.Lock()
 	defer rl.circuitMutex.Unlock()
-	
+
 	cb, exists := rl.circuitBreakers[clientIP]
 	if !exists {
 		cb = &CircuitBreaker{
@@ -745,10 +745,10 @@ func (rl *RateLimiter) RecordFailure(clientIP string) {
 		}
 		rl.circuitBreakers[clientIP] = cb
 	}
-	
+
 	cb.failureCount++
 	cb.lastFailure = time.Now()
-	
+
 	if cb.failureCount >= rl.config.CircuitBreakerThreshold {
 		cb.state = CircuitBreakerOpen
 		cb.nextAttempt = time.Now().Add(rl.config.CircuitBreakerRecoveryTime)
@@ -759,12 +759,12 @@ func (rl *RateLimiter) RecordFailure(clientIP string) {
 func (rl *RateLimiter) RecordSuccess(clientIP string) {
 	rl.circuitMutex.Lock()
 	defer rl.circuitMutex.Unlock()
-	
+
 	cb, exists := rl.circuitBreakers[clientIP]
 	if !exists {
 		return
 	}
-	
+
 	if cb.state == CircuitBreakerHalfOpen {
 		cb.state = CircuitBreakerClosed
 		cb.failureCount = 0

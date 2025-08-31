@@ -1,0 +1,3161 @@
+time="2025-08-22T23:58:27+02:00" level=info msg="Starting scan scan_1755899907 for path: C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json"
+time="2025-08-22T23:58:27+02:00" level=warning msg="Auto-detection failed: no supported projects found in C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json"
+time="2025-08-22T23:58:27+02:00" level=info msg="Found 1 dependency files"
+time="2025-08-22T23:58:27+02:00" level=info msg="DEBUG: Parsing file C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json with type npm"
+time="2025-08-22T23:58:27+02:00" level=info msg="DEBUG: parseNPMDependencies called with fileName: package.json"
+time="2025-08-22T23:58:27+02:00" level=info msg="DEBUG: Returning 85 total dependencies"
+time="2025-08-22T23:58:27+02:00" level=info msg="Analyzing 85 dependencies"
+time="2025-08-22T23:58:27+02:00" level=info msg="Starting threat analysis for 85 dependencies"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @aws-sdk/client-ses from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 525.8µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @aws-sdk/client-sns from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @microsoft/microsoft-graph-client from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @sendgrid/mail from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @sentry/node from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 520.6µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/amqplib from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/bull from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/compression from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 523.6µs. Threat level: low, Confidence: 0.76"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/cors from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.78"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/express from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/handlebars from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/html-to-text from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 517.4µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/jest from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.72"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/jsonwebtoken from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/lodash from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/morgan from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/node from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/nodemailer from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/supertest from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.72"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/swagger-jsdoc from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 521.8µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/swagger-ui-express from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/uuid from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.72"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/web-push from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @types/ws from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 516.8µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @typescript-eslint/eslint-plugin from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.77"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package @typescript-eslint/parser from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.80"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package amqplib from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package apn from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package aws-sdk from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 518.6µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package axios from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package beautifulsoup4 from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package bull from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package compression from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 517.8µs. Threat level: low, Confidence: 0.72"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package cors from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package discord.js from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 529µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package dotenv from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package elastic-apm-node from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package eslint from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package express from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 516.9µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package express-rate-limit from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.88"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package express-validator from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.88"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package fcm-notification from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 511.1µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package firebase-admin from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package handlebars from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 521.6µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package helmet from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package html-to-text from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package ioredis from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 508.7µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package jaeger-client from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package jest from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.75"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package joi from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package jsonwebtoken from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 518.9µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package juice from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.73"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package kafkajs from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package lodash from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 517.5µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package mailgun-js from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package microsoft-graph from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package mjml from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package moment from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 527.2µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package mongoose from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.70"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package morgan from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.73"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package node-cron from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 516.8µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package node-gcm from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package nodemailer from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package nodemon from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 540.9µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package numpyy from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package opentracing from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package pandass from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 516.3µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package prometheus-api-metrics from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package pusher from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package reqeusts from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.73"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package slack-node from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 528.5µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package socket.io from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package supertest from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 520.1µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package swagger-jsdoc from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package swagger-ui-express from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package telegram-bot-api from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package ts-jest from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package ts-node from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 531µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package twilio from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package typescript from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 610.3µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package uuid from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package web-push from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 518µs. Threat level: low, Confidence: 0.78"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package whatsapp-web.js from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package winston from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Checking package ws from npm registry"
+time="2025-08-22T23:58:27+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:27+02:00" level=info msg="Threat analysis completed in 13.108ms. Found 17 threats, 85 warnings"
+time="2025-08-22T23:58:27+02:00" level=info msg="Scan scan_1755899907 completed in 14.6842ms. Found 17 threats, 85 warnings"
+2025/08/22 23:58:27 [DEBUG] Database config - Type: 'sqlite', Database: './data/typosentinel.db'
+2025/08/22 23:58:27 [DEBUG] Database config - Host: 'localhost', Port: 5432, Username: 'typosentinel', SSLMode: 'disable'
+2025/08/22 23:58:27 [DEBUG] Opening SQLite database: ./data/typosentinel.db
+2025/08/22 23:58:27 Warning: Failed to save scan to database: failed to initialize OSS service: failed to ping database: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+{
+  "scan_id": "scan_1755899907",
+  "timestamp": "2025-08-22T23:58:27.4336585+02:00",
+  "duration": 14684200,
+  "path": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+  "total_packages": 85,
+  "threats": [
+    {
+      "id": "threat_1755899907436281100",
+      "package": "@types/compression",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.762962962962963,
+      "description": "Package name '@types/compression' is very similar to 'typescript' (76.3% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/compression' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4444444444444444,
+          "score": 0.4444444444444444
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.762962962962963,
+          "score": 0.762962962962963
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4362811+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907436804700",
+      "package": "@types/cors",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7787878787878788,
+      "description": "Package name '@types/cors' is very similar to 'typescript' (77.9% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/cors' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4545454545454546,
+          "score": 0.4545454545454546
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7787878787878788,
+          "score": 0.7787878787878788
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4368047+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907437322100",
+      "package": "@types/jest",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7151515151515152,
+      "description": "Package name '@types/jest' is very similar to 'typescript' (71.5% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/jest' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.5454545454545454,
+          "score": 0.5454545454545454
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7151515151515152,
+          "score": 0.7151515151515152
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4373221+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907437834900",
+      "package": "@types/supertest",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.725,
+      "description": "Package name '@types/supertest' is very similar to 'typescript' (72.5% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/supertest' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4375,
+          "score": 0.4375
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.725,
+          "score": 0.725
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4378349+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907438356700",
+      "package": "@types/uuid",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7151515151515152,
+      "description": "Package name '@types/uuid' is very similar to 'typescript' (71.5% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/uuid' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4545454545454546,
+          "score": 0.4545454545454546
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7151515151515152,
+          "score": 0.7151515151515152
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4383567+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907438873500",
+      "package": "@typescript-eslint/eslint-plugin",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7708333333333334,
+      "description": "Package name '@typescript-eslint/eslint-plugin' is very similar to 'typescript' (77.1% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@typescript-eslint/eslint-plugin' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.3125,
+          "score": 0.3125
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7708333333333334,
+          "score": 0.7708333333333334
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907438873500",
+      "package": "@typescript-eslint/parser",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7999999999999999,
+      "description": "Package name '@typescript-eslint/parser' is very similar to 'typescript' (80.0% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@typescript-eslint/parser' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4,
+          "score": 0.4
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7999999999999999,
+          "score": 0.7999999999999999
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907439392100",
+      "package": "compression",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7229437229437229,
+      "description": "Package name 'compression' is very similar to 'express' (72.3% similarity)",
+      "similar_to": "express",
+      "recommendation": "Verify that 'compression' is the intended package. Consider using 'express' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4545454545454546,
+          "score": 0.4545454545454546
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7229437229437229,
+          "score": 0.7229437229437229
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4393921+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907440955800",
+      "package": "express-rate-limit",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8777777777777778,
+      "description": "Package name 'express-rate-limit' is very similar to 'express' (87.8% similarity)",
+      "similar_to": "express",
+      "recommendation": "Verify that 'express-rate-limit' is the intended package. Consider using 'express' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.38888888888888884,
+          "score": 0.38888888888888884
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8777777777777778,
+          "score": 0.8777777777777778
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4409558+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907440955800",
+      "package": "express-validator",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8823529411764706,
+      "description": "Package name 'express-validator' is very similar to 'express' (88.2% similarity)",
+      "similar_to": "express",
+      "recommendation": "Verify that 'express-validator' is the intended package. Consider using 'express' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4117647058823529,
+          "score": 0.4117647058823529
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8823529411764706,
+          "score": 0.8823529411764706
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4409558+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907442497200",
+      "package": "jest",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.75,
+      "description": "Package name 'jest' is very similar to 'eslint' (75.0% similarity)",
+      "similar_to": "eslint",
+      "recommendation": "Verify that 'jest' is the intended package. Consider using 'eslint' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.33333333333333337,
+          "score": 0.33333333333333337
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.75,
+          "score": 0.75
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4424972+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907443016100",
+      "package": "juice",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7300000000000001,
+      "description": "Package name 'juice' is very similar to 'jquery' (73.0% similarity)",
+      "similar_to": "jquery",
+      "recommendation": "Verify that 'juice' is the intended package. Consider using 'jquery' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.33333333333333337,
+          "score": 0.33333333333333337
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7300000000000001,
+          "score": 0.7300000000000001
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4430161+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907444060800",
+      "package": "mongoose",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7,
+      "description": "Package name 'mongoose' is very similar to 'moment' (70.0% similarity)",
+      "similar_to": "moment",
+      "recommendation": "Verify that 'mongoose' is the intended package. Consider using 'moment' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.25,
+          "score": 0.25
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7,
+          "score": 0.7
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4440608+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907444060800",
+      "package": "morgan",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7333333333333333,
+      "description": "Package name 'morgan' is very similar to 'moment' (73.3% similarity)",
+      "similar_to": "moment",
+      "recommendation": "Verify that 'morgan' is the intended package. Consider using 'moment' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.33333333333333337,
+          "score": 0.33333333333333337
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7333333333333333,
+          "score": 0.7333333333333333
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4440608+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907445634800",
+      "package": "reqeusts",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7266666666666667,
+      "description": "Package name 'reqeusts' is very similar to 'react' (72.7% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'reqeusts' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.375,
+          "score": 0.375
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7266666666666667,
+          "score": 0.7266666666666667
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4456348+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907445634800",
+      "package": "reqeusts",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7130952380952381,
+      "description": "Package name 'reqeusts' is very similar to 'express' (71.3% similarity)",
+      "similar_to": "express",
+      "recommendation": "Verify that 'reqeusts' is the intended package. Consider using 'express' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.25,
+          "score": 0.25
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7130952380952381,
+          "score": 0.7130952380952381
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4456348+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899907447824700",
+      "package": "web-push",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7833333333333332,
+      "description": "Package name 'web-push' is very similar to 'webpack' (78.3% similarity)",
+      "similar_to": "webpack",
+      "recommendation": "Verify that 'web-push' is the intended package. Consider using 'webpack' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.5,
+          "score": 0.5
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7833333333333332,
+          "score": 0.7833333333333332
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:27.4478247+02:00",
+      "detection_method": "lexical_similarity"
+    }
+  ],
+  "warnings": [
+    {
+      "id": "warning_1755899907435234700",
+      "package": "@aws-sdk/client-ses",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4352347+02:00"
+    },
+    {
+      "id": "warning_1755899907435760500",
+      "package": "@aws-sdk/client-sns",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4357605+02:00"
+    },
+    {
+      "id": "warning_1755899907435760500",
+      "package": "@microsoft/microsoft-graph-client",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4357605+02:00"
+    },
+    {
+      "id": "warning_1755899907435760500",
+      "package": "@sendgrid/mail",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4357605+02:00"
+    },
+    {
+      "id": "warning_1755899907436281100",
+      "package": "@sentry/node",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4362811+02:00"
+    },
+    {
+      "id": "warning_1755899907436281100",
+      "package": "@types/amqplib",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4362811+02:00"
+    },
+    {
+      "id": "warning_1755899907436281100",
+      "package": "@types/bull",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4362811+02:00"
+    },
+    {
+      "id": "warning_1755899907436804700",
+      "package": "@types/compression",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4368047+02:00"
+    },
+    {
+      "id": "warning_1755899907436804700",
+      "package": "@types/cors",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4368047+02:00"
+    },
+    {
+      "id": "warning_1755899907436804700",
+      "package": "@types/express",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4368047+02:00"
+    },
+    {
+      "id": "warning_1755899907436804700",
+      "package": "@types/handlebars",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4368047+02:00"
+    },
+    {
+      "id": "warning_1755899907437322100",
+      "package": "@types/html-to-text",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4373221+02:00"
+    },
+    {
+      "id": "warning_1755899907437322100",
+      "package": "@types/jest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4373221+02:00"
+    },
+    {
+      "id": "warning_1755899907437322100",
+      "package": "@types/jsonwebtoken",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4373221+02:00"
+    },
+    {
+      "id": "warning_1755899907437322100",
+      "package": "@types/lodash",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4373221+02:00"
+    },
+    {
+      "id": "warning_1755899907437834900",
+      "package": "@types/morgan",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4378349+02:00"
+    },
+    {
+      "id": "warning_1755899907437834900",
+      "package": "@types/node",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4378349+02:00"
+    },
+    {
+      "id": "warning_1755899907437834900",
+      "package": "@types/nodemailer",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4378349+02:00"
+    },
+    {
+      "id": "warning_1755899907437834900",
+      "package": "@types/supertest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4378349+02:00"
+    },
+    {
+      "id": "warning_1755899907438356700",
+      "package": "@types/swagger-jsdoc",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4383567+02:00"
+    },
+    {
+      "id": "warning_1755899907438356700",
+      "package": "@types/swagger-ui-express",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4383567+02:00"
+    },
+    {
+      "id": "warning_1755899907438356700",
+      "package": "@types/uuid",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4383567+02:00"
+    },
+    {
+      "id": "warning_1755899907438356700",
+      "package": "@types/web-push",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4383567+02:00"
+    },
+    {
+      "id": "warning_1755899907438873500",
+      "package": "@types/ws",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00"
+    },
+    {
+      "id": "warning_1755899907438873500",
+      "package": "@typescript-eslint/eslint-plugin",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00"
+    },
+    {
+      "id": "warning_1755899907438873500",
+      "package": "@typescript-eslint/parser",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00"
+    },
+    {
+      "id": "warning_1755899907438873500",
+      "package": "amqplib",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00"
+    },
+    {
+      "id": "warning_1755899907438873500",
+      "package": "apn",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4388735+02:00"
+    },
+    {
+      "id": "warning_1755899907439392100",
+      "package": "aws-sdk",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4393921+02:00"
+    },
+    {
+      "id": "warning_1755899907439392100",
+      "package": "axios",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4393921+02:00"
+    },
+    {
+      "id": "warning_1755899907439392100",
+      "package": "beautifulsoup4",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4393921+02:00"
+    },
+    {
+      "id": "warning_1755899907439392100",
+      "package": "bull",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4393921+02:00"
+    },
+    {
+      "id": "warning_1755899907439909900",
+      "package": "compression",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4399099+02:00"
+    },
+    {
+      "id": "warning_1755899907439909900",
+      "package": "cors",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4399099+02:00"
+    },
+    {
+      "id": "warning_1755899907440438900",
+      "package": "discord.js",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4404389+02:00"
+    },
+    {
+      "id": "warning_1755899907440438900",
+      "package": "dotenv",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4404389+02:00"
+    },
+    {
+      "id": "warning_1755899907440438900",
+      "package": "elastic-apm-node",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4404389+02:00"
+    },
+    {
+      "id": "warning_1755899907440438900",
+      "package": "eslint",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4404389+02:00"
+    },
+    {
+      "id": "warning_1755899907440955800",
+      "package": "express",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4409558+02:00"
+    },
+    {
+      "id": "warning_1755899907440955800",
+      "package": "express-rate-limit",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4409558+02:00"
+    },
+    {
+      "id": "warning_1755899907440955800",
+      "package": "express-validator",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4409558+02:00"
+    },
+    {
+      "id": "warning_1755899907441466900",
+      "package": "fcm-notification",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4414669+02:00"
+    },
+    {
+      "id": "warning_1755899907441466900",
+      "package": "firebase-admin",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4414669+02:00"
+    },
+    {
+      "id": "warning_1755899907441988500",
+      "package": "handlebars",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4419885+02:00"
+    },
+    {
+      "id": "warning_1755899907441988500",
+      "package": "helmet",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4419885+02:00"
+    },
+    {
+      "id": "warning_1755899907441988500",
+      "package": "html-to-text",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4419885+02:00"
+    },
+    {
+      "id": "warning_1755899907442497200",
+      "package": "ioredis",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4424972+02:00"
+    },
+    {
+      "id": "warning_1755899907442497200",
+      "package": "jaeger-client",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4424972+02:00"
+    },
+    {
+      "id": "warning_1755899907442497200",
+      "package": "jest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4424972+02:00"
+    },
+    {
+      "id": "warning_1755899907442497200",
+      "package": "joi",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4424972+02:00"
+    },
+    {
+      "id": "warning_1755899907443016100",
+      "package": "jsonwebtoken",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4430161+02:00"
+    },
+    {
+      "id": "warning_1755899907443016100",
+      "package": "juice",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4430161+02:00"
+    },
+    {
+      "id": "warning_1755899907443016100",
+      "package": "kafkajs",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4430161+02:00"
+    },
+    {
+      "id": "warning_1755899907443533600",
+      "package": "lodash",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4435336+02:00"
+    },
+    {
+      "id": "warning_1755899907443533600",
+      "package": "mailgun-js",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4435336+02:00"
+    },
+    {
+      "id": "warning_1755899907443533600",
+      "package": "microsoft-graph",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4435336+02:00"
+    },
+    {
+      "id": "warning_1755899907443533600",
+      "package": "mjml",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4435336+02:00"
+    },
+    {
+      "id": "warning_1755899907444060800",
+      "package": "moment",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4440608+02:00"
+    },
+    {
+      "id": "warning_1755899907444060800",
+      "package": "mongoose",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4440608+02:00"
+    },
+    {
+      "id": "warning_1755899907444060800",
+      "package": "morgan",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4440608+02:00"
+    },
+    {
+      "id": "warning_1755899907444577600",
+      "package": "node-cron",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4445776+02:00"
+    },
+    {
+      "id": "warning_1755899907444577600",
+      "package": "node-gcm",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4445776+02:00"
+    },
+    {
+      "id": "warning_1755899907444577600",
+      "package": "nodemailer",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4445776+02:00"
+    },
+    {
+      "id": "warning_1755899907445118500",
+      "package": "nodemon",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4451185+02:00"
+    },
+    {
+      "id": "warning_1755899907445118500",
+      "package": "numpyy",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4451185+02:00"
+    },
+    {
+      "id": "warning_1755899907445118500",
+      "package": "opentracing",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4451185+02:00"
+    },
+    {
+      "id": "warning_1755899907445634800",
+      "package": "pandass",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4456348+02:00"
+    },
+    {
+      "id": "warning_1755899907445634800",
+      "package": "prometheus-api-metrics",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4456348+02:00"
+    },
+    {
+      "id": "warning_1755899907445634800",
+      "package": "pusher",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4456348+02:00"
+    },
+    {
+      "id": "warning_1755899907445634800",
+      "package": "reqeusts",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4456348+02:00"
+    },
+    {
+      "id": "warning_1755899907446163300",
+      "package": "slack-node",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4461633+02:00"
+    },
+    {
+      "id": "warning_1755899907446163300",
+      "package": "socket.io",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4461633+02:00"
+    },
+    {
+      "id": "warning_1755899907446683400",
+      "package": "supertest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4466834+02:00"
+    },
+    {
+      "id": "warning_1755899907446683400",
+      "package": "swagger-jsdoc",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4466834+02:00"
+    },
+    {
+      "id": "warning_1755899907446683400",
+      "package": "swagger-ui-express",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4466834+02:00"
+    },
+    {
+      "id": "warning_1755899907446683400",
+      "package": "telegram-bot-api",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4466834+02:00"
+    },
+    {
+      "id": "warning_1755899907446683400",
+      "package": "ts-jest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4466834+02:00"
+    },
+    {
+      "id": "warning_1755899907447214400",
+      "package": "ts-node",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4472144+02:00"
+    },
+    {
+      "id": "warning_1755899907447214400",
+      "package": "twilio",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4472144+02:00"
+    },
+    {
+      "id": "warning_1755899907447824700",
+      "package": "typescript",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4478247+02:00"
+    },
+    {
+      "id": "warning_1755899907447824700",
+      "package": "uuid",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4478247+02:00"
+    },
+    {
+      "id": "warning_1755899907448342700",
+      "package": "web-push",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4483427+02:00"
+    },
+    {
+      "id": "warning_1755899907448342700",
+      "package": "whatsapp-web.js",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4483427+02:00"
+    },
+    {
+      "id": "warning_1755899907448342700",
+      "package": "winston",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4483427+02:00"
+    },
+    {
+      "id": "warning_1755899907448342700",
+      "package": "ws",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:27.4483427+02:00"
+    }
+  ],
+  "resolution": {
+    "resolved": [
+      {
+        "name": "@aws-sdk/client-ses",
+        "version": "3.462.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.462.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@aws-sdk/client-sns",
+        "version": "3.462.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.462.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@microsoft/microsoft-graph-client",
+        "version": "3.0.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.0.7",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@sendgrid/mail",
+        "version": "7.7.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.7.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@sentry/node",
+        "version": "7.81.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.81.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/amqplib",
+        "version": "0.10.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.10.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/bull",
+        "version": "4.10.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.10.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/compression",
+        "version": "1.7.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.7.5",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/cors",
+        "version": "2.8.17",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.8.17",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/express",
+        "version": "4.17.21",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.17.21",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/handlebars",
+        "version": "4.1.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.1.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/html-to-text",
+        "version": "9.0.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^9.0.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/jest",
+        "version": "29.5.8",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^29.5.8",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/jsonwebtoken",
+        "version": "9.0.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^9.0.5",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/lodash",
+        "version": "4.14.202",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.14.202",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/morgan",
+        "version": "1.9.9",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.9.9",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/node",
+        "version": "20.10.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^20.10.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/nodemailer",
+        "version": "6.4.14",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.4.14",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/supertest",
+        "version": "2.0.16",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.0.16",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/swagger-jsdoc",
+        "version": "6.0.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.0.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/swagger-ui-express",
+        "version": "4.1.6",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.1.6",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/uuid",
+        "version": "9.0.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^9.0.7",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/web-push",
+        "version": "3.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.6.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@types/ws",
+        "version": "8.5.10",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^8.5.10",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@typescript-eslint/eslint-plugin",
+        "version": "6.13.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.13.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "@typescript-eslint/parser",
+        "version": "6.13.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.13.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "amqplib",
+        "version": "0.10.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.10.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "apn",
+        "version": "2.2.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.2.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "aws-sdk",
+        "version": "2.1498.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.1498.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "axios",
+        "version": "1.6.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.6.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "beautifulsoup4",
+        "version": "1.0.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.0.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "bull",
+        "version": "4.12.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.12.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "compression",
+        "version": "1.7.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.7.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "cors",
+        "version": "2.8.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.8.5",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "discord.js",
+        "version": "14.14.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^14.14.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "dotenv",
+        "version": "16.3.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^16.3.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "elastic-apm-node",
+        "version": "4.5.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.5.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "eslint",
+        "version": "8.54.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^8.54.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "express",
+        "version": "4.18.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.18.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "express-rate-limit",
+        "version": "7.1.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.1.5",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "express-validator",
+        "version": "7.0.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.0.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "fcm-notification",
+        "version": "0.1.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.1.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "firebase-admin",
+        "version": "11.11.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^11.11.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "handlebars",
+        "version": "4.7.8",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.7.8",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "helmet",
+        "version": "7.1.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.1.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "html-to-text",
+        "version": "9.0.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^9.0.5",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "ioredis",
+        "version": "5.3.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.3.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "jaeger-client",
+        "version": "3.19.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.19.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "jest",
+        "version": "29.7.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^29.7.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "joi",
+        "version": "17.11.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^17.11.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "jsonwebtoken",
+        "version": "9.0.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^9.0.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "juice",
+        "version": "10.0.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^10.0.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "kafkajs",
+        "version": "2.2.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.2.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "lodash",
+        "version": "4.17.21",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.17.21",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "mailgun-js",
+        "version": "0.22.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.22.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "microsoft-graph",
+        "version": "3.0.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.0.7",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "mjml",
+        "version": "4.14.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.14.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "moment",
+        "version": "2.29.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.29.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "mongoose",
+        "version": "8.0.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^8.0.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "morgan",
+        "version": "1.10.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.10.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "node-cron",
+        "version": "3.0.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.0.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "node-gcm",
+        "version": "1.0.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.0.5",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "nodemailer",
+        "version": "6.9.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.9.7",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "nodemon",
+        "version": "3.0.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.0.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "numpyy",
+        "version": "1.0.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.0.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "opentracing",
+        "version": "0.14.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.14.7",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "pandass",
+        "version": "1.0.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.0.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "prometheus-api-metrics",
+        "version": "3.2.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.2.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "pusher",
+        "version": "5.1.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.1.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "reqeusts",
+        "version": "1.0.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.0.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "slack-node",
+        "version": "0.1.8",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.1.8",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "socket.io",
+        "version": "4.7.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.7.4",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "supertest",
+        "version": "6.3.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.3.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "swagger-jsdoc",
+        "version": "6.2.8",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.2.8",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "swagger-ui-express",
+        "version": "5.0.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.0.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "telegram-bot-api",
+        "version": "2.0.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.0.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "ts-jest",
+        "version": "29.1.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^29.1.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "ts-node",
+        "version": "10.9.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^10.9.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "twilio",
+        "version": "4.19.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.19.3",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "typescript",
+        "version": "5.3.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.3.2",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "uuid",
+        "version": "9.0.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^9.0.1",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "web-push",
+        "version": "3.6.6",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.6.6",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "whatsapp-web.js",
+        "version": "1.23.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.23.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "winston",
+        "version": "3.11.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.11.0",
+          "parent": "notification-service"
+        }
+      },
+      {
+        "name": "ws",
+        "version": "8.14.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^8.14.2",
+          "parent": "notification-service"
+        }
+      }
+    ],
+    "conflicts": [],
+    "warnings": []
+  },
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 0,
+    "medium_threats": 2,
+    "low_threats": 15,
+    "total_warnings": 85,
+    "clean_packages": 68,
+    "conflict_count": 0
+  },
+  "metadata": {
+    "dependency_files": [
+      "C:/Users/aliko/Typo/Typosentinel/enterprise-env/microservices/notification-service/package.json"
+    ],
+    "detector_version": "1.0.0",
+    "scan_options": {
+      "OutputFormat": "json",
+      "SpecificFile": "",
+      "DeepAnalysis": false,
+      "IncludeDevDependencies": true,
+      "SimilarityThreshold": 0.8,
+      "ExcludePackages": [],
+      "AllowEmptyProjects": true,
+      "CheckVulnerabilities": false,
+      "VulnerabilityDBs": [
+        "osv",
+        "nvd"
+      ],
+      "VulnConfigPath": "config/vulnerability_databases.yaml",
+      "Recursive": false,
+      "WorkspaceAware": true,
+      "ConsolidateReport": false,
+      "PackageManagers": [],
+      "EnableSupplyChain": false,
+      "AdvancedAnalysis": false
+    }
+  }
+}

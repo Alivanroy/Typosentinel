@@ -14,14 +14,14 @@ type CycloneDXFormatter struct{}
 
 // CycloneDXDocument represents a CycloneDX SBOM document
 type CycloneDXDocument struct {
-	BOMFormat    string                `json:"bomFormat"`
-	SpecVersion  string                `json:"specVersion"`
-	SerialNumber string                `json:"serialNumber"`
-	Version      int                   `json:"version"`
-	Metadata     CycloneDXMetadata     `json:"metadata"`
-	Components   []CycloneDXComponent  `json:"components"`
-	Services     []CycloneDXService    `json:"services,omitempty"`
-	Dependencies []CycloneDXDependency `json:"dependencies,omitempty"`
+	BOMFormat       string                   `json:"bomFormat"`
+	SpecVersion     string                   `json:"specVersion"`
+	SerialNumber    string                   `json:"serialNumber"`
+	Version         int                      `json:"version"`
+	Metadata        CycloneDXMetadata        `json:"metadata"`
+	Components      []CycloneDXComponent     `json:"components"`
+	Services        []CycloneDXService       `json:"services,omitempty"`
+	Dependencies    []CycloneDXDependency    `json:"dependencies,omitempty"`
 	Vulnerabilities []CycloneDXVulnerability `json:"vulnerabilities,omitempty"`
 }
 
@@ -48,58 +48,58 @@ type CycloneDXAuthor struct {
 
 // CycloneDXComponent represents a software component
 type CycloneDXComponent struct {
-	Type        string                    `json:"type"`
-	BOMRef      string                    `json:"bom-ref"`
-	Name        string                    `json:"name"`
-	Version     string                    `json:"version,omitempty"`
-	Description string                    `json:"description,omitempty"`
-	Scope       string                    `json:"scope,omitempty"`
-	Hashes      []CycloneDXHash           `json:"hashes,omitempty"`
-	Licenses    []CycloneDXLicense        `json:"licenses,omitempty"`
-	Copyright   string                    `json:"copyright,omitempty"`
-	CPE         string                    `json:"cpe,omitempty"`
-	PURL        string                    `json:"purl,omitempty"`
-	ExternalRefs []CycloneDXExternalRef   `json:"externalReferences,omitempty"`
-	Properties  []CycloneDXProperty       `json:"properties,omitempty"`
+	Type         string                 `json:"type"`
+	BOMRef       string                 `json:"bom-ref"`
+	Name         string                 `json:"name"`
+	Version      string                 `json:"version,omitempty"`
+	Description  string                 `json:"description,omitempty"`
+	Scope        string                 `json:"scope,omitempty"`
+	Hashes       []CycloneDXHash        `json:"hashes,omitempty"`
+	Licenses     []CycloneDXLicense     `json:"licenses,omitempty"`
+	Copyright    string                 `json:"copyright,omitempty"`
+	CPE          string                 `json:"cpe,omitempty"`
+	PURL         string                 `json:"purl,omitempty"`
+	ExternalRefs []CycloneDXExternalRef `json:"externalReferences,omitempty"`
+	Properties   []CycloneDXProperty    `json:"properties,omitempty"`
 }
 
 // CycloneDXService represents a service
 type CycloneDXService struct {
-	BOMRef      string                  `json:"bom-ref"`
-	Name        string                  `json:"name"`
-	Version     string                  `json:"version,omitempty"`
-	Description string                  `json:"description,omitempty"`
-	Endpoints   []string                `json:"endpoints,omitempty"`
-	Authenticated bool                  `json:"authenticated,omitempty"`
-	xTrustBoundary bool                 `json:"x-trust-boundary,omitempty"`
-	Data        []CycloneDXDataFlow     `json:"data,omitempty"`
-	Licenses    []CycloneDXLicense      `json:"licenses,omitempty"`
-	ExternalRefs []CycloneDXExternalRef `json:"externalReferences,omitempty"`
+	BOMRef         string                 `json:"bom-ref"`
+	Name           string                 `json:"name"`
+	Version        string                 `json:"version,omitempty"`
+	Description    string                 `json:"description,omitempty"`
+	Endpoints      []string               `json:"endpoints,omitempty"`
+	Authenticated  bool                   `json:"authenticated,omitempty"`
+	XTrustBoundary bool                   `json:"x-trust-boundary,omitempty"`
+	Data           []CycloneDXDataFlow    `json:"data,omitempty"`
+	Licenses       []CycloneDXLicense     `json:"licenses,omitempty"`
+	ExternalRefs   []CycloneDXExternalRef `json:"externalReferences,omitempty"`
 }
 
 // CycloneDXDependency represents a dependency relationship
 type CycloneDXDependency struct {
-	Ref          string   `json:"ref"`
-	DependsOn    []string `json:"dependsOn,omitempty"`
+	Ref       string   `json:"ref"`
+	DependsOn []string `json:"dependsOn,omitempty"`
 }
 
 // CycloneDXVulnerability represents a security vulnerability
 type CycloneDXVulnerability struct {
-	BOMRef      string                    `json:"bom-ref"`
-	ID          string                    `json:"id"`
-	Source      CycloneDXVulnSource       `json:"source"`
-	References  []CycloneDXVulnReference  `json:"references,omitempty"`
-	Ratings     []CycloneDXVulnRating     `json:"ratings,omitempty"`
-	CWEs        []int                     `json:"cwes,omitempty"`
-	Description string                    `json:"description,omitempty"`
-	Detail      string                    `json:"detail,omitempty"`
-	Recommendation string                 `json:"recommendation,omitempty"`
-	Affects     []CycloneDXVulnAffects    `json:"affects,omitempty"`
-	Published   string                    `json:"published,omitempty"`
-	Updated     string                    `json:"updated,omitempty"`
-	Credits     CycloneDXVulnCredits      `json:"credits,omitempty"`
-	Tools       []CycloneDXTool           `json:"tools,omitempty"`
-	Analysis    CycloneDXVulnAnalysis     `json:"analysis,omitempty"`
+	BOMRef         string                   `json:"bom-ref"`
+	ID             string                   `json:"id"`
+	Source         CycloneDXVulnSource      `json:"source"`
+	References     []CycloneDXVulnReference `json:"references,omitempty"`
+	Ratings        []CycloneDXVulnRating    `json:"ratings,omitempty"`
+	CWEs           []int                    `json:"cwes,omitempty"`
+	Description    string                   `json:"description,omitempty"`
+	Detail         string                   `json:"detail,omitempty"`
+	Recommendation string                   `json:"recommendation,omitempty"`
+	Affects        []CycloneDXVulnAffects   `json:"affects,omitempty"`
+	Published      string                   `json:"published,omitempty"`
+	Updated        string                   `json:"updated,omitempty"`
+	Credits        CycloneDXVulnCredits     `json:"credits,omitempty"`
+	Tools          []CycloneDXTool          `json:"tools,omitempty"`
+	Analysis       CycloneDXVulnAnalysis    `json:"analysis,omitempty"`
 }
 
 // CycloneDXHash represents a hash value
@@ -147,7 +147,7 @@ type CycloneDXVulnSource struct {
 
 // CycloneDXVulnReference represents a vulnerability reference
 type CycloneDXVulnReference struct {
-	ID     string `json:"id"`
+	ID     string              `json:"id"`
 	Source CycloneDXVulnSource `json:"source"`
 }
 
@@ -167,7 +167,7 @@ type CycloneDXVulnAffects struct {
 
 // CycloneDXVulnCredits represents vulnerability credits
 type CycloneDXVulnCredits struct {
-	Individuals []CycloneDXVulnIndividual `json:"individuals,omitempty"`
+	Individuals   []CycloneDXVulnIndividual   `json:"individuals,omitempty"`
 	Organizations []CycloneDXVulnOrganization `json:"organizations,omitempty"`
 }
 
@@ -185,12 +185,12 @@ type CycloneDXVulnOrganization struct {
 
 // CycloneDXVulnAnalysis represents vulnerability analysis information
 type CycloneDXVulnAnalysis struct {
-	State         string    `json:"state,omitempty"`
-	Justification string    `json:"justification,omitempty"`
-	Response      []string  `json:"response,omitempty"`
-	Detail        string    `json:"detail,omitempty"`
-	FirstIssued   string    `json:"firstIssued,omitempty"`
-	LastUpdated   string    `json:"lastUpdated,omitempty"`
+	State         string   `json:"state,omitempty"`
+	Justification string   `json:"justification,omitempty"`
+	Response      []string `json:"response,omitempty"`
+	Detail        string   `json:"detail,omitempty"`
+	FirstIssued   string   `json:"firstIssued,omitempty"`
+	LastUpdated   string   `json:"lastUpdated,omitempty"`
 }
 
 // NewCycloneDXFormatter creates a new CycloneDX formatter
@@ -241,7 +241,7 @@ func (f *CycloneDXFormatter) createComponents(results *scanner.ScanResults) []Cy
 		if result.Package == nil || result.Package.Metadata == nil {
 			continue
 		}
-		
+
 		component := CycloneDXComponent{
 			Type:    "library",
 			BOMRef:  f.createBOMRef(result.Package.Metadata.Name, result.Package.Metadata.Version),
@@ -330,8 +330,8 @@ func (f *CycloneDXFormatter) createVulnerabilities(results *scanner.ScanResults)
 					Name: "Typosentinel",
 					URL:  "https://typosentinel.com",
 				},
-				Description: threat.Description,
-				Detail:      threat.Evidence,
+				Description:    threat.Description,
+				Detail:         threat.Evidence,
 				Recommendation: threat.Recommendation,
 				Ratings: []CycloneDXVulnRating{
 					{

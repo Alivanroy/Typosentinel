@@ -1,0 +1,16 @@
+{
+  "name": "enterprise-main",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "4.18.2",
+    "lodash": "4.17.21",
+    "axios": "1.6.0",
+    "jsonwebtoken": "9.0.2",
+    "bcryptjs": "2.4.3"
+  },
+  "devDependencies": {
+    "jest": "29.7.0",
+    "eslint": "8.57.0",
+    "typescript": "5.3.3"
+  }
+}

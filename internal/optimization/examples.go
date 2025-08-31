@@ -14,7 +14,7 @@ import (
 func ExampleBasicOptimization() {
 	// Initialize database
 	dbConfig := &config.DatabaseConfig{
-		Type: "sqlite",
+		Type:     "sqlite",
 		Database: ":memory:",
 	}
 	db, err := database.NewThreatDB(dbConfig)
@@ -66,7 +66,7 @@ func ExampleBasicOptimization() {
 func ExampleBatchOptimization() {
 	// Initialize database
 	dbConfig := &config.DatabaseConfig{
-		Type: "sqlite",
+		Type:     "sqlite",
 		Database: ":memory:",
 	}
 	db, err := database.NewThreatDB(dbConfig)
@@ -128,7 +128,7 @@ func ExampleBatchOptimization() {
 func ExampleAdvancedOptimization() {
 	// Initialize database
 	dbConfig := &config.DatabaseConfig{
-		Type: "sqlite",
+		Type:     "sqlite",
 		Database: ":memory:",
 	}
 	db, err := database.NewThreatDB(dbConfig)
@@ -314,7 +314,7 @@ func ExampleAdvancedOptimization() {
 func ExampleHealthMonitoring() {
 	// Initialize database
 	dbConfig := &config.DatabaseConfig{
-		Type: "sqlite",
+		Type:     "sqlite",
 		Database: ":memory:",
 	}
 	db, err := database.NewThreatDB(dbConfig)
@@ -373,7 +373,7 @@ func ExampleHealthMonitoring() {
 func ExampleConfigurationManagement() {
 	// Initialize database
 	dbConfig := &config.DatabaseConfig{
-		Type: "sqlite",
+		Type:     "sqlite",
 		Database: ":memory:",
 	}
 	db, err := database.NewThreatDB(dbConfig)
@@ -428,7 +428,7 @@ func GetRecommendedConfiguration() *PerformanceConfig {
 func ExamplePerformanceBenchmarking() {
 	// Initialize database
 	dbConfig := &config.DatabaseConfig{
-		Type: "sqlite",
+		Type:     "sqlite",
 		Database: ":memory:",
 	}
 	db, err := database.NewThreatDB(dbConfig)

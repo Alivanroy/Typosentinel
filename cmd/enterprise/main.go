@@ -168,33 +168,46 @@ func (pla *PkgLoggerAdapter) Debug(msg string, fields ...map[string]interface{})
 // noOpMetrics is a no-op implementation of interfaces.Metrics
 type noOpMetrics struct{}
 
-func (m *noOpMetrics) IncrementCounter(name string, labels interfaces.MetricTags) {}
-func (m *noOpMetrics) SetGauge(name string, value float64, labels interfaces.MetricTags) {}
+func (m *noOpMetrics) IncrementCounter(name string, labels interfaces.MetricTags)               {}
+func (m *noOpMetrics) SetGauge(name string, value float64, labels interfaces.MetricTags)        {}
 func (m *noOpMetrics) RecordHistogram(name string, value float64, labels interfaces.MetricTags) {}
-func (m *noOpMetrics) RecordDuration(name string, duration time.Duration, tags interfaces.MetricTags) {}
+func (m *noOpMetrics) RecordDuration(name string, duration time.Duration, tags interfaces.MetricTags) {
+}
 func (m *noOpMetrics) Start(ctx context.Context) error { return nil }
-func (m *noOpMetrics) Stop() error { return nil }
-func (m *noOpMetrics) Counter(name string, tags interfaces.MetricTags) interfaces.Counter { return &noOpCounter{} }
-func (m *noOpMetrics) Gauge(name string, tags interfaces.MetricTags) interfaces.Gauge { return &noOpGauge{} }
-func (m *noOpMetrics) Histogram(name string, tags interfaces.MetricTags) interfaces.Histogram { return &noOpHistogram{} }
-func (m *noOpMetrics) Timer(name string, tags interfaces.MetricTags) interfaces.Timer { return &noOpTimer{} }
+func (m *noOpMetrics) Stop() error                     { return nil }
+func (m *noOpMetrics) Counter(name string, tags interfaces.MetricTags) interfaces.Counter {
+	return &noOpCounter{}
+}
+func (m *noOpMetrics) Gauge(name string, tags interfaces.MetricTags) interfaces.Gauge {
+	return &noOpGauge{}
+}
+func (m *noOpMetrics) Histogram(name string, tags interfaces.MetricTags) interfaces.Histogram {
+	return &noOpHistogram{}
+}
+func (m *noOpMetrics) Timer(name string, tags interfaces.MetricTags) interfaces.Timer {
+	return &noOpTimer{}
+}
 
 type noOpCounter struct{}
-func (c *noOpCounter) Inc() {}
+
+func (c *noOpCounter) Inc()              {}
 func (c *noOpCounter) Add(value float64) {}
 
 type noOpGauge struct{}
+
 func (g *noOpGauge) Set(value float64) {}
-func (g *noOpGauge) Inc() {}
-func (g *noOpGauge) Dec() {}
+func (g *noOpGauge) Inc()              {}
+func (g *noOpGauge) Dec()              {}
 func (g *noOpGauge) Add(value float64) {}
 func (g *noOpGauge) Sub(value float64) {}
 
 type noOpHistogram struct{}
+
 func (h *noOpHistogram) Observe(value float64) {}
 
 type noOpTimer struct{}
-func (t *noOpTimer) Time() func() { return func() {} }
+
+func (t *noOpTimer) Time() func()                  { return func() {} }
 func (t *noOpTimer) Record(duration time.Duration) {}
 
 // Helper functions
@@ -878,14 +891,14 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	// Initialize database service
 	dbConfig := &config.DatabaseConfig{
-		Host:            "localhost",
-		Port:            5432,
-		Username:        "typosentinel",
-		Password:        "password",
-		Database:        "typosentinel",
-		SSLMode:         "disable",
-		MaxOpenConns:    10,
-		MaxIdleConns:    5,
+		Host:         "localhost",
+		Port:         5432,
+		Username:     "typosentinel",
+		Password:     "password",
+		Database:     "typosentinel",
+		SSLMode:      "disable",
+		MaxOpenConns: 10,
+		MaxIdleConns: 5,
 	}
 	dbService, err := database.NewDatabaseService(dbConfig)
 	if err != nil {
@@ -913,7 +926,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	var violationStore auth.ViolationStore
 	var dbViolationStore *storage.ViolationStore
 	if dbService != nil {
-		dbViolationStore = storage.NewViolationStore(dbService.GetDB(), pkgLogger)
+		dbViolationStore = storage.NewViolationStore()
 		violationStore = dbViolationStore
 		log.Printf("Using database-backed violation store")
 	} else {
@@ -996,7 +1009,7 @@ func runServer(cmd *cobra.Command, args []string) {
 			MaxAge:           86400,
 		}
 		log.Printf("[ENTERPRISE DEBUG] CORS config created: %+v", corsConfig)
-		
+
 		restConfig := config.RESTAPIConfig{
 			Enabled:  true,
 			Host:     host,

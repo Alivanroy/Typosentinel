@@ -22,20 +22,20 @@ type EnterpriseAPIServer struct {
 
 // APIConfig configures the enterprise API server
 type APIConfig struct {
-	Port                int           `json:"port"`
-	Host                string        `json:"host"`
-	TLSEnabled          bool          `json:"tls_enabled"`
-	CertFile            string        `json:"cert_file"`
-	KeyFile             string        `json:"key_file"`
-	CORSEnabled         bool          `json:"cors_enabled"`
-	AllowedOrigins      []string      `json:"allowed_origins"`
-	AuthenticationEnabled bool        `json:"authentication_enabled"`
-	APIKeyRequired      bool          `json:"api_key_required"`
-	JWTSecret           string        `json:"jwt_secret"`
-	RequestTimeout      time.Duration `json:"request_timeout"`
-	MaxRequestSize      int64         `json:"max_request_size"`
-	LoggingEnabled      bool          `json:"logging_enabled"`
-	MetricsEnabled      bool          `json:"metrics_enabled"`
+	Port                  int           `json:"port"`
+	Host                  string        `json:"host"`
+	TLSEnabled            bool          `json:"tls_enabled"`
+	CertFile              string        `json:"cert_file"`
+	KeyFile               string        `json:"key_file"`
+	CORSEnabled           bool          `json:"cors_enabled"`
+	AllowedOrigins        []string      `json:"allowed_origins"`
+	AuthenticationEnabled bool          `json:"authentication_enabled"`
+	APIKeyRequired        bool          `json:"api_key_required"`
+	JWTSecret             string        `json:"jwt_secret"`
+	RequestTimeout        time.Duration `json:"request_timeout"`
+	MaxRequestSize        int64         `json:"max_request_size"`
+	LoggingEnabled        bool          `json:"logging_enabled"`
+	MetricsEnabled        bool          `json:"metrics_enabled"`
 }
 
 // APIResponse represents a standard API response
@@ -50,21 +50,21 @@ type APIResponse struct {
 
 // ScanRequestAPI represents an API scan request
 type ScanRequestAPI struct {
-	TenantID              string                 `json:"tenant_id"`
-	RepositoryURL         string                 `json:"repository_url" validate:"required,url"`
-	Branch                string                 `json:"branch"`
-	ScanType              string                 `json:"scan_type"`
-	MLPredictionEnabled   bool                   `json:"ml_prediction_enabled"`
-	AutoRemediationEnabled bool                  `json:"auto_remediation_enabled"`
-	PRGenerationEnabled   bool                   `json:"pr_generation_enabled"`
-	OutputFormats         []string               `json:"output_formats"`
-	PolicyOverrides       map[string]interface{} `json:"policy_overrides"`
-	Metadata              map[string]interface{} `json:"metadata"`
-	Priority              string                 `json:"priority"`
-	CallbackURL           string                 `json:"callback_url"`
-	CallbackMethod        string                 `json:"callback_method"`
-	CallbackHeaders       map[string]string      `json:"callback_headers"`
-	CallbackTimeout       int                    `json:"callback_timeout"`
+	TenantID               string                 `json:"tenant_id"`
+	RepositoryURL          string                 `json:"repository_url" validate:"required,url"`
+	Branch                 string                 `json:"branch"`
+	ScanType               string                 `json:"scan_type"`
+	MLPredictionEnabled    bool                   `json:"ml_prediction_enabled"`
+	AutoRemediationEnabled bool                   `json:"auto_remediation_enabled"`
+	PRGenerationEnabled    bool                   `json:"pr_generation_enabled"`
+	OutputFormats          []string               `json:"output_formats"`
+	PolicyOverrides        map[string]interface{} `json:"policy_overrides"`
+	Metadata               map[string]interface{} `json:"metadata"`
+	Priority               string                 `json:"priority"`
+	CallbackURL            string                 `json:"callback_url"`
+	CallbackMethod         string                 `json:"callback_method"`
+	CallbackHeaders        map[string]string      `json:"callback_headers"`
+	CallbackTimeout        int                    `json:"callback_timeout"`
 }
 
 // TenantRequestAPI represents an API tenant request
@@ -221,10 +221,10 @@ func (s *EnterpriseAPIServer) handleHealth(w http.ResponseWriter, r *http.Reques
 
 func (s *EnterpriseAPIServer) handleStatus(w http.ResponseWriter, r *http.Request) {
 	status := map[string]interface{}{
-		"server_status":        "running",
-		"multi_tenant_enabled": s.integrationLayer.config.MultiTenantEnabled,
-		"ml_enabled":           s.integrationLayer.config.MLPredictionEnabled,
-		"remediation_enabled":  s.integrationLayer.config.AutoRemediationEnabled,
+		"server_status":         "running",
+		"multi_tenant_enabled":  s.integrationLayer.config.MultiTenantEnabled,
+		"ml_enabled":            s.integrationLayer.config.MLPredictionEnabled,
+		"remediation_enabled":   s.integrationLayer.config.AutoRemediationEnabled,
 		"pr_generation_enabled": s.integrationLayer.config.PRGenerationEnabled,
 	}
 
@@ -393,8 +393,8 @@ func (s *EnterpriseAPIServer) handleMLPredict(w http.ResponseWriter, r *http.Req
 func (s *EnterpriseAPIServer) handleGetMLModels(w http.ResponseWriter, r *http.Request) {
 	models := map[string]interface{}{
 		"available_models": []string{"logistic_regression", "random_forest", "neural_network"},
-		"active_model": "ensemble",
-		"model_version": "1.0.0",
+		"active_model":     "ensemble",
+		"model_version":    "1.0.0",
 	}
 
 	response := APIResponse{
@@ -588,16 +588,16 @@ func convertToTenantSettings(settings map[string]interface{}) *multitenant.Tenan
 
 	if notifications, ok := settings["notifications"].(map[string]interface{}); ok {
 		result.Notifications = &multitenant.NotificationSettings{
-			EmailEnabled: getBoolFromMap(notifications, "email_enabled"),
-			SlackEnabled: getBoolFromMap(notifications, "slack_enabled"),
+			EmailEnabled:   getBoolFromMap(notifications, "email_enabled"),
+			SlackEnabled:   getBoolFromMap(notifications, "slack_enabled"),
 			WebhookEnabled: getBoolFromMap(notifications, "webhook_enabled"),
 		}
 	}
 
 	if security, ok := settings["security"].(map[string]interface{}); ok {
 		result.Security = &multitenant.SecuritySettings{
-			MFARequired: getBoolFromMap(security, "mfa_required"),
-			AuditLogging: getBoolFromMap(security, "audit_logging"),
+			MFARequired:    getBoolFromMap(security, "mfa_required"),
+			AuditLogging:   getBoolFromMap(security, "audit_logging"),
 			DataEncryption: getBoolFromMap(security, "data_encryption"),
 		}
 	}

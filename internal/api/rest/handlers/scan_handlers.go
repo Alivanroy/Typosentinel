@@ -65,7 +65,7 @@ func (h *ScanHandlers) StartScan(c *gin.Context) {
 
 	if !isValidRegistry {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid registry",
+			"error":            "Invalid registry",
 			"valid_registries": validRegistries,
 		})
 		return
@@ -106,7 +106,7 @@ func (h *ScanHandlers) GetScanResults(c *gin.Context) {
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	
+
 	if page < 1 {
 		page = 1
 	}
@@ -230,7 +230,7 @@ func (h *ScanHandlers) performScan(scan *database.PackageScan) {
 
 	// Perform the actual scan using the detector
 	threats, riskLevel, summary, err := h.scanPackage(scan.PackageName, scan.Registry, scan.Version)
-	
+
 	duration := time.Since(startTime)
 	completedAt := time.Now()
 

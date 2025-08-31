@@ -647,9 +647,9 @@ func (da *DynamicAnalyzer) getResourceUsage(sandbox *Sandbox) *ResourceUsage {
 
 func (da *DynamicAnalyzer) getDockerResourceUsage(sandbox *Sandbox) *ResourceUsage {
 	// Get Docker container stats
-	cmd := exec.Command("docker", "stats", "--no-stream", "--format", 
+	cmd := exec.Command("docker", "stats", "--no-stream", "--format",
 		"{{.CPUPerc}},{{.MemUsage}},{{.BlockIO}},{{.PIDs}}", sandbox.ID)
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		return &ResourceUsage{
@@ -664,9 +664,9 @@ func (da *DynamicAnalyzer) getDockerResourceUsage(sandbox *Sandbox) *ResourceUsa
 	// Parse Docker stats output
 	stats := strings.TrimSpace(string(output))
 	parts := strings.Split(stats, ",")
-	
+
 	usage := &ResourceUsage{}
-	
+
 	if len(parts) >= 1 {
 		// Parse CPU percentage (remove % sign)
 		cpuStr := strings.TrimSuffix(parts[0], "%")
@@ -674,7 +674,7 @@ func (da *DynamicAnalyzer) getDockerResourceUsage(sandbox *Sandbox) *ResourceUsa
 			usage.CPUUsage = cpu
 		}
 	}
-	
+
 	if len(parts) >= 2 {
 		// Parse memory usage (format: "used / limit")
 		memParts := strings.Split(parts[1], " / ")
@@ -684,7 +684,7 @@ func (da *DynamicAnalyzer) getDockerResourceUsage(sandbox *Sandbox) *ResourceUsa
 			}
 		}
 	}
-	
+
 	if len(parts) >= 4 {
 		// Parse process count
 		if pids, err := parseInt(parts[3]); err == nil {
@@ -694,7 +694,7 @@ func (da *DynamicAnalyzer) getDockerResourceUsage(sandbox *Sandbox) *ResourceUsa
 
 	// Get network I/O stats
 	usage.NetworkIO = da.getDockerNetworkIO(sandbox)
-	
+
 	return usage
 }
 
@@ -702,7 +702,7 @@ func (da *DynamicAnalyzer) getChrootResourceUsage(sandbox *Sandbox) *ResourceUsa
 	// For chroot, we can monitor the host system resources
 	// This is a simplified implementation
 	return &ResourceUsage{
-		CPUUsage:        5.0,  // Simulated low CPU usage
+		CPUUsage:        5.0,              // Simulated low CPU usage
 		MemoryUsage:     25 * 1024 * 1024, // 25MB
 		DiskUsage:       50 * 1024 * 1024, // 50MB
 		FileDescriptors: 5,
@@ -725,7 +725,7 @@ func (da *DynamicAnalyzer) getDockerNetworkIO(sandbox *Sandbox) NetworkIO {
 
 	lines := strings.Split(string(output), "\n")
 	var totalRx, totalTx int64
-	
+
 	for _, line := range lines {
 		if strings.Contains(line, "eth0") || strings.Contains(line, "wlan0") {
 			fields := strings.Fields(line)
@@ -797,23 +797,23 @@ func (da *DynamicAnalyzer) getDockerNetworkActivity(sandbox *Sandbox) *NetworkAc
 				parts := strings.Split(localAddr, ":")
 				if len(parts) >= 2 {
 					port, _ := parseInt(parts[len(parts)-1])
-					
+
 					// Check if this is a suspicious port
 					riskLevel := "LOW"
 					description := "Normal network activity"
-					
+
 					if da.isSuspiciousPort(port) {
 						riskLevel = "HIGH"
 						description = fmt.Sprintf("Suspicious listening port detected: %d", port)
 					}
-					
+
 					return &NetworkActivity{
-						Timestamp:       time.Now(),
-						Protocol:        fields[0],
-						SourcePort:      port,
-						Direction:       "inbound",
-						RiskLevel:       riskLevel,
-						Description:     description,
+						Timestamp:   time.Now(),
+						Protocol:    fields[0],
+						SourcePort:  port,
+						Direction:   "inbound",
+						RiskLevel:   riskLevel,
+						Description: description,
 					}
 				}
 			}
@@ -833,16 +833,16 @@ func (da *DynamicAnalyzer) getDockerNetworkActivity(sandbox *Sandbox) *NetworkAc
 					parts := strings.Split(foreignAddr, ":")
 					if len(parts) >= 1 {
 						destIP := parts[0]
-						
+
 						// Check if destination is suspicious
 						riskLevel := "LOW"
 						description := "Normal outbound connection"
-						
+
 						if da.isSuspiciousIP(destIP) {
 							riskLevel = "HIGH"
 							description = fmt.Sprintf("Suspicious outbound connection to: %s", destIP)
 						}
-						
+
 						return &NetworkActivity{
 							Timestamp:     time.Now(),
 							Protocol:      fields[0],
@@ -956,9 +956,9 @@ func (da *DynamicAnalyzer) isSuspiciousPort(port int) bool {
 	// Common suspicious ports
 	suspiciousPorts := []int{
 		1234, 4444, 5555, 6666, 7777, 8888, 9999, // Common backdoor ports
-		31337, 12345, 54321,                       // Leet speak ports
-		6667, 6668, 6669,                          // IRC ports
-		1337, 31338,                               // More leet speak
+		31337, 12345, 54321, // Leet speak ports
+		6667, 6668, 6669, // IRC ports
+		1337, 31338, // More leet speak
 	}
 
 	for _, suspPort := range suspiciousPorts {
@@ -1051,7 +1051,7 @@ func parseMemorySize(s string) (int64, error) {
 	if s == "" {
 		return 0, fmt.Errorf("empty string")
 	}
-	
+
 	// Simplified parsing for demo - in production, parse units properly
 	if strings.Contains(s, "MiB") || strings.Contains(s, "MB") {
 		return 50 * 1024 * 1024, nil // 50MB
@@ -1059,7 +1059,7 @@ func parseMemorySize(s string) (int64, error) {
 	if strings.Contains(s, "GiB") || strings.Contains(s, "GB") {
 		return 1024 * 1024 * 1024, nil // 1GB
 	}
-	
+
 	return 10 * 1024 * 1024, nil // Default 10MB
 }
 

@@ -581,32 +581,32 @@ func (sa *StaticAnalyzer) detectManifestType(manifestPath string) string {
 func (sa *StaticAnalyzer) analyzeSuspiciousCommands(line string, lineNumber int, analysis *InstallScriptAnalysis) {
 	// Enhanced suspicious command detection with context analysis
 	suspiciousPatterns := map[string]float64{
-		"curl.*sh":           0.9, // Piping curl to shell
-		"wget.*sh":           0.9, // Piping wget to shell
-		"eval.*\\$":          0.8, // Dynamic code evaluation
-		"base64.*decode":     0.7, // Base64 decoding
-		"nc.*-l":            0.8, // Netcat listener
-		"python.*-c":        0.6, // Python one-liner
-		"perl.*-e":          0.6, // Perl one-liner
-		"ruby.*-e":          0.6, // Ruby one-liner
-		"bash.*-c":          0.5, // Bash command execution
-		"sh.*-c":            0.5, // Shell command execution
-		"sudo.*rm":          0.7, // Sudo with rm
-		"rm.*-rf.*\\*":      0.8, // Recursive force delete with wildcard
-		"dd.*if=":           0.6, // Disk operations
-		"mkfifo":            0.7, // Named pipe creation
-		"nohup":             0.5, // Background process
-		"crontab":           0.6, // Cron job modification
-		"systemctl":         0.6, // System service control
-		"service":           0.6, // Service control
-		"iptables":          0.7, // Firewall modification
-		"ufw":               0.7, // Ubuntu firewall
-		"passwd":            0.8, // Password modification
-		"useradd":           0.7, // User creation
-		"usermod":           0.7, // User modification
-		"chown.*root":       0.6, // Change ownership to root
-		"chmod.*777":        0.8, // World writable permissions
-		"chmod.*\\+s":       0.9, // SUID/SGID permissions
+		"curl.*sh":       0.9, // Piping curl to shell
+		"wget.*sh":       0.9, // Piping wget to shell
+		"eval.*\\$":      0.8, // Dynamic code evaluation
+		"base64.*decode": 0.7, // Base64 decoding
+		"nc.*-l":         0.8, // Netcat listener
+		"python.*-c":     0.6, // Python one-liner
+		"perl.*-e":       0.6, // Perl one-liner
+		"ruby.*-e":       0.6, // Ruby one-liner
+		"bash.*-c":       0.5, // Bash command execution
+		"sh.*-c":         0.5, // Shell command execution
+		"sudo.*rm":       0.7, // Sudo with rm
+		"rm.*-rf.*\\*":   0.8, // Recursive force delete with wildcard
+		"dd.*if=":        0.6, // Disk operations
+		"mkfifo":         0.7, // Named pipe creation
+		"nohup":          0.5, // Background process
+		"crontab":        0.6, // Cron job modification
+		"systemctl":      0.6, // System service control
+		"service":        0.6, // Service control
+		"iptables":       0.7, // Firewall modification
+		"ufw":            0.7, // Ubuntu firewall
+		"passwd":         0.8, // Password modification
+		"useradd":        0.7, // User creation
+		"usermod":        0.7, // User modification
+		"chown.*root":    0.6, // Change ownership to root
+		"chmod.*777":     0.8, // World writable permissions
+		"chmod.*\\+s":    0.9, // SUID/SGID permissions
 	}
 
 	for pattern, confidence := range suspiciousPatterns {
@@ -653,24 +653,24 @@ func (sa *StaticAnalyzer) analyzeNetworkCalls(line string, lineNumber int, analy
 		method     string
 		riskLevel  string
 	}{
-		`curl\s+.*https?://[^\s]+`:                    {0.8, "GET", "MEDIUM"},
-		`wget\s+.*https?://[^\s]+`:                    {0.8, "GET", "MEDIUM"},
-		`fetch\s+.*https?://[^\s]+`:                   {0.7, "GET", "MEDIUM"},
-		`python.*urllib.*https?://[^\s]+`:             {0.7, "GET", "MEDIUM"},
-		`python.*requests.*https?://[^\s]+`:           {0.7, "GET", "MEDIUM"},
-		`node.*https?://[^\s]+`:                       {0.6, "GET", "MEDIUM"},
-		`npm.*install.*https?://[^\s]+`:               {0.8, "GET", "HIGH"},
-		`pip.*install.*https?://[^\s]+`:               {0.8, "GET", "HIGH"},
-		`gem.*install.*https?://[^\s]+`:               {0.8, "GET", "HIGH"},
-		`go.*get.*https?://[^\s]+`:                    {0.7, "GET", "MEDIUM"},
-		`git.*clone.*https?://[^\s]+`:                 {0.6, "GET", "LOW"},
-		`ssh.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:         {0.9, "SSH", "HIGH"},
-		`telnet.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:      {0.9, "TELNET", "HIGH"},
-		`nc.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+.*[0-9]+`:  {0.8, "NETCAT", "HIGH"},
-		`socat.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:       {0.8, "SOCAT", "HIGH"},
-		`ftp.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:         {0.7, "FTP", "MEDIUM"},
-		`scp.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:         {0.7, "SCP", "MEDIUM"},
-		`rsync.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:       {0.7, "RSYNC", "MEDIUM"},
+		`curl\s+.*https?://[^\s]+`:                   {0.8, "GET", "MEDIUM"},
+		`wget\s+.*https?://[^\s]+`:                   {0.8, "GET", "MEDIUM"},
+		`fetch\s+.*https?://[^\s]+`:                  {0.7, "GET", "MEDIUM"},
+		`python.*urllib.*https?://[^\s]+`:            {0.7, "GET", "MEDIUM"},
+		`python.*requests.*https?://[^\s]+`:          {0.7, "GET", "MEDIUM"},
+		`node.*https?://[^\s]+`:                      {0.6, "GET", "MEDIUM"},
+		`npm.*install.*https?://[^\s]+`:              {0.8, "GET", "HIGH"},
+		`pip.*install.*https?://[^\s]+`:              {0.8, "GET", "HIGH"},
+		`gem.*install.*https?://[^\s]+`:              {0.8, "GET", "HIGH"},
+		`go.*get.*https?://[^\s]+`:                   {0.7, "GET", "MEDIUM"},
+		`git.*clone.*https?://[^\s]+`:                {0.6, "GET", "LOW"},
+		`ssh.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:        {0.9, "SSH", "HIGH"},
+		`telnet.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:     {0.9, "TELNET", "HIGH"},
+		`nc.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+.*[0-9]+`: {0.8, "NETCAT", "HIGH"},
+		`socat.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:      {0.8, "SOCAT", "HIGH"},
+		`ftp.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:        {0.7, "FTP", "MEDIUM"},
+		`scp.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:        {0.7, "SCP", "MEDIUM"},
+		`rsync.*[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`:      {0.7, "RSYNC", "MEDIUM"},
 	}
 
 	for pattern, info := range networkPatterns {
@@ -752,35 +752,35 @@ func (sa *StaticAnalyzer) analyzeFileOperations(line string, lineNumber int, ana
 		confidence float64
 		riskLevel  string
 	}{
-		`rm\s+-rf\s+/`:                           {"delete", 0.9, "HIGH"},
-		`rm\s+-rf\s+\*`:                          {"delete", 0.9, "HIGH"},
-		`rm\s+-rf\s+~`:                           {"delete", 0.8, "HIGH"},
-		`rm\s+-rf\s+\$HOME`:                      {"delete", 0.8, "HIGH"},
-		`rm\s+-f\s+/etc/`:                        {"delete", 0.9, "HIGH"},
-		`rm\s+-f\s+/usr/`:                        {"delete", 0.8, "HIGH"},
-		`rm\s+-f\s+/var/`:                        {"delete", 0.7, "MEDIUM"},
-		`cp\s+.*\s+/etc/`:                        {"copy", 0.7, "MEDIUM"},
-		`cp\s+.*\s+/usr/bin/`:                    {"copy", 0.8, "HIGH"},
-		`cp\s+.*\s+/usr/local/bin/`:              {"copy", 0.7, "MEDIUM"},
-		`mv\s+.*\s+/etc/`:                        {"move", 0.7, "MEDIUM"},
-		`mv\s+.*\s+/usr/bin/`:                    {"move", 0.8, "HIGH"},
-		`mkdir\s+-p\s+/etc/`:                     {"create", 0.6, "MEDIUM"},
-		`mkdir\s+-p\s+/usr/`:                     {"create", 0.7, "MEDIUM"},
-		`touch\s+/etc/`:                          {"create", 0.6, "MEDIUM"},
-		`ln\s+-s\s+.*\s+/usr/bin/`:               {"link", 0.7, "MEDIUM"},
-		`ln\s+-sf\s+.*\s+/usr/bin/`:              {"link", 0.8, "HIGH"},
-		`dd\s+if=.*\s+of=/dev/`:                  {"write", 0.9, "HIGH"},
-		`dd\s+if=/dev/zero\s+of=`:                {"write", 0.7, "MEDIUM"},
-		`tar\s+.*\s+/`:                           {"extract", 0.6, "MEDIUM"},
-		`unzip\s+.*\s+-d\s+/`:                    {"extract", 0.6, "MEDIUM"},
-		`find\s+/.*\s+-delete`:                   {"delete", 0.8, "HIGH"},
-		`find\s+/.*\s+-exec\s+rm`:                {"delete", 0.8, "HIGH"},
-		`shred\s+`:                               {"secure_delete", 0.8, "HIGH"},
-		`wipe\s+`:                                {"secure_delete", 0.8, "HIGH"},
-		`cat\s+.*>\s*/etc/`:                      {"write", 0.7, "MEDIUM"},
-		`echo\s+.*>\s*/etc/`:                     {"write", 0.7, "MEDIUM"},
-		`tee\s+.*\s*/etc/`:                       {"write", 0.7, "MEDIUM"},
-		`rsync\s+.*\s+/`:                         {"sync", 0.5, "LOW"},
+		`rm\s+-rf\s+/`:              {"delete", 0.9, "HIGH"},
+		`rm\s+-rf\s+\*`:             {"delete", 0.9, "HIGH"},
+		`rm\s+-rf\s+~`:              {"delete", 0.8, "HIGH"},
+		`rm\s+-rf\s+\$HOME`:         {"delete", 0.8, "HIGH"},
+		`rm\s+-f\s+/etc/`:           {"delete", 0.9, "HIGH"},
+		`rm\s+-f\s+/usr/`:           {"delete", 0.8, "HIGH"},
+		`rm\s+-f\s+/var/`:           {"delete", 0.7, "MEDIUM"},
+		`cp\s+.*\s+/etc/`:           {"copy", 0.7, "MEDIUM"},
+		`cp\s+.*\s+/usr/bin/`:       {"copy", 0.8, "HIGH"},
+		`cp\s+.*\s+/usr/local/bin/`: {"copy", 0.7, "MEDIUM"},
+		`mv\s+.*\s+/etc/`:           {"move", 0.7, "MEDIUM"},
+		`mv\s+.*\s+/usr/bin/`:       {"move", 0.8, "HIGH"},
+		`mkdir\s+-p\s+/etc/`:        {"create", 0.6, "MEDIUM"},
+		`mkdir\s+-p\s+/usr/`:        {"create", 0.7, "MEDIUM"},
+		`touch\s+/etc/`:             {"create", 0.6, "MEDIUM"},
+		`ln\s+-s\s+.*\s+/usr/bin/`:  {"link", 0.7, "MEDIUM"},
+		`ln\s+-sf\s+.*\s+/usr/bin/`: {"link", 0.8, "HIGH"},
+		`dd\s+if=.*\s+of=/dev/`:     {"write", 0.9, "HIGH"},
+		`dd\s+if=/dev/zero\s+of=`:   {"write", 0.7, "MEDIUM"},
+		`tar\s+.*\s+/`:              {"extract", 0.6, "MEDIUM"},
+		`unzip\s+.*\s+-d\s+/`:       {"extract", 0.6, "MEDIUM"},
+		`find\s+/.*\s+-delete`:      {"delete", 0.8, "HIGH"},
+		`find\s+/.*\s+-exec\s+rm`:   {"delete", 0.8, "HIGH"},
+		`shred\s+`:                  {"secure_delete", 0.8, "HIGH"},
+		`wipe\s+`:                   {"secure_delete", 0.8, "HIGH"},
+		`cat\s+.*>\s*/etc/`:         {"write", 0.7, "MEDIUM"},
+		`echo\s+.*>\s*/etc/`:        {"write", 0.7, "MEDIUM"},
+		`tee\s+.*\s*/etc/`:          {"write", 0.7, "MEDIUM"},
+		`rsync\s+.*\s+/`:            {"sync", 0.5, "LOW"},
 	}
 
 	for pattern, info := range filePatterns {
@@ -842,10 +842,10 @@ func (sa *StaticAnalyzer) analyzeFileOperations(line string, lineNumber int, ana
 
 	// Check for file hiding techniques
 	hidingPatterns := []string{
-		`mv\s+.*\s+\.[^/]*$`,        // Moving to hidden file
-		`cp\s+.*\s+\.[^/]*$`,        // Copying to hidden file
-		`touch\s+\.[^/]*$`,          // Creating hidden file
-		`mkdir\s+\.[^/]*$`,          // Creating hidden directory
+		`mv\s+.*\s+\.[^/]*$`, // Moving to hidden file
+		`cp\s+.*\s+\.[^/]*$`, // Copying to hidden file
+		`touch\s+\.[^/]*$`,   // Creating hidden file
+		`mkdir\s+\.[^/]*$`,   // Creating hidden directory
 	}
 
 	for _, pattern := range hidingPatterns {
@@ -866,35 +866,35 @@ func (sa *StaticAnalyzer) analyzeFileOperations(line string, lineNumber int, ana
 func (sa *StaticAnalyzer) analyzePermissionChanges(line string, lineNumber int, analysis *InstallScriptAnalysis) {
 	// Enhanced permission change detection with privilege escalation analysis
 	permissionPatterns := map[string]struct {
-		riskLevel  string
-		confidence float64
+		riskLevel   string
+		confidence  float64
 		description string
 	}{
-		`chmod\s+777`:                    {"HIGH", 0.9, "World writable permissions (777)"},
-		`chmod\s+\+x\s+.*\/bin\/`:        {"HIGH", 0.8, "Making binary executable in system path"},
-		`chmod\s+\+s`:                    {"HIGH", 0.9, "Setting SUID/SGID bit"},
-		`chmod\s+4755`:                   {"HIGH", 0.9, "Setting SUID permissions (4755)"},
-		`chmod\s+2755`:                   {"HIGH", 0.9, "Setting SGID permissions (2755)"},
-		`chmod\s+6755`:                   {"HIGH", 0.9, "Setting SUID+SGID permissions (6755)"},
-		`chmod\s+u\+s`:                   {"HIGH", 0.9, "Setting SUID bit"},
-		`chmod\s+g\+s`:                   {"HIGH", 0.9, "Setting SGID bit"},
-		`chmod\s+\+t`:                    {"MEDIUM", 0.7, "Setting sticky bit"},
-		`chmod\s+1755`:                   {"MEDIUM", 0.7, "Setting sticky bit permissions (1755)"},
-		`chmod\s+755\s+.*\/bin\/`:        {"MEDIUM", 0.6, "Setting executable permissions in system path"},
-		`chmod\s+644\s+\/etc\/`:          {"MEDIUM", 0.6, "Modifying system configuration file permissions"},
-		`chmod\s+600\s+.*\.ssh\/`:        {"LOW", 0.4, "Setting SSH key permissions"},
-		`chown\s+root`:                   {"HIGH", 0.8, "Changing ownership to root"},
-		`chown\s+0:0`:                    {"HIGH", 0.8, "Changing ownership to root (numeric)"},
-		`chgrp\s+root`:                   {"MEDIUM", 0.7, "Changing group to root"},
-		`chgrp\s+0`:                      {"MEDIUM", 0.7, "Changing group to root (numeric)"},
-		`chown\s+.*:.*\s+\/etc\/`:        {"HIGH", 0.8, "Changing ownership of system configuration"},
-		`chown\s+.*:.*\s+\/usr\/bin\/`:   {"HIGH", 0.8, "Changing ownership of system binaries"},
-		`chown\s+.*:.*\s+\/sbin\/`:       {"HIGH", 0.8, "Changing ownership of system binaries"},
-		`chattr\s+\+i`:                   {"HIGH", 0.8, "Making file immutable"},
-		`chattr\s+\+a`:                   {"MEDIUM", 0.7, "Making file append-only"},
-		`setfacl`:                        {"MEDIUM", 0.6, "Modifying file ACLs"},
-		`umask\s+000`:                    {"HIGH", 0.8, "Setting permissive umask"},
-		`umask\s+002`:                    {"MEDIUM", 0.5, "Setting group-writable umask"},
+		`chmod\s+777`:                  {"HIGH", 0.9, "World writable permissions (777)"},
+		`chmod\s+\+x\s+.*\/bin\/`:      {"HIGH", 0.8, "Making binary executable in system path"},
+		`chmod\s+\+s`:                  {"HIGH", 0.9, "Setting SUID/SGID bit"},
+		`chmod\s+4755`:                 {"HIGH", 0.9, "Setting SUID permissions (4755)"},
+		`chmod\s+2755`:                 {"HIGH", 0.9, "Setting SGID permissions (2755)"},
+		`chmod\s+6755`:                 {"HIGH", 0.9, "Setting SUID+SGID permissions (6755)"},
+		`chmod\s+u\+s`:                 {"HIGH", 0.9, "Setting SUID bit"},
+		`chmod\s+g\+s`:                 {"HIGH", 0.9, "Setting SGID bit"},
+		`chmod\s+\+t`:                  {"MEDIUM", 0.7, "Setting sticky bit"},
+		`chmod\s+1755`:                 {"MEDIUM", 0.7, "Setting sticky bit permissions (1755)"},
+		`chmod\s+755\s+.*\/bin\/`:      {"MEDIUM", 0.6, "Setting executable permissions in system path"},
+		`chmod\s+644\s+\/etc\/`:        {"MEDIUM", 0.6, "Modifying system configuration file permissions"},
+		`chmod\s+600\s+.*\.ssh\/`:      {"LOW", 0.4, "Setting SSH key permissions"},
+		`chown\s+root`:                 {"HIGH", 0.8, "Changing ownership to root"},
+		`chown\s+0:0`:                  {"HIGH", 0.8, "Changing ownership to root (numeric)"},
+		`chgrp\s+root`:                 {"MEDIUM", 0.7, "Changing group to root"},
+		`chgrp\s+0`:                    {"MEDIUM", 0.7, "Changing group to root (numeric)"},
+		`chown\s+.*:.*\s+\/etc\/`:      {"HIGH", 0.8, "Changing ownership of system configuration"},
+		`chown\s+.*:.*\s+\/usr\/bin\/`: {"HIGH", 0.8, "Changing ownership of system binaries"},
+		`chown\s+.*:.*\s+\/sbin\/`:     {"HIGH", 0.8, "Changing ownership of system binaries"},
+		`chattr\s+\+i`:                 {"HIGH", 0.8, "Making file immutable"},
+		`chattr\s+\+a`:                 {"MEDIUM", 0.7, "Making file append-only"},
+		`setfacl`:                      {"MEDIUM", 0.6, "Modifying file ACLs"},
+		`umask\s+000`:                  {"HIGH", 0.8, "Setting permissive umask"},
+		`umask\s+002`:                  {"MEDIUM", 0.5, "Setting group-writable umask"},
 	}
 
 	for pattern, info := range permissionPatterns {
@@ -944,18 +944,18 @@ func (sa *StaticAnalyzer) analyzePermissionChanges(line string, lineNumber int, 
 
 	// Check for privilege escalation techniques
 	privEscPatterns := []string{
-		`sudo\s+su\s+-`,                  // Switching to root
-		`sudo\s+bash`,                    // Getting root shell
-		`sudo\s+sh`,                      // Getting root shell
-		`su\s+-\s+root`,                  // Switching to root
-		`sudo\s+.*NOPASSWD`,              // Passwordless sudo
-		`echo.*sudoers`,                  // Modifying sudoers
-		`visudo`,                         // Editing sudoers
-		`passwd\s+root`,                  // Changing root password
-		`usermod\s+.*sudo`,               // Adding user to sudo group
-		`usermod\s+.*wheel`,              // Adding user to wheel group
-		`gpasswd\s+.*sudo`,               // Adding user to sudo group
-		`adduser\s+.*sudo`,               // Adding user to sudo group
+		`sudo\s+su\s+-`,     // Switching to root
+		`sudo\s+bash`,       // Getting root shell
+		`sudo\s+sh`,         // Getting root shell
+		`su\s+-\s+root`,     // Switching to root
+		`sudo\s+.*NOPASSWD`, // Passwordless sudo
+		`echo.*sudoers`,     // Modifying sudoers
+		`visudo`,            // Editing sudoers
+		`passwd\s+root`,     // Changing root password
+		`usermod\s+.*sudo`,  // Adding user to sudo group
+		`usermod\s+.*wheel`, // Adding user to wheel group
+		`gpasswd\s+.*sudo`,  // Adding user to sudo group
+		`adduser\s+.*sudo`,  // Adding user to sudo group
 	}
 
 	for _, pattern := range privEscPatterns {
@@ -975,58 +975,58 @@ func (sa *StaticAnalyzer) analyzePermissionChanges(line string, lineNumber int, 
 
 func (sa *StaticAnalyzer) analyzeEnvironmentAccess(line string, lineNumber int, analysis *InstallScriptAnalysis) {
 	// Enhanced environment variable access detection with sensitive data analysis
-	
+
 	// Sensitive environment variables that should raise alerts
 	sensitiveEnvVars := map[string]struct {
-		riskLevel  string
-		confidence float64
+		riskLevel   string
+		confidence  float64
 		description string
 	}{
-		"PASSWORD":           {"HIGH", 0.9, "Password environment variable access"},
-		"PASSWD":             {"HIGH", 0.9, "Password environment variable access"},
-		"SECRET":             {"HIGH", 0.9, "Secret environment variable access"},
-		"TOKEN":              {"HIGH", 0.9, "Token environment variable access"},
-		"API_KEY":            {"HIGH", 0.9, "API key environment variable access"},
-		"APIKEY":             {"HIGH", 0.9, "API key environment variable access"},
-		"AUTH":               {"HIGH", 0.8, "Authentication environment variable access"},
-		"PRIVATE_KEY":        {"HIGH", 0.9, "Private key environment variable access"},
-		"PRIVATEKEY":         {"HIGH", 0.9, "Private key environment variable access"},
-		"SSH_KEY":            {"HIGH", 0.9, "SSH key environment variable access"},
-		"SSHKEY":             {"HIGH", 0.9, "SSH key environment variable access"},
-		"DATABASE_URL":       {"MEDIUM", 0.7, "Database URL environment variable access"},
-		"DB_PASSWORD":        {"HIGH", 0.9, "Database password environment variable access"},
-		"DB_PASS":            {"HIGH", 0.9, "Database password environment variable access"},
-		"MYSQL_PASSWORD":     {"HIGH", 0.9, "MySQL password environment variable access"},
-		"POSTGRES_PASSWORD":  {"HIGH", 0.9, "PostgreSQL password environment variable access"},
-		"REDIS_PASSWORD":     {"HIGH", 0.9, "Redis password environment variable access"},
-		"AWS_SECRET":         {"HIGH", 0.9, "AWS secret environment variable access"},
-		"AWS_ACCESS_KEY":     {"HIGH", 0.9, "AWS access key environment variable access"},
-		"GITHUB_TOKEN":       {"HIGH", 0.9, "GitHub token environment variable access"},
-		"GITLAB_TOKEN":       {"HIGH", 0.9, "GitLab token environment variable access"},
-		"SLACK_TOKEN":        {"MEDIUM", 0.7, "Slack token environment variable access"},
-		"DISCORD_TOKEN":      {"MEDIUM", 0.7, "Discord token environment variable access"},
-		"WEBHOOK_URL":        {"MEDIUM", 0.6, "Webhook URL environment variable access"},
-		"ENCRYPTION_KEY":     {"HIGH", 0.9, "Encryption key environment variable access"},
-		"SIGNING_KEY":        {"HIGH", 0.9, "Signing key environment variable access"},
-		"CERTIFICATE":        {"MEDIUM", 0.7, "Certificate environment variable access"},
-		"CERT":               {"MEDIUM", 0.7, "Certificate environment variable access"},
-		"HOME":               {"LOW", 0.3, "Home directory environment variable access"},
-		"USER":               {"LOW", 0.3, "User environment variable access"},
-		"PATH":               {"LOW", 0.2, "PATH environment variable access"},
-		"SHELL":              {"LOW", 0.3, "Shell environment variable access"},
-		"SUDO_USER":          {"MEDIUM", 0.6, "Sudo user environment variable access"},
-		"SUDO_UID":           {"MEDIUM", 0.6, "Sudo UID environment variable access"},
-		"SUDO_GID":           {"MEDIUM", 0.6, "Sudo GID environment variable access"},
+		"PASSWORD":          {"HIGH", 0.9, "Password environment variable access"},
+		"PASSWD":            {"HIGH", 0.9, "Password environment variable access"},
+		"SECRET":            {"HIGH", 0.9, "Secret environment variable access"},
+		"TOKEN":             {"HIGH", 0.9, "Token environment variable access"},
+		"API_KEY":           {"HIGH", 0.9, "API key environment variable access"},
+		"APIKEY":            {"HIGH", 0.9, "API key environment variable access"},
+		"AUTH":              {"HIGH", 0.8, "Authentication environment variable access"},
+		"PRIVATE_KEY":       {"HIGH", 0.9, "Private key environment variable access"},
+		"PRIVATEKEY":        {"HIGH", 0.9, "Private key environment variable access"},
+		"SSH_KEY":           {"HIGH", 0.9, "SSH key environment variable access"},
+		"SSHKEY":            {"HIGH", 0.9, "SSH key environment variable access"},
+		"DATABASE_URL":      {"MEDIUM", 0.7, "Database URL environment variable access"},
+		"DB_PASSWORD":       {"HIGH", 0.9, "Database password environment variable access"},
+		"DB_PASS":           {"HIGH", 0.9, "Database password environment variable access"},
+		"MYSQL_PASSWORD":    {"HIGH", 0.9, "MySQL password environment variable access"},
+		"POSTGRES_PASSWORD": {"HIGH", 0.9, "PostgreSQL password environment variable access"},
+		"REDIS_PASSWORD":    {"HIGH", 0.9, "Redis password environment variable access"},
+		"AWS_SECRET":        {"HIGH", 0.9, "AWS secret environment variable access"},
+		"AWS_ACCESS_KEY":    {"HIGH", 0.9, "AWS access key environment variable access"},
+		"GITHUB_TOKEN":      {"HIGH", 0.9, "GitHub token environment variable access"},
+		"GITLAB_TOKEN":      {"HIGH", 0.9, "GitLab token environment variable access"},
+		"SLACK_TOKEN":       {"MEDIUM", 0.7, "Slack token environment variable access"},
+		"DISCORD_TOKEN":     {"MEDIUM", 0.7, "Discord token environment variable access"},
+		"WEBHOOK_URL":       {"MEDIUM", 0.6, "Webhook URL environment variable access"},
+		"ENCRYPTION_KEY":    {"HIGH", 0.9, "Encryption key environment variable access"},
+		"SIGNING_KEY":       {"HIGH", 0.9, "Signing key environment variable access"},
+		"CERTIFICATE":       {"MEDIUM", 0.7, "Certificate environment variable access"},
+		"CERT":              {"MEDIUM", 0.7, "Certificate environment variable access"},
+		"HOME":              {"LOW", 0.3, "Home directory environment variable access"},
+		"USER":              {"LOW", 0.3, "User environment variable access"},
+		"PATH":              {"LOW", 0.2, "PATH environment variable access"},
+		"SHELL":             {"LOW", 0.3, "Shell environment variable access"},
+		"SUDO_USER":         {"MEDIUM", 0.6, "Sudo user environment variable access"},
+		"SUDO_UID":          {"MEDIUM", 0.6, "Sudo UID environment variable access"},
+		"SUDO_GID":          {"MEDIUM", 0.6, "Sudo GID environment variable access"},
 	}
 
 	// Detect environment variable access patterns
 	envPatterns := []string{
-		`\$[A-Z_][A-Z0-9_]*`,           // Standard env var access
-		`\$\{[A-Z_][A-Z0-9_]*\}`,       // Braced env var access
-		`export\s+[A-Z_][A-Z0-9_]*=`,   // Environment variable setting
-		`env\s+[A-Z_][A-Z0-9_]*=`,      // Environment variable setting with env
-		`printenv\s+[A-Z_][A-Z0-9_]*`,  // Environment variable reading
-		`echo\s+\$[A-Z_][A-Z0-9_]*`,    // Environment variable echoing
+		`\$[A-Z_][A-Z0-9_]*`,          // Standard env var access
+		`\$\{[A-Z_][A-Z0-9_]*\}`,      // Braced env var access
+		`export\s+[A-Z_][A-Z0-9_]*=`,  // Environment variable setting
+		`env\s+[A-Z_][A-Z0-9_]*=`,     // Environment variable setting with env
+		`printenv\s+[A-Z_][A-Z0-9_]*`, // Environment variable reading
+		`echo\s+\$[A-Z_][A-Z0-9_]*`,   // Environment variable echoing
 	}
 
 	for _, pattern := range envPatterns {
@@ -1034,7 +1034,7 @@ func (sa *StaticAnalyzer) analyzeEnvironmentAccess(line string, lineNumber int, 
 			// Extract variable name
 			varRegex := regexp.MustCompile(`[A-Z_][A-Z0-9_]*`)
 			matches := varRegex.FindAllString(line, -1)
-			
+
 			for _, varName := range matches {
 				// Skip common shell keywords
 				if varName == "EXPORT" || varName == "ENV" || varName == "ECHO" || varName == "PRINTENV" {
@@ -1080,12 +1080,12 @@ func (sa *StaticAnalyzer) analyzeEnvironmentAccess(line string, lineNumber int, 
 
 	// Check for environment variable exfiltration patterns
 	exfiltrationPatterns := []string{
-		`curl.*\$[A-Z_][A-Z0-9_]*`,      // Sending env vars via curl
-		`wget.*\$[A-Z_][A-Z0-9_]*`,      // Sending env vars via wget
-		`nc.*\$[A-Z_][A-Z0-9_]*`,        // Sending env vars via netcat
-		`echo.*\$[A-Z_][A-Z0-9_]*.*>`,   // Redirecting env vars to files
-		`cat.*\$[A-Z_][A-Z0-9_]*.*>`,    // Redirecting env vars to files
-		`base64.*\$[A-Z_][A-Z0-9_]*`,    // Encoding env vars
+		`curl.*\$[A-Z_][A-Z0-9_]*`,    // Sending env vars via curl
+		`wget.*\$[A-Z_][A-Z0-9_]*`,    // Sending env vars via wget
+		`nc.*\$[A-Z_][A-Z0-9_]*`,      // Sending env vars via netcat
+		`echo.*\$[A-Z_][A-Z0-9_]*.*>`, // Redirecting env vars to files
+		`cat.*\$[A-Z_][A-Z0-9_]*.*>`,  // Redirecting env vars to files
+		`base64.*\$[A-Z_][A-Z0-9_]*`,  // Encoding env vars
 	}
 
 	for _, pattern := range exfiltrationPatterns {
@@ -1104,12 +1104,12 @@ func (sa *StaticAnalyzer) analyzeEnvironmentAccess(line string, lineNumber int, 
 
 	// Check for environment variable manipulation
 	manipulationPatterns := []string{
-		`unset\s+[A-Z_][A-Z0-9_]*`,      // Unsetting environment variables
-		`export\s+PATH=`,                // Modifying PATH
-		`export\s+LD_PRELOAD=`,          // Library preloading
-		`export\s+LD_LIBRARY_PATH=`,     // Library path modification
-		`export\s+SHELL=`,               // Shell modification
-		`export\s+HOME=`,                // Home directory modification
+		`unset\s+[A-Z_][A-Z0-9_]*`,  // Unsetting environment variables
+		`export\s+PATH=`,            // Modifying PATH
+		`export\s+LD_PRELOAD=`,      // Library preloading
+		`export\s+LD_LIBRARY_PATH=`, // Library path modification
+		`export\s+SHELL=`,           // Shell modification
+		`export\s+HOME=`,            // Home directory modification
 	}
 
 	for _, pattern := range manipulationPatterns {
@@ -1331,7 +1331,7 @@ func (sa *StaticAnalyzer) calculateEnhancedRiskAssessment(result *AnalysisResult
 func (sa *StaticAnalyzer) loadYaraRules() error {
 	// Load YARA rules from files or embedded resources
 	// In production, this would load .yar files and compile them
-	
+
 	// Define built-in YARA-like rules for common malware patterns
 	// Note: In production, these would be loaded from .yar files
 	if sa.config.YaraRulesEnabled {
@@ -1411,14 +1411,14 @@ func (sa *StaticAnalyzer) loadYaraRules() error {
 			},
 		}
 	}
-	
+
 	return nil
 }
 
 func (sa *StaticAnalyzer) loadScriptPatterns() error {
 	// Load script analysis patterns
 	// This would load regex patterns, command lists, etc.
-	
+
 	// Enhanced script patterns for comprehensive analysis
 	sa.scriptPatterns = []*ScriptPattern{
 		{
@@ -1502,7 +1502,7 @@ func (sa *StaticAnalyzer) loadScriptPatterns() error {
 			Enabled:     true,
 		},
 	}
-	
+
 	return nil
 }
 
@@ -1514,21 +1514,21 @@ func (sa *StaticAnalyzer) applyYaraRules(filePath string) ([]YaraMatch, error) {
 
 func (sa *StaticAnalyzer) applyEnhancedYaraRules(filePath string) ([]YaraMatch, error) {
 	var matches []YaraMatch
-	
+
 	// Read file content
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	contentStr := string(content)
-	
+
 	// Apply each YARA rule
 	for _, rule := range sa.yaraRules {
 		if !rule.Enabled {
 			continue
 		}
-		
+
 		// Check patterns in the rule
 		for _, pattern := range rule.Patterns {
 			if matched, _ := regexp.MatchString(pattern, contentStr); matched {
@@ -1537,19 +1537,19 @@ func (sa *StaticAnalyzer) applyEnhancedYaraRules(filePath string) ([]YaraMatch, 
 				if err != nil {
 					continue
 				}
-				
+
 				allMatches := re.FindAllStringIndex(contentStr, -1)
 				var ruleMatches []YaraRuleMatch
-				
+
 				for _, match := range allMatches {
 					start := match[0]
 					end := match[1]
-					
+
 					// Get context around the match
 					contextStart := max(0, start-50)
 					contextEnd := minInt(len(contentStr), end+50)
 					context := contentStr[contextStart:contextEnd]
-					
+
 					ruleMatches = append(ruleMatches, YaraRuleMatch{
 						Offset:  int64(start),
 						Length:  end - start,
@@ -1557,7 +1557,7 @@ func (sa *StaticAnalyzer) applyEnhancedYaraRules(filePath string) ([]YaraMatch, 
 						Context: context,
 					})
 				}
-				
+
 				if len(ruleMatches) > 0 {
 					matches = append(matches, YaraMatch{
 						RuleName:    rule.Name,
@@ -1571,22 +1571,22 @@ func (sa *StaticAnalyzer) applyEnhancedYaraRules(filePath string) ([]YaraMatch, 
 			}
 		}
 	}
-	
+
 	return matches, nil
 }
 
 func (sa *StaticAnalyzer) performEnhancedAnalysis(filePath string) ([]Finding, error) {
 	var findings []Finding
-	
+
 	// Read file content
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	contentStr := string(content)
 	lines := strings.Split(contentStr, "\n")
-	
+
 	// Enhanced pattern detection
 	enhancedPatterns := map[string]struct {
 		severity    string
@@ -1623,14 +1623,14 @@ func (sa *StaticAnalyzer) performEnhancedAnalysis(filePath string) ([]Finding, e
 		`screen\s+-d`:                  {"MEDIUM", "Detached screen session detected", 0.6},
 		`tmux\s+.*`:                    {"MEDIUM", "Terminal multiplexer detected", 0.6},
 	}
-	
+
 	// Analyze each line
 	for lineNum, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		
+
 		// Check against enhanced patterns
 		for pattern, info := range enhancedPatterns {
 			if matched, _ := regexp.MatchString(pattern, line); matched {
@@ -1652,7 +1652,7 @@ func (sa *StaticAnalyzer) performEnhancedAnalysis(filePath string) ([]Finding, e
 				})
 			}
 		}
-		
+
 		// Check for obfuscated code patterns
 		if sa.detectObfuscation(line) {
 			findings = append(findings, Finding{
@@ -1671,7 +1671,7 @@ func (sa *StaticAnalyzer) performEnhancedAnalysis(filePath string) ([]Finding, e
 				},
 			})
 		}
-		
+
 		// Check for suspicious URLs
 		if sa.detectSuspiciousURLs(line) {
 			findings = append(findings, Finding{
@@ -1691,7 +1691,7 @@ func (sa *StaticAnalyzer) performEnhancedAnalysis(filePath string) ([]Finding, e
 			})
 		}
 	}
-	
+
 	return findings, nil
 }
 
@@ -1705,18 +1705,18 @@ func (sa *StaticAnalyzer) detectObfuscation(line string) bool {
 		`\$\{[^}]{20,}\}`,          // Long variable substitutions
 		`[a-zA-Z_][a-zA-Z0-9_]*\[['\"][^'\"]{20,}['\"]\]`, // Long array indices
 	}
-	
+
 	for _, pattern := range obfuscationPatterns {
 		if matched, _ := regexp.MatchString(pattern, line); matched {
 			return true
 		}
 	}
-	
+
 	// Check for excessive string concatenation (potential obfuscation)
 	if strings.Count(line, "+") > 10 || strings.Count(line, ".") > 15 {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -1725,35 +1725,35 @@ func (sa *StaticAnalyzer) detectSuspiciousURLs(line string) bool {
 	urlPattern := `https?://[^\s'"<>]+`
 	re := regexp.MustCompile(urlPattern)
 	urls := re.FindAllString(line, -1)
-	
+
 	for _, url := range urls {
 		// Check for suspicious URL characteristics
 		if sa.isSuspiciousURL(url) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 func (sa *StaticAnalyzer) isSuspiciousURL(url string) bool {
 	// Check for various suspicious URL patterns
 	suspiciousPatterns := []string{
-		`\d+\.\d+\.\d+\.\d+`,           // IP addresses
-		`[a-z0-9]{20,}\.com`,           // Long random domains
-		`bit\.ly|tinyurl|t\.co|goo\.gl`, // URL shorteners
-		`\.tk|\.ml|\.ga|\.cf`,          // Suspicious TLDs
-		`[0-9]{4,}\.`,                  // Domains with many numbers
-		`-{3,}`,                        // Multiple dashes
+		`\d+\.\d+\.\d+\.\d+`,                 // IP addresses
+		`[a-z0-9]{20,}\.com`,                 // Long random domains
+		`bit\.ly|tinyurl|t\.co|goo\.gl`,      // URL shorteners
+		`\.tk|\.ml|\.ga|\.cf`,                // Suspicious TLDs
+		`[0-9]{4,}\.`,                        // Domains with many numbers
+		`-{3,}`,                              // Multiple dashes
 		`[a-z]{1,3}\.[a-z]{1,3}\.[a-z]{1,3}`, // Very short domain parts
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if matched, _ := regexp.MatchString(pattern, url); matched {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

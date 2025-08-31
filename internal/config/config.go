@@ -853,9 +853,9 @@ func (m *Manager) setDefaults() {
 
 // IntegrationsConfig contains integrations configuration
 type IntegrationsConfig struct {
-	Enabled      bool                        `mapstructure:"enabled"`
+	Enabled      bool                       `mapstructure:"enabled"`
 	Connectors   map[string]ConnectorConfig `mapstructure:"connectors"`
-	EventRouting map[string][]string         `mapstructure:"event_routing"`
+	EventRouting map[string][]string        `mapstructure:"event_routing"`
 	Filters      []FilterConfig             `mapstructure:"filters"`
 }
 
@@ -870,11 +870,11 @@ type ConnectorConfig struct {
 
 // RetryConfig contains retry configuration
 type RetryConfig struct {
-	Enabled     bool          `mapstructure:"enabled"`
-	MaxAttempts int           `mapstructure:"max_attempts" validate:"min=1,max=10"`
-	InitialDelay time.Duration `mapstructure:"initial_delay" validate:"min=1s"`
-	MaxDelay     time.Duration `mapstructure:"max_delay" validate:"min=1s"`
-	BackoffFactor float64      `mapstructure:"backoff_factor" validate:"min=1.0,max=10.0"`
+	Enabled       bool          `mapstructure:"enabled"`
+	MaxAttempts   int           `mapstructure:"max_attempts" validate:"min=1,max=10"`
+	InitialDelay  time.Duration `mapstructure:"initial_delay" validate:"min=1s"`
+	MaxDelay      time.Duration `mapstructure:"max_delay" validate:"min=1s"`
+	BackoffFactor float64       `mapstructure:"backoff_factor" validate:"min=1.0,max=10.0"`
 }
 
 // FilterConfig contains filter configuration
@@ -888,52 +888,52 @@ type FilterConfig struct {
 
 // SupplyChainConfig contains supply chain security configuration
 type SupplyChainConfig struct {
-	Enabled             bool                      `mapstructure:"enabled"`
-	BuildIntegrity      BuildIntegrityConfig      `mapstructure:"build_integrity"`
-	ZeroDayDetection    ZeroDayDetectionConfig    `mapstructure:"zero_day_detection"`
-	DependencyGraph     DependencyGraphConfig     `mapstructure:"dependency_graph"`
-	ThreatIntelligence  ThreatIntelConfig         `mapstructure:"threat_intelligence"`
-	HoneypotDetection   HoneypotDetectionConfig   `mapstructure:"honeypot_detection"`
-	RiskCalculation     RiskCalculationConfig     `mapstructure:"risk_calculation"`
-	DataStorage         SupplyChainStorageConfig  `mapstructure:"data_storage"`
+	Enabled            bool                     `mapstructure:"enabled"`
+	BuildIntegrity     BuildIntegrityConfig     `mapstructure:"build_integrity"`
+	ZeroDayDetection   ZeroDayDetectionConfig   `mapstructure:"zero_day_detection"`
+	DependencyGraph    DependencyGraphConfig    `mapstructure:"dependency_graph"`
+	ThreatIntelligence ThreatIntelConfig        `mapstructure:"threat_intelligence"`
+	HoneypotDetection  HoneypotDetectionConfig  `mapstructure:"honeypot_detection"`
+	RiskCalculation    RiskCalculationConfig    `mapstructure:"risk_calculation"`
+	DataStorage        SupplyChainStorageConfig `mapstructure:"data_storage"`
 }
 
 // BuildIntegrityConfig contains build integrity detection configuration
 type BuildIntegrityConfig struct {
-	Enabled           bool          `mapstructure:"enabled"`
-	SignatureCheck    bool          `mapstructure:"signature_check"`
-	TamperingDetection bool         `mapstructure:"tampering_detection"`
-	BuildAnalysis     bool          `mapstructure:"build_analysis"`
-	Timeout           time.Duration `mapstructure:"timeout" validate:"min=1s"`
+	Enabled            bool          `mapstructure:"enabled"`
+	SignatureCheck     bool          `mapstructure:"signature_check"`
+	TamperingDetection bool          `mapstructure:"tampering_detection"`
+	BuildAnalysis      bool          `mapstructure:"build_analysis"`
+	Timeout            time.Duration `mapstructure:"timeout" validate:"min=1s"`
 }
 
 // ZeroDayDetectionConfig contains zero-day detection configuration
 type ZeroDayDetectionConfig struct {
-	Enabled            bool          `mapstructure:"enabled"`
-	BehavioralAnalysis bool          `mapstructure:"behavioral_analysis"`
-	CodeAnomalyDetection bool        `mapstructure:"code_anomaly_detection"`
-	RuntimeAnalysis    bool          `mapstructure:"runtime_analysis"`
-	AnomalyThreshold   float64       `mapstructure:"anomaly_threshold" validate:"min=0,max=1"`
-	Timeout            time.Duration `mapstructure:"timeout" validate:"min=1s"`
+	Enabled              bool          `mapstructure:"enabled"`
+	BehavioralAnalysis   bool          `mapstructure:"behavioral_analysis"`
+	CodeAnomalyDetection bool          `mapstructure:"code_anomaly_detection"`
+	RuntimeAnalysis      bool          `mapstructure:"runtime_analysis"`
+	AnomalyThreshold     float64       `mapstructure:"anomaly_threshold" validate:"min=0,max=1"`
+	Timeout              time.Duration `mapstructure:"timeout" validate:"min=1s"`
 }
 
 // DependencyGraphConfig contains dependency graph analysis configuration
 type DependencyGraphConfig struct {
-	Enabled               bool `mapstructure:"enabled"`
-	MaxDepth              int  `mapstructure:"max_depth" validate:"min=1,max=20"`
-	TransitiveAnalysis    bool `mapstructure:"transitive_analysis"`
-	ConfusionDetection    bool `mapstructure:"confusion_detection"`
+	Enabled                 bool `mapstructure:"enabled"`
+	MaxDepth                int  `mapstructure:"max_depth" validate:"min=1,max=20"`
+	TransitiveAnalysis      bool `mapstructure:"transitive_analysis"`
+	ConfusionDetection      bool `mapstructure:"confusion_detection"`
 	SupplyChainRiskAnalysis bool `mapstructure:"supply_chain_risk_analysis"`
 }
 
 // ThreatIntelConfig contains threat intelligence configuration
 type ThreatIntelConfig struct {
-	Enabled           bool                    `mapstructure:"enabled"`
-	Sources           []ThreatIntelSource     `mapstructure:"sources"`
-	CacheEnabled      bool                    `mapstructure:"cache_enabled"`
-	CacheTTL          time.Duration           `mapstructure:"cache_ttl" validate:"min=1m"`
-	Timeout           time.Duration           `mapstructure:"timeout" validate:"min=1s"`
-	Retries           int                     `mapstructure:"retries" validate:"min=0,max=5"`
+	Enabled      bool                `mapstructure:"enabled"`
+	Sources      []ThreatIntelSource `mapstructure:"sources"`
+	CacheEnabled bool                `mapstructure:"cache_enabled"`
+	CacheTTL     time.Duration       `mapstructure:"cache_ttl" validate:"min=1m"`
+	Timeout      time.Duration       `mapstructure:"timeout" validate:"min=1s"`
+	Retries      int                 `mapstructure:"retries" validate:"min=0,max=5"`
 }
 
 // ThreatIntelSource contains threat intelligence source configuration
@@ -949,20 +949,20 @@ type ThreatIntelSource struct {
 
 // HoneypotDetectionConfig contains honeypot detection configuration
 type HoneypotDetectionConfig struct {
-	Enabled              bool          `mapstructure:"enabled"`
-	PackageTrapDetection bool          `mapstructure:"package_trap_detection"`
-	AuthenticityValidation bool        `mapstructure:"authenticity_validation"`
-	ConfidenceThreshold  float64       `mapstructure:"confidence_threshold" validate:"min=0,max=1"`
-	Timeout              time.Duration `mapstructure:"timeout" validate:"min=1s"`
+	Enabled                bool          `mapstructure:"enabled"`
+	PackageTrapDetection   bool          `mapstructure:"package_trap_detection"`
+	AuthenticityValidation bool          `mapstructure:"authenticity_validation"`
+	ConfidenceThreshold    float64       `mapstructure:"confidence_threshold" validate:"min=0,max=1"`
+	Timeout                time.Duration `mapstructure:"timeout" validate:"min=1s"`
 }
 
 // RiskCalculationConfig contains risk calculation configuration
 type RiskCalculationConfig struct {
-	Enabled           bool                    `mapstructure:"enabled"`
-	Weights           RiskWeights             `mapstructure:"weights"`
-	Thresholds        RiskThresholds          `mapstructure:"thresholds"`
-	Factors           []string                `mapstructure:"factors"`
-	CustomRules       []CustomRiskRule        `mapstructure:"custom_rules"`
+	Enabled     bool             `mapstructure:"enabled"`
+	Weights     RiskWeights      `mapstructure:"weights"`
+	Thresholds  RiskThresholds   `mapstructure:"thresholds"`
+	Factors     []string         `mapstructure:"factors"`
+	CustomRules []CustomRiskRule `mapstructure:"custom_rules"`
 }
 
 // RiskWeights contains weights for different risk factors
@@ -993,9 +993,9 @@ type CustomRiskRule struct {
 
 // SupplyChainStorageConfig contains storage configuration for supply chain data
 type SupplyChainStorageConfig struct {
-	Enabled        bool                  `mapstructure:"enabled"`
-	GraphDatabase  GraphDatabaseConfig   `mapstructure:"graph_database"`
-	TimeSeriesDB   TimeSeriesDBConfig    `mapstructure:"time_series_db"`
+	Enabled         bool                  `mapstructure:"enabled"`
+	GraphDatabase   GraphDatabaseConfig   `mapstructure:"graph_database"`
+	TimeSeriesDB    TimeSeriesDBConfig    `mapstructure:"time_series_db"`
 	RetentionPolicy RetentionPolicyConfig `mapstructure:"retention_policy"`
 }
 
@@ -1026,12 +1026,12 @@ type TimeSeriesDBConfig struct {
 
 // RetentionPolicyConfig contains data retention policy configuration
 type RetentionPolicyConfig struct {
-	Enabled           bool          `mapstructure:"enabled"`
-	ScanResults       time.Duration `mapstructure:"scan_results" validate:"min=24h"`
-	ThreatIntel       time.Duration `mapstructure:"threat_intel" validate:"min=24h"`
-	DependencyGraphs  time.Duration `mapstructure:"dependency_graphs" validate:"min=24h"`
-	BuildIntegrity    time.Duration `mapstructure:"build_integrity" validate:"min=24h"`
-	ZeroDayFindings   time.Duration `mapstructure:"zero_day_findings" validate:"min=24h"`
+	Enabled            bool          `mapstructure:"enabled"`
+	ScanResults        time.Duration `mapstructure:"scan_results" validate:"min=24h"`
+	ThreatIntel        time.Duration `mapstructure:"threat_intel" validate:"min=24h"`
+	DependencyGraphs   time.Duration `mapstructure:"dependency_graphs" validate:"min=24h"`
+	BuildIntegrity     time.Duration `mapstructure:"build_integrity" validate:"min=24h"`
+	ZeroDayFindings    time.Duration `mapstructure:"zero_day_findings" validate:"min=24h"`
 	HoneypotDetections time.Duration `mapstructure:"honeypot_detections" validate:"min=24h"`
 }
 

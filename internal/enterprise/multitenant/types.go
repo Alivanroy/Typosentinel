@@ -31,24 +31,24 @@ const (
 
 // TenantQuotas defines resource quotas for a tenant
 type TenantQuotas struct {
-	MaxRepositories     int `json:"max_repositories"`
-	MaxScansPerDay      int `json:"max_scans_per_day"`
-	MaxUsers            int `json:"max_users"`
-	MaxStorageGB        int `json:"max_storage_gb"`
-	MaxAPICallsPerHour  int `json:"max_api_calls_per_hour"`
-	MaxPolicies         int `json:"max_policies"`
-	MaxIntegrations     int `json:"max_integrations"`
-	MaxRetentionDays    int `json:"max_retention_days"`
+	MaxRepositories    int `json:"max_repositories"`
+	MaxScansPerDay     int `json:"max_scans_per_day"`
+	MaxUsers           int `json:"max_users"`
+	MaxStorageGB       int `json:"max_storage_gb"`
+	MaxAPICallsPerHour int `json:"max_api_calls_per_hour"`
+	MaxPolicies        int `json:"max_policies"`
+	MaxIntegrations    int `json:"max_integrations"`
+	MaxRetentionDays   int `json:"max_retention_days"`
 }
 
 // TenantSettings defines configuration settings for a tenant
 type TenantSettings struct {
-	TimeZone            string            `json:"timezone"`
-	Language            string            `json:"language"`
-	Notifications       *NotificationSettings `json:"notifications"`
-	Security            *SecuritySettings     `json:"security"`
-	Integrations        *IntegrationSettings  `json:"integrations"`
-	CustomFields        map[string]interface{} `json:"custom_fields,omitempty"`
+	TimeZone      string                 `json:"timezone"`
+	Language      string                 `json:"language"`
+	Notifications *NotificationSettings  `json:"notifications"`
+	Security      *SecuritySettings      `json:"security"`
+	Integrations  *IntegrationSettings   `json:"integrations"`
+	CustomFields  map[string]interface{} `json:"custom_fields,omitempty"`
 }
 
 // NotificationSettings defines notification preferences
@@ -63,12 +63,12 @@ type NotificationSettings struct {
 
 // SecuritySettings defines security preferences
 type SecuritySettings struct {
-	MFARequired         bool `json:"mfa_required"`
-	PasswordPolicy      *PasswordPolicy `json:"password_policy"`
-	SessionTimeout      int `json:"session_timeout_minutes"`
-	IPWhitelist         []string `json:"ip_whitelist,omitempty"`
-	AuditLogging        bool `json:"audit_logging"`
-	DataEncryption      bool `json:"data_encryption"`
+	MFARequired    bool            `json:"mfa_required"`
+	PasswordPolicy *PasswordPolicy `json:"password_policy"`
+	SessionTimeout int             `json:"session_timeout_minutes"`
+	IPWhitelist    []string        `json:"ip_whitelist,omitempty"`
+	AuditLogging   bool            `json:"audit_logging"`
+	DataEncryption bool            `json:"data_encryption"`
 }
 
 // PasswordPolicy defines password requirements
@@ -93,18 +93,18 @@ type IntegrationSettings struct {
 
 // MultiTenantConfig defines configuration for multi-tenant system
 type MultiTenantConfig struct {
-	MaxTenants           int                `json:"max_tenants"`
-	DefaultQuotas        *TenantQuotas      `json:"default_quotas"`
-	IsolationLevel       IsolationLevel     `json:"isolation_level"`
-	ResourcePooling      bool               `json:"resource_pooling"`
-	AuditingEnabled      bool               `json:"auditing_enabled"`
-	MetricsEnabled       bool               `json:"metrics_enabled"`
-	AutoScaling          bool               `json:"auto_scaling"`
-	DataRetentionDays    int                `json:"data_retention_days"`
-	BackupEnabled        bool               `json:"backup_enabled"`
-	EncryptionEnabled    bool               `json:"encryption_enabled"`
-	DatabaseConfig       *DatabaseConfig    `json:"database_config"`
-	CacheConfig          *CacheConfig       `json:"cache_config"`
+	MaxTenants        int             `json:"max_tenants"`
+	DefaultQuotas     *TenantQuotas   `json:"default_quotas"`
+	IsolationLevel    IsolationLevel  `json:"isolation_level"`
+	ResourcePooling   bool            `json:"resource_pooling"`
+	AuditingEnabled   bool            `json:"auditing_enabled"`
+	MetricsEnabled    bool            `json:"metrics_enabled"`
+	AutoScaling       bool            `json:"auto_scaling"`
+	DataRetentionDays int             `json:"data_retention_days"`
+	BackupEnabled     bool            `json:"backup_enabled"`
+	EncryptionEnabled bool            `json:"encryption_enabled"`
+	DatabaseConfig    *DatabaseConfig `json:"database_config"`
+	CacheConfig       *CacheConfig    `json:"cache_config"`
 }
 
 // IsolationLevel defines the level of tenant isolation
@@ -168,45 +168,45 @@ type TenantFilter struct {
 
 // TenantUsage represents usage statistics for a tenant
 type TenantUsage struct {
-	TenantID            string    `json:"tenant_id"`
-	RepositoryCount     int       `json:"repository_count"`
-	ScansToday          int       `json:"scans_today"`
-	UserCount           int       `json:"user_count"`
-	StorageUsedGB       float64   `json:"storage_used_gb"`
-	APICallsThisHour    int       `json:"api_calls_this_hour"`
-	PolicyCount         int       `json:"policy_count"`
-	IntegrationCount    int       `json:"integration_count"`
-	LastScanTime        time.Time `json:"last_scan_time"`
-	QuotaUtilization    map[string]float64 `json:"quota_utilization"`
+	TenantID         string             `json:"tenant_id"`
+	RepositoryCount  int                `json:"repository_count"`
+	ScansToday       int                `json:"scans_today"`
+	UserCount        int                `json:"user_count"`
+	StorageUsedGB    float64            `json:"storage_used_gb"`
+	APICallsThisHour int                `json:"api_calls_this_hour"`
+	PolicyCount      int                `json:"policy_count"`
+	IntegrationCount int                `json:"integration_count"`
+	LastScanTime     time.Time          `json:"last_scan_time"`
+	QuotaUtilization map[string]float64 `json:"quota_utilization"`
 }
 
 // QuotaOperation represents an operation that consumes quota
 type QuotaOperation struct {
-	Type     string `json:"type"` // scan, api_call, storage, etc.
-	Amount   int    `json:"amount"`
+	Type     string                 `json:"type"` // scan, api_call, storage, etc.
+	Amount   int                    `json:"amount"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // TenantMetrics represents metrics for tenant operations
 type TenantMetrics struct {
-	TotalTenants    int64                    `json:"total_tenants"`
-	ActiveTenants   int64                    `json:"active_tenants"`
-	TenantsByPlan   map[string]int64         `json:"tenants_by_plan"`
-	ResourceUsage   map[string]float64       `json:"resource_usage"`
-	QuotaViolations int64                    `json:"quota_violations"`
-	LastUpdated     time.Time                `json:"last_updated"`
+	TotalTenants    int64              `json:"total_tenants"`
+	ActiveTenants   int64              `json:"active_tenants"`
+	TenantsByPlan   map[string]int64   `json:"tenants_by_plan"`
+	ResourceUsage   map[string]float64 `json:"resource_usage"`
+	QuotaViolations int64              `json:"quota_violations"`
+	LastUpdated     time.Time          `json:"last_updated"`
 }
 
 // TenantMetricsSnapshot represents a snapshot of tenant metrics
 type TenantMetricsSnapshot struct {
-	Timestamp       time.Time                `json:"timestamp"`
-	TotalTenants    int64                    `json:"total_tenants"`
-	ActiveTenants   int64                    `json:"active_tenants"`
-	TenantsByPlan   map[string]int64         `json:"tenants_by_plan"`
-	TenantsByStatus map[string]int64         `json:"tenants_by_status"`
-	ResourceUsage   map[string]float64       `json:"resource_usage"`
-	QuotaViolations int64                    `json:"quota_violations"`
-	Performance     *PerformanceMetrics      `json:"performance"`
+	Timestamp       time.Time           `json:"timestamp"`
+	TotalTenants    int64               `json:"total_tenants"`
+	ActiveTenants   int64               `json:"active_tenants"`
+	TenantsByPlan   map[string]int64    `json:"tenants_by_plan"`
+	TenantsByStatus map[string]int64    `json:"tenants_by_status"`
+	ResourceUsage   map[string]float64  `json:"resource_usage"`
+	QuotaViolations int64               `json:"quota_violations"`
+	Performance     *PerformanceMetrics `json:"performance"`
 }
 
 // PerformanceMetrics represents performance metrics
@@ -258,14 +258,14 @@ type ResourceAllocation struct {
 
 // TenantBackup represents backup information for a tenant
 type TenantBackup struct {
-	ID          string    `json:"id"`
-	TenantID    string    `json:"tenant_id"`
-	Type        string    `json:"type"` // full, incremental
-	Status      string    `json:"status"` // pending, running, completed, failed
-	StartTime   time.Time `json:"start_time"`
-	EndTime     time.Time `json:"end_time,omitempty"`
-	SizeBytes   int64     `json:"size_bytes"`
-	Location    string    `json:"location"`
-	Checksum    string    `json:"checksum"`
-	Error       string    `json:"error,omitempty"`
+	ID        string    `json:"id"`
+	TenantID  string    `json:"tenant_id"`
+	Type      string    `json:"type"`   // full, incremental
+	Status    string    `json:"status"` // pending, running, completed, failed
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time,omitempty"`
+	SizeBytes int64     `json:"size_bytes"`
+	Location  string    `json:"location"`
+	Checksum  string    `json:"checksum"`
+	Error     string    `json:"error,omitempty"`
 }

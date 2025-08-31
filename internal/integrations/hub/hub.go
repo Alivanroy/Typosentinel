@@ -15,24 +15,23 @@ import (
 
 // IntegrationHub manages all security tool integrations
 type IntegrationHub struct {
-	eventBus    *events.EventBus
-	config      *config.IntegrationsConfig
-	logger      logger.Logger
-	connectors  map[string]integrations.Connector
-	factory     integrations.ConnectorFactory
-	routing     map[pkgevents.EventType][]string
-	mu          sync.RWMutex
-	running     bool
-	metrics     *HubMetrics
+	eventBus   *events.EventBus
+	config     *config.IntegrationsConfig
+	logger     logger.Logger
+	connectors map[string]integrations.Connector
+	factory    integrations.ConnectorFactory
+	routing    map[pkgevents.EventType][]string
+	mu         sync.RWMutex
+	running    bool
+	metrics    *HubMetrics
 }
 
 // HubMetrics tracks integration hub performance
 type HubMetrics struct {
-	TotalEvents     int64
-	RoutedEvents    int64
-	FailedEvents    int64
+	TotalEvents      int64
+	RoutedEvents     int64
+	FailedEvents     int64
 	ActiveConnectors int
-	mu              sync.RWMutex
 }
 
 // NewIntegrationHub creates a new integration hub
@@ -133,7 +132,7 @@ func (ih *IntegrationHub) setupEventRouting() {
 		ih.routing[eventType] = connectorNames
 
 		ih.logger.Debug("Event routing configured", map[string]interface{}{
-			"event_type":  eventTypeStr,
+			"event_type": eventTypeStr,
 			"connectors": connectorNames,
 		})
 	}
@@ -215,7 +214,7 @@ func (ih *IntegrationHub) Handle(ctx context.Context, event *pkgevents.SecurityE
 	})
 
 	ih.logger.Debug("Event routed successfully", map[string]interface{}{
-		"event_id":       event.ID,
+		"event_id":        event.ID,
 		"connector_count": len(connectorNames),
 		"latency_ms":      time.Since(start).Milliseconds(),
 	})
@@ -270,9 +269,9 @@ func (ih *IntegrationHub) routeToConnector(ctx context.Context, event *pkgevents
 	// Apply connector-specific filters if configured
 	if !ih.shouldSendToConnector(event, connectorName) {
 		ih.logger.Debug("Event filtered out for connector", map[string]interface{}{
-			"event_type":  string(event.Type),
-			"event_id":    event.ID,
-			"connector":   connectorName,
+			"event_type": string(event.Type),
+			"event_id":   event.ID,
+			"connector":  connectorName,
 		})
 		return nil
 	}
@@ -308,18 +307,23 @@ func (ih *IntegrationHub) GetConnectorStatus() map[string]integrations.HealthSta
 
 // GetMetrics returns hub metrics
 func (ih *IntegrationHub) GetMetrics() HubMetrics {
-	ih.metrics.mu.RLock()
-	defer ih.metrics.mu.RUnlock()
+	ih.mu.RLock()
+	defer ih.mu.RUnlock()
 
-	metrics := *ih.metrics
-	metrics.ActiveConnectors = len(ih.connectors)
+	// Return a copy of the metrics struct
+	metrics := HubMetrics{
+		TotalEvents:      ih.metrics.TotalEvents,
+		RoutedEvents:     ih.metrics.RoutedEvents,
+		FailedEvents:     ih.metrics.FailedEvents,
+		ActiveConnectors: len(ih.connectors),
+	}
 	return metrics
 }
 
 // updateMetrics safely updates hub metrics
 func (ih *IntegrationHub) updateMetrics(updateFn func(*HubMetrics)) {
-	ih.metrics.mu.Lock()
-	defer ih.metrics.mu.Unlock()
+	ih.mu.Lock()
+	defer ih.mu.Unlock()
 	updateFn(ih.metrics)
 }
 
@@ -361,13 +365,13 @@ func (ih *IntegrationHub) IsRunning() bool {
 func (ih *IntegrationHub) shouldSendToConnector(event *pkgevents.SecurityEvent, connectorName string) bool {
 	// For now, implement basic filtering based on event severity and type
 	// This can be extended with more sophisticated filtering rules
-	
+
 	// Example filters:
 	// 1. Critical events go to all connectors
 	if event.Severity == pkgevents.SeverityCritical {
 		return true
 	}
-	
+
 	// 2. Filter based on connector type (example logic)
 	switch connectorName {
 	case "slack", "teams":

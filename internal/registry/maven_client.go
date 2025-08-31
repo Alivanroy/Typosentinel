@@ -94,7 +94,7 @@ func NewMavenClient() *MavenClient {
 // GetPackageInfo retrieves package information from Maven Central
 func (c *MavenClient) GetPackageInfo(ctx context.Context, groupID, artifactID, version string) (*types.PackageMetadata, error) {
 	cacheKey := fmt.Sprintf("%s:%s:%s", groupID, artifactID, version)
-	
+
 	// Check cache first
 	if entry, exists := c.cache[cacheKey]; exists {
 		if time.Since(entry.Timestamp) < c.cacheTTL {
@@ -134,18 +134,18 @@ func (c *MavenClient) GetPackageInfo(ctx context.Context, groupID, artifactID, v
 
 	// Convert to PackageMetadata
 	metadata := &types.PackageMetadata{
-		Name:        fmt.Sprintf("%s:%s", groupID, artifactID),
-		Version:     version,
-		Description: pom.Description,
-		Homepage:    pom.URL,
-		Registry:    "maven",
-		Author:      "", // Maven doesn't have a single author field
-		License:     "", // Will be populated from licenses
-		Keywords:    []string{},
+		Name:         fmt.Sprintf("%s:%s", groupID, artifactID),
+		Version:      version,
+		Description:  pom.Description,
+		Homepage:     pom.URL,
+		Registry:     "maven",
+		Author:       "", // Maven doesn't have a single author field
+		License:      "", // Will be populated from licenses
+		Keywords:     []string{},
 		Dependencies: []string{},
-		Maintainers: []string{},
-		Downloads:   0, // Maven Central doesn't provide download stats easily
-		LastUpdated: &[]time.Time{time.Now()}[0], // Use current time as approximation
+		Maintainers:  []string{},
+		Downloads:    0,                           // Maven Central doesn't provide download stats easily
+		LastUpdated:  &[]time.Time{time.Now()}[0], // Use current time as approximation
 	}
 
 	// Extract license information
@@ -198,18 +198,18 @@ func (c *MavenClient) SearchPackages(ctx context.Context, query string) ([]*type
 	var packages []*types.PackageMetadata
 	for _, doc := range searchResp.Response.Docs {
 		pkg := &types.PackageMetadata{
-			Name:        fmt.Sprintf("%s:%s", doc.GroupID, doc.ArtifactID),
-			Version:     doc.Version,
-			Description: "", // Search API doesn't provide description
-			Registry:    "maven",
-			Homepage:    "",
-			Author:      "",
-			License:     "",
-			Keywords:    []string{},
+			Name:         fmt.Sprintf("%s:%s", doc.GroupID, doc.ArtifactID),
+			Version:      doc.Version,
+			Description:  "", // Search API doesn't provide description
+			Registry:     "maven",
+			Homepage:     "",
+			Author:       "",
+			License:      "",
+			Keywords:     []string{},
 			Dependencies: []string{},
-			Maintainers: []string{},
-			Downloads:   0,
-			LastUpdated: &[]time.Time{time.Unix(doc.Timestamp/1000, 0)}[0],
+			Maintainers:  []string{},
+			Downloads:    0,
+			LastUpdated:  &[]time.Time{time.Unix(doc.Timestamp/1000, 0)}[0],
 		}
 		packages = append(packages, pkg)
 	}

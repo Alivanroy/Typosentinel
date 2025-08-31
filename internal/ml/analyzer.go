@@ -202,7 +202,7 @@ type AnalysisMetadata struct {
 func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 	// Initialize behavioral analyzer
 	behavioralAnalyzer := NewBehavioralAnalyzer()
-	
+
 	// Initialize enhanced behavioral analyzer
 	enhancedBehavioralConfig := DefaultEnhancedBehavioralConfig()
 	enhancedBehavioralAnalyzer, err := NewEnhancedBehavioralAnalyzer(enhancedBehavioralConfig)
@@ -210,14 +210,14 @@ func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 		// Non-fatal error, log it but continue
 		fmt.Printf("Warning: Failed to initialize enhanced behavioral analyzer: %v\n", err)
 	}
-	
+
 	// Initialize feedback loop
 	feedbackLoop, err := NewFeedbackLoop("./data/feedback")
 	if err != nil {
 		// Non-fatal error, log it but continue
 		fmt.Printf("Warning: Failed to initialize feedback loop: %v\n", err)
 	}
-	
+
 	// Initialize enhanced algorithms
 	enhancedConfig := Config{
 		Enabled:             cfg.Enabled,
@@ -232,7 +232,7 @@ func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 		GPUAcceleration:     cfg.GPUAcceleration,
 	}
 	enhancedAlgorithms := NewEnhancedMLAlgorithms(enhancedConfig)
-	
+
 	return &MLAnalyzer{
 		Config:                     cfg,
 		Client:                     nil, // Client can be set separately for testing
@@ -247,7 +247,7 @@ func NewMLAnalyzer(cfg config.MLAnalysisConfig) *MLAnalyzer {
 func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAnalyzer {
 	// Initialize behavioral analyzer
 	behavioralAnalyzer := NewBehavioralAnalyzer()
-	
+
 	// Initialize enhanced behavioral analyzer
 	enhancedBehavioralConfig := DefaultEnhancedBehavioralConfig()
 	enhancedBehavioralAnalyzer, err := NewEnhancedBehavioralAnalyzer(enhancedBehavioralConfig)
@@ -255,14 +255,14 @@ func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAna
 		// Non-fatal error, log it but continue
 		fmt.Printf("Warning: Failed to initialize enhanced behavioral analyzer: %v\n", err)
 	}
-	
+
 	// Initialize feedback loop
 	feedbackLoop, err := NewFeedbackLoop("./data/feedback")
 	if err != nil {
 		// Non-fatal error, log it but continue
 		fmt.Printf("Warning: Failed to initialize feedback loop: %v\n", err)
 	}
-	
+
 	// Initialize enhanced algorithms
 	enhancedConfig := Config{
 		Enabled:             cfg.Enabled,
@@ -277,7 +277,7 @@ func NewMLAnalyzerWithClient(cfg config.MLAnalysisConfig, client *Client) *MLAna
 		GPUAcceleration:     cfg.GPUAcceleration,
 	}
 	enhancedAlgorithms := NewEnhancedMLAlgorithms(enhancedConfig)
-	
+
 	return &MLAnalyzer{
 		Config:                     cfg,
 		Client:                     client,
@@ -318,13 +318,13 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	// Perform enhanced similarity analysis
 	var similarityScore float64
 	var similarPackages []SimilarPackage
-	
+
 	if a.EnhancedAlgorithms != nil {
 		// Use enhanced algorithms for better accuracy
 		popularPackages := a.getPopularPackages() // Get list of popular packages
 		enhancedSimilarity := a.EnhancedAlgorithms.AdvancedSimilarityAnalysis(pkg, popularPackages)
 		similarityScore = enhancedSimilarity.MaxSimilarity
-		
+
 		// Convert enhanced similar packages to standard format
 		for _, enhancedPkg := range enhancedSimilarity.SimilarPackages {
 			similarPackages = append(similarPackages, SimilarPackage{
@@ -348,7 +348,7 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 	// Perform enhanced malicious detection
 	var maliciousScore float64
 	var err error
-	
+
 	if a.EnhancedAlgorithms != nil {
 		// Use enhanced malicious detection
 		enhancedMalicious := a.EnhancedAlgorithms.AdvancedMaliciousDetection(ctx, pkg)
@@ -454,10 +454,10 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 		} else if riskAssessment.OverallRisk == "medium" {
 			predictedLabel = "suspicious"
 		}
-		
+
 		// Add to feedback loop (non-blocking)
 		go func() {
-			if err := a.FeedbackLoop.AddFeedback(pkg, predictedLabel, "", 
+			if err := a.FeedbackLoop.AddFeedback(pkg, predictedLabel, "",
 				riskAssessment.RiskScore, "automated_analysis", features); err != nil {
 				// Log error but don't fail the analysis
 				fmt.Printf("Warning: Failed to record feedback: %v\n", err)
@@ -469,18 +469,18 @@ func (a *MLAnalyzer) Analyze(ctx context.Context, pkg *types.Package) (*Analysis
 }
 
 // ProvideFeedback allows users to provide feedback on analysis results for continuous learning
-func (a *MLAnalyzer) ProvideFeedback(pkg *types.Package, predictedLabel, actualLabel string, 
+func (a *MLAnalyzer) ProvideFeedback(pkg *types.Package, predictedLabel, actualLabel string,
 	confidenceScore float64, feedbackSource string) error {
-	
+
 	if a.FeedbackLoop == nil {
 		return fmt.Errorf("feedback loop is not initialized")
 	}
-	
+
 	// Extract features for the feedback
 	features := a.extractFeatures(pkg)
-	
+
 	// Add feedback to the loop
-	return a.FeedbackLoop.AddFeedback(pkg, predictedLabel, actualLabel, 
+	return a.FeedbackLoop.AddFeedback(pkg, predictedLabel, actualLabel,
 		confidenceScore, feedbackSource, features)
 }
 
@@ -491,7 +491,7 @@ func (a *MLAnalyzer) GetFeedbackStats() map[string]interface{} {
 			"error": "feedback loop is not initialized",
 		}
 	}
-	
+
 	return a.FeedbackLoop.GetFeedbackStats()
 }
 
@@ -519,7 +519,7 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 	features["name_vowel_ratio"] = calculateVowelRatio(pkg.Name)
 	features["name_digit_ratio"] = calculateDigitRatio(pkg.Name)
 	features["name_special_char_ratio"] = calculateSpecialCharRatio(pkg.Name)
-	
+
 	// Enhanced name pattern features
 	features["name_consecutive_consonants"] = float64(countConsecutiveConsonants(pkg.Name))
 	features["name_consecutive_vowels"] = float64(countConsecutiveVowels(pkg.Name))
@@ -567,7 +567,7 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 		features["downloads"] = float64(pkg.Metadata.Downloads)
 		features["file_count"] = float64(pkg.Metadata.FileCount)
 		features["size"] = float64(pkg.Metadata.Size)
-		
+
 		// Age and activity features
 		features["package_age_days"] = float64(calculatePackageAgeDays(pkg.Metadata.CreatedAt))
 		features["days_since_last_update"] = float64(calculateDaysSinceLastUpdate(pkg.Metadata.UpdatedAt))
@@ -682,7 +682,7 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 
 		// Apply length difference penalty to reduce false positives
 		lengthDiffPenalty := a.calculateLengthDifferencePenalty(pkg.Name, popular)
-		
+
 		// Apply semantic context penalty for unrelated packages
 		semanticPenalty := a.calculateSemanticContextPenalty(pkg.Name, popular)
 
@@ -724,7 +724,7 @@ func (a *MLAnalyzer) calculateSimilarityScore(pkg *types.Package) float64 {
 	} else if maxSimilarity < 0.6 {
 		maxSimilarity = maxSimilarity * 0.7 // Moderately reduce medium similarity scores
 	}
-	
+
 	// Additional filtering for packages with very different lengths or contexts
 	if mostSimilarPackage != "" {
 		if a.hasSignificantLengthDifference(pkg.Name, mostSimilarPackage) {
@@ -936,13 +936,13 @@ func (a *MLAnalyzer) calculateSuspiciousPatternScore(packageName string) float64
 	for _, keyword := range suspiciousKeywords {
 		if strings.Contains(lowerName, keyword) {
 			// Higher score for exact matches or standalone words
-			if lowerName == keyword || 
-			   strings.HasPrefix(lowerName, keyword+"-") || 
-			   strings.HasPrefix(lowerName, keyword+"_") || 
-			   strings.HasSuffix(lowerName, "-"+keyword) || 
-			   strings.HasSuffix(lowerName, "_"+keyword) || 
-			   strings.Contains(lowerName, "-"+keyword+"-") || 
-			   strings.Contains(lowerName, "_"+keyword+"_") {
+			if lowerName == keyword ||
+				strings.HasPrefix(lowerName, keyword+"-") ||
+				strings.HasPrefix(lowerName, keyword+"_") ||
+				strings.HasSuffix(lowerName, "-"+keyword) ||
+				strings.HasSuffix(lowerName, "_"+keyword) ||
+				strings.Contains(lowerName, "-"+keyword+"-") ||
+				strings.Contains(lowerName, "_"+keyword+"_") {
 				score += 0.3
 			} else {
 				score += 0.2
@@ -1275,11 +1275,11 @@ func (a *MLAnalyzer) max(a1, b int) int {
 // findSimilarPackages finds packages similar to the analyzed one.
 func (a *MLAnalyzer) findSimilarPackages(pkg *types.Package) []SimilarPackage {
 	var similarPackages []SimilarPackage
-	
+
 	// Popular packages database for similarity comparison
 	popularPackages := map[string][]string{
 		"npm": {
-			"react", "lodash", "express", "axios", "moment", "jquery", "bootstrap", 
+			"react", "lodash", "express", "axios", "moment", "jquery", "bootstrap",
 			"vue", "angular", "typescript", "webpack", "babel", "eslint", "prettier",
 			"chalk", "commander", "inquirer", "fs-extra", "glob", "rimraf", "mkdirp",
 			"debug", "request", "cheerio", "socket.io", "nodemon", "cors", "helmet",
@@ -1301,34 +1301,34 @@ func (a *MLAnalyzer) findSimilarPackages(pkg *types.Package) []SimilarPackage {
 			"github.com/golang/protobuf", "github.com/grpc-ecosystem/grpc-gateway",
 		},
 	}
-	
+
 	// Get popular packages for the same registry
 	candidates := popularPackages[strings.ToLower(pkg.Registry)]
 	if candidates == nil {
 		// If registry not found, use a general set
 		candidates = []string{"react", "lodash", "express", "requests", "numpy", "flask"}
 	}
-	
+
 	// Calculate similarity for each candidate
 	for _, candidate := range candidates {
 		// Skip if it's the same package
 		if strings.EqualFold(candidate, pkg.Name) {
 			continue
 		}
-		
+
 		// Calculate multiple similarity metrics
 		jaroWinklerSim := a.calculateJaroWinklerSimilarity(pkg.Name, candidate)
 		phoneticSim := a.calculatePhoneticSimilarity(pkg.Name, candidate)
 		basicSim := a.calculateSimilarity(pkg.Name, candidate)
-		
+
 		// Combine similarities with weights
 		combinedSimilarity := (jaroWinklerSim * 0.5) + (phoneticSim * 0.3) + (basicSim * 0.2)
-		
+
 		// Only include if similarity is above threshold
 		if combinedSimilarity > 0.6 {
 			// Calculate a simple distance metric
 			distance := int(math.Abs(float64(len(pkg.Name) - len(candidate))))
-			
+
 			similarPackage := SimilarPackage{
 				Name:           candidate,
 				Similarity:     combinedSimilarity,
@@ -1343,7 +1343,7 @@ func (a *MLAnalyzer) findSimilarPackages(pkg *types.Package) []SimilarPackage {
 			similarPackages = append(similarPackages, similarPackage)
 		}
 	}
-	
+
 	// Sort by similarity score (highest first)
 	for i := 0; i < len(similarPackages)-1; i++ {
 		for j := i + 1; j < len(similarPackages); j++ {
@@ -1352,16 +1352,14 @@ func (a *MLAnalyzer) findSimilarPackages(pkg *types.Package) []SimilarPackage {
 			}
 		}
 	}
-	
+
 	// Limit to top 10 results
 	if len(similarPackages) > 10 {
 		similarPackages = similarPackages[:10]
 	}
-	
+
 	return similarPackages
 }
-
-
 
 // estimateDownloads provides estimated download counts for popular packages
 func (a *MLAnalyzer) estimateDownloads(packageName, registry string) int64 {
@@ -1371,11 +1369,11 @@ func (a *MLAnalyzer) estimateDownloads(packageName, registry string) int64 {
 		"requests": 50000000, "numpy": 30000000, "flask": 10000000,
 		"junit": 5000000, "spring-boot": 8000000,
 	}
-	
+
 	if downloads, exists := popularDownloads[packageName]; exists {
 		return downloads
 	}
-	
+
 	// Default estimate based on registry
 	switch strings.ToLower(registry) {
 	case "npm":
@@ -2060,7 +2058,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	} else if similarityScore > 0.6 {
 		similarityLabel = "potentially_suspicious"
 	}
-	
+
 	predictions = append(predictions, Prediction{
 		Model:       "similarity_model",
 		Probability: similarityScore,
@@ -2079,7 +2077,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	if features["name_length"] > 50 {
 		maliciousScore += 0.2
 	}
-	
+
 	// Check for suspicious patterns in package name
 	suspiciousPatterns := []string{"test", "temp", "fake", "malware", "virus", "hack"}
 	for _, pattern := range suspiciousPatterns {
@@ -2088,7 +2086,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 			break
 		}
 	}
-	
+
 	maliciousScore = math.Min(maliciousScore, 1.0)
 	maliciousLabel := "benign"
 	if maliciousScore > 0.7 {
@@ -2096,7 +2094,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	} else if maliciousScore > 0.4 {
 		maliciousLabel = "suspicious"
 	}
-	
+
 	predictions = append(predictions, Prediction{
 		Model:       "malicious_detection_model",
 		Probability: maliciousScore,
@@ -2106,7 +2104,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 
 	// 3. Reputation Model
 	reputationScore := 0.5 // Default neutral reputation
-	
+
 	// Check if package has metadata indicating trustworthiness
 	if pkg.Metadata != nil {
 		if pkg.Metadata.Repository != "" {
@@ -2122,7 +2120,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 			reputationScore += 0.1
 		}
 	}
-	
+
 	// Check for known trusted patterns
 	trustedDomains := []string{"github.com", "gitlab.com", "bitbucket.org", "npmjs.org", "pypi.org"}
 	for _, domain := range trustedDomains {
@@ -2131,7 +2129,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 			break
 		}
 	}
-	
+
 	reputationScore = math.Min(reputationScore, 1.0)
 	reputationLabel := "unknown"
 	if reputationScore > 0.7 {
@@ -2141,7 +2139,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	} else {
 		reputationLabel = "untrusted"
 	}
-	
+
 	predictions = append(predictions, Prediction{
 		Model:       "reputation_model",
 		Probability: reputationScore,
@@ -2157,7 +2155,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	} else if typosquattingScore > 0.6 {
 		typosquattingLabel = "possible_typosquatting"
 	}
-	
+
 	predictions = append(predictions, Prediction{
 		Model:       "typosquatting_model",
 		Probability: typosquattingScore,
@@ -2173,7 +2171,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	if features["name_uppercase_ratio"] > 0.8 {
 		behavioralScore += 0.2
 	}
-	
+
 	behavioralScore = math.Min(behavioralScore, 1.0)
 	behavioralLabel := "normal"
 	if behavioralScore > 0.6 {
@@ -2181,7 +2179,7 @@ func (a *MLAnalyzer) generatePredictions(pkg *types.Package, features map[string
 	} else if behavioralScore > 0.3 {
 		behavioralLabel = "unusual"
 	}
-	
+
 	predictions = append(predictions, Prediction{
 		Model:       "behavioral_model",
 		Probability: behavioralScore,
@@ -2202,7 +2200,7 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 	// Implement ensemble voting for borderline cases
 	// Each model gets a vote on the risk level
 	votes := make(map[string]int)
-	
+
 	// Typosquatting vote
 	if typosquattingScore >= 0.8 {
 		votes["critical"]++
@@ -2215,7 +2213,7 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 	} else {
 		votes["minimal"]++
 	}
-	
+
 	// Malicious vote
 	if maliciousScore >= 0.8 {
 		votes["critical"]++
@@ -2228,7 +2226,7 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 	} else {
 		votes["minimal"]++
 	}
-	
+
 	// Reputation vote (inverse - lower reputation means higher risk)
 	if reputationScore <= 0.2 {
 		votes["high"]++
@@ -2239,10 +2237,10 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 	} else {
 		votes["minimal"]++
 	}
-	
+
 	// Determine risk level with adjusted thresholds
 	var overallRisk string
-	
+
 	// First use the weighted score for the initial assessment
 	switch {
 	case riskScore >= 0.7:
@@ -2256,13 +2254,13 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 	default:
 		overallRisk = "minimal"
 	}
-	
+
 	// For borderline cases (within 0.05 of a threshold), use ensemble voting
-	isBorderline := (math.Abs(riskScore - 0.7) <= 0.05) || 
-				  (math.Abs(riskScore - 0.5) <= 0.05) || 
-				  (math.Abs(riskScore - 0.3) <= 0.05) || 
-				  (math.Abs(riskScore - 0.15) <= 0.05)
-	
+	isBorderline := (math.Abs(riskScore-0.7) <= 0.05) ||
+		(math.Abs(riskScore-0.5) <= 0.05) ||
+		(math.Abs(riskScore-0.3) <= 0.05) ||
+		(math.Abs(riskScore-0.15) <= 0.05)
+
 	if isBorderline {
 		// Find the risk level with the most votes
 		maxVotes := 0
@@ -2272,7 +2270,7 @@ func (a *MLAnalyzer) assessRisk(typosquattingScore, maliciousScore, reputationSc
 				overallRisk = level
 			}
 		}
-		
+
 		// In case of a tie, use the higher risk level
 		if votes["critical"] == maxVotes {
 			overallRisk = "critical"
@@ -2420,10 +2418,10 @@ func (a *MLAnalyzer) generateFindings(pkg *types.Package, similarityScore, malic
 			Severity:    "medium",
 			Confidence:  0.6,
 			Description: "Package exhibits file system behavior",
-			Evidence:    fmt.Sprintf("File operations: create=%v, delete=%v", 
+			Evidence: fmt.Sprintf("File operations: create=%v, delete=%v",
 				behavioralAnalysis.FileSystemBehavior.FileCreation,
 				behavioralAnalysis.FileSystemBehavior.FileDeletion),
-			Model:       "behavioral_analysis_model",
+			Model: "behavioral_analysis_model",
 		})
 	}
 
@@ -2544,28 +2542,9 @@ func calculateDigitRatio(s string) float64 {
 }
 
 // calculateSpecialCharRatio calculates the ratio of special characters in a string.
-func calculateSpecialCharRatio(s string) float64 {
-	if len(s) == 0 {
-		return 0
-	}
+// calculateSpecialCharRatio function moved to advanced_feature_extractor.go
 
-	specialCount := 0
-	for _, char := range s {
-		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9')) {
-			specialCount++
-		}
-	}
-
-	return float64(specialCount) / float64(len(s))
-}
-
-// boolToFloat converts a boolean to float64.
-func boolToFloat(b bool) float64 {
-	if b {
-		return 1.0
-	}
-	return 0.0
-}
+// boolToFloat function moved to advanced_feature_extractor.go
 
 // getFeatureNames extracts feature names from the features map.
 func getFeatureNames(features map[string]float64) []string {
@@ -2673,7 +2652,7 @@ func (a *MLAnalyzer) getPopularPackages() []string {
 		"github.com/kubernetes/kubernetes",
 		"github.com/etcd-io/etcd",
 		"github.com/go-redis/redis",
-		
+
 		// NPM packages (common typosquatting targets)
 		"express",
 		"lodash",
@@ -2695,7 +2674,7 @@ func (a *MLAnalyzer) getPopularPackages() []string {
 		"debug",
 		"request",
 		"async",
-		
+
 		// Python packages
 		"requests",
 		"numpy",
@@ -2712,7 +2691,7 @@ func (a *MLAnalyzer) getPopularPackages() []string {
 		"pytest",
 		"click",
 		"jinja2",
-		
+
 		// Common package name patterns
 		"utils",
 		"helpers",
@@ -2737,10 +2716,10 @@ func (a *MLAnalyzer) getPopularPackages() []string {
 func (a *MLAnalyzer) calculateConfidenceLevel(typosquattingScore, maliciousScore, reputationScore float64) float64 {
 	// Base confidence starts at 0.5
 	confidence := 0.5
-	
+
 	// Increase confidence when scores are consistent (all high or all low)
 	scores := []float64{typosquattingScore, maliciousScore, 1.0 - reputationScore}
-	
+
 	// Calculate score variance to measure consistency
 	mean := (scores[0] + scores[1] + scores[2]) / 3.0
 	variance := 0.0
@@ -2748,23 +2727,23 @@ func (a *MLAnalyzer) calculateConfidenceLevel(typosquattingScore, maliciousScore
 		variance += math.Pow(score-mean, 2)
 	}
 	variance /= 3.0
-	
+
 	// Lower variance (more consistent scores) increases confidence
 	consistencyBonus := math.Max(0, 0.3*(1.0-variance))
 	confidence += consistencyBonus
-	
+
 	// Increase confidence for extreme scores (very high or very low)
 	for _, score := range scores {
 		if score > 0.8 || score < 0.2 {
 			confidence += 0.1
 		}
 	}
-	
+
 	// Reputation score quality affects confidence
 	if reputationScore > 0.7 || reputationScore < 0.3 {
 		confidence += 0.1 // Clear reputation signal
 	}
-	
+
 	// Ensure confidence is within valid range
 	return math.Min(math.Max(confidence, 0.1), 0.95)
 }
@@ -2787,7 +2766,7 @@ func (a *MLAnalyzer) convertToEnhancedFeatures(pkg *types.Package) *EnhancedPack
 		enhancedFeatures.Keywords = pkg.Metadata.Keywords
 		enhancedFeatures.Maintainers = pkg.Metadata.Maintainers
 		enhancedFeatures.Downloads = pkg.Metadata.Downloads
-		
+
 		if pkg.Metadata.PublishedAt != nil {
 			enhancedFeatures.CreationDate = *pkg.Metadata.PublishedAt
 		}
@@ -2811,10 +2790,10 @@ func (a *MLAnalyzer) convertToEnhancedFeatures(pkg *types.Package) *EnhancedPack
 
 	// Set default file structure metrics
 	enhancedFeatures.FileStructure = FileStructure{
-		TotalFiles:         10, // Default estimate
-		SuspiciousFiles:    make([]string, 0),
-		UnusualExtensions:  make([]string, 0),
-		LargeFiles:         make([]string, 0),
+		TotalFiles:        10, // Default estimate
+		SuspiciousFiles:   make([]string, 0),
+		UnusualExtensions: make([]string, 0),
+		LargeFiles:        make([]string, 0),
 	}
 
 	// Set default code metrics

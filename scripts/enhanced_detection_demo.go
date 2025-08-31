@@ -140,11 +140,11 @@ func displayResult(result *detector.EnhancedThreatResult) {
 		fmt.Printf("      - Legitimate: %t\n", result.MetadataAnalysis.IsLegitimate)
 		fmt.Printf("      - Popularity Score: %.2f\n", result.MetadataAnalysis.PopularityScore)
 		fmt.Printf("      - Typosquatting Risk: %.2f\n", result.MetadataAnalysis.TyposquattingRisk)
-		
+
 		if len(result.MetadataAnalysis.RiskFactors) > 0 {
 			fmt.Printf("      - Risk Factors: %v\n", result.MetadataAnalysis.RiskFactors)
 		}
-		
+
 		if len(result.MetadataAnalysis.PositiveIndicators) > 0 {
 			fmt.Printf("      - Positive Indicators: %v\n", result.MetadataAnalysis.PositiveIndicators)
 		}
@@ -187,7 +187,7 @@ func displaySummary(results []*detector.EnhancedThreatResult, totalPackages int)
 	// Severity breakdown
 	severityCounts := make(map[string]int)
 	threatTypeCounts := make(map[string]int)
-	
+
 	for _, result := range results {
 		if !result.IsFiltered {
 			severityCounts[result.Severity]++
@@ -218,10 +218,10 @@ func displaySummary(results []*detector.EnhancedThreatResult, totalPackages int)
 
 	// Key insights
 	fmt.Printf("\n🎯 Key Insights:\n")
-	
+
 	highRiskCount := 0
 	typosquattingCount := 0
-	
+
 	for _, result := range results {
 		if !result.IsFiltered {
 			if result.SupplyChainRisk > 0.7 {

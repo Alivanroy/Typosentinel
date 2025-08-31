@@ -7,24 +7,24 @@ import (
 
 // RepositoryConfig holds repository scanning configuration
 type RepositoryConfig struct {
-	Enabled   bool                           `yaml:"enabled" json:"enabled"`
-	Platforms map[string]PlatformConfig     `yaml:"platforms" json:"platforms"`
-	Discovery DiscoveryConfig               `yaml:"discovery" json:"discovery"`
-	Scanning  ScanningConfig                `yaml:"scanning" json:"scanning"`
-	Webhooks  RepositoryWebhookConfig       `yaml:"webhooks" json:"webhooks"`
-	Filters   GlobalRepositoryFilters       `yaml:"filters" json:"filters"`
-	Scheduled []ScheduledRepositoryScan     `yaml:"scheduled" json:"scheduled"`
+	Enabled   bool                      `yaml:"enabled" json:"enabled"`
+	Platforms map[string]PlatformConfig `yaml:"platforms" json:"platforms"`
+	Discovery DiscoveryConfig           `yaml:"discovery" json:"discovery"`
+	Scanning  ScanningConfig            `yaml:"scanning" json:"scanning"`
+	Webhooks  RepositoryWebhookConfig   `yaml:"webhooks" json:"webhooks"`
+	Filters   GlobalRepositoryFilters   `yaml:"filters" json:"filters"`
+	Scheduled []ScheduledRepositoryScan `yaml:"scheduled" json:"scheduled"`
 }
 
 // PlatformConfig holds platform-specific configuration
 type PlatformConfig struct {
-	Enabled   bool                    `yaml:"enabled" json:"enabled"`
-	BaseURL   string                  `yaml:"base_url" json:"base_url"`
-	Auth      AuthenticationConfig    `yaml:"auth" json:"auth"`
-	Timeout   time.Duration           `yaml:"timeout" json:"timeout"`
+	Enabled   bool                      `yaml:"enabled" json:"enabled"`
+	BaseURL   string                    `yaml:"base_url" json:"base_url"`
+	Auth      AuthenticationConfig      `yaml:"auth" json:"auth"`
+	Timeout   time.Duration             `yaml:"timeout" json:"timeout"`
 	RateLimit RepositoryRateLimitConfig `yaml:"rate_limit" json:"rate_limit"`
-	Settings  map[string]interface{}  `yaml:"settings" json:"settings"`
-	Targets   []ScanTarget            `yaml:"targets" json:"targets"`
+	Settings  map[string]interface{}    `yaml:"settings" json:"settings"`
+	Targets   []ScanTarget              `yaml:"targets" json:"targets"`
 }
 
 // AuthenticationConfig holds authentication settings
@@ -65,17 +65,17 @@ type ScanTarget struct {
 
 // RepositoryFilter holds repository filtering options
 type RepositoryFilter struct {
-	Languages       []string `yaml:"languages" json:"languages"`
-	Topics          []string `yaml:"topics" json:"topics"`
-	IncludePrivate  bool     `yaml:"include_private" json:"include_private"`
-	IncludeArchived bool     `yaml:"include_archived" json:"include_archived"`
-	IncludeForks    bool     `yaml:"include_forks" json:"include_forks"`
-	MinStars        int      `yaml:"min_stars" json:"min_stars"`
-	MaxStars        int      `yaml:"max_stars" json:"max_stars"`
-	MinSize         int64    `yaml:"min_size" json:"min_size"`
-	MaxSize         int64    `yaml:"max_size" json:"max_size"`
-	NamePattern     string   `yaml:"name_pattern" json:"name_pattern"`
-	ExcludePatterns []string `yaml:"exclude_patterns" json:"exclude_patterns"`
+	Languages       []string   `yaml:"languages" json:"languages"`
+	Topics          []string   `yaml:"topics" json:"topics"`
+	IncludePrivate  bool       `yaml:"include_private" json:"include_private"`
+	IncludeArchived bool       `yaml:"include_archived" json:"include_archived"`
+	IncludeForks    bool       `yaml:"include_forks" json:"include_forks"`
+	MinStars        int        `yaml:"min_stars" json:"min_stars"`
+	MaxStars        int        `yaml:"max_stars" json:"max_stars"`
+	MinSize         int64      `yaml:"min_size" json:"min_size"`
+	MaxSize         int64      `yaml:"max_size" json:"max_size"`
+	NamePattern     string     `yaml:"name_pattern" json:"name_pattern"`
+	ExcludePatterns []string   `yaml:"exclude_patterns" json:"exclude_patterns"`
 	CreatedAfter    *time.Time `yaml:"created_after" json:"created_after"`
 	CreatedBefore   *time.Time `yaml:"created_before" json:"created_before"`
 	UpdatedAfter    *time.Time `yaml:"updated_after" json:"updated_after"`
@@ -84,13 +84,13 @@ type RepositoryFilter struct {
 
 // DiscoveryConfig holds repository discovery configuration
 type DiscoveryConfig struct {
-	Enabled             bool                        `yaml:"enabled" json:"enabled"`
-	Interval            time.Duration               `yaml:"interval" json:"interval"`
-	MaxReposPerPlatform int                         `yaml:"max_repos_per_platform" json:"max_repos_per_platform"`
-	Workers             int                         `yaml:"workers" json:"workers"`
-	Timeout             time.Duration               `yaml:"timeout" json:"timeout"`
-	Platforms           []PlatformDiscoveryConfig   `yaml:"platforms" json:"platforms"`
-	Cache               DiscoveryCacheConfig        `yaml:"cache" json:"cache"`
+	Enabled             bool                      `yaml:"enabled" json:"enabled"`
+	Interval            time.Duration             `yaml:"interval" json:"interval"`
+	MaxReposPerPlatform int                       `yaml:"max_repos_per_platform" json:"max_repos_per_platform"`
+	Workers             int                       `yaml:"workers" json:"workers"`
+	Timeout             time.Duration             `yaml:"timeout" json:"timeout"`
+	Platforms           []PlatformDiscoveryConfig `yaml:"platforms" json:"platforms"`
+	Cache               DiscoveryCacheConfig      `yaml:"cache" json:"cache"`
 }
 
 // PlatformDiscoveryConfig holds platform-specific discovery settings
@@ -115,14 +115,14 @@ type DiscoveryCacheConfig struct {
 
 // ScanningConfig holds scanning configuration
 type ScanningConfig struct {
-	Concurrency      ConcurrencyConfig       `yaml:"concurrency" json:"concurrency"`
-	Timeouts         TimeoutConfig           `yaml:"timeouts" json:"timeouts"`
-	Cache            ScanCacheConfig         `yaml:"cache" json:"cache"`
-	Filters          ScanFilterConfig        `yaml:"filters" json:"filters"`
-	PackageManagers  []string                `yaml:"package_managers" json:"package_managers"`
-	ScanTypes        []string                `yaml:"scan_types" json:"scan_types"`
-	OutputFormats    []string                `yaml:"output_formats" json:"output_formats"`
-	Policies         []ScanPolicyConfig      `yaml:"policies" json:"policies"`
+	Concurrency     ConcurrencyConfig  `yaml:"concurrency" json:"concurrency"`
+	Timeouts        TimeoutConfig      `yaml:"timeouts" json:"timeouts"`
+	Cache           ScanCacheConfig    `yaml:"cache" json:"cache"`
+	Filters         ScanFilterConfig   `yaml:"filters" json:"filters"`
+	PackageManagers []string           `yaml:"package_managers" json:"package_managers"`
+	ScanTypes       []string           `yaml:"scan_types" json:"scan_types"`
+	OutputFormats   []string           `yaml:"output_formats" json:"output_formats"`
+	Policies        []ScanPolicyConfig `yaml:"policies" json:"policies"`
 }
 
 // ConcurrencyConfig holds concurrency settings
@@ -134,10 +134,10 @@ type ConcurrencyConfig struct {
 
 // TimeoutConfig holds timeout settings
 type TimeoutConfig struct {
-	RepositoryClone  time.Duration `yaml:"repository_clone" json:"repository_clone"`
-	PackageAnalysis  time.Duration `yaml:"package_analysis" json:"package_analysis"`
-	TotalScan        time.Duration `yaml:"total_scan" json:"total_scan"`
-	APIRequest       time.Duration `yaml:"api_request" json:"api_request"`
+	RepositoryClone time.Duration `yaml:"repository_clone" json:"repository_clone"`
+	PackageAnalysis time.Duration `yaml:"package_analysis" json:"package_analysis"`
+	TotalScan       time.Duration `yaml:"total_scan" json:"total_scan"`
+	APIRequest      time.Duration `yaml:"api_request" json:"api_request"`
 }
 
 // ScanCacheConfig holds scan caching configuration
@@ -181,28 +181,28 @@ type PolicyAction struct {
 
 // RepositoryWebhookConfig holds repository webhook configuration
 type RepositoryWebhookConfig struct {
-	Enabled   bool                          `yaml:"enabled" json:"enabled"`
-	Endpoint  string                        `yaml:"endpoint" json:"endpoint"`
-	Secret    string                        `yaml:"secret" json:"-"`
-	Events    []string                      `yaml:"events" json:"events"`
+	Enabled   bool                             `yaml:"enabled" json:"enabled"`
+	Endpoint  string                           `yaml:"endpoint" json:"endpoint"`
+	Secret    string                           `yaml:"secret" json:"-"`
+	Events    []string                         `yaml:"events" json:"events"`
 	Platforms map[string]WebhookPlatformConfig `yaml:"platforms" json:"platforms"`
-	Security  WebhookSecurityConfig         `yaml:"security" json:"security"`
+	Security  WebhookSecurityConfig            `yaml:"security" json:"security"`
 }
 
 // WebhookPlatformConfig holds platform-specific webhook settings
 type WebhookPlatformConfig struct {
-	Enabled      bool                   `yaml:"enabled" json:"enabled"`
-	ContentType  string                 `yaml:"content_type" json:"content_type"`
-	SSLVerify    bool                   `yaml:"ssl_verify" json:"ssl_verify"`
-	Events       []string               `yaml:"events" json:"events"`
-	Settings     map[string]interface{} `yaml:"settings" json:"settings"`
+	Enabled     bool                   `yaml:"enabled" json:"enabled"`
+	ContentType string                 `yaml:"content_type" json:"content_type"`
+	SSLVerify   bool                   `yaml:"ssl_verify" json:"ssl_verify"`
+	Events      []string               `yaml:"events" json:"events"`
+	Settings    map[string]interface{} `yaml:"settings" json:"settings"`
 }
 
 // WebhookSecurityConfig holds webhook security settings
 type WebhookSecurityConfig struct {
-	ValidateSignature bool   `yaml:"validate_signature" json:"validate_signature"`
+	ValidateSignature bool     `yaml:"validate_signature" json:"validate_signature"`
 	AllowedIPs        []string `yaml:"allowed_ips" json:"allowed_ips"`
-	RateLimit         int    `yaml:"rate_limit" json:"rate_limit"`
+	RateLimit         int      `yaml:"rate_limit" json:"rate_limit"`
 }
 
 // GlobalRepositoryFilters holds global filtering options

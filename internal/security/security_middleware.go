@@ -75,7 +75,7 @@ func (sm *SecurityMiddleware) SecurityHeaders() gin.HandlerFunc {
 		c.Header("X-XSS-Protection", "1; mode=block")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
-		
+
 		if sm.config.JWT.RequireHTTPS {
 			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 		}
@@ -97,7 +97,7 @@ func (sm *SecurityMiddleware) EnhancedRateLimit() gin.HandlerFunc {
 		}
 
 		clientIP := c.ClientIP()
-		
+
 		// Check IP whitelist
 		if sm.isIPWhitelisted(clientIP) {
 			c.Next()
@@ -119,7 +119,7 @@ func (sm *SecurityMiddleware) EnhancedRateLimit() gin.HandlerFunc {
 
 		// Get rate limiter for this IP
 		limiter := sm.getRateLimiter(clientIP)
-		
+
 		// Check rate limit
 		if !limiter.Allow() {
 			sm.logger.Warn("Rate limit exceeded", map[string]interface{}{
@@ -271,7 +271,7 @@ func (sm *SecurityMiddleware) LoginAttemptLimiter() gin.HandlerFunc {
 		}
 
 		clientIP := c.ClientIP()
-		
+
 		sm.loginAttemptsMu.Lock()
 		tracker, exists := sm.loginAttempts[clientIP]
 		if !exists {

@@ -43,17 +43,17 @@ type AzureWebhookManager struct {
 
 // Azure DevOps API response structures
 type azureRepository struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	URL           string    `json:"url"`
+	ID            string       `json:"id"`
+	Name          string       `json:"name"`
+	URL           string       `json:"url"`
 	Project       azureProject `json:"project"`
-	DefaultBranch string    `json:"defaultBranch"`
-	Size          int64     `json:"size"`
-	RemoteURL     string    `json:"remoteUrl"`
-	SSHURL        string    `json:"sshUrl"`
-	WebURL        string    `json:"webUrl"`
-	IsDisabled    bool      `json:"isDisabled"`
-	IsFork        bool      `json:"isFork"`
+	DefaultBranch string       `json:"defaultBranch"`
+	Size          int64        `json:"size"`
+	RemoteURL     string       `json:"remoteUrl"`
+	SSHURL        string       `json:"sshUrl"`
+	WebURL        string       `json:"webUrl"`
+	IsDisabled    bool         `json:"isDisabled"`
+	IsFork        bool         `json:"isFork"`
 }
 
 type azureProject struct {
@@ -69,20 +69,20 @@ type azureProject struct {
 }
 
 type azureOrganization struct {
-	AccountID   string `json:"accountId"`
-	AccountName string `json:"accountName"`
-	AccountURI  string `json:"accountUri"`
+	AccountID   string                 `json:"accountId"`
+	AccountName string                 `json:"accountName"`
+	AccountURI  string                 `json:"accountUri"`
 	Properties  map[string]interface{} `json:"properties"`
 }
 
 type azureCommit struct {
-	CommitID      string    `json:"commitId"`
-	Comment       string    `json:"comment"`
-	Author        azureGitUserDate `json:"author"`
-	Committer     azureGitUserDate `json:"committer"`
-	ChangeCounts  map[string]int   `json:"changeCounts"`
-	URL           string    `json:"url"`
-	RemoteURL     string    `json:"remoteUrl"`
+	CommitID     string           `json:"commitId"`
+	Comment      string           `json:"comment"`
+	Author       azureGitUserDate `json:"author"`
+	Committer    azureGitUserDate `json:"committer"`
+	ChangeCounts map[string]int   `json:"changeCounts"`
+	URL          string           `json:"url"`
+	RemoteURL    string           `json:"remoteUrl"`
 }
 
 type azureGitUserDate struct {
@@ -92,11 +92,11 @@ type azureGitUserDate struct {
 }
 
 type azureBranch struct {
-	Name         string      `json:"name"`
-	ObjectID     string      `json:"objectId"`
-	Creator      azureIdentityRef `json:"creator"`
-	URL          string      `json:"url"`
-	IsBaseVersion bool       `json:"isBaseVersion"`
+	Name          string           `json:"name"`
+	ObjectID      string           `json:"objectId"`
+	Creator       azureIdentityRef `json:"creator"`
+	URL           string           `json:"url"`
+	IsBaseVersion bool             `json:"isBaseVersion"`
 }
 
 type azureIdentityRef struct {
@@ -109,17 +109,17 @@ type azureIdentityRef struct {
 }
 
 type azureGitItem struct {
-	ObjectID     string `json:"objectId"`
+	ObjectID      string `json:"objectId"`
 	GitObjectType string `json:"gitObjectType"`
-	CommitID     string `json:"commitId"`
-	Path         string `json:"path"`
-	IsFolder     bool   `json:"isFolder"`
-	URL          string `json:"url"`
+	CommitID      string `json:"commitId"`
+	Path          string `json:"path"`
+	IsFolder      bool   `json:"isFolder"`
+	URL           string `json:"url"`
 }
 
 type azureValueResponse struct {
 	Value []json.RawMessage `json:"value"`
-	Count int              `json:"count"`
+	Count int               `json:"count"`
 }
 
 // NewAzureDevOpsConnector creates a new Azure DevOps connector
@@ -275,7 +275,7 @@ func (a *AzureDevOpsConnector) ListOrgRepositories(ctx context.Context, org stri
 
 // GetRepository gets a specific repository
 func (a *AzureDevOpsConnector) GetRepository(ctx context.Context, project, name string) (*repository.Repository, error) {
-	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s", 
+	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s",
 		url.QueryEscape(a.organization), url.QueryEscape(project), url.QueryEscape(name))
 
 	req, err := a.createRequest(ctx, "GET", endpoint, nil)
@@ -322,7 +322,7 @@ func (a *AzureDevOpsConnector) GetRepositoryContent(ctx context.Context, repo *r
 		ref = strings.TrimPrefix(ref, "refs/heads/")
 	}
 
-	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/items", 
+	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/items",
 		url.QueryEscape(a.organization), url.QueryEscape(project), url.QueryEscape(repoName))
 
 	params := url.Values{}
@@ -365,7 +365,7 @@ func (a *AzureDevOpsConnector) ListRepositoryFiles(ctx context.Context, repo *re
 		ref = strings.TrimPrefix(ref, "refs/heads/")
 	}
 
-	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/items", 
+	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/items",
 		url.QueryEscape(a.organization), url.QueryEscape(project), url.QueryEscape(repoName))
 
 	params := url.Values{}
@@ -438,7 +438,7 @@ func (a *AzureDevOpsConnector) GetRepositoryTopics(ctx context.Context, repo *re
 // GetRepositoryBranches gets repository branches
 func (a *AzureDevOpsConnector) GetRepositoryBranches(ctx context.Context, repo *repository.Repository) ([]string, error) {
 	project, repoName := a.parseFullName(repo.FullName)
-	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/refs", 
+	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/refs",
 		url.QueryEscape(a.organization), url.QueryEscape(project), url.QueryEscape(repoName))
 
 	params := url.Values{}
@@ -489,7 +489,7 @@ func (a *AzureDevOpsConnector) GetRepositoryCommits(ctx context.Context, repo *r
 		}
 	}
 
-	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/commits", 
+	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories/%s/commits",
 		url.QueryEscape(a.organization), url.QueryEscape(project), url.QueryEscape(repoName))
 
 	params := url.Values{}
@@ -591,7 +591,7 @@ func (a *AzureDevOpsConnector) shouldRetry(statusCode int) bool {
 	return statusCode == 429 || // Rate limited
 		statusCode == 502 || // Bad Gateway
 		statusCode == 503 || // Service Unavailable
-		statusCode == 504    // Gateway Timeout
+		statusCode == 504 // Gateway Timeout
 }
 
 // AzureWebhookManager methods
@@ -600,59 +600,59 @@ func (a *AzureDevOpsConnector) shouldRetry(statusCode int) bool {
 func (wm *AzureWebhookManager) CreateWebhook(ctx context.Context, repo *repository.Repository, webhookURL string, events []string) error {
 	project, repoName := wm.connector.parseFullName(repo.FullName)
 	endpoint := fmt.Sprintf("/%s/_apis/hooks/subscriptions", url.PathEscape(wm.connector.organization))
-	
+
 	// Azure DevOps service hook configuration
 	serviceHookData := map[string]interface{}{
-		"publisherId": "tfs",
-		"eventType":   "git.push", // Default to git push events
-		"resourceVersion": "1.0",
-		"consumerId": "webHooks",
+		"publisherId":      "tfs",
+		"eventType":        "git.push", // Default to git push events
+		"resourceVersion":  "1.0",
+		"consumerId":       "webHooks",
 		"consumerActionId": "httpRequest",
 		"publisherInputs": map[string]interface{}{
-			"projectId": project,
+			"projectId":  project,
 			"repository": repoName,
 		},
 		"consumerInputs": map[string]interface{}{
-			"url": webhookURL,
-			"httpHeaders": "Content-Type:application/json",
+			"url":               webhookURL,
+			"httpHeaders":       "Content-Type:application/json",
 			"basicAuthUsername": "",
 			"basicAuthPassword": "",
 		},
 	}
-	
+
 	body, err := json.Marshal(serviceHookData)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service hook data: %w", err)
 	}
-	
+
 	req, err := wm.connector.createRequest(ctx, "POST", endpoint, strings.NewReader(string(body)))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	resp, err := wm.connector.executeRequestWithRetry(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to create service hook: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to create service hook: HTTP %d", resp.StatusCode)
 	}
-	
+
 	// Parse response to get service hook ID
 	var hookResp map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&hookResp); err != nil {
 		return fmt.Errorf("failed to decode service hook response: %w", err)
 	}
-	
+
 	hookID, ok := hookResp["id"].(string)
 	if !ok {
 		return fmt.Errorf("service hook ID not found in response")
 	}
-	
+
 	// Store webhook in manager
 	wm.mu.Lock()
 	wm.webhooks[hookID] = &repository.Webhook{
@@ -662,61 +662,61 @@ func (wm *AzureWebhookManager) CreateWebhook(ctx context.Context, repo *reposito
 		Active: true,
 	}
 	wm.mu.Unlock()
-	
+
 	return nil
 }
 
 // DeleteWebhook deletes a service hook from the repository
 func (wm *AzureWebhookManager) DeleteWebhook(ctx context.Context, repo *repository.Repository, webhookID string) error {
 	endpoint := fmt.Sprintf("/%s/_apis/hooks/subscriptions/%s", url.PathEscape(wm.connector.organization), url.PathEscape(webhookID))
-	
+
 	req, err := wm.connector.createRequest(ctx, "DELETE", endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := wm.connector.executeRequestWithRetry(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to delete service hook: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to delete service hook: HTTP %d", resp.StatusCode)
 	}
-	
+
 	// Remove webhook from manager
 	wm.mu.Lock()
 	delete(wm.webhooks, webhookID)
 	wm.mu.Unlock()
-	
+
 	return nil
 }
 
 // ListWebhooks lists all service hooks for the organization
 func (wm *AzureWebhookManager) ListWebhooks(ctx context.Context, repo *repository.Repository) ([]repository.Webhook, error) {
 	endpoint := fmt.Sprintf("/%s/_apis/hooks/subscriptions", url.PathEscape(wm.connector.organization))
-	
+
 	req, err := wm.connector.createRequest(ctx, "GET", endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := wm.connector.executeRequestWithRetry(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list service hooks: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to list service hooks: HTTP %d", resp.StatusCode)
 	}
-	
+
 	var response azureValueResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	var hookList []map[string]interface{}
 	for _, hookData := range response.Value {
 		var hook map[string]interface{}
@@ -725,29 +725,29 @@ func (wm *AzureWebhookManager) ListWebhooks(ctx context.Context, repo *repositor
 		}
 		hookList = append(hookList, hook)
 	}
-	
+
 	webhooks := make([]repository.Webhook, 0, len(hookList))
 	for _, hook := range hookList {
 		webhook := repository.Webhook{
 			ID:     fmt.Sprintf("%v", hook["id"]),
 			Active: true, // Azure DevOps doesn't have explicit active status
 		}
-		
+
 		// Extract URL from consumer inputs
 		if consumerInputs, ok := hook["consumerInputs"].(map[string]interface{}); ok {
 			if url, ok := consumerInputs["url"].(string); ok {
 				webhook.URL = url
 			}
 		}
-		
+
 		// Extract event type
 		if eventType, ok := hook["eventType"].(string); ok {
 			webhook.Events = []string{eventType}
 		}
-		
+
 		webhooks = append(webhooks, webhook)
 	}
-	
+
 	return webhooks, nil
 }
 
@@ -828,7 +828,7 @@ func (a *AzureDevOpsConnector) listProjects(ctx context.Context) ([]azureProject
 }
 
 func (a *AzureDevOpsConnector) listRepositoriesForProject(ctx context.Context, project string, filter *repository.RepositoryFilter) ([]*repository.Repository, error) {
-	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories", 
+	endpoint := fmt.Sprintf("/%s/%s/_apis/git/repositories",
 		url.QueryEscape(a.organization), url.QueryEscape(project))
 
 	params := url.Values{}
@@ -890,9 +890,9 @@ func (a *AzureDevOpsConnector) convertRepository(repo *azureRepository) *reposit
 		Archived:      repo.IsDisabled,
 		Fork:          repo.IsFork,
 		Size:          repo.Size,
-		StarCount:     0, // Not available in Azure DevOps
-		ForkCount:     0, // Not available in Azure DevOps
-		Topics:        []string{}, // Not available in Azure DevOps
+		StarCount:     0,           // Not available in Azure DevOps
+		ForkCount:     0,           // Not available in Azure DevOps
+		Topics:        []string{},  // Not available in Azure DevOps
 		CreatedAt:     time.Time{}, // Not available in basic API
 		UpdatedAt:     repo.Project.LastUpdateTime,
 		PushedAt:      repo.Project.LastUpdateTime,

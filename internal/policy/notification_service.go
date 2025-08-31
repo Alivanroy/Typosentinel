@@ -18,28 +18,24 @@ type DefaultNotificationService struct {
 	logger *log.Logger
 }
 
-
-
 // NotificationPayload represents the payload sent in notifications
 type NotificationPayload struct {
-	Type        string                 `json:"type"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Severity    string                 `json:"severity"`
-	Title       string                 `json:"title"`
-	Message     string                 `json:"message"`
-	Violation   *auth.PolicyViolation  `json:"violation,omitempty"`
+	Type        string                  `json:"type"`
+	Timestamp   time.Time               `json:"timestamp"`
+	Severity    string                  `json:"severity"`
+	Title       string                  `json:"title"`
+	Message     string                  `json:"message"`
+	Violation   *auth.PolicyViolation   `json:"violation,omitempty"`
 	Remediation *auth.RemediationAction `json:"remediation,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Metadata    map[string]interface{}  `json:"metadata,omitempty"`
 }
-
-
 
 // NewDefaultNotificationService creates a new default notification service
 func NewDefaultNotificationService(config *NotificationConfig, logger *log.Logger) *DefaultNotificationService {
 	if logger == nil {
 		logger = log.Default()
 	}
-	
+
 	return &DefaultNotificationService{
 		config: config,
 		logger: logger,
@@ -100,7 +96,7 @@ func (ns *DefaultNotificationService) sendNotification(payload *NotificationPayl
 
 	for _, channel := range ns.config.Channels {
 		var err error
-		
+
 		switch channel {
 		case "console":
 			err = ns.sendConsoleNotification(payload)
@@ -223,30 +219,30 @@ Timestamp: %s
 %s
 
 This is an automated notification from Typosentinel.
-`, payload.Title, payload.Message, payload.Severity, 
+`, payload.Title, payload.Message, payload.Severity,
 		payload.Timestamp.Format(time.RFC3339),
 		formatPayloadDetails(payload))
 
 	// Log the email content (in production, you'd send via SMTP)
-	ns.logger.Printf("EMAIL NOTIFICATION to %v:\nSubject: %s\nBody:\n%s", 
+	ns.logger.Printf("EMAIL NOTIFICATION to %v:\nSubject: %s\nBody:\n%s",
 		ns.config.EmailTo, subject, body)
 
 	// Example of how real SMTP sending would work (commented out since we don't have SMTP config):
 	/*
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-	from := "alerts@typosentinel.com"
-	password := "your-app-password"
+		smtpHost := "smtp.gmail.com"
+		smtpPort := "587"
+		from := "alerts@typosentinel.com"
+		password := "your-app-password"
 
-	auth := smtp.PlainAuth("", from, password, smtpHost)
-	
-	for _, to := range ns.config.EmailTo {
-		msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body))
-		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, msg)
-		if err != nil {
-			return fmt.Errorf("failed to send email to %s: %w", to, err)
+		auth := smtp.PlainAuth("", from, password, smtpHost)
+
+		for _, to := range ns.config.EmailTo {
+			msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body))
+			err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, msg)
+			if err != nil {
+				return fmt.Errorf("failed to send email to %s: %w", to, err)
+			}
 		}
-	}
 	*/
 
 	return nil
@@ -255,7 +251,7 @@ This is an automated notification from Typosentinel.
 // formatPayloadDetails formats additional payload details for email
 func formatPayloadDetails(payload *NotificationPayload) string {
 	var details strings.Builder
-	
+
 	if payload.Violation != nil {
 		details.WriteString(fmt.Sprintf("Violation Details:\n"))
 		details.WriteString(fmt.Sprintf("  ID: %s\n", payload.Violation.ID))
@@ -263,13 +259,13 @@ func formatPayloadDetails(payload *NotificationPayload) string {
 		details.WriteString(fmt.Sprintf("  Description: %s\n", payload.Violation.Description))
 		details.WriteString(fmt.Sprintf("  Status: %s\n", payload.Violation.Status))
 	}
-	
+
 	if payload.Remediation != nil {
 		details.WriteString(fmt.Sprintf("\nRemediation Action:\n"))
 		details.WriteString(fmt.Sprintf("  Type: %s\n", payload.Remediation.Type))
 		details.WriteString(fmt.Sprintf("  Status: %s\n", payload.Remediation.Status))
 	}
-	
+
 	return details.String()
 }
 

@@ -9,9 +9,9 @@ import (
 
 // AuthorizationMiddleware provides RBAC-based authorization
 type AuthorizationMiddleware struct {
-	rbac       *RBACEngine
+	rbac        *RBACEngine
 	authManager *AuthManager
-	enabled    bool
+	enabled     bool
 }
 
 // NewAuthorizationMiddleware creates a new authorization middleware
@@ -43,8 +43,8 @@ func (am *AuthorizationMiddleware) RequirePermission(permission Permission) gin.
 
 		if !am.rbac.CheckPermission(c.Request.Context(), user, permission) {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":   "Forbidden",
-				"message": "Insufficient permissions",
+				"error":               "Forbidden",
+				"message":             "Insufficient permissions",
 				"required_permission": string(permission),
 			})
 			c.Abort()
@@ -75,10 +75,10 @@ func (am *AuthorizationMiddleware) RequireRole(role string) gin.HandlerFunc {
 
 		if !user.HasRole(role) {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":   "Forbidden",
-				"message": "Insufficient role privileges",
+				"error":         "Forbidden",
+				"message":       "Insufficient role privileges",
 				"required_role": role,
-				"user_roles": user.Roles,
+				"user_roles":    user.Roles,
 			})
 			c.Abort()
 			return
@@ -108,10 +108,10 @@ func (am *AuthorizationMiddleware) RequireAnyRole(roles ...string) gin.HandlerFu
 
 		if !user.HasAnyRole(roles...) {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":   "Forbidden",
-				"message": "Insufficient role privileges",
+				"error":          "Forbidden",
+				"message":        "Insufficient role privileges",
 				"required_roles": roles,
-				"user_roles": user.Roles,
+				"user_roles":     user.Roles,
 			})
 			c.Abort()
 			return
@@ -157,9 +157,9 @@ func (am *AuthorizationMiddleware) RequireAction(actionType, resource string) gi
 
 		if !allowed {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":   "Forbidden",
-				"message": "Action not permitted",
-				"action":  actionType,
+				"error":    "Forbidden",
+				"message":  "Action not permitted",
+				"action":   actionType,
 				"resource": resource,
 			})
 			c.Abort()
@@ -208,8 +208,8 @@ func (am *AuthorizationMiddleware) ResourceOwnershipMiddleware(resourceParam str
 		// Check if user owns the resource or has access to it
 		if !am.userOwnsResource(user, resourceID) {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":   "Forbidden",
-				"message": "Access denied to resource",
+				"error":    "Forbidden",
+				"message":  "Access denied to resource",
 				"resource": resourceID,
 			})
 			c.Abort()

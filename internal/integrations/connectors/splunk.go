@@ -15,22 +15,22 @@ import (
 
 // SplunkConnector sends events to Splunk via HTTP Event Collector
 type SplunkConnector struct {
-	name     string
-	config   SplunkConfig
-	client   *http.Client
-	logger   logger.Logger
-	health   integrations.HealthStatus
+	name   string
+	config SplunkConfig
+	client *http.Client
+	logger logger.Logger
+	health integrations.HealthStatus
 }
 
 // SplunkConfig holds Splunk-specific configuration
 type SplunkConfig struct {
-	HECURL    string `json:"hec_url"`
-	Token     string `json:"token"`
-	Index     string `json:"index"`
-	Source    string `json:"source"`
+	HECURL     string `json:"hec_url"`
+	Token      string `json:"token"`
+	Index      string `json:"index"`
+	Source     string `json:"source"`
 	SourceType string `json:"sourcetype"`
-	Host      string `json:"host"`
-	Timeout   int    `json:"timeout"`
+	Host       string `json:"host"`
+	Timeout    int    `json:"timeout"`
 }
 
 // SplunkEvent represents a Splunk HEC event
@@ -205,11 +205,11 @@ func (s *SplunkConnector) sendToSplunk(ctx context.Context, event *SplunkEvent) 
 func (s *SplunkConnector) transformEvent(event *events.SecurityEvent) *SplunkEvent {
 	// Create enriched event data
 	eventData := map[string]interface{}{
-		"id":          event.ID,
-		"timestamp":   event.Timestamp.Format(time.RFC3339),
-		"event_type":  string(event.Type),
-		"severity":    string(event.Severity),
-		"source":      event.Source,
+		"id":         event.ID,
+		"timestamp":  event.Timestamp.Format(time.RFC3339),
+		"event_type": string(event.Type),
+		"severity":   string(event.Severity),
+		"source":     event.Source,
 		"package": map[string]interface{}{
 			"name":     event.Package.Name,
 			"version":  event.Package.Version,
@@ -218,18 +218,18 @@ func (s *SplunkConnector) transformEvent(event *events.SecurityEvent) *SplunkEve
 			"path":     event.Package.Path,
 		},
 		"threat": map[string]interface{}{
-			"type":         event.Threat.Type,
-			"confidence":   event.Threat.Confidence,
-			"risk_score":   event.Threat.RiskScore,
-			"description":  event.Threat.Description,
-			"evidence":     event.Threat.Evidence,
+			"type":        event.Threat.Type,
+			"confidence":  event.Threat.Confidence,
+			"risk_score":  event.Threat.RiskScore,
+			"description": event.Threat.Description,
+			"evidence":    event.Threat.Evidence,
 			"mitigations": event.Threat.Mitigations,
 		},
 		"metadata": map[string]interface{}{
 			"detection_method": event.Metadata.DetectionMethod,
-			"tags":            event.Metadata.Tags,
-			"custom_fields":   event.Metadata.CustomFields,
-			"correlation_id":  event.Metadata.CorrelationID,
+			"tags":             event.Metadata.Tags,
+			"custom_fields":    event.Metadata.CustomFields,
+			"correlation_id":   event.Metadata.CorrelationID,
 		},
 	}
 

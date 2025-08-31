@@ -23,7 +23,7 @@ func InitializeAuthService(
 
 	// Create token store
 	tokenStore := NewDatabaseTokenStore(dbManager.GetDB(), logger)
-	
+
 	// Create authentication service
 	authService := NewAuthService(config, logger, rbacEngine, userRepository, tokenStore)
 
@@ -45,7 +45,7 @@ func main() {
 		Password: "password",
 		SSLMode:  "disable",
 	}
-	
+
 	dbManager, err := database.NewDatabaseManager(dbConfig, logger)
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
@@ -80,7 +80,7 @@ func main() {
 		Username: "testuser",
 		Password: "testpassword",
 	}
-	
+
 	response, err := authService.Authenticate(ctx, authReq, "127.0.0.1", "test-agent")
 	if err != nil {
 		log.Printf("Authentication failed: %v", err)

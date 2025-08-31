@@ -26,27 +26,27 @@ type GitLabConnector struct {
 
 // GitLab API response structures
 type gitlabProject struct {
-	ID                int64     `json:"id"`
-	Name              string    `json:"name"`
-	NameWithNamespace string    `json:"name_with_namespace"`
-	Path              string    `json:"path"`
-	PathWithNamespace string    `json:"path_with_namespace"`
-	Description       *string   `json:"description"`
-	WebURL            string    `json:"web_url"`
-	HTTPURLToRepo     string    `json:"http_url_to_repo"`
-	SSHURLToRepo      string    `json:"ssh_url_to_repo"`
-	DefaultBranch     string    `json:"default_branch"`
-	Visibility        string    `json:"visibility"`
-	Archived          bool      `json:"archived"`
-	StarCount         int       `json:"star_count"`
-	ForksCount        int       `json:"forks_count"`
-	CreatedAt         time.Time `json:"created_at"`
-	LastActivityAt    time.Time `json:"last_activity_at"`
-	TagList           []string  `json:"tag_list"`
-	Topics            []string  `json:"topics"`
-	Namespace         gitlabNamespace `json:"namespace"`
-	Owner             *gitlabUser `json:"owner"`
-	ForkedFromProject *gitlabProject `json:"forked_from_project"`
+	ID                int64                    `json:"id"`
+	Name              string                   `json:"name"`
+	NameWithNamespace string                   `json:"name_with_namespace"`
+	Path              string                   `json:"path"`
+	PathWithNamespace string                   `json:"path_with_namespace"`
+	Description       *string                  `json:"description"`
+	WebURL            string                   `json:"web_url"`
+	HTTPURLToRepo     string                   `json:"http_url_to_repo"`
+	SSHURLToRepo      string                   `json:"ssh_url_to_repo"`
+	DefaultBranch     string                   `json:"default_branch"`
+	Visibility        string                   `json:"visibility"`
+	Archived          bool                     `json:"archived"`
+	StarCount         int                      `json:"star_count"`
+	ForksCount        int                      `json:"forks_count"`
+	CreatedAt         time.Time                `json:"created_at"`
+	LastActivityAt    time.Time                `json:"last_activity_at"`
+	TagList           []string                 `json:"tag_list"`
+	Topics            []string                 `json:"topics"`
+	Namespace         gitlabNamespace          `json:"namespace"`
+	Owner             *gitlabUser              `json:"owner"`
+	ForkedFromProject *gitlabProject           `json:"forked_from_project"`
 	Statistics        *gitlabProjectStatistics `json:"statistics"`
 }
 
@@ -82,28 +82,28 @@ type gitlabGroup struct {
 }
 
 type gitlabProjectStatistics struct {
-	CommitCount           int64 `json:"commit_count"`
-	StorageSize           int64 `json:"storage_size"`
-	RepositorySize        int64 `json:"repository_size"`
-	WikiSize              int64 `json:"wiki_size"`
-	LfsObjectsSize        int64 `json:"lfs_objects_size"`
-	JobArtifactsSize      int64 `json:"job_artifacts_size"`
-	PackagesSize          int64 `json:"packages_size"`
-	SnippetsSize          int64 `json:"snippets_size"`
-	UploadsSize           int64 `json:"uploads_size"`
+	CommitCount      int64 `json:"commit_count"`
+	StorageSize      int64 `json:"storage_size"`
+	RepositorySize   int64 `json:"repository_size"`
+	WikiSize         int64 `json:"wiki_size"`
+	LfsObjectsSize   int64 `json:"lfs_objects_size"`
+	JobArtifactsSize int64 `json:"job_artifacts_size"`
+	PackagesSize     int64 `json:"packages_size"`
+	SnippetsSize     int64 `json:"snippets_size"`
+	UploadsSize      int64 `json:"uploads_size"`
 }
 
 type gitlabFile struct {
-	FileName     string `json:"file_name"`
-	FilePath     string `json:"file_path"`
-	Size         int64  `json:"size"`
-	Encoding     string `json:"encoding"`
-	Content      string `json:"content"`
+	FileName      string `json:"file_name"`
+	FilePath      string `json:"file_path"`
+	Size          int64  `json:"size"`
+	Encoding      string `json:"encoding"`
+	Content       string `json:"content"`
 	ContentSHA256 string `json:"content_sha256"`
-	Ref          string `json:"ref"`
-	BlobID       string `json:"blob_id"`
-	CommitID     string `json:"commit_id"`
-	LastCommitID string `json:"last_commit_id"`
+	Ref           string `json:"ref"`
+	BlobID        string `json:"blob_id"`
+	CommitID      string `json:"commit_id"`
+	LastCommitID  string `json:"last_commit_id"`
 }
 
 type gitlabTreeItem struct {
@@ -129,14 +129,14 @@ type gitlabCommit struct {
 }
 
 type gitlabBranch struct {
-	Name               string        `json:"name"`
-	Merged             bool          `json:"merged"`
-	Protected          bool          `json:"protected"`
-	DevelopersCanPush  bool          `json:"developers_can_push"`
-	DevelopersCanMerge bool          `json:"developers_can_merge"`
-	CanPush            bool          `json:"can_push"`
-	Default            bool          `json:"default"`
-	Commit             gitlabCommit  `json:"commit"`
+	Name               string       `json:"name"`
+	Merged             bool         `json:"merged"`
+	Protected          bool         `json:"protected"`
+	DevelopersCanPush  bool         `json:"developers_can_push"`
+	DevelopersCanMerge bool         `json:"developers_can_merge"`
+	CanPush            bool         `json:"can_push"`
+	Default            bool         `json:"default"`
+	Commit             gitlabCommit `json:"commit"`
 }
 
 // NewGitLabConnector creates a new GitLab connector
@@ -606,13 +606,13 @@ func (g *GitLabConnector) CreateWebhook(ctx context.Context, repo *repository.Re
 
 	// Prepare webhook payload
 	payload := map[string]interface{}{
-		"url":                      webhookURL,
-		"push_events":              gitlabEvents["push_events"],
-		"merge_requests_events":    gitlabEvents["merge_requests_events"],
-		"tag_push_events":          gitlabEvents["tag_push_events"],
-		"issues_events":            gitlabEvents["issues_events"],
-		"wiki_page_events":         gitlabEvents["wiki_page_events"],
-		"enable_ssl_verification":  true,
+		"url":                     webhookURL,
+		"push_events":             gitlabEvents["push_events"],
+		"merge_requests_events":   gitlabEvents["merge_requests_events"],
+		"tag_push_events":         gitlabEvents["tag_push_events"],
+		"issues_events":           gitlabEvents["issues_events"],
+		"wiki_page_events":        gitlabEvents["wiki_page_events"],
+		"enable_ssl_verification": true,
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -865,11 +865,11 @@ func (g *GitLabConnector) convertProject(project *gitlabProject) *repository.Rep
 		Platform:      "gitlab",
 		Owner:         owner,
 		Metadata: map[string]interface{}{
-			"visibility":        project.Visibility,
+			"visibility":          project.Visibility,
 			"name_with_namespace": project.NameWithNamespace,
-			"path":             project.Path,
+			"path":                project.Path,
 			"path_with_namespace": project.PathWithNamespace,
-			"namespace":        project.Namespace,
+			"namespace":           project.Namespace,
 		},
 	}
 }
@@ -981,7 +981,7 @@ func (g *GitLabConnector) decodeBase64Content(content string) ([]byte, error) {
 	// Remove whitespace and newlines
 	content = strings.ReplaceAll(content, "\n", "")
 	content = strings.ReplaceAll(content, " ", "")
-	
+
 	// Decode base64
 	return json.RawMessage(content), nil
 }

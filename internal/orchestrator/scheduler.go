@@ -14,76 +14,76 @@ import (
 
 // ScanScheduler manages scheduled repository scans
 type ScanScheduler struct {
-	cron         *cron.Cron
-	queue        ScanQueue
-	repository   repository.RepositoryManager
-	schedules    map[string]*ScheduledScan
-	mu           sync.RWMutex
-	running      bool
-	logger       *log.Logger
-	metrics      *SchedulerMetrics
+	cron       *cron.Cron
+	queue      ScanQueue
+	repository repository.RepositoryManager
+	schedules  map[string]*ScheduledScan
+	mu         sync.RWMutex
+	running    bool
+	logger     *log.Logger
+	metrics    *SchedulerMetrics
 }
 
 // ScheduledScan represents a scheduled scan configuration
 type ScheduledScan struct {
-	ID          string                    `json:"id"`
-	Name        string                    `json:"name"`
-	Description string                    `json:"description"`
-	Schedule    string                    `json:"schedule"` // Cron expression
-	Targets     []ScanTarget              `json:"targets"`
-	Options     repository.ScanOptions    `json:"options"`
-	Output      []OutputConfig            `json:"output"`
-	Policies    []PolicyConfig            `json:"policies"`
-	Enabled     bool                      `json:"enabled"`
-	CreatedAt   time.Time                 `json:"created_at"`
-	UpdatedAt   time.Time                 `json:"updated_at"`
-	LastRun     *time.Time                `json:"last_run,omitempty"`
-	NextRun     *time.Time                `json:"next_run,omitempty"`
-	RunCount    int64                     `json:"run_count"`
-	CronID      cron.EntryID              `json:"-"`
-	Metadata    map[string]interface{}    `json:"metadata"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Schedule    string                 `json:"schedule"` // Cron expression
+	Targets     []ScanTarget           `json:"targets"`
+	Options     repository.ScanOptions `json:"options"`
+	Output      []OutputConfig         `json:"output"`
+	Policies    []PolicyConfig         `json:"policies"`
+	Enabled     bool                   `json:"enabled"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+	LastRun     *time.Time             `json:"last_run,omitempty"`
+	NextRun     *time.Time             `json:"next_run,omitempty"`
+	RunCount    int64                  `json:"run_count"`
+	CronID      cron.EntryID           `json:"-"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // ScanTarget represents a scan target configuration
 type ScanTarget struct {
-	Type         string                    `json:"type"` // github, gitlab, bitbucket, etc.
-	Organization string                    `json:"organization,omitempty"`
-	Group        string                    `json:"group,omitempty"`
-	User         string                    `json:"user,omitempty"`
-	Repositories []string                  `json:"repositories,omitempty"`
-	IncludeAll   bool                      `json:"include_all"`
+	Type         string                       `json:"type"` // github, gitlab, bitbucket, etc.
+	Organization string                       `json:"organization,omitempty"`
+	Group        string                       `json:"group,omitempty"`
+	User         string                       `json:"user,omitempty"`
+	Repositories []string                     `json:"repositories,omitempty"`
+	IncludeAll   bool                         `json:"include_all"`
 	Filter       *repository.RepositoryFilter `json:"filter,omitempty"`
-	Branch       string                    `json:"branch,omitempty"`
-	Metadata     map[string]interface{}    `json:"metadata"`
+	Branch       string                       `json:"branch,omitempty"`
+	Metadata     map[string]interface{}       `json:"metadata"`
 }
 
 // OutputConfig represents output configuration
 type OutputConfig struct {
-	Format      string                    `json:"format"`
-	Destination string                    `json:"destination"`
-	Template    string                    `json:"template,omitempty"`
-	Options     map[string]interface{}    `json:"options,omitempty"`
+	Format      string                 `json:"format"`
+	Destination string                 `json:"destination"`
+	Template    string                 `json:"template,omitempty"`
+	Options     map[string]interface{} `json:"options,omitempty"`
 }
 
 // PolicyConfig represents policy configuration
 type PolicyConfig struct {
-	Name        string                    `json:"name"`
-	Condition   string                    `json:"condition"`
-	Action      string                    `json:"action"`
-	Parameters  map[string]interface{}    `json:"parameters,omitempty"`
-	Enabled     bool                      `json:"enabled"`
+	Name       string                 `json:"name"`
+	Condition  string                 `json:"condition"`
+	Action     string                 `json:"action"`
+	Parameters map[string]interface{} `json:"parameters,omitempty"`
+	Enabled    bool                   `json:"enabled"`
 }
 
 // SchedulerMetrics tracks scheduler performance
 type SchedulerMetrics struct {
-	TotalSchedules    int64     `json:"total_schedules"`
-	ActiveSchedules   int64     `json:"active_schedules"`
-	TotalRuns         int64     `json:"total_runs"`
-	SuccessfulRuns    int64     `json:"successful_runs"`
-	FailedRuns        int64     `json:"failed_runs"`
-	LastRunTime       time.Time `json:"last_run_time"`
-	AverageRunTime    time.Duration `json:"average_run_time"`
-	QueueSize         int       `json:"queue_size"`
+	TotalSchedules  int64         `json:"total_schedules"`
+	ActiveSchedules int64         `json:"active_schedules"`
+	TotalRuns       int64         `json:"total_runs"`
+	SuccessfulRuns  int64         `json:"successful_runs"`
+	FailedRuns      int64         `json:"failed_runs"`
+	LastRunTime     time.Time     `json:"last_run_time"`
+	AverageRunTime  time.Duration `json:"average_run_time"`
+	QueueSize       int           `json:"queue_size"`
 }
 
 // ScanQueue interface for managing scan jobs
@@ -101,7 +101,7 @@ type ScanQueue interface {
 // NewScanScheduler creates a new scan scheduler
 func NewScanScheduler(queue ScanQueue, repoManager repository.RepositoryManager, logger *log.Logger) *ScanScheduler {
 	c := cron.New(cron.WithSeconds())
-	
+
 	return &ScanScheduler{
 		cron:       c,
 		queue:      queue,
@@ -433,7 +433,7 @@ func (s *ScanScheduler) executeSchedule(scheduleID string) {
 	}
 	s.mu.Unlock()
 
-	s.logger.Printf("Completed scheduled scan: %s (%s) - %d repositories queued in %v", 
+	s.logger.Printf("Completed scheduled scan: %s (%s) - %d repositories queued in %v",
 		schedule.Name, scheduleID, successCount, duration)
 }
 

@@ -13,8 +13,8 @@ import (
 // EnhancedDashboard provides advanced web interface features
 type EnhancedDashboard struct {
 	*Dashboard
-	sessions     map[string]*UserSession
-	preferences  map[string]*UserPreferences
+	sessions      map[string]*UserSession
+	preferences   map[string]*UserPreferences
 	configHistory []ConfigHistoryEntry
 }
 
@@ -31,10 +31,10 @@ type UserSession struct {
 // UserPreferences stores user-specific dashboard preferences
 type UserPreferences struct {
 	Username        string            `json:"username"`
-	Theme           string            `json:"theme"`           // "light", "dark", "auto"
-	RefreshRate     int               `json:"refresh_rate"`    // seconds
-	DefaultView     string            `json:"default_view"`    // "dashboard", "scans", "config"
-	ChartType       string            `json:"chart_type"`      // "line", "bar", "area"
+	Theme           string            `json:"theme"`        // "light", "dark", "auto"
+	RefreshRate     int               `json:"refresh_rate"` // seconds
+	DefaultView     string            `json:"default_view"` // "dashboard", "scans", "config"
+	ChartType       string            `json:"chart_type"`   // "line", "bar", "area"
 	Notifications   NotificationPrefs `json:"notifications"`
 	DashboardLayout DashboardLayout   `json:"dashboard_layout"`
 	Filters         FilterPrefs       `json:"filters"`
@@ -43,12 +43,12 @@ type UserPreferences struct {
 
 // NotificationPrefs defines notification preferences
 type NotificationPrefs struct {
-	Email         bool `json:"email"`
-	Browser       bool `json:"browser"`
-	Slack         bool `json:"slack"`
-	OnHighThreats bool `json:"on_high_threats"`
+	Email          bool `json:"email"`
+	Browser        bool `json:"browser"`
+	Slack          bool `json:"slack"`
+	OnHighThreats  bool `json:"on_high_threats"`
 	OnScanComplete bool `json:"on_scan_complete"`
-	OnSystemError bool `json:"on_system_error"`
+	OnSystemError  bool `json:"on_system_error"`
 }
 
 // DashboardLayout defines dashboard widget layout
@@ -59,18 +59,18 @@ type DashboardLayout struct {
 // WidgetConfig defines individual widget configuration
 type WidgetConfig struct {
 	ID       string `json:"id"`
-	Type     string `json:"type"`     // "metrics", "chart", "table", "status"
+	Type     string `json:"type"` // "metrics", "chart", "table", "status"
 	Position int    `json:"position"`
-	Size     string `json:"size"`     // "small", "medium", "large"
+	Size     string `json:"size"` // "small", "medium", "large"
 	Visible  bool   `json:"visible"`
 }
 
 // FilterPrefs defines default filter preferences
 type FilterPrefs struct {
-	DefaultSeverity []string `json:"default_severity"`
-	DefaultStatus   []string `json:"default_status"`
-	DefaultTimeRange string  `json:"default_time_range"`
-	AutoRefresh     bool     `json:"auto_refresh"`
+	DefaultSeverity  []string `json:"default_severity"`
+	DefaultStatus    []string `json:"default_status"`
+	DefaultTimeRange string   `json:"default_time_range"`
+	AutoRefresh      bool     `json:"auto_refresh"`
 }
 
 // ConfigHistoryEntry represents a configuration change
@@ -88,7 +88,7 @@ type ConfigHistoryEntry struct {
 // NewEnhancedDashboard creates a new enhanced dashboard instance
 func NewEnhancedDashboard(config *DashboardConfig, coordinator *ScanCoordinator) *EnhancedDashboard {
 	baseDashboard := NewDashboard(config, coordinator)
-	
+
 	return &EnhancedDashboard{
 		Dashboard:     baseDashboard,
 		sessions:      make(map[string]*UserSession),
@@ -181,7 +181,7 @@ func (ed *EnhancedDashboard) enhancedAuthMiddleware(next http.Handler) http.Hand
 
 			// Update last seen
 			session.LastSeen = time.Now()
-			
+
 			// Add user context to request
 			ctx := context.WithValue(r.Context(), "user", session.Username)
 			r = r.WithContext(ctx)
@@ -276,7 +276,7 @@ func (ed *EnhancedDashboard) handlePreferences(w http.ResponseWriter, r *http.Re
 			prefs = ed.getDefaultPreferences(username)
 			ed.preferences[username] = prefs
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(prefs)
 
@@ -636,7 +636,7 @@ func (ed *EnhancedDashboard) handleConfigTemplates(w http.ResponseWriter, r *htt
 					"scan_depth":  3,
 				},
 				"detector": map[string]interface{}{
-					"threshold": 0.7,
+					"threshold":  0.7,
 					"algorithms": []string{"levenshtein", "jaro_winkler"},
 				},
 			},
@@ -652,7 +652,7 @@ func (ed *EnhancedDashboard) handleConfigTemplates(w http.ResponseWriter, r *htt
 					"scan_depth":  5,
 				},
 				"detector": map[string]interface{}{
-					"threshold": 0.8,
+					"threshold":  0.8,
 					"algorithms": []string{"levenshtein", "jaro_winkler", "soundex"},
 				},
 			},

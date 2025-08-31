@@ -17,9 +17,9 @@ import (
 
 // EnterpriseHandler handles enterprise repository scanning endpoints
 type EnterpriseHandler struct {
-	repoManager   *repository.Manager
-	scheduler     *orchestrator.ScanScheduler
-	logger        *logrus.Logger
+	repoManager *repository.Manager
+	scheduler   *orchestrator.ScanScheduler
+	logger      *logrus.Logger
 }
 
 // NewEnterpriseHandler creates a new enterprise handler
@@ -39,26 +39,26 @@ func (h *EnterpriseHandler) RegisterRoutes(router *gin.Engine) {
 		v1.POST("/repositories/discover", h.DiscoverRepositories)
 		v1.GET("/repositories", h.ListRepositories)
 		v1.GET("/repositories/:platform/:owner/:repo", h.GetRepository)
-		
+
 		// Scanning operations
 		v1.POST("/scan/single", h.ScanSingleRepository)
 		v1.POST("/scan/bulk", h.ScanBulkRepositories)
 		v1.POST("/scan/organization", h.ScanOrganization)
 		v1.GET("/scan/:scanId/status", h.GetScanStatus)
 		v1.GET("/scan/:scanId/results", h.GetScanResults)
-		
+
 		// Scheduled scanning
 		v1.POST("/schedule", h.CreateSchedule)
 		v1.GET("/schedule", h.ListSchedules)
 		v1.PUT("/schedule/:scheduleId", h.UpdateSchedule)
 		v1.DELETE("/schedule/:scheduleId", h.DeleteSchedule)
 		v1.POST("/schedule/:scheduleId/trigger", h.TriggerSchedule)
-		
+
 		// Platform connectors
 		v1.POST("/connectors/:platform/configure", h.ConfigureConnector)
 		v1.GET("/connectors", h.ListConnectors)
 		v1.GET("/connectors/:platform/health", h.CheckConnectorHealth)
-		
+
 		// Reports and exports
 		v1.GET("/reports/dashboard", h.GetDashboard)
 		v1.GET("/reports/export/:format", h.ExportResults)
@@ -75,9 +75,9 @@ type DiscoverRepositoriesRequest struct {
 // DiscoverRepositoriesResponse represents a repository discovery response
 type DiscoverRepositoriesResponse struct {
 	Repositories []*repository.Repository `json:"repositories"`
-	Count        int                       `json:"count"`
-	Platforms    []string                  `json:"platforms"`
-	Duration     string                    `json:"duration"`
+	Count        int                      `json:"count"`
+	Platforms    []string                 `json:"platforms"`
+	Duration     string                   `json:"duration"`
 }
 
 // DiscoverRepositories discovers repositories across platforms
@@ -87,40 +87,40 @@ func (h *EnterpriseHandler) DiscoverRepositories(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	start := time.Now()
 	ctx := c.Request.Context()
-	
+
 	// Extract platform names from the map
 	platforms := make([]string, 0, len(req.Platforms))
 	for platform := range req.Platforms {
 		platforms = append(platforms, platform)
 	}
-	
+
 	repos, err := h.repoManager.DiscoverRepositories(ctx, platforms, req.Filter)
 	if err != nil {
 		h.logger.Errorf("Failed to discover repositories: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to discover repositories", "details": err.Error()})
 		return
 	}
-	
+
 	response := DiscoverRepositoriesResponse{
 		Repositories: repos,
 		Count:        len(repos),
 		Platforms:    platforms,
 		Duration:     time.Since(start).String(),
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
 // ScanSingleRepositoryRequest represents a single repository scan request
 type ScanSingleRepositoryRequest struct {
-	Platform   string                     `json:"platform"`
-	Owner      string                     `json:"owner"`
-	Repository string                     `json:"repository"`
-	Branch     string                     `json:"branch,omitempty"`
-	Options    repository.ScanOptions     `json:"options"`
+	Platform   string                 `json:"platform"`
+	Owner      string                 `json:"owner"`
+	Repository string                 `json:"repository"`
+	Branch     string                 `json:"branch,omitempty"`
+	Options    repository.ScanOptions `json:"options"`
 }
 
 // ScanSingleRepository scans a single repository
@@ -130,22 +130,22 @@ func (h *EnterpriseHandler) ScanSingleRepository(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
-	
+
 	// Get the repository
 	connector, err := h.repoManager.GetConnector(req.Platform)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported platform", "platform": req.Platform})
 		return
 	}
-	
+
 	repo, err := connector.GetRepository(ctx, req.Owner, req.Repository)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Repository not found", "details": err.Error()})
 		return
 	}
-	
+
 	// Create scan request
 	scanRequest := &repository.ScanRequest{
 		Repository:  repo,
@@ -156,7 +156,7 @@ func (h *EnterpriseHandler) ScanSingleRepository(c *gin.Context) {
 		Options:     req.Options,
 		CreatedAt:   time.Now(),
 	}
-	
+
 	// Perform scan
 	result, err := h.repoManager.ScanRepositoryWithResult(ctx, scanRequest)
 	if err != nil {
@@ -164,7 +164,7 @@ func (h *EnterpriseHandler) ScanSingleRepository(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Scan failed", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, result)
 }
 
@@ -181,10 +181,10 @@ func (h *EnterpriseHandler) ScanBulkRepositories(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
 	scanRequests := make([]*repository.ScanRequest, 0, len(req.Repositories))
-	
+
 	// Convert to scan requests
 	for i, repoReq := range req.Repositories {
 		connector, err := h.repoManager.GetConnector(repoReq.Platform)
@@ -192,18 +192,18 @@ func (h *EnterpriseHandler) ScanBulkRepositories(c *gin.Context) {
 			h.logger.Warnf("Skipping repository %s/%s: unsupported platform %s", repoReq.Owner, repoReq.Repository, repoReq.Platform)
 			continue
 		}
-		
+
 		repo, err := connector.GetRepository(ctx, repoReq.Owner, repoReq.Repository)
 		if err != nil {
 			h.logger.Warnf("Skipping repository %s/%s: %v", repoReq.Owner, repoReq.Repository, err)
 			continue
 		}
-		
+
 		options := req.Options
 		if len(repoReq.Options.OutputFormats) > 0 {
 			options = repoReq.Options
 		}
-		
+
 		scanRequest := &repository.ScanRequest{
 			Repository:  repo,
 			Branch:      repoReq.Branch,
@@ -213,15 +213,15 @@ func (h *EnterpriseHandler) ScanBulkRepositories(c *gin.Context) {
 			Options:     options,
 			CreatedAt:   time.Now(),
 		}
-		
+
 		scanRequests = append(scanRequests, scanRequest)
 	}
-	
+
 	if len(scanRequests) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid repositories to scan"})
 		return
 	}
-	
+
 	// Perform bulk scan
 	results, err := h.repoManager.ScanRepositoriesWithResults(ctx, scanRequests)
 	if err != nil {
@@ -229,7 +229,7 @@ func (h *EnterpriseHandler) ScanBulkRepositories(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Bulk scan failed", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"results": results,
 		"total":   len(results),
@@ -240,8 +240,8 @@ func (h *EnterpriseHandler) ScanBulkRepositories(c *gin.Context) {
 
 // ScanOrganizationRequest represents an organization scan request
 type ScanOrganizationRequest struct {
-	Platform     string                      `json:"platform"`
-	Organization string                      `json:"organization"`
+	Platform     string                       `json:"platform"`
+	Organization string                       `json:"organization"`
 	Filter       *repository.RepositoryFilter `json:"filter"`
 	Options      repository.ScanOptions       `json:"options"`
 }
@@ -253,30 +253,30 @@ func (h *EnterpriseHandler) ScanOrganization(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
-	
+
 	// Get connector
 	connector, err := h.repoManager.GetConnector(req.Platform)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported platform", "platform": req.Platform})
 		return
 	}
-	
+
 	// Get organization
 	org, err := connector.GetOrganization(ctx, req.Organization)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Organization not found", "details": err.Error()})
 		return
 	}
-	
+
 	// List repositories
 	repos, err := connector.ListOrgRepositories(ctx, org.Login, req.Filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list repositories", "details": err.Error()})
 		return
 	}
-	
+
 	// Create scan requests
 	scanRequests := make([]*repository.ScanRequest, 0, len(repos))
 	for i, repo := range repos {
@@ -290,12 +290,12 @@ func (h *EnterpriseHandler) ScanOrganization(c *gin.Context) {
 		}
 		scanRequests = append(scanRequests, scanRequest)
 	}
-	
+
 	if len(scanRequests) == 0 {
 		c.JSON(http.StatusOK, gin.H{"message": "No repositories found to scan", "organization": req.Organization})
 		return
 	}
-	
+
 	// Perform bulk scan
 	results, err := h.repoManager.ScanRepositoriesWithResults(ctx, scanRequests)
 	if err != nil {
@@ -303,7 +303,7 @@ func (h *EnterpriseHandler) ScanOrganization(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Organization scan failed", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"organization": req.Organization,
 		"results":      results,
@@ -321,19 +321,19 @@ type ConfigureConnectorRequest struct {
 // ConfigureConnector configures a platform connector
 func (h *EnterpriseHandler) ConfigureConnector(c *gin.Context) {
 	platform := c.Param("platform")
-	
+
 	var req ConfigureConnectorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
-	
+
 	// Create connector based on platform
 	var connector repository.Connector
 	var err error
-	
+
 	switch platform {
 	case "github":
 		connector, err = connectors.NewGitHubConnector(req.Config)
@@ -343,7 +343,7 @@ func (h *EnterpriseHandler) ConfigureConnector(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported platform", "platform": platform})
 		return
 	}
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create connector", "details": err.Error()})
 		return
@@ -354,13 +354,13 @@ func (h *EnterpriseHandler) ConfigureConnector(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed", "details": err.Error()})
 		return
 	}
-	
+
 	// Register connector
 	if err := h.repoManager.RegisterConnector(platform, connector); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register connector", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Connector configured successfully",
 		"platform": platform,
@@ -371,7 +371,7 @@ func (h *EnterpriseHandler) ConfigureConnector(c *gin.Context) {
 // ListConnectors lists all configured connectors
 func (h *EnterpriseHandler) ListConnectors(c *gin.Context) {
 	connectorNames := h.repoManager.ListConnectors()
-	
+
 	result := make(map[string]interface{})
 	for _, platform := range connectorNames {
 		connector, err := h.repoManager.GetConnector(platform)
@@ -383,7 +383,7 @@ func (h *EnterpriseHandler) ListConnectors(c *gin.Context) {
 			}
 			continue
 		}
-		
+
 		result[platform] = gin.H{
 			"platform": connector.GetPlatformName(),
 			"type":     connector.GetPlatformType(),
@@ -391,7 +391,7 @@ func (h *EnterpriseHandler) ListConnectors(c *gin.Context) {
 			"status":   "active",
 		}
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"connectors": result,
 		"count":      len(result),
@@ -401,25 +401,25 @@ func (h *EnterpriseHandler) ListConnectors(c *gin.Context) {
 // CheckConnectorHealth checks the health of a platform connector
 func (h *EnterpriseHandler) CheckConnectorHealth(c *gin.Context) {
 	platform := c.Param("platform")
-	
+
 	connector, err := h.repoManager.GetConnector(platform)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Connector not found", "platform": platform})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
 	err = connector.HealthCheck(ctx)
-	
+
 	status := "healthy"
 	if err != nil {
 		status = "unhealthy"
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"platform": platform,
-		"status":   status,
-		"error":    err,
+		"platform":  platform,
+		"status":    status,
+		"error":     err,
 		"timestamp": time.Now(),
 	})
 }
@@ -441,14 +441,14 @@ func (h *EnterpriseHandler) GetDashboard(c *gin.Context) {
 			"github": gin.H{"repositories": 0, "last_scan": nil},
 			"gitlab": gin.H{"repositories": 0, "last_scan": nil},
 		},
-		"trends": []gin.H{},
+		"trends":      []gin.H{},
 		"top_threats": []gin.H{},
 		"recommendations": []gin.H{
 			{"type": "info", "message": "Configure platform connectors to start scanning"},
 		},
 		"generated_at": time.Now(),
 	}
-	
+
 	c.JSON(http.StatusOK, dashboard)
 }
 
@@ -456,12 +456,12 @@ func (h *EnterpriseHandler) GetDashboard(c *gin.Context) {
 func (h *EnterpriseHandler) ExportResults(c *gin.Context) {
 	format := c.Param("format")
 	scanId := c.Query("scan_id")
-	
+
 	if scanId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "scan_id parameter is required"})
 		return
 	}
-	
+
 	// This would typically retrieve scan results from storage
 	// For now, return a sample response
 	switch format {
@@ -497,13 +497,13 @@ func (h *EnterpriseHandler) ExportResults(c *gin.Context) {
 				"files_scanned": 3,
 			},
 		}
-		
+
 		pdfContent, err := utils.GenerateSimplePDF(reportData)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF", "details": err.Error()})
 			return
 		}
-		
+
 		c.Header("Content-Type", "application/pdf")
 		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=scan_%s.pdf", scanId))
 		c.Data(http.StatusOK, "application/pdf", pdfContent)
@@ -515,7 +515,7 @@ func (h *EnterpriseHandler) ExportResults(c *gin.Context) {
 // GetSARIFReport returns SARIF format report
 func (h *EnterpriseHandler) GetSARIFReport(c *gin.Context) {
 	scanId := c.Param("scanId")
-	
+
 	// This would typically retrieve scan results and convert to SARIF
 	// For now, return a sample SARIF report
 	sarif := output.SARIF{
@@ -535,7 +535,7 @@ func (h *EnterpriseHandler) GetSARIFReport(c *gin.Context) {
 			},
 		},
 	}
-	
+
 	c.Header("Content-Type", "application/json")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=sarif_%s.json", scanId))
 	c.JSON(http.StatusOK, sarif)
@@ -545,13 +545,13 @@ func (h *EnterpriseHandler) GetSARIFReport(c *gin.Context) {
 
 // CreateScheduleRequest represents a schedule creation request
 type CreateScheduleRequest struct {
-	Name        string                           `json:"name"`
-	Description string                           `json:"description"`
-	Schedule    string                           `json:"schedule"`
-	Targets     []orchestrator.ScanTarget       `json:"targets"`
-	Output      []orchestrator.OutputConfig     `json:"output"`
-	Policies    []orchestrator.PolicyConfig     `json:"policies"`
-	Enabled     bool                             `json:"enabled"`
+	Name        string                      `json:"name"`
+	Description string                      `json:"description"`
+	Schedule    string                      `json:"schedule"`
+	Targets     []orchestrator.ScanTarget   `json:"targets"`
+	Output      []orchestrator.OutputConfig `json:"output"`
+	Policies    []orchestrator.PolicyConfig `json:"policies"`
+	Enabled     bool                        `json:"enabled"`
 }
 
 // CreateSchedule creates a new scan schedule
@@ -561,7 +561,7 @@ func (h *EnterpriseHandler) CreateSchedule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	schedule := &orchestrator.ScheduledScan{
 		ID:          fmt.Sprintf("schedule_%d", time.Now().Unix()),
 		Name:        req.Name,
@@ -574,19 +574,19 @@ func (h *EnterpriseHandler) CreateSchedule(c *gin.Context) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	if err := h.scheduler.AddSchedule(schedule); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create schedule", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusCreated, schedule)
 }
 
 // ListSchedules lists all scan schedules
 func (h *EnterpriseHandler) ListSchedules(c *gin.Context) {
 	schedules := h.scheduler.ListSchedules()
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"schedules": schedules,
 		"count":     len(schedules),
@@ -596,13 +596,13 @@ func (h *EnterpriseHandler) ListSchedules(c *gin.Context) {
 // UpdateSchedule updates an existing schedule
 func (h *EnterpriseHandler) UpdateSchedule(c *gin.Context) {
 	scheduleId := c.Param("scheduleId")
-	
+
 	var req CreateScheduleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format", "details": err.Error()})
 		return
 	}
-	
+
 	schedule := &orchestrator.ScheduledScan{
 		ID:          scheduleId,
 		Name:        req.Name,
@@ -614,56 +614,56 @@ func (h *EnterpriseHandler) UpdateSchedule(c *gin.Context) {
 		Enabled:     req.Enabled,
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	if err := h.scheduler.UpdateSchedule(schedule); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update schedule", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, schedule)
 }
 
 // DeleteSchedule deletes a scan schedule
 func (h *EnterpriseHandler) DeleteSchedule(c *gin.Context) {
 	scheduleId := c.Param("scheduleId")
-	
+
 	if err := h.scheduler.RemoveSchedule(scheduleId); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete schedule", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule deleted successfully", "schedule_id": scheduleId})
 }
 
 // TriggerSchedule manually triggers a scheduled scan
 func (h *EnterpriseHandler) TriggerSchedule(c *gin.Context) {
 	scheduleId := c.Param("scheduleId")
-	
+
 	if err := h.scheduler.TriggerSchedule(scheduleId); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to trigger schedule", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule triggered successfully", "schedule_id": scheduleId})
 }
 
 // GetScanStatus returns the status of a scan
 func (h *EnterpriseHandler) GetScanStatus(c *gin.Context) {
 	scanId := c.Param("scanId")
-	
+
 	// This would typically query scan status from storage
 	// For now, return a sample status
 	status := gin.H{
-		"scan_id":    scanId,
-		"status":     "completed",
-		"progress":   100,
-		"started_at": time.Now().Add(-5 * time.Minute),
+		"scan_id":      scanId,
+		"status":       "completed",
+		"progress":     100,
+		"started_at":   time.Now().Add(-5 * time.Minute),
 		"completed_at": time.Now(),
-		"duration":   "5m0s",
-		"repository": "example/repo",
-		"platform":   "github",
+		"duration":     "5m0s",
+		"repository":   "example/repo",
+		"platform":     "github",
 	}
-	
+
 	c.JSON(http.StatusOK, status)
 }
 
@@ -671,7 +671,7 @@ func (h *EnterpriseHandler) GetScanStatus(c *gin.Context) {
 func (h *EnterpriseHandler) GetScanResults(c *gin.Context) {
 	scanId := c.Param("scanId")
 	format := c.DefaultQuery("format", "json")
-	
+
 	// This would typically retrieve scan results from storage
 	// For now, return sample results
 	results := gin.H{
@@ -694,7 +694,7 @@ func (h *EnterpriseHandler) GetScanResults(c *gin.Context) {
 			"files_scanned": 3,
 		},
 	}
-	
+
 	switch format {
 	case "json":
 		c.JSON(http.StatusOK, results)
@@ -711,20 +711,20 @@ func (h *EnterpriseHandler) GetRepository(c *gin.Context) {
 	platform := c.Param("platform")
 	owner := c.Param("owner")
 	repoName := c.Param("repo")
-	
+
 	connector, err := h.repoManager.GetConnector(platform)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported platform", "platform": platform})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
 	repo, err := connector.GetRepository(ctx, owner, repoName)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Repository not found", "details": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, repo)
 }
 
@@ -733,30 +733,30 @@ func (h *EnterpriseHandler) ListRepositories(c *gin.Context) {
 	platform := c.Query("platform")
 	owner := c.Query("owner")
 	limitStr := c.DefaultQuery("limit", "50")
-	
+
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
 		limit = 50
 	}
-	
+
 	if platform == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "platform parameter is required"})
 		return
 	}
-	
+
 	connector, err := h.repoManager.GetConnector(platform)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported platform", "platform": platform})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
 	filter := &repository.RepositoryFilter{
 		IncludePrivate:  true,
 		IncludeArchived: false,
 		IncludeForks:    false,
 	}
-	
+
 	var repos []*repository.Repository
 	if owner != "" {
 		repos, err = connector.ListRepositories(ctx, owner, filter)
@@ -767,17 +767,17 @@ func (h *EnterpriseHandler) ListRepositories(c *gin.Context) {
 			repos, err = connector.ListOrgRepositories(ctx, orgs[0].Login, filter)
 		}
 	}
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list repositories", "details": err.Error()})
 		return
 	}
-	
+
 	// Apply limit
 	if len(repos) > limit {
 		repos = repos[:limit]
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"repositories": repos,
 		"count":        len(repos),

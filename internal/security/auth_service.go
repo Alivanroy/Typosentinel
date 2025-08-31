@@ -467,7 +467,7 @@ func (as *AuthService) hashPasswordArgon2(password string) (string, error) {
 	}
 
 	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
-	
+
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
 		argon2.Version, 64*1024, 1, 4,
 		base64.RawStdEncoding.EncodeToString(salt),
@@ -503,13 +503,13 @@ func (as *AuthService) verifyPasswordArgon2(password, hash string) bool {
 	}
 
 	actualHash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
-	
+
 	return subtle.ConstantTimeCompare(expectedHash, actualHash) == 1
 }
 
 func (as *AuthService) createSession(user *User, clientIP, userAgent string) *Session {
 	sessionID := as.generateSessionID()
-	
+
 	session := &Session{
 		ID:        sessionID,
 		UserID:    user.ID,
@@ -613,23 +613,23 @@ func (as *AuthService) sessionCleanupRoutine() {
 
 // User represents a user in the system
 type User struct {
-	ID                   string     `json:"id"`
-	Username             string     `json:"username"`
-	Email                string     `json:"email"`
-	PasswordHash         string     `json:"-"` // Never serialize password hash
-	PasswordChangedAt    time.Time  `json:"password_changed_at"`
-	PasswordHistory      []string   `json:"-"` // Never serialize password history
-	IsActive             bool       `json:"is_active"`
-	IsVerified           bool       `json:"is_verified"`
-	MFAEnabled           bool       `json:"mfa_enabled"`
-	MFASecret            string     `json:"-"` // Never serialize MFA secret
-	Roles                []string   `json:"roles"`
-	LastLoginAt          time.Time  `json:"last_login_at"`
-	LastLoginIP          string     `json:"last_login_ip"`
-	FailedLoginAttempts  int        `json:"failed_login_attempts"`
-	LockedUntil          *time.Time `json:"locked_until,omitempty"`
-	CreatedAt            time.Time  `json:"created_at"`
-	UpdatedAt            time.Time  `json:"updated_at"`
+	ID                  string     `json:"id"`
+	Username            string     `json:"username"`
+	Email               string     `json:"email"`
+	PasswordHash        string     `json:"-"` // Never serialize password hash
+	PasswordChangedAt   time.Time  `json:"password_changed_at"`
+	PasswordHistory     []string   `json:"-"` // Never serialize password history
+	IsActive            bool       `json:"is_active"`
+	IsVerified          bool       `json:"is_verified"`
+	MFAEnabled          bool       `json:"mfa_enabled"`
+	MFASecret           string     `json:"-"` // Never serialize MFA secret
+	Roles               []string   `json:"roles"`
+	LastLoginAt         time.Time  `json:"last_login_at"`
+	LastLoginIP         string     `json:"last_login_ip"`
+	FailedLoginAttempts int        `json:"failed_login_attempts"`
+	LockedUntil         *time.Time `json:"locked_until,omitempty"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
 }
 
 func (u *User) PrimaryRole() string {
@@ -753,7 +753,7 @@ func (as *AuthService) generateRefreshToken(userID, sessionID string) (string, e
 	now := time.Now()
 	tokenID := uuid.New().String()
 	expiresAt := now.Add(as.config.JWT.RefreshTokenExpiration)
-	
+
 	claims := RefreshTokenClaims{
 		Subject:   userID,
 		SessionID: sessionID,
@@ -794,7 +794,7 @@ func (as *AuthService) generateRefreshToken(userID, sessionID string) (string, e
 		// Hash the token for storage
 		hash := sha256.Sum256([]byte(token))
 		tokenHash := hex.EncodeToString(hash[:])
-		
+
 		tokenInfo := &RefreshTokenInfo{
 			TokenID:   tokenID,
 			TokenHash: tokenHash,
@@ -803,7 +803,7 @@ func (as *AuthService) generateRefreshToken(userID, sessionID string) (string, e
 			IsActive:  true,
 			ExpiresAt: expiresAt,
 		}
-		
+
 		ctx := context.Background()
 		if err := as.tokenStore.StoreRefreshToken(ctx, tokenInfo); err != nil {
 			as.logger.Error("Failed to store refresh token in database", map[string]interface{}{
@@ -993,7 +993,7 @@ func (as *AuthService) RefreshAccessToken(ctx context.Context, refreshToken stri
 		// Validate refresh token in database
 		hash := sha256.Sum256([]byte(refreshToken))
 		tokenHash := hex.EncodeToString(hash[:])
-		
+
 		_, err = as.tokenStore.ValidateRefreshToken(ctx, tokenHash)
 		if err != nil {
 			as.logger.Warn("Refresh token not found in database", map[string]interface{}{

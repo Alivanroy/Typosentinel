@@ -27,12 +27,12 @@ func NewFactory() *Factory {
 // CreateConnector creates a connector for the specified platform
 func (f *Factory) CreateConnector(platform string, config repository.PlatformConfig) (repository.Connector, error) {
 	platform = strings.ToLower(platform)
-	
+
 	createFunc, exists := f.supportedPlatforms[platform]
 	if !exists {
 		return nil, fmt.Errorf("unsupported platform: %s", platform)
 	}
-	
+
 	return createFunc(config)
 }
 
@@ -48,20 +48,20 @@ func (f *Factory) GetSupportedPlatforms() []string {
 // ValidateConfig validates the configuration for a specific platform
 func (f *Factory) ValidateConfig(platform string, config repository.PlatformConfig) error {
 	platform = strings.ToLower(platform)
-	
+
 	if _, exists := f.supportedPlatforms[platform]; !exists {
 		return fmt.Errorf("unsupported platform: %s", platform)
 	}
-	
+
 	// Basic validation
 	if config.BaseURL == "" {
 		return fmt.Errorf("base URL is required for platform %s", platform)
 	}
-	
+
 	if config.Auth.Token == "" && config.Auth.Username == "" {
 		return fmt.Errorf("authentication credentials are required for platform %s", platform)
 	}
-	
+
 	// Platform-specific validation
 	switch platform {
 	case "github":
@@ -101,21 +101,21 @@ func (f *Factory) validateGitHubConfig(config repository.PlatformConfig) error {
 	if config.BaseURL == "" {
 		config.BaseURL = "https://api.github.com"
 	}
-	
+
 	if config.Auth.Type == "" {
 		config.Auth.Type = "token"
 	}
-	
+
 	if config.Auth.Type == "token" && config.Auth.Token == "" {
 		return fmt.Errorf("GitHub token is required for token authentication")
 	}
-	
+
 	if config.Auth.Type == "oauth" {
 		if config.Auth.ClientID == "" || config.Auth.ClientSecret == "" {
 			return fmt.Errorf("GitHub OAuth requires client ID and client secret")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -123,15 +123,15 @@ func (f *Factory) validateGitLabConfig(config repository.PlatformConfig) error {
 	if config.BaseURL == "" {
 		config.BaseURL = "https://gitlab.com/api/v4"
 	}
-	
+
 	if config.Auth.Type == "" {
 		config.Auth.Type = "token"
 	}
-	
+
 	if config.Auth.Type == "token" && config.Auth.Token == "" {
 		return fmt.Errorf("GitLab token is required for token authentication")
 	}
-	
+
 	return nil
 }
 
@@ -139,15 +139,15 @@ func (f *Factory) validateBitbucketConfig(config repository.PlatformConfig) erro
 	if config.BaseURL == "" {
 		config.BaseURL = "https://api.bitbucket.org/2.0"
 	}
-	
+
 	if config.Auth.Type == "" {
 		config.Auth.Type = "token"
 	}
-	
+
 	if config.Auth.Type == "token" && config.Auth.Token == "" {
 		return fmt.Errorf("Bitbucket token is required for token authentication")
 	}
-	
+
 	return nil
 }
 
@@ -155,19 +155,19 @@ func (f *Factory) validateAzureDevOpsConfig(config repository.PlatformConfig) er
 	if config.BaseURL == "" {
 		config.BaseURL = "https://dev.azure.com"
 	}
-	
+
 	if config.Auth.Type == "" {
 		config.Auth.Type = "token"
 	}
-	
+
 	if config.Auth.Type == "token" && config.Auth.Token == "" {
 		return fmt.Errorf("Azure DevOps Personal Access Token is required")
 	}
-	
+
 	if len(config.Organizations) == 0 {
 		return fmt.Errorf("Azure DevOps organization is required")
 	}
-	
+
 	return nil
 }
 
@@ -190,7 +190,7 @@ func (f *Factory) IsPlatformSupported(platform string) bool {
 // GetPlatformDefaults returns default configuration for a platform
 func (f *Factory) GetPlatformDefaults(platform string) repository.PlatformConfig {
 	platform = strings.ToLower(platform)
-	
+
 	switch platform {
 	case "github":
 		return repository.PlatformConfig{

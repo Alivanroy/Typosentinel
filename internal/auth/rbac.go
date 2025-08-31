@@ -15,19 +15,19 @@ type Permission string
 
 // Common permissions
 const (
-	PermissionScanAll        Permission = "scan:all"
-	PermissionScanRead       Permission = "scan:read"
-	PermissionScanExecute    Permission = "scan:execute"
-	PermissionScanOwnRepos   Permission = "scan:own_repos"
-	PermissionReportsAll     Permission = "reports:all"
-	PermissionReportsRead    Permission = "reports:read"
+	PermissionScanAll         Permission = "scan:all"
+	PermissionScanRead        Permission = "scan:read"
+	PermissionScanExecute     Permission = "scan:execute"
+	PermissionScanOwnRepos    Permission = "scan:own_repos"
+	PermissionReportsAll      Permission = "reports:all"
+	PermissionReportsRead     Permission = "reports:read"
 	PermissionReportsOwnRepos Permission = "reports:own_repos"
-	PermissionConfigWrite    Permission = "config:write"
-	PermissionConfigRead     Permission = "config:read"
-	PermissionUsersManage    Permission = "users:manage"
-	PermissionUsersRead      Permission = "users:read"
-	PermissionPoliciesManage Permission = "policies:manage"
-	PermissionPoliciesRead   Permission = "policies:read"
+	PermissionConfigWrite     Permission = "config:write"
+	PermissionConfigRead      Permission = "config:read"
+	PermissionUsersManage     Permission = "users:manage"
+	PermissionUsersRead       Permission = "users:read"
+	PermissionPoliciesManage  Permission = "policies:manage"
+	PermissionPoliciesRead    Permission = "policies:read"
 )
 
 // Action represents an action being performed

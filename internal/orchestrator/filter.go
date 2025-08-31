@@ -19,22 +19,22 @@ type FilterConfig struct {
 	Languages        []string          `json:"languages"`
 	MinStars         int               `json:"min_stars"`
 	MaxStars         int               `json:"max_stars"`
-	MinSize          int64             `json:"min_size"`          // in bytes
-	MaxSize          int64             `json:"max_size"`          // in bytes
-	NamePatterns     []string          `json:"name_patterns"`     // regex patterns
-	ExcludePatterns  []string          `json:"exclude_patterns"`  // regex patterns
-	MinAge           *time.Duration    `json:"min_age"`           // minimum repository age
-	MaxAge           *time.Duration    `json:"max_age"`           // maximum repository age
+	MinSize          int64             `json:"min_size"`         // in bytes
+	MaxSize          int64             `json:"max_size"`         // in bytes
+	NamePatterns     []string          `json:"name_patterns"`    // regex patterns
+	ExcludePatterns  []string          `json:"exclude_patterns"` // regex patterns
+	MinAge           *time.Duration    `json:"min_age"`          // minimum repository age
+	MaxAge           *time.Duration    `json:"max_age"`          // maximum repository age
 	RequiredTopics   []string          `json:"required_topics"`
 	ExcludedTopics   []string          `json:"excluded_topics"`
-	IsPrivate        *bool             `json:"is_private"`        // nil means both, true means private only, false means public only
-	IsFork           *bool             `json:"is_fork"`           // nil means both, true means forks only, false means non-forks only
-	IsArchived       *bool             `json:"is_archived"`       // nil means both, true means archived only, false means active only
+	IsPrivate        *bool             `json:"is_private"`  // nil means both, true means private only, false means public only
+	IsFork           *bool             `json:"is_fork"`     // nil means both, true means forks only, false means non-forks only
+	IsArchived       *bool             `json:"is_archived"` // nil means both, true means archived only, false means active only
 	HasIssues        *bool             `json:"has_issues"`
 	HasWiki          *bool             `json:"has_wiki"`
 	HasPages         *bool             `json:"has_pages"`
-	CustomFilters    map[string]string `json:"custom_filters"`    // custom key-value filters
-	OwnerTypes       []string          `json:"owner_types"`       // "user", "organization"
+	CustomFilters    map[string]string `json:"custom_filters"` // custom key-value filters
+	OwnerTypes       []string          `json:"owner_types"`    // "user", "organization"
 	LicenseTypes     []string          `json:"license_types"`
 	MinCommits       int               `json:"min_commits"`
 	MaxCommits       int               `json:"max_commits"`

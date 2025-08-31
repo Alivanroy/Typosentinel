@@ -16,12 +16,12 @@ import (
 
 // BitbucketConnector implements the Connector interface for Bitbucket
 type BitbucketConnector struct {
-	client    *http.Client
-	baseURL   string
-	apiToken  string
-	userAgent string
-	config    repository.PlatformConfig
-	retryConfig *RetryConfig
+	client         *http.Client
+	baseURL        string
+	apiToken       string
+	userAgent      string
+	config         repository.PlatformConfig
+	retryConfig    *RetryConfig
 	webhookManager *WebhookManager
 }
 
@@ -58,9 +58,9 @@ type bitbucketRepository struct {
 	MainBranch  *struct {
 		Name string `json:"name"`
 	} `json:"mainbranch"`
-	Owner bitbucketOwner `json:"owner"`
+	Owner  bitbucketOwner       `json:"owner"`
 	Parent *bitbucketRepository `json:"parent"`
-	Links struct {
+	Links  struct {
 		Clone []struct {
 			Name string `json:"name"`
 			Href string `json:"href"`
@@ -87,14 +87,14 @@ type bitbucketOwner struct {
 }
 
 type bitbucketWorkspace struct {
-	UUID        string `json:"uuid"`
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
-	Type        string `json:"type"`
-	IsPrivate   bool   `json:"is_private"`
-	CreatedOn   time.Time `json:"created_on"`
-	UpdatedOn   time.Time `json:"updated_on"`
-	Links       struct {
+	UUID      string    `json:"uuid"`
+	Name      string    `json:"name"`
+	Slug      string    `json:"slug"`
+	Type      string    `json:"type"`
+	IsPrivate bool      `json:"is_private"`
+	CreatedOn time.Time `json:"created_on"`
+	UpdatedOn time.Time `json:"updated_on"`
+	Links     struct {
 		Avatar struct {
 			Href string `json:"href"`
 		} `json:"avatar"`
@@ -177,12 +177,12 @@ func NewBitbucketConnector(config repository.PlatformConfig) (*BitbucketConnecto
 			BackoffFactor: 2.0,
 		},
 	}
-	
+
 	connector.webhookManager = &WebhookManager{
 		connector: connector,
 		webhooks:  make(map[string]*repository.Webhook),
 	}
-	
+
 	return connector, nil
 }
 
@@ -342,7 +342,7 @@ func (b *BitbucketConnector) GetRepositoryContent(ctx context.Context, repo *rep
 		ref = repo.DefaultBranch
 	}
 
-	endpoint := fmt.Sprintf("/repositories/%s/%s/src/%s/%s", 
+	endpoint := fmt.Sprintf("/repositories/%s/%s/src/%s/%s",
 		url.QueryEscape(owner), url.QueryEscape(name), url.QueryEscape(ref), url.QueryEscape(filePath))
 
 	req, err := b.createRequest(ctx, "GET", endpoint, nil)
@@ -370,7 +370,7 @@ func (b *BitbucketConnector) ListRepositoryFiles(ctx context.Context, repo *repo
 		ref = repo.DefaultBranch
 	}
 
-	endpoint := fmt.Sprintf("/repositories/%s/%s/src/%s/%s", 
+	endpoint := fmt.Sprintf("/repositories/%s/%s/src/%s/%s",
 		url.QueryEscape(owner), url.QueryEscape(name), url.QueryEscape(ref), url.QueryEscape(dirPath))
 
 	req, err := b.createRequest(ctx, "GET", endpoint, nil)
@@ -482,7 +482,7 @@ func (b *BitbucketConnector) GetRepositoryCommits(ctx context.Context, repo *rep
 		branch = repo.DefaultBranch
 	}
 
-	endpoint := fmt.Sprintf("/repositories/%s/%s/commits/%s", 
+	endpoint := fmt.Sprintf("/repositories/%s/%s/commits/%s",
 		url.QueryEscape(owner), url.QueryEscape(name), url.QueryEscape(branch))
 
 	if limit > 0 {
@@ -543,47 +543,47 @@ func (b *BitbucketConnector) ListWebhooks(ctx context.Context, repo *repository.
 func (wm *WebhookManager) CreateWebhook(ctx context.Context, repo *repository.Repository, webhookURL string, events []string) error {
 	owner, name := wm.connector.parseFullName(repo.FullName)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/hooks", owner, name)
-	
+
 	webhookData := map[string]interface{}{
 		"description": "TypoSentinel Security Webhook",
 		"url":         webhookURL,
 		"active":      true,
 		"events":      events,
 	}
-	
+
 	body, err := json.Marshal(webhookData)
 	if err != nil {
 		return fmt.Errorf("failed to marshal webhook data: %w", err)
 	}
-	
+
 	req, err := wm.connector.createRequest(ctx, "POST", endpoint, strings.NewReader(string(body)))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	resp, err := wm.connector.executeRequestWithRetry(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to create webhook: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("failed to create webhook: HTTP %d", resp.StatusCode)
 	}
-	
+
 	// Parse response to get webhook ID
 	var webhookResp map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&webhookResp); err != nil {
 		return fmt.Errorf("failed to decode webhook response: %w", err)
 	}
-	
+
 	webhookID, ok := webhookResp["uuid"].(string)
 	if !ok {
 		return fmt.Errorf("webhook ID not found in response")
 	}
-	
+
 	// Store webhook in manager
 	wm.mu.Lock()
 	wm.webhooks[webhookID] = &repository.Webhook{
@@ -593,7 +593,7 @@ func (wm *WebhookManager) CreateWebhook(ctx context.Context, repo *repository.Re
 		Active: true,
 	}
 	wm.mu.Unlock()
-	
+
 	return nil
 }
 
@@ -601,27 +601,27 @@ func (wm *WebhookManager) CreateWebhook(ctx context.Context, repo *repository.Re
 func (wm *WebhookManager) DeleteWebhook(ctx context.Context, repo *repository.Repository, webhookID string) error {
 	owner, name := wm.connector.parseFullName(repo.FullName)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/hooks/%s", owner, name, webhookID)
-	
+
 	req, err := wm.connector.createRequest(ctx, "DELETE", endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := wm.connector.executeRequestWithRetry(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to delete webhook: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("failed to delete webhook: HTTP %d", resp.StatusCode)
 	}
-	
+
 	// Remove webhook from manager
 	wm.mu.Lock()
 	delete(wm.webhooks, webhookID)
 	wm.mu.Unlock()
-	
+
 	return nil
 }
 
@@ -629,32 +629,32 @@ func (wm *WebhookManager) DeleteWebhook(ctx context.Context, repo *repository.Re
 func (wm *WebhookManager) ListWebhooks(ctx context.Context, repo *repository.Repository) ([]repository.Webhook, error) {
 	owner, name := wm.connector.parseFullName(repo.FullName)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/hooks", owner, name)
-	
+
 	req, err := wm.connector.createRequest(ctx, "GET", endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := wm.connector.executeRequestWithRetry(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list webhooks: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to list webhooks: HTTP %d", resp.StatusCode)
 	}
-	
+
 	var response bitbucketPaginatedResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-	
+
 	var webhookList []map[string]interface{}
 	if err := json.Unmarshal(response.Values, &webhookList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal webhooks: %w", err)
 	}
-	
+
 	webhooks := make([]repository.Webhook, 0, len(webhookList))
 	for _, wh := range webhookList {
 		webhook := repository.Webhook{
@@ -662,17 +662,17 @@ func (wm *WebhookManager) ListWebhooks(ctx context.Context, repo *repository.Rep
 			URL:    fmt.Sprintf("%v", wh["url"]),
 			Active: wh["active"].(bool),
 		}
-		
+
 		if events, ok := wh["events"].([]interface{}); ok {
 			webhook.Events = make([]string, len(events))
 			for i, event := range events {
 				webhook.Events[i] = fmt.Sprintf("%v", event)
 			}
 		}
-		
+
 		webhooks = append(webhooks, webhook)
 	}
-	
+
 	return webhooks, nil
 }
 
@@ -738,7 +738,7 @@ func (b *BitbucketConnector) executeRequestWithRetry(ctx context.Context, req *h
 			case <-time.After(delay):
 				// Continue with retry
 			}
-			
+
 			// Exponential backoff with jitter
 			delay = time.Duration(float64(delay) * b.retryConfig.BackoffFactor)
 			if delay > b.retryConfig.MaxDelay {
@@ -772,7 +772,7 @@ func (b *BitbucketConnector) shouldRetry(statusCode int) bool {
 	return statusCode == 429 || // Rate limited
 		statusCode == 502 || // Bad Gateway
 		statusCode == 503 || // Service Unavailable
-		statusCode == 504    // Gateway Timeout
+		statusCode == 504 // Gateway Timeout
 }
 
 func (b *BitbucketConnector) listRepositoriesWithURL(ctx context.Context, baseURL string, filter *repository.RepositoryFilter) ([]*repository.Repository, error) {
@@ -845,8 +845,8 @@ func (b *BitbucketConnector) convertRepository(repo *bitbucketRepository) *repos
 		Archived:      false, // Bitbucket doesn't have archived concept
 		Fork:          repo.Parent != nil,
 		Size:          repo.Size,
-		StarCount:     0, // Not available in Bitbucket API
-		ForkCount:     0, // Not available in basic API
+		StarCount:     0,          // Not available in Bitbucket API
+		ForkCount:     0,          // Not available in basic API
 		Topics:        []string{}, // Not available in basic API
 		CreatedAt:     repo.CreatedOn,
 		UpdatedAt:     repo.UpdatedOn,

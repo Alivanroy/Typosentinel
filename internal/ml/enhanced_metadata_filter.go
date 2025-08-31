@@ -16,52 +16,52 @@ type MetadataFilter struct {
 
 // MetadataFilterConfig contains configuration for metadata filtering
 type MetadataFilterConfig struct {
-	MinDownloadThreshold     int64   `json:"min_download_threshold"`
-	MinVersionCount          int     `json:"min_version_count"`
-	MinMaintainerCount       int     `json:"min_maintainer_count"`
-	MaxAgeForRelevance       int     `json:"max_age_for_relevance_days"`
-	SimilarityThreshold      float64 `json:"similarity_threshold"`
-	EnableTechnologyFilter   bool    `json:"enable_technology_filter"`
-	EnableAgeFilter          bool    `json:"enable_age_filter"`
-	EnablePopularityFilter   bool    `json:"enable_popularity_filter"`
-	EnableMaintainerFilter   bool    `json:"enable_maintainer_filter"`
-	EnableRepositoryFilter   bool    `json:"enable_repository_filter"`
+	MinDownloadThreshold   int64   `json:"min_download_threshold"`
+	MinVersionCount        int     `json:"min_version_count"`
+	MinMaintainerCount     int     `json:"min_maintainer_count"`
+	MaxAgeForRelevance     int     `json:"max_age_for_relevance_days"`
+	SimilarityThreshold    float64 `json:"similarity_threshold"`
+	EnableTechnologyFilter bool    `json:"enable_technology_filter"`
+	EnableAgeFilter        bool    `json:"enable_age_filter"`
+	EnablePopularityFilter bool    `json:"enable_popularity_filter"`
+	EnableMaintainerFilter bool    `json:"enable_maintainer_filter"`
+	EnableRepositoryFilter bool    `json:"enable_repository_filter"`
 }
 
 // MetadataAnalysis contains the results of metadata analysis
 type MetadataAnalysis struct {
-	IsLegitimate           bool                   `json:"is_legitimate"`
-	ConfidenceScore        float64                `json:"confidence_score"`
-	RiskFactors            []string               `json:"risk_factors"`
-	PositiveIndicators     []string               `json:"positive_indicators"`
-	TyposquattingRisk      float64                `json:"typosquatting_risk"`
-	SupplyChainRisk        float64                `json:"supply_chain_risk"`
-	FilterReasons          []string               `json:"filter_reasons"`
-	MetadataQuality        float64                `json:"metadata_quality"`
-	TechnologyAlignment    float64                `json:"technology_alignment"`
-	PopularityScore        float64                `json:"popularity_score"`
-	MaintainerTrustScore   float64                `json:"maintainer_trust_score"`
-	RepositoryTrustScore   float64                `json:"repository_trust_score"`
+	IsLegitimate         bool     `json:"is_legitimate"`
+	ConfidenceScore      float64  `json:"confidence_score"`
+	RiskFactors          []string `json:"risk_factors"`
+	PositiveIndicators   []string `json:"positive_indicators"`
+	TyposquattingRisk    float64  `json:"typosquatting_risk"`
+	SupplyChainRisk      float64  `json:"supply_chain_risk"`
+	FilterReasons        []string `json:"filter_reasons"`
+	MetadataQuality      float64  `json:"metadata_quality"`
+	TechnologyAlignment  float64  `json:"technology_alignment"`
+	PopularityScore      float64  `json:"popularity_score"`
+	MaintainerTrustScore float64  `json:"maintainer_trust_score"`
+	RepositoryTrustScore float64  `json:"repository_trust_score"`
 }
 
 // PackageMetadata contains enhanced package metadata for analysis
 type PackageMetadata struct {
-	Name                string            `json:"name"`
-	Version             string            `json:"version"`
-	Description         string            `json:"description"`
-	Homepage            string            `json:"homepage"`
-	Repository          string            `json:"repository"`
-	License             string            `json:"license"`
-	Keywords            []string          `json:"keywords"`
-	Dependencies        map[string]string `json:"dependencies"`
-	DevDependencies     map[string]string `json:"dev_dependencies"`
-	Maintainers         []string          `json:"maintainers"`
-	CreatedAt           time.Time         `json:"created_at"`
-	UpdatedAt           time.Time         `json:"updated_at"`
-	DownloadStats       DownloadStats     `json:"download_stats"`
-	VersionHistory      []VersionInfo     `json:"version_history"`
-	SecurityAdvisories  []SecurityAdvisory `json:"security_advisories"`
-	Registry            string            `json:"registry"`
+	Name               string             `json:"name"`
+	Version            string             `json:"version"`
+	Description        string             `json:"description"`
+	Homepage           string             `json:"homepage"`
+	Repository         string             `json:"repository"`
+	License            string             `json:"license"`
+	Keywords           []string           `json:"keywords"`
+	Dependencies       map[string]string  `json:"dependencies"`
+	DevDependencies    map[string]string  `json:"dev_dependencies"`
+	Maintainers        []string           `json:"maintainers"`
+	CreatedAt          time.Time          `json:"created_at"`
+	UpdatedAt          time.Time          `json:"updated_at"`
+	DownloadStats      DownloadStats      `json:"download_stats"`
+	VersionHistory     []VersionInfo      `json:"version_history"`
+	SecurityAdvisories []SecurityAdvisory `json:"security_advisories"`
+	Registry           string             `json:"registry"`
 }
 
 // DownloadStats contains download statistics
@@ -73,19 +73,19 @@ type DownloadStats struct {
 
 // VersionInfo contains version information
 type VersionInfo struct {
-	Version     string    `json:"version"`
-	PublishedAt time.Time `json:"published_at"`
-	IsPrerelease bool     `json:"is_prerelease"`
+	Version      string    `json:"version"`
+	PublishedAt  time.Time `json:"published_at"`
+	IsPrerelease bool      `json:"is_prerelease"`
 }
 
 // SecurityAdvisory contains security advisory information
 type SecurityAdvisory struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Severity    string    `json:"severity"`
-	CVSS        float64   `json:"cvss"`
-	PublishedAt time.Time `json:"published_at"`
-	AffectedVersions string `json:"affected_versions"`
+	ID               string    `json:"id"`
+	Title            string    `json:"title"`
+	Severity         string    `json:"severity"`
+	CVSS             float64   `json:"cvss"`
+	PublishedAt      time.Time `json:"published_at"`
+	AffectedVersions string    `json:"affected_versions"`
 }
 
 // NewMetadataFilter creates a new metadata filter with default configuration
@@ -205,7 +205,7 @@ func (mf *MetadataFilter) analyzeRepository(metadata *PackageMetadata, analysis 
 	// Check for trusted hosting platforms
 	trustedHosts := []string{"github.com", "gitlab.com", "bitbucket.org"}
 	repoLower := strings.ToLower(metadata.Repository)
-	
+
 	for _, host := range trustedHosts {
 		if strings.Contains(repoLower, host) {
 			analysis.RepositoryTrustScore = 0.8
@@ -382,7 +382,7 @@ func (mf *MetadataFilter) analyzeMetadataQuality(metadata *PackageMetadata, anal
 	if metadata.Description != "" {
 		descScore := mf.analyzeDescriptionQuality(metadata.Description)
 		qualityScore += descScore * 0.3 // Increased weight for description
-		
+
 		if descScore >= 0.8 {
 			analysis.PositiveIndicators = append(analysis.PositiveIndicators, "high_quality_description")
 		} else if descScore < 0.3 {
@@ -396,7 +396,7 @@ func (mf *MetadataFilter) analyzeMetadataQuality(metadata *PackageMetadata, anal
 	if metadata.Repository != "" {
 		repoScore := mf.analyzeRepositoryQuality(metadata.Repository)
 		qualityScore += repoScore * 0.25
-		
+
 		if repoScore >= 0.8 {
 			analysis.PositiveIndicators = append(analysis.PositiveIndicators, "trusted_repository")
 		} else if repoScore < 0.3 {
@@ -410,7 +410,7 @@ func (mf *MetadataFilter) analyzeMetadataQuality(metadata *PackageMetadata, anal
 	if metadata.License != "" {
 		licenseScore := mf.analyzeLicenseQuality(metadata.License)
 		qualityScore += licenseScore * 0.15
-		
+
 		if licenseScore >= 0.8 {
 			analysis.PositiveIndicators = append(analysis.PositiveIndicators, "standard_license")
 		} else if licenseScore < 0.3 {
@@ -424,7 +424,7 @@ func (mf *MetadataFilter) analyzeMetadataQuality(metadata *PackageMetadata, anal
 	if metadata.Homepage != "" {
 		homepageScore := mf.analyzeHomepageQuality(metadata.Homepage)
 		qualityScore += homepageScore * 0.1
-		
+
 		if homepageScore >= 0.8 {
 			analysis.PositiveIndicators = append(analysis.PositiveIndicators, "professional_homepage")
 		}
@@ -434,7 +434,7 @@ func (mf *MetadataFilter) analyzeMetadataQuality(metadata *PackageMetadata, anal
 	if len(metadata.Keywords) > 0 {
 		keywordScore := mf.analyzeKeywordsQuality(metadata.Keywords)
 		qualityScore += keywordScore * 0.1
-		
+
 		if keywordScore >= 0.8 {
 			analysis.PositiveIndicators = append(analysis.PositiveIndicators, "relevant_keywords")
 		} else if keywordScore < 0.3 {
@@ -446,7 +446,7 @@ func (mf *MetadataFilter) analyzeMetadataQuality(metadata *PackageMetadata, anal
 	if len(metadata.Maintainers) > 0 {
 		maintainerScore := mf.analyzeMaintainerQuality(metadata.Maintainers)
 		qualityScore += maintainerScore * 0.1
-		
+
 		if maintainerScore >= 0.8 {
 			analysis.PositiveIndicators = append(analysis.PositiveIndicators, "trusted_maintainers")
 		}
@@ -507,21 +507,21 @@ func (mf *MetadataFilter) calculateOverallScores(analysis *MetadataAnalysis) {
 	riskWeight := float64(len(analysis.RiskFactors)) * 0.15
 
 	// Base confidence from metadata quality and popularity
-	baseConfidence := (analysis.MetadataQuality + analysis.PopularityScore + 
-					  analysis.MaintainerTrustScore + analysis.RepositoryTrustScore) / 4.0
+	baseConfidence := (analysis.MetadataQuality + analysis.PopularityScore +
+		analysis.MaintainerTrustScore + analysis.RepositoryTrustScore) / 4.0
 
-	analysis.ConfidenceScore = math.Max(0.0, math.Min(1.0, baseConfidence + positiveWeight - riskWeight))
+	analysis.ConfidenceScore = math.Max(0.0, math.Min(1.0, baseConfidence+positiveWeight-riskWeight))
 
 	// Determine if package is legitimate
-	analysis.IsLegitimate = analysis.ConfidenceScore > 0.6 && 
-						   analysis.TyposquattingRisk < 0.5 && 
-						   analysis.SupplyChainRisk < 0.7
+	analysis.IsLegitimate = analysis.ConfidenceScore > 0.6 &&
+		analysis.TyposquattingRisk < 0.5 &&
+		analysis.SupplyChainRisk < 0.7
 
 	// Adjust for critical risk factors
 	for _, risk := range analysis.RiskFactors {
-		if strings.Contains(risk, "extremely_low_usage") || 
-		   strings.Contains(risk, "claims_official_repository") ||
-		   strings.Contains(risk, "critical_security_vulnerabilities") {
+		if strings.Contains(risk, "extremely_low_usage") ||
+			strings.Contains(risk, "claims_official_repository") ||
+			strings.Contains(risk, "critical_security_vulnerabilities") {
 			analysis.IsLegitimate = false
 			break
 		}
@@ -560,11 +560,11 @@ func (mf *MetadataFilter) isKnownOrganization(owner string) bool {
 func (mf *MetadataFilter) getPopularPackages(registry string) []string {
 	// This would be loaded from a database or API
 	popularPackages := map[string][]string{
-		"npm": {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular"},
-		"pypi": {"requests", "numpy", "pandas", "flask", "django", "tensorflow"},
+		"npm":      {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular"},
+		"pypi":     {"requests", "numpy", "pandas", "flask", "django", "tensorflow"},
 		"rubygems": {"rails", "bundler", "rake", "rspec", "puma", "nokogiri"},
 	}
-	
+
 	if packages, exists := popularPackages[registry]; exists {
 		return packages
 	}
@@ -610,7 +610,7 @@ func (mf *MetadataFilter) levenshteinDistance(s1, s2 string) int {
 
 			matrix[i][j] = min(
 				min(matrix[i-1][j]+1, matrix[i][j-1]+1), // deletion, insertion
-				matrix[i-1][j-1]+cost,                    // substitution
+				matrix[i-1][j-1]+cost,                   // substitution
 			)
 		}
 	}
@@ -671,7 +671,7 @@ func min(a, b int) int {
 func (mf *MetadataFilter) analyzeDescriptionQuality(description string) float64 {
 	score := 0.0
 	desc := strings.TrimSpace(description)
-	
+
 	// Length analysis
 	if len(desc) >= 50 {
 		score += 0.3
@@ -681,22 +681,22 @@ func (mf *MetadataFilter) analyzeDescriptionQuality(description string) float64 
 	} else if len(desc) < 20 {
 		return 0.1 // Very short descriptions are poor quality
 	}
-	
+
 	// Content quality checks
 	if mf.hasInformativeContent(desc) {
 		score += 0.3
 	}
-	
+
 	// Check for suspicious patterns
 	if mf.hasSuspiciousDescriptionPatterns(desc) {
 		score -= 0.4
 	}
-	
+
 	// Grammar and structure
 	if mf.hasGoodStructure(desc) {
 		score += 0.2
 	}
-	
+
 	return math.Max(0.0, math.Min(score, 1.0))
 }
 
@@ -704,7 +704,7 @@ func (mf *MetadataFilter) analyzeDescriptionQuality(description string) float64 
 func (mf *MetadataFilter) analyzeRepositoryQuality(repository string) float64 {
 	score := 0.0
 	repoLower := strings.ToLower(repository)
-	
+
 	// Check for trusted platforms
 	trustedPlatforms := []string{"github.com", "gitlab.com", "bitbucket.org", "sourceforge.net"}
 	for _, platform := range trustedPlatforms {
@@ -713,17 +713,17 @@ func (mf *MetadataFilter) analyzeRepositoryQuality(repository string) float64 {
 			break
 		}
 	}
-	
+
 	// Check for HTTPS
 	if strings.HasPrefix(repoLower, "https://") {
 		score += 0.2
 	}
-	
+
 	// Check for proper repository structure
 	if mf.hasValidRepoStructure(repository) {
 		score += 0.2
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -731,25 +731,25 @@ func (mf *MetadataFilter) analyzeRepositoryQuality(repository string) float64 {
 func (mf *MetadataFilter) analyzeLicenseQuality(license string) float64 {
 	score := 0.0
 	licenseLower := strings.ToLower(strings.TrimSpace(license))
-	
+
 	// Standard open source licenses
 	standardLicenses := []string{
 		"mit", "apache", "gpl", "bsd", "lgpl", "mpl", "isc", "unlicense",
 		"apache-2.0", "gpl-3.0", "bsd-3-clause", "bsd-2-clause",
 	}
-	
+
 	for _, stdLicense := range standardLicenses {
 		if strings.Contains(licenseLower, stdLicense) {
 			score += 0.8
 			break
 		}
 	}
-	
+
 	// Check for suspicious license content
 	if mf.hasSuspiciousLicenseContent(license) {
 		score -= 0.5
 	}
-	
+
 	return math.Max(0.0, math.Min(score, 1.0))
 }
 
@@ -757,12 +757,12 @@ func (mf *MetadataFilter) analyzeLicenseQuality(license string) float64 {
 func (mf *MetadataFilter) analyzeHomepageQuality(homepage string) float64 {
 	score := 0.0
 	homepageLower := strings.ToLower(homepage)
-	
+
 	// Check for HTTPS
 	if strings.HasPrefix(homepageLower, "https://") {
 		score += 0.3
 	}
-	
+
 	// Check for professional domains
 	professionalDomains := []string{".org", ".com", ".net", ".io", ".dev"}
 	for _, domain := range professionalDomains {
@@ -771,69 +771,69 @@ func (mf *MetadataFilter) analyzeHomepageQuality(homepage string) float64 {
 			break
 		}
 	}
-	
+
 	// Check for suspicious patterns
 	if mf.hasSuspiciousURLPatterns(homepage) {
 		score -= 0.3
 	}
-	
+
 	// Valid URL structure
 	if mf.hasValidURLStructure(homepage) {
 		score += 0.3
 	}
-	
+
 	return math.Max(0.0, math.Min(score, 1.0))
 }
 
 // analyzeKeywordsQuality analyzes the quality and relevance of keywords
 func (mf *MetadataFilter) analyzeKeywordsQuality(keywords []string) float64 {
 	score := 0.0
-	
+
 	// Optimal keyword count
 	if len(keywords) >= 3 && len(keywords) <= 10 {
 		score += 0.4
 	} else if len(keywords) > 0 {
 		score += 0.2
 	}
-	
+
 	// Check for relevant, non-spammy keywords
 	relevantCount := 0
 	spammyCount := 0
-	
+
 	for _, keyword := range keywords {
 		keywordLower := strings.ToLower(strings.TrimSpace(keyword))
-		
+
 		if mf.isRelevantKeyword(keywordLower) {
 			relevantCount++
 		}
-		
+
 		if mf.isSpammyKeyword(keywordLower) {
 			spammyCount++
 		}
 	}
-	
+
 	if len(keywords) > 0 {
 		relevanceRatio := float64(relevantCount) / float64(len(keywords))
 		spamRatio := float64(spammyCount) / float64(len(keywords))
-		
+
 		score += relevanceRatio * 0.4
 		score -= spamRatio * 0.6
 	}
-	
+
 	return math.Max(0.0, math.Min(score, 1.0))
 }
 
 // analyzeMaintainerQuality analyzes the quality and trustworthiness of maintainers
 func (mf *MetadataFilter) analyzeMaintainerQuality(maintainers []string) float64 {
 	score := 0.0
-	
+
 	// Multiple maintainers is generally good
 	if len(maintainers) > 1 {
 		score += 0.3
 	} else if len(maintainers) == 1 {
 		score += 0.2
 	}
-	
+
 	// Check for trusted maintainers
 	trustedCount := 0
 	for _, maintainer := range maintainers {
@@ -841,19 +841,19 @@ func (mf *MetadataFilter) analyzeMaintainerQuality(maintainers []string) float64
 			trustedCount++
 		}
 	}
-	
+
 	if len(maintainers) > 0 {
 		trustedRatio := float64(trustedCount) / float64(len(maintainers))
 		score += trustedRatio * 0.5
 	}
-	
+
 	// Check for suspicious maintainer patterns
 	for _, maintainer := range maintainers {
 		if mf.hasSuspiciousMaintainerPattern(maintainer) {
 			score -= 0.2
 		}
 	}
-	
+
 	return math.Max(0.0, math.Min(score, 1.0))
 }
 
@@ -862,13 +862,13 @@ func (mf *MetadataFilter) hasInformativeContent(description string) bool {
 	// Check for meaningful words and technical terms
 	technicalTerms := []string{"library", "framework", "tool", "utility", "api", "sdk", "plugin", "module"}
 	descLower := strings.ToLower(description)
-	
+
 	for _, term := range technicalTerms {
 		if strings.Contains(descLower, term) {
 			return true
 		}
 	}
-	
+
 	// Check for descriptive words
 	words := strings.Fields(description)
 	return len(words) >= 5 // At least 5 words for informative content
@@ -876,20 +876,20 @@ func (mf *MetadataFilter) hasInformativeContent(description string) bool {
 
 func (mf *MetadataFilter) hasSuspiciousDescriptionPatterns(description string) bool {
 	descLower := strings.ToLower(description)
-	
+
 	// Check for malicious patterns
 	suspiciousPatterns := []string{
 		"bitcoin", "crypto", "miner", "hack", "crack", "exploit",
 		"malware", "virus", "trojan", "keylog", "stealer",
 		"download and run", "execute", "eval", "base64",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(descLower, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -898,13 +898,13 @@ func (mf *MetadataFilter) hasGoodStructure(description string) bool {
 	if len(description) == 0 {
 		return false
 	}
-	
+
 	// First character should be uppercase
 	firstChar := description[0]
 	if firstChar < 'A' || firstChar > 'Z' {
 		return false
 	}
-	
+
 	// Should end with proper punctuation
 	lastChar := description[len(description)-1]
 	return lastChar == '.' || lastChar == '!' || lastChar == '?'
@@ -915,7 +915,7 @@ func (mf *MetadataFilter) hasValidRepoStructure(repository string) bool {
 	if !strings.Contains(repository, "/") {
 		return false
 	}
-	
+
 	// Should contain owner/repo pattern
 	parts := strings.Split(repository, "/")
 	return len(parts) >= 2
@@ -923,20 +923,20 @@ func (mf *MetadataFilter) hasValidRepoStructure(repository string) bool {
 
 func (mf *MetadataFilter) hasSuspiciousLicenseContent(license string) bool {
 	licenseLower := strings.ToLower(license)
-	
+
 	suspiciousTerms := []string{"proprietary", "commercial", "restricted", "confidential"}
 	for _, term := range suspiciousTerms {
 		if strings.Contains(licenseLower, term) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 func (mf *MetadataFilter) hasSuspiciousURLPatterns(url string) bool {
 	urlLower := strings.ToLower(url)
-	
+
 	// Check for suspicious TLDs or patterns
 	suspiciousPatterns := []string{".tk", ".ml", ".ga", ".cf", "bit.ly", "tinyurl"}
 	for _, pattern := range suspiciousPatterns {
@@ -944,7 +944,7 @@ func (mf *MetadataFilter) hasSuspiciousURLPatterns(url string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -960,13 +960,13 @@ func (mf *MetadataFilter) isRelevantKeyword(keyword string) bool {
 		"web", "api", "library", "framework", "tool", "utility", "cli",
 		"frontend", "backend", "database", "testing", "security",
 	}
-	
+
 	for _, relevant := range relevantKeywords {
 		if strings.Contains(keyword, relevant) {
 			return true
 		}
 	}
-	
+
 	return len(keyword) >= 3 && len(keyword) <= 20 // Reasonable length
 }
 
@@ -976,31 +976,31 @@ func (mf *MetadataFilter) isSpammyKeyword(keyword string) bool {
 		"best", "awesome", "amazing", "ultimate", "super", "mega",
 		"free", "download", "crack", "hack", "cheat",
 	}
-	
+
 	for _, spammy := range spammyPatterns {
 		if strings.Contains(keyword, spammy) {
 			return true
 		}
 	}
-	
+
 	// Very short or very long keywords are often spammy
 	return len(keyword) < 2 || len(keyword) > 30
 }
 
 func (mf *MetadataFilter) hasSuspiciousMaintainerPattern(maintainer string) bool {
 	maintainerLower := strings.ToLower(maintainer)
-	
+
 	// Check for suspicious patterns
 	suspiciousPatterns := []string{
 		"fake", "temp", "test", "admin", "root", "user", "anonymous",
 		"hacker", "cracker", "exploit", "malware",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(maintainerLower, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }

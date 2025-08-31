@@ -1,0 +1,10 @@
+﻿{
+    "timestamp":  "2025-08-22 16:38:33 UTC",
+    "gate_status":  "PASSED",
+    "threat_summary":  {
+                           "low":  0,
+                           "critical":  0,
+                           "medium":  0,
+                           "high":  0
+                       }
+}

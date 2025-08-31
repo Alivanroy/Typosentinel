@@ -22,50 +22,50 @@ type RubyGemsClient struct {
 
 // RubyGemsSearchResponse represents RubyGems search API response
 type RubyGemsSearchResponse []struct {
-	Name        string `json:"name"`
-	Downloads   int64  `json:"downloads"`
-	Version     string `json:"version"`
-	VersionDownloads int64 `json:"version_downloads"`
-	Platform    string `json:"platform"`
-	Authors     string `json:"authors"`
-	Info        string `json:"info"`
-	Licenses    []string `json:"licenses"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	SHA         string `json:"sha"`
-	ProjectURI  string `json:"project_uri"`
-	GemURI      string `json:"gem_uri"`
-	HomepageURI string `json:"homepage_uri"`
-	WikiURI     string `json:"wiki_uri"`
-	DocumentationURI string `json:"documentation_uri"`
-	MailingListURI   string `json:"mailing_list_uri"`
-	SourceCodeURI    string `json:"source_code_uri"`
-	BugTrackerURI    string `json:"bug_tracker_uri"`
-	ChangelogURI     string `json:"changelog_uri"`
-	FundingURI       string `json:"funding_uri"`
+	Name             string                 `json:"name"`
+	Downloads        int64                  `json:"downloads"`
+	Version          string                 `json:"version"`
+	VersionDownloads int64                  `json:"version_downloads"`
+	Platform         string                 `json:"platform"`
+	Authors          string                 `json:"authors"`
+	Info             string                 `json:"info"`
+	Licenses         []string               `json:"licenses"`
+	Metadata         map[string]interface{} `json:"metadata"`
+	SHA              string                 `json:"sha"`
+	ProjectURI       string                 `json:"project_uri"`
+	GemURI           string                 `json:"gem_uri"`
+	HomepageURI      string                 `json:"homepage_uri"`
+	WikiURI          string                 `json:"wiki_uri"`
+	DocumentationURI string                 `json:"documentation_uri"`
+	MailingListURI   string                 `json:"mailing_list_uri"`
+	SourceCodeURI    string                 `json:"source_code_uri"`
+	BugTrackerURI    string                 `json:"bug_tracker_uri"`
+	ChangelogURI     string                 `json:"changelog_uri"`
+	FundingURI       string                 `json:"funding_uri"`
 }
 
 // RubyGemsGemInfo represents detailed gem information
 type RubyGemsGemInfo struct {
-	Name        string `json:"name"`
-	Downloads   int64  `json:"downloads"`
-	Version     string `json:"version"`
-	VersionDownloads int64 `json:"version_downloads"`
-	Platform    string `json:"platform"`
-	Authors     string `json:"authors"`
-	Info        string `json:"info"`
-	Licenses    []string `json:"licenses"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	SHA         string `json:"sha"`
-	ProjectURI  string `json:"project_uri"`
-	GemURI      string `json:"gem_uri"`
-	HomepageURI string `json:"homepage_uri"`
-	WikiURI     string `json:"wiki_uri"`
-	DocumentationURI string `json:"documentation_uri"`
-	MailingListURI   string `json:"mailing_list_uri"`
-	SourceCodeURI    string `json:"source_code_uri"`
-	BugTrackerURI    string `json:"bug_tracker_uri"`
-	ChangelogURI     string `json:"changelog_uri"`
-	FundingURI       string `json:"funding_uri"`
+	Name             string                 `json:"name"`
+	Downloads        int64                  `json:"downloads"`
+	Version          string                 `json:"version"`
+	VersionDownloads int64                  `json:"version_downloads"`
+	Platform         string                 `json:"platform"`
+	Authors          string                 `json:"authors"`
+	Info             string                 `json:"info"`
+	Licenses         []string               `json:"licenses"`
+	Metadata         map[string]interface{} `json:"metadata"`
+	SHA              string                 `json:"sha"`
+	ProjectURI       string                 `json:"project_uri"`
+	GemURI           string                 `json:"gem_uri"`
+	HomepageURI      string                 `json:"homepage_uri"`
+	WikiURI          string                 `json:"wiki_uri"`
+	DocumentationURI string                 `json:"documentation_uri"`
+	MailingListURI   string                 `json:"mailing_list_uri"`
+	SourceCodeURI    string                 `json:"source_code_uri"`
+	BugTrackerURI    string                 `json:"bug_tracker_uri"`
+	ChangelogURI     string                 `json:"changelog_uri"`
+	FundingURI       string                 `json:"funding_uri"`
 	Dependencies     struct {
 		Development []struct {
 			Name         string `json:"name"`
@@ -80,17 +80,17 @@ type RubyGemsGemInfo struct {
 
 // RubyGemsVersions represents gem versions response
 type RubyGemsVersions []struct {
-	Number      string    `json:"number"`
-	BuiltAt     time.Time `json:"built_at"`
-	Summary     string    `json:"summary"`
-	Description string    `json:"description"`
-	Authors     string    `json:"authors"`
-	Platform    string    `json:"platform"`
-	RubyVersion string    `json:"ruby_version"`
-	Prerelease  bool      `json:"prerelease"`
-	Licenses    []string  `json:"licenses"`
+	Number       string            `json:"number"`
+	BuiltAt      time.Time         `json:"built_at"`
+	Summary      string            `json:"summary"`
+	Description  string            `json:"description"`
+	Authors      string            `json:"authors"`
+	Platform     string            `json:"platform"`
+	RubyVersion  string            `json:"ruby_version"`
+	Prerelease   bool              `json:"prerelease"`
+	Licenses     []string          `json:"licenses"`
 	Requirements map[string]string `json:"requirements"`
-	SHA         string    `json:"sha"`
+	SHA          string            `json:"sha"`
 }
 
 // NewRubyGemsClient creates a new RubyGems client
@@ -108,7 +108,7 @@ func NewRubyGemsClient() *RubyGemsClient {
 // GetPackageInfo retrieves package information from RubyGems.org
 func (c *RubyGemsClient) GetPackageInfo(ctx context.Context, gemName, version string) (*types.PackageMetadata, error) {
 	cacheKey := fmt.Sprintf("%s:%s", gemName, version)
-	
+
 	// Check cache first
 	if entry, exists := c.cache[cacheKey]; exists {
 		if time.Since(entry.Timestamp) < c.cacheTTL {
@@ -208,18 +208,18 @@ func (c *RubyGemsClient) GetPackageInfo(ctx context.Context, gemName, version st
 
 	// Convert to PackageMetadata
 	metadata := &types.PackageMetadata{
-		Name:        gemName,
-		Version:     useVersion,
-		Description: description,
-		Homepage:    gemInfo.HomepageURI,
-		Registry:    "rubygems",
-		Author:      gemInfo.Authors,
-		License:     strings.Join(gemInfo.Licenses, ", "),
-		Keywords:    keywords,
+		Name:         gemName,
+		Version:      useVersion,
+		Description:  description,
+		Homepage:     gemInfo.HomepageURI,
+		Registry:     "rubygems",
+		Author:       gemInfo.Authors,
+		License:      strings.Join(gemInfo.Licenses, ", "),
+		Keywords:     keywords,
 		Dependencies: dependencies,
-		Maintainers: maintainers,
-		Downloads:   gemInfo.Downloads,
-		LastUpdated: nil, // RubyGems API doesn't provide last updated easily
+		Maintainers:  maintainers,
+		Downloads:    gemInfo.Downloads,
+		LastUpdated:  nil, // RubyGems API doesn't provide last updated easily
 	}
 
 	// Cache the result
@@ -268,18 +268,18 @@ func (c *RubyGemsClient) SearchPackages(ctx context.Context, query string) ([]*t
 		}
 
 		packageMetadata := &types.PackageMetadata{
-			Name:        gem.Name,
-			Version:     gem.Version,
-			Description: gem.Info,
-			Registry:    "rubygems",
-			Homepage:    gem.HomepageURI,
-			Author:      gem.Authors,
-			License:     strings.Join(gem.Licenses, ", "),
-			Keywords:    []string{}, // Search results don't include keywords
+			Name:         gem.Name,
+			Version:      gem.Version,
+			Description:  gem.Info,
+			Registry:     "rubygems",
+			Homepage:     gem.HomepageURI,
+			Author:       gem.Authors,
+			License:      strings.Join(gem.Licenses, ", "),
+			Keywords:     []string{}, // Search results don't include keywords
 			Dependencies: []string{}, // Search results don't include dependencies
-			Maintainers: maintainers,
-			Downloads:   gem.Downloads,
-			LastUpdated: nil, // Not available in search results
+			Maintainers:  maintainers,
+			Downloads:    gem.Downloads,
+			LastUpdated:  nil, // Not available in search results
 		}
 
 		packages = append(packages, packageMetadata)

@@ -21,9 +21,9 @@ import (
 
 // corsMiddleware configures CORS middleware
 func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
-	log.Printf("[CORS DEBUG] Creating CORS middleware with config: Enabled=%v, AllowedOrigins=%v, AllowedMethods=%v, AllowedHeaders=%v", 
+	log.Printf("[CORS DEBUG] Creating CORS middleware with config: Enabled=%v, AllowedOrigins=%v, AllowedMethods=%v, AllowedHeaders=%v",
 		corsConfig.Enabled, corsConfig.AllowedOrigins, corsConfig.AllowedMethods, corsConfig.AllowedHeaders)
-	
+
 	config := cors.Config{
 		AllowOrigins:     corsConfig.AllowedOrigins,
 		AllowMethods:     corsConfig.AllowedMethods,
@@ -51,9 +51,9 @@ func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
 		config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Requested-With"}
 	}
 
-	log.Printf("[CORS DEBUG] Final CORS config: AllowAllOrigins=%v, AllowOrigins=%v, AllowMethods=%v, AllowHeaders=%v, AllowCredentials=%v", 
+	log.Printf("[CORS DEBUG] Final CORS config: AllowAllOrigins=%v, AllowOrigins=%v, AllowMethods=%v, AllowHeaders=%v, AllowCredentials=%v",
 		config.AllowAllOrigins, config.AllowOrigins, config.AllowMethods, config.AllowHeaders, config.AllowCredentials)
-	
+
 	return cors.New(config)
 }
 
@@ -393,20 +393,20 @@ func authenticateBasic(c *gin.Context, authConfig *config.APIAuthentication) (bo
 	validUsers := getBasicAuthUsers()
 	if len(validUsers) == 0 {
 		// Require admin password to be explicitly set - NO DEFAULT PASSWORD
-	adminPassword := os.Getenv("TYPOSENTINEL_ADMIN_PASSWORD")
-	if adminPassword == "" {
-		log.Printf("ERROR: Admin password not configured - TYPOSENTINEL_ADMIN_PASSWORD environment variable is required")
-		log.Printf("SECURITY: Set a strong admin password with: export TYPOSENTINEL_ADMIN_PASSWORD='YourSecurePassword123!'")
-		return false, ""
-	}
-
-	// Validate password strength in production
-	if os.Getenv("TYPOSENTINEL_ENVIRONMENT") == "production" {
-		if len(adminPassword) < 12 {
-			log.Printf("ERROR: Admin password too weak - must be at least 12 characters in production")
+		adminPassword := os.Getenv("TYPOSENTINEL_ADMIN_PASSWORD")
+		if adminPassword == "" {
+			log.Printf("ERROR: Admin password not configured - TYPOSENTINEL_ADMIN_PASSWORD environment variable is required")
+			log.Printf("SECURITY: Set a strong admin password with: export TYPOSENTINEL_ADMIN_PASSWORD='YourSecurePassword123!'")
 			return false, ""
 		}
-	}
+
+		// Validate password strength in production
+		if os.Getenv("TYPOSENTINEL_ENVIRONMENT") == "production" {
+			if len(adminPassword) < 12 {
+				log.Printf("ERROR: Admin password too weak - must be at least 12 characters in production")
+				return false, ""
+			}
+		}
 		validUsers = map[string]string{
 			"admin": hashPassword(adminPassword),
 		}
@@ -457,7 +457,7 @@ func getBasicAuthUsers() map[string]string {
 			if len(parts) == 2 {
 				userKey := parts[0]
 				password := parts[1]
-				
+
 				// Extract username from environment variable name
 				username := strings.ToLower(strings.TrimPrefix(userKey, "TYPOSENTINEL_USER_"))
 				if username != "" && password != "" {

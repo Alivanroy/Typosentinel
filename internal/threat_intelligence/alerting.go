@@ -807,11 +807,11 @@ func (sc *SlackChannel) Initialize(ctx context.Context, settings map[string]inte
 func (sc *SlackChannel) SendAlert(ctx context.Context, alert *ThreatAlert) error {
 	color := sc.getSeverityColor(alert.Severity)
 	attachment := map[string]interface{}{
-		"color":      color,
-		"title":      alert.Title,
-		"text":       alert.Description,
-		"timestamp":  alert.Timestamp.Unix(),
-		"footer":     "TypoSentinel",
+		"color":       color,
+		"title":       alert.Title,
+		"text":        alert.Description,
+		"timestamp":   alert.Timestamp.Unix(),
+		"footer":      "TypoSentinel",
 		"footer_icon": ":shield:",
 		"fields": []map[string]interface{}{
 			{
@@ -930,11 +930,11 @@ type GitHubChannel struct {
 }
 
 type GitHubSettings struct {
-	Token      string `json:"token"`
-	Owner      string `json:"owner"`
-	Repo       string `json:"repo"`
-	CreateIssues bool `json:"create_issues"`
-	Labels     []string `json:"labels"`
+	Token        string   `json:"token"`
+	Owner        string   `json:"owner"`
+	Repo         string   `json:"repo"`
+	CreateIssues bool     `json:"create_issues"`
+	Labels       []string `json:"labels"`
 }
 
 func NewGitHubChannel(logger *logger.Logger) *GitHubChannel {
@@ -988,8 +988,8 @@ func (gc *GitHubChannel) SendAlert(ctx context.Context, alert *ThreatAlert) erro
 	body := gc.formatIssueBody(alert)
 
 	issue := map[string]interface{}{
-		"title": title,
-		"body":  body,
+		"title":  title,
+		"body":   body,
 		"labels": gc.settings.Labels,
 	}
 

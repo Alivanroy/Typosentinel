@@ -35,7 +35,7 @@ type TrainingSession struct {
 	EndTime          time.Time              `json:"end_time"`
 	Duration         time.Duration          `json:"duration"`
 	TrainingMetrics  *TrainingMetrics       `json:"training_metrics"`
-	ValidationResult *ValidationResult      `json:"validation_result"`
+	ValidationResult *CrossValidationResult `json:"validation_result"`
 	Status           TrainingStatus         `json:"status"`
 	Config           *TrainingConfig        `json:"config"`
 	Metadata         map[string]interface{} `json:"metadata"`
@@ -43,41 +43,30 @@ type TrainingSession struct {
 
 // TrainingConfig holds configuration for training sessions
 type TrainingConfig struct {
-	ModelType        string            `json:"model_type"`
-	BatchSize        int               `json:"batch_size"`
-	Epochs           int               `json:"epochs"`
-	LearningRate     float64           `json:"learning_rate"`
-	ValidationSplit  float64           `json:"validation_split"`
-	EarlyStopping    bool              `json:"early_stopping"`
-	Patience         int               `json:"patience"`
-	MinDelta         float64           `json:"min_delta"`
-	Hyperparameters  map[string]interface{} `json:"hyperparameters"`
+	ModelType       string                 `json:"model_type"`
+	BatchSize       int                    `json:"batch_size"`
+	Epochs          int                    `json:"epochs"`
+	LearningRate    float64                `json:"learning_rate"`
+	ValidationSplit float64                `json:"validation_split"`
+	EarlyStopping   bool                   `json:"early_stopping"`
+	Patience        int                    `json:"patience"`
+	MinDelta        float64                `json:"min_delta"`
+	Hyperparameters map[string]interface{} `json:"hyperparameters"`
 }
 
 // TrainingStatus represents the status of a training session
 type TrainingStatus string
 
 const (
-	TrainingStatusPending    TrainingStatus = "pending"
-	TrainingStatusRunning    TrainingStatus = "running"
-	TrainingStatusCompleted  TrainingStatus = "completed"
-	TrainingStatusFailed     TrainingStatus = "failed"
-	TrainingStatusCancelled  TrainingStatus = "cancelled"
+	TrainingStatusPending   TrainingStatus = "pending"
+	TrainingStatusRunning   TrainingStatus = "running"
+	TrainingStatusCompleted TrainingStatus = "completed"
+	TrainingStatusFailed    TrainingStatus = "failed"
+	TrainingStatusCancelled TrainingStatus = "cancelled"
 )
 
 // ValidationResult holds cross-validation results
-type ValidationResult struct {
-	FoldResults    []*FoldResult `json:"fold_results"`
-	MeanAccuracy   float64       `json:"mean_accuracy"`
-	StdAccuracy    float64       `json:"std_accuracy"`
-	MeanPrecision  float64       `json:"mean_precision"`
-	StdPrecision   float64       `json:"std_precision"`
-	MeanRecall     float64       `json:"mean_recall"`
-	StdRecall      float64       `json:"std_recall"`
-	MeanF1Score    float64       `json:"mean_f1_score"`
-	StdF1Score     float64       `json:"std_f1_score"`
-	OverallScore   float64       `json:"overall_score"`
-}
+// ValidationResult struct moved to advanced_data_collector.go to avoid duplication
 
 // FoldResult represents results from a single cross-validation fold
 type FoldResult struct {
@@ -131,10 +120,10 @@ func (tp *TrainingPipeline) StartTraining(ctx context.Context, modelType string,
 	go tp.runTrainingSession(ctx, session)
 
 	logger.Info("Training session started", map[string]interface{}{
-		"session_id":  session.ID,
-		"model_type":  modelType,
-		"batch_size":  config.BatchSize,
-		"epochs":      config.Epochs,
+		"session_id": session.ID,
+		"model_type": modelType,
+		"batch_size": config.BatchSize,
+		"epochs":     config.Epochs,
 	})
 
 	return session, nil
@@ -215,11 +204,11 @@ func (tp *TrainingPipeline) runTrainingSession(ctx context.Context, session *Tra
 // trainModel performs the actual model training
 func (tp *TrainingPipeline) trainModel(ctx context.Context, model MLModel, trainData, validationData []TrainingData, config *TrainingConfig) (*TrainingMetrics, error) {
 	startTime := time.Now()
-	
+
 	// Initialize metrics tracking
 	var bestAccuracy float64
 	var patienceCounter int
-	
+
 	// Training loop
 	for epoch := 0; epoch < config.Epochs; epoch++ {
 		select {
@@ -239,7 +228,7 @@ func (tp *TrainingPipeline) trainModel(ctx context.Context, model MLModel, train
 
 		// Evaluate on validation data
 		accuracy := tp.evaluateAccuracy(model, validationData)
-		
+
 		// Early stopping check
 		if config.EarlyStopping {
 			if accuracy > bestAccuracy+config.MinDelta {
@@ -282,7 +271,7 @@ func (tp *TrainingPipeline) trainEpoch(model MLModel, data []TrainingData, batch
 		if end > len(data) {
 			end = len(data)
 		}
-		
+
 		batch := data[i:end]
 		err := model.Train(batch)
 		if err != nil {
@@ -304,13 +293,13 @@ func (tp *TrainingPipeline) evaluateAccuracy(model MLModel, data []TrainingData)
 		if err != nil {
 			continue
 		}
-		
+
 		// Simple threshold-based classification
 		predicted := 0.0
 		if prediction.Probability > 0.5 {
 			predicted = 1.0
 		}
-		
+
 		if math.Abs(predicted-sample.Label) < 0.1 {
 			correct++
 		}
@@ -369,12 +358,12 @@ func (tp *TrainingPipeline) convertToMLModelConfig(trainingConfig *TrainingConfi
 func (tp *TrainingPipeline) failSession(session *TrainingSession, err error) {
 	tp.mu.Lock()
 	defer tp.mu.Unlock()
-	
+
 	session.Status = TrainingStatusFailed
 	session.EndTime = time.Now()
 	session.Duration = session.EndTime.Sub(session.StartTime)
 	session.Metadata["error"] = err.Error()
-	
+
 	logger.Error("Training session failed", map[string]interface{}{
 		"session_id": session.ID,
 		"error":      err.Error(),
@@ -402,8 +391,8 @@ func (tp *TrainingPipeline) recordTrainingMetrics(session *TrainingSession) {
 
 	for name, value := range metrics {
 		tp.metricsCollector.SetGauge(name, value, map[string]string{
-			"model_type":  session.ModelType,
-			"session_id":  session.ID,
+			"model_type": session.ModelType,
+			"session_id": session.ID,
 		})
 	}
 }
@@ -412,7 +401,7 @@ func (tp *TrainingPipeline) recordTrainingMetrics(session *TrainingSession) {
 func (tp *TrainingPipeline) GetTrainingHistory() []*TrainingSession {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
-	
+
 	history := make([]*TrainingSession, len(tp.trainingHistory))
 	copy(history, tp.trainingHistory)
 	return history
@@ -422,7 +411,7 @@ func (tp *TrainingPipeline) GetTrainingHistory() []*TrainingSession {
 func (tp *TrainingPipeline) GetTrainingStatus() map[string]interface{} {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"is_training":      tp.isTraining,
 		"total_sessions":   len(tp.trainingHistory),
@@ -452,7 +441,7 @@ func (tp *TrainingPipeline) IsTraining() bool {
 func (tp *TrainingPipeline) GetTrainedModel(modelType string) (MLModel, bool) {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
-	
+
 	model, exists := tp.models[modelType]
 	return model, exists
 }
@@ -461,7 +450,7 @@ func (tp *TrainingPipeline) GetTrainedModel(modelType string) (MLModel, bool) {
 func (tp *TrainingPipeline) GetModels() map[string]MLModel {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
-	
+
 	models := make(map[string]MLModel)
 	for k, v := range tp.models {
 		models[k] = v

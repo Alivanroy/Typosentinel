@@ -36,13 +36,13 @@ type AnalyzeRequest struct {
 }
 
 type AnalysisResult struct {
-	PackageName string        `json:"package_name"`
-	Registry    string        `json:"registry"`
-	Threats     []Threat      `json:"threats"`
-	Warnings    []Warning     `json:"warnings"`
-	RiskLevel   int           `json:"risk_level"`
-	RiskScore   float64       `json:"risk_score"`
-	AnalyzedAt  time.Time     `json:"analyzed_at"`
+	PackageName string    `json:"package_name"`
+	Registry    string    `json:"registry"`
+	Threats     []Threat  `json:"threats"`
+	Warnings    []Warning `json:"warnings"`
+	RiskLevel   int       `json:"risk_level"`
+	RiskScore   float64   `json:"risk_score"`
+	AnalyzedAt  time.Time `json:"analyzed_at"`
 }
 
 type Threat struct {
@@ -62,17 +62,17 @@ type BatchAnalyzeRequest struct {
 }
 
 type BatchAnalysisResult struct {
-	Results   []AnalysisResult `json:"results"`
-	Summary   BatchSummary     `json:"summary"`
-	AnalyzedAt time.Time       `json:"analyzed_at"`
+	Results    []AnalysisResult `json:"results"`
+	Summary    BatchSummary     `json:"summary"`
+	AnalyzedAt time.Time        `json:"analyzed_at"`
 }
 
 type BatchSummary struct {
-	Total       int `json:"total"`
-	HighRisk    int `json:"high_risk"`
-	MediumRisk  int `json:"medium_risk"`
-	LowRisk     int `json:"low_risk"`
-	NoThreats   int `json:"no_threats"`
+	Total      int `json:"total"`
+	HighRisk   int `json:"high_risk"`
+	MediumRisk int `json:"medium_risk"`
+	LowRisk    int `json:"low_risk"`
+	NoThreats  int `json:"no_threats"`
 }
 
 // Rate limiter for API endpoints
@@ -112,7 +112,7 @@ func (rl *RateLimiter) Allow(ip string) bool {
 
 // Global instances
 var (
-	rateLimiter  *RateLimiter
+	rateLimiter *RateLimiter
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -152,8 +152,8 @@ func rateLimitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusTooManyRequests)
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"error": "Rate limit exceeded",
-				"message": "Too many requests. Please try again later.",
+				"error":       "Rate limit exceeded",
+				"message":     "Too many requests. Please try again later.",
 				"retry_after": "60 seconds",
 			})
 			return
@@ -177,7 +177,7 @@ func getClientIP(r *http.Request) string {
 
 func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	var req AnalyzeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -215,7 +215,7 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 
 func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	var req BatchAnalyzeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -386,10 +386,10 @@ func main() {
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	status := map[string]interface{}{
-		"service":    "TypoSentinel API",
-		"version":    "1.0.0",
-		"status":     "operational",
-		"timestamp":  time.Now(),
+		"service":   "TypoSentinel API",
+		"version":   "1.0.0",
+		"status":    "operational",
+		"timestamp": time.Now(),
 		"features": map[string]bool{
 			"typosquatting_detection": true,
 			"malware_scanning":        true,
@@ -424,12 +424,12 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 
 func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	// Parse query parameters for filtering
 	severity := r.URL.Query().Get("severity")
 	status := r.URL.Query().Get("status")
 	packageName := r.URL.Query().Get("package")
-	
+
 	// Mock vulnerability data
 	vulnerabilities := []map[string]interface{}{
 		{
@@ -481,7 +481,7 @@ func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-9012"},
 		},
 	}
-	
+
 	// Apply filters
 	filteredVulns := make([]map[string]interface{}, 0)
 	for _, vuln := range vulnerabilities {
@@ -496,6 +496,6 @@ func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		filteredVulns = append(filteredVulns, vuln)
 	}
-	
+
 	json.NewEncoder(w).Encode(filteredVulns)
 }

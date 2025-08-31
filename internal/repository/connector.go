@@ -7,113 +7,113 @@ import (
 
 // Repository represents a code repository
 type Repository struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	FullName    string            `json:"full_name"`
-	URL         string            `json:"url"`
-	CloneURL    string            `json:"clone_url"`
-	SSHURL      string            `json:"ssh_url"`
-	DefaultBranch string          `json:"default_branch"`
-	Language    string            `json:"language"`
-	Languages   map[string]int    `json:"languages"`
-	Private     bool              `json:"private"`
-	Archived    bool              `json:"archived"`
-	Fork        bool              `json:"fork"`
-	Size        int64             `json:"size"`
-	StarCount   int               `json:"star_count"`
-	ForkCount   int               `json:"fork_count"`
-	Topics      []string          `json:"topics"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
-	PushedAt    time.Time         `json:"pushed_at"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	Platform    string            `json:"platform"`
-	Owner       Owner             `json:"owner"`
+	ID            string                 `json:"id"`
+	Name          string                 `json:"name"`
+	FullName      string                 `json:"full_name"`
+	URL           string                 `json:"url"`
+	CloneURL      string                 `json:"clone_url"`
+	SSHURL        string                 `json:"ssh_url"`
+	DefaultBranch string                 `json:"default_branch"`
+	Language      string                 `json:"language"`
+	Languages     map[string]int         `json:"languages"`
+	Private       bool                   `json:"private"`
+	Archived      bool                   `json:"archived"`
+	Fork          bool                   `json:"fork"`
+	Size          int64                  `json:"size"`
+	StarCount     int                    `json:"star_count"`
+	ForkCount     int                    `json:"fork_count"`
+	Topics        []string               `json:"topics"`
+	CreatedAt     time.Time              `json:"created_at"`
+	UpdatedAt     time.Time              `json:"updated_at"`
+	PushedAt      time.Time              `json:"pushed_at"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	Platform      string                 `json:"platform"`
+	Owner         Owner                  `json:"owner"`
 }
 
 // Owner represents the repository owner
 type Owner struct {
-	ID       string `json:"id"`
-	Login    string `json:"login"`
-	Name     string `json:"name"`
-	Type     string `json:"type"` // user, organization, group
+	ID        string `json:"id"`
+	Login     string `json:"login"`
+	Name      string `json:"name"`
+	Type      string `json:"type"` // user, organization, group
 	AvatarURL string `json:"avatar_url"`
 }
 
 // Organization represents a platform organization/group
 type Organization struct {
-	ID          string            `json:"id"`
-	Login       string            `json:"login"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	URL         string            `json:"url"`
-	AvatarURL   string            `json:"avatar_url"`
-	Type        string            `json:"type"`
-	Platform    string            `json:"platform"`
+	ID          string                 `json:"id"`
+	Login       string                 `json:"login"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	URL         string                 `json:"url"`
+	AvatarURL   string                 `json:"avatar_url"`
+	Type        string                 `json:"type"`
+	Platform    string                 `json:"platform"`
 	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // RepositoryFilter defines filtering criteria for repositories
 type RepositoryFilter struct {
-	Languages           []string          `json:"languages"`
-	Topics              []string          `json:"topics"`
-	IncludePrivate      bool              `json:"include_private"`
-	IncludeArchived     bool              `json:"include_archived"`
-	IncludeForks        bool              `json:"include_forks"`
-	MinStars            int               `json:"min_stars"`
-	MaxSize             int64             `json:"max_size"`
-	UpdatedAfter        *time.Time        `json:"updated_after"`
-	UpdatedBefore       *time.Time        `json:"updated_before"`
-	NamePattern         string            `json:"name_pattern"`
-	ExcludePatterns     []string          `json:"exclude_patterns"`
-	CustomFilters       map[string]interface{} `json:"custom_filters"`
-	HasPackageManager   bool              `json:"has_package_manager"`
+	Languages         []string               `json:"languages"`
+	Topics            []string               `json:"topics"`
+	IncludePrivate    bool                   `json:"include_private"`
+	IncludeArchived   bool                   `json:"include_archived"`
+	IncludeForks      bool                   `json:"include_forks"`
+	MinStars          int                    `json:"min_stars"`
+	MaxSize           int64                  `json:"max_size"`
+	UpdatedAfter      *time.Time             `json:"updated_after"`
+	UpdatedBefore     *time.Time             `json:"updated_before"`
+	NamePattern       string                 `json:"name_pattern"`
+	ExcludePatterns   []string               `json:"exclude_patterns"`
+	CustomFilters     map[string]interface{} `json:"custom_filters"`
+	HasPackageManager bool                   `json:"has_package_manager"`
 }
 
 // ScanRequest represents a repository scan request
 type ScanRequest struct {
-	Repository    *Repository       `json:"repository"`
-	Branch        string            `json:"branch"`
-	CommitSHA     string            `json:"commit_sha"`
-	ScanID        string            `json:"scan_id"`
-	RequestedBy   string            `json:"requested_by"`
-	Priority      int               `json:"priority"`
-	Options       ScanOptions       `json:"options"`
-	CreatedAt     time.Time         `json:"created_at"`
+	Repository  *Repository `json:"repository"`
+	Branch      string      `json:"branch"`
+	CommitSHA   string      `json:"commit_sha"`
+	ScanID      string      `json:"scan_id"`
+	RequestedBy string      `json:"requested_by"`
+	Priority    int         `json:"priority"`
+	Options     ScanOptions `json:"options"`
+	CreatedAt   time.Time   `json:"created_at"`
 }
 
 // ScanOptions defines scanning configuration
 type ScanOptions struct {
-	DeepScan          bool              `json:"deep_scan"`
-	IncludeDev        bool              `json:"include_dev"`
-	Timeout           time.Duration     `json:"timeout"`
-	MaxFileSize       int64             `json:"max_file_size"`
-	ExcludePatterns   []string          `json:"exclude_patterns"`
-	LanguageOverride  string            `json:"language_override"`
-	CustomRules       []string          `json:"custom_rules"`
-	OutputFormats     []string          `json:"output_formats"`
+	DeepScan         bool          `json:"deep_scan"`
+	IncludeDev       bool          `json:"include_dev"`
+	Timeout          time.Duration `json:"timeout"`
+	MaxFileSize      int64         `json:"max_file_size"`
+	ExcludePatterns  []string      `json:"exclude_patterns"`
+	LanguageOverride string        `json:"language_override"`
+	CustomRules      []string      `json:"custom_rules"`
+	OutputFormats    []string      `json:"output_formats"`
 	// Legacy fields for compatibility
-	OutputFormat           string        `json:"output_format"`
-	DeepAnalysis           bool          `json:"deep_analysis"`
-	IncludeDevDependencies bool          `json:"include_dev_dependencies"`
-	SimilarityThreshold    float64       `json:"similarity_threshold"`
-	ExcludePackages        []string      `json:"exclude_packages"`
-	CheckVulnerabilities   bool          `json:"check_vulnerabilities"`
+	OutputFormat           string   `json:"output_format"`
+	DeepAnalysis           bool     `json:"deep_analysis"`
+	IncludeDevDependencies bool     `json:"include_dev_dependencies"`
+	SimilarityThreshold    float64  `json:"similarity_threshold"`
+	ExcludePackages        []string `json:"exclude_packages"`
+	CheckVulnerabilities   bool     `json:"check_vulnerabilities"`
 }
 
 // ScanResult represents the result of a repository scan
 type ScanResult struct {
-	Repository      *Repository                `json:"repository"`
-	ScanID          string                     `json:"scan_id"`
-	Status          string                     `json:"status"`
-	StartTime       time.Time                  `json:"start_time"`
-	EndTime         time.Time                  `json:"end_time"`
-	Duration        time.Duration              `json:"duration"`
-	Error           string                     `json:"error,omitempty"`
-	Message         string                     `json:"message,omitempty"`
-	AnalysisResult  interface{}                `json:"analysis_result,omitempty"`
-	DependencyFiles []string                   `json:"dependency_files"`
-	Metadata        map[string]interface{}     `json:"metadata"`
+	Repository      *Repository            `json:"repository"`
+	ScanID          string                 `json:"scan_id"`
+	Status          string                 `json:"status"`
+	StartTime       time.Time              `json:"start_time"`
+	EndTime         time.Time              `json:"end_time"`
+	Duration        time.Duration          `json:"duration"`
+	Error           string                 `json:"error,omitempty"`
+	Message         string                 `json:"message,omitempty"`
+	AnalysisResult  interface{}            `json:"analysis_result,omitempty"`
+	DependencyFiles []string               `json:"dependency_files"`
+	Metadata        map[string]interface{} `json:"metadata"`
 }
 
 // AuthConfig represents authentication configuration
@@ -131,25 +131,25 @@ type AuthConfig struct {
 
 // PlatformConfig represents platform-specific configuration
 type PlatformConfig struct {
-	Name          string            `json:"name"`
-	BaseURL       string            `json:"base_url"`
-	APIVersion    string            `json:"api_version"`
-	Auth          AuthConfig        `json:"auth"`
-	RateLimit     RateLimitConfig   `json:"rate_limit"`
-	Timeout       time.Duration     `json:"timeout"`
-	Retries       int               `json:"retries"`
-	Organizations []string          `json:"organizations"`
-	Repositories  []string          `json:"repositories"`
+	Name          string                 `json:"name"`
+	BaseURL       string                 `json:"base_url"`
+	APIVersion    string                 `json:"api_version"`
+	Auth          AuthConfig             `json:"auth"`
+	RateLimit     RateLimitConfig        `json:"rate_limit"`
+	Timeout       time.Duration          `json:"timeout"`
+	Retries       int                    `json:"retries"`
+	Organizations []string               `json:"organizations"`
+	Repositories  []string               `json:"repositories"`
 	Metadata      map[string]interface{} `json:"metadata"`
 }
 
 // RateLimitConfig defines rate limiting configuration
 type RateLimitConfig struct {
-	RequestsPerHour   int           `json:"requests_per_hour"`
-	RequestsPerMinute int           `json:"requests_per_minute"`
-	BurstLimit        int           `json:"burst_limit"`
-	BackoffStrategy   string        `json:"backoff_strategy"`
-	MaxRetries        int           `json:"max_retries"`
+	RequestsPerHour   int    `json:"requests_per_hour"`
+	RequestsPerMinute int    `json:"requests_per_minute"`
+	BurstLimit        int    `json:"burst_limit"`
+	BackoffStrategy   string `json:"backoff_strategy"`
+	MaxRetries        int    `json:"max_retries"`
 }
 
 // Connector defines the interface for repository platform connectors
@@ -200,12 +200,12 @@ type Connector interface {
 
 // Commit represents a repository commit
 type Commit struct {
-	SHA       string    `json:"sha"`
-	Message   string    `json:"message"`
-	Author    string    `json:"author"`
-	Email     string    `json:"email"`
-	Date      time.Time `json:"date"`
-	URL       string    `json:"url"`
+	SHA     string    `json:"sha"`
+	Message string    `json:"message"`
+	Author  string    `json:"author"`
+	Email   string    `json:"email"`
+	Date    time.Time `json:"date"`
+	URL     string    `json:"url"`
 }
 
 // Webhook represents a repository webhook

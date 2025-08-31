@@ -16,11 +16,11 @@ import (
 
 // QRadarConnector sends events to IBM QRadar SIEM
 type QRadarConnector struct {
-	name     string
-	config   QRadarConfig
-	client   *http.Client
-	logger   logger.Logger
-	health   integrations.HealthStatus
+	name   string
+	config QRadarConfig
+	client *http.Client
+	logger logger.Logger
+	health integrations.HealthStatus
 }
 
 // QRadarConfig defines QRadar connection settings
@@ -35,17 +35,17 @@ type QRadarConfig struct {
 
 // QRadarEvent represents an event to be sent to QRadar
 type QRadarEvent struct {
-	EventTime   int64                  `json:"event_time"`
-	EventType   string                 `json:"event_type"`
-	Severity    int                    `json:"severity"`
-	Message     string                 `json:"message"`
-	SourceIP    string                 `json:"source_ip,omitempty"`
-	DestIP      string                 `json:"dest_ip,omitempty"`
-	UserName    string                 `json:"username,omitempty"`
-	EventID     string                 `json:"event_id"`
-	Category    string                 `json:"category"`
-	Properties  map[string]interface{} `json:"properties"`
-	LogSource   string                 `json:"log_source"`
+	EventTime  int64                  `json:"event_time"`
+	EventType  string                 `json:"event_type"`
+	Severity   int                    `json:"severity"`
+	Message    string                 `json:"message"`
+	SourceIP   string                 `json:"source_ip,omitempty"`
+	DestIP     string                 `json:"dest_ip,omitempty"`
+	UserName   string                 `json:"username,omitempty"`
+	EventID    string                 `json:"event_id"`
+	Category   string                 `json:"category"`
+	Properties map[string]interface{} `json:"properties"`
+	LogSource  string                 `json:"log_source"`
 }
 
 // NewQRadarConnector creates a new QRadar connector

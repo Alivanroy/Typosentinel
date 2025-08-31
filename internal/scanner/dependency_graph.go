@@ -12,8 +12,8 @@ import (
 
 // DependencyGraphAnalyzerImpl implements the DependencyGraphAnalyzer interface
 type DependencyGraphAnalyzerImpl struct {
-	config       *config.DependencyGraphConfig
-	logger       *logger.Logger
+	config        *config.DependencyGraphConfig
+	logger        *logger.Logger
 	depthAnalyzer *DependencyDepthAnalyzer
 }
 
@@ -131,10 +131,10 @@ func (dga *DependencyGraphAnalyzerImpl) buildDependencyGraphFromPackages(package
 	// Create nodes for each package
 	for i, pkg := range packages {
 		node := DependencyNode{
-			ID:       fmt.Sprintf("%s@%s", pkg.Name, pkg.Version),
-			Package:  pkg,
-			Level:    dga.calculatePackageLevel(pkg, packages),
-			Direct:   i < 10, // Simplified: assume first 10 are direct
+			ID:      fmt.Sprintf("%s@%s", pkg.Name, pkg.Version),
+			Package: pkg,
+			Level:   dga.calculatePackageLevel(pkg, packages),
+			Direct:  i < 10, // Simplified: assume first 10 are direct
 			RiskData: &NodeRiskData{
 				RiskScore:    dga.calculateNodeRiskScore(pkg),
 				ThreatCount:  len(pkg.Threats),

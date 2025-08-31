@@ -1,0 +1,524 @@
+time="2025-08-23T00:03:14+02:00" level=info msg="Starting scan scan_1755900194 for path: C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json"
+time="2025-08-23T00:03:14+02:00" level=warning msg="Auto-detection failed: no supported projects found in C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json"
+time="2025-08-23T00:03:14+02:00" level=info msg="Found 1 dependency files"
+time="2025-08-23T00:03:14+02:00" level=info msg="DEBUG: Parsing file C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json with type npm"
+time="2025-08-23T00:03:14+02:00" level=info msg="DEBUG: parseNPMDependencies called with fileName: package.json"
+time="2025-08-23T00:03:14+02:00" level=info msg="DEBUG: Returning 13 total dependencies"
+time="2025-08-23T00:03:14+02:00" level=info msg="Analyzing 13 dependencies"
+time="2025-08-23T00:03:14+02:00" level=info msg="Starting threat analysis for 13 dependencies"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package axios from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package bcryptjs from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 542µs. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package eslint from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package express from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package jest from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.75"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package jsonwebtoken from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 531.7µs. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package lodash from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package mongoose from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.70"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package nodemon from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 542.6µs. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package redis from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package socket.io from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package supertest from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 542.6µs. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Checking package typescript from npm registry"
+time="2025-08-23T00:03:14+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-23T00:03:14+02:00" level=info msg="Threat analysis completed in 2.1589ms. Found 2 threats, 13 warnings"
+time="2025-08-23T00:03:14+02:00" level=info msg="Scan scan_1755900194 completed in 7.1623ms. Found 2 threats, 13 warnings"
+2025/08/23 00:03:14 [DEBUG] Database config - Type: 'sqlite', Database: './data/typosentinel.db'
+2025/08/23 00:03:14 [DEBUG] Database config - Host: 'localhost', Port: 5432, Username: 'typosentinel', SSLMode: 'disable'
+2025/08/23 00:03:14 [DEBUG] Opening SQLite database: ./data/typosentinel.db
+2025/08/23 00:03:14 Warning: Failed to save scan to database: failed to initialize OSS service: failed to ping database: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+{
+  "scan_id": "scan_1755900194",
+  "timestamp": "2025-08-23T00:03:14.6619347+02:00",
+  "duration": 7162300,
+  "path": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+  "total_packages": 13,
+  "threats": [
+    {
+      "id": "threat_1755900194667480100",
+      "package": "jest",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.75,
+      "description": "Package name 'jest' is very similar to 'eslint' (75.0% similarity)",
+      "similar_to": "eslint",
+      "recommendation": "Verify that 'jest' is the intended package. Consider using 'eslint' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.33333333333333337,
+          "score": 0.33333333333333337
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.75,
+          "score": 0.75
+        }
+      ],
+      "detected_at": "2025-08-23T00:03:14.6674801+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755900194668011800",
+      "package": "mongoose",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7,
+      "description": "Package name 'mongoose' is very similar to 'moment' (70.0% similarity)",
+      "similar_to": "moment",
+      "recommendation": "Verify that 'mongoose' is the intended package. Consider using 'moment' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.25,
+          "score": 0.25
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7,
+          "score": 0.7
+        }
+      ],
+      "detected_at": "2025-08-23T00:03:14.6680118+02:00",
+      "detection_method": "lexical_similarity"
+    }
+  ],
+  "warnings": [
+    {
+      "id": "warning_1755900194666938100",
+      "package": "axios",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6669381+02:00"
+    },
+    {
+      "id": "warning_1755900194667480100",
+      "package": "bcryptjs",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6674801+02:00"
+    },
+    {
+      "id": "warning_1755900194667480100",
+      "package": "eslint",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6674801+02:00"
+    },
+    {
+      "id": "warning_1755900194667480100",
+      "package": "express",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6674801+02:00"
+    },
+    {
+      "id": "warning_1755900194667480100",
+      "package": "jest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6674801+02:00"
+    },
+    {
+      "id": "warning_1755900194668011800",
+      "package": "jsonwebtoken",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6680118+02:00"
+    },
+    {
+      "id": "warning_1755900194668011800",
+      "package": "lodash",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6680118+02:00"
+    },
+    {
+      "id": "warning_1755900194668011800",
+      "package": "mongoose",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6680118+02:00"
+    },
+    {
+      "id": "warning_1755900194668554400",
+      "package": "nodemon",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6685544+02:00"
+    },
+    {
+      "id": "warning_1755900194668554400",
+      "package": "redis",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6685544+02:00"
+    },
+    {
+      "id": "warning_1755900194668554400",
+      "package": "socket.io",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.6685544+02:00"
+    },
+    {
+      "id": "warning_1755900194669097000",
+      "package": "supertest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.669097+02:00"
+    },
+    {
+      "id": "warning_1755900194669097000",
+      "package": "typescript",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-23T00:03:14.669097+02:00"
+    }
+  ],
+  "resolution": {
+    "resolved": [
+      {
+        "name": "axios",
+        "version": "1.6.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "1.6.0",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "bcryptjs",
+        "version": "2.4.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "2.4.3",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "eslint",
+        "version": "8.57.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "8.57.0",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "express",
+        "version": "4.18.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "4.18.2",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "jest",
+        "version": "29.7.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "29.7.0",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "jsonwebtoken",
+        "version": "9.0.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "9.0.2",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "lodash",
+        "version": "4.17.21",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "4.17.21",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "mongoose",
+        "version": "8.0.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "8.0.3",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "nodemon",
+        "version": "3.0.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "3.0.2",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "redis",
+        "version": "4.6.10",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "4.6.10",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "socket.io",
+        "version": "4.7.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "4.7.4",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "supertest",
+        "version": "6.3.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "6.3.3",
+          "parent": "enterprise-develop"
+        }
+      },
+      {
+        "name": "typescript",
+        "version": "5.3.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "5.3.3",
+          "parent": "enterprise-develop"
+        }
+      }
+    ],
+    "conflicts": [],
+    "warnings": []
+  },
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 0,
+    "medium_threats": 0,
+    "low_threats": 2,
+    "total_warnings": 13,
+    "clean_packages": 11,
+    "conflict_count": 0
+  },
+  "metadata": {
+    "dependency_files": [
+      "C:/Users/aliko/Typo/Typosentinel/enterprise-env/tests/branch-scenarios/develop/package.json"
+    ],
+    "detector_version": "1.0.0",
+    "scan_options": {
+      "OutputFormat": "json",
+      "SpecificFile": "",
+      "DeepAnalysis": false,
+      "IncludeDevDependencies": true,
+      "SimilarityThreshold": 0.8,
+      "ExcludePackages": [],
+      "AllowEmptyProjects": true,
+      "CheckVulnerabilities": false,
+      "VulnerabilityDBs": [
+        "osv",
+        "nvd"
+      ],
+      "VulnConfigPath": "config/vulnerability_databases.yaml",
+      "Recursive": false,
+      "WorkspaceAware": true,
+      "ConsolidateReport": false,
+      "PackageManagers": [],
+      "EnableSupplyChain": false,
+      "AdvancedAnalysis": false
+    }
+  }
+}

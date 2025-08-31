@@ -22,12 +22,12 @@ import (
 // - Seasonal activation patterns
 // - Gradual payload deployment across versions
 type TemporalDetector struct {
-	config                *TemporalDetectorConfig
-	suspiciousPatterns    []TemporalPattern
-	versionTracker        *VersionTracker
-	activationPredictor   *ActivationPredictor
-	behaviorBaseline      *BehaviorBaseline
-	logger                logger.Logger
+	config              *TemporalDetectorConfig
+	suspiciousPatterns  []TemporalPattern
+	versionTracker      *VersionTracker
+	activationPredictor *ActivationPredictor
+	behaviorBaseline    *BehaviorBaseline
+	logger              logger.Logger
 }
 
 // TemporalDetectorConfig configures temporal detection parameters
@@ -67,11 +67,11 @@ type VersionEntry struct {
 
 // CodeChange represents changes between versions
 type CodeChange struct {
-	Type        string  // "addition", "modification", "deletion"
-	Location    string
-	Content     string
-	Suspicion   float64
-	Indicators  []string
+	Type       string // "addition", "modification", "deletion"
+	Location   string
+	Content    string
+	Suspicion  float64
+	Indicators []string
 }
 
 // ActivationPredictor predicts potential activation triggers
@@ -100,7 +100,7 @@ type MarketEvent struct {
 
 // BehaviorBaseline tracks normal behavior patterns
 type BehaviorBaseline struct {
-	normalPatterns    map[string]float64
+	normalPatterns     map[string]float64
 	deviationThreshold float64
 }
 
@@ -120,29 +120,29 @@ type TemporalThreat struct {
 
 // PredictedTrigger represents a predicted activation trigger
 type PredictedTrigger struct {
-	Type        string    `json:"type"`
-	Trigger     string    `json:"trigger"`
-	Probability float64   `json:"probability"`
+	Type          string    `json:"type"`
+	Trigger       string    `json:"trigger"`
+	Probability   float64   `json:"probability"`
 	EstimatedDate time.Time `json:"estimated_date,omitempty"`
 }
 
 // VersionAnalysisResult represents version analysis results
 type VersionAnalysisResult struct {
-	TotalVersions       int                    `json:"total_versions"`
-	SuspiciousVersions  int                    `json:"suspicious_versions"`
-	GradualDeployment   bool                   `json:"gradual_deployment"`
-	PayloadAssembly     bool                   `json:"payload_assembly"`
-	VersionProgression  []VersionProgression   `json:"version_progression"`
-	SuspiciousChanges   []SuspiciousChange     `json:"suspicious_changes"`
+	TotalVersions      int                  `json:"total_versions"`
+	SuspiciousVersions int                  `json:"suspicious_versions"`
+	GradualDeployment  bool                 `json:"gradual_deployment"`
+	PayloadAssembly    bool                 `json:"payload_assembly"`
+	VersionProgression []VersionProgression `json:"version_progression"`
+	SuspiciousChanges  []SuspiciousChange   `json:"suspicious_changes"`
 }
 
 // VersionProgression tracks progression across versions
 type VersionProgression struct {
-	Version     string    `json:"version"`
-	Date        time.Time `json:"date"`
-	Suspicion   float64   `json:"suspicion"`
-	Changes     int       `json:"changes"`
-	Indicators  []string  `json:"indicators"`
+	Version    string    `json:"version"`
+	Date       time.Time `json:"date"`
+	Suspicion  float64   `json:"suspicion"`
+	Changes    int       `json:"changes"`
+	Indicators []string  `json:"indicators"`
 }
 
 // SuspiciousChange represents a suspicious change across versions
@@ -225,7 +225,7 @@ func (td *TemporalDetector) AnalyzeTemporalThreats(ctx context.Context, pkg *typ
 	// 6. Generate recommendations
 	threat.Recommendations = td.generateRecommendations(threat)
 
-	td.logger.Info(fmt.Sprintf("Temporal threat analysis completed for %s: confidence=%.2f, threat_type=%s", 
+	td.logger.Info(fmt.Sprintf("Temporal threat analysis completed for %s: confidence=%.2f, threat_type=%s",
 		pkg.Name, threat.ConfidenceScore, threat.ThreatType))
 
 	return threat, nil
@@ -237,7 +237,7 @@ func (td *TemporalDetector) analyzeTemporalPatterns(pkg *types.Package) []string
 
 	// Analyze package code for temporal indicators
 	codeContent := td.extractCodeContent(pkg)
-	
+
 	for _, pattern := range td.suspiciousPatterns {
 		if pattern.Pattern.MatchString(codeContent) {
 			patterns = append(patterns, pattern.Name)
@@ -380,14 +380,14 @@ func (td *TemporalDetector) extractCodeContent(pkg *types.Package) string {
 
 func (td *TemporalDetector) detectAstronomicalTriggers(content string) []PredictedTrigger {
 	triggers := []PredictedTrigger{}
-	
+
 	// Check for astronomical event references
 	astronomicalPatterns := map[string]float64{
-		"eclipse":    0.8,
-		"solstice":   0.7,
-		"equinox":    0.7,
-		"lunar":      0.6,
-		"solar":      0.6,
+		"eclipse":  0.8,
+		"solstice": 0.7,
+		"equinox":  0.7,
+		"lunar":    0.6,
+		"solar":    0.6,
 	}
 
 	for event, probability := range astronomicalPatterns {
@@ -405,7 +405,7 @@ func (td *TemporalDetector) detectAstronomicalTriggers(content string) []Predict
 
 func (td *TemporalDetector) detectSeasonalTriggers(content string) []PredictedTrigger {
 	triggers := []PredictedTrigger{}
-	
+
 	seasonalPatterns := map[string]float64{
 		"christmas": 0.7,
 		"halloween": 0.6,
@@ -429,13 +429,13 @@ func (td *TemporalDetector) detectSeasonalTriggers(content string) []PredictedTr
 
 func (td *TemporalDetector) detectMarketTriggers(content string) []PredictedTrigger {
 	triggers := []PredictedTrigger{}
-	
+
 	marketPatterns := map[string]float64{
-		"stock price": 0.8,
+		"stock price":  0.8,
 		"market crash": 0.9,
-		"volatility": 0.7,
-		"dow jones": 0.8,
-		"nasdaq": 0.8,
+		"volatility":   0.7,
+		"dow jones":    0.8,
+		"nasdaq":       0.8,
 	}
 
 	for market, probability := range marketPatterns {
@@ -453,11 +453,11 @@ func (td *TemporalDetector) detectMarketTriggers(content string) []PredictedTrig
 
 func (td *TemporalDetector) detectDelayTriggers(content string) []PredictedTrigger {
 	triggers := []PredictedTrigger{}
-	
+
 	// Look for extremely long delays
 	delayPattern := regexp.MustCompile(`(\d+)\s*(month|year|day)s?`)
 	matches := delayPattern.FindAllStringSubmatch(content, -1)
-	
+
 	for _, match := range matches {
 		if len(match) >= 3 {
 			triggers = append(triggers, PredictedTrigger{
@@ -473,15 +473,15 @@ func (td *TemporalDetector) detectDelayTriggers(content string) []PredictedTrigg
 
 func (td *TemporalDetector) calculateConfidenceScore(threat *TemporalThreat) float64 {
 	score := 0.0
-	
+
 	// Weight patterns
 	score += float64(len(threat.DetectedPatterns)) * 0.3
-	
+
 	// Weight triggers
 	for _, trigger := range threat.PredictedTriggers {
 		score += trigger.Probability * 0.2
 	}
-	
+
 	// Weight version analysis
 	if threat.VersionAnalysis != nil {
 		if threat.VersionAnalysis.GradualDeployment {
@@ -491,7 +491,7 @@ func (td *TemporalDetector) calculateConfidenceScore(threat *TemporalThreat) flo
 			score += 0.5
 		}
 	}
-	
+
 	return math.Min(score, 1.0)
 }
 
@@ -508,20 +508,20 @@ func (td *TemporalDetector) classifyThreat(threat *TemporalThreat) (string, type
 
 func (td *TemporalDetector) generateRecommendations(threat *TemporalThreat) []string {
 	recommendations := []string{}
-	
+
 	if threat.ConfidenceScore > 0.7 {
 		recommendations = append(recommendations, "Immediate quarantine recommended")
 		recommendations = append(recommendations, "Extended monitoring required (24+ months)")
 	}
-	
+
 	if len(threat.PredictedTriggers) > 0 {
 		recommendations = append(recommendations, "Monitor for predicted activation triggers")
 	}
-	
+
 	if threat.VersionAnalysis != nil && threat.VersionAnalysis.GradualDeployment {
 		recommendations = append(recommendations, "Review all package versions for gradual payload assembly")
 	}
-	
+
 	return recommendations
 }
 
@@ -554,68 +554,68 @@ func NewBehaviorBaseline() *BehaviorBaseline {
 
 func (td *TemporalDetector) calculateVersionSuspicion(version VersionEntry) float64 {
 	suspicion := 0.0
-	
+
 	// Check for suspicious timing patterns
 	if version.ReleaseDate.Hour() < 6 || version.ReleaseDate.Hour() > 22 {
 		suspicion += 0.2 // Off-hours deployment
 	}
-	
+
 	// Check for weekend deployments
 	if version.ReleaseDate.Weekday() == time.Saturday || version.ReleaseDate.Weekday() == time.Sunday {
 		suspicion += 0.15
 	}
-	
+
 	// Check for rapid version increments
 	if strings.Contains(version.Version, "999") || strings.Contains(version.Version, "9999") {
 		suspicion += 0.3
 	}
-	
+
 	// Check for suspicious version patterns
 	if matched, _ := regexp.MatchString(`\d+\.\d+\.\d+\.\d+`, version.Version); matched {
 		suspicion += 0.2 // Unusual 4-part versioning
 	}
-	
+
 	// Check for existing suspicious flag
 	if version.Suspicious {
 		suspicion += 0.4
 	}
-	
+
 	// Check for code changes indicators
 	for _, change := range version.Changes {
 		if change.Suspicion > 0.5 {
 			suspicion += 0.1
 		}
 	}
-	
+
 	return math.Min(suspicion, 1.0)
 }
 
 func (td *TemporalDetector) extractVersionIndicators(version VersionEntry) []string {
 	indicators := []string{}
-	
+
 	// Time-based indicators
 	if version.ReleaseDate.Hour() < 6 || version.ReleaseDate.Hour() > 22 {
 		indicators = append(indicators, "off_hours_deployment")
 	}
-	
+
 	if version.ReleaseDate.Weekday() == time.Saturday || version.ReleaseDate.Weekday() == time.Sunday {
 		indicators = append(indicators, "weekend_deployment")
 	}
-	
+
 	// Version pattern indicators
 	if strings.Contains(version.Version, "999") {
 		indicators = append(indicators, "suspicious_version_number")
 	}
-	
+
 	if matched, _ := regexp.MatchString(`\d+\.\d+\.\d+\.\d+`, version.Version); matched {
 		indicators = append(indicators, "unusual_version_format")
 	}
-	
+
 	// Suspicious flag indicator
 	if version.Suspicious {
 		indicators = append(indicators, "marked_suspicious")
 	}
-	
+
 	// Code changes indicators
 	for _, change := range version.Changes {
 		if change.Suspicion > 0.5 {
@@ -623,7 +623,7 @@ func (td *TemporalDetector) extractVersionIndicators(version VersionEntry) []str
 			break
 		}
 	}
-	
+
 	return indicators
 }
 
@@ -631,7 +631,7 @@ func (td *TemporalDetector) analyzeVersionChanges(prev, current VersionEntry) *S
 	if prev.Version == "" {
 		return nil // No previous version to compare
 	}
-	
+
 	change := &SuspiciousChange{
 		FromVersion: prev.Version,
 		ToVersion:   current.Version,
@@ -639,38 +639,38 @@ func (td *TemporalDetector) analyzeVersionChanges(prev, current VersionEntry) *S
 		Indicators:  []string{},
 		Suspicion:   0.0,
 	}
-	
+
 	// Analyze time gap between versions
 	timeDiff := current.ReleaseDate.Sub(prev.ReleaseDate)
 	if timeDiff < 5*time.Minute {
 		change.Indicators = append(change.Indicators, "rapid_version_update")
 		change.Suspicion += 0.3
 	}
-	
+
 	// Analyze version number changes
 	if td.isVersionDowngrade(prev.Version, current.Version) {
 		change.Indicators = append(change.Indicators, "version_downgrade")
 		change.Suspicion += 0.4
 	}
-	
+
 	// Check for suspicious flags
 	if current.Suspicious {
 		change.Indicators = append(change.Indicators, "suspicious_version")
 		change.Suspicion += 0.3
 	}
-	
+
 	// Check for significant changes
 	if len(current.Changes) > len(prev.Changes)*2 {
 		change.Indicators = append(change.Indicators, "significant_changes")
 		change.Suspicion += 0.2
 	}
-	
+
 	change.Suspicion = math.Min(change.Suspicion, 1.0)
-	
+
 	if change.Suspicion > 0.1 {
 		return change
 	}
-	
+
 	return nil
 }
 
@@ -678,27 +678,27 @@ func (td *TemporalDetector) detectGradualDeployment(progressions []VersionProgre
 	if len(progressions) < 3 {
 		return false
 	}
-	
+
 	// Look for patterns indicating gradual payload assembly
 	suspiciousPatterns := 0
-	
+
 	for _, progression := range progressions {
 		// Check for incremental size increases
 		if td.hasIncrementalSizeIncrease(progression) {
 			suspiciousPatterns++
 		}
-		
+
 		// Check for gradual complexity increase
 		if td.hasGradualComplexityIncrease(progression) {
 			suspiciousPatterns++
 		}
-		
+
 		// Check for staged functionality introduction
 		if td.hasStagedFunctionalityIntroduction(progression) {
 			suspiciousPatterns++
 		}
 	}
-	
+
 	// If more than 60% of progressions show suspicious patterns
 	return float64(suspiciousPatterns)/float64(len(progressions)) > 0.6
 }
@@ -707,9 +707,9 @@ func (td *TemporalDetector) detectPayloadAssembly(changes []SuspiciousChange) bo
 	if len(changes) < 2 {
 		return false
 	}
-	
+
 	assemblyIndicators := 0
-	
+
 	for _, change := range changes {
 		// Look for indicators of payload assembly
 		for _, indicator := range change.Indicators {
@@ -723,12 +723,12 @@ func (td *TemporalDetector) detectPayloadAssembly(changes []SuspiciousChange) bo
 			}
 		}
 	}
-	
+
 	// Check for temporal clustering of changes
 	if td.hasTemporalClustering(changes) {
 		assemblyIndicators += 2
 	}
-	
+
 	// Threshold for payload assembly detection
 	return assemblyIndicators >= 4
 }
@@ -738,26 +738,26 @@ func (td *TemporalDetector) isVersionDowngrade(prev, current string) bool {
 	// Simple semantic version comparison
 	prevParts := strings.Split(prev, ".")
 	currentParts := strings.Split(current, ".")
-	
+
 	if len(prevParts) != len(currentParts) {
 		return false
 	}
-	
+
 	for i := 0; i < len(prevParts) && i < len(currentParts); i++ {
 		prevNum, err1 := strconv.Atoi(prevParts[i])
 		currentNum, err2 := strconv.Atoi(currentParts[i])
-		
+
 		if err1 != nil || err2 != nil {
 			continue
 		}
-		
+
 		if currentNum < prevNum {
 			return true
 		} else if currentNum > prevNum {
 			return false
 		}
 	}
-	
+
 	return false
 }
 
@@ -780,7 +780,7 @@ func (td *TemporalDetector) hasTemporalClustering(changes []SuspiciousChange) bo
 	if len(changes) < 2 {
 		return false
 	}
-	
+
 	// Simplified clustering check based on number of changes
 	return len(changes) > 3
 }

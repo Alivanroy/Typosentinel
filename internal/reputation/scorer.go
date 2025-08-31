@@ -689,28 +689,28 @@ func (s *EnhancedReputationScorer) parseGitHubURL(url string) (string, string) {
 func (s *EnhancedReputationScorer) checkForTests(owner, repo string) bool {
 	// This would check for test directories/files in the repository
 	// For now, use heuristics based on common patterns
-	
+
 	if owner == "" || repo == "" {
 		return false
 	}
-	
+
 	// Well-maintained packages typically have tests
 	// Use package name patterns to infer test presence
 	repoLower := strings.ToLower(repo)
-	
+
 	// Popular/well-known packages likely have tests
 	wellKnownPatterns := []string{
 		"react", "vue", "angular", "express", "lodash", "axios",
 		"django", "flask", "requests", "numpy", "pandas",
 		"rails", "devise", "rspec", "junit", "spring",
 	}
-	
+
 	for _, pattern := range wellKnownPatterns {
 		if strings.Contains(repoLower, pattern) {
 			return true
 		}
 	}
-	
+
 	// Packages with test-related keywords in name likely have tests
 	testIndicators := []string{"test", "spec", "mock", "stub"}
 	for _, indicator := range testIndicators {
@@ -718,14 +718,14 @@ func (s *EnhancedReputationScorer) checkForTests(owner, repo string) bool {
 			return true
 		}
 	}
-	
+
 	// Organizational repositories (with common org prefixes) likely have tests
 	if strings.Contains(owner, "google") || strings.Contains(owner, "microsoft") ||
 		strings.Contains(owner, "facebook") || strings.Contains(owner, "angular") ||
 		strings.Contains(owner, "vuejs") || len(owner) > 10 {
 		return true
 	}
-	
+
 	// Default assumption for unknown packages
 	return len(repo) > 5 // Longer names suggest more mature packages
 }

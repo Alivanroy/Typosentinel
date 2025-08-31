@@ -32,11 +32,11 @@ type SecurityPolicy struct {
 type PolicyType string
 
 const (
-	PolicyTypeAccess       PolicyType = "access"
-	PolicyTypeInput        PolicyType = "input"
-	PolicyTypeRate         PolicyType = "rate"
-	PolicyTypeData         PolicyType = "data"
-	PolicyTypeCompliance   PolicyType = "compliance"
+	PolicyTypeAccess         PolicyType = "access"
+	PolicyTypeInput          PolicyType = "input"
+	PolicyTypeRate           PolicyType = "rate"
+	PolicyTypeData           PolicyType = "data"
+	PolicyTypeCompliance     PolicyType = "compliance"
 	PolicyTypeAuthentication PolicyType = "authentication"
 )
 
@@ -55,18 +55,18 @@ type PolicyRule struct {
 type RuleOperator string
 
 const (
-	OperatorEquals       RuleOperator = "equals"
-	OperatorNotEquals    RuleOperator = "not_equals"
-	OperatorContains     RuleOperator = "contains"
-	OperatorNotContains  RuleOperator = "not_contains"
-	OperatorMatches      RuleOperator = "matches"
-	OperatorNotMatches   RuleOperator = "not_matches"
-	OperatorGreaterThan  RuleOperator = "greater_than"
-	OperatorLessThan     RuleOperator = "less_than"
-	OperatorIn           RuleOperator = "in"
-	OperatorNotIn        RuleOperator = "not_in"
-	OperatorStartsWith   RuleOperator = "starts_with"
-	OperatorEndsWith     RuleOperator = "ends_with"
+	OperatorEquals      RuleOperator = "equals"
+	OperatorNotEquals   RuleOperator = "not_equals"
+	OperatorContains    RuleOperator = "contains"
+	OperatorNotContains RuleOperator = "not_contains"
+	OperatorMatches     RuleOperator = "matches"
+	OperatorNotMatches  RuleOperator = "not_matches"
+	OperatorGreaterThan RuleOperator = "greater_than"
+	OperatorLessThan    RuleOperator = "less_than"
+	OperatorIn          RuleOperator = "in"
+	OperatorNotIn       RuleOperator = "not_in"
+	OperatorStartsWith  RuleOperator = "starts_with"
+	OperatorEndsWith    RuleOperator = "ends_with"
 )
 
 // PolicyAction defines actions to take when a policy is violated
@@ -80,40 +80,40 @@ type PolicyAction struct {
 type ActionType string
 
 const (
-	ActionBlock    ActionType = "block"
-	ActionAllow    ActionType = "allow"
-	ActionLog      ActionType = "log"
-	ActionAlert    ActionType = "alert"
-	ActionThrottle ActionType = "throttle"
-	ActionRedirect ActionType = "redirect"
+	ActionBlock      ActionType = "block"
+	ActionAllow      ActionType = "allow"
+	ActionLog        ActionType = "log"
+	ActionAlert      ActionType = "alert"
+	ActionThrottle   ActionType = "throttle"
+	ActionRedirect   ActionType = "redirect"
 	ActionQuarantine ActionType = "quarantine"
 )
 
 // PolicyContext provides context for policy evaluation
 type PolicyContext struct {
-	UserID      string                 `json:"user_id"`
-	IPAddress   string                 `json:"ip_address"`
-	UserAgent   string                 `json:"user_agent"`
-	Endpoint    string                 `json:"endpoint"`
-	Method      string                 `json:"method"`
-	Headers     map[string]string      `json:"headers"`
-	Parameters  map[string]interface{} `json:"parameters"`
-	Body        string                 `json:"body"`
-	Timestamp   time.Time              `json:"timestamp"`
-	SessionID   string                 `json:"session_id"`
-	RequestID   string                 `json:"request_id"`
-	Metadata    map[string]interface{} `json:"metadata"`
+	UserID     string                 `json:"user_id"`
+	IPAddress  string                 `json:"ip_address"`
+	UserAgent  string                 `json:"user_agent"`
+	Endpoint   string                 `json:"endpoint"`
+	Method     string                 `json:"method"`
+	Headers    map[string]string      `json:"headers"`
+	Parameters map[string]interface{} `json:"parameters"`
+	Body       string                 `json:"body"`
+	Timestamp  time.Time              `json:"timestamp"`
+	SessionID  string                 `json:"session_id"`
+	RequestID  string                 `json:"request_id"`
+	Metadata   map[string]interface{} `json:"metadata"`
 }
 
 // PolicyResult represents the result of policy evaluation
 type PolicyResult struct {
-	PolicyID    string                 `json:"policy_id"`
-	RuleID      string                 `json:"rule_id"`
-	Action      ActionType             `json:"action"`
-	Allowed     bool                   `json:"allowed"`
-	Message     string                 `json:"message"`
-	Details     map[string]interface{} `json:"details"`
-	Timestamp   time.Time              `json:"timestamp"`
+	PolicyID  string                 `json:"policy_id"`
+	RuleID    string                 `json:"rule_id"`
+	Action    ActionType             `json:"action"`
+	Allowed   bool                   `json:"allowed"`
+	Message   string                 `json:"message"`
+	Details   map[string]interface{} `json:"details"`
+	Timestamp time.Time              `json:"timestamp"`
 }
 
 // NewPolicyEngine creates a new policy engine
@@ -141,10 +141,10 @@ func (pe *PolicyEngine) AddPolicy(policy *SecurityPolicy) error {
 	pe.policies[policy.ID] = policy
 
 	if pe.auditLogger != nil {
-		pe.auditLogger.LogSystemEvent("POLICY_MANAGEMENT", "ADD_POLICY", 
-			fmt.Sprintf("Added security policy: %s", policy.Name), 
+		pe.auditLogger.LogSystemEvent("POLICY_MANAGEMENT", "ADD_POLICY",
+			fmt.Sprintf("Added security policy: %s", policy.Name),
 			map[string]interface{}{
-				"policy_id": policy.ID,
+				"policy_id":   policy.ID,
 				"policy_type": policy.Type,
 			})
 	}
@@ -161,8 +161,8 @@ func (pe *PolicyEngine) RemovePolicy(policyID string) error {
 	delete(pe.policies, policyID)
 
 	if pe.auditLogger != nil {
-		pe.auditLogger.LogSystemEvent("POLICY_MANAGEMENT", "REMOVE_POLICY", 
-			fmt.Sprintf("Removed security policy: %s", policyID), 
+		pe.auditLogger.LogSystemEvent("POLICY_MANAGEMENT", "REMOVE_POLICY",
+			fmt.Sprintf("Removed security policy: %s", policyID),
 			map[string]interface{}{
 				"policy_id": policyID,
 			})
@@ -206,14 +206,14 @@ func (pe *PolicyEngine) EvaluatePolicy(policyID string, context *PolicyContext) 
 
 			// Log policy evaluation
 			if pe.auditLogger != nil {
-				pe.auditLogger.LogSystemEvent("POLICY_EVALUATION", "RULE_MATCHED", 
-					fmt.Sprintf("Policy rule matched: %s/%s", policyID, rule.ID), 
+				pe.auditLogger.LogSystemEvent("POLICY_EVALUATION", "RULE_MATCHED",
+					fmt.Sprintf("Policy rule matched: %s/%s", policyID, rule.ID),
 					map[string]interface{}{
-						"policy_id": policyID,
-						"rule_id": rule.ID,
-						"action": result.Action,
-						"allowed": result.Allowed,
-						"user_id": context.UserID,
+						"policy_id":  policyID,
+						"rule_id":    rule.ID,
+						"action":     result.Action,
+						"allowed":    result.Allowed,
+						"user_id":    context.UserID,
 						"ip_address": context.IPAddress,
 					})
 			}
@@ -375,19 +375,19 @@ func (pe *PolicyEngine) stringContains(value, substring interface{}) bool {
 func (pe *PolicyEngine) regexMatches(value, pattern interface{}) bool {
 	valueStr := fmt.Sprintf("%v", value)
 	patternStr := fmt.Sprintf("%v", pattern)
-	
+
 	regex, err := regexp.Compile(patternStr)
 	if err != nil {
 		return false
 	}
-	
+
 	return regex.MatchString(valueStr)
 }
 
 // valueInList checks if value is in list
 func (pe *PolicyEngine) valueInList(value, list interface{}) bool {
 	valueStr := fmt.Sprintf("%v", value)
-	
+
 	switch listVal := list.(type) {
 	case []interface{}:
 		for _, item := range listVal {
@@ -402,7 +402,7 @@ func (pe *PolicyEngine) valueInList(value, list interface{}) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -562,7 +562,7 @@ func (pe *PolicyEngine) loadDefaultPolicies() {
 				Description: "Apply rate limiting",
 				Parameters: map[string]interface{}{
 					"requests_per_minute": 60,
-					"burst_size":         10,
+					"burst_size":          10,
 				},
 			},
 		},

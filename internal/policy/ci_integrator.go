@@ -21,31 +21,31 @@ type CIIntegratorImpl struct {
 
 // CIIntegratorConfig configuration for CI integrator
 type CIIntegratorConfig struct {
-	Enabled       bool                      `json:"enabled"`
-	Providers     map[string]CIProviderConfig `json:"providers"`
-	DefaultProvider string                   `json:"default_provider"`
-	Timeout       time.Duration             `json:"timeout"`
-	RetryAttempts int                       `json:"retry_attempts"`
+	Enabled         bool                        `json:"enabled"`
+	Providers       map[string]CIProviderConfig `json:"providers"`
+	DefaultProvider string                      `json:"default_provider"`
+	Timeout         time.Duration               `json:"timeout"`
+	RetryAttempts   int                         `json:"retry_attempts"`
 }
 
 // CIProviderConfig configuration for a specific CI provider
 type CIProviderConfig struct {
-	Type     string            `json:"type"` // github, gitlab, jenkins, azure_devops, circleci
-	BaseURL  string            `json:"base_url"`
-	Token    string            `json:"token"`
-	Headers  map[string]string `json:"headers"`
-	Enabled  bool              `json:"enabled"`
+	Type    string            `json:"type"` // github, gitlab, jenkins, azure_devops, circleci
+	BaseURL string            `json:"base_url"`
+	Token   string            `json:"token"`
+	Headers map[string]string `json:"headers"`
+	Enabled bool              `json:"enabled"`
 }
 
 // PipelineStatus represents the status of a CI/CD pipeline
 type PipelineStatus struct {
-	ID       string    `json:"id"`
-	Status   string    `json:"status"` // running, blocked, success, failed, cancelled
-	Branch   string    `json:"branch"`
-	Commit   string    `json:"commit"`
+	ID        string     `json:"id"`
+	Status    string     `json:"status"` // running, blocked, success, failed, cancelled
+	Branch    string     `json:"branch"`
+	Commit    string     `json:"commit"`
 	BlockedAt *time.Time `json:"blocked_at,omitempty"`
-	BlockedBy string    `json:"blocked_by,omitempty"`
-	Reason   string    `json:"reason,omitempty"`
+	BlockedBy string     `json:"blocked_by,omitempty"`
+	Reason    string     `json:"reason,omitempty"`
 }
 
 // NewCIIntegratorImpl creates a new CI integrator implementation
@@ -202,7 +202,7 @@ func (ci *CIIntegratorImpl) blockGitHubPipeline(ctx context.Context, repoURL, br
 
 	payload := map[string]interface{}{
 		"required_status_checks": map[string]interface{}{
-			"strict": true,
+			"strict":   true,
 			"contexts": []string{"typosentinel/security-check"},
 		},
 		"enforce_admins": true,
@@ -266,9 +266,9 @@ func (ci *CIIntegratorImpl) blockGitLabPipeline(ctx context.Context, repoURL, br
 	url := fmt.Sprintf("%s/api/v4/projects/%s/protected_branches", config.BaseURL, projectID)
 
 	payload := map[string]interface{}{
-		"name": branch,
-		"push_access_level": 40, // Maintainer level
-		"merge_access_level": 40, // Maintainer level
+		"name":                         branch,
+		"push_access_level":            40, // Maintainer level
+		"merge_access_level":           40, // Maintainer level
 		"code_owner_approval_required": true,
 	}
 
@@ -322,48 +322,48 @@ func (ci *CIIntegratorImpl) getGitLabPipelineStatus(ctx context.Context, repoURL
 func (ci *CIIntegratorImpl) blockJenkinsPipeline(ctx context.Context, repoURL, branch string, config *CIProviderConfig) error {
 	// Extract job name from repo URL or use configured job name
 	jobName := ci.extractJenkinsJobName(repoURL)
-	
+
 	// Disable the job
 	url := fmt.Sprintf("%s/job/%s/disable", config.BaseURL, jobName)
-	
+
 	return ci.makeAPIRequest(ctx, "POST", url, nil, config)
 }
 
 func (ci *CIIntegratorImpl) unblockJenkinsPipeline(ctx context.Context, repoURL, branch string, config *CIProviderConfig) error {
 	// Extract job name from repo URL or use configured job name
 	jobName := ci.extractJenkinsJobName(repoURL)
-	
+
 	// Enable the job
 	url := fmt.Sprintf("%s/job/%s/enable", config.BaseURL, jobName)
-	
+
 	return ci.makeAPIRequest(ctx, "POST", url, nil, config)
 }
 
 func (ci *CIIntegratorImpl) getJenkinsPipelineStatus(ctx context.Context, repoURL, branch string, config *CIProviderConfig) (string, error) {
 	// Extract job name from repo URL or use configured job name
 	jobName := ci.extractJenkinsJobName(repoURL)
-	
+
 	// Get job status
 	url := fmt.Sprintf("%s/job/%s/api/json", config.BaseURL, jobName)
-	
+
 	resp, err := ci.makeAPIRequestWithResponse(ctx, "GET", url, nil, config)
 	if err != nil {
 		return "unknown", err
 	}
-	
+
 	var jobInfo struct {
 		Buildable bool   `json:"buildable"`
 		Color     string `json:"color"`
 	}
-	
+
 	if err := json.Unmarshal(resp, &jobInfo); err != nil {
 		return "unknown", err
 	}
-	
+
 	if !jobInfo.Buildable {
 		return "blocked", nil
 	}
-	
+
 	// Map Jenkins color to status
 	switch jobInfo.Color {
 	case "blue":
@@ -390,21 +390,21 @@ func (ci *CIIntegratorImpl) blockAzureDevOpsPipeline(ctx context.Context, repoUR
 	url := fmt.Sprintf("%s/%s/%s/_apis/policy/configurations?api-version=6.0", config.BaseURL, org, project)
 
 	payload := map[string]interface{}{
-		"isEnabled": true,
+		"isEnabled":  true,
 		"isBlocking": true,
 		"type": map[string]interface{}{
 			"id": "fa4e907d-c16b-4a4c-9dfa-4906e5d171dd", // Build policy type ID
 		},
 		"settings": map[string]interface{}{
-			"buildDefinitionId": 0, // You might need to get this dynamically
+			"buildDefinitionId":       0, // You might need to get this dynamically
 			"queueOnSourceUpdateOnly": false,
-			"manualQueueOnly": true,
-			"displayName": "TypoSentinel Security Block",
+			"manualQueueOnly":         true,
+			"displayName":             "TypoSentinel Security Block",
 			"scope": []map[string]interface{}{
 				{
 					"repositoryId": repo,
-					"refName": fmt.Sprintf("refs/heads/%s", branch),
-					"matchKind": "exact",
+					"refName":      fmt.Sprintf("refs/heads/%s", branch),
+					"matchKind":    "exact",
 				},
 			},
 		},
@@ -615,7 +615,7 @@ func (ci *CIIntegratorImpl) extractJenkinsJobName(repoURL string) string {
 		// Fallback to a sanitized version of the URL
 		return strings.ReplaceAll(strings.ReplaceAll(repoURL, "/", "-"), ":", "-")
 	}
-	
+
 	// Use the repository name as job name
 	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
 	if len(parts) > 0 {
@@ -624,7 +624,7 @@ func (ci *CIIntegratorImpl) extractJenkinsJobName(repoURL string) string {
 		jobName = strings.TrimSuffix(jobName, ".git")
 		return jobName
 	}
-	
+
 	return "default-job"
 }
 

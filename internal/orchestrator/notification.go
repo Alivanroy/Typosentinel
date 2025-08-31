@@ -29,12 +29,12 @@ type NotificationManagerConfig struct {
 
 // EmailConfig holds email notification configuration
 type EmailConfig struct {
-	SMTPHost     string `json:"smtp_host"`
-	SMTPPort     int    `json:"smtp_port"`
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	FromAddress  string `json:"from_address"`
-	Enabled      bool   `json:"enabled"`
+	SMTPHost    string `json:"smtp_host"`
+	SMTPPort    int    `json:"smtp_port"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	FromAddress string `json:"from_address"`
+	Enabled     bool   `json:"enabled"`
 }
 
 // SlackConfig holds Slack notification configuration
@@ -194,10 +194,10 @@ func (nm *DefaultNotificationManager) sendWebhookNotification(subject, message s
 	}
 
 	if scan != nil {
-			payload["scan_id"] = scan.ID
-			payload["scan_name"] = scan.Name
-			payload["schedule"] = scan.Schedule
-		}
+		payload["scan_id"] = scan.ID
+		payload["scan_name"] = scan.Name
+		payload["schedule"] = scan.Schedule
+	}
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {

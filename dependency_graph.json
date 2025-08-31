@@ -1,0 +1,185 @@
+🔍 Analyzing dependency graph for: .
+📊 Configuration: Max Depth=5, Include Dev=true, Output=json
+
+[TYPOSENTINEL] 2025/08/22 15:25:22 logger.go:169: [INFO] Initializing enhanced scanner detectors
+Enriching package github.com/chromedp/cdproto (registry: go, description: )
+Enriched package github.com/chromedp/cdproto - new description: 
+Enriching package github.com/chromedp/chromedp (registry: go, description: )
+Enriched package github.com/chromedp/chromedp - new description: 
+Enriching package github.com/fatih/color (registry: go, description: )
+Enriched package github.com/fatih/color - new description: 
+Enriching package github.com/fsnotify/fsnotify (registry: go, description: )
+Enriched package github.com/fsnotify/fsnotify - new description: 
+Enriching package github.com/gin-contrib/cors (registry: go, description: )
+Enriched package github.com/gin-contrib/cors - new description: 
+Enriching package github.com/gin-gonic/gin (registry: go, description: )
+Enriched package github.com/gin-gonic/gin - new description: 
+Enriching package github.com/go-ldap/ldap/v3 (registry: go, description: )
+Enriched package github.com/go-ldap/ldap/v3 - new description: 
+Enriching package github.com/go-playground/validator/v10 (registry: go, description: )
+Enriched package github.com/go-playground/validator/v10 - new description: 
+Enriching package github.com/go-redis/redis/v8 (registry: go, description: )
+Enriched package github.com/go-redis/redis/v8 - new description: 
+Enriching package github.com/google/uuid (registry: go, description: )
+Enriched package github.com/google/uuid - new description: 
+Enriching package github.com/joho/godotenv (registry: go, description: )
+Enriched package github.com/joho/godotenv - new description: 
+Enriching package github.com/lib/pq (registry: go, description: )
+Enriched package github.com/lib/pq - new description: 
+Enriching package github.com/mattn/go-sqlite3 (registry: go, description: )
+Enriched package github.com/mattn/go-sqlite3 - new description: 
+Enriching package github.com/microcosm-cc/bluemonday (registry: go, description: )
+Enriched package github.com/microcosm-cc/bluemonday - new description: 
+Enriching package github.com/olekukonko/tablewriter (registry: go, description: )
+Enriched package github.com/olekukonko/tablewriter - new description: 
+Enriching package github.com/pelletier/go-toml/v2 (registry: go, description: )
+Enriched package github.com/pelletier/go-toml/v2 - new description: 
+Enriching package github.com/redis/go-redis/v9 (registry: go, description: )
+Enriched package github.com/redis/go-redis/v9 - new description: 
+Enriching package github.com/robfig/cron/v3 (registry: go, description: )
+Enriched package github.com/robfig/cron/v3 - new description: 
+Enriching package github.com/sirupsen/logrus (registry: go, description: )
+Enriched package github.com/sirupsen/logrus - new description: 
+Enriching package github.com/spf13/cobra (registry: go, description: )
+Enriched package github.com/spf13/cobra - new description: 
+Enriching package github.com/spf13/viper (registry: go, description: )
+Enriched package github.com/spf13/viper - new description: 
+Enriching package github.com/stretchr/testify (registry: go, description: )
+Enriched package github.com/stretchr/testify - new description: 
+Enriching package golang.org/x/crypto (registry: go, description: )
+Enriched package golang.org/x/crypto - new description: 
+Enriching package golang.org/x/time (registry: go, description: )
+Enriched package golang.org/x/time - new description: 
+Enriching package gopkg.in/natefinch/lumberjack.v2 (registry: go, description: )
+Enriched package gopkg.in/natefinch/lumberjack.v2 - new description: 
+Enriching package gopkg.in/yaml.v2 (registry: go, description: )
+Enriched package gopkg.in/yaml.v2 - new description: 
+Enriching package gopkg.in/yaml.v3 (registry: go, description: )
+Enriched package gopkg.in/yaml.v3 - new description: 
+Enriching package github.com/Azure/go-ntlmssp (registry: go, description: )
+Enriched package github.com/Azure/go-ntlmssp - new description: 
+Enriching package github.com/aymerick/douceur (registry: go, description: )
+Enriched package github.com/aymerick/douceur - new description: 
+Enriching package github.com/bytedance/sonic (registry: go, description: )
+Enriched package github.com/bytedance/sonic - new description: 
+Enriching package github.com/bytedance/sonic/loader (registry: go, description: )
+Enriched package github.com/bytedance/sonic/loader - new description: 
+Enriching package github.com/cespare/xxhash/v2 (registry: go, description: )
+Enriched package github.com/cespare/xxhash/v2 - new description: 
+Enriching package github.com/chromedp/sysutil (registry: go, description: )
+Enriched package github.com/chromedp/sysutil - new description: 
+Enriching package github.com/cloudwego/base64x (registry: go, description: )
+Enriched package github.com/cloudwego/base64x - new description: 
+Enriching package github.com/davecgh/go-spew (registry: go, description: )
+Enriched package github.com/davecgh/go-spew - new description: 
+Enriching package github.com/dgryski/go-rendezvous (registry: go, description: )
+Enriched package github.com/dgryski/go-rendezvous - new description: 
+Enriching package github.com/gabriel-vasile/mimetype (registry: go, description: )
+Enriched package github.com/gabriel-vasile/mimetype - new description: 
+Enriching package github.com/gin-contrib/sse (registry: go, description: )
+Enriched package github.com/gin-contrib/sse - new description: 
+Enriching package github.com/go-asn1-ber/asn1-ber (registry: go, description: )
+Enriched package github.com/go-asn1-ber/asn1-ber - new description: 
+Enriching package github.com/go-playground/locales (registry: go, description: )
+Enriched package github.com/go-playground/locales - new description: 
+Enriching package github.com/go-playground/universal-translator (registry: go, description: )
+Enriched package github.com/go-playground/universal-translator - new description: 
+Enriching package github.com/go-viper/mapstructure/v2 (registry: go, description: )
+Enriched package github.com/go-viper/mapstructure/v2 - new description: 
+Enriching package github.com/gobwas/httphead (registry: go, description: )
+Enriched package github.com/gobwas/httphead - new description: 
+Enriching package github.com/gobwas/pool (registry: go, description: )
+Enriched package github.com/gobwas/pool - new description: 
+Enriching package github.com/gobwas/ws (registry: go, description: )
+Enriched package github.com/gobwas/ws - new description: 
+Enriching package github.com/goccy/go-json (registry: go, description: )
+Enriched package github.com/goccy/go-json - new description: 
+Enriching package github.com/gorilla/css (registry: go, description: )
+Enriched package github.com/gorilla/css - new description: 
+Enriching package github.com/inconshreveable/mousetrap (registry: go, description: )
+Enriched package github.com/inconshreveable/mousetrap - new description: 
+Enriching package github.com/josharian/intern (registry: go, description: )
+Enriched package github.com/josharian/intern - new description: 
+Enriching package github.com/json-iterator/go (registry: go, description: )
+Enriched package github.com/json-iterator/go - new description: 
+Enriching package github.com/klauspost/cpuid/v2 (registry: go, description: )
+Enriched package github.com/klauspost/cpuid/v2 - new description: 
+Enriching package github.com/leodido/go-urn (registry: go, description: )
+Enriched package github.com/leodido/go-urn - new description: 
+Enriching package github.com/mailru/easyjson (registry: go, description: )
+Enriched package github.com/mailru/easyjson - new description: 
+Enriching package github.com/mattn/go-colorable (registry: go, description: )
+Enriched package github.com/mattn/go-colorable - new description: 
+Enriching package github.com/mattn/go-isatty (registry: go, description: )
+Enriched package github.com/mattn/go-isatty - new description: 
+Enriching package github.com/mattn/go-runewidth (registry: go, description: )
+Enriched package github.com/mattn/go-runewidth - new description: 
+Enriching package github.com/modern-go/concurrent (registry: go, description: )
+Enriched package github.com/modern-go/concurrent - new description: 
+Enriching package github.com/modern-go/reflect2 (registry: go, description: )
+Enriched package github.com/modern-go/reflect2 - new description: 
+Enriching package github.com/olekukonko/errors (registry: go, description: )
+Enriched package github.com/olekukonko/errors - new description: 
+Enriching package github.com/olekukonko/ll (registry: go, description: )
+Enriched package github.com/olekukonko/ll - new description: 
+Enriching package github.com/pmezard/go-difflib (registry: go, description: )
+Enriched package github.com/pmezard/go-difflib - new description: 
+Enriching package github.com/rivo/uniseg (registry: go, description: )
+Enriched package github.com/rivo/uniseg - new description: 
+Enriching package github.com/rogpeppe/go-internal (registry: go, description: )
+Enriched package github.com/rogpeppe/go-internal - new description: 
+Enriching package github.com/sagikazarmark/locafero (registry: go, description: )
+Enriched package github.com/sagikazarmark/locafero - new description: 
+Enriching package github.com/sourcegraph/conc (registry: go, description: )
+Enriched package github.com/sourcegraph/conc - new description: 
+Enriching package github.com/spf13/afero (registry: go, description: )
+Enriched package github.com/spf13/afero - new description: 
+Enriching package github.com/spf13/cast (registry: go, description: )
+Enriched package github.com/spf13/cast - new description: 
+Enriching package github.com/spf13/pflag (registry: go, description: )
+Enriched package github.com/spf13/pflag - new description: 
+Enriching package github.com/subosito/gotenv (registry: go, description: )
+Enriched package github.com/subosito/gotenv - new description: 
+Enriching package github.com/twitchyliquid64/golang-asm (registry: go, description: )
+Enriched package github.com/twitchyliquid64/golang-asm - new description: 
+Enriching package github.com/ugorji/go/codec (registry: go, description: )
+Enriched package github.com/ugorji/go/codec - new description: 
+Enriching package go.uber.org/multierr (registry: go, description: )
+Enriched package go.uber.org/multierr - new description: 
+Enriching package golang.org/x/arch (registry: go, description: )
+Enriched package golang.org/x/arch - new description: 
+Enriching package golang.org/x/net (registry: go, description: )
+Enriched package golang.org/x/net - new description: 
+Enriching package golang.org/x/sys (registry: go, description: )
+Enriched package golang.org/x/sys - new description: 
+Enriching package golang.org/x/text (registry: go, description: )
+Enriched package golang.org/x/text - new description: 
+Enriching package google.golang.org/protobuf (registry: go, description: )
+Enriched package google.golang.org/protobuf - new description: 
+{
+  "duration": 0,
+  "metadata": {
+    "build_integrity_findings": 0,
+    "honeypot_detections": 0,
+    "supply_chain_analysis": true,
+    "supply_chain_risk_level": 0,
+    "supply_chain_risk_score": 0,
+    "threat_intel_findings": 0,
+    "zero_day_findings": 0
+  },
+  "path": ".",
+  "scan_id": "scan_1755869122807701400",
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 0,
+    "medium_threats": 0,
+    "low_threats": 5,
+    "total_warnings": 0,
+    "clean_packages": 72,
+    "conflict_count": 0
+  },
+  "threats": 5,
+  "timestamp": "2025-08-22T15:25:22.8077014+02:00",
+  "total_packages": 77,
+  "warnings": 0
+}

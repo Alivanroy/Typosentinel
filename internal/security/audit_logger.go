@@ -265,16 +265,16 @@ func (al *AuditLogger) LogSystemEvent(eventType, action, message string, details
 // LogEvent logs a generic audit event
 func (al *AuditLogger) LogEvent(event AuditEvent) {
 	entry := AuditLogEntry{
-		Timestamp:   time.Now(),
-		Level:       "INFO",
-		EventType:   event.EventType,
-		UserID:      "",
-		IPAddress:   event.IPAddress,
-		UserAgent:   event.UserAgent,
-		Action:      "EVENT",
-		Result:      "SUCCESS",
-		Message:     "Generic audit event",
-		Details:     event.EventData,
+		Timestamp: time.Now(),
+		Level:     "INFO",
+		EventType: event.EventType,
+		UserID:    "",
+		IPAddress: event.IPAddress,
+		UserAgent: event.UserAgent,
+		Action:    "EVENT",
+		Result:    "SUCCESS",
+		Message:   "Generic audit event",
+		Details:   event.EventData,
 	}
 
 	if event.UserID != nil {
@@ -378,7 +378,7 @@ func (al *AuditLogger) rotateLog() {
 	for i := al.config.MaxFiles - 1; i > 0; i-- {
 		oldPath := fmt.Sprintf("%s.%d", al.logPath, i)
 		newPath := fmt.Sprintf("%s.%d", al.logPath, i+1)
-		
+
 		if _, err := os.Stat(oldPath); err == nil {
 			if err := os.Rename(oldPath, newPath); err != nil {
 				log.Printf("Failed to rotate log file %s to %s: %v", oldPath, newPath, err)
@@ -418,10 +418,10 @@ func (al *AuditLogger) GetLogStats() (map[string]interface{}, error) {
 	}
 
 	stats := map[string]interface{}{
-		"log_path":     al.logPath,
-		"file_size":    fileInfo.Size(),
-		"max_size":     al.config.MaxFileSize,
-		"encrypted":    al.config.EncryptLogs,
+		"log_path":      al.logPath,
+		"file_size":     fileInfo.Size(),
+		"max_size":      al.config.MaxFileSize,
+		"encrypted":     al.config.EncryptLogs,
 		"last_modified": fileInfo.ModTime(),
 	}
 

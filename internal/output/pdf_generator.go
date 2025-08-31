@@ -24,37 +24,37 @@ type PDFGenerator struct {
 
 // PDFOptions configures PDF generation settings
 type PDFOptions struct {
-	PaperWidth      float64 `json:"paper_width"`       // in inches
-	PaperHeight     float64 `json:"paper_height"`      // in inches
-	MarginTop       float64 `json:"margin_top"`        // in inches
-	MarginBottom    float64 `json:"margin_bottom"`     // in inches
-	MarginLeft      float64 `json:"margin_left"`       // in inches
-	MarginRight     float64 `json:"margin_right"`      // in inches
-	PrintBackground bool    `json:"print_background"`  // include background graphics
-	Landscape       bool    `json:"landscape"`          // page orientation
-	Scale           float64 `json:"scale"`             // page scale (0.1 to 2.0)
-	DisplayHeaderFooter bool `json:"display_header_footer"`
-	HeaderTemplate  string  `json:"header_template"`
-	FooterTemplate  string  `json:"footer_template"`
-	PreferCSSPageSize bool  `json:"prefer_css_page_size"`
+	PaperWidth          float64 `json:"paper_width"`      // in inches
+	PaperHeight         float64 `json:"paper_height"`     // in inches
+	MarginTop           float64 `json:"margin_top"`       // in inches
+	MarginBottom        float64 `json:"margin_bottom"`    // in inches
+	MarginLeft          float64 `json:"margin_left"`      // in inches
+	MarginRight         float64 `json:"margin_right"`     // in inches
+	PrintBackground     bool    `json:"print_background"` // include background graphics
+	Landscape           bool    `json:"landscape"`        // page orientation
+	Scale               float64 `json:"scale"`            // page scale (0.1 to 2.0)
+	DisplayHeaderFooter bool    `json:"display_header_footer"`
+	HeaderTemplate      string  `json:"header_template"`
+	FooterTemplate      string  `json:"footer_template"`
+	PreferCSSPageSize   bool    `json:"prefer_css_page_size"`
 }
 
 // DefaultPDFOptions returns sensible default PDF generation options
 func DefaultPDFOptions() PDFOptions {
 	return PDFOptions{
-		PaperWidth:      8.5,  // US Letter width
-		PaperHeight:     11.0, // US Letter height
-		MarginTop:       1.0,
-		MarginBottom:    1.0,
-		MarginLeft:      1.0,
-		MarginRight:     1.0,
-		PrintBackground: true,
-		Landscape:       false,
-		Scale:           1.0,
+		PaperWidth:          8.5,  // US Letter width
+		PaperHeight:         11.0, // US Letter height
+		MarginTop:           1.0,
+		MarginBottom:        1.0,
+		MarginLeft:          1.0,
+		MarginRight:         1.0,
+		PrintBackground:     true,
+		Landscape:           false,
+		Scale:               1.0,
 		DisplayHeaderFooter: true,
-		HeaderTemplate: `<div style="font-size: 10px; text-align: center; width: 100%; margin: 0 auto;"><span class="title"></span></div>`,
-		FooterTemplate: `<div style="font-size: 10px; text-align: center; width: 100%; margin: 0 auto;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>`,
-		PreferCSSPageSize: false,
+		HeaderTemplate:      `<div style="font-size: 10px; text-align: center; width: 100%; margin: 0 auto;"><span class="title"></span></div>`,
+		FooterTemplate:      `<div style="font-size: 10px; text-align: center; width: 100%; margin: 0 auto;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>`,
+		PreferCSSPageSize:   false,
 	}
 }
 
@@ -64,7 +64,7 @@ func NewPDFGenerator(templateDir, outputDir string, options *PDFOptions) *PDFGen
 		defaultOpts := DefaultPDFOptions()
 		options = &defaultOpts
 	}
-	
+
 	return &PDFGenerator{
 		TemplateDir: templateDir,
 		OutputDir:   outputDir,
@@ -234,7 +234,7 @@ type ReportRequest struct {
 // ValidateTemplate checks if a template file exists and is valid
 func (pg *PDFGenerator) ValidateTemplate(templateName string) error {
 	tmplPath := filepath.Join(pg.TemplateDir, templateName)
-	
+
 	// Check if file exists
 	if _, err := os.Stat(tmplPath); os.IsNotExist(err) {
 		return fmt.Errorf("template file does not exist: %s", tmplPath)
@@ -252,7 +252,7 @@ func (pg *PDFGenerator) ValidateTemplate(templateName string) error {
 // GetAvailableTemplates returns a list of available HTML templates
 func (pg *PDFGenerator) GetAvailableTemplates() ([]string, error) {
 	var templates []string
-	
+
 	entries, err := os.ReadDir(pg.TemplateDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read template directory: %w", err)
@@ -280,11 +280,11 @@ func GetPDFInfo(filePath string) (*PDFInfo, error) {
 	}
 
 	return &PDFInfo{
-		FilePath:    filePath,
-		FileName:    stat.Name(),
-		FileSize:    stat.Size(),
-		CreatedAt:   stat.ModTime(),
-		IsReadable:  true, // Basic check, could be enhanced
+		FilePath:   filePath,
+		FileName:   stat.Name(),
+		FileSize:   stat.Size(),
+		CreatedAt:  stat.ModTime(),
+		IsReadable: true, // Basic check, could be enhanced
 	}, nil
 }
 

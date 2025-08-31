@@ -12,10 +12,10 @@ import (
 
 // ViolationIntegrator connects policy violations to scan results
 type ViolationIntegrator struct {
-	policyManager *auth.EnterprisePolicyManager
-	remediationEngine *RemediationEngine
+	policyManager       *auth.EnterprisePolicyManager
+	remediationEngine   *RemediationEngine
 	notificationService NotificationService
-	auditLogger AuditLogger
+	auditLogger         AuditLogger
 }
 
 // NotificationService interface for sending notifications
@@ -33,34 +33,34 @@ type AuditLogger interface {
 // ScanResultWithViolations extends scan results with policy violations
 type ScanResultWithViolations struct {
 	*analyzer.ScanResult
-	Violations []ViolationDetails `json:"violations"`
-	EnforcementResult *auth.EnforcementResult `json:"enforcement_result"`
-	RemediationActions []RemediationDetails `json:"remediation_actions"`
+	Violations         []ViolationDetails      `json:"violations"`
+	EnforcementResult  *auth.EnforcementResult `json:"enforcement_result"`
+	RemediationActions []RemediationDetails    `json:"remediation_actions"`
 }
 
 // ViolationDetails provides detailed information about a policy violation
 type ViolationDetails struct {
 	*auth.PolicyViolation
-	AffectedPackages []string `json:"affected_packages"`
-	ThreatContext *ThreatContext `json:"threat_context"`
-	RiskAssessment *RiskAssessment `json:"risk_assessment"`
+	AffectedPackages []string        `json:"affected_packages"`
+	ThreatContext    *ThreatContext  `json:"threat_context"`
+	RiskAssessment   *RiskAssessment `json:"risk_assessment"`
 }
 
 // ThreatContext provides context about threats related to the violation
 type ThreatContext struct {
-	ThreatTypes []string `json:"threat_types"`
+	ThreatTypes          []string       `json:"threat_types"`
 	SeverityDistribution map[string]int `json:"severity_distribution"`
-	AffectedFiles []string `json:"affected_files"`
-	CVEReferences []string `json:"cve_references"`
+	AffectedFiles        []string       `json:"affected_files"`
+	CVEReferences        []string       `json:"cve_references"`
 }
 
 // RiskAssessment provides risk assessment for the violation
 type RiskAssessment struct {
-	OverallRiskScore float64 `json:"overall_risk_score"`
-	ImpactScore float64 `json:"impact_score"`
-	LikelihoodScore float64 `json:"likelihood_score"`
-	MitigationComplexity string `json:"mitigation_complexity"`
-	BusinessImpact string `json:"business_impact"`
+	OverallRiskScore     float64 `json:"overall_risk_score"`
+	ImpactScore          float64 `json:"impact_score"`
+	LikelihoodScore      float64 `json:"likelihood_score"`
+	MitigationComplexity string  `json:"mitigation_complexity"`
+	BusinessImpact       string  `json:"business_impact"`
 }
 
 // RemediationDetails provides details about remediation actions
@@ -85,10 +85,10 @@ func NewViolationIntegrator(
 	auditLogger AuditLogger,
 ) *ViolationIntegrator {
 	return &ViolationIntegrator{
-		policyManager: policyManager,
-		remediationEngine: remediationEngine,
+		policyManager:       policyManager,
+		remediationEngine:   remediationEngine,
 		notificationService: notificationService,
-		auditLogger: auditLogger,
+		auditLogger:         auditLogger,
 	}
 }
 
@@ -122,9 +122,9 @@ func (vi *ViolationIntegrator) ProcessScanResult(ctx context.Context, scanResult
 
 	// Create enhanced scan result
 	enhancedResult := &ScanResultWithViolations{
-		ScanResult: scanResult,
-		Violations: make([]ViolationDetails, 0),
-		EnforcementResult: enforcementResult,
+		ScanResult:         scanResult,
+		Violations:         make([]ViolationDetails, 0),
+		EnforcementResult:  enforcementResult,
 		RemediationActions: make([]RemediationDetails, 0),
 	}
 
@@ -170,24 +170,24 @@ func (vi *ViolationIntegrator) createViolationDetails(violation *auth.PolicyViol
 	riskAssessment := vi.assessRisk(violation, scanResult)
 
 	return ViolationDetails{
-		PolicyViolation: violation,
+		PolicyViolation:  violation,
 		AffectedPackages: affectedPackages,
-		ThreatContext: threatContext,
-		RiskAssessment: riskAssessment,
+		ThreatContext:    threatContext,
+		RiskAssessment:   riskAssessment,
 	}
 }
 
 // extractAffectedPackages extracts package names affected by the violation
 func (vi *ViolationIntegrator) extractAffectedPackages(violation *auth.PolicyViolation, scanResult *analyzer.ScanResult) []string {
 	packages := make([]string, 0)
-	
+
 	// Extract from threats in scan result
 	for _, threat := range scanResult.Threats {
 		if threat.Severity.String() == violation.Severity {
 			packages = append(packages, threat.Package)
 		}
 	}
-	
+
 	return packages
 }
 
@@ -196,13 +196,13 @@ func (vi *ViolationIntegrator) createThreatContext(violation *auth.PolicyViolati
 	threatTypes := make([]string, 0)
 	severityDist := make(map[string]int)
 	cveRefs := make([]string, 0)
-	
+
 	for _, threat := range scanResult.Threats {
 		threatTypes = append(threatTypes, string(threat.Type))
 		severityDist[threat.Severity.String()]++
 		cveRefs = append(cveRefs, threat.CVEs...)
 	}
-	
+
 	return &ThreatContext{
 		ThreatTypes:          threatTypes,
 		SeverityDistribution: severityDist,
@@ -265,11 +265,11 @@ func (vi *ViolationIntegrator) assessRisk(violation *auth.PolicyViolation, scanR
 	}
 
 	return &RiskAssessment{
-		OverallRiskScore: overallRiskScore,
-		ImpactScore: impactScore,
-		LikelihoodScore: likelihoodScore,
+		OverallRiskScore:     overallRiskScore,
+		ImpactScore:          impactScore,
+		LikelihoodScore:      likelihoodScore,
 		MitigationComplexity: mitigationComplexity,
-		BusinessImpact: businessImpact,
+		BusinessImpact:       businessImpact,
 	}
 }
 
@@ -278,25 +278,25 @@ func (vi *ViolationIntegrator) processRemediation(ctx context.Context, violation
 	if vi.remediationEngine == nil {
 		return nil, fmt.Errorf("remediation engine not configured")
 	}
-	
+
 	// Execute remediation
 	result, err := (*vi.remediationEngine).ExecuteRemediation(ctx, violation)
 	if err != nil {
 		return nil, fmt.Errorf("remediation execution failed: %w", err)
 	}
-	
+
 	// Update violation status if remediation was successful
 	if result.Status == "completed" {
 		violation.Status = auth.ViolationStatusRemediated
 		violation.ResolvedAt = &result.CompletedAt
 	}
-	
+
 	return &RemediationDetails{
 		ViolationID:     violation.ID,
 		RemediationType: violation.Remediation.Type,
 		Status:          string(result.Status),
 		Steps:           []RemediationStep{}, // Steps not available in RemediationResult
-		StartedAt:       time.Now(), // Use current time as started
+		StartedAt:       time.Now(),          // Use current time as started
 		CompletedAt:     &result.CompletedAt,
 		Duration:        time.Since(time.Now()), // Calculate duration
 		Success:         result.Status == "completed",
@@ -311,12 +311,12 @@ func (vi *ViolationIntegrator) convertThreats(threats []types.Threat) []types.Th
 	converted := make([]types.Threat, len(threats))
 	for i, threat := range threats {
 		converted[i] = types.Threat{
-			ID: threat.ID,
-			Type: threat.Type,
-			Severity: threat.Severity,
-			Package: threat.Package,
+			ID:          threat.ID,
+			Type:        threat.Type,
+			Severity:    threat.Severity,
+			Package:     threat.Package,
 			Description: threat.Description,
-			References: threat.References,
+			References:  threat.References,
 		}
 	}
 	return converted

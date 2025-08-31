@@ -28,27 +28,27 @@ func NewDependencyDepthAnalyzer(cfg *config.DependencyGraphConfig, log *logger.L
 
 // DepthAnalysisResult contains comprehensive depth analysis results
 type DepthAnalysisResult struct {
-	MaxDepth            int                    `json:"max_depth"`
-	AverageDepth        float64                `json:"average_depth"`
-	DepthDistribution   map[int]int            `json:"depth_distribution"`
-	CriticalPaths       []CriticalPath         `json:"critical_paths"`
-	DeepDependencies    []DeepDependency       `json:"deep_dependencies"`
-	RiskByDepth         map[int]float64        `json:"risk_by_depth"`
-	TransitiveRisks     []TransitiveRisk       `json:"transitive_risks"`
-	DepthMetrics        DepthMetrics           `json:"depth_metrics"`
-	Recommendations     []string               `json:"recommendations"`
-	AnalysisMetadata    map[string]interface{} `json:"analysis_metadata"`
-	AnalyzedAt          time.Time              `json:"analyzed_at"`
+	MaxDepth          int                    `json:"max_depth"`
+	AverageDepth      float64                `json:"average_depth"`
+	DepthDistribution map[int]int            `json:"depth_distribution"`
+	CriticalPaths     []CriticalPath         `json:"critical_paths"`
+	DeepDependencies  []DeepDependency       `json:"deep_dependencies"`
+	RiskByDepth       map[int]float64        `json:"risk_by_depth"`
+	TransitiveRisks   []TransitiveRisk       `json:"transitive_risks"`
+	DepthMetrics      DepthMetrics           `json:"depth_metrics"`
+	Recommendations   []string               `json:"recommendations"`
+	AnalysisMetadata  map[string]interface{} `json:"analysis_metadata"`
+	AnalyzedAt        time.Time              `json:"analyzed_at"`
 }
 
 // CriticalPath represents a high-risk dependency path
 type CriticalPath struct {
-	Path            []string  `json:"path"`
-	Depth           int       `json:"depth"`
-	RiskScore       float64   `json:"risk_score"`
-	Vulnerabilities []string  `json:"vulnerabilities"`
-	ImpactRadius    int       `json:"impact_radius"`
-	Criticality     string    `json:"criticality"`
+	Path            []string `json:"path"`
+	Depth           int      `json:"depth"`
+	RiskScore       float64  `json:"risk_score"`
+	Vulnerabilities []string `json:"vulnerabilities"`
+	ImpactRadius    int      `json:"impact_radius"`
+	Criticality     string   `json:"criticality"`
 }
 
 // DeepDependency represents a dependency at significant depth
@@ -64,27 +64,27 @@ type DeepDependency struct {
 
 // TransitiveRisk represents risk propagated through dependency chains
 type TransitiveRisk struct {
-	SourcePackage   string    `json:"source_package"`
-	TargetPackage   string    `json:"target_package"`
-	Path            []string  `json:"path"`
-	Depth           int       `json:"depth"`
-	RiskScore       float64   `json:"risk_score"`
-	PropagationType string    `json:"propagation_type"`
-	Severity        string    `json:"severity"`
-	MitigationCost  float64   `json:"mitigation_cost"`
+	SourcePackage   string   `json:"source_package"`
+	TargetPackage   string   `json:"target_package"`
+	Path            []string `json:"path"`
+	Depth           int      `json:"depth"`
+	RiskScore       float64  `json:"risk_score"`
+	PropagationType string   `json:"propagation_type"`
+	Severity        string   `json:"severity"`
+	MitigationCost  float64  `json:"mitigation_cost"`
 }
 
 // DepthMetrics contains statistical metrics about dependency depths
 type DepthMetrics struct {
-	TotalPackages       int     `json:"total_packages"`
-	DirectDependencies  int     `json:"direct_dependencies"`
-	TransitiveDeps      int     `json:"transitive_dependencies"`
-	MaxDepth            int     `json:"max_depth"`
-	AverageDepth        float64 `json:"average_depth"`
-	MedianDepth         float64 `json:"median_depth"`
-	DepthVariance       float64 `json:"depth_variance"`
-	ComplexityIndex     float64 `json:"complexity_index"`
-	RiskConcentration   float64 `json:"risk_concentration"`
+	TotalPackages      int     `json:"total_packages"`
+	DirectDependencies int     `json:"direct_dependencies"`
+	TransitiveDeps     int     `json:"transitive_dependencies"`
+	MaxDepth           int     `json:"max_depth"`
+	AverageDepth       float64 `json:"average_depth"`
+	MedianDepth        float64 `json:"median_depth"`
+	DepthVariance      float64 `json:"depth_variance"`
+	ComplexityIndex    float64 `json:"complexity_index"`
+	RiskConcentration  float64 `json:"risk_concentration"`
 }
 
 // MaintenanceInfo contains package maintenance information

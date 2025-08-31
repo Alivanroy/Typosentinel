@@ -13,10 +13,10 @@ import (
 
 // EnhancedSupplyChainDetector provides comprehensive supply chain threat detection
 type EnhancedSupplyChainDetector struct {
-	metadataFilter    *ml.MetadataFilter
-	typoDetector      *EnhancedTyposquattingDetector
-	config            *SupplyChainConfig
-	falsePositiveDB   *FalsePositiveDatabase
+	metadataFilter  *ml.MetadataFilter
+	typoDetector    *EnhancedTyposquattingDetector
+	config          *SupplyChainConfig
+	falsePositiveDB *FalsePositiveDatabase
 }
 
 // SupplyChainConfig contains configuration for supply chain detection
@@ -32,9 +32,9 @@ type SupplyChainConfig struct {
 
 // FalsePositiveDatabase stores known false positive patterns
 type FalsePositiveDatabase struct {
-	KnownFalsePositives map[string]FalsePositiveEntry `json:"known_false_positives"`
-	PatternFilters      []PatternFilter               `json:"pattern_filters"`
-	TechnologyMismatches []TechnologyMismatch         `json:"technology_mismatches"`
+	KnownFalsePositives  map[string]FalsePositiveEntry `json:"known_false_positives"`
+	PatternFilters       []PatternFilter               `json:"pattern_filters"`
+	TechnologyMismatches []TechnologyMismatch          `json:"technology_mismatches"`
 }
 
 // FalsePositiveEntry represents a known false positive
@@ -48,35 +48,35 @@ type FalsePositiveEntry struct {
 
 // PatternFilter represents a pattern-based filter
 type PatternFilter struct {
-	Pattern     string  `json:"pattern"`
-	FilterType  string  `json:"filter_type"` // "exclude", "reduce_confidence"
-	Reason      string  `json:"reason"`
-	Confidence  float64 `json:"confidence"`
+	Pattern    string  `json:"pattern"`
+	FilterType string  `json:"filter_type"` // "exclude", "reduce_confidence"
+	Reason     string  `json:"reason"`
+	Confidence float64 `json:"confidence"`
 }
 
 // TechnologyMismatch represents technology-specific filtering
 type TechnologyMismatch struct {
-	CVEPattern      string   `json:"cve_pattern"`
-	Technologies    []string `json:"technologies"`
-	ExcludedTechs   []string `json:"excluded_techs"`
-	Reason          string   `json:"reason"`
+	CVEPattern    string   `json:"cve_pattern"`
+	Technologies  []string `json:"technologies"`
+	ExcludedTechs []string `json:"excluded_techs"`
+	Reason        string   `json:"reason"`
 }
 
 // EnhancedThreatResult contains comprehensive threat analysis results
 type EnhancedThreatResult struct {
-	Package              string                    `json:"package"`
-	Registry             string                    `json:"registry"`
-	ThreatType           string                    `json:"threat_type"`
-	Severity             string                    `json:"severity"`
-	ConfidenceScore      float64                   `json:"confidence_score"`
-	IsFiltered           bool                      `json:"is_filtered"`
-	FilterReasons        []string                  `json:"filter_reasons"`
-	MetadataAnalysis     *ml.MetadataAnalysis      `json:"metadata_analysis"`
-	TyposquattingAnalysis *TyposquattingAnalysis   `json:"typosquatting_analysis"`
-	SupplyChainRisk      float64                   `json:"supply_chain_risk"`
-	Recommendations      []string                  `json:"recommendations"`
-	Evidence             []Evidence                `json:"evidence"`
-	FalsePositiveRisk    float64                   `json:"false_positive_risk"`
+	Package               string                 `json:"package"`
+	Registry              string                 `json:"registry"`
+	ThreatType            string                 `json:"threat_type"`
+	Severity              string                 `json:"severity"`
+	ConfidenceScore       float64                `json:"confidence_score"`
+	IsFiltered            bool                   `json:"is_filtered"`
+	FilterReasons         []string               `json:"filter_reasons"`
+	MetadataAnalysis      *ml.MetadataAnalysis   `json:"metadata_analysis"`
+	TyposquattingAnalysis *TyposquattingAnalysis `json:"typosquatting_analysis"`
+	SupplyChainRisk       float64                `json:"supply_chain_risk"`
+	Recommendations       []string               `json:"recommendations"`
+	Evidence              []Evidence             `json:"evidence"`
+	FalsePositiveRisk     float64                `json:"false_positive_risk"`
 }
 
 // Evidence represents evidence for a threat
@@ -147,7 +147,7 @@ func (escd *EnhancedSupplyChainDetector) analyzePackage(ctx context.Context, pkg
 		metadataAnalysis, err := escd.metadataFilter.AnalyzeMetadata(ctx, metadata)
 		if err == nil {
 			result.MetadataAnalysis = metadataAnalysis
-			
+
 			// Check if package should be filtered based on metadata
 			if !metadataAnalysis.IsLegitimate {
 				result.IsFiltered = true
@@ -211,7 +211,7 @@ func (escd *EnhancedSupplyChainDetector) calculateThreatScores(result *EnhancedT
 	if result.MetadataAnalysis != nil {
 		confidenceScore += result.MetadataAnalysis.ConfidenceScore * 0.4
 		supplyChainRisk += result.MetadataAnalysis.SupplyChainRisk * 0.3
-		
+
 		// High typosquatting risk significantly impacts confidence
 		if result.MetadataAnalysis.TyposquattingRisk > 0.7 {
 			confidenceScore += 0.3
@@ -223,7 +223,7 @@ func (escd *EnhancedSupplyChainDetector) calculateThreatScores(result *EnhancedT
 	if result.TyposquattingAnalysis != nil {
 		// Use visual similarity as confidence proxy
 		confidenceScore += result.TyposquattingAnalysis.VisualSimilarity * 0.3
-		
+
 		// High edit distance indicates potential typosquatting
 		if result.TyposquattingAnalysis.EditDistance <= 2 && result.TyposquattingAnalysis.VisualSimilarity > 0.7 {
 			supplyChainRisk += 0.2
@@ -340,7 +340,7 @@ func (escd *EnhancedSupplyChainDetector) applyFalsePositiveFiltering(result *Enh
 	if escd.shouldReduceConfidence(result) {
 		originalConfidence := result.ConfidenceScore
 		result.ConfidenceScore *= 0.7 // Reduce confidence by 30%
-		result.FilterReasons = append(result.FilterReasons, 
+		result.FilterReasons = append(result.FilterReasons,
 			fmt.Sprintf("confidence_reduced: %.2f -> %.2f", originalConfidence, result.ConfidenceScore))
 	}
 }
@@ -358,7 +358,7 @@ func (escd *EnhancedSupplyChainDetector) generateRecommendations(result *Enhance
 	}
 
 	if result.TyposquattingAnalysis != nil && result.TyposquattingAnalysis.VisualSimilarity > 0.8 {
-		result.Recommendations = append(result.Recommendations, 
+		result.Recommendations = append(result.Recommendations,
 			fmt.Sprintf("Potential typosquatting of '%s' - verify package name", result.TyposquattingAnalysis.PrimaryType))
 	}
 
@@ -366,7 +366,7 @@ func (escd *EnhancedSupplyChainDetector) generateRecommendations(result *Enhance
 		if result.MetadataAnalysis.PopularityScore < 0.2 {
 			result.Recommendations = append(result.Recommendations, "Low usage package - verify legitimacy")
 		}
-		
+
 		if len(result.MetadataAnalysis.RiskFactors) > 3 {
 			result.Recommendations = append(result.Recommendations, "Multiple risk factors detected - thorough review recommended")
 		}
@@ -403,7 +403,7 @@ func (escd *EnhancedSupplyChainDetector) convertToMetadata(pkg *types.Package) *
 		Version:  pkg.Version,
 		Registry: pkg.Registry,
 	}
-	
+
 	// Populate from package metadata if available
 	if pkg.Metadata != nil {
 		metadata.Description = pkg.Metadata.Description
@@ -415,17 +415,17 @@ func (escd *EnhancedSupplyChainDetector) convertToMetadata(pkg *types.Package) *
 		metadata.Keywords = pkg.Metadata.Keywords
 		metadata.Homepage = pkg.Metadata.Homepage
 	}
-	
+
 	return metadata
 }
 
 func (escd *EnhancedSupplyChainDetector) getPopularPackages(registry string) []string {
 	popularPackages := map[string][]string{
-		"npm": {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular"},
-		"pypi": {"requests", "numpy", "pandas", "flask", "django", "tensorflow"},
+		"npm":      {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "vue", "angular"},
+		"pypi":     {"requests", "numpy", "pandas", "flask", "django", "tensorflow"},
 		"rubygems": {"rails", "bundler", "rake", "rspec", "puma", "nokogiri"},
 	}
-	
+
 	if packages, exists := popularPackages[registry]; exists {
 		return packages
 	}
@@ -517,7 +517,7 @@ func (escd *EnhancedSupplyChainDetector) hasCharacterSubstitution(candidate, tar
 			if diffCount > 2 {
 				return false
 			}
-			
+
 			// Check if it's a known substitution
 			if subs, exists := substitutions[r1]; exists {
 				found := false
@@ -570,7 +570,7 @@ func (escd *EnhancedSupplyChainDetector) hasKeyboardErrors(candidate, target str
 			if errorCount > 1 {
 				return false
 			}
-			
+
 			if adjacent, exists := proximityMap[r1]; exists {
 				found := false
 				for _, adj := range adjacent {
@@ -592,13 +592,13 @@ func (escd *EnhancedSupplyChainDetector) hasKeyboardErrors(candidate, target str
 func (escd *EnhancedSupplyChainDetector) hasVersionConfusion(candidate, target string) bool {
 	// Check for version/suffix additions
 	suffixes := []string{"2", "js", "node", "v2", "next", "new"}
-	
+
 	for _, suffix := range suffixes {
 		if candidate == target+suffix {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -607,7 +607,7 @@ func (escd *EnhancedSupplyChainDetector) hasNamespaceConfusion(candidate, target
 	if strings.Contains(candidate, "-") && strings.Contains(target, "-") {
 		candidateParts := strings.Split(candidate, "-")
 		targetParts := strings.Split(target, "-")
-		
+
 		if len(candidateParts) == len(targetParts) {
 			diffCount := 0
 			for i, part1 := range candidateParts {
@@ -618,7 +618,7 @@ func (escd *EnhancedSupplyChainDetector) hasNamespaceConfusion(candidate, target
 			return diffCount == 1
 		}
 	}
-	
+
 	return false
 }
 
@@ -630,26 +630,26 @@ func (escd *EnhancedSupplyChainDetector) matchesPattern(text, pattern string) bo
 // NewFalsePositiveDatabase creates a new false positive database with default entries
 func NewFalsePositiveDatabase() *FalsePositiveDatabase {
 	knownFalsePositives := make(map[string]FalsePositiveEntry)
-	
+
 	// Add common legitimate package variations
 	legitimatePackages := map[string]string{
-		"npm:react-dom":        "Official React DOM package",
-		"npm:react-router":     "Official React Router package",
-		"npm:react-native":     "Official React Native package",
-		"npm:react-scripts":    "Official Create React App scripts",
-		"npm:lodash-es":        "Official Lodash ES modules package",
-		"npm:lodash.debounce":  "Official Lodash debounce utility",
-		"npm:lodash.merge":     "Official Lodash merge utility",
-		"npm:express-session": "Official Express session middleware",
+		"npm:react-dom":         "Official React DOM package",
+		"npm:react-router":      "Official React Router package",
+		"npm:react-native":      "Official React Native package",
+		"npm:react-scripts":     "Official Create React App scripts",
+		"npm:lodash-es":         "Official Lodash ES modules package",
+		"npm:lodash.debounce":   "Official Lodash debounce utility",
+		"npm:lodash.merge":      "Official Lodash merge utility",
+		"npm:express-session":   "Official Express session middleware",
 		"npm:express-validator": "Official Express validator middleware",
-		"npm:angular-cli":      "Official Angular CLI package",
-		"npm:angular-core":     "Official Angular core package",
-		"npm:angular-common":   "Official Angular common package",
-		"npm:vue-router":       "Official Vue Router package",
-		"npm:vue-cli":          "Official Vue CLI package",
-		"npm:vuex":             "Official Vue state management",
+		"npm:angular-cli":       "Official Angular CLI package",
+		"npm:angular-core":      "Official Angular core package",
+		"npm:angular-common":    "Official Angular common package",
+		"npm:vue-router":        "Official Vue Router package",
+		"npm:vue-cli":           "Official Vue CLI package",
+		"npm:vuex":              "Official Vue state management",
 	}
-	
+
 	for key, reason := range legitimatePackages {
 		knownFalsePositives[key] = FalsePositiveEntry{
 			PackageName:     strings.Split(key, ":")[1],
@@ -659,7 +659,7 @@ func NewFalsePositiveDatabase() *FalsePositiveDatabase {
 			ConfidenceScore: 0.95,
 		}
 	}
-	
+
 	return &FalsePositiveDatabase{
 		KnownFalsePositives: knownFalsePositives,
 		PatternFilters: []PatternFilter{
@@ -670,14 +670,14 @@ func NewFalsePositiveDatabase() *FalsePositiveDatabase {
 				Confidence: 0.9,
 			},
 			{
-				Pattern:    "content-disposition", 
+				Pattern:    "content-disposition",
 				FilterType: "reduce_confidence",
 				Reason:     "legitimate_npm_package",
 				Confidence: 0.9,
 			},
 			{
 				Pattern:    "accepts",
-				FilterType: "reduce_confidence", 
+				FilterType: "reduce_confidence",
 				Reason:     "legitimate_npm_package",
 				Confidence: 0.9,
 			},
@@ -716,11 +716,11 @@ func NewFalsePositiveDatabase() *FalsePositiveDatabase {
 func (escd *EnhancedSupplyChainDetector) isLegitimateVariation(candidate, target string) bool {
 	// Common legitimate variations
 	legitimatePatterns := map[string][]string{
-		"react": {"react-dom", "react-router", "react-native", "react-scripts"},
+		"react":   {"react-dom", "react-router", "react-native", "react-scripts"},
 		"angular": {"angular-cli", "angular-core", "angular-common"},
-		"vue": {"vue-router", "vue-cli", "vuex"},
+		"vue":     {"vue-router", "vue-cli", "vuex"},
 		"express": {"express-session", "express-validator"},
-		"lodash": {"lodash-es", "lodash.debounce", "lodash.merge"},
+		"lodash":  {"lodash-es", "lodash.debounce", "lodash.merge"},
 	}
 
 	if variations, exists := legitimatePatterns[target]; exists {
@@ -780,9 +780,9 @@ func (escd *EnhancedSupplyChainDetector) shouldFilterByContext(result *EnhancedT
 
 	// Filter if package has high trust scores but low threat confidence
 	if result.MetadataAnalysis != nil {
-		if result.MetadataAnalysis.MaintainerTrustScore > 0.8 && 
-		   result.MetadataAnalysis.RepositoryTrustScore > 0.8 && 
-		   result.ConfidenceScore < 0.5 {
+		if result.MetadataAnalysis.MaintainerTrustScore > 0.8 &&
+			result.MetadataAnalysis.RepositoryTrustScore > 0.8 &&
+			result.ConfidenceScore < 0.5 {
 			result.FilterReasons = append(result.FilterReasons, "high_trust_low_threat")
 			return true
 		}
@@ -804,14 +804,14 @@ func (escd *EnhancedSupplyChainDetector) shouldReduceConfidence(result *Enhanced
 	// Reduce confidence for packages with mixed signals
 	if result.MetadataAnalysis != nil {
 		// Good metadata but moderate threat
-		if result.MetadataAnalysis.MetadataQuality > 0.6 && 
-		   result.ConfidenceScore > 0.5 && result.ConfidenceScore < 0.8 {
+		if result.MetadataAnalysis.MetadataQuality > 0.6 &&
+			result.ConfidenceScore > 0.5 && result.ConfidenceScore < 0.8 {
 			return true
 		}
 
 		// Decent popularity but suspicious patterns
-		if result.MetadataAnalysis.PopularityScore > 0.3 && 
-		   result.ConfidenceScore > 0.6 && result.ConfidenceScore < 0.9 {
+		if result.MetadataAnalysis.PopularityScore > 0.3 &&
+			result.ConfidenceScore > 0.6 && result.ConfidenceScore < 0.9 {
 			return true
 		}
 	}

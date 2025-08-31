@@ -160,19 +160,7 @@ type PopularityFeatures struct {
 	MaintenanceScore  float64 `json:"maintenance_score"`
 }
 
-// SecurityFeatures contains security-related features
-type SecurityFeatures struct {
-	KnownVulnerabilities int      `json:"known_vulnerabilities"`
-	SecurityScore        float64  `json:"security_score"`
-	HasSecurityPolicy    bool     `json:"has_security_policy"`
-	SignedReleases       bool     `json:"signed_releases"`
-	SigstoreVerified     bool     `json:"sigstore_verified"`
-	SLSALevel            int      `json:"slsa_level"`
-	HasSBOM              bool     `json:"has_sbom"`
-	SupplyChainRisk      float64  `json:"supply_chain_risk"`
-	MalwareIndicators    []string `json:"malware_indicators"`
-	SuspiciousScripts    []string `json:"suspicious_scripts"`
-}
+// SecurityFeatures type defined in advanced_feature_extractor.go
 
 // MLAnalysisResult represents comprehensive ML analysis results
 type MLAnalysisResult struct {
@@ -405,29 +393,29 @@ func (e *EnhancedMLEngine) calculateNameEntropy(name string) float64 {
 func (e *EnhancedMLEngine) extractMetadataFeatures(ctx context.Context, features *PackageFeatures) {
 	// Extract metadata features from package information
 	metadataFeatures := MetadataFeatures{}
-	
+
 	// Use existing description length if available
 	if features.DescriptionLength > 0 {
 		metadataFeatures.HasDescription = true
 		metadataFeatures.DescriptionLength = features.DescriptionLength
 		metadataFeatures.DescriptionQuality = e.calculateDescriptionQualityFromLength(features.DescriptionLength)
 	}
-	
+
 	// Check repository features
 	metadataFeatures.HasRepository = features.RepositoryFeatures.HasRepository
 	metadataFeatures.HasHomepage = features.RepositoryFeatures.RepositoryURL != ""
-	
+
 	// Check license from license score
 	metadataFeatures.HasLicense = features.LicenseScore > 0
 	metadataFeatures.LicenseType = "unknown" // Default since we don't have direct access
-	
+
 	// Estimate version count and publication recency
 	metadataFeatures.VersionCount = e.estimateVersionCount(features.Version)
 	metadataFeatures.PublicationRecency = features.AgeInDays
-	
+
 	// Set latest version
 	metadataFeatures.LatestVersion = features.Version
-	
+
 	features.MetadataFeatures = metadataFeatures
 }
 
@@ -436,9 +424,9 @@ func (e *EnhancedMLEngine) calculateDescriptionQuality(description string) float
 	if description == "" {
 		return 0.0
 	}
-	
+
 	quality := 0.0
-	
+
 	// Length factor (optimal range: 50-500 characters)
 	length := len(description)
 	if length >= 50 && length <= 500 {
@@ -446,7 +434,7 @@ func (e *EnhancedMLEngine) calculateDescriptionQuality(description string) float
 	} else if length > 20 {
 		quality += 0.1
 	}
-	
+
 	// Word count factor
 	words := len(strings.Fields(description))
 	if words >= 10 && words <= 100 {
@@ -454,13 +442,13 @@ func (e *EnhancedMLEngine) calculateDescriptionQuality(description string) float
 	} else if words >= 5 {
 		quality += 0.1
 	}
-	
+
 	// Check for meaningful content (not just package name repetition)
-	if !strings.Contains(strings.ToLower(description), "package") || 
-	   !strings.Contains(strings.ToLower(description), "library") {
+	if !strings.Contains(strings.ToLower(description), "package") ||
+		!strings.Contains(strings.ToLower(description), "library") {
 		quality += 0.2
 	}
-	
+
 	// Check for proper capitalization and punctuation
 	if len(description) > 0 && unicode.IsUpper(rune(description[0])) {
 		quality += 0.1
@@ -468,7 +456,7 @@ func (e *EnhancedMLEngine) calculateDescriptionQuality(description string) float
 	if strings.HasSuffix(description, ".") || strings.HasSuffix(description, "!") {
 		quality += 0.1
 	}
-	
+
 	// Penalize suspicious patterns
 	suspiciousPatterns := []string{"test", "demo", "sample", "placeholder", "lorem ipsum"}
 	for _, pattern := range suspiciousPatterns {
@@ -477,7 +465,7 @@ func (e *EnhancedMLEngine) calculateDescriptionQuality(description string) float
 			break
 		}
 	}
-	
+
 	return math.Max(0.0, math.Min(1.0, quality))
 }
 
@@ -486,9 +474,9 @@ func (e *EnhancedMLEngine) calculateDescriptionQualityFromLength(length int) flo
 	if length == 0 {
 		return 0.0
 	}
-	
+
 	quality := 0.0
-	
+
 	// Length factor (optimal range: 50-500 characters)
 	if length >= 50 && length <= 500 {
 		quality += 0.6
@@ -501,7 +489,7 @@ func (e *EnhancedMLEngine) calculateDescriptionQualityFromLength(length int) flo
 	} else {
 		quality += 0.1 // Very short descriptions
 	}
-	
+
 	// Estimate word count (average 5 characters per word)
 	estimatedWords := length / 5
 	if estimatedWords >= 10 && estimatedWords <= 100 {
@@ -509,7 +497,7 @@ func (e *EnhancedMLEngine) calculateDescriptionQualityFromLength(length int) flo
 	} else if estimatedWords >= 5 {
 		quality += 0.1
 	}
-	
+
 	return math.Max(0.0, math.Min(1.0, quality))
 }
 
@@ -518,7 +506,7 @@ func (e *EnhancedMLEngine) estimateVersionCount(version string) int {
 	if version == "" {
 		return 1
 	}
-	
+
 	// Parse semantic version
 	parts := strings.Split(version, ".")
 	if len(parts) >= 3 {
@@ -532,7 +520,7 @@ func (e *EnhancedMLEngine) estimateVersionCount(version string) int {
 			}
 		}
 	}
-	
+
 	// Fallback estimation
 	return 5
 }
@@ -542,7 +530,7 @@ func (e *EnhancedMLEngine) calculatePublicationRecency(creationDate string) int 
 	if creationDate == "" {
 		return 365 // Default to 1 year if unknown
 	}
-	
+
 	// Try to parse the date
 	layouts := []string{
 		"2006-01-02T15:04:05Z",
@@ -551,26 +539,26 @@ func (e *EnhancedMLEngine) calculatePublicationRecency(creationDate string) int 
 		"2006/01/02",
 		"01/02/2006",
 	}
-	
+
 	for _, layout := range layouts {
 		if t, err := time.Parse(layout, creationDate); err == nil {
 			return int(time.Since(t).Hours() / 24)
 		}
 	}
-	
+
 	// Fallback
 	return 365
 }
 
 func (e *EnhancedMLEngine) extractAuthorFeatures(ctx context.Context, features *PackageFeatures) {
 	authorFeatures := AuthorFeatures{}
-	
+
 	// Extract author information from package metadata if available
 	if features.PackageName != "" {
 		// Analyze author name patterns
 		authorName := e.extractAuthorFromPackage(features.PackageName)
 		authorFeatures.AuthorName = authorName
-		
+
 		// Estimate author characteristics based on name patterns
 		authorFeatures.AccountAge = e.estimateAccountAge(authorName)
 		authorFeatures.PublishedPackages = e.estimatePublishedPackages(authorName)
@@ -581,7 +569,7 @@ func (e *EnhancedMLEngine) extractAuthorFeatures(ctx context.Context, features *
 		authorFeatures.GitHubRepos = e.estimateGitHubRepos(authorName)
 		authorFeatures.LastActivity = e.estimateLastActivity()
 	}
-	
+
 	features.AuthorFeatures = authorFeatures
 }
 
@@ -621,8 +609,8 @@ func (e *EnhancedMLEngine) estimateTotalDownloads(packageDownloads int64) int64 
 
 func (e *EnhancedMLEngine) isLikelyVerifiedAccount(authorName string) bool {
 	// Heuristic: professional names are more likely to be verified
-	return len(authorName) > 8 && !strings.ContainsAny(authorName, "0123456789") && 
-		   !strings.Contains(strings.ToLower(authorName), "test")
+	return len(authorName) > 8 && !strings.ContainsAny(authorName, "0123456789") &&
+		!strings.Contains(strings.ToLower(authorName), "test")
 }
 
 func (e *EnhancedMLEngine) hasLikelyGitHubProfile(authorName string) bool {
@@ -657,21 +645,21 @@ func (e *EnhancedMLEngine) estimateLastActivity() time.Time {
 
 func (e *EnhancedMLEngine) extractRepositoryFeatures(ctx context.Context, features *PackageFeatures) {
 	repositoryFeatures := RepositoryFeatures{}
-	
+
 	// Analyze package characteristics to estimate repository features
 	if features.PackageName != "" {
 		// Estimate repository presence and characteristics
 		repositoryFeatures.HasRepository = e.hasLikelyRepository(features.PackageName)
 		repositoryFeatures.RepositoryURL = e.generateLikelyRepositoryURL(features.PackageName)
 		repositoryFeatures.RepositoryType = "git" // Most modern packages use git
-		
+
 		// Estimate repository metrics based on package characteristics
 		repositoryFeatures.StarCount = e.estimateStarCount(features.DownloadCount, features.AgeInDays)
 		repositoryFeatures.ForkCount = e.estimateForkCount(repositoryFeatures.StarCount)
 		repositoryFeatures.CommitCount = e.estimateCommitCount(features.AgeInDays)
 		repositoryFeatures.ContributorCount = e.estimateContributorCount(repositoryFeatures.StarCount)
 		repositoryFeatures.LastCommit = e.estimateLastCommit(features.AgeInDays)
-		
+
 		// Estimate repository quality indicators
 		repositoryFeatures.HasReadme = e.hasLikelyReadme(features.PackageName)
 		repositoryFeatures.ReadmeLength = e.estimateReadmeLength(features.DescriptionLength)
@@ -679,16 +667,16 @@ func (e *EnhancedMLEngine) extractRepositoryFeatures(ctx context.Context, featur
 		repositoryFeatures.TestCoverage = e.estimateTestCoverage(repositoryFeatures.HasTests)
 		repositoryFeatures.HasCI = e.hasLikelyCI(repositoryFeatures.StarCount)
 	}
-	
+
 	features.RepositoryFeatures = repositoryFeatures
 }
 
 func (e *EnhancedMLEngine) hasLikelyRepository(packageName string) bool {
 	// Most legitimate packages have repositories
 	// Suspicious packages might not have proper repositories
-	return len(packageName) > 3 && 
-		   !strings.Contains(strings.ToLower(packageName), "test") &&
-		   !strings.ContainsAny(packageName, "0123456789") // Avoid packages with random numbers
+	return len(packageName) > 3 &&
+		!strings.Contains(strings.ToLower(packageName), "test") &&
+		!strings.ContainsAny(packageName, "0123456789") // Avoid packages with random numbers
 }
 
 func (e *EnhancedMLEngine) generateLikelyRepositoryURL(packageName string) string {
@@ -841,7 +829,7 @@ func (e *EnhancedMLEngine) analyzeSecurityPatterns(ctx context.Context, features
 	// Analyze security patterns and update existing fields
 	suspiciousCount := e.detectSuspiciousPatterns(features.PackageName)
 	features.SuspiciousKeywords += suspiciousCount
-	
+
 	// Update security features with existing fields
 	if e.hasLikelyObfuscation(features.PackageName) {
 		features.SecurityFeatures.MalwareIndicators = append(features.SecurityFeatures.MalwareIndicators, "obfuscation")
@@ -883,7 +871,7 @@ func (e *EnhancedMLEngine) detectSuspiciousPatterns(packageName string) int {
 		"test", "temp", "demo", "sample", "fake", "malicious", "evil",
 		"hack", "crack", "exploit", "virus", "trojan", "backdoor",
 	}
-	
+
 	count := 0
 	nameLower := strings.ToLower(packageName)
 	for _, pattern := range suspiciousPatterns {
@@ -961,16 +949,14 @@ func (e *EnhancedMLEngine) hasLikelyDataCollection(packageName string) bool {
 	return false
 }
 
-
-
 func (e *EnhancedMLEngine) extractPopularityFeatures(ctx context.Context, features *PackageFeatures) {
 	// Extract popularity features from existing package data
 	popularityFeatures := PopularityFeatures{}
-	
+
 	// Use existing download count if available
 	if features.DownloadCount > 0 {
 		popularityFeatures.TotalDownloads = features.DownloadCount
-		
+
 		// Estimate weekly/monthly downloads based on age and total downloads
 		if features.AgeInDays > 0 {
 			dailyAverage := float64(features.DownloadCount) / float64(features.AgeInDays)
@@ -978,7 +964,7 @@ func (e *EnhancedMLEngine) extractPopularityFeatures(ctx context.Context, featur
 			popularityFeatures.MonthlyDownloads = int64(dailyAverage * 30)
 		}
 	}
-	
+
 	// Calculate download trend based on update frequency
 	if features.UpdateFrequency > 1.0 {
 		popularityFeatures.DownloadTrend = "increasing"
@@ -990,19 +976,19 @@ func (e *EnhancedMLEngine) extractPopularityFeatures(ctx context.Context, featur
 		popularityFeatures.DownloadTrend = "decreasing"
 		popularityFeatures.DownloadVelocity = features.UpdateFrequency
 	}
-	
+
 	// Estimate popularity rank based on download count
 	popularityFeatures.PopularityRank = e.estimatePopularityRank(features.DownloadCount)
-	
+
 	// Use repository features for community metrics
 	popularityFeatures.DependentPackages = features.RepositoryFeatures.ForkCount
-	
+
 	// Calculate community score based on repository metrics
 	popularityFeatures.CommunityScore = e.calculateCommunityScore(features)
-	
+
 	// Calculate maintenance score based on activity
 	popularityFeatures.MaintenanceScore = e.calculateMaintenanceScore(features)
-	
+
 	features.PopularityFeatures = popularityFeatures
 }
 
@@ -1011,7 +997,7 @@ func (e *EnhancedMLEngine) estimatePopularityRank(downloadCount int64) int {
 	if downloadCount == 0 {
 		return 100000 // Very low rank for packages with no downloads
 	}
-	
+
 	// Rough estimation based on download tiers
 	if downloadCount > 10000000 { // 10M+
 		return 100
@@ -1031,11 +1017,11 @@ func (e *EnhancedMLEngine) estimatePopularityRank(downloadCount int64) int {
 // calculateCommunityScore calculates community engagement score
 func (e *EnhancedMLEngine) calculateCommunityScore(features *PackageFeatures) float64 {
 	score := 0.0
-	
+
 	// Repository engagement
 	if features.RepositoryFeatures.HasRepository {
 		score += 0.2
-		
+
 		// Stars indicate community interest
 		if features.StarCount > 100 {
 			score += 0.3
@@ -1044,34 +1030,34 @@ func (e *EnhancedMLEngine) calculateCommunityScore(features *PackageFeatures) fl
 		} else if features.StarCount > 0 {
 			score += 0.1
 		}
-		
+
 		// Forks indicate active usage
 		if features.ForkCount > 10 {
 			score += 0.2
 		} else if features.ForkCount > 0 {
 			score += 0.1
 		}
-		
+
 		// Contributors indicate community involvement
 		if features.ContributorCount > 5 {
 			score += 0.2
 		} else if features.ContributorCount > 1 {
 			score += 0.1
 		}
-		
+
 		// Issues indicate active maintenance
 		if features.IssueCount > 0 && features.IssueCount < 100 {
 			score += 0.1 // Some issues are good, too many might indicate problems
 		}
 	}
-	
+
 	return math.Max(0.0, math.Min(1.0, score))
 }
 
 // calculateMaintenanceScore calculates maintenance quality score
 func (e *EnhancedMLEngine) calculateMaintenanceScore(features *PackageFeatures) float64 {
 	score := 0.0
-	
+
 	// Update frequency indicates active maintenance
 	if features.UpdateFrequency > 0.5 {
 		score += 0.3
@@ -1080,7 +1066,7 @@ func (e *EnhancedMLEngine) calculateMaintenanceScore(features *PackageFeatures) 
 	} else if features.UpdateFrequency > 0 {
 		score += 0.1
 	}
-	
+
 	// Multiple maintainers indicate better maintenance
 	if features.MaintainerCount > 3 {
 		score += 0.2
@@ -1089,7 +1075,7 @@ func (e *EnhancedMLEngine) calculateMaintenanceScore(features *PackageFeatures) 
 	} else if features.MaintainerCount == 1 {
 		score += 0.05
 	}
-	
+
 	// Repository features indicate good maintenance practices
 	if features.RepositoryFeatures.HasTests {
 		score += 0.2
@@ -1100,39 +1086,39 @@ func (e *EnhancedMLEngine) calculateMaintenanceScore(features *PackageFeatures) 
 	if features.RepositoryFeatures.HasReadme {
 		score += 0.1
 	}
-	
+
 	// License indicates proper maintenance
 	if features.LicenseScore > 0 {
 		score += 0.1
 	}
-	
+
 	return math.Max(0.0, math.Min(1.0, score))
 }
 
 func (e *EnhancedMLEngine) extractSecurityFeatures(ctx context.Context, features *PackageFeatures) {
 	securityFeatures := SecurityFeatures{}
-	
+
 	// Analyze package name for suspicious patterns
 	suspiciousName := e.analyzeSuspiciousPackageName(features.PackageName)
-	
+
 	// Check for typosquatting indicators
 	typoSquattingRisk := e.analyzeTypoSquattingRisk(features.PackageName)
-	
+
 	// Analyze maintainer trust
 	maintainerTrust := e.analyzeMaintainerTrust(features)
-	
+
 	// Analyze version patterns for suspicious behavior
 	versionRisk := e.analyzeVersionRisk(features)
-	
+
 	// Calculate overall security score
 	securityScore := e.calculateSecurityScore(suspiciousName, typoSquattingRisk, maintainerTrust, versionRisk)
-	
+
 	// Check for malicious indicators
 	hasMaliciousIndicators := suspiciousName || typoSquattingRisk > 0.7 || maintainerTrust < 0.3
-	
+
 	// Estimate vulnerability count based on age and complexity
 	vulnCount := e.estimateVulnerabilityCount(features)
-	
+
 	securityFeatures.KnownVulnerabilities = vulnCount
 	securityFeatures.SecurityScore = securityScore
 	securityFeatures.HasSecurityPolicy = maintainerTrust > 0.7
@@ -1141,17 +1127,17 @@ func (e *EnhancedMLEngine) extractSecurityFeatures(ctx context.Context, features
 	securityFeatures.SLSALevel = 0
 	securityFeatures.HasSBOM = false
 	securityFeatures.SupplyChainRisk = 1.0 - securityScore
-	
+
 	// Add malware indicators if suspicious
 	if hasMaliciousIndicators {
 		securityFeatures.MalwareIndicators = []string{"suspicious_name_pattern"}
 	}
-	
+
 	// Add suspicious scripts if version risk is high
 	if versionRisk > 0.5 {
 		securityFeatures.SuspiciousScripts = []string{"rapid_version_changes"}
 	}
-	
+
 	features.SecurityFeatures = securityFeatures
 }
 
@@ -1161,14 +1147,14 @@ func (e *EnhancedMLEngine) analyzeSuspiciousPackageName(name string) bool {
 		"test", "temp", "tmp", "debug", "hack", "crack", "exploit",
 		"malware", "virus", "trojan", "backdoor", "keylog", "steal",
 	}
-	
+
 	nameLower := strings.ToLower(name)
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(nameLower, pattern) {
 			return true
 		}
 	}
-	
+
 	// Check for excessive special characters
 	specialCharCount := 0
 	for _, char := range name {
@@ -1176,7 +1162,7 @@ func (e *EnhancedMLEngine) analyzeSuspiciousPackageName(name string) bool {
 			specialCharCount++
 		}
 	}
-	
+
 	return float64(specialCharCount)/float64(len(name)) > 0.3
 }
 
@@ -1188,7 +1174,7 @@ func (e *EnhancedMLEngine) analyzeTypoSquattingRisk(name string) float64 {
 		"bootstrap", "webpack", "babel", "eslint", "typescript",
 		"numpy", "pandas", "requests", "flask", "django", "tensorflow",
 	}
-	
+
 	maxSimilarity := 0.0
 	for _, popular := range popularPackages {
 		similarity := e.calculateStringSimilarity(name, popular)
@@ -1196,28 +1182,28 @@ func (e *EnhancedMLEngine) analyzeTypoSquattingRisk(name string) float64 {
 			maxSimilarity = similarity
 		}
 	}
-	
+
 	// High similarity with different name indicates potential typosquatting
 	if maxSimilarity > 0.8 && maxSimilarity < 1.0 {
 		return maxSimilarity
 	}
-	
+
 	return 0.0
 }
 
 // analyzeMaintainerTrust calculates maintainer trustworthiness
 func (e *EnhancedMLEngine) analyzeMaintainerTrust(features *PackageFeatures) float64 {
 	trust := 0.5 // Base trust score
-	
+
 	// Multiple maintainers increase trust
 	if features.MaintainerCount > 1 {
 		trust += 0.2
 	}
-	
+
 	// Repository presence increases trust
 	if features.RepositoryFeatures.HasRepository {
 		trust += 0.2
-		
+
 		// Active repository increases trust
 		if features.StarCount > 10 {
 			trust += 0.1
@@ -1226,58 +1212,58 @@ func (e *EnhancedMLEngine) analyzeMaintainerTrust(features *PackageFeatures) flo
 			trust += 0.1
 		}
 	}
-	
+
 	// Age increases trust (older packages are generally more trustworthy)
 	if features.AgeInDays > 365 {
 		trust += 0.2
 	} else if features.AgeInDays > 90 {
 		trust += 0.1
 	}
-	
+
 	// Regular updates indicate active maintenance
 	if features.UpdateFrequency > 0.1 {
 		trust += 0.1
 	}
-	
+
 	return math.Max(0.0, math.Min(1.0, trust))
 }
 
 // analyzeVersionRisk checks for suspicious version patterns
 func (e *EnhancedMLEngine) analyzeVersionRisk(features *PackageFeatures) float64 {
 	risk := 0.0
-	
+
 	// Very new packages (less than 7 days) are riskier
 	if features.AgeInDays < 7 {
 		risk += 0.3
 	} else if features.AgeInDays < 30 {
 		risk += 0.1
 	}
-	
+
 	// Packages with very frequent updates might be suspicious
 	if features.UpdateFrequency > 10 {
 		risk += 0.2
 	}
-	
+
 	// Single version packages might be suspicious
 	if features.UpdateFrequency == 0 && features.AgeInDays > 30 {
 		risk += 0.1
 	}
-	
+
 	return math.Max(0.0, math.Min(1.0, risk))
 }
 
 // calculateSecurityScore computes overall security score
 func (e *EnhancedMLEngine) calculateSecurityScore(suspiciousName bool, typoRisk, maintainerTrust, versionRisk float64) float64 {
 	score := 1.0
-	
+
 	if suspiciousName {
 		score -= 0.4
 	}
-	
+
 	score -= typoRisk * 0.3
 	score -= (1.0 - maintainerTrust) * 0.2
 	score -= versionRisk * 0.1
-	
+
 	return math.Max(0.0, math.Min(1.0, score))
 }
 
@@ -1302,12 +1288,12 @@ func (e *EnhancedMLEngine) estimateVulnerabilityCount(features *PackageFeatures)
 	} else if features.AgeInDays > 730 { // 2 years
 		return 1
 	}
-	
+
 	// Packages with no updates might have unpatched vulnerabilities
 	if features.UpdateFrequency == 0 && features.AgeInDays > 365 {
 		return 1
 	}
-	
+
 	return 0
 }
 
@@ -1316,15 +1302,15 @@ func (e *EnhancedMLEngine) calculateStringSimilarity(s1, s2 string) float64 {
 	if s1 == s2 {
 		return 1.0
 	}
-	
+
 	// Simple Levenshtein distance-based similarity
 	distance := e.levenshteinDistance(s1, s2)
 	maxLen := math.Max(float64(len(s1)), float64(len(s2)))
-	
+
 	if maxLen == 0 {
 		return 1.0
 	}
-	
+
 	return 1.0 - (float64(distance) / maxLen)
 }
 
@@ -1336,34 +1322,34 @@ func (e *EnhancedMLEngine) levenshteinDistance(s1, s2 string) int {
 	if len(s2) == 0 {
 		return len(s1)
 	}
-	
+
 	matrix := make([][]int, len(s1)+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len(s2)+1)
 		matrix[i][0] = i
 	}
-	
+
 	for j := 0; j <= len(s2); j++ {
 		matrix[0][j] = j
 	}
-	
+
 	for i := 1; i <= len(s1); i++ {
 		for j := 1; j <= len(s2); j++ {
 			cost := 0
 			if s1[i-1] != s2[j-1] {
 				cost = 1
 			}
-			
+
 			matrix[i][j] = int(math.Min(
-				float64(matrix[i-1][j]+1),      // deletion
+				float64(matrix[i-1][j]+1), // deletion
 				math.Min(
-					float64(matrix[i][j-1]+1),  // insertion
+					float64(matrix[i][j-1]+1),      // insertion
 					float64(matrix[i-1][j-1]+cost), // substitution
 				),
 			))
 		}
 	}
-	
+
 	return matrix[len(s1)][len(s2)]
 }
 
@@ -1382,17 +1368,17 @@ func (e *EnhancedMLEngine) performEmbeddingAnalysis(ctx context.Context, feature
 func (e *EnhancedMLEngine) generateEmbedding(ctx context.Context, text string) ([]float64, error) {
 	// Generate feature-based embedding instead of using external model
 	embedding := make([]float64, 384) // Common embedding dimension
-	
+
 	if text == "" {
 		return embedding, nil
 	}
-	
+
 	// Character frequency features (first 128 dimensions)
 	charFreq := make(map[rune]int)
 	for _, r := range text {
 		charFreq[r]++
 	}
-	
+
 	// Normalize character frequencies
 	textLen := len(text)
 	for i := 0; i < 128 && i < len(embedding); i++ {
@@ -1400,7 +1386,7 @@ func (e *EnhancedMLEngine) generateEmbedding(ctx context.Context, text string) (
 			embedding[i] = float64(freq) / float64(textLen)
 		}
 	}
-	
+
 	// N-gram features (next 128 dimensions)
 	if len(text) >= 2 {
 		bigramFreq := make(map[string]int)
@@ -1408,7 +1394,7 @@ func (e *EnhancedMLEngine) generateEmbedding(ctx context.Context, text string) (
 			bigram := text[i : i+2]
 			bigramFreq[bigram]++
 		}
-		
+
 		idx := 128
 		for _, freq := range bigramFreq {
 			if idx >= 256 {
@@ -1418,16 +1404,16 @@ func (e *EnhancedMLEngine) generateEmbedding(ctx context.Context, text string) (
 			idx++
 		}
 	}
-	
+
 	// Statistical features (next 64 dimensions)
 	if len(embedding) > 256 {
-		embedding[256] = float64(len(text)) / 100.0 // Length feature
-		embedding[257] = e.calculateEntropy(text)   // Entropy feature
-		embedding[258] = e.calculateVowelRatio(text) // Vowel ratio
-		embedding[259] = e.calculateDigitRatio(text) // Digit ratio
-		embedding[260] = e.calculateUppercaseRatio(text) // Uppercase ratio
+		embedding[256] = float64(len(text)) / 100.0        // Length feature
+		embedding[257] = e.calculateEntropy(text)          // Entropy feature
+		embedding[258] = e.calculateVowelRatio(text)       // Vowel ratio
+		embedding[259] = e.calculateDigitRatio(text)       // Digit ratio
+		embedding[260] = e.calculateUppercaseRatio(text)   // Uppercase ratio
 		embedding[261] = e.calculateSpecialCharRatio(text) // Special char ratio
-		
+
 		// Pattern features
 		embedding[262] = e.hasRepeatingPatterns(text)
 		embedding[263] = e.hasRandomLookingPattern(text)
@@ -1435,14 +1421,14 @@ func (e *EnhancedMLEngine) generateEmbedding(ctx context.Context, text string) (
 		embedding[265] = e.hasCommonPrefixes(text)
 		embedding[266] = e.hasCommonSuffixes(text)
 	}
-	
+
 	// Remaining dimensions filled with derived features
 	for i := 267; i < len(embedding); i++ {
 		// Use hash-based features for remaining dimensions
 		hash := e.simpleHash(text, i)
 		embedding[i] = float64(hash%1000) / 1000.0
 	}
-	
+
 	return embedding, nil
 }
 
@@ -1450,12 +1436,12 @@ func (e *EnhancedMLEngine) calculateEntropy(text string) float64 {
 	if len(text) == 0 {
 		return 0.0
 	}
-	
+
 	freq := make(map[rune]int)
 	for _, r := range text {
 		freq[r]++
 	}
-	
+
 	entropy := 0.0
 	textLen := float64(len(text))
 	for _, count := range freq {
@@ -1464,7 +1450,7 @@ func (e *EnhancedMLEngine) calculateEntropy(text string) float64 {
 			entropy -= p * math.Log2(p)
 		}
 	}
-	
+
 	return entropy / 8.0 // Normalize to 0-1 range
 }
 
@@ -1472,7 +1458,7 @@ func (e *EnhancedMLEngine) calculateVowelRatio(text string) float64 {
 	if len(text) == 0 {
 		return 0.0
 	}
-	
+
 	vowels := "aeiouAEIOU"
 	vowelCount := 0
 	for _, r := range text {
@@ -1480,7 +1466,7 @@ func (e *EnhancedMLEngine) calculateVowelRatio(text string) float64 {
 			vowelCount++
 		}
 	}
-	
+
 	return float64(vowelCount) / float64(len(text))
 }
 
@@ -1488,14 +1474,14 @@ func (e *EnhancedMLEngine) calculateDigitRatio(text string) float64 {
 	if len(text) == 0 {
 		return 0.0
 	}
-	
+
 	digitCount := 0
 	for _, r := range text {
 		if unicode.IsDigit(r) {
 			digitCount++
 		}
 	}
-	
+
 	return float64(digitCount) / float64(len(text))
 }
 
@@ -1503,14 +1489,14 @@ func (e *EnhancedMLEngine) calculateUppercaseRatio(text string) float64 {
 	if len(text) == 0 {
 		return 0.0
 	}
-	
+
 	upperCount := 0
 	for _, r := range text {
 		if unicode.IsUpper(r) {
 			upperCount++
 		}
 	}
-	
+
 	return float64(upperCount) / float64(len(text))
 }
 
@@ -1518,14 +1504,14 @@ func (e *EnhancedMLEngine) calculateSpecialCharRatio(text string) float64 {
 	if len(text) == 0 {
 		return 0.0
 	}
-	
+
 	specialCount := 0
 	for _, r := range text {
 		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
 			specialCount++
 		}
 	}
-	
+
 	return float64(specialCount) / float64(len(text))
 }
 
@@ -1533,7 +1519,7 @@ func (e *EnhancedMLEngine) hasRepeatingPatterns(text string) float64 {
 	if len(text) < 4 {
 		return 0.0
 	}
-	
+
 	// Check for repeating substrings
 	for length := 2; length <= len(text)/2; length++ {
 		for i := 0; i <= len(text)-2*length; i++ {
@@ -1543,7 +1529,7 @@ func (e *EnhancedMLEngine) hasRepeatingPatterns(text string) float64 {
 			}
 		}
 	}
-	
+
 	return 0.0
 }
 
@@ -1551,55 +1537,55 @@ func (e *EnhancedMLEngine) hasRandomLookingPattern(text string) float64 {
 	if len(text) < 5 {
 		return 0.0
 	}
-	
+
 	// High entropy and mixed case/numbers suggest randomness
 	entropy := e.calculateEntropy(text)
 	digitRatio := e.calculateDigitRatio(text)
-	
+
 	if entropy > 0.7 && digitRatio > 0.3 {
 		return 1.0
 	}
-	
+
 	return 0.0
 }
 
 func (e *EnhancedMLEngine) hasDictionaryWords(text string) float64 {
 	// Simple check for common English words
 	commonWords := []string{"the", "and", "for", "are", "but", "not", "you", "all", "can", "had", "her", "was", "one", "our", "out", "day", "get", "has", "him", "his", "how", "man", "new", "now", "old", "see", "two", "way", "who", "boy", "did", "its", "let", "put", "say", "she", "too", "use"}
-	
+
 	lowerText := strings.ToLower(text)
 	for _, word := range commonWords {
 		if strings.Contains(lowerText, word) {
 			return 1.0
 		}
 	}
-	
+
 	return 0.0
 }
 
 func (e *EnhancedMLEngine) hasCommonPrefixes(text string) float64 {
 	commonPrefixes := []string{"pre", "un", "re", "in", "dis", "en", "non", "over", "mis", "sub", "inter", "fore", "de", "trans", "super", "semi", "anti", "mid", "under"}
-	
+
 	lowerText := strings.ToLower(text)
 	for _, prefix := range commonPrefixes {
 		if strings.HasPrefix(lowerText, prefix) {
 			return 1.0
 		}
 	}
-	
+
 	return 0.0
 }
 
 func (e *EnhancedMLEngine) hasCommonSuffixes(text string) float64 {
 	commonSuffixes := []string{"ing", "ed", "er", "est", "ly", "tion", "ness", "ment", "ful", "less", "able", "ible", "al", "ial", "ic", "ous", "ive", "ize", "ise", "age", "dom", "ship", "ward", "wise"}
-	
+
 	lowerText := strings.ToLower(text)
 	for _, suffix := range commonSuffixes {
 		if strings.HasSuffix(lowerText, suffix) {
 			return 1.0
 		}
 	}
-	
+
 	return 0.0
 }
 
@@ -1615,44 +1601,44 @@ func (e *EnhancedMLEngine) simpleHash(text string, seed int) int {
 func (e *EnhancedMLEngine) generatePackageEmbedding(features *PackageFeatures) ([]float64, error) {
 	// Create a feature-based embedding (384 dimensions)
 	embedding := make([]float64, 384)
-	
+
 	// Normalize package name to embedding space (first 64 dimensions)
 	nameEmbedding := e.generateNameEmbedding(features.PackageName)
 	copy(embedding[0:64], nameEmbedding)
-	
+
 	// Author features (dimensions 64-127)
 	authorEmbedding := e.generateAuthorEmbedding(features.AuthorFeatures)
 	copy(embedding[64:128], authorEmbedding)
-	
+
 	// Repository features (dimensions 128-191)
 	repoEmbedding := e.generateRepositoryEmbedding(features.RepositoryFeatures)
 	copy(embedding[128:192], repoEmbedding)
-	
+
 	// Metadata features (dimensions 192-255)
 	metadataEmbedding := e.generateMetadataEmbedding(features.MetadataFeatures)
 	copy(embedding[192:256], metadataEmbedding)
-	
+
 	// Popularity features (dimensions 256-319)
 	popularityEmbedding := e.generatePopularityEmbedding(features.PopularityFeatures)
 	copy(embedding[256:320], popularityEmbedding)
-	
+
 	// Security features (dimensions 320-383)
 	securityEmbedding := e.generateSecurityEmbedding(features.SecurityFeatures)
 	copy(embedding[320:384], securityEmbedding)
-	
+
 	return embedding, nil
 }
 
 // generateNameEmbedding creates embedding from package name
 func (e *EnhancedMLEngine) generateNameEmbedding(name string) []float64 {
 	embedding := make([]float64, 64)
-	
+
 	// Character frequency analysis
 	charFreq := make(map[rune]int)
 	for _, char := range name {
 		charFreq[char]++
 	}
-	
+
 	// Convert to normalized features
 	nameLen := float64(len(name))
 	for i := 0; i < 26; i++ {
@@ -1662,54 +1648,54 @@ func (e *EnhancedMLEngine) generateNameEmbedding(name string) []float64 {
 			embedding[i] = freq
 		}
 	}
-	
+
 	// Add structural features
 	if len(embedding) > 26 {
-		embedding[26] = float64(strings.Count(name, "-")) / nameLen  // Hyphen frequency
-		embedding[27] = float64(strings.Count(name, "_")) / nameLen  // Underscore frequency
-		embedding[28] = float64(strings.Count(name, ".")) / nameLen  // Dot frequency
-		embedding[29] = nameLen / 50.0                               // Normalized length
-		
+		embedding[26] = float64(strings.Count(name, "-")) / nameLen // Hyphen frequency
+		embedding[27] = float64(strings.Count(name, "_")) / nameLen // Underscore frequency
+		embedding[28] = float64(strings.Count(name, ".")) / nameLen // Dot frequency
+		embedding[29] = nameLen / 50.0                              // Normalized length
+
 		// Add entropy-like features
 		for i := 30; i < 64; i++ {
 			pos := float64(i-30) / 34.0
 			embedding[i] = math.Sin(pos * math.Pi * nameLen)
 		}
 	}
-	
+
 	return embedding
 }
 
 // generateAuthorEmbedding creates embedding from author features
 func (e *EnhancedMLEngine) generateAuthorEmbedding(author AuthorFeatures) []float64 {
 	embedding := make([]float64, 64)
-	
-	embedding[0] = math.Min(float64(author.AccountAge)/365.0, 1.0)           // Normalized age
-	embedding[1] = math.Min(float64(author.PublishedPackages)/100.0, 1.0)   // Normalized package count
-	embedding[2] = math.Min(float64(author.TotalDownloads)/1000000.0, 1.0)  // Normalized downloads
-	embedding[3] = math.Min(float64(author.GitHubFollowers)/1000.0, 1.0)    // Normalized followers
-	embedding[4] = author.AverageRating                                      // Average rating
-	
+
+	embedding[0] = math.Min(float64(author.AccountAge)/365.0, 1.0)         // Normalized age
+	embedding[1] = math.Min(float64(author.PublishedPackages)/100.0, 1.0)  // Normalized package count
+	embedding[2] = math.Min(float64(author.TotalDownloads)/1000000.0, 1.0) // Normalized downloads
+	embedding[3] = math.Min(float64(author.GitHubFollowers)/1000.0, 1.0)   // Normalized followers
+	embedding[4] = author.AverageRating                                    // Average rating
+
 	if author.VerifiedAccount {
 		embedding[5] = 1.0
 	}
 	if author.HasGitHubProfile {
 		embedding[6] = 1.0
 	}
-	
+
 	// Fill remaining dimensions with derived features
 	for i := 8; i < 64; i++ {
 		factor := float64(i-8) / 56.0
 		embedding[i] = author.AverageRating * math.Sin(factor*math.Pi)
 	}
-	
+
 	return embedding
 }
 
 // generateRepositoryEmbedding creates embedding from repository features
 func (e *EnhancedMLEngine) generateRepositoryEmbedding(repo RepositoryFeatures) []float64 {
 	embedding := make([]float64, 64)
-	
+
 	if repo.HasRepository {
 		embedding[0] = 1.0
 	}
@@ -1722,27 +1708,27 @@ func (e *EnhancedMLEngine) generateRepositoryEmbedding(repo RepositoryFeatures) 
 	if repo.HasCI {
 		embedding[4] = 1.0
 	}
-	
+
 	embedding[5] = math.Min(float64(repo.StarCount)/1000.0, 1.0)      // Normalized stars
-	embedding[6] = math.Min(float64(repo.ForkCount)/100.0, 1.0)      // Normalized forks
-	embedding[7] = math.Min(float64(repo.IssueCount)/100.0, 1.0)     // Normalized issues
+	embedding[6] = math.Min(float64(repo.ForkCount)/100.0, 1.0)       // Normalized forks
+	embedding[7] = math.Min(float64(repo.IssueCount)/100.0, 1.0)      // Normalized issues
 	embedding[8] = math.Min(float64(repo.ContributorCount)/50.0, 1.0) // Normalized contributors
-	embedding[9] = repo.TestCoverage / 100.0                         // Normalized test coverage
-	embedding[10] = math.Min(float64(repo.CommitCount)/1000.0, 1.0)  // Normalized commits
-	
+	embedding[9] = repo.TestCoverage / 100.0                          // Normalized test coverage
+	embedding[10] = math.Min(float64(repo.CommitCount)/1000.0, 1.0)   // Normalized commits
+
 	// Fill remaining dimensions
 	for i := 11; i < 64; i++ {
 		factor := float64(i-11) / 53.0
 		embedding[i] = embedding[5] * math.Cos(factor*math.Pi) // Based on star count
 	}
-	
+
 	return embedding
 }
 
 // generateMetadataEmbedding creates embedding from metadata features
 func (e *EnhancedMLEngine) generateMetadataEmbedding(metadata MetadataFeatures) []float64 {
 	embedding := make([]float64, 64)
-	
+
 	if metadata.HasDescription {
 		embedding[0] = 1.0
 	}
@@ -1758,35 +1744,35 @@ func (e *EnhancedMLEngine) generateMetadataEmbedding(metadata MetadataFeatures) 
 	if metadata.HasKeywords {
 		embedding[4] = 1.0
 	}
-	
-	embedding[5] = math.Min(float64(metadata.DescriptionLength)/500.0, 1.0) // Normalized description length
-	embedding[6] = metadata.DescriptionQuality                              // Description quality
-	embedding[7] = math.Min(float64(metadata.KeywordCount)/20.0, 1.0)       // Normalized keyword count
-	embedding[8] = math.Min(float64(metadata.VersionCount)/100.0, 1.0)      // Normalized version count
+
+	embedding[5] = math.Min(float64(metadata.DescriptionLength)/500.0, 1.0)  // Normalized description length
+	embedding[6] = metadata.DescriptionQuality                               // Description quality
+	embedding[7] = math.Min(float64(metadata.KeywordCount)/20.0, 1.0)        // Normalized keyword count
+	embedding[8] = math.Min(float64(metadata.VersionCount)/100.0, 1.0)       // Normalized version count
 	embedding[9] = math.Min(float64(metadata.PublicationRecency)/365.0, 1.0) // Normalized recency
-	
+
 	// Fill remaining dimensions
 	for i := 10; i < 64; i++ {
 		factor := float64(i-10) / 54.0
 		embedding[i] = metadata.DescriptionQuality * math.Sin(factor*2*math.Pi)
 	}
-	
+
 	return embedding
 }
 
 // generatePopularityEmbedding creates embedding from popularity features
 func (e *EnhancedMLEngine) generatePopularityEmbedding(popularity PopularityFeatures) []float64 {
 	embedding := make([]float64, 64)
-	
-	embedding[0] = math.Min(float64(popularity.TotalDownloads)/10000000.0, 1.0)   // Normalized total downloads
-	embedding[1] = math.Min(float64(popularity.WeeklyDownloads)/100000.0, 1.0)    // Normalized weekly downloads
-	embedding[2] = math.Min(float64(popularity.MonthlyDownloads)/500000.0, 1.0)   // Normalized monthly downloads
-	embedding[3] = math.Min(popularity.DownloadVelocity/10.0, 1.0)                // Normalized velocity
-	embedding[4] = math.Min(float64(popularity.PopularityRank)/100000.0, 1.0)     // Normalized rank (inverted)
-	embedding[5] = math.Min(float64(popularity.DependentPackages)/1000.0, 1.0)    // Normalized dependents
-	embedding[6] = popularity.CommunityScore                                       // Community score
-	embedding[7] = popularity.MaintenanceScore                                     // Maintenance score
-	
+
+	embedding[0] = math.Min(float64(popularity.TotalDownloads)/10000000.0, 1.0) // Normalized total downloads
+	embedding[1] = math.Min(float64(popularity.WeeklyDownloads)/100000.0, 1.0)  // Normalized weekly downloads
+	embedding[2] = math.Min(float64(popularity.MonthlyDownloads)/500000.0, 1.0) // Normalized monthly downloads
+	embedding[3] = math.Min(popularity.DownloadVelocity/10.0, 1.0)              // Normalized velocity
+	embedding[4] = math.Min(float64(popularity.PopularityRank)/100000.0, 1.0)   // Normalized rank (inverted)
+	embedding[5] = math.Min(float64(popularity.DependentPackages)/1000.0, 1.0)  // Normalized dependents
+	embedding[6] = popularity.CommunityScore                                    // Community score
+	embedding[7] = popularity.MaintenanceScore                                  // Maintenance score
+
 	// Encode download trend
 	switch popularity.DownloadTrend {
 	case "increasing":
@@ -1796,25 +1782,25 @@ func (e *EnhancedMLEngine) generatePopularityEmbedding(popularity PopularityFeat
 	case "decreasing":
 		embedding[10] = 1.0
 	}
-	
+
 	// Fill remaining dimensions
 	for i := 11; i < 64; i++ {
 		factor := float64(i-11) / 53.0
 		embedding[i] = popularity.CommunityScore * math.Cos(factor*math.Pi)
 	}
-	
+
 	return embedding
 }
 
 // generateSecurityEmbedding creates embedding from security features
 func (e *EnhancedMLEngine) generateSecurityEmbedding(security SecurityFeatures) []float64 {
 	embedding := make([]float64, 64)
-	
+
 	embedding[0] = math.Min(float64(security.KnownVulnerabilities)/10.0, 1.0) // Normalized vulnerability count
 	embedding[1] = security.SecurityScore                                     // Security score
-	embedding[2] = 1.0 - security.SupplyChainRisk                            // Inverted supply chain risk
-	embedding[3] = float64(security.SLSALevel) / 4.0                         // Normalized SLSA level
-	
+	embedding[2] = 1.0 - security.SupplyChainRisk                             // Inverted supply chain risk
+	embedding[3] = float64(security.SLSALevel) / 4.0                          // Normalized SLSA level
+
 	if security.HasSecurityPolicy {
 		embedding[4] = 1.0
 	}
@@ -1827,44 +1813,44 @@ func (e *EnhancedMLEngine) generateSecurityEmbedding(security SecurityFeatures) 
 	if security.HasSBOM {
 		embedding[7] = 1.0
 	}
-	
+
 	// Encode malware indicators count
 	embedding[8] = math.Min(float64(len(security.MalwareIndicators))/10.0, 1.0)
-	
+
 	// Encode suspicious scripts count
 	embedding[9] = math.Min(float64(len(security.SuspiciousScripts))/10.0, 1.0)
-	
+
 	// Fill remaining dimensions
 	for i := 10; i < 64; i++ {
 		factor := float64(i-10) / 54.0
 		embedding[i] = security.SecurityScore * math.Sin(factor*3*math.Pi)
 	}
-	
+
 	return embedding
 }
 
 // convertToEnhancedFeatures converts PackageFeatures to EnhancedPackageFeatures for ML models
 func (e *EnhancedMLEngine) convertToEnhancedFeatures(features *PackageFeatures) *EnhancedPackageFeatures {
 	enhanced := &EnhancedPackageFeatures{
-		Name:         features.PackageName,
-		Registry:     features.Registry,
-		Version:      features.Version,
-		Description:  "", // Will be populated from metadata if available
-		Author:       features.AuthorFeatures.AuthorName,
-		Maintainers:  []string{features.AuthorFeatures.AuthorName},
-		Keywords:     []string{}, // Will be populated from metadata
-		License:      features.MetadataFeatures.LicenseType,
-		Homepage:     "",
-		Repository:   features.RepositoryFeatures.RepositoryURL,
-		Downloads:    features.PopularityFeatures.TotalDownloads,
-		Stars:        features.RepositoryFeatures.StarCount,
-		Forks:        features.RepositoryFeatures.ForkCount,
-		Issues:       features.RepositoryFeatures.IssueCount,
-		CreationDate: time.Now().AddDate(0, 0, -features.AuthorFeatures.AccountAge),
-		LastUpdated:  features.AuthorFeatures.LastActivity,
-		Dependencies: []Dependency{}, // Will be populated if dependency data available
+		Name:            features.PackageName,
+		Registry:        features.Registry,
+		Version:         features.Version,
+		Description:     "", // Will be populated from metadata if available
+		Author:          features.AuthorFeatures.AuthorName,
+		Maintainers:     []string{features.AuthorFeatures.AuthorName},
+		Keywords:        []string{}, // Will be populated from metadata
+		License:         features.MetadataFeatures.LicenseType,
+		Homepage:        "",
+		Repository:      features.RepositoryFeatures.RepositoryURL,
+		Downloads:       features.PopularityFeatures.TotalDownloads,
+		Stars:           features.RepositoryFeatures.StarCount,
+		Forks:           features.RepositoryFeatures.ForkCount,
+		Issues:          features.RepositoryFeatures.IssueCount,
+		CreationDate:    time.Now().AddDate(0, 0, -features.AuthorFeatures.AccountAge),
+		LastUpdated:     features.AuthorFeatures.LastActivity,
+		Dependencies:    []Dependency{}, // Will be populated if dependency data available
 		DevDependencies: []Dependency{},
-		Scripts:      make(map[string]string),
+		Scripts:         make(map[string]string),
 		FileStructure: FileStructure{
 			TotalFiles:         0,
 			JavaScriptFiles:    0,
@@ -1965,7 +1951,7 @@ func (e *EnhancedMLEngine) convertToEnhancedFeatures(features *PackageFeatures) 
 func (e *EnhancedMLEngine) performMaliciousDetection(ctx context.Context, features *PackageFeatures) error {
 	// Convert PackageFeatures to EnhancedPackageFeatures for ML models
 	enhancedFeatures := e.convertToEnhancedFeatures(features)
-	
+
 	// Use the actual ML models from enhanced_detector.go
 	malwareClassifier, err := NewMalwareClassifier()
 	if err != nil {
@@ -1974,7 +1960,7 @@ func (e *EnhancedMLEngine) performMaliciousDetection(ctx context.Context, featur
 		features.MaliciousScore = e.calculateMaliciousScore(features)
 		return nil
 	}
-	
+
 	// Perform malware classification using the actual ML model
 	classification, err := malwareClassifier.ClassifyMalware(ctx, enhancedFeatures)
 	if err != nil {
@@ -1983,20 +1969,20 @@ func (e *EnhancedMLEngine) performMaliciousDetection(ctx context.Context, featur
 		features.MaliciousScore = e.calculateMaliciousScore(features)
 		return nil
 	}
-	
+
 	// Update features with ML model results
 	features.MaliciousScore = classification.Confidence
 	if classification.IsMalware {
 		features.MaliciousScore = math.Max(features.MaliciousScore, 0.7) // Ensure high score for detected malware
 	}
-	
+
 	// Store additional classification details in model versions for reference
 	if features.ModelVersions == nil {
 		features.ModelVersions = make(map[string]string)
 	}
-	features.ModelVersions["malware_classifier"] = fmt.Sprintf("type:%s,family:%s,confidence:%.2f", 
+	features.ModelVersions["malware_classifier"] = fmt.Sprintf("type:%s,family:%s,confidence:%.2f",
 		classification.MalwareType, classification.MalwareFamily, classification.Confidence)
-	
+
 	return nil
 }
 
@@ -2035,7 +2021,7 @@ func (e *EnhancedMLEngine) calculateMaliciousScore(features *PackageFeatures) fl
 func (e *EnhancedMLEngine) performReputationScoring(ctx context.Context, features *PackageFeatures) error {
 	// Convert PackageFeatures to EnhancedPackageFeatures for ML models
 	enhancedFeatures := e.convertToEnhancedFeatures(features)
-	
+
 	// Use the actual ML models from enhanced_detector.go
 	reputationAnalyzer, err := NewReputationAnalyzer()
 	if err != nil {
@@ -2044,7 +2030,7 @@ func (e *EnhancedMLEngine) performReputationScoring(ctx context.Context, feature
 		features.ReputationScore = e.calculateReputationScore(features)
 		return nil
 	}
-	
+
 	// Perform reputation analysis using the actual ML model
 	reputationAnalysis, err := reputationAnalyzer.AnalyzeReputation(ctx, enhancedFeatures)
 	if err != nil {
@@ -2053,17 +2039,17 @@ func (e *EnhancedMLEngine) performReputationScoring(ctx context.Context, feature
 		features.ReputationScore = e.calculateReputationScore(features)
 		return nil
 	}
-	
+
 	// Update features with ML model results
 	features.ReputationScore = reputationAnalysis.ReputationScore
-	
+
 	// Store additional reputation details in model versions for reference
 	if features.ModelVersions == nil {
 		features.ModelVersions = make(map[string]string)
 	}
-	features.ModelVersions["reputation_analyzer"] = fmt.Sprintf("trust_level:%s,author_rep:%.2f,community_trust:%.2f", 
+	features.ModelVersions["reputation_analyzer"] = fmt.Sprintf("trust_level:%s,author_rep:%.2f,community_trust:%.2f",
 		reputationAnalysis.TrustLevel, reputationAnalysis.AuthorReputation, reputationAnalysis.CommunityTrust)
-	
+
 	return nil
 }
 
@@ -2195,7 +2181,7 @@ func (e *EnhancedMLEngine) generateWarnings(features *PackageFeatures) []string 
 func (e *EnhancedMLEngine) findSimilarPackages(features *PackageFeatures) []SimilarPackage {
 	// Convert PackageFeatures to EnhancedPackageFeatures for ML models
 	enhancedFeatures := e.convertToEnhancedFeatures(features)
-	
+
 	// Use the actual ML models from enhanced_detector.go
 	similarityModel, err := NewSimilarityModel()
 	if err != nil {
@@ -2203,7 +2189,7 @@ func (e *EnhancedMLEngine) findSimilarPackages(features *PackageFeatures) []Simi
 		// Return empty slice on error
 		return []SimilarPackage{}
 	}
-	
+
 	// Perform similarity analysis using the actual ML model
 	ctx := context.Background()
 	similarityResults, err := similarityModel.AnalyzeSimilarity(ctx, enhancedFeatures)
@@ -2212,13 +2198,13 @@ func (e *EnhancedMLEngine) findSimilarPackages(features *PackageFeatures) []Simi
 		// Return empty slice on error
 		return []SimilarPackage{}
 	}
-	
+
 	// Convert EnhancedSimilarityResult to SimilarPackage format
 	var similarPackages []SimilarPackage
 	for _, result := range similarityResults {
 		// Calculate edit distance for compatibility
 		distance := e.calculateEditDistance(features.PackageName, result.SimilarPackage)
-		
+
 		similarPackage := SimilarPackage{
 			Name:           result.SimilarPackage,
 			Registry:       features.Registry,
@@ -2230,10 +2216,10 @@ func (e *EnhancedMLEngine) findSimilarPackages(features *PackageFeatures) []Simi
 			Maintainer:     "unknown",
 			SuspiciousFlag: result.SimilarityScore > 0.9, // High similarity might indicate typosquatting
 		}
-		
+
 		similarPackages = append(similarPackages, similarPackage)
 	}
-	
+
 	return similarPackages
 }
 
@@ -2245,19 +2231,19 @@ func (e *EnhancedMLEngine) calculateEditDistance(s1, s2 string) int {
 	if len(s2) == 0 {
 		return len(s1)
 	}
-	
+
 	matrix := make([][]int, len(s1)+1)
 	for i := range matrix {
 		matrix[i] = make([]int, len(s2)+1)
 	}
-	
+
 	for i := 0; i <= len(s1); i++ {
 		matrix[i][0] = i
 	}
 	for j := 0; j <= len(s2); j++ {
 		matrix[0][j] = j
 	}
-	
+
 	for i := 1; i <= len(s1); i++ {
 		for j := 1; j <= len(s2); j++ {
 			cost := 0
@@ -2271,7 +2257,7 @@ func (e *EnhancedMLEngine) calculateEditDistance(s1, s2 string) int {
 			)
 		}
 	}
-	
+
 	return matrix[len(s1)][len(s2)]
 }
 
@@ -2290,7 +2276,7 @@ func (e *EnhancedMLEngine) min3(a, b, c int) int {
 func (e *EnhancedMLEngine) calculateTyposquattingRisk(features *PackageFeatures) float64 {
 	// Convert PackageFeatures to EnhancedPackageFeatures for ML models
 	enhancedFeatures := e.convertToEnhancedFeatures(features)
-	
+
 	// Use the actual ML models from enhanced_detector.go
 	typoDetector, err := NewTypoDetector()
 	if err != nil {
@@ -2298,7 +2284,7 @@ func (e *EnhancedMLEngine) calculateTyposquattingRisk(features *PackageFeatures)
 		// Return basic calculation as fallback
 		return e.calculateBasicTyposquattingRisk(features)
 	}
-	
+
 	// Perform typosquatting detection using the actual ML model
 	ctx := context.Background()
 	typoDetection, err := typoDetector.DetectTyposquatting(ctx, enhancedFeatures)
@@ -2307,12 +2293,12 @@ func (e *EnhancedMLEngine) calculateTyposquattingRisk(features *PackageFeatures)
 		// Return basic calculation as fallback
 		return e.calculateBasicTyposquattingRisk(features)
 	}
-	
+
 	// Return the confidence score from the ML model
 	if typoDetection.IsTyposquatting {
 		return typoDetection.Confidence
 	}
-	
+
 	// Return a lower risk score if not detected as typosquatting
 	return typoDetection.Confidence * 0.3
 }
@@ -2320,23 +2306,23 @@ func (e *EnhancedMLEngine) calculateTyposquattingRisk(features *PackageFeatures)
 // calculateBasicTyposquattingRisk provides a basic fallback calculation
 func (e *EnhancedMLEngine) calculateBasicTyposquattingRisk(features *PackageFeatures) float64 {
 	risk := 0.0
-	
+
 	// Basic heuristics for typosquatting risk
 	if features.NameComplexity > 0.7 {
 		risk += 0.2
 	}
-	
+
 	if features.NameEntropy < 3.0 {
 		risk += 0.1
 	}
-	
+
 	if features.PopularityFeatures.TotalDownloads < 100 {
 		risk += 0.2
 	}
-	
+
 	if features.AuthorFeatures.AccountAge < 30 {
 		risk += 0.1
 	}
-	
+
 	return math.Min(risk, 1.0)
 }

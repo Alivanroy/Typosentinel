@@ -226,7 +226,7 @@ func (g *GenericGitConnector) getRepositoryInfo(ctx context.Context, owner, name
 		CloneURL:      g.baseURL,
 		SSHURL:        g.baseURL,
 		DefaultBranch: defaultBranch,
-		Language:      "", // Would need language detection
+		Language:      "",    // Would need language detection
 		Private:       false, // Cannot determine without API
 		Archived:      false,
 		Fork:          false,

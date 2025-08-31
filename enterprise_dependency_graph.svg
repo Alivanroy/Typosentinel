@@ -1,0 +1,19 @@
+🔍 Analyzing dependency graph for: enterprise-env
+📊 Configuration: Max Depth=3, Include Dev=true, Output=svg
+
+[TYPOSENTINEL] 2025/08/22 16:00:21 logger.go:169: [INFO] Initializing enhanced scanner detectors
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+  <title>Dependency Graph Analysis</title>
+  <rect width="100%" height="100%" fill="#f8f9fa"/>
+  <text x="400" y="30" text-anchor="middle" font-size="20" font-weight="bold">Dependency Graph: enterprise-env</text>
+  <circle cx="400" cy="100" r="30" fill="#007bff" stroke="#0056b3" stroke-width="2"/>
+  <text x="400" y="105" text-anchor="middle" fill="white" font-size="12">0 pkg</text>
+  <text x="50" y="550" font-size="12" font-weight="bold">Legend:</text>
+  <circle cx="70" cy="570" r="8" fill="#007bff"/>
+  <text x="85" y="575" font-size="10">Root Package</text>
+  <circle cx="200" cy="570" r="8" fill="#dc3545"/>
+  <text x="215" y="575" font-size="10">High/Critical Threat</text>
+  <circle cx="350" cy="570" r="8" fill="#ffc107"/>
+  <text x="365" y="575" font-size="10">Medium/Low Threat</text>
+</svg>

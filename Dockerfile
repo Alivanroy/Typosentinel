@@ -1,7 +1,7 @@
 # Multi-stage build for TypoSentinel Production
 
 # Build stage
-FROM golang:1.21-alpine AS go-builder
+FROM golang:1.23-alpine AS go-builder
 
 WORKDIR /app
 COPY go.mod go.sum ./

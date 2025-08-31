@@ -50,22 +50,22 @@ func (e *MetadataEnricher) enrichPackage(ctx context.Context, pkg *types.Package
 // enrichNPMPackage enriches NPM package metadata
 func (e *MetadataEnricher) enrichNPMPackage(ctx context.Context, pkg *types.Package) error {
 	url := fmt.Sprintf("https://registry.npmjs.org/%s", pkg.Name)
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
-	
+
 	resp, err := e.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("npm registry returned status %d", resp.StatusCode)
 	}
-	
+
 	var npmData struct {
 		Description string `json:"description"`
 		Author      struct {
@@ -87,21 +87,21 @@ func (e *MetadataEnricher) enrichNPMPackage(ctx context.Context, pkg *types.Pack
 			Modified string `json:"modified"`
 		} `json:"time"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&npmData); err != nil {
 		return err
 	}
-	
+
 	// Initialize metadata if nil
 	if pkg.Metadata == nil {
 		pkg.Metadata = &types.PackageMetadata{}
 	}
-	
+
 	// Update metadata with fetched information
 	pkg.Metadata.Description = npmData.Description
 	pkg.Metadata.Homepage = npmData.Homepage
 	pkg.Metadata.Repository = npmData.Repository.URL
-	
+
 	// Handle license (can be string or object)
 	if license, ok := npmData.License.(string); ok {
 		pkg.Metadata.License = license
@@ -110,21 +110,21 @@ func (e *MetadataEnricher) enrichNPMPackage(ctx context.Context, pkg *types.Pack
 			pkg.Metadata.License = fmt.Sprintf("%v", licenseType)
 		}
 	}
-	
+
 	// Parse creation time
 	if npmData.Time.Created != "" {
 		if createdTime, err := time.Parse(time.RFC3339, npmData.Time.Created); err == nil {
 			pkg.Metadata.CreatedAt = createdTime
 		}
 	}
-	
+
 	// Parse modification time
 	if npmData.Time.Modified != "" {
 		if modifiedTime, err := time.Parse(time.RFC3339, npmData.Time.Modified); err == nil {
 			pkg.Metadata.UpdatedAt = modifiedTime
 		}
 	}
-	
+
 	// Set maintainers
 	var maintainers []string
 	for _, maintainer := range npmData.Maintainers {
@@ -133,29 +133,29 @@ func (e *MetadataEnricher) enrichNPMPackage(ctx context.Context, pkg *types.Pack
 		}
 	}
 	pkg.Metadata.Maintainers = maintainers
-	
+
 	return nil
 }
 
 // enrichPyPIPackage enriches PyPI package metadata
 func (e *MetadataEnricher) enrichPyPIPackage(ctx context.Context, pkg *types.Package) error {
 	url := fmt.Sprintf("https://pypi.org/pypi/%s/json", pkg.Name)
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
-	
+
 	resp, err := e.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("pypi registry returned status %d", resp.StatusCode)
 	}
-	
+
 	var pypiData struct {
 		Info struct {
 			Description string `json:"description"`
@@ -165,29 +165,29 @@ func (e *MetadataEnricher) enrichPyPIPackage(ctx context.Context, pkg *types.Pac
 			License     string `json:"license"`
 		} `json:"info"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&pypiData); err != nil {
 		return err
 	}
-	
+
 	// Initialize metadata if nil
 	if pkg.Metadata == nil {
 		pkg.Metadata = &types.PackageMetadata{}
 	}
-	
+
 	// Update metadata with fetched information
 	if pypiData.Info.Description != "" {
 		pkg.Metadata.Description = pypiData.Info.Description
 	} else if pypiData.Info.Summary != "" {
 		pkg.Metadata.Description = pypiData.Info.Summary
 	}
-	
+
 	pkg.Metadata.Homepage = pypiData.Info.Homepage
 	pkg.Metadata.License = pypiData.Info.License
-	
+
 	if pypiData.Info.Author != "" {
 		pkg.Metadata.Maintainers = []string{pypiData.Info.Author}
 	}
-	
+
 	return nil
 }

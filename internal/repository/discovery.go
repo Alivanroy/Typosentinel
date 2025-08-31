@@ -28,31 +28,31 @@ type DiscoveryService struct {
 type DiscoveryConfig struct {
 	// Platforms to discover repositories from
 	Platforms []PlatformDiscoveryConfig `json:"platforms"`
-	
+
 	// Discovery interval
 	Interval time.Duration `json:"interval"`
-	
+
 	// Maximum repositories to discover per platform per run
 	MaxReposPerPlatform int `json:"max_repos_per_platform"`
-	
+
 	// Filter for repository discovery
 	Filter *RepositoryFilter `json:"filter,omitempty"`
-	
+
 	// Whether to discover private repositories
 	IncludePrivate bool `json:"include_private"`
-	
+
 	// Whether to discover forked repositories
 	IncludeForks bool `json:"include_forks"`
-	
+
 	// Whether to discover archived repositories
 	IncludeArchived bool `json:"include_archived"`
-	
+
 	// Concurrent discovery workers per platform
 	Workers int `json:"workers"`
-	
+
 	// Timeout for discovery operations
 	Timeout time.Duration `json:"timeout"`
-	
+
 	// Cache configuration
 	Cache DiscoveryCacheConfig `json:"cache"`
 }
@@ -87,34 +87,34 @@ type cacheEntry struct {
 type PlatformDiscoveryConfig struct {
 	// Platform name (github, gitlab, bitbucket, azuredevops)
 	Platform string `json:"platform"`
-	
+
 	// Platform configuration
 	Config PlatformConfig `json:"config"`
-	
+
 	// Organizations/users to discover repositories from
 	Organizations []string `json:"organizations,omitempty"`
-	
+
 	// Specific repositories to discover (owner/repo format)
 	Repositories []string `json:"repositories,omitempty"`
-	
+
 	// Search queries for repository discovery
 	SearchQueries []string `json:"search_queries,omitempty"`
-	
+
 	// Platform-specific filter
 	Filter *RepositoryFilter `json:"filter,omitempty"`
-	
+
 	// Whether this platform is enabled for discovery
 	Enabled bool `json:"enabled"`
 }
 
 // DiscoveryResult contains the result of a discovery operation
 type DiscoveryResult struct {
-	Platform     string                `json:"platform"`
-	Repositories []*Repository         `json:"repositories"`
-	Errors       []error               `json:"errors"`
-	Duration     time.Duration         `json:"duration"`
-	Timestamp    time.Time             `json:"timestamp"`
-	Stats        DiscoveryStats        `json:"stats"`
+	Platform     string         `json:"platform"`
+	Repositories []*Repository  `json:"repositories"`
+	Errors       []error        `json:"errors"`
+	Duration     time.Duration  `json:"duration"`
+	Timestamp    time.Time      `json:"timestamp"`
+	Stats        DiscoveryStats `json:"stats"`
 }
 
 // DiscoveryStats contains statistics about a discovery operation
@@ -157,32 +157,32 @@ func NewDiscoveryServiceWithRepoConfig(manager RepositoryManager, config Discove
 func (ds *DiscoveryService) Start(ctx context.Context) error {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	
+
 	if ds.running {
 		return fmt.Errorf("discovery service is already running")
 	}
-	
+
 	// Initialize connectors for each platform
 	for _, platformConfig := range ds.config.Platforms {
 		if !platformConfig.Enabled {
 			continue
 		}
-		
+
 		connector, err := ds.manager.GetConnector(platformConfig.Platform)
 		if err != nil {
 			ds.logger.Printf("Failed to get connector for platform %s: %v", platformConfig.Platform, err)
 			continue
 		}
-		
+
 		ds.connectors[platformConfig.Platform] = connector
 	}
-	
+
 	ds.running = true
 	ds.logger.Printf("Starting repository discovery service with %d platforms", len(ds.connectors))
-	
+
 	// Start discovery loop
 	go ds.discoveryLoop(ctx)
-	
+
 	return nil
 }
 
@@ -190,15 +190,15 @@ func (ds *DiscoveryService) Start(ctx context.Context) error {
 func (ds *DiscoveryService) Stop() error {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	
+
 	if !ds.running {
 		return fmt.Errorf("discovery service is not running")
 	}
-	
+
 	ds.logger.Println("Stopping repository discovery service")
 	close(ds.stopCh)
 	ds.running = false
-	
+
 	return nil
 }
 
@@ -217,14 +217,14 @@ func (ds *DiscoveryService) DiscoverOnce(ctx context.Context) ([]DiscoveryResult
 		connectors[platform] = connector
 	}
 	ds.mu.RUnlock()
-	
+
 	if len(connectors) == 0 {
 		return nil, fmt.Errorf("no connectors available for discovery")
 	}
-	
+
 	results := make([]DiscoveryResult, 0, len(connectors))
 	resultsCh := make(chan DiscoveryResult, len(connectors))
-	
+
 	// Discover repositories from each platform concurrently
 	var wg sync.WaitGroup
 	for platform, connector := range connectors {
@@ -235,18 +235,18 @@ func (ds *DiscoveryService) DiscoverOnce(ctx context.Context) ([]DiscoveryResult
 			resultsCh <- result
 		}(platform, connector)
 	}
-	
+
 	// Wait for all discoveries to complete
 	go func() {
 		wg.Wait()
 		close(resultsCh)
 	}()
-	
+
 	// Collect results
 	for result := range resultsCh {
 		results = append(results, result)
 	}
-	
+
 	return results, nil
 }
 
@@ -254,7 +254,7 @@ func (ds *DiscoveryService) DiscoverOnce(ctx context.Context) ([]DiscoveryResult
 func (ds *DiscoveryService) discoveryLoop(ctx context.Context) {
 	ticker := time.NewTicker(ds.config.Interval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -270,7 +270,7 @@ func (ds *DiscoveryService) discoveryLoop(ctx context.Context) {
 				ds.logger.Printf("Discovery failed: %v", err)
 				continue
 			}
-			
+
 			// Log discovery results
 			for _, result := range results {
 				ds.logger.Printf("Platform %s: discovered %d repositories in %v (new: %d, updated: %d, errors: %d)",
@@ -289,7 +289,7 @@ func (ds *DiscoveryService) discoverFromPlatform(ctx context.Context, platform s
 		Timestamp: start,
 		Errors:    make([]error, 0),
 	}
-	
+
 	// Get platform configuration
 	var platformConfig *PlatformDiscoveryConfig
 	for _, config := range ds.config.Platforms {
@@ -298,15 +298,15 @@ func (ds *DiscoveryService) discoverFromPlatform(ctx context.Context, platform s
 			break
 		}
 	}
-	
+
 	if platformConfig == nil {
 		result.Errors = append(result.Errors, fmt.Errorf("no configuration found for platform %s", platform))
 		result.Duration = time.Since(start)
 		return result
 	}
-	
+
 	repos := make([]*Repository, 0)
-	
+
 	// Discover from organizations
 	for _, org := range platformConfig.Organizations {
 		orgRepos, err := ds.discoverFromOrganization(ctx, connector, org, platformConfig.Filter)
@@ -316,7 +316,7 @@ func (ds *DiscoveryService) discoverFromPlatform(ctx context.Context, platform s
 		}
 		repos = append(repos, orgRepos...)
 	}
-	
+
 	// Discover specific repositories
 	for _, repoName := range platformConfig.Repositories {
 		repo, err := ds.discoverSpecificRepository(ctx, connector, repoName)
@@ -328,7 +328,7 @@ func (ds *DiscoveryService) discoverFromPlatform(ctx context.Context, platform s
 			repos = append(repos, repo)
 		}
 	}
-	
+
 	// Discover from search queries
 	for _, query := range platformConfig.SearchQueries {
 		searchRepos, err := ds.discoverFromSearch(ctx, connector, query, platformConfig.Filter)
@@ -338,18 +338,18 @@ func (ds *DiscoveryService) discoverFromPlatform(ctx context.Context, platform s
 		}
 		repos = append(repos, searchRepos...)
 	}
-	
+
 	// Apply global filter and limits
 	repos = ds.applyFilters(repos)
 	if ds.config.MaxReposPerPlatform > 0 && len(repos) > ds.config.MaxReposPerPlatform {
 		repos = repos[:ds.config.MaxReposPerPlatform]
 	}
-	
+
 	result.Repositories = repos
 	result.Stats.TotalFound = len(repos)
 	result.Stats.Errors = len(result.Errors)
 	result.Duration = time.Since(start)
-	
+
 	return result
 }
 
@@ -364,7 +364,7 @@ func (ds *DiscoveryService) discoverSpecificRepository(ctx context.Context, conn
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid repository name format: %s (expected owner/repo)", repoName)
 	}
-	
+
 	return connector.GetRepository(ctx, parts[0], parts[1])
 }
 
@@ -376,7 +376,7 @@ func (ds *DiscoveryService) discoverFromSearch(ctx context.Context, connector Co
 // applyFilters applies global filters to discovered repositories
 func (ds *DiscoveryService) applyFilters(repos []*Repository) []*Repository {
 	filtered := make([]*Repository, 0, len(repos))
-	
+
 	for _, repo := range repos {
 		// Apply global filters
 		if !ds.config.IncludePrivate && repo.Private {
@@ -388,15 +388,15 @@ func (ds *DiscoveryService) applyFilters(repos []*Repository) []*Repository {
 		if !ds.config.IncludeArchived && repo.Archived {
 			continue
 		}
-		
+
 		// Apply discovery filter if configured
 		if ds.config.Filter != nil && !ds.matchesFilter(repo, ds.config.Filter) {
 			continue
 		}
-		
+
 		filtered = append(filtered, repo)
 	}
-	
+
 	return filtered
 }
 
@@ -405,7 +405,7 @@ func (ds *DiscoveryService) matchesFilter(repo *Repository, filter *RepositoryFi
 	if filter == nil {
 		return true
 	}
-	
+
 	// Check languages
 	if len(filter.Languages) > 0 {
 		found := false
@@ -419,36 +419,36 @@ func (ds *DiscoveryService) matchesFilter(repo *Repository, filter *RepositoryFi
 			return false
 		}
 	}
-	
+
 	// Check minimum stars
 	if filter.MinStars > 0 && repo.StarCount < filter.MinStars {
 		return false
 	}
-	
+
 	// Check maximum size
 	if filter.MaxSize > 0 && repo.Size > filter.MaxSize {
 		return false
 	}
-	
+
 	// Check updated after
 	if filter.UpdatedAfter != nil && repo.UpdatedAt.Before(*filter.UpdatedAfter) {
 		return false
 	}
-	
+
 	// Check name pattern
 	if filter.NamePattern != "" {
 		if !matchesPattern(repo.Name, filter.NamePattern) {
 			return false
 		}
 	}
-	
+
 	// Check exclude patterns
 	for _, pattern := range filter.ExcludePatterns {
 		if matchesPattern(repo.Name, pattern) {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -479,12 +479,12 @@ func matchesPattern(s, pattern string) bool {
 	if pattern == "*" {
 		return true
 	}
-	
+
 	// Simple pattern matching - just check if pattern is contained in string
 	// For more complex patterns, we could use regexp or glob libraries
 	pattern = strings.TrimPrefix(pattern, "*")
 	pattern = strings.TrimSuffix(pattern, "*")
-	
+
 	return strings.Contains(strings.ToLower(s), strings.ToLower(pattern))
 }
 

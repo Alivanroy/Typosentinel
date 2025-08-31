@@ -1,0 +1,2235 @@
+time="2025-08-22T23:58:26+02:00" level=info msg="Starting scan scan_1755899906 for path: C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json"
+time="2025-08-22T23:58:26+02:00" level=warning msg="Auto-detection failed: no supported projects found in C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json"
+time="2025-08-22T23:58:26+02:00" level=info msg="Found 1 dependency files"
+time="2025-08-22T23:58:26+02:00" level=info msg="DEBUG: Parsing file C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json with type npm"
+time="2025-08-22T23:58:26+02:00" level=info msg="DEBUG: parseNPMDependencies called with fileName: package.json"
+time="2025-08-22T23:58:26+02:00" level=info msg="DEBUG: Returning 56 total dependencies"
+time="2025-08-22T23:58:26+02:00" level=info msg="Analyzing 56 dependencies"
+time="2025-08-22T23:58:26+02:00" level=info msg="Starting threat analysis for 56 dependencies"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @apollo/client from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @emotion/react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @emotion/styled from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 531µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @mui/material from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @mui/x-data-grid from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @playwright/test from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @reduxjs/toolkit from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @sentry/react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/addon-essentials from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/addon-interactions from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/addon-links from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/blocks from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/react-vite from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @storybook/testing-library from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @tanstack/react-query from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @testing-library/jest-dom from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @testing-library/react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @testing-library/user-event from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @types/jest from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 554.4µs. Threat level: low, Confidence: 0.72"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @types/lodash from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @types/node from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @types/react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.78"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @types/react-dom from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.72"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @types/styled-components from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @typescript-eslint/eslint-plugin from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.77"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @typescript-eslint/parser from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: low, Confidence: 0.80"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package @vitejs/plugin-react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package axios from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 601.6µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package date-fns from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package eslint from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package eslint-plugin-react-hooks from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.85"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package eslint-plugin-react-refresh from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.84"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package eslint-plugin-storybook from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.85"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package formik from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package graphql from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package i18next from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package jest from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 521.1µs. Threat level: low, Confidence: 0.75"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package jest-environment-jsdom from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package lodash from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 509.1µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react-dom from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 522.8µs. Threat level: high, Confidence: 0.91"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react-helmet-async from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.86"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react-hook-form from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.87"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react-i18next from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 508.6µs. Threat level: medium, Confidence: 0.88"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react-redux from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 1.1141ms. Threat level: medium, Confidence: 0.89"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package react-router-dom from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.86"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package recharts from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: medium, Confidence: 0.85"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package socket.io-client from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 520.7µs. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package storybook from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package styled-components from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package typescript from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package vite from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package vite-plugin-eslint from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package yup from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Checking package zod from npm registry"
+time="2025-08-22T23:58:26+02:00" level=info msg="Package check completed in 0s. Threat level: none, Confidence: 0.00"
+time="2025-08-22T23:58:26+02:00" level=info msg="Threat analysis completed in 7.4602ms. Found 16 threats, 56 warnings"
+time="2025-08-22T23:58:26+02:00" level=info msg="Scan scan_1755899906 completed in 9.5774ms. Found 16 threats, 56 warnings"
+2025/08/22 23:58:26 [DEBUG] Database config - Type: 'sqlite', Database: './data/typosentinel.db'
+2025/08/22 23:58:26 [DEBUG] Database config - Host: 'localhost', Port: 5432, Username: 'typosentinel', SSLMode: 'disable'
+2025/08/22 23:58:26 [DEBUG] Opening SQLite database: ./data/typosentinel.db
+2025/08/22 23:58:26 Warning: Failed to save scan to database: failed to initialize OSS service: failed to ping database: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+{
+  "scan_id": "scan_1755899906",
+  "timestamp": "2025-08-22T23:58:26.395016+02:00",
+  "duration": 9577400,
+  "path": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+  "total_packages": 56,
+  "threats": [
+    {
+      "id": "threat_1755899906398177800",
+      "package": "@types/jest",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7151515151515152,
+      "description": "Package name '@types/jest' is very similar to 'typescript' (71.5% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/jest' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.5454545454545454,
+          "score": 0.5454545454545454
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7151515151515152,
+          "score": 0.7151515151515152
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399253600",
+      "package": "@types/react",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7805555555555556,
+      "description": "Package name '@types/react' is very similar to 'typescript' (78.1% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/react' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.5833333333333333,
+          "score": 0.5833333333333333
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7805555555555556,
+          "score": 0.7805555555555556
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399253600",
+      "package": "@types/react-dom",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.725,
+      "description": "Package name '@types/react-dom' is very similar to 'typescript' (72.5% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@types/react-dom' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4375,
+          "score": 0.4375
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.725,
+          "score": 0.725
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399253600",
+      "package": "@typescript-eslint/eslint-plugin",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7708333333333334,
+      "description": "Package name '@typescript-eslint/eslint-plugin' is very similar to 'typescript' (77.1% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@typescript-eslint/eslint-plugin' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.3125,
+          "score": 0.3125
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7708333333333334,
+          "score": 0.7708333333333334
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399253600",
+      "package": "@typescript-eslint/parser",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.7999999999999999,
+      "description": "Package name '@typescript-eslint/parser' is very similar to 'typescript' (80.0% similarity)",
+      "similar_to": "typescript",
+      "recommendation": "Verify that '@typescript-eslint/parser' is the intended package. Consider using 'typescript' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4,
+          "score": 0.4
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.7999999999999999,
+          "score": 0.7999999999999999
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399855200",
+      "package": "eslint-plugin-react-hooks",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8480000000000001,
+      "description": "Package name 'eslint-plugin-react-hooks' is very similar to 'eslint' (84.8% similarity)",
+      "similar_to": "eslint",
+      "recommendation": "Verify that 'eslint-plugin-react-hooks' is the intended package. Consider using 'eslint' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.24,
+          "score": 0.24
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8480000000000001,
+          "score": 0.8480000000000001
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399855200",
+      "package": "eslint-plugin-react-refresh",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8444444444444446,
+      "description": "Package name 'eslint-plugin-react-refresh' is very similar to 'eslint' (84.4% similarity)",
+      "similar_to": "eslint",
+      "recommendation": "Verify that 'eslint-plugin-react-refresh' is the intended package. Consider using 'eslint' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.2222222222222222,
+          "score": 0.2222222222222222
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8444444444444446,
+          "score": 0.8444444444444446
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906399855200",
+      "package": "eslint-plugin-storybook",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8521739130434783,
+      "description": "Package name 'eslint-plugin-storybook' is very similar to 'eslint' (85.2% similarity)",
+      "similar_to": "eslint",
+      "recommendation": "Verify that 'eslint-plugin-storybook' is the intended package. Consider using 'eslint' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.26086956521739135,
+          "score": 0.26086956521739135
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8521739130434783,
+          "score": 0.8521739130434783
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906400379100",
+      "package": "jest",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 0,
+      "confidence": 0.75,
+      "description": "Package name 'jest' is very similar to 'eslint' (75.0% similarity)",
+      "similar_to": "eslint",
+      "recommendation": "Verify that 'jest' is the intended package. Consider using 'eslint' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.33333333333333337,
+          "score": 0.33333333333333337
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.75,
+          "score": 0.75
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4003791+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906401409300",
+      "package": "react-dom",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 2,
+      "confidence": 0.9111111111111111,
+      "description": "Package name 'react-dom' is very similar to 'react' (91.1% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'react-dom' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.5555555555555556,
+          "score": 0.5555555555555556
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.9111111111111111,
+          "score": 0.9111111111111111
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4014093+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906401932100",
+      "package": "react-helmet-async",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8555555555555555,
+      "description": "Package name 'react-helmet-async' is very similar to 'react' (85.6% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'react-helmet-async' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.2777777777777778,
+          "score": 0.2777777777777778
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8555555555555555,
+          "score": 0.8555555555555555
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4019321+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906401932100",
+      "package": "react-hook-form",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8666666666666666,
+      "description": "Package name 'react-hook-form' is very similar to 'react' (86.7% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'react-hook-form' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.33333333333333337,
+          "score": 0.33333333333333337
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8666666666666666,
+          "score": 0.8666666666666666
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4019321+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906401932100",
+      "package": "react-i18next",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8769230769230769,
+      "description": "Package name 'react-i18next' is very similar to 'react' (87.7% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'react-i18next' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.3846153846153846,
+          "score": 0.3846153846153846
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8769230769230769,
+          "score": 0.8769230769230769
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4019321+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906402440700",
+      "package": "react-redux",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.890909090909091,
+      "description": "Package name 'react-redux' is very similar to 'react' (89.1% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'react-redux' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.4545454545454546,
+          "score": 0.4545454545454546
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.890909090909091,
+          "score": 0.890909090909091
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4024407+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906403554800",
+      "package": "react-router-dom",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8625,
+      "description": "Package name 'react-router-dom' is very similar to 'react' (86.2% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'react-router-dom' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.3125,
+          "score": 0.3125
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8625,
+          "score": 0.8625
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4035548+02:00",
+      "detection_method": "lexical_similarity"
+    },
+    {
+      "id": "threat_1755899906403554800",
+      "package": "recharts",
+      "registry": "npm",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8466666666666666,
+      "description": "Package name 'recharts' is very similar to 'react' (84.7% similarity)",
+      "similar_to": "react",
+      "recommendation": "Verify that 'recharts' is the intended package. Consider using 'react' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "levenshtein_distance",
+          "description": "Levenshtein similarity score",
+          "value": 0.5,
+          "score": 0.5
+        },
+        {
+          "type": "jaro_winkler",
+          "description": "Jaro-Winkler similarity score",
+          "value": 0.8466666666666666,
+          "score": 0.8466666666666666
+        }
+      ],
+      "detected_at": "2025-08-22T23:58:26.4035548+02:00",
+      "detection_method": "lexical_similarity"
+    }
+  ],
+  "warnings": [
+    {
+      "id": "warning_1755899906397133200",
+      "package": "@apollo/client",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3971332+02:00"
+    },
+    {
+      "id": "warning_1755899906397133200",
+      "package": "@emotion/react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3971332+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@emotion/styled",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@mui/material",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@mui/x-data-grid",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@playwright/test",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@reduxjs/toolkit",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@sentry/react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906397664200",
+      "package": "@storybook/addon-essentials",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3976642+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@storybook/addon-interactions",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@storybook/addon-links",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@storybook/blocks",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@storybook/react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@storybook/react-vite",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@storybook/testing-library",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@tanstack/react-query",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@testing-library/jest-dom",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@testing-library/react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398177800",
+      "package": "@testing-library/user-event",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3981778+02:00"
+    },
+    {
+      "id": "warning_1755899906398732200",
+      "package": "@types/jest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3987322+02:00"
+    },
+    {
+      "id": "warning_1755899906398732200",
+      "package": "@types/lodash",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3987322+02:00"
+    },
+    {
+      "id": "warning_1755899906398732200",
+      "package": "@types/node",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3987322+02:00"
+    },
+    {
+      "id": "warning_1755899906399253600",
+      "package": "@types/react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00"
+    },
+    {
+      "id": "warning_1755899906399253600",
+      "package": "@types/react-dom",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00"
+    },
+    {
+      "id": "warning_1755899906399253600",
+      "package": "@types/styled-components",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00"
+    },
+    {
+      "id": "warning_1755899906399253600",
+      "package": "@typescript-eslint/eslint-plugin",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00"
+    },
+    {
+      "id": "warning_1755899906399253600",
+      "package": "@typescript-eslint/parser",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00"
+    },
+    {
+      "id": "warning_1755899906399253600",
+      "package": "@vitejs/plugin-react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3992536+02:00"
+    },
+    {
+      "id": "warning_1755899906399855200",
+      "package": "axios",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00"
+    },
+    {
+      "id": "warning_1755899906399855200",
+      "package": "date-fns",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00"
+    },
+    {
+      "id": "warning_1755899906399855200",
+      "package": "eslint",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00"
+    },
+    {
+      "id": "warning_1755899906399855200",
+      "package": "eslint-plugin-react-hooks",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00"
+    },
+    {
+      "id": "warning_1755899906399855200",
+      "package": "eslint-plugin-react-refresh",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00"
+    },
+    {
+      "id": "warning_1755899906399855200",
+      "package": "eslint-plugin-storybook",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.3998552+02:00"
+    },
+    {
+      "id": "warning_1755899906400379100",
+      "package": "formik",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4003791+02:00"
+    },
+    {
+      "id": "warning_1755899906400379100",
+      "package": "graphql",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4003791+02:00"
+    },
+    {
+      "id": "warning_1755899906400379100",
+      "package": "i18next",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4003791+02:00"
+    },
+    {
+      "id": "warning_1755899906400900200",
+      "package": "jest",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4009002+02:00"
+    },
+    {
+      "id": "warning_1755899906400900200",
+      "package": "jest-environment-jsdom",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4009002+02:00"
+    },
+    {
+      "id": "warning_1755899906401409300",
+      "package": "lodash",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4014093+02:00"
+    },
+    {
+      "id": "warning_1755899906401409300",
+      "package": "react",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4014093+02:00"
+    },
+    {
+      "id": "warning_1755899906401932100",
+      "package": "react-dom",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4019321+02:00"
+    },
+    {
+      "id": "warning_1755899906401932100",
+      "package": "react-helmet-async",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4019321+02:00"
+    },
+    {
+      "id": "warning_1755899906401932100",
+      "package": "react-hook-form",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4019321+02:00"
+    },
+    {
+      "id": "warning_1755899906402440700",
+      "package": "react-i18next",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4024407+02:00"
+    },
+    {
+      "id": "warning_1755899906403554800",
+      "package": "react-redux",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4035548+02:00"
+    },
+    {
+      "id": "warning_1755899906403554800",
+      "package": "react-router-dom",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4035548+02:00"
+    },
+    {
+      "id": "warning_1755899906403554800",
+      "package": "recharts",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4035548+02:00"
+    },
+    {
+      "id": "warning_1755899906404075500",
+      "package": "socket.io-client",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4040755+02:00"
+    },
+    {
+      "id": "warning_1755899906404075500",
+      "package": "storybook",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4040755+02:00"
+    },
+    {
+      "id": "warning_1755899906404075500",
+      "package": "styled-components",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4040755+02:00"
+    },
+    {
+      "id": "warning_1755899906404075500",
+      "package": "typescript",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4040755+02:00"
+    },
+    {
+      "id": "warning_1755899906404593400",
+      "package": "vite",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4045934+02:00"
+    },
+    {
+      "id": "warning_1755899906404593400",
+      "package": "vite-plugin-eslint",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4045934+02:00"
+    },
+    {
+      "id": "warning_1755899906404593400",
+      "package": "yup",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4045934+02:00"
+    },
+    {
+      "id": "warning_1755899906404593400",
+      "package": "zod",
+      "registry": "npm",
+      "type": "missing_metadata",
+      "message": "Package has no description",
+      "suggestion": "Verify package legitimacy - legitimate packages usually have descriptions",
+      "detected_at": "2025-08-22T23:58:26.4045934+02:00"
+    }
+  ],
+  "resolution": {
+    "resolved": [
+      {
+        "name": "@apollo/client",
+        "version": "3.8.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.8.7",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@emotion/react",
+        "version": "11.11.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^11.11.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@emotion/styled",
+        "version": "11.11.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^11.11.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@mui/material",
+        "version": "5.14.18",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.14.18",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@mui/x-data-grid",
+        "version": "6.18.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.18.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@playwright/test",
+        "version": "1.40.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.40.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@reduxjs/toolkit",
+        "version": "1.9.7",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.9.7",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@sentry/react",
+        "version": "7.81.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.81.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/addon-essentials",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/addon-interactions",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/addon-links",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/blocks",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/react",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/react-vite",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@storybook/testing-library",
+        "version": "0.2.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.2.2",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@tanstack/react-query",
+        "version": "5.8.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.8.4",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@testing-library/jest-dom",
+        "version": "6.1.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.1.5",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@testing-library/react",
+        "version": "13.4.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^13.4.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@testing-library/user-event",
+        "version": "14.5.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^14.5.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@types/jest",
+        "version": "29.5.8",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^29.5.8",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@types/lodash",
+        "version": "4.14.202",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.14.202",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@types/node",
+        "version": "20.10.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^20.10.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@types/react",
+        "version": "18.2.39",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^18.2.39",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@types/react-dom",
+        "version": "18.2.17",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^18.2.17",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@types/styled-components",
+        "version": "5.1.34",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.1.34",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@typescript-eslint/eslint-plugin",
+        "version": "6.13.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.13.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@typescript-eslint/parser",
+        "version": "6.13.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.13.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "@vitejs/plugin-react",
+        "version": "4.2.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.2.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "axios",
+        "version": "1.6.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.6.2",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "date-fns",
+        "version": "2.30.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.30.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "eslint",
+        "version": "8.54.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^8.54.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "eslint-plugin-react-hooks",
+        "version": "4.6.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.6.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "eslint-plugin-react-refresh",
+        "version": "0.4.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.4.4",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "eslint-plugin-storybook",
+        "version": "0.6.15",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^0.6.15",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "formik",
+        "version": "2.4.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.4.5",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "graphql",
+        "version": "16.8.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^16.8.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "i18next",
+        "version": "23.7.6",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^23.7.6",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "jest",
+        "version": "29.7.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^29.7.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "jest-environment-jsdom",
+        "version": "29.7.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^29.7.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "lodash",
+        "version": "4.17.21",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.17.21",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^18.2.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^18.2.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react-helmet-async",
+        "version": "1.3.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.3.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react-hook-form",
+        "version": "7.48.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.48.2",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react-i18next",
+        "version": "13.5.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^13.5.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react-redux",
+        "version": "8.1.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^8.1.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "react-router-dom",
+        "version": "6.20.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.20.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "recharts",
+        "version": "2.8.0",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^2.8.0",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "socket.io-client",
+        "version": "4.7.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^4.7.4",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "storybook",
+        "version": "7.6.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^7.6.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "styled-components",
+        "version": "6.1.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^6.1.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "typescript",
+        "version": "5.3.2",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.3.2",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "vite",
+        "version": "5.0.5",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^5.0.5",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "vite-plugin-eslint",
+        "version": "1.8.1",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": true,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.8.1",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "yup",
+        "version": "1.3.3",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^1.3.3",
+          "parent": "enterprise-frontend"
+        }
+      },
+      {
+        "name": "zod",
+        "version": "3.22.4",
+        "registry": "npm",
+        "source": "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        },
+        "extra_data": {
+          "constraint": "^3.22.4",
+          "parent": "enterprise-frontend"
+        }
+      }
+    ],
+    "conflicts": [],
+    "warnings": []
+  },
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 1,
+    "medium_threats": 9,
+    "low_threats": 6,
+    "total_warnings": 56,
+    "clean_packages": 40,
+    "conflict_count": 0
+  },
+  "metadata": {
+    "dependency_files": [
+      "C:/Users/aliko/Typo/Typosentinel/enterprise-env/frontend/package.json"
+    ],
+    "detector_version": "1.0.0",
+    "scan_options": {
+      "OutputFormat": "json",
+      "SpecificFile": "",
+      "DeepAnalysis": false,
+      "IncludeDevDependencies": true,
+      "SimilarityThreshold": 0.8,
+      "ExcludePackages": [],
+      "AllowEmptyProjects": true,
+      "CheckVulnerabilities": false,
+      "VulnerabilityDBs": [
+        "osv",
+        "nvd"
+      ],
+      "VulnConfigPath": "config/vulnerability_databases.yaml",
+      "Recursive": false,
+      "WorkspaceAware": true,
+      "ConsolidateReport": false,
+      "PackageManagers": [],
+      "EnableSupplyChain": false,
+      "AdvancedAnalysis": false
+    }
+  }
+}

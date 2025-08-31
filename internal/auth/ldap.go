@@ -16,24 +16,24 @@ type LDAPProvider struct {
 
 // LDAPConfig holds LDAP configuration
 type LDAPConfig struct {
-	Host               string            `yaml:"host" json:"host"`
-	Port               int               `yaml:"port" json:"port"`
-	UseTLS             bool              `yaml:"use_tls" json:"use_tls"`
-	SkipTLSVerify      bool              `yaml:"skip_tls_verify" json:"skip_tls_verify"`
-	BindDN             string            `yaml:"bind_dn" json:"bind_dn"`
-	BindPassword       string            `yaml:"bind_password" json:"bind_password"`
-	BaseDN             string            `yaml:"base_dn" json:"base_dn"`
-	UserFilter         string            `yaml:"user_filter" json:"user_filter"`
-	UserSearchBase     string            `yaml:"user_search_base" json:"user_search_base"`
-	GroupFilter        string            `yaml:"group_filter" json:"group_filter"`
-	GroupSearchBase    string            `yaml:"group_search_base" json:"group_search_base"`
-	UsernameAttribute  string            `yaml:"username_attribute" json:"username_attribute"`
-	EmailAttribute     string            `yaml:"email_attribute" json:"email_attribute"`
-	DisplayNameAttribute string          `yaml:"display_name_attribute" json:"display_name_attribute"`
-	GroupMemberAttribute string          `yaml:"group_member_attribute" json:"group_member_attribute"`
-	RoleMapping        map[string]string `yaml:"role_mapping" json:"role_mapping"`
-	ConnectionTimeout  time.Duration     `yaml:"connection_timeout" json:"connection_timeout"`
-	RequestTimeout     time.Duration     `yaml:"request_timeout" json:"request_timeout"`
+	Host                 string            `yaml:"host" json:"host"`
+	Port                 int               `yaml:"port" json:"port"`
+	UseTLS               bool              `yaml:"use_tls" json:"use_tls"`
+	SkipTLSVerify        bool              `yaml:"skip_tls_verify" json:"skip_tls_verify"`
+	BindDN               string            `yaml:"bind_dn" json:"bind_dn"`
+	BindPassword         string            `yaml:"bind_password" json:"bind_password"`
+	BaseDN               string            `yaml:"base_dn" json:"base_dn"`
+	UserFilter           string            `yaml:"user_filter" json:"user_filter"`
+	UserSearchBase       string            `yaml:"user_search_base" json:"user_search_base"`
+	GroupFilter          string            `yaml:"group_filter" json:"group_filter"`
+	GroupSearchBase      string            `yaml:"group_search_base" json:"group_search_base"`
+	UsernameAttribute    string            `yaml:"username_attribute" json:"username_attribute"`
+	EmailAttribute       string            `yaml:"email_attribute" json:"email_attribute"`
+	DisplayNameAttribute string            `yaml:"display_name_attribute" json:"display_name_attribute"`
+	GroupMemberAttribute string            `yaml:"group_member_attribute" json:"group_member_attribute"`
+	RoleMapping          map[string]string `yaml:"role_mapping" json:"role_mapping"`
+	ConnectionTimeout    time.Duration     `yaml:"connection_timeout" json:"connection_timeout"`
+	RequestTimeout       time.Duration     `yaml:"request_timeout" json:"request_timeout"`
 }
 
 // NewLDAPProvider creates a new LDAP authentication provider

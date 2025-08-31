@@ -21,9 +21,9 @@ func NewLoadShedder(config *GracefulDegradationConfig) *LoadShedder {
 func NewRequestPrioritizer() *RequestPrioritizer {
 	return &RequestPrioritizer{
 		priorities: map[string]int{
-			"threat_lookup":        1, // Highest priority
-			"vulnerability_check":  2,
-			"package_scan":         3, // Lowest priority
+			"threat_lookup":       1, // Highest priority
+			"vulnerability_check": 2,
+			"package_scan":        3, // Lowest priority
 		},
 	}
 }

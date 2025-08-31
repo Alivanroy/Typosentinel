@@ -21,9 +21,9 @@ type ReportGenerator struct {
 type ReportType string
 
 const (
-	ExecutiveReport   ReportType = "executive"
-	TechnicalReport   ReportType = "technical"
-	ComplianceReport  ReportType = "compliance"
+	ExecutiveReport  ReportType = "executive"
+	TechnicalReport  ReportType = "technical"
+	ComplianceReport ReportType = "compliance"
 )
 
 // ReportData contains common data for all report types
@@ -59,38 +59,38 @@ type ExecutiveReportData struct {
 // TechnicalReportData contains data specific to technical reports
 type TechnicalReportData struct {
 	ReportData
-	ScanOverview         ScanOverview           `json:"scan_overview"`
-	Vulnerabilities      []VulnerabilityDetail  `json:"vulnerabilities"`
-	RepositoryAnalysis   []RepositoryAnalysis   `json:"repository_analysis"`
-	DetectionMethods     []DetectionMethod      `json:"detection_methods"`
-	ScanTimeline         []ScanEvent            `json:"scan_timeline"`
-	SystemConfiguration  SystemConfig           `json:"system_configuration"`
-	PerformanceMetrics   PerformanceMetrics     `json:"performance_metrics"`
+	ScanOverview        ScanOverview          `json:"scan_overview"`
+	Vulnerabilities     []VulnerabilityDetail `json:"vulnerabilities"`
+	RepositoryAnalysis  []RepositoryAnalysis  `json:"repository_analysis"`
+	DetectionMethods    []DetectionMethod     `json:"detection_methods"`
+	ScanTimeline        []ScanEvent           `json:"scan_timeline"`
+	SystemConfiguration SystemConfig          `json:"system_configuration"`
+	PerformanceMetrics  PerformanceMetrics    `json:"performance_metrics"`
 }
 
 // ComplianceReportData contains data specific to compliance reports
 type ComplianceReportData struct {
 	ReportData
-	ExecutiveSummary     string                    `json:"executive_summary"`
-	AssessmentPeriod     string                    `json:"assessment_period"`
-	Assessor             string                    `json:"assessor"`
-	ComplianceFramework  string                    `json:"compliance_framework"`
-	AssessmentScope      string                    `json:"assessment_scope"`
-	OverallScore         float64                   `json:"overall_score"`
-	TotalRequirements    int                       `json:"total_requirements"`
-	CompliantRequirements int                      `json:"compliant_requirements"`
-	PartiallyCompliant   int                       `json:"partially_compliant"`
-	NonCompliant         int                       `json:"non_compliant"`
-	ComplianceStandards  []ComplianceStandard      `json:"compliance_standards"`
-	DetailedAssessment   []orchestrator.ComplianceRequirement   `json:"detailed_assessment"`
-	SecurityControls     []SecurityControl         `json:"security_controls"`
-	HighRiskFindings     int                       `json:"high_risk_findings"`
-	MediumRiskFindings   int                       `json:"medium_risk_findings"`
-	LowRiskFindings      int                       `json:"low_risk_findings"`
-	OverallRiskScore     string                    `json:"overall_risk_score"`
-	RemediationRoadmap   []RemediationPhase        `json:"remediation_roadmap"`
-	AuditTrail           []AuditEntry              `json:"audit_trail"`
-	ReportVersion        string                    `json:"report_version"`
+	ExecutiveSummary      string                               `json:"executive_summary"`
+	AssessmentPeriod      string                               `json:"assessment_period"`
+	Assessor              string                               `json:"assessor"`
+	ComplianceFramework   string                               `json:"compliance_framework"`
+	AssessmentScope       string                               `json:"assessment_scope"`
+	OverallScore          float64                              `json:"overall_score"`
+	TotalRequirements     int                                  `json:"total_requirements"`
+	CompliantRequirements int                                  `json:"compliant_requirements"`
+	PartiallyCompliant    int                                  `json:"partially_compliant"`
+	NonCompliant          int                                  `json:"non_compliant"`
+	ComplianceStandards   []ComplianceStandard                 `json:"compliance_standards"`
+	DetailedAssessment    []orchestrator.ComplianceRequirement `json:"detailed_assessment"`
+	SecurityControls      []SecurityControl                    `json:"security_controls"`
+	HighRiskFindings      int                                  `json:"high_risk_findings"`
+	MediumRiskFindings    int                                  `json:"medium_risk_findings"`
+	LowRiskFindings       int                                  `json:"low_risk_findings"`
+	OverallRiskScore      string                               `json:"overall_risk_score"`
+	RemediationRoadmap    []RemediationPhase                   `json:"remediation_roadmap"`
+	AuditTrail            []AuditEntry                         `json:"audit_trail"`
+	ReportVersion         string                               `json:"report_version"`
 }
 
 // Supporting data structures
@@ -143,12 +143,12 @@ type DetectionMethod struct {
 }
 
 type ScanEvent struct {
-	Timestamp   string `json:"timestamp"`
-	Event       string `json:"event"`
-	Repository  string `json:"repository"`
-	Status      string `json:"status"`
-	Duration    string `json:"duration"`
-	Findings    int    `json:"findings"`
+	Timestamp  string `json:"timestamp"`
+	Event      string `json:"event"`
+	Repository string `json:"repository"`
+	Status     string `json:"status"`
+	Duration   string `json:"duration"`
+	Findings   int    `json:"findings"`
 }
 
 type SystemConfig struct {
@@ -159,26 +159,24 @@ type SystemConfig struct {
 }
 
 type PerformanceMetrics struct {
-	ScanSpeed       string `json:"scan_speed"`
-	MemoryUsage     string `json:"memory_usage"`
-	CPUUsage        string `json:"cpu_usage"`
-	Throughput      string `json:"throughput"`
-	ErrorRate       string `json:"error_rate"`
+	ScanSpeed   string `json:"scan_speed"`
+	MemoryUsage string `json:"memory_usage"`
+	CPUUsage    string `json:"cpu_usage"`
+	Throughput  string `json:"throughput"`
+	ErrorRate   string `json:"error_rate"`
 }
 
 type ComplianceStandard struct {
-	Name             string   `json:"name"`
-	Score            float64  `json:"score"`
-	ScoreClass       string   `json:"score_class"`
-	Status           string   `json:"status"`
-	StatusClass      string   `json:"status_class"`
-	RequirementsMet  int      `json:"requirements_met"`
-	TotalRequirements int     `json:"total_requirements"`
-	LastAssessment   string   `json:"last_assessment"`
-	CriticalGaps     []string `json:"critical_gaps,omitempty"`
+	Name              string   `json:"name"`
+	Score             float64  `json:"score"`
+	ScoreClass        string   `json:"score_class"`
+	Status            string   `json:"status"`
+	StatusClass       string   `json:"status_class"`
+	RequirementsMet   int      `json:"requirements_met"`
+	TotalRequirements int      `json:"total_requirements"`
+	LastAssessment    string   `json:"last_assessment"`
+	CriticalGaps      []string `json:"critical_gaps,omitempty"`
 }
-
-
 
 type RemediationStep struct {
 	Priority string `json:"priority"`
@@ -352,16 +350,16 @@ func (rg *ReportGenerator) CleanupOldReports(maxAge time.Duration) error {
 // GetReportStats returns statistics about generated reports
 func (rg *ReportGenerator) GetReportStats() (map[string]interface{}, error) {
 	stats := make(map[string]interface{})
-	
+
 	templates, err := rg.GetAvailableTemplates()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	stats["available_templates"] = len(templates)
 	stats["template_names"] = templates
 	stats["output_directory"] = rg.outputDir
 	stats["template_directory"] = rg.templateDir
-	
+
 	return stats, nil
 }

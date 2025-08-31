@@ -32,64 +32,64 @@ type SecurityCoordinator struct {
 
 // SecurityCoordinatorConfig configures the security coordinator
 type SecurityCoordinatorConfig struct {
-	EnableTemporalDetection        bool          `yaml:"enable_temporal_detection"`        // true
-	EnableComplexityAnalysis       bool          `yaml:"enable_complexity_analysis"`       // true
-	EnableTrustValidation          bool          `yaml:"enable_trust_validation"`          // true
-	EnableMLHardening              bool          `yaml:"enable_ml_hardening"`              // true
-	EnableMultiVectorDetection     bool          `yaml:"enable_multi_vector_detection"`    // true
-	EnableBehavioralAnalysis       bool          `yaml:"enable_behavioral_analysis"`       // true
-	EnableResourceExhaustionDetection bool       `yaml:"enable_resource_exhaustion_detection"` // true
-	EnableThreatIntelligence       bool          `yaml:"enable_threat_intelligence"`       // true
-	EnableResponseOrchestration    bool          `yaml:"enable_response_orchestration"`    // true
-	EnableSecurityMetrics          bool          `yaml:"enable_security_metrics"`          // true
-	EnableAlertManagement          bool          `yaml:"enable_alert_management"`          // true
-	MaxConcurrentScans             int           `yaml:"max_concurrent_scans"`             // 10
-	ScanTimeout                    time.Duration `yaml:"scan_timeout"`                     // 30m
-	ThreatScoreThreshold           float64       `yaml:"threat_score_threshold"`           // 0.7
-	CriticalThreatThreshold        float64       `yaml:"critical_threat_threshold"`        // 0.9
-	AutoResponseEnabled            bool          `yaml:"auto_response_enabled"`            // false
-	Enabled                        bool          `yaml:"enabled"`                          // true
+	EnableTemporalDetection           bool          `yaml:"enable_temporal_detection"`            // true
+	EnableComplexityAnalysis          bool          `yaml:"enable_complexity_analysis"`           // true
+	EnableTrustValidation             bool          `yaml:"enable_trust_validation"`              // true
+	EnableMLHardening                 bool          `yaml:"enable_ml_hardening"`                  // true
+	EnableMultiVectorDetection        bool          `yaml:"enable_multi_vector_detection"`        // true
+	EnableBehavioralAnalysis          bool          `yaml:"enable_behavioral_analysis"`           // true
+	EnableResourceExhaustionDetection bool          `yaml:"enable_resource_exhaustion_detection"` // true
+	EnableThreatIntelligence          bool          `yaml:"enable_threat_intelligence"`           // true
+	EnableResponseOrchestration       bool          `yaml:"enable_response_orchestration"`        // true
+	EnableSecurityMetrics             bool          `yaml:"enable_security_metrics"`              // true
+	EnableAlertManagement             bool          `yaml:"enable_alert_management"`              // true
+	MaxConcurrentScans                int           `yaml:"max_concurrent_scans"`                 // 10
+	ScanTimeout                       time.Duration `yaml:"scan_timeout"`                         // 30m
+	ThreatScoreThreshold              float64       `yaml:"threat_score_threshold"`               // 0.7
+	CriticalThreatThreshold           float64       `yaml:"critical_threat_threshold"`            // 0.9
+	AutoResponseEnabled               bool          `yaml:"auto_response_enabled"`                // false
+	Enabled                           bool          `yaml:"enabled"`                              // true
 }
 
 // ComprehensiveSecurityResult represents comprehensive security analysis results
 type ComprehensiveSecurityResult struct {
-	PackageName              string                        `json:"package_name"`
-	OverallThreatScore       float64                       `json:"overall_threat_score"`
-	ThreatLevel              string                        `json:"threat_level"`
-	TemporalAnalysis         *TemporalThreat               `json:"temporal_analysis"`
-	ComplexityAnalysis       *ComplexityThreat             `json:"complexity_analysis"`
-	TrustValidation          *TrustValidationResult        `json:"trust_validation"`
-	MLHardening              *MLHardeningResult            `json:"ml_hardening"`
-	MultiVectorAnalysis      *MultiVectorAnalysisResult    `json:"multi_vector_analysis"`
-	BehavioralAnalysis       *BehavioralAnalysisResult     `json:"behavioral_analysis"`
+	PackageName                string                            `json:"package_name"`
+	OverallThreatScore         float64                           `json:"overall_threat_score"`
+	ThreatLevel                string                            `json:"threat_level"`
+	TemporalAnalysis           *TemporalThreat                   `json:"temporal_analysis"`
+	ComplexityAnalysis         *ComplexityThreat                 `json:"complexity_analysis"`
+	TrustValidation            *TrustValidationResult            `json:"trust_validation"`
+	MLHardening                *MLHardeningResult                `json:"ml_hardening"`
+	MultiVectorAnalysis        *MultiVectorAnalysisResult        `json:"multi_vector_analysis"`
+	BehavioralAnalysis         *BehavioralAnalysisResult         `json:"behavioral_analysis"`
 	ResourceExhaustionAnalysis *ResourceExhaustionAnalysisResult `json:"resource_exhaustion_analysis"`
-	ThreatIntelligence       *ThreatIntelResult            `json:"threat_intelligence"`
-	SecurityMetrics          *SecurityMetricsResult        `json:"security_metrics"`
-	DetectedThreats          []DetectedThreat              `json:"detected_threats"`
-	SecurityRecommendations  []SecurityRecommendation      `json:"security_recommendations"`
-	ResponseActions          []ResponseAction              `json:"response_actions"`
-	AlertsGenerated          []SecurityAlert               `json:"alerts_generated"`
-	AnalysisTimestamp        time.Time                     `json:"analysis_timestamp"`
-	AnalysisDuration         time.Duration                 `json:"analysis_duration"`
-	RequiresImmediateAction  bool                          `json:"requires_immediate_action"`
-	Metadata                 map[string]interface{}        `json:"metadata"`
+	ThreatIntelligence         *ThreatIntelResult                `json:"threat_intelligence"`
+	SecurityMetrics            *SecurityMetricsResult            `json:"security_metrics"`
+	DetectedThreats            []DetectedThreat                  `json:"detected_threats"`
+	SecurityRecommendations    []SecurityRecommendation          `json:"security_recommendations"`
+	ResponseActions            []ResponseAction                  `json:"response_actions"`
+	AlertsGenerated            []SecurityAlert                   `json:"alerts_generated"`
+	AnalysisTimestamp          time.Time                         `json:"analysis_timestamp"`
+	AnalysisDuration           time.Duration                     `json:"analysis_duration"`
+	RequiresImmediateAction    bool                              `json:"requires_immediate_action"`
+	Metadata                   map[string]interface{}            `json:"metadata"`
 }
 
 // DetectedThreat represents a detected security threat
 type DetectedThreat struct {
-	ThreatID            string                 `json:"threat_id"`
-	ThreatType          string                 `json:"threat_type"`
-	ThreatCategory      string                 `json:"threat_category"`
-	Severity            string                 `json:"severity"`
-	Confidence          float64                `json:"confidence"`
-	Description         string                 `json:"description"`
-	Evidence            []string               `json:"evidence"`
-	DetectionSource     string                 `json:"detection_source"`
-	DetectionTimestamp  time.Time              `json:"detection_timestamp"`
-	AffectedComponents  []string               `json:"affected_components"`
-	PotentialImpact     string                 `json:"potential_impact"`
-	MitigationStrategies []string              `json:"mitigation_strategies"`
-	Context             map[string]interface{} `json:"context"`
+	ThreatID             string                 `json:"threat_id"`
+	ThreatType           string                 `json:"threat_type"`
+	ThreatCategory       string                 `json:"threat_category"`
+	Severity             string                 `json:"severity"`
+	Confidence           float64                `json:"confidence"`
+	Description          string                 `json:"description"`
+	Evidence             []string               `json:"evidence"`
+	DetectionSource      string                 `json:"detection_source"`
+	DetectionTimestamp   time.Time              `json:"detection_timestamp"`
+	AffectedComponents   []string               `json:"affected_components"`
+	PotentialImpact      string                 `json:"potential_impact"`
+	MitigationStrategies []string               `json:"mitigation_strategies"`
+	Context              map[string]interface{} `json:"context"`
 }
 
 // SecurityRecommendation represents security recommendations
@@ -107,13 +107,13 @@ type SecurityRecommendation struct {
 
 // ResponseAction represents automated response actions
 type ResponseAction struct {
-	ActionID        string                 `json:"action_id"`
-	ActionType      string                 `json:"action_type"`
-	ActionStatus    string                 `json:"action_status"`
-	Description     string                 `json:"description"`
-	ExecutionTime   time.Time              `json:"execution_time"`
-	Result          string                 `json:"result"`
-	Parameters      map[string]interface{} `json:"parameters"`
+	ActionID      string                 `json:"action_id"`
+	ActionType    string                 `json:"action_type"`
+	ActionStatus  string                 `json:"action_status"`
+	Description   string                 `json:"description"`
+	ExecutionTime time.Time              `json:"execution_time"`
+	Result        string                 `json:"result"`
+	Parameters    map[string]interface{} `json:"parameters"`
 }
 
 // SecurityAlert represents security alerts
@@ -132,48 +132,48 @@ type SecurityAlert struct {
 
 // ThreatIntelligenceService provides threat intelligence capabilities
 type ThreatIntelligenceService struct {
-	threatFeeds         []ThreatFeed
-	threatDatabase      map[string]ThreatRecord
-	intelligenceAPI     string
-	updateInterval      time.Duration
-	lastUpdate          time.Time
-	mutex               sync.RWMutex
+	threatFeeds     []ThreatFeed
+	threatDatabase  map[string]ThreatRecord
+	intelligenceAPI string
+	updateInterval  time.Duration
+	lastUpdate      time.Time
+	mutex           sync.RWMutex
 }
 
 // ThreatFeed represents threat intelligence feeds
 type ThreatFeed struct {
-	FeedID          string    `json:"feed_id"`
-	FeedName        string    `json:"feed_name"`
-	FeedURL         string    `json:"feed_url"`
-	FeedType        string    `json:"feed_type"`
-	LastUpdate      time.Time `json:"last_update"`
-	RecordCount     int       `json:"record_count"`
-	Enabled         bool      `json:"enabled"`
+	FeedID      string    `json:"feed_id"`
+	FeedName    string    `json:"feed_name"`
+	FeedURL     string    `json:"feed_url"`
+	FeedType    string    `json:"feed_type"`
+	LastUpdate  time.Time `json:"last_update"`
+	RecordCount int       `json:"record_count"`
+	Enabled     bool      `json:"enabled"`
 }
 
 // ThreatIntelRecord represents threat intelligence records
 type ThreatIntelRecord struct {
-	RecordID        string                 `json:"record_id"`
-	ThreatType      string                 `json:"threat_type"`
-	Indicator       string                 `json:"indicator"`
-	IndicatorType   string                 `json:"indicator_type"`
-	Confidence      float64                `json:"confidence"`
-	Severity        string                 `json:"severity"`
-	Description     string                 `json:"description"`
-	Source          string                 `json:"source"`
-	FirstSeen       time.Time              `json:"first_seen"`
-	LastSeen        time.Time              `json:"last_seen"`
-	Tags            []string               `json:"tags"`
-	Context         map[string]interface{} `json:"context"`
+	RecordID      string                 `json:"record_id"`
+	ThreatType    string                 `json:"threat_type"`
+	Indicator     string                 `json:"indicator"`
+	IndicatorType string                 `json:"indicator_type"`
+	Confidence    float64                `json:"confidence"`
+	Severity      string                 `json:"severity"`
+	Description   string                 `json:"description"`
+	Source        string                 `json:"source"`
+	FirstSeen     time.Time              `json:"first_seen"`
+	LastSeen      time.Time              `json:"last_seen"`
+	Tags          []string               `json:"tags"`
+	Context       map[string]interface{} `json:"context"`
 }
 
 // ThreatIntelResult represents threat intelligence analysis results
 type ThreatIntelResult struct {
-	MatchedThreats      []ThreatMatch         `json:"matched_threats"`
-	ThreatScore         float64               `json:"threat_score"`
-	IntelligenceSources []string              `json:"intelligence_sources"`
-	LastUpdate          time.Time             `json:"last_update"`
-	Recommendations     []string              `json:"recommendations"`
+	MatchedThreats      []ThreatMatch `json:"matched_threats"`
+	ThreatScore         float64       `json:"threat_score"`
+	IntelligenceSources []string      `json:"intelligence_sources"`
+	LastUpdate          time.Time     `json:"last_update"`
+	Recommendations     []string      `json:"recommendations"`
 }
 
 // ThreatMatch represents matched threat intelligence
@@ -186,22 +186,22 @@ type ThreatMatch struct {
 
 // ResponseOrchestrationService manages automated response actions
 type ResponseOrchestrationService struct {
-	responseRules       []ResponseRule
-	responseActions     map[string]ResponseActionHandler
-	responseHistory     []ResponseRecord
-	escalationRules     []EscalationRule
-	mutex               sync.RWMutex
+	responseRules   []ResponseRule
+	responseActions map[string]ResponseActionHandler
+	responseHistory []ResponseRecord
+	escalationRules []EscalationRule
+	mutex           sync.RWMutex
 }
 
 // ResponseRule defines automated response rules
 type ResponseRule struct {
-	RuleID          string                 `json:"rule_id"`
-	RuleName        string                 `json:"rule_name"`
-	TriggerCondition string                `json:"trigger_condition"`
-	ActionType      string                 `json:"action_type"`
-	Parameters      map[string]interface{} `json:"parameters"`
-	Enabled         bool                   `json:"enabled"`
-	Priority        int                    `json:"priority"`
+	RuleID           string                 `json:"rule_id"`
+	RuleName         string                 `json:"rule_name"`
+	TriggerCondition string                 `json:"trigger_condition"`
+	ActionType       string                 `json:"action_type"`
+	Parameters       map[string]interface{} `json:"parameters"`
+	Enabled          bool                   `json:"enabled"`
+	Priority         int                    `json:"priority"`
 }
 
 // ResponseActionHandler defines response action handlers
@@ -221,109 +221,109 @@ type ResponseRecord struct {
 
 // EscalationRule defines escalation rules
 type EscalationRule struct {
-	RuleID          string        `json:"rule_id"`
-	TriggerCondition string       `json:"trigger_condition"`
-	EscalationDelay time.Duration `json:"escalation_delay"`
-	EscalationAction string       `json:"escalation_action"`
-	Enabled         bool          `json:"enabled"`
+	RuleID           string        `json:"rule_id"`
+	TriggerCondition string        `json:"trigger_condition"`
+	EscalationDelay  time.Duration `json:"escalation_delay"`
+	EscalationAction string        `json:"escalation_action"`
+	Enabled          bool          `json:"enabled"`
 }
 
 // SecurityMetrics tracks security metrics
 type SecurityMetrics struct {
-	scanMetrics         map[string]ScanMetric
-	threatMetrics       map[string]ThreatMetric
-	performanceMetrics  map[string]PerformanceMetric
-	alertMetrics        map[string]AlertMetric
-	mutex               sync.RWMutex
+	scanMetrics        map[string]ScanMetric
+	threatMetrics      map[string]ThreatMetric
+	performanceMetrics map[string]PerformanceMetric
+	alertMetrics       map[string]AlertMetric
+	mutex              sync.RWMutex
 }
 
 // ScanMetric represents scan metrics
 type ScanMetric struct {
-	MetricID        string    `json:"metric_id"`
-	ScanType        string    `json:"scan_type"`
-	ScanCount       int       `json:"scan_count"`
-	SuccessRate     float64   `json:"success_rate"`
+	MetricID        string        `json:"metric_id"`
+	ScanType        string        `json:"scan_type"`
+	ScanCount       int           `json:"scan_count"`
+	SuccessRate     float64       `json:"success_rate"`
 	AverageDuration time.Duration `json:"average_duration"`
-	LastScan        time.Time `json:"last_scan"`
+	LastScan        time.Time     `json:"last_scan"`
 }
 
 // ThreatMetric represents threat metrics
 type ThreatMetric struct {
-	MetricID        string  `json:"metric_id"`
-	ThreatType      string  `json:"threat_type"`
-	DetectionCount  int     `json:"detection_count"`
-	FalsePositives  int     `json:"false_positives"`
-	TruePositives   int     `json:"true_positives"`
-	Accuracy        float64 `json:"accuracy"`
+	MetricID       string  `json:"metric_id"`
+	ThreatType     string  `json:"threat_type"`
+	DetectionCount int     `json:"detection_count"`
+	FalsePositives int     `json:"false_positives"`
+	TruePositives  int     `json:"true_positives"`
+	Accuracy       float64 `json:"accuracy"`
 }
 
 // SecurityPerformanceMetric represents performance metrics
 type SecurityPerformanceMetric struct {
-	MetricID        string        `json:"metric_id"`
-	ComponentName   string        `json:"component_name"`
-	AverageLatency  time.Duration `json:"average_latency"`
-	Throughput      float64       `json:"throughput"`
-	ErrorRate       float64       `json:"error_rate"`
-	ResourceUsage   float64       `json:"resource_usage"`
+	MetricID       string        `json:"metric_id"`
+	ComponentName  string        `json:"component_name"`
+	AverageLatency time.Duration `json:"average_latency"`
+	Throughput     float64       `json:"throughput"`
+	ErrorRate      float64       `json:"error_rate"`
+	ResourceUsage  float64       `json:"resource_usage"`
 }
 
 // AlertMetric represents alert metrics
 type AlertMetric struct {
-	MetricID        string  `json:"metric_id"`
-	AlertType       string  `json:"alert_type"`
-	AlertCount      int     `json:"alert_count"`
-	AcknowledgedCount int   `json:"acknowledged_count"`
-	ResolvedCount   int     `json:"resolved_count"`
+	MetricID            string        `json:"metric_id"`
+	AlertType           string        `json:"alert_type"`
+	AlertCount          int           `json:"alert_count"`
+	AcknowledgedCount   int           `json:"acknowledged_count"`
+	ResolvedCount       int           `json:"resolved_count"`
 	AverageResponseTime time.Duration `json:"average_response_time"`
 }
 
 // SecurityMetricsResult represents security metrics results
 type SecurityMetricsResult struct {
-	ScanMetrics         []ScanMetric         `json:"scan_metrics"`
-	ThreatMetrics       []ThreatMetric       `json:"threat_metrics"`
-	PerformanceMetrics  []PerformanceMetric  `json:"performance_metrics"`
-	AlertMetrics        []AlertMetric        `json:"alert_metrics"`
-	OverallHealth       string               `json:"overall_health"`
-	HealthScore         float64              `json:"health_score"`
-	GeneratedAt         time.Time            `json:"generated_at"`
+	ScanMetrics        []ScanMetric        `json:"scan_metrics"`
+	ThreatMetrics      []ThreatMetric      `json:"threat_metrics"`
+	PerformanceMetrics []PerformanceMetric `json:"performance_metrics"`
+	AlertMetrics       []AlertMetric       `json:"alert_metrics"`
+	OverallHealth      string              `json:"overall_health"`
+	HealthScore        float64             `json:"health_score"`
+	GeneratedAt        time.Time           `json:"generated_at"`
 }
 
 // AlertManager manages security alerts
 type AlertManager struct {
-	alerts              map[string]SecurityAlert
-	alertRules          []AlertRule
+	alerts               map[string]SecurityAlert
+	alertRules           []AlertRule
 	notificationChannels []NotificationChannel
-	alertHistory        []AlertRecord
-	mutex               sync.RWMutex
+	alertHistory         []AlertRecord
+	mutex                sync.RWMutex
 }
 
 // AlertRule defines alert generation rules
 type AlertRule struct {
-	RuleID          string                 `json:"rule_id"`
-	RuleName        string                 `json:"rule_name"`
-	TriggerCondition string                `json:"trigger_condition"`
-	Severity        string                 `json:"severity"`
-	AlertTemplate   string                 `json:"alert_template"`
-	Parameters      map[string]interface{} `json:"parameters"`
-	Enabled         bool                   `json:"enabled"`
+	RuleID           string                 `json:"rule_id"`
+	RuleName         string                 `json:"rule_name"`
+	TriggerCondition string                 `json:"trigger_condition"`
+	Severity         string                 `json:"severity"`
+	AlertTemplate    string                 `json:"alert_template"`
+	Parameters       map[string]interface{} `json:"parameters"`
+	Enabled          bool                   `json:"enabled"`
 }
 
 // NotificationChannel defines notification channels
 type NotificationChannel struct {
-	ChannelID       string                 `json:"channel_id"`
-	ChannelType     string                 `json:"channel_type"`
-	Configuration   map[string]interface{} `json:"configuration"`
-	Enabled         bool                   `json:"enabled"`
+	ChannelID     string                 `json:"channel_id"`
+	ChannelType   string                 `json:"channel_type"`
+	Configuration map[string]interface{} `json:"configuration"`
+	Enabled       bool                   `json:"enabled"`
 }
 
 // AlertRecord represents alert history records
 type AlertRecord struct {
-	RecordID        string    `json:"record_id"`
-	AlertID         string    `json:"alert_id"`
-	Action          string    `json:"action"`
-	Timestamp       time.Time `json:"timestamp"`
-	User            string    `json:"user"`
-	Notes           string    `json:"notes"`
+	RecordID  string    `json:"record_id"`
+	AlertID   string    `json:"alert_id"`
+	Action    string    `json:"action"`
+	Timestamp time.Time `json:"timestamp"`
+	User      string    `json:"user"`
+	Notes     string    `json:"notes"`
 }
 
 // NewSecurityCoordinator creates a new security coordinator
@@ -332,29 +332,29 @@ func NewSecurityCoordinator(config *SecurityCoordinatorConfig, logger logger.Log
 		config: config,
 		logger: logger,
 	}
-	
+
 	// Initialize components based on configuration
 	if config.EnableTemporalDetection {
 		temporalConfig := DefaultTemporalDetectorConfig()
 		sc.temporalDetector = NewTemporalDetector(temporalConfig, logger)
 	}
-	
+
 	if config.EnableComplexityAnalysis {
 		complexityConfig := DefaultComplexityAnalyzerConfig()
 		sc.complexityAnalyzer = NewComplexityAnalyzer(complexityConfig, logger)
 	}
-	
+
 	if config.EnableTrustValidation {
 		trustConfig := DefaultTrustValidatorConfig()
 		sc.trustValidator = NewTrustValidator(trustConfig, logger)
 	}
-	
+
 	if config.EnableResourceExhaustionDetection {
 		resourceConfig := DefaultResourceExhaustionConfig()
 		sc.resourceExhaustionDetector = NewResourceExhaustionDetector(resourceConfig, logger)
 		// Start will be called when the coordinator starts
 	}
-	
+
 	return sc
 }
 
@@ -484,10 +484,10 @@ func (sc *SecurityCoordinator) performResourceExhaustionAnalysis(ctx context.Con
 
 	// Get current resource metrics
 	currentMetrics := sc.resourceExhaustionDetector.GetCurrentMetrics()
-	
+
 	// Get detected patterns (empty for now, would need to implement this method)
 	var detectedPatterns []PatternDetection
-	
+
 	// Get active alerts
 	activeAlertsPtr := sc.resourceExhaustionDetector.GetActiveAlerts()
 	activeAlerts := make([]ResourceExhaustionAlert, len(activeAlertsPtr))
@@ -496,19 +496,19 @@ func (sc *SecurityCoordinator) performResourceExhaustionAnalysis(ctx context.Con
 			activeAlerts[i] = *alert
 		}
 	}
-	
+
 	// Get active mitigations (empty for now, would need to implement this method)
 	var activeMitigations []ActiveMitigation
-	
+
 	// Calculate threat score based on current metrics and patterns
 	threatScore := sc.calculateResourceThreatScore(currentMetrics, detectedPatterns)
-	
+
 	// Determine system health
 	systemHealth := sc.determineSystemHealth(currentMetrics, threatScore)
-	
+
 	// Generate recommendations
 	recommendations := sc.generateResourceRecommendations(currentMetrics, detectedPatterns)
-	
+
 	result := &ResourceExhaustionAnalysisResult{
 		ThreatScore:       threatScore,
 		ThreatLevel:       sc.determineThreatLevel(threatScore),
@@ -521,17 +521,17 @@ func (sc *SecurityCoordinator) performResourceExhaustionAnalysis(ctx context.Con
 		AnalysisTimestamp: time.Now(),
 		Metrics:           sc.resourceExhaustionDetector.GetDetectorMetrics(),
 	}
-	
+
 	return result, nil
 }
 
 func (sc *SecurityCoordinator) extractThreatsFromResourceExhaustion(result *ResourceExhaustionAnalysisResult) []DetectedThreat {
 	var threats []DetectedThreat
-	
+
 	if result == nil {
 		return threats
 	}
-	
+
 	// Extract threats from detected patterns
 	for _, pattern := range result.DetectedPatterns {
 		threat := DetectedThreat{
@@ -547,7 +547,7 @@ func (sc *SecurityCoordinator) extractThreatsFromResourceExhaustion(result *Reso
 		}
 		threats = append(threats, threat)
 	}
-	
+
 	// Extract threats from active alerts
 	for _, alert := range result.ActiveAlerts {
 		threat := DetectedThreat{
@@ -563,7 +563,7 @@ func (sc *SecurityCoordinator) extractThreatsFromResourceExhaustion(result *Reso
 		}
 		threats = append(threats, threat)
 	}
-	
+
 	return threats
 }
 
@@ -571,9 +571,9 @@ func (sc *SecurityCoordinator) calculateResourceThreatScore(metrics *ResourceUsa
 	if metrics == nil {
 		return 0.0
 	}
-	
+
 	var score float64
-	
+
 	// Base score from resource utilization
 	if metrics.CPUUsage > 80.0 {
 		score += 0.3
@@ -584,17 +584,17 @@ func (sc *SecurityCoordinator) calculateResourceThreatScore(metrics *ResourceUsa
 	if metrics.GoroutineCount > 10000 {
 		score += 0.2
 	}
-	
+
 	// Additional score from detected patterns
 	for _, pattern := range patterns {
 		score += pattern.Confidence * 0.1
 	}
-	
+
 	// Cap the score at 1.0
 	if score > 1.0 {
 		score = 1.0
 	}
-	
+
 	return score
 }
 
@@ -611,7 +611,7 @@ func (sc *SecurityCoordinator) determineSystemHealth(metrics *ResourceUsageMetri
 
 func (sc *SecurityCoordinator) generateResourceRecommendations(metrics *ResourceUsageMetrics, patterns []PatternDetection) []string {
 	var recommendations []string
-	
+
 	if metrics != nil {
 		if metrics.CPUUsage > 80.0 {
 			recommendations = append(recommendations, "Consider optimizing CPU-intensive operations")
@@ -623,11 +623,11 @@ func (sc *SecurityCoordinator) generateResourceRecommendations(metrics *Resource
 			recommendations = append(recommendations, "Review goroutine management and implement proper cleanup")
 		}
 	}
-	
+
 	if len(patterns) > 0 {
 		recommendations = append(recommendations, "Investigate detected resource exhaustion patterns")
 	}
-	
+
 	return recommendations
 }
 

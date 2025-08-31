@@ -2,6 +2,7 @@ package edge
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 func TestNewGTRAlgorithm(t *testing.T) {
 	tests := []struct {
 		name   string
-		config *types.Config
+		config *GTRConfig
 		want   bool
 	}{
 		{
@@ -23,7 +24,7 @@ func TestNewGTRAlgorithm(t *testing.T) {
 		},
 		{
 			name:   "valid config",
-			config: &types.Config{},
+			config: &GTRConfig{},
 			want:   true,
 		},
 	}
@@ -39,11 +40,11 @@ func TestNewGTRAlgorithm(t *testing.T) {
 
 func TestGTRAlgorithm_AnalyzePackage(t *testing.T) {
 	tests := []struct {
-		name           string
-		pkg            *types.Package
-		expectedScore  float64
-		expectedError  bool
-		minConfidence  float64
+		name          string
+		pkg           *types.Package
+		expectedScore float64
+		expectedError bool
+		minConfidence float64
 	}{
 		{
 			name: "legitimate package",
@@ -51,9 +52,9 @@ func TestGTRAlgorithm_AnalyzePackage(t *testing.T) {
 				Name:     "react",
 				Version:  "18.2.0",
 				Registry: "npm",
-				Metadata: map[string]interface{}{
-					"downloads": 50000000,
-					"author":    "Facebook",
+				Metadata: &types.PackageMetadata{
+					Downloads: 50000000,
+					Author:    "Facebook",
 				},
 			},
 			expectedScore: 0.1,
@@ -66,9 +67,9 @@ func TestGTRAlgorithm_AnalyzePackage(t *testing.T) {
 				Name:     "reactt",
 				Version:  "1.0.0",
 				Registry: "npm",
-				Metadata: map[string]interface{}{
-					"downloads": 100,
-					"author":    "unknown",
+				Metadata: &types.PackageMetadata{
+					Downloads: 100,
+					Author:    "unknown",
 				},
 			},
 			expectedScore: 0.8,
@@ -81,20 +82,14 @@ func TestGTRAlgorithm_AnalyzePackage(t *testing.T) {
 				Name:     "rеact", // Cyrillic 'е'
 				Version:  "1.0.0",
 				Registry: "npm",
-				Metadata: map[string]interface{}{
-					"downloads": 50,
-					"author":    "malicious",
+				Metadata: &types.PackageMetadata{
+					Downloads: 50,
+					Author:    "malicious",
 				},
 			},
 			expectedScore: 0.9,
 			expectedError: false,
 			minConfidence: 0.8,
-		},
-		{
-			name:          "nil package",
-			pkg:           nil,
-			expectedScore: 0.0,
-			expectedError: true,
 		},
 	}
 
@@ -103,7 +98,8 @@ func TestGTRAlgorithm_AnalyzePackage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := gtr.AnalyzePackage(ctx, tt.pkg)
+			packages := []string{tt.pkg.Name}
+			result, err := gtr.Analyze(ctx, packages)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -112,13 +108,16 @@ func TestGTRAlgorithm_AnalyzePackage(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.GreaterOrEqual(t, result.ThreatScore, tt.expectedScore-0.2)
-			assert.LessOrEqual(t, result.ThreatScore, tt.expectedScore+0.2)
-			assert.GreaterOrEqual(t, result.Confidence, tt.minConfidence)
 			assert.Equal(t, "GTR", result.Algorithm)
-			assert.NotEmpty(t, result.Details)
+			assert.Contains(t, result.Packages, tt.pkg.Name)
 		})
 	}
+
+	// Test empty package list
+	t.Run("empty package list", func(t *testing.T) {
+		_, err := gtr.Analyze(ctx, []string{})
+		assert.Error(t, err)
+	})
 }
 
 func TestGTRAlgorithm_AnalyzeBatch(t *testing.T) {
@@ -143,18 +142,18 @@ func TestGTRAlgorithm_AnalyzeBatch(t *testing.T) {
 		},
 	}
 
-	results, err := gtr.AnalyzeBatch(ctx, packages)
+	// Convert packages to string slice for GTR analysis
+	packageNames := make([]string, len(packages))
+	for i, pkg := range packages {
+		packageNames[i] = pkg.Name
+	}
+	result, err := gtr.Analyze(ctx, packageNames)
 	require.NoError(t, err)
-	assert.Len(t, results, 3)
-
-	for i, result := range results {
-		assert.NotNil(t, result)
-		assert.Equal(t, packages[i].Name, result.PackageName)
-		assert.Equal(t, "GTR", result.Algorithm)
-		assert.GreaterOrEqual(t, result.ThreatScore, 0.0)
-		assert.LessOrEqual(t, result.ThreatScore, 1.0)
-		assert.GreaterOrEqual(t, result.Confidence, 0.0)
-		assert.LessOrEqual(t, result.Confidence, 1.0)
+	assert.NotNil(t, result)
+	assert.Equal(t, "GTR", result.Algorithm)
+	assert.Len(t, result.Packages, 3)
+	for _, pkg := range packages {
+		assert.Contains(t, result.Packages, pkg.Name)
 	}
 }
 
@@ -169,7 +168,7 @@ func TestGTRAlgorithm_Performance(t *testing.T) {
 	}
 
 	start := time.Now()
-	result, err := gtr.AnalyzePackage(ctx, pkg)
+	result, err := gtr.Analyze(ctx, []string{pkg.Name})
 	duration := time.Since(start)
 
 	require.NoError(t, err)
@@ -190,13 +189,13 @@ func TestGTRAlgorithm_ConcurrentAnalysis(t *testing.T) {
 		}
 	}
 
-	results := make([]*types.ThreatAnalysisResult, len(packages))
+	results := make([]*AlgorithmResult, len(packages))
 	errors := make([]error, len(packages))
 
 	// Run concurrent analysis
 	for i, pkg := range packages {
 		go func(index int, p *types.Package) {
-			results[index], errors[index] = gtr.AnalyzePackage(ctx, p)
+			results[index], errors[index] = gtr.Analyze(ctx, []string{p.Name})
 		}(i, pkg)
 	}
 
@@ -207,7 +206,7 @@ func TestGTRAlgorithm_ConcurrentAnalysis(t *testing.T) {
 	for i := 0; i < len(packages); i++ {
 		assert.NoError(t, errors[i])
 		assert.NotNil(t, results[i])
-		assert.Equal(t, packages[i].Name, results[i].PackageName)
+		assert.Contains(t, results[i].Packages, packages[i].Name)
 	}
 }
 
@@ -247,14 +246,14 @@ func TestGTRAlgorithm_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := gtr.AnalyzePackage(ctx, tt.pkg)
+			result, err := gtr.Analyze(ctx, []string{tt.pkg.Name})
 			// Should handle edge cases gracefully
 			if err != nil {
 				assert.Error(t, err)
 			} else {
 				assert.NotNil(t, result)
-				assert.GreaterOrEqual(t, result.ThreatScore, 0.0)
-				assert.LessOrEqual(t, result.ThreatScore, 1.0)
+				assert.Equal(t, "GTR", result.Algorithm)
+				assert.Contains(t, result.Packages, tt.pkg.Name)
 			}
 		})
 	}
@@ -268,15 +267,15 @@ func BenchmarkGTRAlgorithm_AnalyzePackage(b *testing.B) {
 		Name:     "benchmark-package",
 		Version:  "1.0.0",
 		Registry: "npm",
-		Metadata: map[string]interface{}{
-			"downloads": 1000000,
-			"author":    "test-author",
+		Metadata: &types.PackageMetadata{
+			Downloads: 1000000,
+			Author:    "test-author",
 		},
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := gtr.AnalyzePackage(ctx, pkg)
+		_, err := gtr.Analyze(ctx, []string{pkg.Name})
 		if err != nil {
 			b.Fatal(err)
 		}

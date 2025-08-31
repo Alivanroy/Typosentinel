@@ -9,16 +9,16 @@ import (
 
 // ScanReportData represents the data structure for PDF reports
 type ScanReportData struct {
-	ScanID       string                 `json:"scan_id"`
-	Repository   string                 `json:"repository"`
-	Platform     string                 `json:"platform"`
-	Status       string                 `json:"status"`
-	StartedAt    time.Time              `json:"started_at"`
-	CompletedAt  time.Time              `json:"completed_at"`
-	Duration     string                 `json:"duration"`
-	Threats      []ThreatInfo           `json:"threats"`
-	Summary      ScanSummary            `json:"summary"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	ScanID      string                 `json:"scan_id"`
+	Repository  string                 `json:"repository"`
+	Platform    string                 `json:"platform"`
+	Status      string                 `json:"status"`
+	StartedAt   time.Time              `json:"started_at"`
+	CompletedAt time.Time              `json:"completed_at"`
+	Duration    string                 `json:"duration"`
+	Threats     []ThreatInfo           `json:"threats"`
+	Summary     ScanSummary            `json:"summary"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // ThreatInfo represents threat information
@@ -44,7 +44,7 @@ type ScanSummary struct {
 // Note: This is a basic implementation. For production use, consider using a proper PDF library
 func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	var buf bytes.Buffer
-	
+
 	// PDF Header (simplified)
 	buf.WriteString("%PDF-1.4\n")
 	buf.WriteString("1 0 obj\n")
@@ -53,7 +53,7 @@ func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	buf.WriteString("/Pages 2 0 R\n")
 	buf.WriteString(">>\n")
 	buf.WriteString("endobj\n\n")
-	
+
 	// Pages object
 	buf.WriteString("2 0 obj\n")
 	buf.WriteString("<<\n")
@@ -62,11 +62,11 @@ func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	buf.WriteString("/Count 1\n")
 	buf.WriteString(">>\n")
 	buf.WriteString("endobj\n\n")
-	
+
 	// Generate content stream
 	content := generateReportContent(data)
 	contentLength := len(content)
-	
+
 	// Page object
 	buf.WriteString("3 0 obj\n")
 	buf.WriteString("<<\n")
@@ -85,7 +85,7 @@ func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	buf.WriteString(">>\n")
 	buf.WriteString(">>\n")
 	buf.WriteString("endobj\n\n")
-	
+
 	// Content stream
 	buf.WriteString("4 0 obj\n")
 	buf.WriteString("<<\n")
@@ -95,7 +95,7 @@ func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	buf.WriteString(content)
 	buf.WriteString("\nendstream\n")
 	buf.WriteString("endobj\n\n")
-	
+
 	// Cross-reference table
 	buf.WriteString("xref\n")
 	buf.WriteString("0 5\n")
@@ -104,7 +104,7 @@ func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	buf.WriteString("0000000074 65535 n \n")
 	buf.WriteString("0000000120 65535 n \n")
 	buf.WriteString("0000000274 65535 n \n")
-	
+
 	// Trailer
 	buf.WriteString("trailer\n")
 	buf.WriteString("<<\n")
@@ -114,20 +114,20 @@ func GenerateSimplePDF(data ScanReportData) ([]byte, error) {
 	buf.WriteString("startxref\n")
 	buf.WriteString("380\n")
 	buf.WriteString("%%EOF\n")
-	
+
 	return buf.Bytes(), nil
 }
 
 // generateReportContent generates the PDF content stream
 func generateReportContent(data ScanReportData) string {
 	var content strings.Builder
-	
+
 	content.WriteString("BT\n")
 	content.WriteString("/F1 16 Tf\n")
 	content.WriteString("50 750 Td\n")
 	content.WriteString("(TypoSentinel Security Scan Report) Tj\n")
 	content.WriteString("0 -30 Td\n")
-	
+
 	// Basic information
 	content.WriteString("/F1 12 Tf\n")
 	content.WriteString(fmt.Sprintf("(Scan ID: %s) Tj\n", escapePDFString(data.ScanID)))
@@ -140,7 +140,7 @@ func generateReportContent(data ScanReportData) string {
 	content.WriteString("0 -20 Td\n")
 	content.WriteString(fmt.Sprintf("(Duration: %s) Tj\n", escapePDFString(data.Duration)))
 	content.WriteString("0 -30 Td\n")
-	
+
 	// Summary section
 	content.WriteString("/F1 14 Tf\n")
 	content.WriteString("(Summary) Tj\n")
@@ -158,14 +158,14 @@ func generateReportContent(data ScanReportData) string {
 	content.WriteString("0 -15 Td\n")
 	content.WriteString(fmt.Sprintf("(Low Threats: %d) Tj\n", data.Summary.LowThreats))
 	content.WriteString("0 -30 Td\n")
-	
+
 	// Threats section
 	if len(data.Threats) > 0 {
 		content.WriteString("/F1 14 Tf\n")
 		content.WriteString("(Detected Threats) Tj\n")
 		content.WriteString("0 -25 Td\n")
 		content.WriteString("/F1 10 Tf\n")
-		
+
 		for i, threat := range data.Threats {
 			if i >= 10 { // Limit to first 10 threats for space
 				content.WriteString("(... and more threats) Tj\n")
@@ -183,16 +183,16 @@ func generateReportContent(data ScanReportData) string {
 		content.WriteString("(No threats detected) Tj\n")
 		content.WriteString("0 -25 Td\n")
 	}
-	
+
 	// Footer
 	content.WriteString("0 -50 Td\n")
 	content.WriteString("/F1 8 Tf\n")
 	content.WriteString(fmt.Sprintf("(Generated on: %s) Tj\n", time.Now().Format("2006-01-02 15:04:05")))
 	content.WriteString("0 -15 Td\n")
 	content.WriteString("(Powered by TypoSentinel) Tj\n")
-	
+
 	content.WriteString("ET\n")
-	
+
 	return content.String()
 }
 
@@ -207,7 +207,7 @@ func escapePDFString(s string) string {
 // GenerateHTMLToPDF generates HTML content that can be converted to PDF
 func GenerateHTMLToPDF(data ScanReportData) string {
 	var html strings.Builder
-	
+
 	html.WriteString(`<!DOCTYPE html>
 <html>
 <head>
@@ -233,13 +233,13 @@ func GenerateHTMLToPDF(data ScanReportData) string {
     </style>
 </head>
 <body>`)
-	
+
 	// Header
 	html.WriteString(`
     <div class="header">
         <h1>TypoSentinel Security Scan Report</h1>
     </div>`)
-	
+
 	// Basic Information
 	html.WriteString(`
     <div class="section">
@@ -257,7 +257,7 @@ func GenerateHTMLToPDF(data ScanReportData) string {
 	html.WriteString(`
         </table>
     </div>`)
-	
+
 	// Summary
 	html.WriteString(`
     <div class="section">
@@ -294,12 +294,12 @@ func GenerateHTMLToPDF(data ScanReportData) string {
 	html.WriteString(`
         </div>
     </div>`)
-	
+
 	// Threats
 	html.WriteString(`
     <div class="section">
         <h2>Detected Threats</h2>`)
-	
+
 	if len(data.Threats) > 0 {
 		for _, threat := range data.Threats {
 			severityClass := strings.ToLower(threat.Severity)
@@ -317,10 +317,10 @@ func GenerateHTMLToPDF(data ScanReportData) string {
             <p>✅ No threats detected in this scan</p>
         </div>`)
 	}
-	
+
 	html.WriteString(`
     </div>`)
-	
+
 	// Footer
 	html.WriteString(fmt.Sprintf(`
     <div class="footer">
@@ -329,6 +329,6 @@ func GenerateHTMLToPDF(data ScanReportData) string {
     </div>
 </body>
 </html>`, time.Now().Format("2006-01-02 15:04:05")))
-	
+
 	return html.String()
 }

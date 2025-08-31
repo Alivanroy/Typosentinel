@@ -16,14 +16,14 @@ import (
 type PolicyAction string
 
 const (
-	PolicyActionAllow            PolicyAction = "allow"
-	PolicyActionDeny             PolicyAction = "deny"
-	PolicyActionBlock            PolicyAction = "block_deployment"
-	PolicyActionRequireApproval  PolicyAction = "require_approval"
-	PolicyActionGenerateSPDX     PolicyAction = "generate_spdx"
-	PolicyActionNotify           PolicyAction = "notify"
-	PolicyActionQuarantine       PolicyAction = "quarantine"
-	PolicyActionLog              PolicyAction = "log"
+	PolicyActionAllow           PolicyAction = "allow"
+	PolicyActionDeny            PolicyAction = "deny"
+	PolicyActionBlock           PolicyAction = "block_deployment"
+	PolicyActionRequireApproval PolicyAction = "require_approval"
+	PolicyActionGenerateSPDX    PolicyAction = "generate_spdx"
+	PolicyActionNotify          PolicyAction = "notify"
+	PolicyActionQuarantine      PolicyAction = "quarantine"
+	PolicyActionLog             PolicyAction = "log"
 )
 
 // PolicyCondition represents a condition that must be met for a policy to trigger
@@ -35,44 +35,44 @@ type PolicyCondition struct {
 
 // SecurityPolicy represents a security policy
 type SecurityPolicy struct {
-	ID          string             `json:"id"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Enabled     bool               `json:"enabled"`
-	Priority    int                `json:"priority"` // Higher number = higher priority
-	Conditions  []PolicyCondition  `json:"conditions"`
-	Action      PolicyAction       `json:"action"`
-	Parameters  map[string]string  `json:"parameters"` // Additional parameters for the action
-	Notifications []string         `json:"notifications"` // Email addresses or webhook URLs
-	Approvers   []string           `json:"approvers"` // Users who can approve
-	Schedule    string             `json:"schedule"` // Cron expression for scheduled actions
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at"`
-	CreatedBy   string             `json:"created_by"`
+	ID            string            `json:"id"`
+	Name          string            `json:"name"`
+	Description   string            `json:"description"`
+	Enabled       bool              `json:"enabled"`
+	Priority      int               `json:"priority"` // Higher number = higher priority
+	Conditions    []PolicyCondition `json:"conditions"`
+	Action        PolicyAction      `json:"action"`
+	Parameters    map[string]string `json:"parameters"`    // Additional parameters for the action
+	Notifications []string          `json:"notifications"` // Email addresses or webhook URLs
+	Approvers     []string          `json:"approvers"`     // Users who can approve
+	Schedule      string            `json:"schedule"`      // Cron expression for scheduled actions
+	CreatedAt     time.Time         `json:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	CreatedBy     string            `json:"created_by"`
 }
 
 // PolicyEvaluationResult represents the result of policy evaluation
 type PolicyEvaluationResult struct {
-	PolicyID     string                 `json:"policy_id"`
-	PolicyName   string                 `json:"policy_name"`
-	Triggered    bool                   `json:"triggered"`
-	Action       PolicyAction           `json:"action"`
-	Reason       string                 `json:"reason"`
-	Parameters   map[string]string      `json:"parameters"`
-	Notifications []string              `json:"notifications"`
-	Approvers    []string               `json:"approvers"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	EvaluatedAt  time.Time              `json:"evaluated_at"`
+	PolicyID      string                 `json:"policy_id"`
+	PolicyName    string                 `json:"policy_name"`
+	Triggered     bool                   `json:"triggered"`
+	Action        PolicyAction           `json:"action"`
+	Reason        string                 `json:"reason"`
+	Parameters    map[string]string      `json:"parameters"`
+	Notifications []string               `json:"notifications"`
+	Approvers     []string               `json:"approvers"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	EvaluatedAt   time.Time              `json:"evaluated_at"`
 }
 
 // PolicyEvaluationContext contains context for policy evaluation
 type PolicyEvaluationContext struct {
-	ScanResult   *types.ScanResult      `json:"scan_result"`
-	Package      *types.Package         `json:"package"`
-	Repository   *RepositoryInfo        `json:"repository"`
-	User         *User                  `json:"user"`
-	Environment  string                 `json:"environment"` // e.g., "production", "staging", "development"
-	Metadata     map[string]interface{} `json:"metadata"`
+	ScanResult  *types.ScanResult      `json:"scan_result"`
+	Package     *types.Package         `json:"package"`
+	Repository  *RepositoryInfo        `json:"repository"`
+	User        *User                  `json:"user"`
+	Environment string                 `json:"environment"` // e.g., "production", "staging", "development"
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 // RepositoryInfo contains repository information for policy evaluation

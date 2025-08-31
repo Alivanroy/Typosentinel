@@ -36,27 +36,27 @@ type ActionResult struct {
 
 // ActionStatus represents the current status of an action
 type ActionStatus struct {
-	ID       string    `json:"id"`
-	Status   string    `json:"status"`
-	Progress float64   `json:"progress"`
+	ID       string       `json:"id"`
+	Status   string       `json:"status"`
+	Progress float64      `json:"progress"`
 	Steps    []ActionStep `json:"steps"`
-	Error    string    `json:"error,omitempty"`
+	Error    string       `json:"error,omitempty"`
 }
 
 // ActionStep represents a step in action execution
 type ActionStep struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"` // pending, running, completed, failed
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Status      string     `json:"status"` // pending, running, completed, failed
 	StartedAt   *time.Time `json:"started_at,omitempty"`
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	Error       string    `json:"error,omitempty"`
+	Error       string     `json:"error,omitempty"`
 }
 
 // ActionExecutorConfig configuration for action executor
 type ActionExecutorConfig struct {
-	Enabled                bool          `json:"enabled"`
+	Enabled               bool          `json:"enabled"`
 	QuarantineDir         string        `json:"quarantine_dir"`
 	BackupDir             string        `json:"backup_dir"`
 	NotificationWebhook   string        `json:"notification_webhook"`
@@ -70,12 +70,12 @@ type ActionExecutorConfig struct {
 
 // DefaultActionExecutor implements ActionExecutor interface
 type DefaultActionExecutor struct {
-	config         *ActionExecutorConfig
-	activeActions  map[string]*ActionStatus
-	mu             sync.RWMutex
-	logger         Logger
-	notifier       Notifier
-	ciIntegrator   CIIntegrator
+	config        *ActionExecutorConfig
+	activeActions map[string]*ActionStatus
+	mu            sync.RWMutex
+	logger        Logger
+	notifier      Notifier
+	ciIntegrator  CIIntegrator
 }
 
 // Logger interface for action executor logging
@@ -375,8 +375,8 @@ func (ae *DefaultActionExecutor) executeGenerateSPDXAction(ctx context.Context, 
 		Message:   "SPDX document generated successfully",
 		StartedAt: time.Now(),
 		Metadata: map[string]interface{}{
-			"action_type": "generate_spdx",
-			"spdx_path":   spdxPath,
+			"action_type":  "generate_spdx",
+			"spdx_path":    spdxPath,
 			"generated_at": time.Now(),
 		},
 	}, nil
@@ -571,10 +571,10 @@ func (ae *DefaultActionExecutor) updateAccessControls(quarantinePath string, vio
 		"access_level":   "restricted",
 		"allowed_users":  []string{"admin", "security-team"},
 		"restrictions": map[string]bool{
-			"read_only":     true,
-			"no_execution":  true,
-			"no_network":    true,
-			"audit_access":  true,
+			"read_only":    true,
+			"no_execution": true,
+			"no_network":   true,
+			"audit_access": true,
 		},
 	}
 
@@ -588,7 +588,7 @@ func (ae *DefaultActionExecutor) updateAccessControls(quarantinePath string, vio
 		return fmt.Errorf("failed to write ACL metadata: %w", err)
 	}
 
-	ae.logger.Info("Access controls updated", 
+	ae.logger.Info("Access controls updated",
 		"path", quarantinePath,
 		"permissions", "0700",
 		"acl_file", aclPath)
@@ -599,27 +599,27 @@ func (ae *DefaultActionExecutor) updateAccessControls(quarantinePath string, vio
 // generateSPDXDocument generates a comprehensive SPDX document
 func (ae *DefaultActionExecutor) generateSPDXDocument(violation *auth.PolicyViolation, repoName string) (string, error) {
 	now := time.Now()
-	
+
 	// Create SPDX document structure
 	spdxDoc := map[string]interface{}{
 		"spdxVersion":       "SPDX-2.3",
 		"dataLicense":       "CC0-1.0",
-		"SPDXID":           "SPDXRef-DOCUMENT",
-		"name":             repoName,
+		"SPDXID":            "SPDXRef-DOCUMENT",
+		"name":              repoName,
 		"documentNamespace": fmt.Sprintf("https://typosentinel.com/spdx/%s/%d", repoName, now.Unix()),
 		"creationInfo": map[string]interface{}{
-			"created":  now.Format(time.RFC3339),
-			"creators": []string{"Tool: TypoSentinel-v1.0"},
+			"created":            now.Format(time.RFC3339),
+			"creators":           []string{"Tool: TypoSentinel-v1.0"},
 			"licenseListVersion": "3.19",
 		},
-		"packages": ae.generateSPDXPackages(violation),
+		"packages":      ae.generateSPDXPackages(violation),
 		"relationships": ae.generateSPDXRelationships(violation),
 		"annotations": []map[string]interface{}{
 			{
 				"annotationType": "REVIEW",
 				"annotator":      "Tool: TypoSentinel",
 				"annotationDate": now.Format(time.RFC3339),
-				"annotationComment": fmt.Sprintf("Security violation detected: %s (Severity: %s)", 
+				"annotationComment": fmt.Sprintf("Security violation detected: %s (Severity: %s)",
 					violation.PolicyName, violation.Severity),
 			},
 		},

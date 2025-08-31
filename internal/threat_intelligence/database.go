@@ -23,8 +23,6 @@ type ThreatDatabase struct {
 	config *config.DatabaseConfig
 }
 
-
-
 // DatabaseStats represents database statistics
 type DatabaseStats struct {
 	TotalThreats      int64            `json:"total_threats"`

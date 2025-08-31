@@ -29,32 +29,32 @@ type GitHubConnector struct {
 
 // GitHub API response structures
 type githubRepository struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	FullName    string    `json:"full_name"`
-	HTMLURL     string    `json:"html_url"`
-	CloneURL    string    `json:"clone_url"`
-	SSHURL      string    `json:"ssh_url"`
-	GitURL      string    `json:"git_url"`
-	SVNURL      string    `json:"svn_url"`
-	Description *string   `json:"description"`
-	Homepage    *string   `json:"homepage"`
-	Language    *string   `json:"language"`
-	Private     bool      `json:"private"`
-	Fork        bool      `json:"fork"`
-	Archived    bool      `json:"archived"`
-	Disabled    bool      `json:"disabled"`
-	Size        int64     `json:"size"`
-	Stargazers  int       `json:"stargazers_count"`
-	Watchers    int       `json:"watchers_count"`
-	Forks       int       `json:"forks_count"`
-	OpenIssues  int       `json:"open_issues_count"`
-	Topics      []string  `json:"topics"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	PushedAt    time.Time `json:"pushed_at"`
-	Owner       githubOwner `json:"owner"`
-	DefaultBranch string  `json:"default_branch"`
+	ID            int64       `json:"id"`
+	Name          string      `json:"name"`
+	FullName      string      `json:"full_name"`
+	HTMLURL       string      `json:"html_url"`
+	CloneURL      string      `json:"clone_url"`
+	SSHURL        string      `json:"ssh_url"`
+	GitURL        string      `json:"git_url"`
+	SVNURL        string      `json:"svn_url"`
+	Description   *string     `json:"description"`
+	Homepage      *string     `json:"homepage"`
+	Language      *string     `json:"language"`
+	Private       bool        `json:"private"`
+	Fork          bool        `json:"fork"`
+	Archived      bool        `json:"archived"`
+	Disabled      bool        `json:"disabled"`
+	Size          int64       `json:"size"`
+	Stargazers    int         `json:"stargazers_count"`
+	Watchers      int         `json:"watchers_count"`
+	Forks         int         `json:"forks_count"`
+	OpenIssues    int         `json:"open_issues_count"`
+	Topics        []string    `json:"topics"`
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
+	PushedAt      time.Time   `json:"pushed_at"`
+	Owner         githubOwner `json:"owner"`
+	DefaultBranch string      `json:"default_branch"`
 }
 
 type githubOwner struct {
@@ -66,13 +66,13 @@ type githubOwner struct {
 }
 
 type githubOrganization struct {
-	ID          int64   `json:"id"`
-	Login       string  `json:"login"`
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	HTMLURL     string  `json:"html_url"`
-	AvatarURL   string  `json:"avatar_url"`
-	Type        string  `json:"type"`
+	ID          int64     `json:"id"`
+	Login       string    `json:"login"`
+	Name        *string   `json:"name"`
+	Description *string   `json:"description"`
+	HTMLURL     string    `json:"html_url"`
+	AvatarURL   string    `json:"avatar_url"`
+	Type        string    `json:"type"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -104,10 +104,10 @@ type githubCommit struct {
 type githubRateLimit struct {
 	Resources struct {
 		Core struct {
-			Limit     int       `json:"limit"`
-			Remaining int       `json:"remaining"`
-			Reset     int64     `json:"reset"`
-			Used      int       `json:"used"`
+			Limit     int   `json:"limit"`
+			Remaining int   `json:"remaining"`
+			Reset     int64 `json:"reset"`
+			Used      int   `json:"used"`
 		} `json:"core"`
 		Search struct {
 			Limit     int   `json:"limit"`
@@ -1007,7 +1007,7 @@ func (g *GitHubConnector) decodeBase64Content(content string) ([]byte, error) {
 	// Remove whitespace and newlines
 	content = strings.ReplaceAll(content, "\n", "")
 	content = strings.ReplaceAll(content, " ", "")
-	
+
 	// Decode base64
 	return base64.StdEncoding.DecodeString(content)
 }

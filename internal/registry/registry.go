@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Connector interface for connecting to package registries
@@ -261,7 +261,7 @@ func (p *PyPIConnector) SearchPackages(ctx context.Context, query string) ([]*ty
 		if len(results) >= 20 { // Limit results
 			break
 		}
-		
+
 		// Simple string matching for search
 		if query == "" || containsIgnoreCase(pkgName, query) {
 			packageInfo, err := p.client.GetPackageInfo(pkgName)
@@ -320,10 +320,10 @@ func (m *MavenConnector) GetPackageInfo(ctx context.Context, name, version strin
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid Maven coordinate format: %s (expected groupId:artifactId)", name)
 	}
-	
+
 	groupID := parts[0]
 	artifactID := parts[1]
-	
+
 	return m.client.GetPackageInfo(ctx, groupID, artifactID, version)
 }
 
@@ -504,12 +504,12 @@ func (c *CargoConnector) Close() error {
 
 // containsIgnoreCase performs case-insensitive substring search
 func containsIgnoreCase(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (s == substr || 
-			len(s) > len(substr) && 
-			(s[:len(substr)] == substr || 
-			 s[len(s)-len(substr):] == substr || 
-			 indexIgnoreCase(s, substr) >= 0))
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			len(s) > len(substr) &&
+				(s[:len(substr)] == substr ||
+					s[len(s)-len(substr):] == substr ||
+					indexIgnoreCase(s, substr) >= 0))
 }
 
 // indexIgnoreCase finds the index of substr in s, case-insensitive

@@ -292,7 +292,7 @@ func (f *GitHubAdvisoryFeed) FetchThreats(ctx context.Context, since time.Time) 
 
 	// GitHub Advisory Database GraphQL API endpoint
 	url := "https://api.github.com/graphql"
-	
+
 	// GraphQL query to fetch security advisories
 	query := `{
 		securityAdvisories(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}) {
@@ -354,12 +354,12 @@ func (f *GitHubAdvisoryFeed) FetchThreats(ctx context.Context, since time.Time) 
 		Data struct {
 			SecurityAdvisories struct {
 				Nodes []struct {
-					GhsaId      string `json:"ghsaId"`
-					Summary     string `json:"summary"`
-					Description string `json:"description"`
-					Severity    string `json:"severity"`
-					UpdatedAt   string `json:"updatedAt"`
-					PublishedAt string `json:"publishedAt"`
+					GhsaId          string `json:"ghsaId"`
+					Summary         string `json:"summary"`
+					Description     string `json:"description"`
+					Severity        string `json:"severity"`
+					UpdatedAt       string `json:"updatedAt"`
+					PublishedAt     string `json:"publishedAt"`
 					Vulnerabilities struct {
 						Nodes []struct {
 							Package struct {

@@ -26,12 +26,12 @@ type SchemaManager struct {
 
 // Migration represents a database migration
 type Migration struct {
-	Version     int
-	Name        string
-	Filename    string
-	SQL         string
-	AppliedAt   *time.Time
-	Checksum    string
+	Version   int
+	Name      string
+	Filename  string
+	SQL       string
+	AppliedAt *time.Time
+	Checksum  string
 }
 
 // NewSchemaManager creates a new schema manager

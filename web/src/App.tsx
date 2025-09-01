@@ -9,7 +9,7 @@ import { Integrations } from './pages/Integrations'
 import { Database } from './pages/Database'
 import { Team } from './pages/Team'
 import { Settings } from './pages/Settings'
-import { Test } from './pages/Test'
+
 import { NotificationProvider } from './contexts/NotificationContext'
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="scans" element={<SecurityScans />} />
-            <Route path="test" element={<Test />} />
+    
             <Route path="vulnerabilities" element={<Vulnerabilities />} />
             <Route path="reports" element={<Reports />} />
             <Route path="analytics" element={<Analytics />} />

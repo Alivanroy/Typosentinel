@@ -1,0 +1,231 @@
+version: '3.8'
+
+services:
+  # Main Typosentinel Application
+  typosentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: typosentinel-enterprise
+    ports:
+      - "3000:3000"
+      - "8080:8080"  # Health check
+      - "9090:9090"  # Metrics
+    environment:
+      - NODE_ENV=production
+      - GO_ENV=production
+      - TYPOSENTINEL_ENV=production
+    env_file:
+      - .env.production
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./certificates:/app/certificates
+      - ./backups:/app/backups
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ./microservices/analytics-service
+    container_name: typosentinel-analytics
+    ports:
+      - "3001:3000"
+    environment:
+      - GO_ENV=production
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - postgres
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./microservices/auth-service
+    container_name: typosentinel-auth
+    ports:
+      - "3002:3000"
+    environment:
+      - GO_ENV=production
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./microservices/notification-service
+    container_name: typosentinel-notifications
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./microservices/payment-service
+    container_name: typosentinel-payments
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # User Service
+  user-service:
+    build:
+      context: ./microservices/user-service
+    container_name: typosentinel-users
+    ports:
+      - "3005:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: typosentinel-postgres
+    environment:
+      - POSTGRES_DB=typosentinel
+      - POSTGRES_USER=typosentinel
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typosentinel"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: typosentinel-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme123}
+    volumes:
+      - redis_data:/data
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: typosentinel-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: typosentinel-grafana
+    ports:
+      - "3010:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana:/etc/grafana/provisioning
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: typosentinel-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certificates:/etc/nginx/certificates
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - typosentinel
+
+  # Web Administration Interface
+  web-admin:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:80/api
+    container_name: typosentinel-web-admin
+    ports:
+      - "8090:80"
+    networks:
+      - typosentinel-network
+    restart: unless-stopped
+    depends_on:
+      - typosentinel
+      - nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  typosentinel-network:
+    driver: bridge

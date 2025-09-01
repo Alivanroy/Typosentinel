@@ -71,7 +71,7 @@ make build
 
 ### Docker Deployment
 
-PlanFinale provides complete Docker deployment with web interface and API server:
+TypoSentinel provides complete Docker deployment with web interface and API server:
 
 ```bash
 # Quick production deployment
@@ -90,6 +90,73 @@ PlanFinale provides complete Docker deployment with web interface and API server
 - API Playground: http://localhost:8080/api
 
 For detailed Docker deployment instructions, see [DOCKER.md](DOCKER.md).
+
+### Production Deployment
+
+#### Environment Configuration
+
+For production deployments, ensure the following environment variables are set:
+
+```bash
+# Required Security Settings
+export JWT_SECRET="your-secure-jwt-secret-key-here"
+export DATABASE_URL="postgresql://user:password@host:port/database"
+export REDIS_URL="redis://host:port/database"
+
+# Optional Production Settings
+export TYPOSENTINEL_ENV="production"
+export TYPOSENTINEL_LOG_LEVEL="info"
+export TYPOSENTINEL_DEBUG="false"
+export TYPOSENTINEL_MAX_WORKERS="20"
+```
+
+#### Production Configuration
+
+Update `config/config.yaml` for production:
+
+```yaml
+app:
+  environment: "production"
+  debug: false
+  log_level: "info"
+  max_workers: 20
+
+server:
+  tls:
+    enabled: true
+    cert_file: "/path/to/cert.pem"
+    key_file: "/path/to/key.pem"
+```
+
+#### Security Hardening
+
+1. **Enable TLS/HTTPS** in production
+2. **Set strong JWT secrets** (minimum 32 characters)
+3. **Configure rate limiting** in `config/security.yaml`
+4. **Enable audit logging** for compliance
+5. **Use secure database connections** with SSL/TLS
+
+#### Performance Optimization
+
+- Set `max_workers` based on CPU cores (recommended: 2x CPU cores)
+- Enable Redis caching for improved performance
+- Configure appropriate timeouts for your environment
+- Monitor memory usage and adjust accordingly
+
+#### Production Deployment Checklist
+
+- [ ] Set all required environment variables (`JWT_SECRET`, `DATABASE_URL`, `REDIS_URL`)
+- [ ] Update configuration files for production environment
+- [ ] Enable TLS/HTTPS with valid certificates
+- [ ] Configure rate limiting and security policies
+- [ ] Set up monitoring and logging
+- [ ] Test backup and recovery procedures
+- [ ] Verify all tests pass (`go test ./...`)
+- [ ] Run security audit (`govulncheck ./...`)
+- [ ] Configure firewall and network security
+- [ ] Set up health checks and monitoring alerts
+
+For complete production deployment guide, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
 
 #### Manual Docker Commands
 

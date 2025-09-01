@@ -1,5 +1,5 @@
 # Multi-stage build for production optimization
-FROM node:18-alpine as builder
+FROM node:20-alpine as builder
 
 # Set working directory
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (including dev dependencies for build)
-RUN npm ci
+    RUN npm install
 
 # Copy source code
 COPY . .

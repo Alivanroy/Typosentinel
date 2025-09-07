@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/Alivanroy/Typosentinel/internal/threat_intelligence"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/sirupsen/logrus"
 )
@@ -20,6 +21,7 @@ type Engine struct {
 	homoglyphDetector             *HomoglyphDetector
 	reputationEngine              *ReputationEngine
 	enhancedTyposquattingDetector *EnhancedTyposquattingDetector
+	threatIntelScanner            *ThreatIntelScanner
 	version                       string
 }
 
@@ -49,6 +51,7 @@ func New(cfg *config.Config) *Engine {
 		homoglyphDetector:             NewHomoglyphDetector(),
 		reputationEngine:              NewReputationEngine(cfg),
 		enhancedTyposquattingDetector: NewEnhancedTyposquattingDetector(),
+		threatIntelScanner:            nil, // Will be initialized when threat intelligence is available
 		version:                       "1.0.0",
 	}
 }
@@ -56,6 +59,22 @@ func New(cfg *config.Config) *Engine {
 // Version returns the detector engine version
 func (e *Engine) Version() string {
 	return e.version
+}
+
+// SetThreatIntelligenceManager sets the threat intelligence manager for CVE scanning
+func (e *Engine) SetThreatIntelligenceManager(manager *threat_intelligence.ThreatIntelligenceManager) {
+	if manager != nil {
+		e.threatIntelScanner = NewThreatIntelScanner(manager)
+		logrus.Info("Threat intelligence scanner initialized")
+	} else {
+		e.threatIntelScanner = nil
+		logrus.Warn("Threat intelligence scanner disabled")
+	}
+}
+
+// HasThreatIntelligence returns whether threat intelligence is available
+func (e *Engine) HasThreatIntelligence() bool {
+	return e.threatIntelScanner != nil && e.threatIntelScanner.IsEnabled()
 }
 
 // CheckPackageResult represents the result of a single package check
@@ -100,6 +119,24 @@ func (e *Engine) CheckPackage(ctx context.Context, packageName, registry string)
 
 	// Analyze the dependency
 	threats, warnings := e.analyzeDependency(dep, popularPackages, options)
+
+	// Perform threat intelligence scanning if available
+	if e.HasThreatIntelligence() {
+		threatIntelResult, err := e.threatIntelScanner.ScanPackage(ctx, packageName, registry, dep.Version)
+		if err != nil {
+			logrus.Warnf("Threat intelligence scan failed for %s: %v", packageName, err)
+		} else if threatIntelResult != nil {
+			// Convert threat intelligence results to threats
+			threatIntelThreats := e.threatIntelScanner.ConvertToThreats(threatIntelResult)
+			threats = append(threats, threatIntelThreats...)
+			
+			// Add threat intelligence details to the result
+			if len(threatIntelResult.Vulnerabilities) > 0 {
+				logrus.Infof("Found %d vulnerabilities for %s (Risk: %s)", 
+					len(threatIntelResult.Vulnerabilities), packageName, threatIntelResult.RiskLevel)
+			}
+		}
+	}
 
 	// Determine overall threat level
 	threatLevel := "none"

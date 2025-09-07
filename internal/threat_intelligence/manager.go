@@ -355,6 +355,15 @@ func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error
 			return fmt.Errorf("failed to initialize default GitHub Advisory feed: %w", err)
 		}
 		tim.feeds["github_advisory"] = ghFeed
+
+		// Initialize NVD feed
+		nvdFeed := NewNVDFeed(tim.logger)
+		if err := nvdFeed.Initialize(ctx, map[string]interface{}{
+			"update_interval": 2 * time.Hour,
+		}); err != nil {
+			return fmt.Errorf("failed to initialize default NVD feed: %w", err)
+		}
+		tim.feeds["nvd"] = nvdFeed
 		tim.logger.Info("Initialized default threat feeds")
 		return nil
 	}
@@ -385,6 +394,15 @@ func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error
 				}
 				tim.feeds["github_advisory"] = ghFeed
 				tim.logger.Info("Initialized GitHub Advisory threat feed")
+
+			case "nvd":
+				nvdFeed := NewNVDFeed(tim.logger)
+				config := tim.buildFeedConfig(feedConfig)
+				if err := nvdFeed.Initialize(ctx, config); err != nil {
+					return fmt.Errorf("failed to initialize NVD feed: %w", err)
+				}
+				tim.feeds["nvd"] = nvdFeed
+				tim.logger.Info("Initialized NVD threat feed")
 
 			default:
 				// Handle custom feeds
@@ -420,6 +438,15 @@ func (tim *ThreatIntelligenceManager) initializeFeeds(ctx context.Context) error
 			return fmt.Errorf("failed to initialize default GitHub Advisory feed: %w", err)
 		}
 		tim.feeds["github_advisory"] = ghFeed
+
+		// Initialize NVD feed
+		nvdFeed := NewNVDFeed(tim.logger)
+		if err := nvdFeed.Initialize(ctx, map[string]interface{}{
+			"update_interval": 2 * time.Hour,
+		}); err != nil {
+			return fmt.Errorf("failed to initialize default NVD feed: %w", err)
+		}
+		tim.feeds["nvd"] = nvdFeed
 		tim.logger.Info("Initialized default threat feeds")
 	}
 

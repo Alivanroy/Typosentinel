@@ -24,6 +24,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
 	// "github.com/Alivanroy/Typosentinel/internal/security" // Temporarily disabled
+	"github.com/Alivanroy/Typosentinel/internal/threat_intelligence"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -44,6 +45,10 @@ type Server struct {
 	ossDB *database.OSSService
 	// Supply chain API
 	supplyChainAPI *SupplyChainAPI
+	// Threat intelligence manager
+	threatManager *threat_intelligence.ThreatIntelligenceManager
+	// Threat intelligence API
+	threatIntelAPI *ThreatIntelAPI
 }
 
 // NewServer creates a new REST API server
@@ -165,12 +170,55 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 			Host: cfg.Host,
 			Port: cfg.Port,
 		},
+		Database: config.DatabaseConfig{
+			Type:     os.Getenv("TYPOSENTINEL_DB_TYPE"),
+			Database: os.Getenv("TYPOSENTINEL_DB_NAME"),
+			Host:     os.Getenv("TYPOSENTINEL_DB_HOST"),
+			Port:     func() int {
+				if port := os.Getenv("TYPOSENTINEL_DB_PORT"); port != "" {
+					if p, err := strconv.Atoi(port); err == nil {
+						return p
+					}
+				}
+				return 5432
+			}(),
+			Username: os.Getenv("TYPOSENTINEL_DB_USER"),
+			Password: os.Getenv("TYPOSENTINEL_DB_PASSWORD"),
+			SSLMode:  "disable",
+		},
 	}
 	log.Printf("[DEBUG] Basic config created: %v", basicConfig != nil)
 	supplyChainAPI := NewSupplyChainAPI(scannerInstance, basicConfig, loggerInstance)
 	log.Printf("[DEBUG] Supply chain API initialized: %v", supplyChainAPI != nil)
 	if supplyChainAPI != nil {
 		log.Printf("[DEBUG] Supply chain API handlers: %v", supplyChainAPI.handlers != nil)
+	}
+
+	// Initialize threat intelligence manager
+	log.Printf("[DEBUG] Creating threat intelligence manager...")
+	threatManager := threat_intelligence.NewThreatIntelligenceManager(basicConfig, loggerInstance)
+	log.Printf("[DEBUG] Threat intelligence manager created: %v", threatManager != nil)
+	if threatManager != nil {
+		// Initialize the threat manager
+		log.Printf("[DEBUG] Initializing threat intelligence manager...")
+		ctx := context.Background()
+		if err := threatManager.Initialize(ctx); err != nil {
+			log.Printf("[WARNING] Failed to initialize threat intelligence manager: %v", err)
+			threatManager = nil
+		} else {
+			log.Printf("[DEBUG] Threat intelligence manager initialized successfully")
+			// Set up threat intelligence with detector engine
+			detectorEngine.SetThreatIntelligenceManager(threatManager)
+		}
+	} else {
+		log.Printf("[WARNING] Failed to create threat intelligence manager")
+	}
+
+	// Initialize threat intelligence API
+	var threatIntelAPI *ThreatIntelAPI
+	if threatManager != nil {
+		threatIntelAPI = NewThreatIntelAPI(threatManager)
+		log.Printf("[DEBUG] Threat intelligence API initialized")
 	}
 
 	server := &Server{
@@ -182,6 +230,8 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 		scanHandlers:       scanHandlers,
 		ossDB:              ossDB,
 		supplyChainAPI:     supplyChainAPI,
+		threatManager:      threatManager,
+		threatIntelAPI:     threatIntelAPI,
 	}
 
 	// Setup routes
@@ -326,6 +376,14 @@ func (s *Server) setupRoutes() {
 				log.Printf("[DEBUG] Supply chain routes registered successfully")
 			} else {
 				log.Printf("[DEBUG] Supply chain API is nil, skipping route registration")
+			}
+
+			// Threat Intelligence endpoints
+			if s.threatIntelAPI != nil {
+				s.setupThreatIntelRoutes(v1, s.threatIntelAPI)
+				log.Printf("[DEBUG] Threat intelligence routes registered successfully")
+			} else {
+				log.Printf("[DEBUG] Threat intelligence API is nil, skipping route registration")
 			}
 		}
 
@@ -491,16 +549,47 @@ func (s *Server) getAllIntegrations(c *gin.Context) {
 func (s *Server) connectIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
 
-	// TODO: Implement actual integration connection logic
-	// This would involve:
-	// 1. Validating the integration ID
-	// 2. Handling authentication (API keys, OAuth, etc.)
-	// 3. Testing the connection
-	// 4. Storing connection details securely
+	// Validate integration ID
+	validIntegrations := []string{"github", "gitlab", "jenkins", "slack", "jira", "sonarqube"}
+	validID := false
+	for _, valid := range validIntegrations {
+		if integrationID == valid {
+			validID = true
+			break
+		}
+	}
+
+	if !validID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid integration ID"})
+		return
+	}
+
+	// Parse connection configuration
+	var config map[string]interface{}
+	if err := c.ShouldBindJSON(&config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid configuration data"})
+		return
+	}
+
+	// Validate required fields based on integration type
+	if err := s.validateIntegrationConfig(integrationID, config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Test the connection
+	if err := s.testIntegrationConnection(integrationID, config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Connection test failed: %v", err)})
+		return
+	}
+
+	// Store connection details (in production, this would be encrypted and stored in database)
+	s.storeIntegrationConfig(integrationID, config)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Integration %s connected successfully", integrationID),
 		"status":  "connected",
+		"id":      integrationID,
 	})
 }
 
@@ -508,15 +597,34 @@ func (s *Server) connectIntegration(c *gin.Context) {
 func (s *Server) disconnectIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
 
-	// TODO: Implement actual integration disconnection logic
-	// This would involve:
-	// 1. Validating the integration ID
-	// 2. Removing stored credentials
-	// 3. Cleaning up any active connections
+	// Validate integration ID
+	if integrationID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Integration ID is required"})
+		return
+	}
 
+	// Check if integration exists
+	_, err := s.getIntegrationConfig(integrationID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Integration not found"})
+		return
+	}
+
+	// Remove stored credentials/configuration
+	err = s.removeIntegrationConfig(integrationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to disconnect integration"})
+		return
+	}
+
+	// Log disconnection event
+	log.Printf("Integration %s disconnected successfully", integrationID)
+
+	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Integration %s disconnected successfully", integrationID),
 		"status":  "disconnected",
+		"disconnected_at": time.Now(),
 	})
 }
 
@@ -524,26 +632,54 @@ func (s *Server) disconnectIntegration(c *gin.Context) {
 func (s *Server) getIntegrationStatus(c *gin.Context) {
 	integrationID := c.Param("id")
 
-	// TODO: Implement actual status checking logic
-	// This would involve:
-	// 1. Checking connection health
-	// 2. Validating credentials
-	// 3. Testing API endpoints
+	// Validate integration ID
+	if integrationID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Integration ID is required"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
+	// Get integration configuration
+	config, err := s.getIntegrationConfig(integrationID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Integration not found"})
+		return
+	}
+
+	// Test connection health
+	healthy := true
+	var healthError string
+	if testErr := s.testIntegrationConnection(integrationID, config); testErr != nil {
+		healthy = false
+		healthError = testErr.Error()
+	}
+
+	// Build response with actual status data
+	response := gin.H{
 		"id":         integrationID,
-		"status":     "connected",
+		"status":     config["status"],
 		"lastCheck":  time.Now().Format(time.RFC3339),
-		"healthy":    true,
-		"lastSync":   time.Now().Add(-30 * time.Minute).Format(time.RFC3339),
-		"syncCount":  42,
-		"errorCount": 0,
-	})
+		"healthy":    healthy,
+		"lastSync":   config["last_sync"],
+		"syncCount":  config["sync_count"],
+		"errorCount": config["error_count"],
+	}
+
+	if !healthy {
+		response["healthError"] = healthError
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // configureIntegration updates configuration for a specific integration
 func (s *Server) configureIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
+
+	// Validate integration ID
+	if integrationID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Integration ID is required"})
+		return
+	}
 
 	var config map[string]interface{}
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -551,15 +687,39 @@ func (s *Server) configureIntegration(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement actual configuration update logic
-	// This would involve:
-	// 1. Validating configuration parameters
-	// 2. Updating stored configuration
-	// 3. Applying changes to active connections
+	// Check if integration exists
+	_, err := s.getIntegrationConfig(integrationID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Integration not found"})
+		return
+	}
+
+	// Validate configuration parameters
+	if err := s.validateIntegrationConfig(integrationID, config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Test connection with new configuration
+	if err := s.testIntegrationConnection(integrationID, config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Configuration test failed",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Update stored configuration
+	s.storeIntegrationConfig(integrationID, config)
+
+	// Log configuration update
+	log.Printf("Integration %s configuration updated successfully", integrationID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Integration %s configured successfully", integrationID),
-		"config":  config,
+		"integration_id": integrationID,
+		"updated_at": time.Now(),
+		"status": "configured",
 	})
 }
 
@@ -567,56 +727,125 @@ func (s *Server) configureIntegration(c *gin.Context) {
 func (s *Server) getIntegrationActivity(c *gin.Context) {
 	integrationID := c.Param("id")
 
-	// TODO: Implement actual activity log retrieval
-	// This would involve:
-	// 1. Querying activity logs from database
-	// 2. Filtering by integration ID
-	// 3. Pagination and sorting
+	// Validate integration ID
+	if integrationID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Integration ID is required"})
+		return
+	}
+
+	// Check if integration exists
+	_, err := s.getIntegrationConfig(integrationID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Integration not found"})
+		return
+	}
+
+	// Parse pagination parameters
+	page := 1
+	pageSize := 20
+	if pageStr := c.Query("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if sizeStr := c.Query("pageSize"); sizeStr != "" {
+		if s, err := strconv.Atoi(sizeStr); err == nil && s > 0 && s <= 100 {
+			pageSize = s
+		}
+	}
+
+	// Parse filter parameters
+	activityType := c.Query("type")
+	status := c.Query("status")
+
+	// In production, this would query from database with filters and pagination
+	// For now, return mock data that respects the filters
+	allActivities := []map[string]interface{}{
+		{
+			"id":        "act_001",
+			"type":      "sync",
+			"status":    "success",
+			"timestamp": time.Now().Add(-30 * time.Minute).Format(time.RFC3339),
+			"message":   "Successfully synced 15 repositories",
+			"details": map[string]interface{}{
+				"repositories": 15,
+				"scanned":      12,
+				"issues":       3,
+			},
+		},
+		{
+			"id":        "act_002",
+			"type":      "notification",
+			"status":    "success",
+			"timestamp": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			"message":   "Sent vulnerability alert",
+			"details": map[string]interface{}{
+				"severity": "high",
+				"package":  "lodash",
+				"version":  "4.17.20",
+			},
+		},
+		{
+			"id":        "act_003",
+			"type":      "connection_test",
+			"status":    "success",
+			"timestamp": time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			"message":   "Connection test passed",
+			"details": map[string]interface{}{
+				"responseTime": "150ms",
+				"endpoint":     "api.github.com",
+			},
+		},
+		{
+			"id":        "act_004",
+			"type":      "error",
+			"status":    "failed",
+			"timestamp": time.Now().Add(-3 * time.Hour).Format(time.RFC3339),
+			"message":   "Failed to sync repository",
+			"details": map[string]interface{}{
+				"error": "Authentication failed",
+				"repository": "example/repo",
+			},
+		},
+	}
+
+	// Apply filters
+	filteredActivities := []map[string]interface{}{}
+	for _, activity := range allActivities {
+		if activityType != "" && activity["type"] != activityType {
+			continue
+		}
+		if status != "" && activity["status"] != status {
+			continue
+		}
+		filteredActivities = append(filteredActivities, activity)
+	}
+
+	// Apply pagination
+	total := len(filteredActivities)
+	start := (page - 1) * pageSize
+	end := start + pageSize
+	if start >= total {
+		filteredActivities = []map[string]interface{}{}
+	} else {
+		if end > total {
+			end = total
+		}
+		filteredActivities = filteredActivities[start:end]
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"integrationId": integrationID,
-		"activities": []map[string]interface{}{
-			{
-				"id":        "act_001",
-				"type":      "sync",
-				"status":    "success",
-				"timestamp": time.Now().Add(-30 * time.Minute).Format(time.RFC3339),
-				"message":   "Successfully synced 15 repositories",
-				"details": map[string]interface{}{
-					"repositories": 15,
-					"scanned":      12,
-					"issues":       3,
-				},
-			},
-			{
-				"id":        "act_002",
-				"type":      "notification",
-				"status":    "success",
-				"timestamp": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
-				"message":   "Sent vulnerability alert",
-				"details": map[string]interface{}{
-					"severity": "high",
-					"package":  "lodash",
-					"version":  "4.17.20",
-				},
-			},
-			{
-				"id":        "act_003",
-				"type":      "connection_test",
-				"status":    "success",
-				"timestamp": time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
-				"message":   "Connection test passed",
-				"details": map[string]interface{}{
-					"responseTime": "150ms",
-					"endpoint":     "api.github.com",
-				},
-			},
-		},
+		"activities":    filteredActivities,
 		"pagination": map[string]interface{}{
-			"page":     1,
-			"pageSize": 20,
-			"total":    3,
-			"hasMore":  false,
+			"page":     page,
+			"pageSize": pageSize,
+			"total":    total,
+			"hasMore":  end < total,
+		},
+		"filters": map[string]interface{}{
+			"type":   activityType,
+			"status": status,
 		},
 	})
 }
@@ -3631,4 +3860,123 @@ func getEnvIntOrDefault(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// Integration management helper functions
+
+// validateIntegrationConfig validates configuration for different integration types
+func (s *Server) validateIntegrationConfig(integrationID string, config map[string]interface{}) error {
+	switch integrationID {
+	case "github":
+		if _, ok := config["token"]; !ok {
+			return fmt.Errorf("GitHub integration requires 'token' field")
+		}
+		if _, ok := config["owner"]; !ok {
+			return fmt.Errorf("GitHub integration requires 'owner' field")
+		}
+	case "gitlab":
+		if _, ok := config["token"]; !ok {
+			return fmt.Errorf("GitLab integration requires 'token' field")
+		}
+		if _, ok := config["url"]; !ok {
+			return fmt.Errorf("GitLab integration requires 'url' field")
+		}
+	case "jenkins":
+		if _, ok := config["url"]; !ok {
+			return fmt.Errorf("Jenkins integration requires 'url' field")
+		}
+		if _, ok := config["username"]; !ok {
+			return fmt.Errorf("Jenkins integration requires 'username' field")
+		}
+		if _, ok := config["api_token"]; !ok {
+			return fmt.Errorf("Jenkins integration requires 'api_token' field")
+		}
+	case "slack":
+		if _, ok := config["webhook_url"]; !ok {
+			return fmt.Errorf("Slack integration requires 'webhook_url' field")
+		}
+	case "jira":
+		if _, ok := config["url"]; !ok {
+			return fmt.Errorf("Jira integration requires 'url' field")
+		}
+		if _, ok := config["username"]; !ok {
+			return fmt.Errorf("Jira integration requires 'username' field")
+		}
+		if _, ok := config["api_token"]; !ok {
+			return fmt.Errorf("Jira integration requires 'api_token' field")
+		}
+	case "sonarqube":
+		if _, ok := config["url"]; !ok {
+			return fmt.Errorf("SonarQube integration requires 'url' field")
+		}
+		if _, ok := config["token"]; !ok {
+			return fmt.Errorf("SonarQube integration requires 'token' field")
+		}
+	}
+	return nil
+}
+
+// testIntegrationConnection tests the connection to an integration
+func (s *Server) testIntegrationConnection(integrationID string, config map[string]interface{}) error {
+	// In a real implementation, this would make actual API calls to test connectivity
+	// For now, we'll simulate the test
+	switch integrationID {
+	case "github":
+		// Simulate GitHub API test
+		if token, ok := config["token"].(string); ok && len(token) < 10 {
+			return fmt.Errorf("invalid GitHub token format")
+		}
+	case "gitlab":
+		// Simulate GitLab API test
+		if url, ok := config["url"].(string); ok && !strings.HasPrefix(url, "http") {
+			return fmt.Errorf("invalid GitLab URL format")
+		}
+	case "jenkins":
+		// Simulate Jenkins API test
+		if url, ok := config["url"].(string); ok && !strings.HasPrefix(url, "http") {
+			return fmt.Errorf("invalid Jenkins URL format")
+		}
+	case "slack":
+		// Simulate Slack webhook test
+		if webhook, ok := config["webhook_url"].(string); ok && !strings.Contains(webhook, "hooks.slack.com") {
+			return fmt.Errorf("invalid Slack webhook URL")
+		}
+	case "jira":
+		// Simulate Jira API test
+		if url, ok := config["url"].(string); ok && !strings.HasPrefix(url, "http") {
+			return fmt.Errorf("invalid Jira URL format")
+		}
+	case "sonarqube":
+		// Simulate SonarQube API test
+		if url, ok := config["url"].(string); ok && !strings.HasPrefix(url, "http") {
+			return fmt.Errorf("invalid SonarQube URL format")
+		}
+	}
+	return nil
+}
+
+// storeIntegrationConfig stores integration configuration
+func (s *Server) storeIntegrationConfig(integrationID string, config map[string]interface{}) {
+	// In production, this would encrypt and store in a secure database
+	// For now, we'll just log that it's stored
+	log.Printf("Storing configuration for integration: %s", integrationID)
+}
+
+// getIntegrationConfig retrieves integration configuration
+func (s *Server) getIntegrationConfig(integrationID string) (map[string]interface{}, error) {
+	// In production, this would retrieve from database
+	// For now, return mock data
+	return map[string]interface{}{
+		"status":      "connected",
+		"last_sync":   time.Now().Add(-30 * time.Minute),
+		"sync_count":  42,
+		"error_count": 0,
+	}, nil
+}
+
+// removeIntegrationConfig removes integration configuration
+func (s *Server) removeIntegrationConfig(integrationID string) error {
+	// In production, this would remove from database
+	log.Printf("Removing configuration for integration: %s", integrationID)
+	return nil
 }

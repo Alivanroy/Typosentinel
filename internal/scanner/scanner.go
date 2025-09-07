@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/cache"
@@ -312,10 +313,12 @@ func (s *Scanner) extractPackages(projectInfo *ProjectInfo) ([]*types.Package, e
 func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, error) {
 	var threats []*types.Threat
 
-	// ML analysis temporarily disabled due to circular dependency
-	// TODO: Implement basic threat analysis or integrate ML through different approach
+	// Basic rule-based threat detection
+	threats = append(threats, s.detectTyposquatting(pkg)...)
+	threats = append(threats, s.detectSuspiciousPatterns(pkg)...)
+	threats = append(threats, s.detectMaliciousIndicators(pkg)...)
+	threats = append(threats, s.detectVersionAnomalies(pkg)...)
 
-	// For now, return empty threats list
 	return threats, nil
 }
 
@@ -519,6 +522,18 @@ func (s *Scanner) min(a, b int) int {
 	return b
 }
 
+// minThree returns the minimum of three integers
+func (s *Scanner) minThree(a, b, c int) int {
+	min := a
+	if b < min {
+		min = b
+	}
+	if c < min {
+		min = c
+	}
+	return min
+}
+
 // max returns the maximum of two integers
 func (s *Scanner) max(a, b int) int {
 	if a > b {
@@ -526,6 +541,8 @@ func (s *Scanner) max(a, b int) int {
 	}
 	return b
 }
+
+
 
 // calculateRiskLevel calculates the risk level based on threats
 func (s *Scanner) calculateRiskLevel(threats []*types.Threat) types.Severity {
@@ -928,5 +945,193 @@ func (s *Scanner) convertEvidenceToMap(evidence []types.Evidence) map[string]str
 
 // generateScanID generates a unique scan ID
 func generateScanID() string {
-	return fmt.Sprintf("scan_%d", time.Now().UnixNano())
+	return fmt.Sprintf("scan_%d", time.Now().Unix())
+}
+
+// detectTyposquatting detects potential typosquatting threats
+func (s *Scanner) detectTyposquatting(pkg *types.Package) []*types.Threat {
+	var threats []*types.Threat
+
+	// Popular package names to check against
+	popularPackages := s.getPopularPackages(pkg.Registry)
+
+	for _, popular := range popularPackages {
+		if similarity := s.calculateSimilarity(pkg.Name, popular); similarity > 0.7 && similarity < 1.0 {
+			threat := &types.Threat{
+				ID:          fmt.Sprintf("typo_%d", time.Now().UnixNano()),
+				Type:        "typosquatting",
+				Severity:    s.getSeverityFromSimilarity(similarity),
+				Confidence:  similarity,
+				Description: fmt.Sprintf("Package name '%s' is similar to popular package '%s'", pkg.Name, popular),
+				SimilarTo:   popular,
+				Evidence:    []types.Evidence{{Type: "similarity", Value: fmt.Sprintf("%.2f", similarity)}},
+			}
+			threats = append(threats, threat)
+		}
+	}
+
+	return threats
+}
+
+// detectSuspiciousPatterns detects suspicious naming patterns
+func (s *Scanner) detectSuspiciousPatterns(pkg *types.Package) []*types.Threat {
+	var threats []*types.Threat
+
+	// Check for suspicious patterns
+	suspiciousPatterns := []string{
+		"test", "temp", "demo", "sample", "example",
+		"hack", "crack", "exploit", "malware", "virus",
+		"backdoor", "trojan", "keylog", "stealer",
+	}
+
+	for _, pattern := range suspiciousPatterns {
+		if strings.Contains(strings.ToLower(pkg.Name), pattern) {
+			threat := &types.Threat{
+				ID:          fmt.Sprintf("pattern_%d", time.Now().UnixNano()),
+				Type:        "suspicious_pattern",
+				Severity:    types.SeverityMedium,
+				Confidence:  0.6,
+				Description: fmt.Sprintf("Package name contains suspicious pattern: %s", pattern),
+				Evidence:    []types.Evidence{{Type: "pattern", Value: pattern}},
+			}
+			threats = append(threats, threat)
+		}
+	}
+
+	return threats
+}
+
+// detectMaliciousIndicators detects known malicious indicators
+func (s *Scanner) detectMaliciousIndicators(pkg *types.Package) []*types.Threat {
+	var threats []*types.Threat
+
+	// Check for suspicious metadata
+	if pkg.Metadata.Author == "" || pkg.Metadata.Description == "" {
+		threat := &types.Threat{
+			ID:          fmt.Sprintf("meta_%d", time.Now().UnixNano()),
+			Type:        "incomplete_metadata",
+			Severity:    types.SeverityLow,
+			Confidence:  0.4,
+			Description: "Package has incomplete metadata (missing author or description)",
+			Evidence:    []types.Evidence{{Type: "metadata", Value: "incomplete"}},
+		}
+		threats = append(threats, threat)
+	}
+
+	// Check for suspicious version patterns
+	if strings.Contains(pkg.Version, "alpha") || strings.Contains(pkg.Version, "beta") {
+		threat := &types.Threat{
+			ID:          fmt.Sprintf("version_%d", time.Now().UnixNano()),
+			Type:        "unstable_version",
+			Severity:    types.SeverityLow,
+			Confidence:  0.3,
+			Description: "Package uses pre-release version which may be unstable",
+			Evidence:    []types.Evidence{{Type: "version", Value: pkg.Version}},
+		}
+		threats = append(threats, threat)
+	}
+
+	return threats
+}
+
+// detectVersionAnomalies detects version-related anomalies
+func (s *Scanner) detectVersionAnomalies(pkg *types.Package) []*types.Threat {
+	var threats []*types.Threat
+
+	// Check for suspicious version jumps (e.g., 1.0.0 to 999.0.0)
+	if strings.HasPrefix(pkg.Version, "999") || strings.HasPrefix(pkg.Version, "9999") {
+		threat := &types.Threat{
+			ID:          fmt.Sprintf("anomaly_%d", time.Now().UnixNano()),
+			Type:        "version_anomaly",
+			Severity:    types.SeverityHigh,
+			Confidence:  0.8,
+			Description: "Package uses suspiciously high version number",
+			Evidence:    []types.Evidence{{Type: "version", Value: pkg.Version}},
+		}
+		threats = append(threats, threat)
+	}
+
+	return threats
+}
+
+// getPopularPackages returns popular packages for the given registry
+func (s *Scanner) getPopularPackages(registry string) []string {
+	switch strings.ToLower(registry) {
+	case "npm":
+		return []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment"}
+	case "pypi":
+		return []string{"numpy", "pandas", "requests", "flask", "django", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow"}
+	case "rubygems":
+		return []string{"rails", "bundler", "rake", "rspec", "nokogiri"}
+	case "maven":
+		return []string{"junit", "spring-boot", "jackson-core", "slf4j-api", "commons-lang3"}
+	default:
+		return []string{}
+	}
+}
+
+// calculateSimilarity calculates similarity between two strings using Levenshtein distance
+func (s *Scanner) calculateSimilarity(s1, s2 string) float64 {
+	if s1 == s2 {
+		return 1.0
+	}
+
+	maxLen := len(s1)
+	if len(s2) > maxLen {
+		maxLen = len(s2)
+	}
+
+	if maxLen == 0 {
+		return 1.0
+	}
+
+	distance := s.levenshteinDistance(s1, s2)
+	return 1.0 - float64(distance)/float64(maxLen)
+}
+
+// levenshteinDistance calculates the Levenshtein distance between two strings
+func (s *Scanner) levenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+		matrix[i][0] = i
+	}
+
+	for j := 0; j <= len(s2); j++ {
+		matrix[0][j] = j
+	}
+
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+
+			matrix[i][j] = s.minThree(
+				matrix[i-1][j]+1,      // deletion
+				matrix[i][j-1]+1,      // insertion
+				matrix[i-1][j-1]+cost, // substitution
+			)
+		}
+	}
+
+	return matrix[len(s1)][len(s2)]
+}
+
+// getSeverityFromSimilarity determines threat severity based on similarity score
+func (s *Scanner) getSeverityFromSimilarity(similarity float64) types.Severity {
+	if similarity >= 0.9 {
+		return types.SeverityHigh
+	} else if similarity >= 0.8 {
+		return types.SeverityMedium
+	}
+	return types.SeverityLow
 }

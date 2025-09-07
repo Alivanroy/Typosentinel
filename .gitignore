@@ -28,6 +28,9 @@ vendor/
 # Go workspace file
 go.work
 
+# Go toolchain (should not be committed)
+go/
+
 # IDE files
 .vscode/
 .idea/

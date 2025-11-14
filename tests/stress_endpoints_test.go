@@ -3,8 +3,9 @@ package tests
 import (
     "bytes"
     "context"
-    "os"
+    "fmt"
     "net/http"
+    "os"
     "sync"
     "testing"
     "time"

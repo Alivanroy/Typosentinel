@@ -1,0 +1,42 @@
+name: Security Scan
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  typosentinel-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build Typosentinel CLI
+        run: |
+          go mod download
+          go build -trimpath -ldflags "-s -w" -o build/typosentinel .
+
+      - name: Run scan and generate SBOM
+        run: |
+          ./build/typosentinel scan . --sbom-format spdx --sbom-output sbom.json || true
+
+      - name: Evaluate risk threshold
+        run: |
+          ./build/typosentinel scan . --output-format json > scan.json || true
+          THREATS=$(jq '.summary.TotalThreats // .Summary.TotalThreats // 0' scan.json)
+          echo "Threats found: $THREATS"
+          if [ "$THREATS" -gt 0 ]; then
+            echo "Error: security threats detected"
+            exit 1
+          fi
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json

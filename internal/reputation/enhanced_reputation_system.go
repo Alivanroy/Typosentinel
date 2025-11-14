@@ -3,6 +3,7 @@ package reputation
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -13,12 +14,13 @@ import (
 
 // EnhancedReputationSystem provides comprehensive reputation analysis with threat intelligence
 type EnhancedReputationSystem struct {
-	threatIntelManager *threat_intelligence.ThreatIntelligenceManager
-	scorer             *EnhancedReputationScorer
-	cache              *ReputationCache
-	logger             *logger.Logger
-	config             *EnhancedReputationConfig
-	mu                 sync.RWMutex
+    threatIntelManager *threat_intelligence.ThreatIntelligenceManager
+    scorer             *EnhancedReputationScorer
+    cache              *ReputationCache
+    fsCache            *FilesystemCache
+    logger             *logger.Logger
+    config             *EnhancedReputationConfig
+    mu                 sync.RWMutex
 }
 
 // EnhancedReputationConfig contains configuration for the enhanced reputation system
@@ -205,22 +207,28 @@ type ReputationCache struct {
 
 // NewEnhancedReputationSystem creates a new enhanced reputation system
 func NewEnhancedReputationSystem(
-	threatIntelManager *threat_intelligence.ThreatIntelligenceManager,
-	config *EnhancedReputationConfig,
-	logger *logger.Logger,
+    threatIntelManager *threat_intelligence.ThreatIntelligenceManager,
+    config *EnhancedReputationConfig,
+    logger *logger.Logger,
 ) *EnhancedReputationSystem {
 	// Set default configuration if not provided
 	if config == nil {
 		config = getDefaultEnhancedReputationConfig()
 	}
 
-	return &EnhancedReputationSystem{
-		threatIntelManager: threatIntelManager,
-		scorer:             NewEnhancedReputationScorer(),
-		cache:              NewReputationCache(config.MaxCacheSize, config.CacheTTL),
-		logger:             logger,
-		config:             config,
-	}
+    ers := &EnhancedReputationSystem{
+        threatIntelManager: threatIntelManager,
+        scorer:             NewEnhancedReputationScorer(),
+        cache:              NewReputationCache(config.MaxCacheSize, config.CacheTTL),
+        logger:             logger,
+        config:             config,
+    }
+    if os.Getenv("TYPOSENTINEL_FS_CACHE_ENABLED") == "true" {
+        base := os.Getenv("TYPOSENTINEL_FS_CACHE_PATH")
+        if base == "" { base = "./cache" }
+        ers.fsCache = NewFilesystemCache(base)
+    }
+    return ers
 }
 
 // AnalyzePackageReputation performs comprehensive reputation analysis
@@ -228,13 +236,21 @@ func (ers *EnhancedReputationSystem) AnalyzePackageReputation(ctx context.Contex
 	startTime := time.Now()
 
 	// Check cache first
-	if ers.config.CacheEnabled {
-		if cached := ers.cache.Get(pkg.Name, pkg.Version, pkg.Registry); cached != nil {
-			cached.CacheHit = true
-			cached.AnalysisDuration = time.Since(startTime)
-			return cached, nil
-		}
-	}
+    if ers.config.CacheEnabled {
+        if ers.fsCache != nil {
+            key := ers.generateCacheKey(pkg)
+            if fsRes, err := ers.fsCache.Get(key); err == nil && fsRes != nil {
+                fsRes.CacheHit = true
+                fsRes.AnalysisDuration = time.Since(startTime)
+                return fsRes, nil
+            }
+        }
+        if cached := ers.cache.Get(pkg.Name, pkg.Version, pkg.Registry); cached != nil {
+            cached.CacheHit = true
+            cached.AnalysisDuration = time.Since(startTime)
+            return cached, nil
+        }
+    }
 
 	ers.logger.Info("Starting enhanced reputation analysis", map[string]interface{}{
 		"package":  pkg.Name,
@@ -324,9 +340,13 @@ func (ers *EnhancedReputationSystem) AnalyzePackageReputation(ctx context.Contex
 	result.Recommendations = ers.generateRecommendations(result)
 
 	// Cache the result
-	if ers.config.CacheEnabled {
-		ers.cache.Set(pkg.Name, pkg.Version, pkg.Registry, result)
-	}
+    if ers.config.CacheEnabled {
+        ers.cache.Set(pkg.Name, pkg.Version, pkg.Registry, result)
+        if ers.fsCache != nil {
+            key := ers.generateCacheKey(pkg)
+            _ = ers.fsCache.Set(key, result, ers.config.CacheTTL)
+        }
+    }
 
 	result.AnalysisDuration = time.Since(startTime)
 

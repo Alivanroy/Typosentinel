@@ -20,12 +20,12 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/api/rest/handlers"
 	"github.com/Alivanroy/Typosentinel/internal/api/rest/middleware"
 	"github.com/Alivanroy/Typosentinel/internal/secrets"
+	"github.com/Alivanroy/Typosentinel/internal/security"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
 	"github.com/Alivanroy/Typosentinel/internal/ml"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
-	// "github.com/Alivanroy/Typosentinel/internal/security" // Temporarily disabled
 	"github.com/Alivanroy/Typosentinel/internal/threat_intelligence"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -135,94 +135,6 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 		scanHandlers = handlers.NewScanHandlers(ossDB, detectorEngine)
 	}
 
-	// Initialize scanner for supply chain API
-	scannerConfig := &config.Config{
-		TypoDetection: &config.TypoDetectionConfig{
-			Enabled:   true,
-			Threshold: 0.8,
-		},
-		Scanner: &config.ScannerConfig{
-			MaxConcurrency: 5,
-			IncludeDevDeps: true,
-		},
-	}
-	scannerInstance, err := scanner.New(scannerConfig)
-	if err != nil {
-		log.Printf("[ERROR] Failed to initialize scanner: %v", err)
-		return nil
-	}
-	log.Printf("[DEBUG] Scanner initialized successfully")
-
-	// Initialize logger
-	loggerInstance := logger.New()
-
-	// Initialize supply chain API
-	log.Printf("[DEBUG] About to initialize supply chain API...")
-	log.Printf("[DEBUG] Scanner instance: %v", scannerInstance != nil)
-	log.Printf("[DEBUG] Logger instance: %v", loggerInstance != nil)
-	// Convert RESTAPIConfig to a basic config for supply chain API
-	basicConfig := &config.Config{
-		App: config.AppConfig{
-			Name:        "typosentinel",
-			Version:     "1.1.0",
-			Environment: config.EnvDevelopment,
-			Debug:       true,
-		},
-		Server: config.ServerConfig{
-			Host: cfg.Host,
-			Port: cfg.Port,
-		},
-		Database: config.DatabaseConfig{
-			Type:     os.Getenv("TYPOSENTINEL_DB_TYPE"),
-			Database: os.Getenv("TYPOSENTINEL_DB_NAME"),
-			Host:     os.Getenv("TYPOSENTINEL_DB_HOST"),
-			Port:     func() int {
-				if port := os.Getenv("TYPOSENTINEL_DB_PORT"); port != "" {
-					if p, err := strconv.Atoi(port); err == nil {
-						return p
-					}
-				}
-				return 5432
-			}(),
-			Username: os.Getenv("TYPOSENTINEL_DB_USER"),
-			Password: os.Getenv("TYPOSENTINEL_DB_PASSWORD"),
-			SSLMode:  "disable",
-		},
-	}
-	log.Printf("[DEBUG] Basic config created: %v", basicConfig != nil)
-	supplyChainAPI := NewSupplyChainAPI(scannerInstance, basicConfig, loggerInstance)
-	log.Printf("[DEBUG] Supply chain API initialized: %v", supplyChainAPI != nil)
-	if supplyChainAPI != nil {
-		log.Printf("[DEBUG] Supply chain API handlers: %v", supplyChainAPI.handlers != nil)
-	}
-
-	// Initialize threat intelligence manager
-	log.Printf("[DEBUG] Creating threat intelligence manager...")
-	threatManager := threat_intelligence.NewThreatIntelligenceManager(basicConfig, loggerInstance)
-	log.Printf("[DEBUG] Threat intelligence manager created: %v", threatManager != nil)
-	if threatManager != nil {
-		// Initialize the threat manager
-		log.Printf("[DEBUG] Initializing threat intelligence manager...")
-		ctx := context.Background()
-		if err := threatManager.Initialize(ctx); err != nil {
-			log.Printf("[WARNING] Failed to initialize threat intelligence manager: %v", err)
-			threatManager = nil
-		} else {
-			log.Printf("[DEBUG] Threat intelligence manager initialized successfully")
-			// Set up threat intelligence with detector engine
-			detectorEngine.SetThreatIntelligenceManager(threatManager)
-		}
-	} else {
-		log.Printf("[WARNING] Failed to create threat intelligence manager")
-	}
-
-	// Initialize threat intelligence API
-	var threatIntelAPI *ThreatIntelAPI
-	if threatManager != nil {
-		threatIntelAPI = NewThreatIntelAPI(threatManager)
-		log.Printf("[DEBUG] Threat intelligence API initialized")
-	}
-
     server := &Server{
         config:             cfg,
         gin:                r,
@@ -231,9 +143,6 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
         enterpriseHandlers: enterpriseHandlers,
         scanHandlers:       scanHandlers,
         ossDB:              ossDB,
-        supplyChainAPI:     supplyChainAPI,
-        threatManager:      threatManager,
-        threatIntelAPI:     threatIntelAPI,
     }
 
     // Wire a minimal analyzer if none was provided
@@ -241,12 +150,8 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
         server.analyzer = analyzerpkg.NewStub()
     }
 
-    // Wire a minimal ML pipeline if none was provided
-    if server.mlPipeline == nil {
-        defaultCfg := &config.Config{MLService: &config.MLServiceConfig{Enabled: true}}
-        server.mlPipeline = ml.NewMLPipeline(defaultCfg)
-        _ = server.mlPipeline.Initialize(context.Background())
-    }
+    // Defer ML pipeline initialization to post-bind for faster health readiness
+    // It will be initialized asynchronously in Start()
 
     // Initialize secrets provider and populate sensitive envs if missing
     var provider secrets.Provider
@@ -274,27 +179,40 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
     // Setup routes
     server.setupRoutes()
 
-	return server
+    return server
 }
 
 // Start starts the REST API server
 func (s *Server) Start(ctx context.Context) error {
-	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
+    env := strings.ToLower(os.Getenv("TYPOSENTINEL_ENVIRONMENT"))
+    if env == "production" {
+        v := security.NewSecureConfigValidator()
+        if err := v.ValidateJWTSecret(os.Getenv("TYPOSENTINEL_JWT_SECRET")); err != nil {
+            return fmt.Errorf("security validation failed: %w", err)
+        }
+    }
+    addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 
-	s.server = &http.Server{
-		Addr:         addr,
-		Handler:      s.gin,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  120 * time.Second,
-	}
+    s.server = &http.Server{
+        Addr:         addr,
+        Handler:      s.gin,
+        ReadTimeout:  30 * time.Second,
+        WriteTimeout: 30 * time.Second,
+        IdleTimeout:  120 * time.Second,
+    }
 
-	log.Printf("Starting REST API server on %s", addr)
+    ln, err := net.Listen("tcp", addr)
+    if err != nil { return err }
+    log.Printf("Starting REST API server on %s", addr)
+    s.running = true
 
-	s.running = true
+    go func() {
+        // Initialize heavy components asynchronously to improve readiness
+        s.startHeavyInit(context.Background())
+    }()
 
-	// Start server
-	return s.server.ListenAndServe()
+    // Serve asynchronously; the listener is already bound so health checks work immediately
+    return s.server.Serve(ln)
 }
 
 // Stop stops the REST API server
@@ -484,6 +402,59 @@ func (s *Server) setupRoutes() {
 			database.GET("/security", s.getDatabaseSecurity)
 		}
 	}
+}
+
+// startHeavyInit performs deferred initialization of heavy components
+func (s *Server) startHeavyInit(ctx context.Context) {
+    loggerInstance := logger.New()
+
+    // Build a basic config from environment
+    basicConfig := &config.Config{
+        App: config.AppConfig{
+            Name:        "typosentinel",
+            Version:     "1.1.0",
+            Environment: config.EnvDevelopment,
+            Debug:       true,
+        },
+        Server: config.ServerConfig{Host: s.config.Host, Port: s.config.Port},
+        Database: config.DatabaseConfig{
+            Type:     os.Getenv("TYPOSENTINEL_DB_TYPE"),
+            Database: os.Getenv("TYPOSENTINEL_DB_NAME"),
+            Host:     os.Getenv("TYPOSENTINEL_DB_HOST"),
+            Port: func() int {
+                if port := os.Getenv("TYPOSENTINEL_DB_PORT"); port != "" {
+                    if p, err := strconv.Atoi(port); err == nil { return p }
+                }
+                return 5432
+            }(),
+            Username: os.Getenv("TYPOSENTINEL_DB_USER"),
+            Password: os.Getenv("TYPOSENTINEL_DB_PASSWORD"),
+            SSLMode:  "disable",
+        },
+    }
+
+    // Supply chain API
+    scannerConfig := &config.Config{TypoDetection: &config.TypoDetectionConfig{Enabled: true, Threshold: 0.8}, Scanner: &config.ScannerConfig{MaxConcurrency: 5, IncludeDevDeps: true}}
+    scannerInstance, err := scanner.New(scannerConfig)
+    if err == nil {
+        s.supplyChainAPI = NewSupplyChainAPI(scannerInstance, basicConfig, loggerInstance)
+    }
+
+    // Threat intelligence manager and API
+    tMgr := threat_intelligence.NewThreatIntelligenceManager(basicConfig, loggerInstance)
+    if tMgr != nil {
+        if err := tMgr.Initialize(ctx); err == nil {
+            s.threatManager = tMgr
+            s.threatIntelAPI = NewThreatIntelAPI(tMgr)
+        }
+    }
+
+    // ML pipeline fallback
+    if s.mlPipeline == nil {
+        defaultCfg := &config.Config{MLService: &config.MLServiceConfig{Enabled: true}}
+        s.mlPipeline = ml.NewMLPipeline(defaultCfg)
+        _ = s.mlPipeline.Initialize(ctx)
+    }
 }
 
 // Health check endpoint
@@ -1173,140 +1144,123 @@ func (s *Server) performPackageAnalysis(ctx context.Context, pkg *types.Package,
 
 // Vulnerability scanning endpoints
 
-// scanVulnerabilities handles vulnerability scanning by package name
+// VulnerabilityScanRequest represents a single vulnerability scan request
+type VulnerabilityScanRequest struct {
+    Ecosystem string `json:"ecosystem" binding:"required"`
+    Name      string `json:"name" binding:"required"`
+    Version   string `json:"version,omitempty"`
+    Options   struct{
+        IncludeDev bool `json:"include_dev,omitempty"`
+    } `json:"options,omitempty"`
+}
+
+// scanVulnerabilities handles vulnerability scanning via POST body (OpenAPI compliant)
 func (s *Server) scanVulnerabilities(c *gin.Context) {
-	ecosystem := c.Param("ecosystem")
-	name := c.Param("name")
-	version := c.Query("version")
+    var req VulnerabilityScanRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	// Validate input parameters
-	if ecosystem == "" || name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ecosystem and package name are required"})
-		return
-	}
+    var threats []types.Threat
+    var warnings []types.Warning
+    var scanErr error
 
-	// Perform vulnerability scan using the analyzer
-	var threats []types.Threat
-	var warnings []types.Warning
-	var scanErr error
+    if s.analyzer != nil {
+        dep := types.Dependency{
+            Name:     req.Name,
+            Version:  req.Version,
+            Registry: req.Ecosystem,
+        }
+        threats, warnings = s.analyzer.AnalyzeDependency(dep, []string{})
+    }
 
-	if s.analyzer != nil {
-		// Create a dependency for analysis
-		dep := types.Dependency{
-			Name:     name,
-			Version:  version,
-			Registry: ecosystem,
-		}
-
-		// Use the analyzer to detect threats
-		threats, warnings = s.analyzer.AnalyzeDependency(dep, []string{})
-	}
-
-	// Prepare response
-	response := gin.H{
-		"package": gin.H{
-			"ecosystem": ecosystem,
-			"name":      name,
-			"version":   version,
-		},
-		"threats":     threats,
-		"warnings":    warnings,
-		"scan_time":   time.Now().UTC(),
-		"total_found": len(threats),
-	}
-
-	// Add error information if scan failed
-	if scanErr != nil {
-		response["scan_error"] = scanErr.Error()
-		response["scan_status"] = "failed"
-	} else {
-		response["scan_status"] = "completed"
-	}
-
-	c.JSON(http.StatusOK, response)
+    response := gin.H{
+        "package": gin.H{
+            "ecosystem": req.Ecosystem,
+            "name":      req.Name,
+            "version":   req.Version,
+        },
+        "threats":     threats,
+        "warnings":    warnings,
+        "scan_time":   time.Now().UTC(),
+        "total_found": len(threats),
+        "scan_status": "completed",
+    }
+    if scanErr != nil {
+        response["scan_error"] = scanErr.Error()
+        response["scan_status"] = "failed"
+    }
+    c.JSON(http.StatusOK, response)
 }
 
 // scanPackageVulnerabilities handles vulnerability scanning via POST
 func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
-	var req AnalyzePackageRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    ecosystem := c.Param("ecosystem")
+    name := c.Param("name")
+    var body struct{
+        Version string `json:"version,omitempty"`
+        Options struct{ IncludeDev bool `json:"include_dev,omitempty"` } `json:"options,omitempty"`
+    }
+    _ = c.ShouldBindJSON(&body)
 
-	// Validate required fields
-	if req.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Package name is required"})
-		return
-	}
-	if req.Ecosystem == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Package ecosystem is required"})
-		return
-	}
+    if ecosystem == "" || name == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Ecosystem and package name are required"})
+        return
+    }
 
-	startTime := time.Now()
-	var vulnerabilities []types.Vulnerability
-	var threats []types.Threat
-	var warnings []types.Warning
-	var scanError error
+    startTime := time.Now()
+    var vulnerabilities []types.Vulnerability
+    var threats []types.Threat
+    var warnings []types.Warning
+    var scanError error
 
-	// Perform vulnerability scanning using the analyzer
-	if s.analyzer != nil {
-		// Create a dependency for analysis
-		dep := types.Dependency{
-			Name:     req.Name,
-			Version:  req.Version,
-			Registry: req.Ecosystem,
-		}
+    if s.analyzer != nil {
+        dep := types.Dependency{
+            Name:     name,
+            Version:  body.Version,
+            Registry: ecosystem,
+        }
+        threats, warnings = s.analyzer.AnalyzeDependency(dep, []string{})
+        for _, threat := range threats {
+            vulnerabilities = append(vulnerabilities, types.Vulnerability{
+                ID:          fmt.Sprintf("TYPO-%s-%d", strings.ToUpper(ecosystem), time.Now().Unix()),
+                Package:     name,
+                Versions:    []string{body.Version},
+                Severity:    threat.Severity,
+                Description: threat.Description,
+                References:  threat.References,
+                Published:   time.Now().UTC().Format(time.RFC3339),
+                Modified:    time.Now().UTC().Format(time.RFC3339),
+            })
+        }
+    } else {
+        scanError = fmt.Errorf("analyzer not available")
+    }
 
-		// Use the analyzer to detect threats and warnings
-		threats, warnings = s.analyzer.AnalyzeDependency(dep, []string{})
-
-		// Convert threats to vulnerabilities format
-		for _, threat := range threats {
-			vuln := types.Vulnerability{
-				ID:          fmt.Sprintf("TYPO-%s-%d", strings.ToUpper(req.Ecosystem), time.Now().Unix()),
-				Package:     req.Name,
-				Versions:    []string{req.Version},
-				Severity:    threat.Severity,
-				Description: threat.Description,
-				References:  threat.References,
-				Published:   time.Now().UTC().Format(time.RFC3339),
-				Modified:    time.Now().UTC().Format(time.RFC3339),
-			}
-			vulnerabilities = append(vulnerabilities, vuln)
-		}
-	} else {
-		scanError = fmt.Errorf("analyzer not available")
-	}
-
-	scanDuration := time.Since(startTime)
-
-	result := gin.H{
-		"package": gin.H{
-			"ecosystem": req.Ecosystem,
-			"name":      req.Name,
-			"version":   req.Version,
-		},
-		"vulnerabilities":       vulnerabilities,
-		"threats":               threats,
-		"warnings":              warnings,
-		"scan_time":             startTime.UTC(),
-		"scan_duration":         scanDuration.String(),
-		"vulnerabilities_count": len(vulnerabilities),
-		"threats_count":         len(threats),
-		"warnings_count":        len(warnings),
-		"scan_status":           "completed",
-	}
-
-	if scanError != nil {
-		result["scan_error"] = scanError.Error()
-		result["scan_status"] = "failed"
-		c.JSON(http.StatusInternalServerError, result)
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
+    result := gin.H{
+        "package": gin.H{
+            "ecosystem": ecosystem,
+            "name":      name,
+            "version":   body.Version,
+        },
+        "vulnerabilities":       vulnerabilities,
+        "threats":               threats,
+        "warnings":              warnings,
+        "scan_time":             startTime.UTC(),
+        "scan_duration":         time.Since(startTime).String(),
+        "vulnerabilities_count": len(vulnerabilities),
+        "threats_count":         len(threats),
+        "warnings_count":        len(warnings),
+        "scan_status":           "completed",
+    }
+    if scanError != nil {
+        result["scan_error"] = scanError.Error()
+        result["scan_status"] = "failed"
+        c.JSON(http.StatusInternalServerError, result)
+        return
+    }
+    c.JSON(http.StatusOK, result)
 }
 
 // BatchVulnerabilityScanRequest represents a batch vulnerability scan request

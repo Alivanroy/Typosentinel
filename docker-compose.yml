@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: typosentinel-api
     ports:
-      - "8080:8080"
+      - "8082:8080"
     restart: unless-stopped
     environment:
       - PORT=8080

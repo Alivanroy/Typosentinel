@@ -12,7 +12,7 @@
     - `internal/threat_intelligence/manager.go:360,399,443` — undefined `NewNVDFeed`
     - `internal/ml/basic_scorer.go:97` — unknown field `DevelopmentWarning` in `ModelInfo`
 - Server start attempts:
-  - `go run ./cmd/enterprise` and `go run ./cmd/typosentinel server --port 8081 --host 127.0.0.1`
+  - `go run ./cmd/enterprise` and `go run . server --port 8081 --host 127.0.0.1`
   - Result: Build failures in Threat Intelligence and ML packages prevent startup
 - Integration/E2E tests:
   - Make targets reference `test/integration` and `test/e2e`; these directories do not exist
@@ -35,14 +35,34 @@
 - Audit Makefile test targets; either:
   - Create `test/integration`, `test/e2e`, and `tests/` directories with appropriate test suites, or
   - Update targets to run package-local tests that exist (e.g., `internal/security`)
-- Ensure `cmd/typosentinel` builds and can start the REST server; verify `/health` and `/ready`
+- Ensure the root binary builds and can start the REST server; verify `/health` and `/ready`
+
+### Filesystem Cache Flags
+- `TYPOSENTINEL_FS_CACHE_ENABLED`: enable persistent cache on disk when set to `true`
+- `TYPOSENTINEL_FS_CACHE_PATH`: directory for cache files (default `./cache`)
+- Fallback: if disabled or unavailable, in-memory cache remains active
+
+### Server Production Validation
+- If `TYPOSENTINEL_ENVIRONMENT=production`, the server validates `TYPOSENTINEL_JWT_SECRET` before starting
+- Startup is refused when the secret is missing or weak
 
 ## Verification Plan (post-fix)
-- Build: `go build ./cmd/typosentinel`
+- Build: `go build -o ./build/typosentinel .`
 - Run: `./build/typosentinel server --port 8080 --host 127.0.0.1`
 - Health: `curl http://localhost:8080/health` and `curl http://localhost:8080/ready`
 - Minimal tests: `make ci-quick-comprehensive` (unit + security)
 - Full tests: `make test-comprehensive` (unit, integration, security, e2e, performance) after test suite alignment
+
+## Latest Snapshot (2025-11-14)
+- Build: success (`go build ./...`)
+- Targeted tests: pass
+  - Python parser integration: `TestPythonCLIParsesRequirements`, `TestPythonCLIParsesPyprojectAndPipfile`
+  - Vulnerability endpoints: `TestVulnerabilityEndpointsAlignment`
+  - Filesystem cache integration: `TestFilesystemCache_SetGetExpiryDeleteClear`
+- Full tests: partial
+  - Failures: readiness timeouts under high-concurrency server starts (`TestStressHighRPSHealth`, intermittent `TestVulnerabilityEndpointsAlignment`) due to heavy initialization before server binding; requires test harness readiness gating or deferred heavy init
+- Server production validation: enforced
+  - Startup refuses in production when `TYPOSENTINEL_JWT_SECRET` is missing/weak
 
 ## Decision
 - Current state fails basic build and runtime validation; defer production readiness until blockers above are resolved and health/readiness endpoints pass, with at least unit/security tests green.

@@ -15,7 +15,13 @@ func TestStressHighRPSHealth(t *testing.T) {
     srv := rest.NewServer(cfg, nil, nil)
     go func() { _ = srv.Start(context.Background()) }()
     defer func() { _ = srv.Stop(context.Background()) }()
-    time.Sleep(500 * time.Millisecond)
+    deadline := time.Now().Add(30 * time.Second)
+    for {
+        if time.Now().After(deadline) { t.Fatalf("server not ready") }
+        r, err := http.Get("http://127.0.0.1:8087/health")
+        if err == nil && r.StatusCode == 200 { r.Body.Close(); break }
+        time.Sleep(100 * time.Millisecond)
+    }
 
     clients := 200
     requestsPerClient := 50
@@ -26,10 +32,9 @@ func TestStressHighRPSHealth(t *testing.T) {
             defer wg.Done()
             for j := 0; j < requestsPerClient; j++ {
                 r, err := http.Get("http://127.0.0.1:8087/health")
-                if err != nil || r.StatusCode != 200 { t.Fatalf("health: %v %d", err, r.StatusCode) }
+                if err != nil || r == nil || r.StatusCode != 200 { t.Errorf("health: %v", err); return }
             }
         }()
     }
     wg.Wait()
 }
-

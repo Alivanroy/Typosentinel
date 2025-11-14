@@ -1,13 +1,16 @@
 package reputation
 
 import (
-	"context"
-	"crypto/sha256"
-	"fmt"
-	"sync"
-	"time"
+    "context"
+    "crypto/sha256"
+    "encoding/json"
+    "fmt"
+    "os"
+    "path/filepath"
+    "sync"
+    "time"
 
-	"github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // CacheEntry represents a cached reputation result
@@ -309,9 +312,9 @@ type PersistentCache interface {
 
 // FilesystemCache implements a filesystem-based persistent cache
 type FilesystemCache struct {
-	basePath string
-	mu       sync.RWMutex
-	stats    CacheStats
+    basePath string
+    mu       sync.RWMutex
+    stats    CacheStats
 }
 
 // NewFilesystemCache creates a new filesystem-based cache
@@ -326,41 +329,74 @@ func NewFilesystemCache(basePath string) *FilesystemCache {
 
 // Get retrieves a cached result from filesystem
 func (fc *FilesystemCache) Get(key string) (*EnhancedReputationResult, error) {
-	fc.mu.RLock()
-	defer fc.mu.RUnlock()
-
-	// Implementation would read from filesystem
-	// This is a simplified version
-	fc.stats.Misses++
-	return nil, fmt.Errorf("not implemented")
+    fc.mu.RLock()
+    defer fc.mu.RUnlock()
+    p := filepath.Join(fc.basePath, key+".json")
+    b, err := os.ReadFile(p)
+    if err != nil {
+        fc.stats.Misses++
+        return nil, fmt.Errorf("cache miss")
+    }
+    var wrap struct{
+        Result    *EnhancedReputationResult `json:"result"`
+        Timestamp time.Time                 `json:"timestamp"`
+        TTL       time.Duration             `json:"ttl"`
+    }
+    if err := json.Unmarshal(b, &wrap); err != nil {
+        fc.stats.Misses++
+        return nil, fmt.Errorf("invalid cache")
+    }
+    if time.Since(wrap.Timestamp) > wrap.TTL {
+        _ = os.Remove(p)
+        fc.stats.Evictions++
+        fc.stats.Misses++
+        return nil, fmt.Errorf("expired")
+    }
+    fc.stats.Hits++
+    return wrap.Result, nil
 }
 
 // Set stores a result in filesystem cache
 func (fc *FilesystemCache) Set(key string, result *EnhancedReputationResult, ttl time.Duration) error {
-	fc.mu.Lock()
-	defer fc.mu.Unlock()
-
-	// Implementation would write to filesystem
-	// This is a simplified version
-	return fmt.Errorf("not implemented")
+    fc.mu.Lock()
+    defer fc.mu.Unlock()
+    if err := os.MkdirAll(fc.basePath, 0755); err != nil {
+        return err
+    }
+    p := filepath.Join(fc.basePath, key+".json")
+    wrap := struct{
+        Result    *EnhancedReputationResult `json:"result"`
+        Timestamp time.Time                 `json:"timestamp"`
+        TTL       time.Duration             `json:"ttl"`
+    }{Result: result, Timestamp: time.Now(), TTL: ttl}
+    b, err := json.Marshal(wrap)
+    if err != nil { return err }
+    return os.WriteFile(p, b, 0644)
 }
 
 // Delete removes a cached result from filesystem
 func (fc *FilesystemCache) Delete(key string) error {
-	fc.mu.Lock()
-	defer fc.mu.Unlock()
-
-	// Implementation would delete from filesystem
-	return fmt.Errorf("not implemented")
+    fc.mu.Lock()
+    defer fc.mu.Unlock()
+    p := filepath.Join(fc.basePath, key+".json")
+    if err := os.Remove(p); err != nil {
+        return err
+    }
+    return nil
 }
 
 // Clear removes all cached results from filesystem
 func (fc *FilesystemCache) Clear() error {
-	fc.mu.Lock()
-	defer fc.mu.Unlock()
-
-	// Implementation would clear filesystem cache
-	return fmt.Errorf("not implemented")
+    fc.mu.Lock()
+    defer fc.mu.Unlock()
+    entries, err := os.ReadDir(fc.basePath)
+    if err != nil { return err }
+    for _, e := range entries {
+        if !e.IsDir() {
+            _ = os.Remove(filepath.Join(fc.basePath, e.Name()))
+        }
+    }
+    return nil
 }
 
 // GetStats returns filesystem cache statistics

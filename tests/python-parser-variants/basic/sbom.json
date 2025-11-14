@@ -1,0 +1,33 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentName": "Typosentinel Security Scan",
+  "documentNamespace": "https://typosentinel.com/spdx/8969a6b8-7163-4d78-bfcf-d7faace45df8",
+  "creationInfo": {
+    "created": "2025-11-14T10:37:02Z",
+    "creators": [
+      "Tool: Typosentinel"
+    ],
+    "licenseListVersion": "3.19"
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-tests-python-parser-variants-basic",
+      "name": "tests/python-parser-variants/basic",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "versionInfo": "unknown"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-tests-python-parser-variants-basic"
+    }
+  ]
+}

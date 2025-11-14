@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/vulnerability"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/sirupsen/logrus"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // Analyzer orchestrates the security scanning process
@@ -465,6 +467,8 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 	switch fileType {
 	case "npm":
 		return a.parseNPMDependencies(filePath, options)
+	case "python":
+		return a.parsePythonDependencies(filePath, options)
 	default:
 		// Check if we have a registry connector for this type
 		if connector, exists := a.registries[registryType]; exists {
@@ -478,6 +482,230 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 		// For unsupported file types, return empty
 		return []types.Dependency{}, nil
 	}
+}
+
+// parsePythonDependencies handles parsing of Python-related files
+func (a *Analyzer) parsePythonDependencies(filePath string, options *ScanOptions) ([]types.Dependency, error) {
+    fileName := filepath.Base(filePath)
+    switch fileName {
+    case "requirements.txt", "requirements-dev.txt":
+        return a.parsePythonRequirements(filePath)
+    case "pyproject.toml":
+        return a.parsePyprojectToml(filePath)
+    case "Pipfile":
+        return a.parsePipfile(filePath)
+    default:
+        return []types.Dependency{}, nil
+    }
+}
+
+func (a *Analyzer) parsePythonRequirements(filePath string) ([]types.Dependency, error) {
+    data, err := os.ReadFile(filePath)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read requirements.txt: %w", err)
+    }
+    lines := strings.Split(string(data), "\n")
+    reqRegex := regexp.MustCompile(`^([a-zA-Z0-9_.\-]+)([><=!~]+)?([0-9A-Za-z_.\-]+.*)?$`)
+    var dependencies []types.Dependency
+    for _, line := range lines {
+        line = strings.TrimSpace(line)
+        if line == "" || strings.HasPrefix(line, "#") {
+            continue
+        }
+        if strings.HasPrefix(line, "-e ") {
+            pkg := strings.TrimSpace(strings.TrimPrefix(line, "-e "))
+            if pkg != "" {
+                dependencies = append(dependencies, types.Dependency{
+                    Name:     pkg,
+                    Version:  "*",
+                    Registry: "pypi",
+                    Source:   filePath,
+                    Direct:   true,
+                })
+            }
+            continue
+        }
+        if strings.Contains(line, ";") {
+            parts := strings.Split(line, ";")
+            line = strings.TrimSpace(parts[0])
+        }
+        if strings.Contains(line, "[") && strings.Contains(line, "]") {
+            start := strings.Index(line, "[")
+            end := strings.Index(line, "]") + 1
+            if start >= 0 && end > start {
+                line = line[:start] + line[end:]
+            }
+        }
+        matches := reqRegex.FindStringSubmatch(line)
+        if len(matches) >= 2 {
+            name := matches[1]
+            version := "*"
+            if len(matches) >= 4 && matches[3] != "" {
+                op := matches[2]
+                spec := matches[3]
+                version = strings.TrimSpace(op + spec)
+            }
+            dependencies = append(dependencies, types.Dependency{
+                Name:     name,
+                Version:  version,
+                Registry: "pypi",
+                Source:   filePath,
+                Direct:   true,
+            })
+        }
+    }
+    return dependencies, nil
+}
+
+func (a *Analyzer) parsePyprojectToml(filePath string) ([]types.Dependency, error) {
+    data, err := os.ReadFile(filePath)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read pyproject.toml: %w", err)
+    }
+    var pyproject struct {
+        Project struct {
+            Dependencies []string `toml:"dependencies"`
+        } `toml:"project"`
+        Tool struct {
+            Poetry struct {
+                Dependencies    map[string]interface{} `toml:"dependencies"`
+                DevDependencies map[string]interface{} `toml:"dev-dependencies"`
+                Group           map[string]struct {
+                    Dependencies map[string]interface{} `toml:"dependencies"`
+                } `toml:"group"`
+            } `toml:"poetry"`
+        } `toml:"tool"`
+    }
+    if err := toml.Unmarshal(data, &pyproject); err != nil {
+        return nil, fmt.Errorf("failed to parse pyproject.toml: %w", err)
+    }
+    var dependencies []types.Dependency
+    addDep := func(name, version string, depType string) {
+        if name == "" { return }
+        dependencies = append(dependencies, types.Dependency{
+            Name:     name,
+            Version:  version,
+            Registry: "pypi",
+            Source:   filePath,
+            Direct:   true,
+            ExtraData: map[string]interface{}{
+                "type": depType,
+            },
+        })
+    }
+    for _, dep := range pyproject.Project.Dependencies {
+        n, v := a.parsePythonRequirementString(dep)
+        addDep(n, v, "project")
+    }
+    for name, spec := range pyproject.Tool.Poetry.Dependencies {
+        if name == "python" { continue }
+        version := "*"
+        switch s := spec.(type) {
+        case string:
+            version = s
+        case map[string]interface{}:
+            if ver, ok := s["version"].(string); ok { version = ver }
+        }
+        addDep(name, version, "poetry")
+    }
+    for name, spec := range pyproject.Tool.Poetry.DevDependencies {
+        version := "*"
+        switch s := spec.(type) {
+        case string:
+            version = s
+        case map[string]interface{}:
+            if ver, ok := s["version"].(string); ok { version = ver }
+        }
+        addDep(name, version, "poetry-dev")
+    }
+    for groupName, group := range pyproject.Tool.Poetry.Group {
+        for name, spec := range group.Dependencies {
+            version := "*"
+            switch s := spec.(type) {
+            case string:
+                version = s
+            case map[string]interface{}:
+                if ver, ok := s["version"].(string); ok { version = ver }
+            }
+            addDep(name, version, "group-"+groupName)
+        }
+    }
+    return dependencies, nil
+}
+
+func (a *Analyzer) parsePipfile(filePath string) ([]types.Dependency, error) {
+    data, err := os.ReadFile(filePath)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read Pipfile: %w", err)
+    }
+    var pipfile struct {
+        Packages    map[string]interface{} `toml:"packages"`
+        DevPackages map[string]interface{} `toml:"dev-packages"`
+    }
+    if err := toml.Unmarshal(data, &pipfile); err != nil {
+        return nil, fmt.Errorf("failed to parse Pipfile: %w", err)
+    }
+    var dependencies []types.Dependency
+    add := func(name, version string, depType string) {
+        if name == "" { return }
+        dependencies = append(dependencies, types.Dependency{
+            Name:     name,
+            Version:  version,
+            Registry: "pypi",
+            Source:   filePath,
+            Direct:   true,
+            ExtraData: map[string]interface{}{
+                "type": depType,
+            },
+        })
+    }
+    for name, spec := range pipfile.Packages {
+        version := "*"
+        switch s := spec.(type) {
+        case string:
+            version = s
+        case map[string]interface{}:
+            if ver, ok := s["version"].(string); ok { version = ver }
+        }
+        add(name, version, "prod")
+    }
+    for name, spec := range pipfile.DevPackages {
+        version := "*"
+        switch s := spec.(type) {
+        case string:
+            version = s
+        case map[string]interface{}:
+            if ver, ok := s["version"].(string); ok { version = ver }
+        }
+        add(name, version, "dev")
+    }
+    return dependencies, nil
+}
+
+func (a *Analyzer) parsePythonRequirementString(req string) (string, string) {
+    r := strings.TrimSpace(req)
+    if strings.Contains(r, ";") {
+        parts := strings.Split(r, ";")
+        r = strings.TrimSpace(parts[0])
+    }
+    if strings.Contains(r, "[") && strings.Contains(r, "]") {
+        start := strings.Index(r, "[")
+        end := strings.Index(r, "]") + 1
+        if start >= 0 && end > start { r = r[:start] + r[end:] }
+    }
+    re := regexp.MustCompile(`^([a-zA-Z0-9_.\-]+)([><=!~]+)?([0-9A-Za-z_.\-]+.*)?$`)
+    m := re.FindStringSubmatch(r)
+    if len(m) >= 2 {
+        name := m[1]
+        version := "*"
+        if len(m) >= 4 && m[3] != "" {
+            op := m[2]
+            spec := m[3]
+            version = strings.TrimSpace(op + spec)
+        }
+        return name, version
+    }
+    return r, "*"
 }
 
 // parseNPMDependencies handles parsing of NPM-related files

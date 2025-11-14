@@ -73,22 +73,29 @@ func NewThreatDatabase(logger *logger.Logger, dbConfig *config.DatabaseConfig) *
 
 // Initialize sets up the threat database
 func (td *ThreatDatabase) Initialize(ctx context.Context) error {
-	td.logger.Info("Initializing threat database")
+    td.logger.Info("Initializing threat database")
 
-	// Open database based on type
-	var db *sql.DB
-	var err error
-	
-	switch td.config.Type {
-	case "sqlite":
-		db, err = sql.Open("sqlite3", td.config.Database)
-	case "postgres":
-		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-			td.config.Host, td.config.Port, td.config.Username, td.config.Password, td.config.Database, td.config.SSLMode)
-		db, err = sql.Open("postgres", dsn)
-	default:
-		return fmt.Errorf("unsupported database type: %s", td.config.Type)
-	}
+    // Open database based on type
+    var db *sql.DB
+    var err error
+    
+    switch td.config.Type {
+    case "", "memory":
+        td.logger.Info("Using in-memory threat database")
+        td.mu.Lock()
+        td.db = nil
+        td.mu.Unlock()
+        td.stats.LastUpdate = time.Now()
+        return nil
+    case "sqlite":
+        db, err = sql.Open("sqlite3", td.config.Database)
+    case "postgres":
+        dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+            td.config.Host, td.config.Port, td.config.Username, td.config.Password, td.config.Database, td.config.SSLMode)
+        db, err = sql.Open("postgres", dsn)
+    default:
+        return fmt.Errorf("unsupported database type: %s", td.config.Type)
+    }
 	
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -100,19 +107,19 @@ func (td *ThreatDatabase) Initialize(ctx context.Context) error {
 	td.mu.Unlock()
 
 	// Configure database
-	if err := td.configureDatabase(ctx); err != nil {
-		return fmt.Errorf("failed to configure database: %w", err)
-	}
+    if err := td.configureDatabase(ctx); err != nil {
+        return fmt.Errorf("failed to configure database: %w", err)
+    }
 
 	// Create tables
-	if err := td.createTables(ctx); err != nil {
-		return fmt.Errorf("failed to create tables: %w", err)
-	}
+    if err := td.createTables(ctx); err != nil {
+        return fmt.Errorf("failed to create tables: %w", err)
+    }
 
 	// Create indexes
-	if err := td.createIndexes(ctx); err != nil {
-		return fmt.Errorf("failed to create indexes: %w", err)
-	}
+    if err := td.createIndexes(ctx); err != nil {
+        return fmt.Errorf("failed to create indexes: %w", err)
+    }
 
 	// Update statistics
 	if err := td.updateStatistics(ctx); err != nil {
@@ -127,8 +134,14 @@ func (td *ThreatDatabase) Initialize(ctx context.Context) error {
 
 // StoreThreat stores a threat intelligence entry in the database
 func (td *ThreatDatabase) StoreThreat(ctx context.Context, threat *ThreatIntelligence) error {
-	td.mu.Lock()
-	defer td.mu.Unlock()
+    td.mu.Lock()
+    defer td.mu.Unlock()
+
+    if td.db == nil {
+        td.stats.TotalThreats++
+        td.stats.LastUpdate = time.Now()
+        return nil
+    }
 
 	// Serialize indicators and metadata
 	indicatorsJSON, err := json.Marshal(threat.Indicators)

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
@@ -77,6 +79,11 @@ func NewOSSService(dbConfig *config.DatabaseConfig) (*OSSService, error) {
 	if dbConfig.Type == "sqlite" {
 		// Open SQLite database
 		log.Printf("[DEBUG] Opening SQLite database: %s", dbConfig.Database)
+		if dir := filepath.Dir(dbConfig.Database); dir != "." && dir != "" {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return nil, fmt.Errorf("failed to create sqlite directory: %w", err)
+			}
+		}
 		db, err = sql.Open("sqlite3", dbConfig.Database)
 	} else {
 		// Open PostgreSQL database

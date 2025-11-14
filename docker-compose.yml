@@ -31,16 +31,16 @@ services:
       - PORT=8080
       - ENV=production
       - TYPOSENTINEL_JWT_SECRET=${TYPOSENTINEL_JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
-      - TYPOSENTINEL_DB_TYPE=postgres
-      - TYPOSENTINEL_DB_HOST=postgres
-      - TYPOSENTINEL_DB_PORT=5432
-      - TYPOSENTINEL_DB_NAME=typosentinel
-      - TYPOSENTINEL_DB_USER=typosentinel
-      - TYPOSENTINEL_DB_PASSWORD=typosentinel123
-      - TYPOSENTINEL_DB_SSLMODE=disable
-      - TYPOSENTINEL_LOG_LEVEL=info
-      - TYPOSENTINEL_CORS_ORIGINS=http://localhost:3000
-      - TYPOSENTINEL_DISABLE_AUTH=true
+      - TYPOSENTINEL_DB_TYPE=${TYPOSENTINEL_DB_TYPE:-sqlite}
+      - TYPOSENTINEL_DB_HOST=${TYPOSENTINEL_DB_HOST:-postgres}
+      - TYPOSENTINEL_DB_PORT=${TYPOSENTINEL_DB_PORT:-5432}
+      - TYPOSENTINEL_DB_NAME=${TYPOSENTINEL_DB_NAME:-/app/data/typosentinel.db}
+      - TYPOSENTINEL_DB_USER=${TYPOSENTINEL_DB_USER:-typosentinel}
+      - TYPOSENTINEL_DB_PASSWORD=${TYPOSENTINEL_DB_PASSWORD:-typosentinel123}
+      - TYPOSENTINEL_DB_SSLMODE=${TYPOSENTINEL_DB_SSLMODE:-disable}
+      - TYPOSENTINEL_LOG_LEVEL=${TYPOSENTINEL_LOG_LEVEL:-info}
+      - TYPOSENTINEL_CORS_ORIGINS=${TYPOSENTINEL_CORS_ORIGINS:-http://localhost:3000}
+      - TYPOSENTINEL_DISABLE_AUTH=${TYPOSENTINEL_DISABLE_AUTH:-true}
     volumes:
       - typosentinel_data:/app/data
       - typosentinel_logs:/app/logs
@@ -52,6 +52,129 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  typosentinel-seed:
+    image: curlimages/curl:8.10.1
+    container_name: typosentinel-seed
+    profiles:
+      - default
+    environment:
+      - API_URL=http://typosentinel-api:8080
+    volumes:
+      - ./deploy/seed.sh:/seed.sh:ro
+    entrypoint: ["sh", "/seed.sh"]
+    depends_on:
+      typosentinel-api:
+        condition: service_healthy
+    networks:
+      - typosentinel-network
+
+  # API Backend (SQLite profile)
+  typosentinel-api-sqlite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: typosentinel-api-sqlite
+    profiles:
+      - sqlite
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - ENV=production
+      - TYPOSENTINEL_DB_TYPE=sqlite
+      - TYPOSENTINEL_DB_NAME=/app/data/typosentinel.db
+      - TYPOSENTINEL_JWT_SECRET=${TYPOSENTINEL_JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - TYPOSENTINEL_LOG_LEVEL=${TYPOSENTINEL_LOG_LEVEL:-info}
+      - TYPOSENTINEL_CORS_ORIGINS=${TYPOSENTINEL_CORS_ORIGINS:-http://localhost:3000}
+      - TYPOSENTINEL_DISABLE_AUTH=${TYPOSENTINEL_DISABLE_AUTH:-true}
+    volumes:
+      - typosentinel_data:/app/data
+      - typosentinel_logs:/app/logs
+    networks:
+      - typosentinel-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  typosentinel-seed-sqlite:
+    image: curlimages/curl:8.10.1
+    container_name: typosentinel-seed-sqlite
+    profiles:
+      - sqlite
+    environment:
+      - API_URL=http://typosentinel-api-sqlite:8080
+    volumes:
+      - ./deploy/seed.sh:/seed.sh:ro
+    entrypoint: ["sh", "/seed.sh"]
+    depends_on:
+      typosentinel-api-sqlite:
+        condition: service_healthy
+    networks:
+      - typosentinel-network
+
+  # API Backend (Postgres profile)
+  typosentinel-api-postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: typosentinel-api-postgres
+    profiles:
+      - postgres
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - ENV=production
+      - TYPOSENTINEL_DB_TYPE=postgres
+      - TYPOSENTINEL_DB_HOST=postgres
+      - TYPOSENTINEL_DB_PORT=5432
+      - TYPOSENTINEL_DB_NAME=typosentinel
+      - TYPOSENTINEL_DB_USER=typosentinel
+      - TYPOSENTINEL_DB_PASSWORD=typosentinel123
+      - TYPOSENTINEL_DB_SSLMODE=disable
+      - TYPOSENTINEL_JWT_SECRET=${TYPOSENTINEL_JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - TYPOSENTINEL_LOG_LEVEL=${TYPOSENTINEL_LOG_LEVEL:-info}
+      - TYPOSENTINEL_CORS_ORIGINS=${TYPOSENTINEL_CORS_ORIGINS:-http://localhost:3000}
+      - TYPOSENTINEL_DISABLE_AUTH=${TYPOSENTINEL_DISABLE_AUTH:-true}
+    volumes:
+      - typosentinel_data:/app/data
+      - typosentinel_logs:/app/logs
+    networks:
+      - typosentinel-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  typosentinel-seed-postgres:
+    image: curlimages/curl:8.10.1
+    container_name: typosentinel-seed-postgres
+    profiles:
+      - postgres
+    environment:
+      - API_URL=http://typosentinel-api-postgres:8080
+    volumes:
+      - ./deploy/seed.sh:/seed.sh:ro
+    entrypoint: ["sh", "/seed.sh"]
+    depends_on:
+      typosentinel-api-postgres:
+        condition: service_healthy
+    networks:
+      - typosentinel-network
 
   # PostgreSQL Database
   postgres:
@@ -107,6 +230,8 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     restart: unless-stopped
     networks:
       - typosentinel-network

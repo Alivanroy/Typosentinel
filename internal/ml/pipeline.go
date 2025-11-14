@@ -301,14 +301,12 @@ func (p *MLPipeline) runEnsemblePrediction(ctx context.Context, features []float
 		predictions[result.name] = result.prediction
 	}
 
-	// Check for errors (non-blocking)
-	select {
-	case err := <-errorChan:
-		logger.DebugWithContext("Model prediction error", map[string]interface{}{
-			"error": err.Error(),
-		})
-	default:
-	}
+    err, ok := <-errorChan
+    if ok && err != nil {
+        logger.DebugWithContext("Model prediction error", map[string]interface{}{
+            "error": err.Error(),
+        })
+    }
 
 	return predictions, nil
 }

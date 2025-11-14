@@ -923,16 +923,16 @@ func runServer(cmd *cobra.Command, args []string) {
 	rbacEngine := auth.NewRBACEngine(&config.AuthzConfig{})
 
 	// Use database-backed violation store if database is available
-	var violationStore auth.ViolationStore
-	var dbViolationStore *storage.ViolationStore
-	if dbService != nil {
-		dbViolationStore = storage.NewViolationStore()
-		violationStore = dbViolationStore
-		log.Printf("Using database-backed violation store")
-	} else {
-		violationStore = auth.NewMemoryViolationStore()
-		log.Printf("Using memory-backed violation store (database not available)")
-	}
+    var violationStore auth.ViolationStore
+    var dbViolationStore *storage.ViolationStore
+    if dbService != nil {
+        dbViolationStore = storage.NewViolationStore(dbService.GetDB(), pkgLogger)
+        violationStore = dbViolationStore
+        log.Printf("Using database-backed violation store")
+    } else {
+        violationStore = auth.NewMemoryViolationStore()
+        log.Printf("Using memory-backed violation store (database not available)")
+    }
 
 	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, violationStore, authLoggerAdapter)
 

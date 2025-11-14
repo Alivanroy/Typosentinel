@@ -8,14 +8,16 @@ import (
 	"math"
 	"strings"
 	"time"
+	"sync"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // GTRAlgorithm implements graph traversal reconnaissance
 type GTRAlgorithm struct {
-	config  *GTRConfig
-	metrics *GTRMetrics
+    config  *GTRConfig
+    metrics *GTRMetrics
+    mu      sync.Mutex
 }
 
 // GTRConfig holds configuration for the GTR algorithm
@@ -109,26 +111,30 @@ func (g *GTRAlgorithm) Configure(config map[string]interface{}) error {
 
 // GetMetrics returns algorithm metrics
 func (g *GTRAlgorithm) GetMetrics() *AlgorithmMetrics {
-	return &AlgorithmMetrics{
-		PackagesProcessed: int(g.metrics.TotalAnalyses),
-		ThreatsDetected:   int(g.metrics.AttackPathsFound),
-		ProcessingTime:    g.metrics.ProcessingTime,
-		Accuracy:          g.metrics.Accuracy,
-		Precision:         g.metrics.Precision,
-		Recall:            g.metrics.Recall,
-		F1Score:           g.metrics.F1Score,
-		LastUpdated:       g.metrics.LastUpdated,
-	}
+    g.mu.Lock()
+    defer g.mu.Unlock()
+    return &AlgorithmMetrics{
+        PackagesProcessed: int(g.metrics.TotalAnalyses),
+        ThreatsDetected:   int(g.metrics.AttackPathsFound),
+        ProcessingTime:    g.metrics.ProcessingTime,
+        Accuracy:          g.metrics.Accuracy,
+        Precision:         g.metrics.Precision,
+        Recall:            g.metrics.Recall,
+        F1Score:           g.metrics.F1Score,
+        LastUpdated:       g.metrics.LastUpdated,
+    }
 }
 
 // Analyze performs graph traversal reconnaissance on a package
 func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
-	startTime := time.Now()
-	defer func() {
-		g.metrics.ProcessingTime += time.Since(startTime)
-		g.metrics.TotalAnalyses++
-		g.metrics.LastUpdated = time.Now()
-	}()
+    startTime := time.Now()
+    defer func() {
+        g.mu.Lock()
+        g.metrics.ProcessingTime += time.Since(startTime)
+        g.metrics.TotalAnalyses++
+        g.metrics.LastUpdated = time.Now()
+        g.mu.Unlock()
+    }()
 
 	if len(packages) == 0 {
 		return nil, fmt.Errorf("no packages provided")
@@ -159,10 +165,12 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*Algorit
 	result.Metadata["dependencies_count"] = len(pkg.Dependencies)
 	result.Metadata["processing_time_ms"] = time.Since(startTime).Milliseconds()
 
-	g.metrics.GraphsAnalyzed++
-	g.metrics.NodesTraversed += int64(len(pkg.Dependencies))
-
-	return result, nil
+    g.mu.Lock()
+    g.metrics.GraphsAnalyzed++
+    g.metrics.NodesTraversed += int64(len(pkg.Dependencies))
+    g.mu.Unlock()
+    
+    return result, nil
 }
 
 // analyzeDependencyGraph analyzes the dependency graph for security issues
@@ -390,9 +398,11 @@ func (g *GTRAlgorithm) countHighRiskDependencies(riskMap map[string]float64) int
 
 // Reset resets the algorithm state
 func (g *GTRAlgorithm) Reset() error {
-	// Reset metrics
-	g.metrics = &GTRMetrics{
-		LastUpdated: time.Now(),
-	}
-	return nil
+    // Reset metrics
+    g.mu.Lock()
+    g.metrics = &GTRMetrics{
+        LastUpdated: time.Now(),
+    }
+    g.mu.Unlock()
+    return nil
 }

@@ -22,12 +22,13 @@ import (
 
 // Analyzer orchestrates the security scanning process
 type Analyzer struct {
-	config       *config.Config
-	detector     *detector.Engine
-	registries   map[string]registry.Connector
-	resolver     *DependencyResolver
-	autoDetector *registry.AutoDetector
-	factory      *registry.Factory
+    config       *config.Config
+    detector     *detector.Engine
+    registries   map[string]registry.Connector
+    resolver     *DependencyResolver
+    autoDetector *registry.AutoDetector
+    factory      *registry.Factory
+    stubRepo     *StubRepo
 }
 
 // ScanOptions contains options for scanning
@@ -1208,9 +1209,9 @@ func (a *Analyzer) calculateSummary(threats []types.Threat, warnings []types.War
 
 // AnalyzeDependency analyzes a single dependency for threats
 func (a *Analyzer) AnalyzeDependency(dep types.Dependency, popularPackages []string) ([]types.Threat, []types.Warning) {
-	if a.detector == nil {
-		return []types.Threat{}, []types.Warning{}
-	}
+    if a.detector == nil {
+        return []types.Threat{}, []types.Warning{}
+    }
 
 	// Use detector engine to analyze the dependency
 	options := &detector.Options{
@@ -1218,7 +1219,13 @@ func (a *Analyzer) AnalyzeDependency(dep types.Dependency, popularPackages []str
 		DeepAnalysis:        true,
 	}
 
-	return a.detector.AnalyzeDependency(dep, popularPackages, options)
+    threats, warnings := a.detector.AnalyzeDependency(dep, popularPackages, options)
+    if len(threats) == 0 && a.stubRepo != nil {
+        st, sw := a.stubRepo.Generate(dep)
+        threats = append(threats, st...)
+        warnings = append(warnings, sw...)
+    }
+    return threats, warnings
 }
 
 // generateScanID generates a unique scan identifier

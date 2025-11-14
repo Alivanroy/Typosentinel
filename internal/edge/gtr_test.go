@@ -1,14 +1,15 @@
 package edge
 
 import (
-	"context"
-	"fmt"
-	"testing"
-	"time"
+    "context"
+    "fmt"
+    "testing"
+    "time"
+    "sync"
 
-	"github.com/Alivanroy/Typosentinel/pkg/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+    "github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
 )
 
 func TestNewGTRAlgorithm(t *testing.T) {
@@ -192,15 +193,15 @@ func TestGTRAlgorithm_ConcurrentAnalysis(t *testing.T) {
 	results := make([]*AlgorithmResult, len(packages))
 	errors := make([]error, len(packages))
 
-	// Run concurrent analysis
-	for i, pkg := range packages {
-		go func(index int, p *types.Package) {
-			results[index], errors[index] = gtr.Analyze(ctx, []string{p.Name})
-		}(i, pkg)
-	}
-
-	// Wait for all goroutines to complete
-	time.Sleep(2 * time.Second)
+    var wg sync.WaitGroup
+    wg.Add(len(packages))
+    for i, pkg := range packages {
+        go func(index int, p *types.Package) {
+            defer wg.Done()
+            results[index], errors[index] = gtr.Analyze(ctx, []string{p.Name})
+        }(i, pkg)
+    }
+    wg.Wait()
 
 	// Verify results
 	for i := 0; i < len(packages); i++ {

@@ -491,7 +491,7 @@ func (eh *EnterpriseHandlers) ListViolations(c *gin.Context) {
 	}
 
 	// Get violations from store
-	violations, total, err := eh.violationStore.ListViolations(c.Request.Context(), &filter)
+    violations, total, err := eh.violationStore.ListViolations(c.Request.Context(), filter)
 	if err != nil {
 		eh.logger.Error("Failed to list violations", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{

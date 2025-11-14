@@ -16,8 +16,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Alivanroy/Typosentinel/internal/analyzer"
+	analyzerpkg "github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/api/rest/handlers"
+	"github.com/Alivanroy/Typosentinel/internal/api/rest/middleware"
+	"github.com/Alivanroy/Typosentinel/internal/secrets"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
@@ -35,7 +37,7 @@ type Server struct {
 	gin        *gin.Engine
 	server     *http.Server
 	mlPipeline *ml.MLPipeline
-	analyzer   *analyzer.Analyzer
+    analyzer   *analyzerpkg.Analyzer
 	running    bool
 	// Enterprise components
 	enterpriseHandlers *EnterpriseHandlers
@@ -48,16 +50,16 @@ type Server struct {
 	// Threat intelligence manager
 	threatManager *threat_intelligence.ThreatIntelligenceManager
 	// Threat intelligence API
-	threatIntelAPI *ThreatIntelAPI
+    threatIntelAPI *ThreatIntelAPI
 }
 
 // NewServer creates a new REST API server
-func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzer.Analyzer) *Server {
-	return NewServerWithEnterprise(cfg, mlPipeline, analyzer, nil)
+func NewServer(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzerpkg.Analyzer) *Server {
+    return NewServerWithEnterprise(cfg, mlPipeline, analyzer, nil)
 }
 
 // NewServerWithEnterprise creates a new REST API server with optional enterprise features
-func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzer.Analyzer, enterpriseHandlers *EnterpriseHandlers) *Server {
+func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline, analyzer *analyzerpkg.Analyzer, enterpriseHandlers *EnterpriseHandlers) *Server {
 	// Set gin mode based on API configuration
 	if !cfg.Enabled {
 		gin.SetMode(gin.ReleaseMode)
@@ -221,21 +223,56 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 		log.Printf("[DEBUG] Threat intelligence API initialized")
 	}
 
-	server := &Server{
-		config:             cfg,
-		gin:                r,
-		mlPipeline:         mlPipeline,
-		analyzer:           analyzer,
-		enterpriseHandlers: enterpriseHandlers,
-		scanHandlers:       scanHandlers,
-		ossDB:              ossDB,
-		supplyChainAPI:     supplyChainAPI,
-		threatManager:      threatManager,
-		threatIntelAPI:     threatIntelAPI,
-	}
+    server := &Server{
+        config:             cfg,
+        gin:                r,
+        mlPipeline:         mlPipeline,
+        analyzer:           analyzer,
+        enterpriseHandlers: enterpriseHandlers,
+        scanHandlers:       scanHandlers,
+        ossDB:              ossDB,
+        supplyChainAPI:     supplyChainAPI,
+        threatManager:      threatManager,
+        threatIntelAPI:     threatIntelAPI,
+    }
 
-	// Setup routes
-	server.setupRoutes()
+    // Wire a minimal analyzer if none was provided
+    if server.analyzer == nil {
+        server.analyzer = analyzerpkg.NewStub()
+    }
+
+    // Wire a minimal ML pipeline if none was provided
+    if server.mlPipeline == nil {
+        defaultCfg := &config.Config{MLService: &config.MLServiceConfig{Enabled: true}}
+        server.mlPipeline = ml.NewMLPipeline(defaultCfg)
+        _ = server.mlPipeline.Initialize(context.Background())
+    }
+
+    // Initialize secrets provider and populate sensitive envs if missing
+    var provider secrets.Provider
+    if path := os.Getenv("TYPOSENTINEL_SECRETS_FILE"); path != "" {
+        if fp, err := secrets.NewFileProvider(path); err == nil { provider = fp }
+    }
+    if provider == nil {
+        if addr, token := os.Getenv("VAULT_ADDR"), os.Getenv("VAULT_TOKEN"); addr != "" && token != "" {
+            provider = secrets.NewVaultProvider(addr, token)
+        }
+    }
+    if provider == nil { provider = secrets.EnvProvider{} }
+    // JWT secret
+    if os.Getenv("TYPOSENTINEL_JWT_SECRET") == "" {
+        if v, err := provider.Get("TYPOSENTINEL_JWT_SECRET"); err == nil { os.Setenv("TYPOSENTINEL_JWT_SECRET", v) }
+    }
+    // Third-party API tokens
+    if os.Getenv("OSV_API_KEY") == "" {
+        if v, err := provider.Get("OSV_API_KEY"); err == nil { os.Setenv("OSV_API_KEY", v) }
+    }
+    if os.Getenv("GITHUB_TOKEN") == "" {
+        if v, err := provider.Get("GITHUB_TOKEN"); err == nil { os.Setenv("GITHUB_TOKEN", v) }
+    }
+
+    // Setup routes
+    server.setupRoutes()
 
 	return server
 }
@@ -282,6 +319,7 @@ func (s *Server) IsRunning() bool {
 
 // setupRoutes sets up all API routes
 func (s *Server) setupRoutes() {
+    s.gin.Use(middleware.RedactSecrets())
 	// Health check
 	s.gin.GET("/health", s.healthCheck)
 	s.gin.GET("/ready", s.readinessCheck)
@@ -1539,11 +1577,15 @@ type MLPredictionRequest struct {
 
 // predictTyposquatting handles typosquatting prediction
 func (s *Server) predictTyposquatting(c *gin.Context) {
-	var req MLPredictionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var req MLPredictionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    if req.Package.Name == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "package.name is required"})
+        return
+    }
 
 	if s.mlPipeline == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "ML pipeline not available"})
@@ -1561,11 +1603,15 @@ func (s *Server) predictTyposquatting(c *gin.Context) {
 
 // predictReputation handles reputation prediction
 func (s *Server) predictReputation(c *gin.Context) {
-	var req MLPredictionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var req MLPredictionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    if req.Package.Name == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "package.name is required"})
+        return
+    }
 
 	if s.mlPipeline == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "ML pipeline not available"})
@@ -1583,11 +1629,15 @@ func (s *Server) predictReputation(c *gin.Context) {
 
 // predictAnomaly handles anomaly detection
 func (s *Server) predictAnomaly(c *gin.Context) {
-	var req MLPredictionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var req MLPredictionRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    if req.Package.Name == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "package.name is required"})
+        return
+    }
 
 	if s.mlPipeline == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "ML pipeline not available"})

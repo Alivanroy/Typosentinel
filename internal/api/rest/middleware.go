@@ -33,11 +33,10 @@ func corsMiddleware(corsConfig config.CORSConfig) gin.HandlerFunc {
 		MaxAge:           time.Duration(corsConfig.MaxAge) * time.Second,
 	}
 
-	// If no origins specified, allow all
-	if len(config.AllowOrigins) == 0 {
-		log.Printf("[CORS DEBUG] No origins specified, allowing all origins")
-		config.AllowAllOrigins = true
-	}
+    if len(config.AllowOrigins) == 0 {
+        log.Printf("[CORS DEBUG] No origins specified, defaulting to allow all origins")
+        config.AllowAllOrigins = true
+    }
 
 	// Default methods if none specified
 	if len(config.AllowMethods) == 0 {
@@ -486,17 +485,23 @@ func verifyPassword(password, hashedPassword string) bool {
 
 // securityHeadersMiddleware adds security headers
 func securityHeadersMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Security headers
-		c.Header("X-Content-Type-Options", "nosniff")
-		c.Header("X-Frame-Options", "DENY")
-		c.Header("X-XSS-Protection", "1; mode=block")
-		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		c.Header("Content-Security-Policy", "default-src 'self'")
-		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return func(c *gin.Context) {
+        c.Header("X-Content-Type-Options", "nosniff")
+        c.Header("X-Frame-Options", "DENY")
+        c.Header("X-XSS-Protection", "1; mode=block")
+        c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+        p := c.Request.URL.Path
+        if strings.HasPrefix(p, "/api/docs") || strings.HasPrefix(p, "/docs") {
+            c.Header("Content-Security-Policy", "default-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; frame-ancestors 'none'; base-uri 'none'")
+        } else {
+            c.Header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'")
+        }
+        if strings.EqualFold(os.Getenv("TYPOSENTINEL_ENVIRONMENT"), "production") {
+            c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        }
 
-		c.Next()
-	}
+        c.Next()
+    }
 }
 
 // compressionMiddleware adds response compression

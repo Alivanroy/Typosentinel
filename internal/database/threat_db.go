@@ -59,7 +59,7 @@ func NewThreatDB(dbConfig *config.DatabaseConfig) (*ThreatDB, error) {
 
 	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
@@ -70,7 +70,7 @@ func NewThreatDB(dbConfig *config.DatabaseConfig) (*ThreatDB, error) {
 
 	// Initialize schema
 	if err := threatDB.initSchema(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
 	}
 

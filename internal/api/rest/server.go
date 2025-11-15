@@ -70,13 +70,36 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 	// Add middleware
 	r.Use(gin.Recovery())
 
-	// Add CORS middleware if configured
-	if cfg.CORS != nil {
-		log.Printf("CORS configuration loaded: Enabled=%v, AllowedOrigins=%v", cfg.CORS.Enabled, cfg.CORS.AllowedOrigins)
-		r.Use(corsMiddleware(*cfg.CORS))
-	} else {
-		log.Printf("No CORS configuration found - CORS middleware not applied")
-	}
+    if cfg.CORS != nil {
+        log.Printf("CORS configuration loaded: Enabled=%v, AllowedOrigins=%v", cfg.CORS.Enabled, cfg.CORS.AllowedOrigins)
+        r.Use(corsMiddleware(*cfg.CORS))
+    } else {
+        env := strings.ToLower(os.Getenv("TYPOSENTINEL_ENVIRONMENT"))
+        if env == "production" {
+            var origins []string
+            if v := os.Getenv("ALLOWED_ORIGINS"); v != "" {
+                for _, o := range strings.Split(v, ",") {
+                    o = strings.TrimSpace(o)
+                    if o != "" { origins = append(origins, o) }
+                }
+            }
+            cc := config.CORSConfig{
+                Enabled:         true,
+                AllowedOrigins:  origins,
+                AllowedMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+                AllowedHeaders:  []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Requested-With"},
+                ExposedHeaders:  []string{},
+                AllowCredentials: true,
+                MaxAge:          86400,
+            }
+            r.Use(corsMiddleware(cc))
+            log.Printf("Applied default production CORS with origins=%v", origins)
+        } else {
+            log.Printf("No CORS configuration found - CORS middleware not applied")
+        }
+    }
+
+	r.Use(securityHeadersMiddleware())
 
 	r.Use(loggingMiddleware())
 
@@ -166,14 +189,14 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
     if provider == nil { provider = secrets.EnvProvider{} }
     // JWT secret
     if os.Getenv("TYPOSENTINEL_JWT_SECRET") == "" {
-        if v, err := provider.Get("TYPOSENTINEL_JWT_SECRET"); err == nil { os.Setenv("TYPOSENTINEL_JWT_SECRET", v) }
+        if v, err := provider.Get("TYPOSENTINEL_JWT_SECRET"); err == nil { _ = os.Setenv("TYPOSENTINEL_JWT_SECRET", v) }
     }
     // Third-party API tokens
     if os.Getenv("OSV_API_KEY") == "" {
-        if v, err := provider.Get("OSV_API_KEY"); err == nil { os.Setenv("OSV_API_KEY", v) }
+        if v, err := provider.Get("OSV_API_KEY"); err == nil { _ = os.Setenv("OSV_API_KEY", v) }
     }
     if os.Getenv("GITHUB_TOKEN") == "" {
-        if v, err := provider.Get("GITHUB_TOKEN"); err == nil { os.Setenv("GITHUB_TOKEN", v) }
+        if v, err := provider.Get("GITHUB_TOKEN"); err == nil { _ = os.Setenv("GITHUB_TOKEN", v) }
     }
 
     // Setup routes
@@ -1202,7 +1225,9 @@ func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
         Version string `json:"version,omitempty"`
         Options struct{ IncludeDev bool `json:"include_dev,omitempty"` } `json:"options,omitempty"`
     }
-    _ = c.ShouldBindJSON(&body)
+    if err := c.ShouldBindJSON(&body); err != nil {
+        body.Version = ""
+    }
 
     if ecosystem == "" || name == "" {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Ecosystem and package name are required"})
@@ -1699,14 +1724,16 @@ func (s *Server) getSystemMetrics(c *gin.Context) {
 	})
 }
 
-// clearCache handles cache clearing
-func (s *Server) clearCache(c *gin.Context) {
-	var request struct {
-		CacheType string `json:"cache_type,omitempty"` // "all", "analysis", "registry", "ml"
-	}
+	// clearCache handles cache clearing
+	func (s *Server) clearCache(c *gin.Context) {
+		var request struct {
+			CacheType string `json:"cache_type,omitempty"` // "all", "analysis", "registry", "ml"
+		}
 
-	// Parse request body if provided
-	c.ShouldBindJSON(&request)
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+			return
+		}
 
 	// Default to clearing all caches if not specified
 	if request.CacheType == "" {

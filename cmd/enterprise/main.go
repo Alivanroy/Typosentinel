@@ -4347,26 +4347,26 @@ func contains(slice []string, item string) bool {
 
 // Generate CSV format compliance report
 func generateComplianceCSV(report ComplianceReport) ([]byte, error) {
-	var buf bytes.Buffer
-	writer := csv.NewWriter(&buf)
+    var buf bytes.Buffer
+    writer := csv.NewWriter(&buf)
 
-	// Write summary
-	writer.Write([]string{"Compliance Report Summary"})
-	writer.Write([]string{"Generated At", report.GeneratedAt})
-	writer.Write([]string{"Period", report.Period})
-	writer.Write([]string{"Total Events", fmt.Sprintf("%d", report.Summary.TotalEvents)})
-	writer.Write([]string{"Unique Users", fmt.Sprintf("%d", report.Summary.UniqueUsers)})
-	writer.Write([]string{"Security Events", fmt.Sprintf("%d", report.Summary.SecurityEvents)})
-	writer.Write([]string{"Policy Violations", fmt.Sprintf("%d", report.Summary.PolicyViolations)})
-	writer.Write([]string{"System Changes", fmt.Sprintf("%d", report.Summary.SystemChanges)})
-	writer.Write([]string{""}) // Empty row
+    // Write summary
+    _ = writer.Write([]string{"Compliance Report Summary"})
+    _ = writer.Write([]string{"Generated At", report.GeneratedAt})
+    _ = writer.Write([]string{"Period", report.Period})
+    _ = writer.Write([]string{"Total Events", fmt.Sprintf("%d", report.Summary.TotalEvents)})
+    _ = writer.Write([]string{"Unique Users", fmt.Sprintf("%d", report.Summary.UniqueUsers)})
+    _ = writer.Write([]string{"Security Events", fmt.Sprintf("%d", report.Summary.SecurityEvents)})
+    _ = writer.Write([]string{"Policy Violations", fmt.Sprintf("%d", report.Summary.PolicyViolations)})
+    _ = writer.Write([]string{"System Changes", fmt.Sprintf("%d", report.Summary.SystemChanges)})
+    _ = writer.Write([]string{""}) // Empty row
 
 	// Write security events
-	writer.Write([]string{"Security Events"})
-	writer.Write([]string{"Timestamp", "User", "Event", "Resource", "Severity"})
-	for _, event := range report.SecurityEvents {
-		writer.Write([]string{event.Timestamp, event.User, event.Event, event.Resource, event.Severity})
-	}
+    _ = writer.Write([]string{"Security Events"})
+    _ = writer.Write([]string{"Timestamp", "User", "Event", "Resource", "Severity"})
+    for _, event := range report.SecurityEvents {
+        _ = writer.Write([]string{event.Timestamp, event.User, event.Event, event.Resource, event.Severity})
+    }
 
 	writer.Flush()
 	return buf.Bytes(), writer.Error()

@@ -210,7 +210,9 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 		AnalyzedAt:  time.Now(),
 	}
 
-	json.NewEncoder(w).Encode(result)
+    if err := json.NewEncoder(w).Encode(result); err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
 }
 
 func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
@@ -284,7 +286,9 @@ func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		AnalyzedAt: time.Now(),
 	}
 
-	json.NewEncoder(w).Encode(batchResult)
+    if err := json.NewEncoder(w).Encode(batchResult); err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
 }
 
 // Helper functions for threat analysis
@@ -404,7 +408,9 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 			"batch_size_limit":    10,
 		},
 	}
-	json.NewEncoder(w).Encode(status)
+    if err := json.NewEncoder(w).Encode(status); err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
 }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
@@ -419,7 +425,9 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 		"demo_mode":          true,
 		"message":            "This is a demo API. Statistics are not tracked in demo mode.",
 	}
-	json.NewEncoder(w).Encode(stats)
+    if err := json.NewEncoder(w).Encode(stats); err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
 }
 
 func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
@@ -497,5 +505,7 @@ func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 		filteredVulns = append(filteredVulns, vuln)
 	}
 
-	json.NewEncoder(w).Encode(filteredVulns)
+    if err := json.NewEncoder(w).Encode(filteredVulns); err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+    }
 }

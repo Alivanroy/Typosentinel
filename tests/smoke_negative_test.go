@@ -6,11 +6,13 @@ import (
     "net/http"
     "testing"
     "time"
+    "os"
     "github.com/Alivanroy/Typosentinel/internal/api/rest"
     "github.com/Alivanroy/Typosentinel/internal/config"
 )
 
 func TestNegativeEndpoints(t *testing.T) {
+    os.Setenv("TYPOSENTINEL_ENVIRONMENT", "development")
     cfg := config.RESTAPIConfig{Enabled: true, Host: "127.0.0.1", Port: 8086, BasePath: "/api", Versioning: config.APIVersioning{Enabled: true, Strategy: "path", DefaultVersion: "v1", SupportedVersions: []string{"v1"}}}
     srv := rest.NewServer(cfg, nil, nil)
     go func() { _ = srv.Start(context.Background()) }()

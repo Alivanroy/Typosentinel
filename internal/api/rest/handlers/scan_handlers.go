@@ -223,8 +223,8 @@ func (h *ScanHandlers) performScan(scan *database.PackageScan) {
 	ctx := context.Background()
 
 	// Update status to running
-	scan.Status = "running"
-	h.db.UpdateScan(ctx, scan)
+    scan.Status = "running"
+    _ = h.db.UpdateScan(ctx, scan)
 
 	startTime := time.Now()
 
@@ -250,8 +250,8 @@ func (h *ScanHandlers) performScan(scan *database.PackageScan) {
 		scan.Duration = int64(duration.Seconds())
 	}
 
-	// Save final results
-	h.db.UpdateScan(ctx, scan)
+    // Save final results
+    _ = h.db.UpdateScan(ctx, scan)
 }
 
 // scanPackage performs the actual package analysis

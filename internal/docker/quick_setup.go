@@ -359,8 +359,8 @@ func (d *DockerSetup) Cleanup() error {
 	d.printStep("🧹 Cleaning up Docker resources...")
 
 	// Stop and remove container
-	exec.Command("docker", "stop", "typosentinel-quick").Run()
-	exec.Command("docker", "rm", "typosentinel-quick").Run()
+    _ = exec.Command("docker", "stop", "typosentinel-quick").Run()
+    _ = exec.Command("docker", "rm", "typosentinel-quick").Run()
 
 	d.printSuccess("✅ Cleanup completed")
 	return nil

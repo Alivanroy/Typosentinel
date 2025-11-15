@@ -1,6 +1,6 @@
 # TypoSentinel
 
-[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.24.9-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](#)
@@ -104,10 +104,12 @@ export DATABASE_URL="postgresql://user:password@host:port/database"
 export REDIS_URL="redis://host:port/database"
 
 # Optional Production Settings
-export TYPOSENTINEL_ENV="production"
+export TYPOSENTINEL_ENVIRONMENT="production"
 export TYPOSENTINEL_LOG_LEVEL="info"
 export TYPOSENTINEL_DEBUG="false"
 export TYPOSENTINEL_MAX_WORKERS="20"
+# CORS allowed origins (comma-separated). Required when restricting origins.
+export ALLOWED_ORIGINS="https://app.company.com,https://admin.company.com"
 ```
 
 #### Production Configuration
@@ -132,9 +134,12 @@ server:
 
 1. **Enable TLS/HTTPS** in production
 2. **Set strong JWT secrets** (minimum 32 characters)
-3. **Configure rate limiting** in `config/security.yaml`
+3. **Configure rate limiting** using API rate limit settings
 4. **Enable audit logging** for compliance
 5. **Use secure database connections** with SSL/TLS
+6. **Security headers**: Enabled globally (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy)
+7. **Content-Security-Policy (CSP)**: Strict for API (`default-src 'none'`); relaxed for docs pages to allow required assets
+8. **HSTS**: Enabled automatically when `TYPOSENTINEL_ENVIRONMENT=production`
 
 #### Performance Optimization
 
@@ -155,6 +160,35 @@ server:
 - [ ] Run security audit (`govulncheck ./...`)
 - [ ] Configure firewall and network security
 - [ ] Set up health checks and monitoring alerts
+
+#### Readiness and Health
+
+- The server binds its TCP listener before heavy initialization, so `/health` responds immediately after start.
+- Use `/ready` to gate traffic until ML and analysis components are initialized.
+
+```bash
+# Health check
+curl -sS http://localhost:8080/health
+
+# Readiness check (returns 200 when components are ready, 503 otherwise)
+curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8080/ready
+```
+
+#### CORS Configuration
+
+- In production, set `ALLOWED_ORIGINS` to a comma-separated list of permitted origins.
+- If no origins are provided, all origins are allowed; set explicit origins to restrict.
+
+```bash
+# Example: restrict to specific origins
+export ALLOWED_ORIGINS="https://app.company.com,https://admin.company.com"
+
+# Validate preflight
+curl -i -X OPTIONS \
+  -H "Origin: https://app.company.com" \
+  -H "Access-Control-Request-Method: POST" \
+  http://localhost:8080/api/v1/analyze
+```
 
 For complete production deployment guide, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
 
@@ -371,6 +405,10 @@ typosentinel server --dev --verbose
 
 # Production mode with security validation
 typosentinel server --config production.yaml
+
+# Health and readiness endpoints
+curl http://localhost:8080/health
+curl http://localhost:8080/ready
 ```
 
 ### Web Interface Features

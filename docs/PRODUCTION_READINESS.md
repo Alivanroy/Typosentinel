@@ -46,6 +46,15 @@
 - If `TYPOSENTINEL_ENVIRONMENT=production`, the server validates `TYPOSENTINEL_JWT_SECRET` before starting
 - Startup is refused when the secret is missing or weak
 
+### CORS Production Examples
+- Recommended production CORS config:
+  - Allowed origins: `https://your-domain.com`
+  - Methods: `GET, POST, PUT, DELETE, OPTIONS`
+  - Headers: `Origin, Content-Length, Content-Type, Authorization, X-Requested-With`
+- Behavior when no origins are configured in production:
+  - Cross-origin requests are not allowed; no `Access-Control-Allow-Origin` header is set
+  - Configure explicit origins to enable specific cross-origin requests
+
 ## Verification Plan (post-fix)
 - Build: `go build -o ./build/typosentinel .`
 - Run: `./build/typosentinel server --port 8080 --host 127.0.0.1`

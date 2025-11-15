@@ -14,4 +14,5 @@ func TestProductionFailsWithoutJWTSecret(t *testing.T) {
     if err := v.ValidateProductionConfig(); err == nil {
         t.Fatalf("expected validation error when JWT secret is empty in production")
     }
+    os.Unsetenv("TYPOSENTINEL_ENVIRONMENT")
 }

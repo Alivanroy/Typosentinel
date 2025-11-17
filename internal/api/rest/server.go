@@ -1222,16 +1222,26 @@ func (s *Server) scanPackageVulnerabilities(c *gin.Context) {
     ecosystem := c.Param("ecosystem")
     name := c.Param("name")
     var body struct{
-        Version string `json:"version,omitempty"`
-        Options struct{ IncludeDev bool `json:"include_dev,omitempty"` } `json:"options,omitempty"`
+        Ecosystem string `json:"ecosystem,omitempty"`
+        Name      string `json:"name,omitempty"`
+        Version   string `json:"version,omitempty"`
+        Options   struct{ IncludeDev bool `json:"include_dev,omitempty"` } `json:"options,omitempty"`
     }
     if err := c.ShouldBindJSON(&body); err != nil {
+        // Keep empty fields if body missing; will validate below
         body.Version = ""
     }
 
     if ecosystem == "" || name == "" {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Ecosystem and package name are required"})
         return
+    }
+    // If body provides either ecosystem or name, require both and they must match path params
+    if body.Name != "" || body.Ecosystem != "" {
+        if body.Name == "" || body.Ecosystem == "" || !strings.EqualFold(body.Name, name) || !strings.EqualFold(body.Ecosystem, ecosystem) {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Request body must include matching ecosystem and name"})
+            return
+        }
     }
 
     startTime := time.Now()
@@ -1550,8 +1560,10 @@ func (s *Server) calculateRiskLevel(threats []types.Threat) (int, float64) {
 
 // MLPredictionRequest represents an ML prediction request
 type MLPredictionRequest struct {
-	Package  types.Package `json:"package" binding:"required" validate:"required"`
-	Features []float64     `json:"features,omitempty" validate:"omitempty,dive,gte=0"`
+    Package        types.Package `json:"package" binding:"required" validate:"required"`
+    Features       []float64     `json:"features,omitempty" validate:"omitempty,dive,gte=0"`
+    ThreatType     string        `json:"threat_type,omitempty"`
+    ActualPositive *bool         `json:"actual_positive,omitempty"`
 }
 
 // predictTyposquatting handles typosquatting prediction
@@ -1571,13 +1583,34 @@ func (s *Server) predictTyposquatting(c *gin.Context) {
 		return
 	}
 
-	result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
+    result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
+        return
+    }
+    ecosystem := req.Package.Registry
+    if ecosystem == "" {
+        ecosystem = req.Package.Type
+    }
+    threatType := req.ThreatType
+    if threatType == "" {
+        threatType = "typosquatting"
+    }
+    predictedPositive, thresholdUsed := s.mlPipeline.PredictPositive(ecosystem, threatType, result.Probability)
+    if req.ActualPositive != nil {
+        s.mlPipeline.RecordFeedback(ecosystem, predictedPositive, *req.ActualPositive, result.Probability)
+    }
+    rl := riskLevelFromScore(result.Probability)
+    c.JSON(http.StatusOK, gin.H{
+        "prediction":         result,
+        "risk_score":         result.Probability,
+        "confidence":         result.Confidence,
+        "label":              result.Label,
+        "risk_level":         rl,
+        "threshold_used":     thresholdUsed,
+        "threshold_source":   s.mlPipeline.GetThresholdSource(ecosystem),
+        "predicted_positive": predictedPositive,
+    })
 }
 
 // predictReputation handles reputation prediction
@@ -1597,13 +1630,34 @@ func (s *Server) predictReputation(c *gin.Context) {
 		return
 	}
 
-	result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
+    result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
+        return
+    }
+    ecosystem := req.Package.Registry
+    if ecosystem == "" {
+        ecosystem = req.Package.Type
+    }
+    threatType := req.ThreatType
+    if threatType == "" {
+        threatType = "reputation"
+    }
+    predictedPositive, thresholdUsed := s.mlPipeline.PredictPositive(ecosystem, threatType, result.Probability)
+    if req.ActualPositive != nil {
+        s.mlPipeline.RecordFeedback(ecosystem, predictedPositive, *req.ActualPositive, result.Probability)
+    }
+    rl2 := riskLevelFromScore(result.Probability)
+    c.JSON(http.StatusOK, gin.H{
+        "prediction":         result,
+        "risk_score":         result.Probability,
+        "confidence":         result.Confidence,
+        "label":              result.Label,
+        "risk_level":         rl2,
+        "threshold_used":     thresholdUsed,
+        "threshold_source":   s.mlPipeline.GetThresholdSource(ecosystem),
+        "predicted_positive": predictedPositive,
+    })
 }
 
 // predictAnomaly handles anomaly detection
@@ -1623,13 +1677,34 @@ func (s *Server) predictAnomaly(c *gin.Context) {
 		return
 	}
 
-	result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
+    result, err := s.mlPipeline.AnalyzePackage(c.Request.Context(), &req.Package)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Prediction failed"})
+        return
+    }
+    ecosystem := req.Package.Registry
+    if ecosystem == "" {
+        ecosystem = req.Package.Type
+    }
+    threatType := req.ThreatType
+    if threatType == "" {
+        threatType = "anomaly"
+    }
+    predictedPositive, thresholdUsed := s.mlPipeline.PredictPositive(ecosystem, threatType, result.Probability)
+    if req.ActualPositive != nil {
+        s.mlPipeline.RecordFeedback(ecosystem, predictedPositive, *req.ActualPositive, result.Probability)
+    }
+    rl3 := riskLevelFromScore(result.Probability)
+    c.JSON(http.StatusOK, gin.H{
+        "prediction":         result,
+        "risk_score":         result.Probability,
+        "confidence":         result.Confidence,
+        "label":              result.Label,
+        "risk_level":         rl3,
+        "threshold_used":     thresholdUsed,
+        "threshold_source":   s.mlPipeline.GetThresholdSource(ecosystem),
+        "predicted_positive": predictedPositive,
+    })
 }
 
 // getMLModelsStatus returns ML models status
@@ -3123,19 +3198,64 @@ func (s *Server) getOpenAPISpec(c *gin.Context) {
 	if data, err := os.ReadFile(specPath); err == nil {
 		// Parse YAML and convert to JSON
 		var spec interface{}
-		if err := yaml.Unmarshal(data, &spec); err == nil {
-			// Update server URL dynamically
-			if specMap, ok := spec.(map[string]interface{}); ok {
-				if servers, ok := specMap["servers"].([]interface{}); ok && len(servers) > 0 {
-					if server, ok := servers[0].(map[string]interface{}); ok {
-						server["url"] = fmt.Sprintf("http://%s:%d%s", s.config.Host, s.config.Port, s.config.BasePath)
-					}
-				}
-			}
-			c.JSON(http.StatusOK, spec)
-			return
-		}
-	}
+        if err := yaml.Unmarshal(data, &spec); err == nil {
+            // Update server URL dynamically
+            if specMap, ok := spec.(map[string]interface{}); ok {
+                if servers, ok := specMap["servers"].([]interface{}); ok && len(servers) > 0 {
+                    if server, ok := servers[0].(map[string]interface{}); ok {
+                        server["url"] = fmt.Sprintf("http://%s:%d%s", s.config.Host, s.config.Port, s.config.BasePath)
+                    }
+                }
+                // Align ML predict endpoints to include standardized response fields if present
+                if paths, ok := specMap["paths"].(map[string]interface{}); ok {
+                    addFields := func(p interface{}) {
+                        pm, ok := p.(map[string]interface{})
+                        if !ok { return }
+                        post := pm["post"]
+                        pmPost, ok := post.(map[string]interface{})
+                        if !ok { return }
+                        resp := pmPost["responses"]
+                        respMap, ok := resp.(map[string]interface{})
+                        if !ok { return }
+                        ok200 := respMap["200"]
+                        ok200Map, ok := ok200.(map[string]interface{})
+                        if !ok { return }
+                        content := ok200Map["content"]
+                        contentMap, ok := content.(map[string]interface{})
+                        if !ok { return }
+                        appJSON := contentMap["application/json"]
+                        appJSONMap, ok := appJSON.(map[string]interface{})
+                        if !ok { return }
+                        schema := appJSONMap["schema"]
+                        schemaMap, ok := schema.(map[string]interface{})
+                        if !ok {
+                            schemaMap = map[string]interface{}{}
+                            appJSONMap["schema"] = schemaMap
+                        }
+                        props := schemaMap["properties"]
+                        propsMap, ok := props.(map[string]interface{})
+                        if !ok {
+                            propsMap = map[string]interface{}{}
+                            schemaMap["properties"] = propsMap
+                        }
+                        // Ensure standardized fields exist
+                        propsMap["risk_score"] = map[string]interface{}{"type": "number", "format": "float"}
+                        propsMap["confidence"] = map[string]interface{}{"type": "number", "format": "float"}
+                        propsMap["risk_level"] = map[string]interface{}{"type": "string"}
+                        propsMap["threshold_used"] = map[string]interface{}{"type": "number", "format": "float"}
+                        propsMap["threshold_source"] = map[string]interface{}{"type": "string"}
+                        propsMap["predicted_positive"] = map[string]interface{}{"type": "boolean"}
+                        propsMap["prediction"] = map[string]interface{}{"type": "object"}
+                    }
+                    if p := paths[s.config.BasePath+"/v1/ml/predict/typosquatting"]; p != nil { addFields(p) }
+                    if p := paths[s.config.BasePath+"/v1/ml/predict/reputation"]; p != nil { addFields(p) }
+                    if p := paths[s.config.BasePath+"/v1/ml/predict/anomaly"]; p != nil { addFields(p) }
+                }
+            }
+            c.JSON(http.StatusOK, spec)
+            return
+        }
+    }
 
 	// Fallback to basic spec if file reading fails
 	spec := gin.H{
@@ -4010,4 +4130,13 @@ func (s *Server) removeIntegrationConfig(integrationID string) error {
 	// In production, this would remove from database
 	log.Printf("Removing configuration for integration: %s", integrationID)
 	return nil
+}
+func riskLevelFromScore(score float64) string {
+    if score >= 0.85 {
+        return "HIGH"
+    }
+    if score >= 0.65 {
+        return "MEDIUM"
+    }
+    return "LOW"
 }

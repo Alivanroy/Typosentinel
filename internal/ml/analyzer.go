@@ -565,20 +565,45 @@ func (a *MLAnalyzer) extractFeatures(pkg *types.Package) map[string]float64 {
 		features["has_license"] = boolToFloat(pkg.Metadata.License != "")
 		features["keyword_count"] = float64(len(pkg.Metadata.Keywords))
 		features["downloads"] = float64(pkg.Metadata.Downloads)
+		if pkg.Metadata.Downloads > 0 {
+			d := float64(pkg.Metadata.Downloads)
+			features["normalized_downloads"] = math.Min(math.Log10(1+d)/6.0, 1.0)
+		} else {
+			features["normalized_downloads"] = 0.0
+		}
 		features["file_count"] = float64(pkg.Metadata.FileCount)
 		features["size"] = float64(pkg.Metadata.Size)
 
 		// Age and activity features
 		features["package_age_days"] = float64(calculatePackageAgeDays(pkg.Metadata.CreatedAt))
+		if !pkg.Metadata.CreatedAt.IsZero() {
+			ageDays := time.Since(pkg.Metadata.CreatedAt).Hours() / 24
+			denom := math.Log1p(365.0 * 5.0)
+			if denom > 0 {
+				features["normalized_age"] = math.Min(math.Log1p(ageDays)/denom, 1.0)
+			} else {
+				features["normalized_age"] = 0.0
+			}
+		} else {
+			features["normalized_age"] = 0.0
+		}
 		features["days_since_last_update"] = float64(calculateDaysSinceLastUpdate(pkg.Metadata.UpdatedAt))
 		// Simple update frequency calculation
 		if pkg.Metadata.LastUpdated != nil {
 			daysSinceCreation := time.Since(pkg.Metadata.CreatedAt).Hours() / 24
 			daysSinceLastUpdate := time.Since(*pkg.Metadata.LastUpdated).Hours() / 24
 			if daysSinceCreation > 0 {
-				features["update_frequency"] = 1.0 / (daysSinceLastUpdate + 1) // Higher value for more recent updates
+				features["update_frequency"] = 1.0 / (daysSinceLastUpdate + 1)
+				if daysSinceLastUpdate < 30 {
+					features["recent_update_bonus"] = 0.2
+				} else if daysSinceLastUpdate > 365 {
+					features["recent_update_bonus"] = -0.1
+				} else {
+					features["recent_update_bonus"] = 0.0
+				}
 			} else {
 				features["update_frequency"] = 0.0
+				features["recent_update_bonus"] = 0.0
 			}
 		} else {
 			features["update_frequency"] = 0.0
@@ -1718,7 +1743,7 @@ func (a *MLAnalyzer) analyzeReputation(pkg *types.Package) ReputationAnalysis {
 	securityScore := 0.5   // Default neutral score
 
 	// Analyze based on package metadata if available
-	if pkg.Metadata != nil {
+    if pkg.Metadata != nil {
 		// Analyze maintainer reputation
 		if pkg.Metadata.Author != "" {
 			// Check for suspicious maintainer patterns
@@ -1737,23 +1762,51 @@ func (a *MLAnalyzer) analyzeReputation(pkg *types.Package) ReputationAnalysis {
 			communityScore -= 0.3 // Poor description is suspicious
 		}
 
-		// Check for repository presence (indicates transparency)
-		if pkg.Metadata.Repository != "" {
-			communityScore += 0.2
-			securityScore += 0.2
-		}
+        // Check for repository presence (indicates transparency)
+        if pkg.Metadata.Repository != "" {
+            communityScore += 0.2
+            securityScore += 0.2
+        }
 
 		// Check for homepage presence
 		if pkg.Metadata.Homepage != "" {
 			communityScore += 0.1
 		}
 
-		// Check for license presence
-		if pkg.Metadata.License != "" {
-			securityScore += 0.2
-			communityScore += 0.1
-		}
-	}
+        // Check for license presence
+        if pkg.Metadata.License != "" {
+            securityScore += 0.2
+            communityScore += 0.1
+        }
+
+        // Downloads-based normalization (log scale to [0,1])
+        if pkg.Metadata.Downloads > 0 {
+            d := float64(pkg.Metadata.Downloads)
+            // Use log1p to avoid zero; assume saturation around ~10^6
+            downloadScore = math.Min(math.Log10(1+d)/6.0, 1.0)
+        }
+
+        // Age-based normalization (older packages score higher)
+        if !pkg.Metadata.CreatedAt.IsZero() {
+            ageDays := time.Since(pkg.Metadata.CreatedAt).Hours() / 24
+            // Normalize using log1p against ~5 years horizon
+            denom := math.Log1p(365.0 * 5.0)
+            if denom > 0 {
+                ageScore = math.Min(math.Log1p(ageDays)/denom, 1.0)
+            }
+        }
+
+        // Update frequency influences security/community subtly
+        if pkg.Metadata.LastUpdated != nil {
+            daysSince := time.Since(*pkg.Metadata.LastUpdated).Hours() / 24
+            if daysSince < 30 {
+                communityScore += 0.1
+                securityScore += 0.1
+            } else if daysSince > 365 {
+                communityScore -= 0.1
+            }
+        }
+    }
 
 	// Analyze package name patterns
 	if len(pkg.Name) < 3 {
@@ -1777,8 +1830,8 @@ func (a *MLAnalyzer) analyzeReputation(pkg *types.Package) ReputationAnalysis {
 	securityScore = math.Max(0, math.Min(1, securityScore))
 
 	// Calculate overall score as weighted average
-	overallScore := (maintainerScore*0.3 + downloadScore*0.2 + ageScore*0.1 +
-		communityScore*0.2 + securityScore*0.2)
+    overallScore := (maintainerScore*0.25 + downloadScore*0.25 + ageScore*0.15 +
+        communityScore*0.2 + securityScore*0.15)
 
 	reputationSources := []ReputationSource{
 		{Source: "package_metadata", Score: overallScore, Weight: 0.6},

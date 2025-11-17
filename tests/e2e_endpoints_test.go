@@ -15,7 +15,7 @@ import (
 
 func TestE2E_CoreEndpoints(t *testing.T) {
     os.Setenv("TYPOSENTINEL_ENVIRONMENT", "development")
-    cfg := config.RESTAPIConfig{Enabled: true, Host: "127.0.0.1", Port: 8084, BasePath: "/api", Versioning: config.APIVersioning{Enabled: true, Strategy: "path", DefaultVersion: "v1", SupportedVersions: []string{"v1"}}}
+    cfg := config.RESTAPIConfig{Enabled: true, Host: "127.0.0.1", Port: 8084, BasePath: "/api", Versioning: config.APIVersioning{Enabled: true, Strategy: "path", DefaultVersion: "v1", SupportedVersions: []string{"v1"}}, CORS: &config.CORSConfig{Enabled: true, AllowedOrigins: []string{"http://example.com"}, AllowedMethods: []string{"GET","POST","OPTIONS"}, AllowedHeaders: []string{"Origin","Content-Type","Authorization"}}}
     srv := rest.NewServer(cfg, nil, nil)
     go func() { _ = srv.Start(context.Background()) }()
     defer func() { _ = srv.Stop(context.Background()) }()
@@ -33,6 +33,7 @@ func TestE2E_CoreEndpoints(t *testing.T) {
         var resp map[string]interface{}
         _ = json.Unmarshal(b, &resp)
         if resp["risk_level"] == nil { t.Fatalf("analyze payload missing risk_level") }
+        if rs, ok := resp["risk_score"].(float64); !ok { t.Fatalf("analyze payload missing risk_score") } else if rs == 0.65 { t.Fatalf("risk_score appears hardcoded: %v", rs) }
     }
     batch := []byte(`{"packages":[{"name":"react","ecosystem":"npm","version":"18.2.0"},{"name":"lodash","ecosystem":"npm","version":"4.17.21"}],"options":{"include_ml":false,"include_vulnerabilities":true}}`)
     if r, err := http.Post("http://127.0.0.1:8084/api/v1/batch-analyze", "application/json", bytes.NewReader(batch)); err != nil || r.StatusCode != 200 { t.Fatalf("batch analyze: %v %d", err, r.StatusCode) } else {
@@ -59,5 +60,22 @@ func TestE2E_CoreEndpoints(t *testing.T) {
         v0 := vulns[0].(map[string]interface{})
         if v0["id"] == nil || v0["severity"] == nil || v0["description"] == nil { t.Fatalf("vuln scan payload missing fields") }
     }
+    // CORS preflight validation (DAST)
+    preflightReq, _ := http.NewRequest("OPTIONS", "http://127.0.0.1:8084/api/v1/analyze", nil)
+    preflightReq.Header.Set("Origin", "http://example.com")
+    preflightReq.Header.Set("Access-Control-Request-Method", "POST")
+    preflightResp, err := http.DefaultClient.Do(preflightReq)
+    if err != nil || (preflightResp.StatusCode != 200 && preflightResp.StatusCode != 204) { t.Fatalf("preflight: %v %d", err, preflightResp.StatusCode) }
+    _ = preflightResp.Body.Close()
+
     if r, err := http.Post("http://127.0.0.1:8084/api/v1/ml/predict/typosquatting", "application/json", bytes.NewReader([]byte(`{"package":{"name":"react","registry":"npm"}}`))); err != nil || (r.StatusCode != 200 && r.StatusCode != 503) { t.Fatalf("ml predict: %v %d", err, r.StatusCode) }
+
+    // Verify ML analysis via analyze with include_ml=true
+    bodyML := []byte(`{"name":"react","ecosystem":"npm","version":"18.2.0","options":{"include_ml":true,"include_vulnerabilities":false}}`)
+    if r, err := http.Post("http://127.0.0.1:8084/api/v1/analyze", "application/json", bytes.NewReader(bodyML)); err != nil || r.StatusCode != 200 { t.Fatalf("analyze ML: %v %d", err, r.StatusCode) } else {
+        b, _ := io.ReadAll(r.Body); _ = r.Body.Close()
+        var resp map[string]interface{}
+        _ = json.Unmarshal(b, &resp)
+        if resp["ml_analysis"] == nil { t.Fatalf("analyze ML payload missing ml_analysis") }
+    }
 }

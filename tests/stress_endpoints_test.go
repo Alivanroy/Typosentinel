@@ -32,34 +32,35 @@ func TestStressEndpointsAnalyzeBatchPredict(t *testing.T) {
     wg.Add(clients)
     var durs []time.Duration
     var mu sync.Mutex
+    var hadErr bool
     for i := 0; i < clients; i++ {
         go func() {
             defer wg.Done()
             body := []byte(`{"name":"react","ecosystem":"npm","version":"18.2.0","options":{"include_ml":true,"include_vulnerabilities":true}}`)
             start := time.Now()
             r, err := http.Post("http://127.0.0.1:8089/api/v1/analyze", "application/json", bytes.NewReader(body))
-            if err != nil { t.Fatalf("analyze err: %v", err) }
-            if r.StatusCode != 200 { t.Fatalf("analyze status: %d", r.StatusCode) }
+            if err != nil { t.Errorf("analyze err: %v", err); hadErr = true; return }
+            if r.StatusCode != 200 { t.Errorf("analyze status: %d", r.StatusCode); hadErr = true; return }
             r.Body.Close()
             mu.Lock(); durs = append(durs, time.Since(start)); mu.Unlock()
             batch := []byte(`{"packages":[{"name":"react","ecosystem":"npm","version":"18.2.0"},{"name":"lodash","ecosystem":"npm","version":"4.17.21"}],"options":{"include_ml":true,"include_vulnerabilities":true}}`)
             start = time.Now()
             r, err = http.Post("http://127.0.0.1:8089/api/v1/batch-analyze", "application/json", bytes.NewReader(batch))
-            if err != nil { t.Fatalf("batch analyze err: %v", err) }
-            if r.StatusCode != 200 { t.Fatalf("batch analyze status: %d", r.StatusCode) }
+            if err != nil { t.Errorf("batch analyze err: %v", err); hadErr = true; return }
+            if r.StatusCode != 200 { t.Errorf("batch analyze status: %d", r.StatusCode); hadErr = true; return }
             r.Body.Close()
             mu.Lock(); durs = append(durs, time.Since(start)); mu.Unlock()
             start = time.Now()
             r, err = http.Post("http://127.0.0.1:8089/api/v1/ml/predict/typosquatting", "application/json", bytes.NewReader([]byte(`{"package":{"name":"react","registry":"npm"}}`)))
-            if err != nil { t.Fatalf("predict err: %v", err) }
-            if r.StatusCode != 200 { t.Fatalf("predict status: %d", r.StatusCode) }
+            if err != nil { t.Errorf("predict err: %v", err); hadErr = true; return }
+            if r.StatusCode != 200 { t.Errorf("predict status: %d", r.StatusCode); hadErr = true; return }
             r.Body.Close()
             mu.Lock(); durs = append(durs, time.Since(start)); mu.Unlock()
         }()
     }
     wg.Wait()
     // SLO: p95 latency assertion
-    if len(durs) > 0 {
+    if !hadErr && len(durs) > 0 {
         // simple percentile calc
         for i := 0; i < len(durs)-1; i++ {
             for j := i + 1; j < len(durs); j++ {

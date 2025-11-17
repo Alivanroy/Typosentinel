@@ -11,11 +11,12 @@ import (
 
 // MLPipeline represents the machine learning pipeline for threat detection
 type MLPipeline struct {
-	config      *config.Config
-	models      map[string]MLModel
-	features    FeatureExtractor
-	mu          sync.RWMutex
-	initialized bool
+    config      *config.Config
+    models      map[string]MLModel
+    features    FeatureExtractor
+    mu          sync.RWMutex
+    initialized bool
+    adaptive    *AdaptiveThresholdManager
 }
 
 // MLModel represents a machine learning model interface
@@ -52,11 +53,12 @@ type BasicFeatureExtractor struct {
 
 // NewMLPipeline creates a new ML pipeline instance
 func NewMLPipeline(config *config.Config) *MLPipeline {
-	return &MLPipeline{
-		config:   config,
-		models:   make(map[string]MLModel),
-		features: NewAdvancedFeatureExtractor(DefaultFeatureExtractionConfig()),
-	}
+    return &MLPipeline{
+        config:   config,
+        models:   make(map[string]MLModel),
+        features: NewAdvancedFeatureExtractor(DefaultFeatureExtractionConfig()),
+        adaptive:  NewAdaptiveThresholdManager(config, logger.New()),
+    }
 }
 
 // Initialize initializes the ML pipeline with models and configurations
@@ -73,12 +75,19 @@ func (p *MLPipeline) Initialize(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize feature extractor: %w", err)
 	}
 
-	// Initialize models based on configuration
-	if err := p.initializeModels(ctx); err != nil {
-		return fmt.Errorf("failed to initialize models: %w", err)
-	}
+    // Initialize models based on configuration
+    if err := p.initializeModels(ctx); err != nil {
+        return fmt.Errorf("failed to initialize models: %w", err)
+    }
 
-	// Advanced scoring is handled internally
+    // Initialize adaptive threshold manager
+    if p.adaptive != nil {
+        if err := p.adaptive.Initialize(ctx); err != nil {
+            logger.Warnf("Adaptive threshold manager init failed: %v", err)
+        }
+    }
+
+    // Advanced scoring is handled internally
 
 	p.initialized = true
 	logger.Info("ML Pipeline initialized successfully")
@@ -364,8 +373,21 @@ func (p *MLPipeline) combinePredictions(predictions map[string]*Prediction, feat
 
 // enhanceWithAdvancedScoring enhances prediction with advanced scoring techniques
 func (p *MLPipeline) enhanceWithAdvancedScoring(prediction *Prediction, pkg *types.Package, features *PackageFeatures) error {
-	// Advanced scoring is handled internally
-	return nil
+    if p.adaptive == nil || pkg == nil {
+        return nil
+    }
+    // Apply adaptive threshold analysis for typosquatting risk
+    ctx := context.Background()
+    ar, err := p.adaptive.AnalyzeWithAdaptiveThresholds(ctx, pkg, prediction.Probability, "typosquatting")
+    if err != nil {
+        return nil
+    }
+    // Adjust probability and confidence
+    prediction.Probability = ar.AdjustedScore
+    if ar.ConfidenceLevel > prediction.Confidence {
+        prediction.Confidence = ar.ConfidenceLevel
+    }
+    return nil
 }
 
 // determineRiskLevel determines risk level based on score and confidence
@@ -421,4 +443,30 @@ func (p *MLPipeline) GetModels() map[string]MLModel {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	return p.models
+}
+// RecordFeedback updates adaptive threshold manager with prediction outcomes
+func (p *MLPipeline) RecordFeedback(ecosystem string, predictedPositive bool, actualPositive bool, score float64) {
+    if p.adaptive == nil {
+        return
+    }
+    p.adaptive.UpdatePerformanceStats(ecosystem, predictedPositive, actualPositive, score)
+}
+// GetAdaptiveThreshold returns threshold for the given ecosystem and threat type
+func (p *MLPipeline) GetAdaptiveThreshold(ecosystem, threatType string) float64 {
+    if p.adaptive == nil {
+        return 0.7
+    }
+    return p.adaptive.GetAdaptiveThreshold(ecosystem, threatType)
+}
+
+// PredictPositive determines if score exceeds adaptive or default threshold
+func (p *MLPipeline) PredictPositive(ecosystem, threatType string, score float64) (bool, float64) {
+    th := p.GetAdaptiveThreshold(ecosystem, threatType)
+    return score >= th, th
+}
+func (p *MLPipeline) GetThresholdSource(ecosystem string) string {
+    if p.adaptive == nil {
+        return "generic_fallback"
+    }
+    return p.adaptive.GetThresholdSource(ecosystem)
 }

@@ -6,9 +6,10 @@
 package edge
 
 import (
-	"context"
-	"fmt"
-	"time"
+    "context"
+    "fmt"
+    "time"
+    "strings"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -112,29 +113,64 @@ func (e *EdgeEngine) AnalyzePackage(ctx context.Context, pkg *types.Package) (*E
 			continue
 		}
 
-		// Convert AlgorithmResult to AnalysisResult
-		// Calculate threat score based on findings
-		threatScore := 0.0
-		confidence := 0.8
-		attackVectors := make([]string, 0)
+        // Convert AlgorithmResult to AnalysisResult
+        // Calculate threat score based on findings (no fixed constants)
+        threatScore := 0.0
+        confidence := 0.0
+        attackVectors := make([]string, 0)
 
-		if len(algorithmResult.Findings) > 0 {
-			threatScore = 0.7 // Default threat score when findings exist
-			for _, finding := range algorithmResult.Findings {
-				if finding.Confidence > confidence {
-					confidence = finding.Confidence
-				}
-				if finding.Type != "" {
-					attackVectors = append(attackVectors, finding.Type)
-				}
-			}
-		}
+        // Prefer algorithm-provided metadata if available
+        if ts, ok := algorithmResult.Metadata["threat_score"].(float64); ok {
+            threatScore = ts
+        }
+        if cf, ok := algorithmResult.Metadata["confidence"].(float64); ok {
+            confidence = cf
+        }
+
+        if len(algorithmResult.Findings) > 0 {
+            var totalScore, totalWeight float64
+            for _, finding := range algorithmResult.Findings {
+                // Map severity to weight
+                w := 0.5
+                switch strings.ToLower(finding.Severity) {
+                case "critical":
+                    w = 1.0
+                case "high":
+                    w = 0.8
+                case "medium":
+                    w = 0.6
+                case "low":
+                    w = 0.4
+                default:
+                    w = 0.3
+                }
+                // Use confidence to scale contribution
+                totalScore += finding.Confidence * w
+                totalWeight += w
+                if finding.Confidence > confidence {
+                    confidence = finding.Confidence
+                }
+                if finding.Type != "" {
+                    attackVectors = append(attackVectors, finding.Type)
+                }
+            }
+            if totalWeight > 0 {
+                // Combine metadata threat_score with weighted finding scores
+                scoreFromFindings := totalScore / totalWeight
+                if threatScore > 0 {
+                    // Blend: 60% findings, 40% algorithm metadata
+                    threatScore = 0.6*scoreFromFindings + 0.4*threatScore
+                } else {
+                    threatScore = scoreFromFindings
+                }
+            }
+        }
 
 		analysisResult := &AnalysisResult{
 			AlgorithmName:  algorithmResult.Algorithm,
 			Tier:           algorithm.Tier(),
 			ThreatScore:    threatScore,
-			Confidence:     confidence,
+            Confidence:     confidence,
 			AttackVectors:  attackVectors,
 			Findings:       algorithmResult.Findings,
 			Metadata:       algorithmResult.Metadata,

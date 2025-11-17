@@ -210,7 +210,7 @@ func (atm *AdaptiveThresholdManager) AnalyzeWithAdaptiveThresholds(ctx context.C
 	// Add analysis details
 	result.Details["ecosystem_detected"] = ecosystem
 	result.Details["model_available"] = model != nil
-	result.Details["threshold_source"] = atm.getThresholdSource(ecosystem)
+    result.Details["threshold_source"] = atm.GetThresholdSource(ecosystem)
 
 	return result, nil
 }
@@ -663,12 +663,12 @@ func (atm *AdaptiveThresholdManager) getDefaultThreshold(threatType string) floa
 	return 0.7
 }
 
-func (atm *AdaptiveThresholdManager) getThresholdSource(ecosystem string) string {
-	_, exists := atm.thresholds[ecosystem]
-	if exists {
-		return "ecosystem_specific"
-	}
-	return "generic_fallback"
+func (atm *AdaptiveThresholdManager) GetThresholdSource(ecosystem string) string {
+    _, exists := atm.thresholds[ecosystem]
+    if exists {
+        return "ecosystem_specific"
+    }
+    return "generic_fallback"
 }
 
 func (atm *AdaptiveThresholdManager) recalculateMetrics(stats *PerformanceStats) {

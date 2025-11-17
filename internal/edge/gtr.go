@@ -3,14 +3,15 @@
 package edge
 
 import (
-	"context"
-	"fmt"
-	"math"
-	"strings"
-	"time"
-	"sync"
+    "context"
+    "fmt"
+    "math"
+    "strings"
+    "time"
+    "sync"
 
-	"github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/Alivanroy/Typosentinel/internal/registry"
 )
 
 // GTRAlgorithm implements graph traversal reconnaissance
@@ -18,6 +19,10 @@ type GTRAlgorithm struct {
     config  *GTRConfig
     metrics *GTRMetrics
     mu      sync.Mutex
+    npmConnector *registry.NPMConnector
+    depCache   map[string][]string
+    depCacheTS map[string]time.Time
+    depMu      sync.RWMutex
 }
 
 // GTRConfig holds configuration for the GTR algorithm
@@ -72,12 +77,16 @@ func NewGTRAlgorithm(config *GTRConfig) *GTRAlgorithm {
 		}
 	}
 
-	return &GTRAlgorithm{
-		config: config,
-		metrics: &GTRMetrics{
-			LastUpdated: time.Now(),
-		},
-	}
+    g := &GTRAlgorithm{
+        config: config,
+        metrics: &GTRMetrics{
+            LastUpdated: time.Now(),
+        },
+        depCache:   make(map[string][]string),
+        depCacheTS: make(map[string]time.Time),
+    }
+    g.npmConnector = registry.NewNPMConnector(&registry.Registry{Name: "npm", URL: "https://registry.npmjs.org", Type: "npm", Enabled: true})
+    return g
 }
 
 // Name returns the algorithm name
@@ -155,8 +164,11 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*Algorit
 		Registry: "npm",
 	}
 
-	// Analyze package dependencies for graph traversal patterns
-	g.analyzeDependencyGraph(pkg, result)
+    // Analyze package dependencies for graph traversal patterns
+    g.analyzeDependencyGraph(pkg, result)
+
+    // Detect typosquatting vectors across provided package set
+    g.detectTyposquatVectorsAcrossPackages(packages, result)
 
 	// Calculate overall scores
 	g.calculateOverallScores(result)
@@ -175,13 +187,38 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*Algorit
 
 // analyzeDependencyGraph analyzes the dependency graph for security issues
 func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *AlgorithmResult) {
-	if pkg.Dependencies == nil {
-		return
-	}
+    if pkg.Dependencies == nil {
+        // Attempt to resolve dependencies via registry
+        ctx := context.Background()
+        nodes, edges, depthMap, riskMap := g.resolveDependencyGraph(ctx, pkg.Name, g.config.MaxTraversalDepth)
+        if len(nodes) == 0 {
+            return
+        }
+        centrality := g.computeDegreeCentrality(pkg)
+        result.Metadata["depth_map"] = depthMap
+        result.Metadata["risk_map"] = riskMap
+        result.Metadata["max_depth"] = g.getMaxDepth(depthMap)
+        result.Metadata["high_risk_count"] = g.countHighRiskDependencies(riskMap)
+        result.Metadata["centrality_map"] = centrality
+        pr := g.computePageRank(nodes, edges, 0.85, 20)
+        result.Metadata["pagerank_centrality"] = pr
+        pathRisk := 0.0
+        for name, rsk := range riskMap {
+            if v, ok := pr[name]; ok {
+                pathRisk += rsk * v
+            }
+        }
+        result.Metadata["path_risk_score"] = pathRisk
+        result.Metadata["nodes_count"] = len(nodes)
+        ec := 0
+        for _, outs := range edges { ec += len(outs) }
+        result.Metadata["edges_count"] = ec
+        return
+    }
 
-	// Track dependency depth and patterns
-	depthMap := make(map[string]int)
-	riskMap := make(map[string]float64)
+    // Track dependency depth and patterns
+    depthMap := make(map[string]int)
+    riskMap := make(map[string]float64)
 
 	// Analyze each dependency
 	for _, dep := range pkg.Dependencies {
@@ -205,7 +242,7 @@ func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *Algori
 				Severity:        g.getRiskSeverity(riskScore),
 				Message:         fmt.Sprintf("Dependency '%s' has high risk score", dep.Name),
 				Confidence:      riskScore,
-				DetectedAt:      time.Now(),
+                DetectedAt:      time.Now().UTC(),
 				DetectionMethod: "gtr_risk_analysis",
 				Evidence: []Evidence{
 					{
@@ -233,7 +270,7 @@ func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *Algori
 				Severity:        "MEDIUM",
 				Message:         fmt.Sprintf("Dependency '%s' is deeply nested", dep.Name),
 				Confidence:      0.7,
-				DetectedAt:      time.Now(),
+                DetectedAt:      time.Now().UTC(),
 				DetectionMethod: "gtr_depth_analysis",
 				Evidence: []Evidence{
 					{
@@ -255,7 +292,7 @@ func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *Algori
 				Severity:        "LOW",
 				Message:         fmt.Sprintf("Development dependency '%s' detected", dep.Name),
 				Confidence:      0.5,
-				DetectedAt:      time.Now(),
+                DetectedAt:      time.Now().UTC(),
 				DetectionMethod: "gtr_dev_dependency_check",
 				Evidence: []Evidence{
 					{
@@ -269,11 +306,37 @@ func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *Algori
 		}
 	}
 
-	// Store analysis metadata
-	result.Metadata["depth_map"] = depthMap
-	result.Metadata["risk_map"] = riskMap
-	result.Metadata["max_depth"] = g.getMaxDepth(depthMap)
-	result.Metadata["high_risk_count"] = g.countHighRiskDependencies(riskMap)
+    // Store analysis metadata
+    result.Metadata["depth_map"] = depthMap
+    result.Metadata["risk_map"] = riskMap
+    result.Metadata["max_depth"] = g.getMaxDepth(depthMap)
+    result.Metadata["high_risk_count"] = g.countHighRiskDependencies(riskMap)
+
+    // Compute simple degree centrality (out-degree based on declared dependencies)
+    centrality := g.computeDegreeCentrality(pkg)
+    result.Metadata["centrality_map"] = centrality
+
+    // PageRank-like centrality and path risk aggregation
+    nodes := make([]string, 0)
+    edges := make(map[string][]string)
+    nodes = append(nodes, pkg.Name)
+    for _, dep := range pkg.Dependencies {
+        nodes = append(nodes, dep.Name)
+        edges[pkg.Name] = append(edges[pkg.Name], dep.Name)
+    }
+    pr := g.computePageRank(nodes, edges, 0.85, 20)
+    result.Metadata["pagerank_centrality"] = pr
+    pathRisk := 0.0
+    for name, rsk := range riskMap {
+        if v, ok := pr[name]; ok {
+            pathRisk += rsk * v
+        }
+    }
+    result.Metadata["path_risk_score"] = pathRisk
+    result.Metadata["nodes_count"] = len(nodes)
+    ec := 0
+    for _, outs := range edges { ec += len(outs) }
+    result.Metadata["edges_count"] = ec
 }
 
 // calculateDependencyRisk calculates risk score for a dependency
@@ -353,8 +416,19 @@ func (g *GTRAlgorithm) calculateOverallScores(result *AlgorithmResult) {
 		}
 	}
 
-	// Normalize threat score
-	threatScore := math.Min(totalThreat/float64(len(result.Findings)), 1.0)
+    // Normalize threat score
+    threatScore := math.Min(totalThreat/float64(len(result.Findings)), 1.0)
+    if pr, ok := result.Metadata["pagerank_centrality"].(map[string]float64); ok {
+        maxPR := 0.0
+        for _, v := range pr {
+            if v > maxPR {
+                maxPR = v
+            }
+        }
+        if maxPR > 0 {
+            threatScore = math.Min(threatScore+math.Min(maxPR, 0.2), 1.0)
+        }
+    }
 
 	// Calculate confidence based on analysis depth
 	confidence := 0.7 // Base confidence for GTR analysis
@@ -371,8 +445,8 @@ func (g *GTRAlgorithm) calculateOverallScores(result *AlgorithmResult) {
 	if highCount > 0 {
 		attackVectors = append(attackVectors, "supply_chain_compromise")
 	}
-	result.Metadata["attack_vectors"] = attackVectors
-	result.Metadata["threat_score"] = threatScore
+    result.Metadata["attack_vectors"] = attackVectors
+    result.Metadata["threat_score"] = threatScore
 }
 
 // Helper functions
@@ -405,4 +479,171 @@ func (g *GTRAlgorithm) Reset() error {
     }
     g.mu.Unlock()
     return nil
+}
+func (g *GTRAlgorithm) detectTyposquatVectorsAcrossPackages(packages []string, result *AlgorithmResult) {
+    if len(packages) < 2 {
+        return
+    }
+    // Compare all pairs and flag high similarity collisions
+    for i := 0; i < len(packages); i++ {
+        for j := i + 1; j < len(packages); j++ {
+            a := packages[i]
+            b := packages[j]
+            if a == "" || b == "" || a == b {
+                continue
+            }
+            sim := levenshteinSimilarity(a, b)
+            if sim >= 0.85 {
+                result.Findings = append(result.Findings, Finding{
+                    ID:              fmt.Sprintf("gtr_typosquat_%s_%s", a, b),
+                    Package:         a,
+                    Type:            "typosquat_vector",
+                    Severity:        g.getRiskSeverity(sim),
+                    Message:         fmt.Sprintf("Package '%s' is highly similar to '%s' (%.2f)", a, b, sim),
+                    Confidence:      sim,
+                    DetectedAt:      time.Now().UTC(),
+                    DetectionMethod: "gtr_name_collision",
+                    Evidence: []Evidence{
+                        {Type: "name_similarity", Description: "Levenshtein-based similarity", Value: map[string]interface{}{"a": a, "b": b}, Score: sim},
+                    },
+                })
+            }
+        }
+    }
+}
+
+func levenshteinSimilarity(s1, s2 string) float64 {
+    if len(s1) == 0 && len(s2) == 0 {
+        return 1.0
+    }
+    d := levenshteinDistance(s1, s2)
+    maxLen := math.Max(float64(len(s1)), float64(len(s2)))
+    if maxLen == 0 {
+        return 0.0
+    }
+    sim := 1.0 - float64(d)/maxLen
+    if sim < 0.0 { sim = 0.0 }
+    if sim > 1.0 { sim = 1.0 }
+    return sim
+}
+
+func levenshteinDistance(s1, s2 string) int {
+    if len(s1) == 0 { return len(s2) }
+    if len(s2) == 0 { return len(s1) }
+    m := make([][]int, len(s1)+1)
+    for i := range m {
+        m[i] = make([]int, len(s2)+1)
+        m[i][0] = i
+    }
+    for j := 0; j <= len(s2); j++ { m[0][j] = j }
+    for i := 1; i <= len(s1); i++ {
+        for j := 1; j <= len(s2); j++ {
+            cost := 0
+            if s1[i-1] != s2[j-1] { cost = 1 }
+            m[i][j] = min3int(m[i-1][j]+1, m[i][j-1]+1, m[i-1][j-1]+cost)
+        }
+    }
+    return m[len(s1)][len(s2)]
+}
+
+func min3int(a, b, c int) int {
+    if a < b && a < c { return a }
+    if b < c { return b }
+    return c
+}
+// computeDegreeCentrality computes a simple degree centrality map
+func (g *GTRAlgorithm) computeDegreeCentrality(pkg *types.Package) map[string]int {
+    cm := make(map[string]int)
+    if pkg == nil || pkg.Dependencies == nil { return cm }
+    // Count direct dependencies per package as degree
+    for _, dep := range pkg.Dependencies {
+        cm[dep.Name]++
+    }
+    return cm
+}
+
+func (g *GTRAlgorithm) computePageRank(nodes []string, edges map[string][]string, d float64, iters int) map[string]float64 {
+    n := len(nodes)
+    if n == 0 {
+        return map[string]float64{}
+    }
+    pr := make(map[string]float64)
+    out := make(map[string]int)
+    for _, u := range nodes {
+        pr[u] = 1.0 / float64(n)
+        out[u] = len(edges[u])
+    }
+    for k := 0; k < iters; k++ {
+        next := make(map[string]float64)
+        base := (1.0 - d) / float64(n)
+        for _, u := range nodes { next[u] = base }
+        for u, outs := range edges {
+            if out[u] == 0 {
+                share := d * pr[u] / float64(n)
+                for _, v := range nodes { next[v] += share }
+                continue
+            }
+            share := d * pr[u] / float64(out[u])
+            for _, v := range outs { next[v] += share }
+        }
+        pr = next
+    }
+    return pr
+}
+func (g *GTRAlgorithm) resolveDependencyGraph(ctx context.Context, root string, maxDepth int) ([]string, map[string][]string, map[string]int, map[string]float64) {
+    nodes := make([]string, 0)
+    edges := make(map[string][]string)
+    depthMap := make(map[string]int)
+    riskMap := make(map[string]float64)
+    if g.npmConnector == nil || root == "" {
+        return nodes, edges, depthMap, riskMap
+    }
+    visited := make(map[string]bool)
+    queue := []string{root}
+    depthMap[root] = 0
+    visited[root] = true
+    nodes = append(nodes, root)
+    for len(queue) > 0 {
+        u := queue[0]
+        queue = queue[1:]
+        du := depthMap[u]
+        if du >= maxDepth { continue }
+        deps := g.getDependencies(ctx, u)
+        if len(deps) == 0 { continue }
+        for _, v := range deps {
+            edges[u] = append(edges[u], v)
+            if !visited[v] {
+                visited[v] = true
+                depthMap[v] = du + 1
+                nodes = append(nodes, v)
+                queue = append(queue, v)
+            }
+            riskMap[v] = math.Max(riskMap[v], 0.1+0.05*float64(depthMap[v]))
+        }
+    }
+    return nodes, edges, depthMap, riskMap
+}
+
+func (g *GTRAlgorithm) getDependencies(ctx context.Context, name string) []string {
+    if g.npmConnector == nil || name == "" {
+        return nil
+    }
+    g.depMu.RLock()
+    deps, ok := g.depCache[name]
+    ts := g.depCacheTS[name]
+    g.depMu.RUnlock()
+    if ok && time.Since(ts) < 10*time.Minute {
+        return deps
+    }
+    c, cancel := context.WithTimeout(ctx, 2*time.Second)
+    defer cancel()
+    info, err := g.npmConnector.GetPackageInfo(c, name, "latest")
+    if err != nil || info == nil {
+        return nil
+    }
+    g.depMu.Lock()
+    g.depCache[name] = info.Dependencies
+    g.depCacheTS[name] = time.Now()
+    g.depMu.Unlock()
+    return info.Dependencies
 }

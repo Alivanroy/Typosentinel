@@ -79,6 +79,125 @@ type BehavioralAnalysisResult struct {
 	Metadata                map[string]interface{}         `json:"metadata"`
 }
 
+// DetectAnomalies performs a basic anomaly detection pass using simple heuristics
+func (ba *BehavioralAnalyzer) DetectAnomalies(ctx context.Context, pkg *types.Package) *AnomalyDetectionResult {
+    res := &AnomalyDetectionResult{
+        DetectedAnomalies:    []BehavioralAnomaly{},
+        AnomalyTypes:         []AnomalyType{},
+        StatisticalAnomalies: []StatisticalAnomaly{},
+        ContextualAnomalies:  []ContextualAnomaly{},
+        CollectiveAnomalies:  []CollectiveAnomaly{},
+    }
+
+    if pkg == nil {
+        return res
+    }
+
+    // Statistical anomaly via Shannon entropy of name and description
+    baseline := 3.5
+    entName := computeEntropy(pkg.Name)
+    if entName-baseline > 0.5 {
+        res.StatisticalAnomalies = append(res.StatisticalAnomalies, StatisticalAnomaly{
+            AnomalyID:     "stat_entropy_name",
+            Metric:        "name_entropy",
+            ObservedValue: entName,
+            ExpectedValue: baseline,
+            Deviation:     entName - baseline,
+            ZScore:        0.0,
+            Probability:   0.0,
+        })
+    }
+    if pkg.Metadata != nil {
+        desc := pkg.Metadata.Description
+        if desc != "" {
+            entDesc := computeEntropy(desc)
+            if entDesc-baseline > 0.8 {
+                res.StatisticalAnomalies = append(res.StatisticalAnomalies, StatisticalAnomaly{
+                    AnomalyID:     "stat_entropy_desc",
+                    Metric:        "description_entropy",
+                    ObservedValue: entDesc,
+                    ExpectedValue: baseline,
+                    Deviation:     entDesc - baseline,
+                    ZScore:        0.0,
+                    Probability:   0.0,
+                })
+            }
+        }
+        // Network baseline check
+        if strings.Contains(desc, "http://") || strings.Contains(desc, "https://") || strings.Contains(strings.ToLower(desc), "socket") {
+            res.DetectedAnomalies = append(res.DetectedAnomalies, BehavioralAnomaly{
+                AnomalyID:     "net_pattern_desc",
+                AnomalyType:   "network",
+                Severity:      "LOW",
+                Description:   "Network URL patterns detected in description",
+                DetectionTime: time.Now(),
+                AnomalyScore:  0.3,
+                Context:       map[string]interface{}{"description": desc},
+                Evidence:      []string{"url_pattern"},
+                Impact:        "informational",
+            })
+        }
+        // Filesystem baseline check
+        fsIndicators := []string{"/etc/", "\\\\", "C:", "chmod", "chown", "rm -rf", "registry"}
+        for _, ind := range fsIndicators {
+            if strings.Contains(desc, ind) {
+                res.DetectedAnomalies = append(res.DetectedAnomalies, BehavioralAnomaly{AnomalyID: "fs_indicator", AnomalyType: "filesystem", Severity: "LOW", Description: "Filesystem indicator detected", DetectionTime: time.Now(), AnomalyScore: 0.3, Context: map[string]interface{}{"indicator": ind}, Evidence: []string{ind}, Impact: "monitor"})
+                break
+            }
+        }
+        // Process baseline check
+        procIndicators := []string{"ps", "tasklist", "process", "spawn", "fork"}
+        for _, ind := range procIndicators {
+            if strings.Contains(strings.ToLower(desc), ind) {
+                res.DetectedAnomalies = append(res.DetectedAnomalies, BehavioralAnomaly{AnomalyID: "proc_indicator", AnomalyType: "process", Severity: "LOW", Description: "Process indicator detected", DetectionTime: time.Now(), AnomalyScore: 0.3, Context: map[string]interface{}{"indicator": ind}, Evidence: []string{ind}, Impact: "monitor"})
+                break
+            }
+        }
+        // Basic evasion indicators in description
+        lowDesc := strings.ToLower(desc)
+        evasionIndicators := []string{"antidebug", "isdebuggerpresent", "virtualbox", "docker", "sandbox"}
+        for _, ind := range evasionIndicators {
+            if strings.Contains(lowDesc, ind) {
+                res.DetectedAnomalies = append(res.DetectedAnomalies, BehavioralAnomaly{
+                    AnomalyID:     "evasion_indicator",
+                    AnomalyType:   "evasion",
+                    Severity:      "MEDIUM",
+                    Description:   "Potential evasion indicator detected",
+                    DetectionTime: time.Now(),
+                    AnomalyScore:  0.6,
+                    Context:       map[string]interface{}{"indicator": ind},
+                    Evidence:      []string{ind},
+                    Impact:        "monitor",
+                })
+            }
+        }
+    }
+
+    // Aggregate anomaly score (simple)
+    res.AnomalyScore = math.Min(0.9, float64(len(res.DetectedAnomalies))*0.1+float64(len(res.StatisticalAnomalies))*0.15)
+    if res.AnomalyScore >= ba.config.AnomalyThreshold {
+        res.AnomalyTypes = append(res.AnomalyTypes, AnomalyType{TypeID: "generic", TypeName: "generic_anomaly", Description: "Aggregate heuristic anomaly", Frequency: 1, AverageScore: res.AnomalyScore, RiskLevel: "MEDIUM"})
+    }
+    return res
+}
+
+// computeEntropy computes Shannon entropy of a string
+func computeEntropy(s string) float64 {
+    if s == "" {
+        return 0.0
+    }
+    freq := make(map[rune]float64)
+    runes := []rune(s)
+    for _, r := range runes { freq[r] += 1.0 }
+    n := float64(len(runes))
+    ent := 0.0
+    for _, c := range freq {
+        p := c / n
+        ent += -p * math.Log2(p)
+    }
+    return ent
+}
+
 // PatternDetectionResult represents pattern detection results
 type PatternDetectionResult struct {
 	DetectedPatterns     []BehavioralPattern   `json:"detected_patterns"`

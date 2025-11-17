@@ -1,11 +1,12 @@
 package security
 
 import (
-	"context"
-	"fmt"
-	"regexp"
-	"sync"
-	"time"
+    "context"
+    "fmt"
+    "math"
+    "regexp"
+    "sync"
+    "time"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -346,28 +347,199 @@ func (epr *EnhancedPatternRecognizer) performFrequencyAnalysis(data interface{})
 }
 
 func (epr *EnhancedPatternRecognizer) performEntropyAnalysis(data interface{}) []EntropyAnomaly {
-	// Implementation would perform entropy analysis
-	return []EntropyAnomaly{}
+    anomalies := make([]EntropyAnomaly, 0)
+    // Baseline selection: use configured detectors when available
+    baseline := 3.5
+    threshold := 0.5
+    for _, d := range epr.entropyDetectors {
+        if d.BaselineEntropy > 0 {
+            baseline = d.BaselineEntropy
+        }
+        if d.EntropyThreshold > 0 {
+            threshold = d.EntropyThreshold
+        }
+        break
+    }
+
+    computeEntropy := func(s string) float64 {
+        if len(s) == 0 {
+            return 0.0
+        }
+        freq := make(map[rune]float64)
+        runes := []rune(s)
+        for _, r := range runes { freq[r] += 1.0 }
+        n := float64(len(runes))
+        ent := 0.0
+        for _, c := range freq {
+            p := c / n
+            ent += -p * math.Log2(p)
+        }
+        return ent
+    }
+
+    compressionApprox := func(s string) float64 {
+        if len(s) == 0 { return 1.0 }
+        // approximate compression ratio by unique/length
+        uniq := make(map[rune]bool)
+        for _, r := range []rune(s) { uniq[r] = true }
+        return float64(len(uniq)) / float64(len([]rune(s)))
+    }
+
+    addAnomaly := func(kind, field, value string) {
+        obs := computeEntropy(value)
+        dev := obs - baseline
+        sig := math.Abs(dev)
+        if sig >= threshold {
+            anomalies = append(anomalies, EntropyAnomaly{
+                AnomalyID:        fmt.Sprintf("entropy_%s_%d", field, time.Now().UnixNano()),
+                EntropyType:      kind,
+                ExpectedEntropy:  baseline,
+                ObservedEntropy:  obs,
+                Deviation:        dev,
+                CompressionRatio: compressionApprox(value),
+                Significance:     sig,
+            })
+        }
+    }
+
+    switch v := data.(type) {
+    case *types.Package:
+        if v != nil {
+            addAnomaly("name", "name", v.Name)
+            if v.Metadata != nil {
+                addAnomaly("description", "description", v.Metadata.Description)
+            }
+            if v.Version != "" { addAnomaly("version", "version", v.Version) }
+        }
+    case map[string]string:
+        for k, s := range v { addAnomaly("text", k, s) }
+    case string:
+        addAnomaly("text", "payload", v)
+    default:
+        // No supported data type; return empty anomalies
+    }
+
+    return anomalies
 }
 
 func (epr *EnhancedPatternRecognizer) calculateOverallConfidence(result *EnhancedDetectionResult) float64 {
-	// Implementation would calculate weighted confidence across all detections
-	return 0.0
+    // Weighted aggregation across detections, ML predictions, and contextual findings
+    total := 0.0
+    weight := 0.0
+
+    for _, dp := range result.DetectedPatterns {
+        w := 1.0
+        if dp.Severity == types.SeverityHigh {
+            w = 1.2
+        } else if dp.Severity == types.SeverityCritical {
+            w = 1.5
+        }
+        total += dp.Confidence * w
+        weight += w
+    }
+
+    for _, ml := range result.MLPredictions {
+        w := 0.8
+        total += ml.Confidence * w
+        weight += w
+    }
+
+    for _, cf := range result.ContextualFindings {
+        w := 0.7
+        total += cf.Confidence * w
+        weight += w
+    }
+
+    if weight == 0 {
+        return 0.0
+    }
+    return total / weight
 }
 
 func (epr *EnhancedPatternRecognizer) calculateRiskScore(result *EnhancedDetectionResult) float64 {
-	// Implementation would calculate overall risk score
-	return 0.0
+    // Risk derived from severity distribution, confidence, and anomaly strength
+    base := 0.0
+    count := 0.0
+
+    severityWeight := func(s types.Severity) float64 {
+        switch s {
+        case types.SeverityCritical:
+            return 1.0
+        case types.SeverityHigh:
+            return 0.8
+        case types.SeverityMedium:
+            return 0.5
+        case types.SeverityLow:
+            return 0.3
+        default:
+            return 0.2
+        }
+    }
+
+    for _, dp := range result.DetectedPatterns {
+        base += dp.Confidence * severityWeight(dp.Severity)
+        count += 1.0
+    }
+
+    for _, fa := range result.FrequencyAnomalies {
+        base += fa.Significance * 0.6
+        count += 1.0
+    }
+
+    for _, ea := range result.EntropyAnomalies {
+        base += ea.Significance * 0.6
+        count += 1.0
+    }
+
+    if count == 0 {
+        return 0.0
+    }
+    score := base / count
+    if score > 1.0 {
+        score = 1.0
+    }
+    if score < 0.0 {
+        score = 0.0
+    }
+    return score
 }
 
 func (epr *EnhancedPatternRecognizer) determineSeverity(result *EnhancedDetectionResult) types.Severity {
-	// Implementation would determine overall severity
-	return types.SeverityLow
+    // Severity determined by max pattern severity and aggregate risk
+    max := types.SeverityLow
+    for _, dp := range result.DetectedPatterns {
+        if dp.Severity > max {
+            max = dp.Severity
+        }
+    }
+
+    risk := epr.calculateRiskScore(result)
+    switch {
+    case risk >= 0.85:
+        return types.SeverityCritical
+    case risk >= 0.7:
+        return types.SeverityHigh
+    case risk >= 0.4:
+        return types.SeverityMedium
+    default:
+        return max
+    }
 }
 
 func (epr *EnhancedPatternRecognizer) generateRecommendations(result *EnhancedDetectionResult) []string {
-	// Implementation would generate actionable recommendations
-	return []string{}
+    recs := make([]string, 0, 4)
+
+    if result.Severity >= types.SeverityHigh {
+        recs = append(recs, "Isolate affected packages and audit recent changes")
+        recs = append(recs, "Increase logging and enable alerting for package operations")
+    }
+    if result.OverallConfidence >= 0.7 {
+        recs = append(recs, "Run deep scan with behavioral analysis to confirm anomalies")
+    }
+    if len(result.DetectedPatterns) == 0 && result.Severity <= types.SeverityMedium {
+        recs = append(recs, "Monitor for changes; no immediate action required")
+    }
+    return recs
 }
 
 func (epr *EnhancedPatternRecognizer) updateAdaptiveThresholds(result *EnhancedDetectionResult) {

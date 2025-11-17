@@ -1,13 +1,13 @@
 package ml
 
 import (
-	"fmt"
-	"math"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
-	"unicode"
+    "fmt"
+    "math"
+    "regexp"
+    "strconv"
+    "strings"
+    "time"
+    "unicode"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -18,6 +18,32 @@ type FeatureVectorExtractor interface {
 	GetFeatureNames() []string
 	NormalizeFeatures(features []float64) []float64
 }
+
+// calculateNameEntropy computes Shannon entropy of the package name
+func calculateNameEntropy(name string) float64 {
+    if len(name) == 0 {
+        return 0.0
+    }
+    freq := make(map[rune]float64)
+    runes := []rune(name)
+    for _, r := range runes { freq[r] += 1.0 }
+    n := float64(len(runes))
+    ent := 0.0
+    for _, c := range freq {
+        p := c / n
+        ent += -p * math.Log2(p)
+    }
+    return ent
+}
+
+// calculateZScore computes a simple z-score given value, mean, stddev
+func calculateZScore(value, mean, std float64) float64 {
+    if std <= 0 {
+        return 0.0
+    }
+    return (value - mean) / std
+}
+
 
 // FeatureEngineer handles feature extraction and engineering for ML models
 type FeatureEngineer struct {

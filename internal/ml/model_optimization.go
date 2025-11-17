@@ -341,11 +341,11 @@ type PostHocResult struct {
 
 // PerformanceMonitor monitors optimization performance
 type PerformanceMonitor struct {
-	metrics          map[string][]float64
-	thresholds       map[string]float64
-	alerts           []*PerformanceAlert
-	mu               sync.RWMutex
-	monitoringActive bool
+    metrics          map[string][]float64
+    thresholds       map[string]float64
+    alerts           []*PerformanceAlert
+    mu               sync.RWMutex
+    monitoringActive bool
 }
 
 // PerformanceAlert represents a performance alert
@@ -569,11 +569,47 @@ type ModelPerformance struct {
 
 // NewPerformanceMonitor creates a new performance monitor
 func NewPerformanceMonitor() *PerformanceMonitor {
-	return &PerformanceMonitor{
-		metrics:    make(map[string][]float64),
-		thresholds: make(map[string]float64),
-		alerts:     make([]*PerformanceAlert, 0),
-	}
+    return &PerformanceMonitor{
+        metrics:    make(map[string][]float64),
+        thresholds: make(map[string]float64),
+        alerts:     make([]*PerformanceAlert, 0),
+    }
+}
+
+// RecordMetric records a metric value
+func (pm *PerformanceMonitor) RecordMetric(name string, value float64) {
+    pm.mu.Lock()
+    defer pm.mu.Unlock()
+    pm.metrics[name] = append(pm.metrics[name], value)
+}
+
+// SetThreshold sets an alert threshold for a metric
+func (pm *PerformanceMonitor) SetThreshold(name string, threshold float64) {
+    pm.mu.Lock()
+    defer pm.mu.Unlock()
+    pm.thresholds[name] = threshold
+}
+
+// GetMetricsSummary returns latest values for metrics
+func (pm *PerformanceMonitor) GetMetricsSummary() map[string]float64 {
+    pm.mu.RLock()
+    defer pm.mu.RUnlock()
+    out := make(map[string]float64)
+    for k, v := range pm.metrics {
+        if len(v) > 0 {
+            out[k] = v[len(v)-1]
+        }
+    }
+    return out
+}
+
+// GetAlerts returns a snapshot of current alerts
+func (pm *PerformanceMonitor) GetAlerts() []*PerformanceAlert {
+    pm.mu.RLock()
+    defer pm.mu.RUnlock()
+    alerts := make([]*PerformanceAlert, len(pm.alerts))
+    copy(alerts, pm.alerts)
+    return alerts
 }
 
 // Placeholder implementations for optimizers

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/internal/orchestrator"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -82,7 +82,7 @@ type ComplianceReportData struct {
 	PartiallyCompliant    int                                  `json:"partially_compliant"`
 	NonCompliant          int                                  `json:"non_compliant"`
 	ComplianceStandards   []ComplianceStandard                 `json:"compliance_standards"`
-	DetailedAssessment    []orchestrator.ComplianceRequirement `json:"detailed_assessment"`
+	DetailedAssessment    []interface{} `json:"detailed_assessment"` // Removed orchestrator dependency
 	SecurityControls      []SecurityControl                    `json:"security_controls"`
 	HighRiskFindings      int                                  `json:"high_risk_findings"`
 	MediumRiskFindings    int                                  `json:"medium_risk_findings"`

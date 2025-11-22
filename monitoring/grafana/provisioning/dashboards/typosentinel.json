@@ -1,7 +1,0 @@
-{
-  "title": "Typosentinel Overview",
-  "panels": [
-    {"type":"graph","title":"Requests","targets":[{"expr":"rate(http_requests_total[5m])"}]},
-    {"type":"graph","title":"Errors","targets":[{"expr":"rate(http_requests_errors_total[5m])"}]}
-  ]
-}

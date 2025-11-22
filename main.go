@@ -6,15 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
-	"github.com/Alivanroy/Typosentinel/internal/api/rest"
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/database"
 	"github.com/Alivanroy/Typosentinel/internal/detector"
@@ -23,12 +19,10 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/repository"
 	"github.com/Alivanroy/Typosentinel/internal/repository/connectors"
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
-	"github.com/Alivanroy/Typosentinel/internal/security"
-	"github.com/Alivanroy/Typosentinel/internal/visualization"
+
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func main() {
@@ -311,156 +305,7 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 	scanOrgCmd.Flags().Bool("include-archived", false, "Include archived repositories")
 	scanOrgCmd.MarkFlagRequired("org")
 
-	// Server command
-	var serverCmd = &cobra.Command{
-		Use:   "server",
-		Short: "Start the Typosentinel REST API server",
-		Long:  "Start the Typosentinel web server and REST API for scanning packages and managing security",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Load configuration
-			cfg, err := config.LoadConfig(configFile)
-			if err != nil {
-				cfg = createDefaultConfig()
-				if verbose {
-					log.Printf("Using default config: %v", err)
-				}
-			}
 
-			// Get server options from flags
-			port, _ := cmd.Flags().GetString("port")
-			host, _ := cmd.Flags().GetString("host")
-			dev, _ := cmd.Flags().GetBool("dev")
-
-			// Ensure server config has defaults
-			if cfg.Server.Host == "" {
-				cfg.Server.Host = "0.0.0.0"
-			}
-			if cfg.Server.Port == 0 {
-				cfg.Server.Port = 8080
-			}
-
-			// Override config with command line flags
-			if port != "" {
-				if portNum, err := parsePort(port); err == nil {
-					cfg.Server.Port = portNum
-				}
-			}
-			if host != "" {
-				cfg.Server.Host = host
-			}
-			if dev {
-				cfg.App.Environment = config.EnvDevelopment
-				cfg.App.Debug = true
-			}
-
-			// Initialize logger
-			logger := logger.New()
-
-			// Run security validation in production
-			if cfg.App.Environment == config.EnvProduction {
-				validator := security.NewSecureConfigValidator()
-				if err := validator.ValidateProductionConfig(); err != nil {
-					return fmt.Errorf("security validation failed: %w", err)
-				}
-				logger.Info("Security validation passed")
-			} else {
-				logger.Warn("Running in development mode - some security checks are relaxed")
-			}
-
-			logger.Info("Starting Typosentinel server", map[string]interface{}{
-				"host":    cfg.Server.Host,
-				"port":    cfg.Server.Port,
-				"version": "1.1.0",
-			})
-
-			// Create analyzer for the server
-			analyzerInstance, err := analyzer.New(cfg)
-			if err != nil {
-				return fmt.Errorf("failed to create analyzer: %w", err)
-			}
-
-			// Create REST API config from server config
-			log.Printf("[MAIN DEBUG] ===== ENHANCED CORS CONFIGURATION DEBUG =====")
-			log.Printf("[MAIN DEBUG] CORS config from environment: Enabled=%v, AllowedOrigins=%v", cfg.Server.CORS.Enabled, cfg.Server.CORS.AllowedOrigins)
-			log.Printf("[MAIN DEBUG] CORS AllowedMethods=%v", cfg.Server.CORS.AllowedMethods)
-			log.Printf("[MAIN DEBUG] CORS AllowedHeaders=%v", cfg.Server.CORS.AllowedHeaders)
-
-			// Debug viper values directly
-			log.Printf("[VIPER DEBUG] server.cors.enabled: %v", viper.Get("server.cors.enabled"))
-			log.Printf("[VIPER DEBUG] server.cors.allowed_origins: %v", viper.Get("server.cors.allowed_origins"))
-			log.Printf("[VIPER DEBUG] server.cors.allowed_methods: %v", viper.Get("server.cors.allowed_methods"))
-			log.Printf("[VIPER DEBUG] server.cors.allowed_headers: %v", viper.Get("server.cors.allowed_headers"))
-
-			// Debug environment detection
-			log.Printf("[ENV DEBUG] Environment detected: '%s'", cfg.App.Environment)
-			log.Printf("[ENV DEBUG] app.environment from viper: '%s'", viper.GetString("app.environment"))
-			log.Printf("[ENV DEBUG] TYPOSENTINEL_APP_ENVIRONMENT env var: '%s'", os.Getenv("TYPOSENTINEL_APP_ENVIRONMENT"))
-			log.Printf("[MAIN DEBUG] ===== END CORS CONFIGURATION DEBUG =====")
-
-			restConfig := config.RESTAPIConfig{
-				Enabled:  true,
-				Host:     cfg.Server.Host,
-				Port:     cfg.Server.Port,
-				BasePath: "/api",
-				Versioning: config.APIVersioning{
-					Enabled:           true,
-					Strategy:          "path",
-					DefaultVersion:    "v1",
-					SupportedVersions: []string{"v1"},
-				},
-				CORS: &cfg.Server.CORS,
-			}
-
-			// Create and start REST server
-			server := rest.NewServerWithEnterprise(restConfig, nil, analyzerInstance, nil)
-
-			// Create context for server operations
-			ctx := context.Background()
-
-			// Start server in a goroutine
-			serverErr := make(chan error, 1)
-			go func() {
-				if err := server.Start(ctx); err != nil {
-					serverErr <- err
-				}
-			}()
-
-			// Wait for interrupt signal or server error
-			interrupt := make(chan os.Signal, 1)
-			signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-
-			fmt.Printf("🚀 Typosentinel Server starting...\n")
-			fmt.Printf("📍 Host: %s\n", cfg.Server.Host)
-			fmt.Printf("🔌 Port: %d\n", cfg.Server.Port)
-			fmt.Printf("🔒 Security validation: ✅ Passed\n")
-			fmt.Printf("📊 Environment: %s\n", cfg.App.Environment)
-			fmt.Printf("🌐 Server URL: http://%s:%d\n", cfg.Server.Host, cfg.Server.Port)
-
-			select {
-			case err := <-serverErr:
-				return fmt.Errorf("server error: %w", err)
-			case sig := <-interrupt:
-				logger.Info("Received shutdown signal", map[string]interface{}{
-					"signal": sig.String(),
-				})
-
-				// Graceful shutdown
-				if err := server.Stop(ctx); err != nil {
-					logger.Error("Error during server shutdown", map[string]interface{}{
-						"error": err.Error(),
-					})
-				}
-				logger.Info("Server shutdown completed")
-			}
-
-			return nil
-		},
-	}
-
-	// Server command flags
-	serverCmd.Flags().StringP("port", "p", "8080", "Server port")
-	serverCmd.Flags().String("host", "0.0.0.0", "Server host")
-	serverCmd.Flags().Bool("dev", false, "Enable development mode")
 
 	// Version command
 	var versionCmd = &cobra.Command{
@@ -971,256 +816,18 @@ impact propagation for comprehensive supply chain risk assessment.`,
 	edgeBenchmarkCmd.Flags().Int("workers", 4, "Number of concurrent workers")
 	edgeBenchmarkCmd.Flags().Int("iterations", 3, "Number of benchmark iterations")
 
-	// QUANTUM Algorithm command
-	var quantumCmd = &cobra.Command{
-		Use:   "quantum [packages...]",
-		Short: "Quantum-inspired threat detection algorithm",
-		Long: `QUANTUM uses quantum-inspired computing principles including superposition,
-entanglement, and quantum gates for advanced threat pattern recognition.`,
-		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get flags
-			qubits, _ := cmd.Flags().GetInt("qubits")
-			entanglement, _ := cmd.Flags().GetBool("entanglement")
-			superposition, _ := cmd.Flags().GetBool("superposition")
 
-			// Create QUANTUM config
-			config := &edge.QUANTUMConfig{
-				QubitCount:                qubits,
-				CoherenceTime:             1000 * time.Microsecond,
-				DecoherenceRate:           0.01,
-				MaxEntanglementDepth:      8,
-				EntanglementThreshold:     0.7,
-				SuperpositionStates:       256,
-				AmplitudePrecision:        1e-10,
-				MeasurementBasis:          "computational",
-				ObservationWindow:         1 * time.Second,
-				ThreatThreshold:           0.8,
-				AnomalyThreshold:          0.6,
-				QuantumAdvantageThreshold: 0.9,
-			}
-			algorithm := edge.NewQUANTUMAlgorithm(config)
 
-			fmt.Printf("⚛️  QUANTUM Algorithm Analysis\n")
-			fmt.Printf("Packages: %v\n", args)
-			fmt.Printf("Qubits: %d, Entanglement: %v, Superposition: %v\n", qubits, entanglement, superposition)
-
-			ctx := context.Background()
-			for _, pkgName := range args {
-				// Create a basic package structure
-				pkg := &types.Package{
-					Name:     pkgName,
-					Version:  "latest",
-					Registry: "npm",
-				}
-
-				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
-				if err != nil {
-					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
-					continue
-				}
-
-				switch outputFormat {
-				case "json":
-					data, _ := json.MarshalIndent(result, "", "  ")
-					fmt.Println(string(data))
-				default:
-					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Algorithm: %s\n", result.Algorithm)
-					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
-					fmt.Printf("Findings: %d\n", len(result.Findings))
-
-					// AttackVectors field removed from AlgorithmResult
-
-					if len(result.Findings) > 0 {
-						fmt.Printf("Findings:\n")
-						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
-						}
-					}
-				}
-			}
-			return nil
-		},
-	}
-
-	// NEURAL Algorithm command
-	var neuralCmd = &cobra.Command{
-		Use:   "neural [packages...]",
-		Short: "Neural ensemble threat detection algorithm",
-		Long: `NEURAL uses ensemble neural networks with consensus mechanisms
-for multi-vector threat analysis and adaptive learning.`,
-		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get flags
-			networks, _ := cmd.Flags().GetInt("networks")
-			consensus, _ := cmd.Flags().GetBool("consensus")
-			learning, _ := cmd.Flags().GetBool("learning")
-
-			// Create NEURAL config
-			config := &edge.NEURALConfig{
-				NetworkCount:         networks,
-				EnsembleMethod:       "bagging",
-				VotingStrategy:       "weighted_average",
-				HiddenLayers:         []int{128, 64, 32},
-				ActivationFunction:   "relu",
-				DropoutRate:          0.2,
-				LearningRate:         0.001,
-				BatchSize:            32,
-				Epochs:               100,
-				ValidationSplit:      0.2,
-				FeatureDimensions:    256,
-				FeatureNormalization: "standard",
-				FeatureSelection:     true,
-				ThreatThreshold:      0.7,
-				ConsensusThreshold:   0.8,
-				ConfidenceThreshold:  0.6,
-				AdaptiveLearning:     learning,
-			}
-			algorithm := edge.NewNEURALAlgorithm(config)
-
-			fmt.Printf("🧠 NEURAL Algorithm Analysis\n")
-			fmt.Printf("Packages: %v\n", args)
-			fmt.Printf("Networks: %d, Consensus: %v, Learning: %v\n", networks, consensus, learning)
-
-			ctx := context.Background()
-			for _, pkgName := range args {
-				// Create a basic package structure
-				pkg := &types.Package{
-					Name:     pkgName,
-					Version:  "latest",
-					Registry: "npm",
-				}
-
-				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
-				if err != nil {
-					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
-					continue
-				}
-
-				switch outputFormat {
-				case "json":
-					data, _ := json.MarshalIndent(result, "", "  ")
-					fmt.Println(string(data))
-				default:
-					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Algorithm: %s\n", result.Algorithm)
-					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
-					fmt.Printf("Findings: %d\n", len(result.Findings))
-
-					// AttackVectors field removed from AlgorithmResult
-
-					if len(result.Findings) > 0 {
-						fmt.Printf("Findings:\n")
-						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
-						}
-					}
-				}
-			}
-			return nil
-		},
-	}
-
-	// ADAPTIVE Algorithm command
-	var adaptiveCmd = &cobra.Command{
-		Use:   "adaptive [packages...]",
-		Short: "Adaptive learning threat detection algorithm",
-		Long: `ADAPTIVE uses real-time learning and adaptation mechanisms
-for evolving threat landscapes and pattern recognition.`,
-		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get flags
-			adaptation, _ := cmd.Flags().GetBool("adaptation")
-			memory, _ := cmd.Flags().GetInt("memory")
-			forgetting, _ := cmd.Flags().GetBool("forgetting")
-
-			// Create ADAPTIVE config
-			config := &edge.ADAPTIVEConfig{
-				LearningRate:         0.01,
-				AdaptationRate:       0.05,
-				ForgetRate:           0.001,
-				MemoryCapacity:       memory,
-				PatternWindow:        100,
-				PatternThreshold:     0.8,
-				NoveltyThreshold:     0.7,
-				PerformanceThreshold: 0.85,
-				DriftThreshold:       0.1,
-				FeedbackWeight:       0.3,
-				FeedbackDecay:        0.95,
-				FeedbackAggregation:  "weighted_average",
-				UpdateStrategy:       "incremental",
-				BatchSize:            32,
-				ThreatThreshold:      0.7,
-				ConfidenceThreshold:  0.6,
-				AdaptiveThreshold:    adaptation,
-			}
-			algorithm := edge.NewADAPTIVEAlgorithm(config)
-
-			fmt.Printf("🔄 ADAPTIVE Algorithm Analysis\n")
-			fmt.Printf("Packages: %v\n", args)
-			fmt.Printf("Adaptation: %v, Memory: %d, Forgetting: %v\n", adaptation, memory, forgetting)
-
-			ctx := context.Background()
-			for _, pkgName := range args {
-				// Create a basic package structure
-				pkg := &types.Package{
-					Name:     pkgName,
-					Version:  "latest",
-					Registry: "npm",
-				}
-
-				result, err := algorithm.Analyze(ctx, []string{pkg.Name})
-				if err != nil {
-					fmt.Printf("Error analyzing %s: %v\n", pkgName, err)
-					continue
-				}
-
-				switch outputFormat {
-				case "json":
-					data, _ := json.MarshalIndent(result, "", "  ")
-					fmt.Println(string(data))
-				default:
-					fmt.Printf("\n📦 Package: %s\n", pkgName)
-					fmt.Printf("Algorithm: %s\n", result.Algorithm)
-					fmt.Printf("Packages Analyzed: %d\n", len(result.Packages))
-					fmt.Printf("Findings: %d\n", len(result.Findings))
-
-					// AttackVectors field removed from AlgorithmResult
-
-					if len(result.Findings) > 0 {
-						fmt.Printf("Findings:\n")
-						for _, finding := range result.Findings {
-							fmt.Printf("  - [%s] %s\n", finding.Severity, finding.Message)
-						}
-					}
-				}
-			}
-			return nil
-		},
-	}
 
 	// Add flags to new edge algorithm commands
-	quantumCmd.Flags().Int("qubits", 8, "Number of qubits for quantum analysis")
-	quantumCmd.Flags().Bool("entanglement", true, "Enable quantum entanglement")
-	quantumCmd.Flags().Bool("superposition", true, "Enable quantum superposition")
 
-	neuralCmd.Flags().Int("networks", 5, "Number of neural networks in ensemble")
-	neuralCmd.Flags().Bool("consensus", true, "Enable consensus mechanism")
-	neuralCmd.Flags().Bool("learning", true, "Enable adaptive learning")
 
-	adaptiveCmd.Flags().Bool("adaptation", true, "Enable real-time adaptation")
-	adaptiveCmd.Flags().Int("memory", 1000, "Memory buffer size")
-	adaptiveCmd.Flags().Bool("forgetting", true, "Enable memory forgetting")
 
 	// Add subcommands to edge command
 	edgeCmd.AddCommand(gtrCmd)
 	edgeCmd.AddCommand(runtCmd)
 	edgeCmd.AddCommand(aiccCmd)
 	edgeCmd.AddCommand(dirtCmd)
-	edgeCmd.AddCommand(quantumCmd)
-	edgeCmd.AddCommand(neuralCmd)
-	edgeCmd.AddCommand(adaptiveCmd)
 	edgeCmd.AddCommand(edgeBenchmarkCmd)
 
 	// Dependency Graph command group
@@ -1341,7 +948,6 @@ for evolving threat landscapes and pattern recognition.`,
 	rootCmd.AddCommand(scanCmd)
 	rootCmd.AddCommand(analyzeCmd)
 	rootCmd.AddCommand(scanOrgCmd)
-	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(supplyChainCmd)
 	rootCmd.AddCommand(edgeCmd)
 	rootCmd.AddCommand(graphCmd)
@@ -1458,9 +1064,7 @@ func outputAnalysisResult(result *detector.CheckPackageResult, format string) {
 
 // outputAnalysisResultTable outputs analysis results in table format
 func outputAnalysisResultTable(result *detector.CheckPackageResult) {
-	fmt.Printf("Package Analysis: %s (%s)\n", result.Package, result.Registry)
-	fmt.Printf("Threat Level: %s\n", result.ThreatLevel)
-	fmt.Printf("Confidence: %.2f\n", result.Confidence)
+    fmt.Printf("Package Analysis\n")
 	fmt.Println()
 
 	if len(result.Threats) > 0 {
@@ -1485,9 +1089,7 @@ func outputAnalysisResultTable(result *detector.CheckPackageResult) {
 		fmt.Println()
 	}
 
-	if len(result.SimilarPackages) > 0 {
-		fmt.Printf("Similar Packages: %s\n", strings.Join(result.SimilarPackages, ", "))
-	}
+    // Similar packages output removed in cleanup
 }
 
 // outputSBOM outputs scan results in SBOM format (SPDX or CycloneDX)
@@ -1809,63 +1411,6 @@ func min(a, b int) int {
 	return b
 }
 
-// outputInteractiveGraph generates an interactive HTML dependency graph
-func outputInteractiveGraph(result *analyzer.ScanResult, scanPath string, verbose bool) error {
-	// Create visualization config
-	config := &visualization.VisualizationConfig{
-		Interactive:     true,
-		ShowRiskScores:  verbose,
-		ShowMetadata:    verbose,
-		ColorScheme:     "risk",
-		Layout:          "force",
-		MaxNodes:        500,
-		MinRiskScore:    0.0,
-		OutputDirectory: "./output",
-	}
-
-	// Create visualizer
-	visualizer := visualization.NewGraphVisualizer(config)
-
-	// Generate output filename
-	baseName := filepath.Base(scanPath)
-	if baseName == "." {
-		baseName = "dependency-graph"
-	}
-	timestamp := time.Now().Format("20060102-150405")
-	outputPath := filepath.Join("./output", fmt.Sprintf("%s-interactive-%s.html", baseName, timestamp))
-
-	// Generate interactive graph
-	return visualizer.GenerateInteractiveGraph(result, outputPath)
-}
-
-// outputAdvancedSVG generates an advanced SVG dependency graph
-func outputAdvancedSVG(result *analyzer.ScanResult, scanPath string, verbose bool) error {
-	// Create visualization config
-	config := &visualization.VisualizationConfig{
-		Interactive:     false,
-		ShowRiskScores:  verbose,
-		ShowMetadata:    verbose,
-		ColorScheme:     "risk",
-		Layout:          "force",
-		MaxNodes:        500,
-		MinRiskScore:    0.0,
-		OutputDirectory: "./output",
-	}
-
-	// Create visualizer
-	visualizer := visualization.NewGraphVisualizer(config)
-
-	// Generate output filename
-	baseName := filepath.Base(scanPath)
-	if baseName == "." {
-		baseName = "dependency-graph"
-	}
-	timestamp := time.Now().Format("20060102-150405")
-	outputPath := filepath.Join("./output", fmt.Sprintf("%s-advanced-%s.svg", baseName, timestamp))
-
-	// Generate advanced SVG
-	return visualizer.GenerateAdvancedSVG(result, outputPath)
-}
 
 // extractPackageNameFromPath extracts package name from scan path
 func extractPackageNameFromPath(path string) string {
@@ -2227,10 +1772,10 @@ func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, 
 		return outputDependencyGraphDOT(result, verbose)
 	case "svg":
 		return outputDependencyGraphSVG(result, verbose)
-	case "interactive":
-		return outputInteractiveGraph(result, path, verbose)
-	case "advanced-svg":
-		return outputAdvancedSVG(result, path, verbose)
+    case "interactive":
+        return fmt.Errorf("interactive output not available")
+    case "advanced-svg":
+        return fmt.Errorf("advanced-svg output not available")
 	case "depth-analysis":
 		return performDepthAnalysis(result, path, verbose)
 	default:

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/internal/monitoring"
+
 )
 
 // EnterpriseConfig holds enterprise-specific configuration
@@ -12,7 +12,7 @@ type EnterpriseConfig struct {
 	Enabled             bool                         `yaml:"enabled" json:"enabled"`
 	License             LicenseConfig                `yaml:"license" json:"license"`
 	Cache               *CacheConfig                 `yaml:"cache" json:"cache"`
-	Monitoring          *monitoring.MonitoringConfig `yaml:"monitoring" json:"monitoring"`
+	Monitoring          interface{} `yaml:"monitoring" json:"monitoring"` // Removed monitoring dependency
 	EnterpriseSecurity  EnterpriseSecurityConfig     `yaml:"enterprise_security" json:"enterprise_security"`
 	Audit               AuditConfig                  `yaml:"audit" json:"audit"`
 	EnterpriseRateLimit EnterpriseRateLimitConfig    `yaml:"enterprise_rate_limit" json:"enterprise_rate_limit"`
@@ -375,8 +375,8 @@ func DefaultEnterpriseConfig() *EnterpriseConfig {
 			MaxSize:         100 * 1024 * 1024, // 100MB
 			CleanupInterval: time.Minute * 10,
 		},
-		Monitoring: &monitoring.MonitoringConfig{
-			Enabled: false,
+		Monitoring: map[string]interface{}{
+			"Enabled": false,
 		},
 		EnterpriseSecurity: EnterpriseSecurityConfig{
 			EnterpriseEncryption: EnterpriseEncryptionConfig{
@@ -461,10 +461,7 @@ func (ec *EnterpriseConfig) Validate() error {
 		}
 	}
 
-	// Validate monitoring configuration
-	if ec.Monitoring != nil && ec.Monitoring.Enabled {
-		// Monitoring validation can be added here
-	}
+	// Validate monitoring configuration - removed for cleanup
 
 	// Validate security configuration
 	if ec.EnterpriseSecurity.Authentication.Enabled {

@@ -407,18 +407,7 @@ func InitializeDefaultAlgorithms() error {
 		return fmt.Errorf("failed to register RUNT: %w", err)
 	}
 
-	// Register experimental algorithms
-	if err := RegisterAlgorithm(NewQUANTUMAlgorithm(nil)); err != nil {
-		return fmt.Errorf("failed to register QUANTUM: %w", err)
-	}
-
-	if err := RegisterAlgorithm(NewNEURALAlgorithm(nil)); err != nil {
-		return fmt.Errorf("failed to register NEURAL: %w", err)
-	}
-
-	if err := RegisterAlgorithm(NewADAPTIVEAlgorithm(nil)); err != nil {
-		return fmt.Errorf("failed to register ADAPTIVE: %w", err)
-	}
+	// Experimental algorithms removed for cleanup - keeping only core functional algorithms
 
 	return nil
 }

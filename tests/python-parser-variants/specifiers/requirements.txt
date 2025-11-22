@@ -1,4 +1,0 @@
-flask~=3.0.3
-scikit-learn>=1.4.0
-uvicorn<0.30.0
-fastapi!=0.115.0

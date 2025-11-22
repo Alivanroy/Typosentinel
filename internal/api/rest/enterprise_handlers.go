@@ -480,9 +480,15 @@ func (eh *EnterpriseHandlers) ListViolations(c *gin.Context) {
 		return
 	}
 
+	// Convert status string to ViolationStatus type
+	var violationStatus storage.ViolationStatus
+	if status != "" {
+		violationStatus = storage.ViolationStatus(status)
+	}
+
 	// Create filter
 	filter := storage.ListViolationsOptions{
-		Status:    status,
+		Status:    violationStatus,
 		PolicyID:  policyName, // Using PolicyID field instead of PolicyName
 		Limit:     limit,
 		Offset:    offset,

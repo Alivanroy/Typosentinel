@@ -34,8 +34,8 @@ import (
 func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "typosentinel",
-		Short: "TypoSentinel - Advanced typosquatting detection tool",
-		Long: `TypoSentinel is a comprehensive security tool for detecting typosquatting attacks,
+		Short: "Typosentinel - Advanced typosquatting detection tool",
+		Long: `Typosentinel is a comprehensive security tool for detecting typosquatting attacks,
 malicious packages, and vulnerabilities in software dependencies across multiple package managers.`,
 		SilenceUsage: true,
 	}

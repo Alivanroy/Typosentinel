@@ -1,0 +1,50 @@
+{
+  "name": "sample-ecommerce-app",
+  "version": "1.0.0",
+  "description": "Sample e-commerce application for testing malicious package detection",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lodash": "^4.17.21",
+    "axios": "^1.4.0",
+    "jsonwebtoken": "^9.0.1",
+    "bcryptjs": "^2.4.3",
+    "mongoose": "^7.4.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "express-rate-limit": "^6.8.1",
+    "express-validator": "^7.0.1",
+    "nodemailer": "^6.9.3",
+    "stripe": "^12.14.0",
+    "winston": "^3.10.0",
+    "joi": "^17.9.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.4",
+    "redis": "^4.6.7",
+    "socket.io": "^4.7.2",
+    "moment": "^2.29.4",
+    "uuid": "^9.0.0",
+    "validator": "^13.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.1",
+    "supertest": "^6.3.3"
+  },
+  "keywords": [
+    "ecommerce",
+    "sample",
+    "testing",
+    "malicious-packages"
+  ],
+  "author": "Typosentinel Testing",
+  "license": "MIT"
+}

@@ -8,7 +8,9 @@ import {
   Activity,
   Zap,
   Database,
-  Lock
+  Lock,
+  Radar,
+  AlertTriangle
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
@@ -20,6 +22,7 @@ interface SidebarProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Security Scans', href: '/scans', icon: Shield },
+  { name: 'Malicious Package Radar', href: '/malicious-packages', icon: Radar },
   { name: 'Vulnerabilities', href: '/vulnerabilities', icon: Lock },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Analytics', href: '/analytics', icon: Activity },

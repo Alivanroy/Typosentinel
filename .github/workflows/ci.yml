@@ -23,6 +23,11 @@ jobs:
           go-version: '1.23'
       - name: Go version
         run: go version
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
       - name: Build server
         run: go build ./cmd/typosentinel
       - name: Run full tests with race and coverage

@@ -428,3 +428,53 @@ func (w *WebhookAuditWriter) Close() error {
 func (w *WebhookAuditWriter) Name() string {
 	return "webhook"
 }
+
+// SyslogAuditWriter writes audit logs to syslog
+type SyslogAuditWriter struct {
+	facility string
+	priority string
+	tag      string
+}
+
+// NewSyslogAuditWriter creates a new syslog audit writer
+func NewSyslogAuditWriter(settings map[string]interface{}) (AuditWriter, error) {
+	facility := "local0"
+	if f, ok := settings["facility"].(string); ok {
+		facility = f
+	}
+
+	priority := "info"
+	if p, ok := settings["priority"].(string); ok {
+		priority = p
+	}
+
+	tag := "typosentinel"
+	if t, ok := settings["tag"].(string); ok {
+		tag = t
+	}
+
+	return &SyslogAuditWriter{
+		facility: facility,
+		priority: priority,
+		tag:      tag,
+	}, nil
+}
+
+func (s *SyslogAuditWriter) Write(entry *AuditEntry) error {
+	// For now, we'll write to stdout as a simple implementation
+	// In a real implementation, this would use the syslog package
+	fmt.Printf("[%s] %s: %s - %s\n", s.tag, entry.Timestamp.Format(time.RFC3339), entry.Action, entry.Resource)
+	return nil
+}
+
+func (s *SyslogAuditWriter) Flush() error {
+	return nil
+}
+
+func (s *SyslogAuditWriter) Close() error {
+	return nil
+}
+
+func (s *SyslogAuditWriter) Name() string {
+	return "syslog"
+}

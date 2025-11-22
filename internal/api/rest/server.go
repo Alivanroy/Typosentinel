@@ -103,15 +103,14 @@ func NewServerWithEnterprise(cfg config.RESTAPIConfig, mlPipeline *ml.MLPipeline
 
 	r.Use(loggingMiddleware())
 
-	// Add input validation middleware (temporarily disabled to fix API issues)
-	// TODO: Re-enable with less strict validation rules
-	// validationConfig := security.ValidationConfig{
-	// 	MaxBodySize:   10 * 1024 * 1024, // 10MB
-	// 	EnableLogging: true,
-	// 	Logger:        nil, // Use default logger
-	// }
-	// validationMiddleware := security.NewValidationMiddleware(validationConfig)
-	// r.Use(validationMiddleware.ValidateRequest())
+	// Add input validation middleware with safe defaults
+	validationConfig := security.ValidationConfig{
+		MaxBodySize:   10 * 1024 * 1024, // 10MB
+		EnableLogging: true,
+		Logger:        nil, // Use default logger
+	}
+	validationMiddleware := security.NewValidationMiddleware(validationConfig)
+	r.Use(validationMiddleware.ValidateRequest())
 
 	// Add rate limiting middleware if configured
 	if cfg.RateLimiting != nil {
@@ -364,6 +363,14 @@ func (s *Server) setupRoutes() {
 			} else {
 				log.Printf("[DEBUG] Threat intelligence API is nil, skipping route registration")
 			}
+
+			// Malicious Package Radar endpoints
+			maliciousPackageHandler := NewMaliciousPackageHandler(nil) // Will be initialized with real services later
+			v1.GET("/malicious-packages", maliciousPackageHandler.GetMaliciousPackages)
+			v1.GET("/campaigns", maliciousPackageHandler.GetCampaigns)
+			v1.GET("/campaigns/:id", maliciousPackageHandler.GetCampaignDetails)
+			v1.GET("/behavior-profiles/:id", maliciousPackageHandler.GetBehaviorProfile)
+			v1.GET("/malicious-packages/stats", maliciousPackageHandler.GetMaliciousPackageStats)
 		}
 
 		// Dashboard endpoints (non-versioned for frontend compatibility)
@@ -582,7 +589,7 @@ func (s *Server) connectIntegration(c *gin.Context) {
 	integrationID := c.Param("id")
 
 	// Validate integration ID
-	validIntegrations := []string{"github", "gitlab", "jenkins", "slack", "jira", "sonarqube"}
+	validIntegrations := []string{"github", "gitlab", "jenkins", "slack", "jira", "sonarqube", "splunk"}
 	validID := false
 	for _, valid := range validIntegrations {
 		if integrationID == valid {

@@ -129,6 +129,33 @@ func (ala *AuthLoggerAdapter) Error(msg string, fields ...interface{}) {
 	ala.logger.Error(msg, logFields...)
 }
 
+// authViolationStoreAdapter adapts storage.ViolationStore to auth.ViolationStore interface
+type authViolationStoreAdapter struct {
+	store *storage.ViolationStore
+}
+
+func (a *authViolationStoreAdapter) CreateViolation(ctx context.Context, violation *auth.PolicyViolation) error {
+	return a.store.CreateViolation(ctx, violation)
+}
+
+func (a *authViolationStoreAdapter) GetViolation(ctx context.Context, id string) (*auth.PolicyViolation, error) {
+	result, err := a.store.GetViolation(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	// Type assertion to convert interface{} to *auth.PolicyViolation
+	if violation, ok := result.(*auth.PolicyViolation); ok {
+		return violation, nil
+	}
+	return nil, fmt.Errorf("unexpected violation type: %T", result)
+}
+
+func (a *authViolationStoreAdapter) UpdateViolationStatus(ctx context.Context, id string, status auth.ViolationStatus, userID string, reason string) error {
+	// Convert auth.ViolationStatus to storage.ViolationStatus
+	storageStatus := storage.ViolationStatus(status)
+	return a.store.UpdateViolationStatus(ctx, id, storageStatus, userID, reason)
+}
+
 // PkgLoggerAdapter adapts logging.Logger to pkg/logger.Logger interface
 type PkgLoggerAdapter struct {
 	logger *logging.Logger
@@ -922,17 +949,14 @@ func runServer(cmd *cobra.Command, args []string) {
 	policyEngine := auth.NewPolicyEngine(authLoggerAdapter)
 	rbacEngine := auth.NewRBACEngine(&config.AuthzConfig{})
 
-	// Use database-backed violation store if database is available
-    var violationStore auth.ViolationStore
-    var dbViolationStore *storage.ViolationStore
-    if dbService != nil {
-        dbViolationStore = storage.NewViolationStore(dbService.GetDB(), pkgLogger)
-        violationStore = dbViolationStore
-        log.Printf("Using database-backed violation store")
-    } else {
-        violationStore = auth.NewMemoryViolationStore()
-        log.Printf("Using memory-backed violation store (database not available)")
-    }
+	// Use memory-backed violation store for now
+    // TODO: Implement proper database-backed violation store
+    memoryStorage := storage.NewMemoryStorage()
+    storageViolationStore := storage.NewViolationStore(memoryStorage)
+    
+    // Create adapter to implement auth.ViolationStore interface
+    violationStore := &authViolationStoreAdapter{store: storageViolationStore}
+    log.Printf("Using memory-backed violation store")
 
 	policyManager := auth.NewEnterprisePolicyManager(policyEngine, rbacEngine, violationStore, authLoggerAdapter)
 
@@ -1033,7 +1057,7 @@ func runServer(cmd *cobra.Command, args []string) {
 
 		// Create enterprise handlers if database is available
 		var enterpriseHandlers *rest.EnterpriseHandlers
-		if dbViolationStore != nil {
+		if violationStore != nil {
 			// Create auth middleware
 			authMiddleware := &auth.AuthorizationMiddleware{}
 
@@ -1042,7 +1066,7 @@ func runServer(cmd *cobra.Command, args []string) {
 				policyManager,
 				rbacEngine,
 				authMiddleware,
-				dbViolationStore,
+				storageViolationStore,
 				authLoggerAdapter,
 			)
 

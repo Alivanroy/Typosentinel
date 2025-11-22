@@ -94,6 +94,104 @@ export interface IntegrationActivity {
   details?: Record<string, any>
 }
 
+export interface MaliciousPackage {
+  id: string
+  name: string
+  ecosystem: string
+  version: string
+  riskScore: number
+  riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  behaviorScore: number
+  campaignScore: number
+  baseScore: number
+  threats: Array<{
+    type: string
+    severity: 'low' | 'medium' | 'high' | 'critical'
+    description: string
+    confidence: number
+  }>
+  behaviorSummary: {
+    filesystemActions: number
+    networkAttempts: number
+    suspiciousPatterns: number
+    processBehavior: number
+  }
+  campaignId?: string
+  campaignName?: string
+  firstSeen: string
+  lastSeen: string
+  status: 'active' | 'inactive' | 'quarantined'
+}
+
+export interface Campaign {
+  id: string
+  name: string
+  description: string
+  ecosystem: string
+  packageCount: number
+  affectedEcosystems: string[]
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  riskScore: number
+  firstSeen: string
+  lastSeen: string
+  status: 'active' | 'inactive' | 'mitigated'
+  packages: Array<{
+    name: string
+    version: string
+    ecosystem: string
+    riskScore: number
+  }>
+  indicators: Array<{
+    type: string
+    description: string
+    confidence: number
+  }>
+  networkIOCs: string[]
+  fileIOCs: string[]
+  authorSignatures: Array<{
+    name: string
+    email: string
+    confidence: number
+  }>
+}
+
+export interface BehaviorProfile {
+  packageId: string
+  packageName: string
+  ecosystem: string
+  filesystemActions: Array<{
+    action: string
+    path: string
+    timestamp: string
+    risk: 'low' | 'medium' | 'high' | 'critical'
+  }>
+  networkAttempts: Array<{
+    domain: string
+    ip: string
+    port: number
+    protocol: string
+    timestamp: string
+    risk: 'low' | 'medium' | 'high' | 'critical'
+  }>
+  suspiciousPatterns: Array<{
+    pattern: string
+    description: string
+    severity: 'low' | 'medium' | 'high' | 'critical'
+    confidence: number
+  }>
+  processBehavior: Array<{
+    action: string
+    target: string
+    timestamp: string
+    risk: 'low' | 'medium' | 'high' | 'critical'
+  }>
+  riskAssessment: {
+    overallScore: number
+    confidence: number
+    riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  }
+}
+
 export interface DatabaseInstance {
   id: string
   name: string
@@ -559,6 +657,61 @@ class ApiService {
 
   async getPerformance(): Promise<PerformanceMetrics> {
     return this.apiCall('/api/v1/dashboard/performance')
+  }
+
+  // Malicious Package Radar API methods
+  async getMaliciousPackages(filters?: {
+    riskLevel?: string
+    ecosystem?: string
+    campaignId?: string
+    status?: string
+    limit?: number
+  }): Promise<MaliciousPackage[]> {
+    const queryParams = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value.toString())
+      })
+    }
+    const endpoint = `/api/v1/malicious-packages${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+    const response = await this.apiCall<{packages: MaliciousPackage[]}>(endpoint)
+    return response.packages || []
+  }
+
+  async getCampaigns(filters?: {
+    severity?: string
+    ecosystem?: string
+    status?: string
+    limit?: number
+  }): Promise<Campaign[]> {
+    const queryParams = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value.toString())
+      })
+    }
+    const endpoint = `/api/v1/campaigns${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+    const response = await this.apiCall<{campaigns: Campaign[]}>(endpoint)
+    return response.campaigns || []
+  }
+
+  async getCampaignDetails(campaignId: string): Promise<Campaign> {
+    return this.apiCall(`/api/v1/campaigns/${campaignId}`)
+  }
+
+  async getBehaviorProfile(packageId: string): Promise<BehaviorProfile> {
+    return this.apiCall(`/api/v1/behavior-profiles/${packageId}`)
+  }
+
+  async getMaliciousPackageStats(): Promise<{
+    totalMaliciousPackages: number
+    activeCampaigns: number
+    highRiskPackages: number
+    quarantinedPackages: number
+    topThreatTypes: Array<{type: string; count: number}>
+    ecosystemDistribution: Array<{ecosystem: string; count: number}>
+  }> {
+    return this.apiCall('/api/v1/malicious-packages/stats')
   }
 
   // Real backend analysis methods

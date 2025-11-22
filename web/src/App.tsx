@@ -9,6 +9,7 @@ import { Integrations } from './pages/Integrations'
 import { Database } from './pages/Database'
 import { Team } from './pages/Team'
 import { Settings } from './pages/Settings'
+import { MaliciousPackageRadar } from './pages/MaliciousPackageRadar'
 
 import { NotificationProvider } from './contexts/NotificationContext'
 
@@ -20,7 +21,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="scans" element={<SecurityScans />} />
-    
+            <Route path="malicious-packages" element={<MaliciousPackageRadar />} />
             <Route path="vulnerabilities" element={<Vulnerabilities />} />
             <Route path="reports" element={<Reports />} />
             <Route path="analytics" element={<Analytics />} />

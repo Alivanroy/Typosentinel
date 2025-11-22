@@ -1,6 +1,6 @@
-# PlanFinale Docker Deployment Guide
+# Typosentinel Docker Deployment Guide
 
-This guide covers how to deploy PlanFinale using Docker and Docker Compose.
+This guide covers how to deploy Typosentinel using Docker and Docker Compose.
 
 ## Quick Start
 
@@ -14,8 +14,8 @@ This guide covers how to deploy PlanFinale using Docker and Docker Compose.
 ### 1. Clone and Navigate
 
 ```bash
-git clone <repository-url>
-cd planfinale
+git clone https://github.com/Alivanroy/Typosentinel.git
+cd Typosentinel
 ```
 
 ### 2. Deploy with One Command
@@ -129,17 +129,17 @@ Create a `.env` file in the project root:
 
 ```bash
 # Security
-PLANFINALE_JWT_SECRET=your-secret-key-here
+TYPOSENTINEL_JWT_SECRET=your-secret-key-here
 
 # Database
-PLANFINALE_DB_PATH=/app/data/planfinale.db
+TYPOSENTINEL_DB_PATH=/app/data/typosentinel.db
 
 # Logging
-PLANFINALE_LOG_LEVEL=info
+TYPOSENTINEL_LOG_LEVEL=info
 
 # CORS
-PLANFINALE_CORS_ENABLED=true
-PLANFINALE_CORS_ORIGINS=http://localhost:3000
+TYPOSENTINEL_CORS_ENABLED=true
+TYPOSENTINEL_CORS_ORIGINS=http://localhost:3000
 
 # Monitoring
 GRAFANA_PASSWORD=your-grafana-password
@@ -159,25 +159,25 @@ The production configuration is located at `config/production.yaml`. Key setting
 
 ### Persistent Volumes
 
-- `planfinale_data`: Application data and SQLite database
-- `planfinale_logs`: Application logs
+- `typosentinel_data`: Application data and SQLite database
+- `typosentinel_logs`: Application logs
 
 ### Volume Locations
 
 ```bash
 # View volume information
-docker volume ls | grep planfinale
-docker volume inspect planfinale_data
+docker volume ls | grep typosentinel
+docker volume inspect typosentinel_data
 ```
 
 ### Backup Data
 
 ```bash
 # Backup database
-docker run --rm -v planfinale_data:/data -v $(pwd):/backup alpine tar czf /backup/planfinale-data-backup.tar.gz -C /data .
+docker run --rm -v typosentinel_data:/data -v $(pwd):/backup alpine tar czf /backup/typosentinel-data-backup.tar.gz -C /data .
 
 # Restore database
-docker run --rm -v planfinale_data:/data -v $(pwd):/backup alpine tar xzf /backup/planfinale-data-backup.tar.gz -C /data
+docker run --rm -v typosentinel_data:/data -v $(pwd):/backup alpine tar xzf /backup/typosentinel-data-backup.tar.gz -C /data
 ```
 
 ## Health Checks and Monitoring
@@ -192,7 +192,7 @@ docker run --rm -v planfinale_data:/data -v $(pwd):/backup alpine tar xzf /backu
 When deployed with monitoring:
 
 1. **Prometheus** collects metrics from:
-   - PlanFinale API server
+   - Typosentinel API server
    - Node Exporter (system metrics)
    - Docker containers
 
@@ -204,12 +204,12 @@ When deployed with monitoring:
 
 ### Custom Metrics
 
-PlanFinale exposes custom metrics at `/metrics`:
+Typosentinel exposes custom metrics at `/metrics`:
 
-- `planfinale_scans_total`: Total number of package scans
-- `planfinale_scan_duration_seconds`: Scan duration histogram
-- `planfinale_active_connections`: Current active connections
-- `planfinale_errors_total`: Total number of errors
+- `typosentinel_scans_total`: Total number of package scans
+- `typosentinel_scan_duration_seconds`: Scan duration histogram
+- `typosentinel_active_connections`: Current active connections
+- `typosentinel_errors_total`: Total number of errors
 
 ## Troubleshooting
 
@@ -222,8 +222,8 @@ PlanFinale exposes custom metrics at `/metrics`:
 docker-compose ps
 
 # View logs
-docker-compose logs planfinale-api
-docker-compose logs planfinale-web
+docker-compose logs typosentinel-api
+docker-compose logs typosentinel-web
 
 # Check Docker daemon
 docker info
@@ -245,8 +245,8 @@ lsof -i :8080
 
 ```bash
 # Fix volume permissions
-docker-compose exec planfinale-api chown -R appuser:appgroup /app/data
-docker-compose exec planfinale-api chown -R appuser:appgroup /app/logs
+docker-compose exec typosentinel-api chown -R appuser:appgroup /app/data
+docker-compose exec typosentinel-api chown -R appuser:appgroup /app/logs
 ```
 
 #### Database Issues
@@ -254,7 +254,7 @@ docker-compose exec planfinale-api chown -R appuser:appgroup /app/logs
 ```bash
 # Reset database (WARNING: This will delete all data)
 docker-compose down
-docker volume rm planfinale_data
+docker volume rm typosentinel_data
 docker-compose up -d
 ```
 
@@ -265,8 +265,8 @@ docker-compose up -d
 docker-compose logs -f
 
 # View specific service logs
-docker-compose logs -f planfinale-api
-docker-compose logs -f planfinale-web
+docker-compose logs -f typosentinel-api
+docker-compose logs -f typosentinel-web
 
 # View logs with timestamps
 docker-compose logs -f -t
@@ -283,7 +283,7 @@ Edit `docker-compose.yml` to adjust resource limits:
 
 ```yaml
 services:
-  planfinale-api:
+  typosentinel-api:
     deploy:
       resources:
         limits:
@@ -352,7 +352,7 @@ server {
 ```yaml
 # docker-compose.yml
 services:
-  planfinale-api:
+  typosentinel-api:
     deploy:
       replicas: 3
     
@@ -363,7 +363,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - planfinale-api
+      - typosentinel-api
 ```
 
 ### Load Balancer Configuration
@@ -371,15 +371,15 @@ services:
 Create `nginx-lb.conf` for load balancing:
 
 ```nginx
-upstream planfinale_api {
-    server planfinale-api:8080;
+upstream typosentinel_api {
+    server typosentinel-api:8080;
     # Add more servers for scaling
 }
 
 server {
     listen 80;
     location /api/ {
-        proxy_pass http://planfinale_api;
+        proxy_pass http://typosentinel_api;
     }
 }
 ```
@@ -402,7 +402,7 @@ docker image prune -f
 ### Cleanup
 
 ```bash
-# Remove all PlanFinale containers and images
+# Remove all Typosentinel containers and images
 docker-compose down --rmi all
 
 # Remove volumes (WARNING: This deletes all data)

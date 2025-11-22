@@ -1,0 +1,797 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentName": "Typosentinel Security Scan",
+  "documentNamespace": "https://typosentinel.com/spdx/185e1f36-20d8-4df1-86d4-b840033f7e25",
+  "creationInfo": {
+    "created": "2025-11-21T13:19:40Z",
+    "creators": [
+      "Tool: Typosentinel"
+    ],
+    "licenseListVersion": "3.19"
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-react-i18next",
+      "name": "react-i18next",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/react-i18next"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'react-i18next' is very similar to 'react' (87.7% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-express-slow-down",
+      "name": "express-slow-down",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/express-slow-down"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'express-slow-down' is very similar to 'express' (88.2% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-express-validator",
+      "name": "express-validator",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/express-validator"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'express-validator' is very similar to 'express' (88.2% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-morgan",
+      "name": "morgan",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/morgan"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'morgan' is very similar to 'moment' (73.3% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-react-helmet-async",
+      "name": "react-helmet-async",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/react-helmet-async"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'react-helmet-async' is very similar to 'react' (85.6% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-react-router-dom",
+      "name": "react-router-dom",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/react-router-dom"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'react-router-dom' is very similar to 'react' (86.2% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-typeorm",
+      "name": "typeorm",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/typeorm"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'typeorm' is very similar to 'typescript' (84.3% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-fastapi",
+      "name": "fastapi",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/fastapi"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'fastapi' is very similar to 'flask' (70.9% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-juice",
+      "name": "juice",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/juice"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'juice' is very similar to 'jquery' (73.0% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-reflect-metadata",
+      "name": "reflect-metadata",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/reflect-metadata"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'reflect-metadata' is very similar to 'react' (74.7% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-stripe",
+      "name": "stripe",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/stripe"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'stripe' is very similar to 'typescript' (70.0% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-web-push",
+      "name": "web-push",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/web-push"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'web-push' is very similar to 'webpack' (78.3% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-react-redux",
+      "name": "react-redux",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/react-redux"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'react-redux' is very similar to 'react' (89.1% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-express-rate-limit",
+      "name": "express-rate-limit",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/express-rate-limit"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'express-rate-limit' is very similar to 'express' (87.8% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-mongodb",
+      "name": "mongodb",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/mongodb"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'mongodb' is very similar to 'moment' (71.4% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-react-dom",
+      "name": "react-dom",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/react-dom"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'react-dom' is very similar to 'react' (91.1% similarity)",
+          "severity": "high",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-react-hook-form",
+      "name": "react-hook-form",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/react-hook-form"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'react-hook-form' is very similar to 'react' (86.7% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-scipy",
+      "name": "scipy",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:pypi/scipy"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'scipy' is very similar to 'scikit-learn' (73.2% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-compression",
+      "name": "compression",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/compression"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'compression' is very similar to 'express' (72.3% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-mongoose",
+      "name": "mongoose",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/mongoose"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'mongoose' is very similar to 'moment' (70.0% similarity)",
+          "severity": "low",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-recharts",
+      "name": "recharts",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:npm/recharts"
+        }
+      ],
+      "securityVulnerabilities": [
+        {
+          "id": "TYPOSENTINEL-1",
+          "description": "Package name 'recharts' is very similar to 'react' (84.7% similarity)",
+          "severity": "medium",
+          "references": [
+            "lexical_similarity"
+          ]
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-react-i18next"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-express-slow-down"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-express-validator"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-morgan"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-react-helmet-async"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-react-router-dom"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-typeorm"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-fastapi"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-juice"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-reflect-metadata"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-stripe"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-web-push"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-react-redux"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-express-rate-limit"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-mongodb"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-react-dom"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-react-hook-form"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-scipy"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-compression"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-mongoose"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-recharts"
+    }
+  ],
+  "annotations": [
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'react-i18next' is very similar to 'react' (87.7% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'express-slow-down' is very similar to 'express' (88.2% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'express-validator' is very similar to 'express' (88.2% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'morgan' is very similar to 'moment' (73.3% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'react-helmet-async' is very similar to 'react' (85.6% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'react-router-dom' is very similar to 'react' (86.2% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'typeorm' is very similar to 'typescript' (84.3% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'fastapi' is very similar to 'flask' (70.9% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'juice' is very similar to 'jquery' (73.0% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'reflect-metadata' is very similar to 'react' (74.7% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'stripe' is very similar to 'typescript' (70.0% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'web-push' is very similar to 'webpack' (78.3% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'react-redux' is very similar to 'react' (89.1% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'express-rate-limit' is very similar to 'express' (87.8% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'mongodb' is very similar to 'moment' (71.4% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: high) - Package name 'react-dom' is very similar to 'react' (91.1% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'react-hook-form' is very similar to 'react' (86.7% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'scipy' is very similar to 'scikit-learn' (73.2% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'compression' is very similar to 'express' (72.3% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: low) - Package name 'mongoose' is very similar to 'moment' (70.0% similarity)"
+    },
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: Typosentinel",
+      "annotationDate": "2025-11-21T13:19:40Z",
+      "annotationComment": "Security threat detected: typosquatting (Severity: medium) - Package name 'recharts' is very similar to 'react' (84.7% similarity)"
+    }
+  ]
+}

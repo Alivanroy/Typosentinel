@@ -562,6 +562,60 @@ export function SecurityScans() {
                 </div>
               </div>
 
+              {/* Behavior Analysis Summary */}
+              {selectedScan.behaviorSummary && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Behavior Analysis</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-purple-600">{selectedScan.behaviorSummary.riskScore.toFixed(1)}</div>
+                      <div className="text-sm text-purple-700">Risk Score</div>
+                      <div className="text-xs text-purple-600 mt-1">{selectedScan.behaviorSummary.riskLevel.toUpperCase()}</div>
+                    </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-orange-600">{selectedScan.behaviorSummary.filesystemActions}</div>
+                      <div className="text-sm text-orange-700">File Actions</div>
+                    </div>
+                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-cyan-600">{selectedScan.behaviorSummary.networkAttempts}</div>
+                      <div className="text-sm text-cyan-700">Network Attempts</div>
+                    </div>
+                    <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 text-center">
+                      <div className="text-2xl font-bold text-pink-600">{selectedScan.behaviorSummary.suspiciousPatterns}</div>
+                      <div className="text-sm text-pink-700">Suspicious Patterns</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Campaign Information */}
+              {selectedScan.campaignInfo && selectedScan.campaignInfo.isPartOfCampaign && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Campaign Information</h3>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                      <span className="font-medium text-yellow-800">Part of Campaign: {selectedScan.campaignInfo.campaignName}</span>
+                    </div>
+                    <p className="text-sm text-yellow-700 mb-3">
+                      This package is part of a coordinated malicious campaign. Review related packages for additional threats.
+                    </p>
+                    {selectedScan.campaignInfo.relatedPackages && selectedScan.campaignInfo.relatedPackages.length > 0 && (
+                      <div>
+                        <p className="text-xs text-yellow-600 mb-2">Related packages:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedScan.campaignInfo.relatedPackages.map((pkg: {name: string, riskScore: number}, index: number) => (
+                            <span key={index} className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
+                              {pkg.name} ({pkg.riskScore.toFixed(1)})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Scan Configuration */}
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Scan Configuration</h3>

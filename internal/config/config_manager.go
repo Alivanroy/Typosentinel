@@ -665,7 +665,7 @@ func (cm *ConfigManager) Set(key string, value interface{}, source ConfigSource)
 	}
 
 	// Update metrics
-	cm.metrics.ConfigUpdates.WithLabelValues(key, source.String()).Inc()
+	cm.metrics.ConfigUpdates().WithLabelValues(key, source.String()).Inc()
 
 	logger.Info("Configuration updated", map[string]interface{}{
 		"key":    key,

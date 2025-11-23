@@ -1,0 +1,186 @@
+# Supply Chain Firewall Action
+# Reusable GitHub Action for Supply Chain Security
+
+name: 'Supply Chain Firewall'
+description: 'Block builds that contain supply chain security risks and policy violations'
+
+inputs:
+  package-file:
+    description: 'Package file to scan (package.json, requirements.txt, etc.)'
+    required: false
+    default: 'auto-detect'
+  policy-threshold:
+    description: 'Policy enforcement threshold (block, alert, review)'
+    required: false
+    default: 'block'
+  asset-criticality:
+    description: 'Asset criticality level (PUBLIC, INTERNAL, CRITICAL)'
+    required: false
+    default: 'INTERNAL'
+  fail-on-violation:
+    description: 'Fail the build on policy violations'
+    required: false
+    default: 'true'
+  typosentinel-version:
+    description: 'Version of Typosentinel to use'
+    required: false
+    default: 'latest'
+
+outputs:
+  risk-score:
+    description: 'Overall risk score from the analysis'
+  policy-action:
+    description: 'Policy action taken (ALLOWED, BLOCKED, ALERT, REVIEW)'
+  violations-found:
+    description: 'Number of policy violations found'
+  analysis-complete:
+    description: 'Whether the analysis completed successfully'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+        
+    - name: Install Typosentinel
+      shell: bash
+      run: |
+        if [ "${{ inputs.typosentinel-version }}" = "latest" ]; then
+          go install github.com/typosentinel/typosentinel@latest
+        else
+          go install github.com/typosentinel/typosentinel@${{ inputs.typosentinel-version }}
+        fi
+        
+    - name: Detect package files
+      id: detect
+      shell: bash
+      run: |
+        PACKAGE_FILES=""
+        if [ "${{ inputs.package-file }}" = "auto-detect" ]; then
+          # Auto-detect package files
+          if [ -f "package.json" ]; then
+            PACKAGE_FILES="package.json"
+          elif [ -f "requirements.txt" ]; then
+            PACKAGE_FILES="requirements.txt"
+          elif [ -f "go.mod" ]; then
+            PACKAGE_FILES="go.mod"
+          elif [ -f "pom.xml" ]; then
+            PACKAGE_FILES="pom.xml"
+          elif [ -f "Cargo.toml" ]; then
+            PACKAGE_FILES="Cargo.toml"
+          elif [ -f "composer.json" ]; then
+            PACKAGE_FILES="composer.json"
+          elif [ -f "Gemfile" ]; then
+            PACKAGE_FILES="Gemfile"
+          else
+            echo "No package file detected"
+            exit 1
+          fi
+        else
+          PACKAGE_FILES="${{ inputs.package-file }}"
+        fi
+        echo "package-files=$PACKAGE_FILES" >> $GITHUB_OUTPUT
+        echo "Detected package files: $PACKAGE_FILES"
+        
+    - name: Run supply chain analysis
+      id: analysis
+      shell: bash
+      run: |
+        echo "Running supply chain firewall analysis..."
+        
+        # Set asset criticality multiplier based on input
+        case "${{ inputs.asset-criticality }}" in
+          PUBLIC)
+            CRITICALITY_MULTIPLIER="0.5"
+            ;;
+          INTERNAL)
+            CRITICALITY_MULTIPLIER="1.0"
+            ;;
+          CRITICAL)
+            CRITICALITY_MULTIPLIER="2.0"
+            ;;
+          *)
+            CRITICALITY_MULTIPLIER="1.0"
+            ;;
+        esac
+        
+        echo "Analyzing with asset criticality: ${{ inputs.asset-criticality }} (multiplier: $CRITICALITY_MULTIPLIER)"
+        
+        # Run DIRT analysis with business-aware risk assessment
+        typosentinel edge dirt ${{ steps.detect.outputs.package-files }} \
+          --risk-threshold=0.7 \
+          --include-graph \
+          --max-depth=5 > dirt-analysis.json
+          
+        # Extract risk score from analysis
+        RISK_SCORE=$(cat dirt-analysis.json | jq -r '.risk_assessment.overallRiskScore // 0')
+        echo "risk-score=$RISK_SCORE" >> $GITHUB_OUTPUT
+        
+        # Determine policy action based on threshold
+        POLICY_THRESHOLD="${{ inputs.policy-threshold }}"
+        POLICY_ACTION="ALLOWED"
+        VIOLATIONS_FOUND=0
+        
+        if (( $(echo "$RISK_SCORE >= 0.9" | bc -l) )); then
+          POLICY_ACTION="BLOCKED"
+          VIOLATIONS_FOUND=1
+        elif (( $(echo "$RISK_SCORE >= 0.7" | bc -l) )); then
+          POLICY_ACTION="ALERT"
+          VIOLATIONS_FOUND=1
+        elif (( $(echo "$RISK_SCORE >= 0.5" | bc -l) )); then
+          POLICY_ACTION="REVIEW"
+          VIOLATIONS_FOUND=1
+        fi
+        
+        echo "policy-action=$POLICY_ACTION" >> $GITHUB_OUTPUT
+        echo "violations-found=$VIOLATIONS_FOUND" >> $GITHUB_OUTPUT
+        echo "analysis-complete=true" >> $GITHUB_OUTPUT
+        
+        echo "Risk Score: $RISK_SCORE"
+        echo "Policy Action: $POLICY_ACTION"
+        echo "Violations Found: $VIOLATIONS_FOUND"
+        
+        # Create summary
+        echo "## Supply Chain Firewall Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Risk Score:** $RISK_SCORE" >> $GITHUB_STEP_SUMMARY
+        echo "**Policy Action:** $POLICY_ACTION" >> $GITHUB_STEP_SUMMARY
+        echo "**Asset Criticality:** ${{ inputs.asset-criticality }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Violations Found:** $VIOLATIONS_FOUND" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$POLICY_ACTION" = "BLOCKED" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚠️ Build Blocked" >> $GITHUB_STEP_SUMMARY
+          echo "This build has been blocked to prevent potential supply chain attacks." >> $GITHUB_STEP_SUMMARY
+          echo "Please review the analysis results and address the identified risks." >> $GITHUB_STEP_SUMMARY
+        elif [ "$POLICY_ACTION" = "ALERT" ] || [ "$POLICY_ACTION" = "REVIEW" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚠️ Review Required" >> $GITHUB_STEP_SUMMARY
+          echo "This build contains potential supply chain risks that require manual review." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "No policy violations detected. Build can proceed safely." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Upload analysis results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: supply-chain-analysis
+        path: |
+          dirt-analysis.json
+          
+    - name: Enforce policy decision
+      if: ${{ inputs.fail-on-violation == 'true' && steps.analysis.outputs.policy-action == 'BLOCKED' }}
+      shell: bash
+      run: |
+        echo "❌ Build blocked by supply chain firewall"
+        echo "Policy violation detected with risk score: ${{ steps.analysis.outputs.risk-score }}"
+        echo "Policy action: ${{ steps.analysis.outputs.policy-action }}"
+        echo ""
+        echo "This build has been blocked to prevent potential supply chain attacks."
+        echo "Please review the analysis results and address the identified risks."
+        exit 1

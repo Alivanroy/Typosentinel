@@ -366,6 +366,10 @@ func main() {
 	r.HandleFunc("/v1/status", statusHandler).Methods("GET")
 	r.HandleFunc("/v1/stats", statsHandler).Methods("GET")
 	r.HandleFunc("/api/v1/vulnerabilities", vulnerabilitiesHandler).Methods("GET")
+	
+	// Dashboard endpoints
+	r.HandleFunc("/api/v1/dashboard/metrics", dashboardMetricsHandler).Methods("GET")
+	r.HandleFunc("/api/v1/dashboard/performance", dashboardPerformanceHandler).Methods("GET")
 
 	// Configure CORS
 	c := cors.New(cors.Options{
@@ -508,4 +512,58 @@ func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
     if err := json.NewEncoder(w).Encode(filteredVulns); err != nil {
         http.Error(w, "Internal Server Error", http.StatusInternalServerError)
     }
+}
+
+func dashboardMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
+	// Mock dashboard metrics data
+	metrics := map[string]interface{}{
+		"totalScans":        1247,
+		"threatsDetected":   89,
+		"criticalThreats":   12,
+		"packagesScanned":   5421,
+		"scanSuccessRate":   98.5,
+		"averageScanTime":   2.3,
+		"timeRange":         "24h",
+		"lastUpdated":       time.Now().Format(time.RFC3339),
+	}
+	
+	if err := json.NewEncoder(w).Encode(metrics); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func dashboardPerformanceHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	
+	// Mock performance metrics data
+	performance := map[string]interface{}{
+		"response_times": map[string]float64{
+			"api":       45.2,
+			"dashboard": 120.5,
+			"scanner":   2300.0,
+		},
+		"throughput": map[string]float64{
+			"api_requests_per_sec": 15.7,
+			"scans_per_hour":       52.3,
+		},
+		"error_rates": map[string]float64{
+			"api":     0.1,
+			"scanner": 1.5,
+		},
+		"resource_metrics": map[string]float64{
+			"cpu_usage":    35.2,
+			"memory_usage": 68.4,
+			"disk_usage":   45.1,
+			"network_io":   12.3,
+			"open_files":   234,
+			"goroutines":   89,
+		},
+		"performance_trends": []interface{}{},
+	}
+	
+	if err := json.NewEncoder(w).Encode(performance); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }

@@ -487,17 +487,15 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 	// Edge Algorithms command group
 	var edgeCmd = &cobra.Command{
 		Use:   "edge",
-		Short: "Novel edge algorithms for advanced threat detection",
-		Long: `Edge algorithms provide cutting-edge threat detection capabilities using advanced
-mathematical models and machine learning techniques for superior security analysis.`,
+		Short: "Supply chain security algorithms",
+		Long: `Edge algorithms analyze package dependencies and detect supply chain threats using proven techniques.`,
 	}
 
 	// GTR Algorithm command
 	var gtrCmd = &cobra.Command{
 		Use:   "gtr [packages...]",
-		Short: "Graph-based Threat Recognition algorithm",
-		Long: `GTR (Graph-based Threat Recognition) uses advanced graph theory and network analysis
-to identify complex threat patterns and relationships between packages.`,
+		Short: "Graph Traversal Reconnaissance algorithm",
+		Long: `GTR (Graph Traversal Reconnaissance) analyzes package dependency relationships to identify supply chain risks.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get flags
@@ -631,14 +629,12 @@ of package dependencies and network relationships for comprehensive threat detec
 	// AICC Algorithm command
 	var aiccCmd = &cobra.Command{
 		Use:   "aicc [packages...]",
-		Short: "Adaptive Intelligence Correlation Clustering algorithm",
-		Long: `AICC (Adaptive Intelligence Correlation Clustering) uses machine learning
-and adaptive clustering techniques for intelligent threat pattern recognition.`,
+		Short: "Asset Intelligence Correlation Clustering algorithm",
+		Long: `AICC (Asset Intelligence Correlation Clustering) analyzes package relationships for supply chain security assessment.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get flags
 			clusters, _ := cmd.Flags().GetInt("clusters")
-			adaptiveMode, _ := cmd.Flags().GetBool("adaptive")
 			includeCorrelation, _ := cmd.Flags().GetBool("include-correlation")
 
 			// Create AICC config
@@ -646,14 +642,14 @@ and adaptive clustering techniques for intelligent threat pattern recognition.`,
 				MaxChainDepth:     clusters,
 				MinTrustScore:     0.7,
 				RequireTimestamps: true,
-				AllowSelfSigned:   !adaptiveMode,
+				AllowSelfSigned:   true,
 				PolicyStrictness:  "medium",
 			}
 			algorithm := edge.NewAICCAlgorithm(config)
 
 			fmt.Printf("🤖 AICC Algorithm Analysis\n")
 			fmt.Printf("Packages: %v\n", args)
-			fmt.Printf("Clusters: %d, Adaptive: %v\n", clusters, adaptiveMode)
+			fmt.Printf("Clusters: %d\n", clusters)
 
 			ctx := context.Background()
 			for _, pkgName := range args {
@@ -805,7 +801,6 @@ impact propagation for comprehensive supply chain risk assessment.`,
 	runtCmd.Flags().Bool("include-features", false, "Include feature analysis in output")
 
 	aiccCmd.Flags().Int("clusters", 5, "Number of clusters for analysis")
-	aiccCmd.Flags().Bool("adaptive", true, "Enable adaptive clustering mode")
 	aiccCmd.Flags().Bool("include-correlation", false, "Include correlation metrics")
 
 	dirtCmd.Flags().Int("max-depth", 8, "Maximum dependency traversal depth")

@@ -4,36 +4,36 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![CI Status](https://github.com/Alivanroy/Typosentinel/workflows/CI/badge.svg)](https://github.com/Alivanroy/Typosentinel/actions)
 
-**Typosentinel** is a comprehensive security tool for detecting malicious open-source packages, typosquatting attacks, and supply chain vulnerabilities across multiple package managers and programming languages.
+**Typosentinel** is an intelligent supply chain firewall that actively blocks malicious packages, typosquatting attacks, and supply chain threats in real-time. It transforms from a security scanner into an active protection system with business-aware risk assessment and policy-based blocking.
 
 ## 🚀 Features
 
-### Core Security Features
-- **Multi-Language Support**: Detects typosquatting across npm, PyPI, Go modules, Maven, NuGet, and more
-- **Advanced Detection**: String similarity, visual similarity, and behavioral analysis
-- **Supply Chain Security**: Comprehensive supply chain analysis with build integrity verification
-- **Vulnerability Scanning**: Integration with multiple vulnerability databases (OSV, NVD, GitHub)
-- **Real-time Monitoring**: Continuous dependency monitoring with intelligent caching
+### Supply Chain Firewall Features
+- **Active Blocking**: Real-time package interception and policy-based blocking
+- **Business-Aware Risk Assessment**: Asset criticality scoring (CRITICAL/INTERNAL/PUBLIC) with intelligent multipliers
+- **Policy Engine**: 5 default security policies with customizable rules and thresholds
+- **CI/CD Integration**: GitHub Actions integration for build-time package blocking
+- **Multi-Language Support**: npm, PyPI, Go modules, Maven, NuGet, and more package managers
 
-### Advanced Analysis
-- **Behavior Analysis**: Dynamic sandbox analysis of package behavior
-- **Campaign Intelligence**: Group related malicious packages into campaigns
-- **Risk Scoring**: Multi-factor risk assessment with behavior and campaign factors
-- **Threat Intelligence**: Integration with threat intelligence feeds
-- **Enhanced Detection**: Advanced algorithms for sophisticated threats
+### Advanced Detection & Analysis
+- **DIRT Algorithm**: Business-aware Dependency Impact Risk Traversal with asset criticality scoring
+- **Campaign Intelligence**: Group related malicious packages into coordinated campaigns
+- **Behavioral Analysis**: Dynamic sandbox analysis with filesystem and network monitoring
+- **Threat Intelligence**: Real-time integration with multiple threat intelligence feeds
+- **Enhanced Detection**: Advanced algorithms for sophisticated typosquatting and supply chain attacks
 
 ### Integration & Deployment
-- **Web Interface**: Modern React-based dashboard for security monitoring
-- **REST API**: Comprehensive API for CI/CD pipeline integration
+- **Firewall Dashboard**: Real-time supply chain firewall monitoring with live activity feed
+- **REST API**: Comprehensive API for CI/CD pipeline integration and policy enforcement
 - **Organization Scanning**: Multi-platform repository scanning (GitHub, GitLab, Bitbucket)
 - **SBOM Generation**: SPDX and CycloneDX software bill of materials support
-- **Docker Deployment**: Complete containerized deployment with monitoring
+- **Docker Deployment**: Complete containerized deployment with monitoring and alerting
 
 ### Performance & Reliability
-- **Performance Optimized**: Efficient scanning with caching and parallel processing
+- **Real-time Processing**: Sub-second response times for policy enforcement
 - **Enterprise Ready**: Authentication, RBAC, audit logging, and compliance features
-- **Comprehensive Reporting**: Detailed analysis reports with risk scoring
-- **Multi-format Output**: JSON, YAML, SARIF, table, and terminal output
+- **Policy Reporting**: Detailed policy violation reports with business impact analysis
+- **Multi-format Output**: JSON, YAML, SARIF, table, and terminal output with firewall metrics
 
 ## 📦 Installation
 
@@ -143,14 +143,14 @@ typosentinel server --port 8080 --host 0.0.0.0
 typosentinel server --dev --verbose
 ```
 
-### Web Interface Features
+### Firewall Dashboard Features
 
-- **📊 Dashboard**: Real-time security metrics and threat overview
-- **🔍 Package Scanner**: Interactive package analysis with live results
-- **📈 Analytics**: Historical data and trend analysis
-- **⚙️ Configuration**: Web-based configuration management
-- **🎯 Malicious Package Radar**: Campaign view and high-risk package tracking
-- **📋 Reports**: Downloadable security reports and SBOM generation
+- **🛡️ Firewall Status**: Real-time supply chain firewall monitoring with live activity feed
+- **📊 Security Metrics**: Policy violations, blocked packages, and threat intelligence
+- **🔍 Package Analysis**: Interactive package scanning with business-aware risk assessment
+- **📈 Activity Feed**: Live stream of security events and policy enforcements
+- **⚙️ Policy Management**: Web-based configuration of security policies and thresholds
+- **📋 Reports**: Downloadable security reports with business impact analysis
 
 ### API Endpoints
 
@@ -227,40 +227,38 @@ POST /api/v1/scan/organization
 
 ## 🚀 CI/CD Integration
 
-### GitHub Actions Example
+### GitHub Actions Supply Chain Firewall
 
 ```yaml
-# .github/workflows/security-scan.yml
-name: Security Scan
+# .github/workflows/supply-chain-firewall.yml
+name: Supply Chain Firewall
 on: [push, pull_request]
 
 jobs:
-  typo-scan:
+  supply-chain-protection:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download Typosentinel
-        run: |
-          wget https://github.com/Alivanroy/Typosentinel/releases/latest/download/typosentinel-linux-amd64
-          chmod +x typosentinel-linux-amd64
-          sudo mv typosentinel-linux-amd64 /usr/local/bin/typosentinel
-      - name: Scan for malicious packages
-        run: |
-          typosentinel scan --output sarif --output-file results.sarif .
-          # Fail build only on high-confidence detections
-          typosentinel scan --fail-on malicious --format json .
-      - name: Upload results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
+      - name: Supply Chain Firewall
+        uses: Alivanroy/Typosentinel/.github/actions/supply-chain-firewall@main
         with:
-          sarif_file: results.sarif
+          policy-config: |
+            policies:
+              - name: "Block Critical Risk"
+                condition: "risk_score >= 0.9"
+                action: "BLOCK"
+              - name: "Alert Typosquatting"
+                condition: "typosquatting_score >= 0.8"
+                action: "ALERT"
+          asset-criticality: "INTERNAL"
+          fail-on-policy-violation: true
 ```
 
-### GitLab CI Example
+### GitLab CI Supply Chain Protection
 
 ```yaml
 # .gitlab-ci.yml
-typo_scan:
+supply_chain_firewall:
   stage: security
   image: alpine:latest
   before_script:
@@ -268,7 +266,7 @@ typo_scan:
     - wget -O typosentinel https://github.com/Alivanroy/Typosentinel/releases/latest/download/typosentinel-linux-amd64
     - chmod +x typosentinel
   script:
-    - ./typosentinel scan --output gitlab-sast --output-file gl-sast-report.json .
+    - ./typosentinel supply-chain policy-enforce --config policies.yaml --asset-criticality INTERNAL .
   artifacts:
     reports:
       sast: gl-sast-report.json
@@ -281,14 +279,15 @@ typo_scan:
 ## 📖 Documentation
 
 ### Core Documentation
-- [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
-- [API Documentation](docs/API_DOCUMENTATION.md) - REST API reference
-- [Docker Deployment Guide](DOCKER.md) - Complete Docker deployment instructions
+- [User Guide](docs/USER_GUIDE.md) - Supply chain firewall configuration and usage
+- [API Documentation](docs/API_DOCUMENTATION.md) - REST API for policy management and enforcement
+- [Docker Deployment Guide](DOCKER.md) - Complete containerized firewall deployment
 
 ### Advanced Features
-- [Behavior Analysis](internal/behavior/) - Dynamic sandbox analysis implementation
-- [Campaign Intelligence](internal/campaign/) - Package grouping and threat intelligence
-- [Risk Scoring](internal/risk/) - Enhanced risk assessment engine
+- [Supply Chain Policy Engine](internal/supplychain/) - Business-aware policy enforcement system
+- [DIRT Algorithm](internal/edge/) - Dependency Impact Risk Traversal with asset criticality
+- [Campaign Intelligence](internal/campaign/) - Coordinated threat campaign detection
+- [Business-Aware Risk Assessment](internal/edge/dirt.go) - Asset criticality scoring and risk multipliers
 
 ### Development & Deployment
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project

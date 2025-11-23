@@ -27,6 +27,16 @@ type AuditLogConfig struct {
 	IncludeMetadata bool   `json:"include_metadata"`
 }
 
+// AuditEvent represents a generic audit event
+type AuditEvent struct {
+	EventType string                 `json:"event_type"`
+	IPAddress string                 `json:"ip_address,omitempty"`
+	UserAgent string                 `json:"user_agent,omitempty"`
+	UserID    *string                `json:"user_id,omitempty"`
+	Success   bool                   `json:"success"`
+	EventData map[string]interface{} `json:"event_data,omitempty"`
+}
+
 // AuditLogEntry represents a single audit log entry
 type AuditLogEntry struct {
 	Timestamp   time.Time              `json:"timestamp"`

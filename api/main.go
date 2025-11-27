@@ -12,7 +12,11 @@ import (
 	"sync"
 	"time"
 
+	"bytes"
+	"net/smtp"
+
 	apimetrics "github.com/Alivanroy/Typosentinel/internal/api/metrics"
+	apilm "github.com/Alivanroy/Typosentinel/internal/api/middleware"
 	pkgmetrics "github.com/Alivanroy/Typosentinel/pkg/metrics"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -279,6 +283,23 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(result); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+
+	if result.RiskLevel >= 3 {
+		if url := os.Getenv("SLACK_WEBHOOK_URL"); url != "" {
+			payload := map[string]interface{}{"text": fmt.Sprintf("High risk detected: %s (%s) risk=%d", result.PackageName, result.Registry, result.RiskLevel)}
+			b, _ := json.Marshal(payload)
+			_, _ = http.Post(url, "application/json", bytes.NewBuffer(b))
+		}
+		host := os.Getenv("SMTP_HOST")
+		user := os.Getenv("SMTP_USER")
+		pass := os.Getenv("SMTP_PASS")
+		to := os.Getenv("EMAIL_TO")
+		from := os.Getenv("EMAIL_FROM")
+		if host != "" && user != "" && pass != "" && to != "" && from != "" {
+			msg := []byte("Subject: TypoSentinel Alert\r\n\r\n" + fmt.Sprintf("High risk detected: %s (%s) risk=%d", result.PackageName, result.Registry, result.RiskLevel))
+			_ = smtp.SendMail(host+":587", smtp.PlainAuth("", user, pass, host), from, []string{to}, msg)
+		}
+	}
 }
 
 func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
@@ -513,8 +534,19 @@ func main() {
 	r.HandleFunc("/test", testHandler).Methods("GET")
 
 	// API endpoints with auth and rate limiting
-	r.Handle("/v1/analyze", rateLimitMiddleware(authMiddleware(http.HandlerFunc(analyzeHandler)))).Methods("POST")
-	r.Handle("/v1/analyze/batch", rateLimitMiddleware(authMiddleware(http.HandlerFunc(batchAnalyzeHandler)))).Methods("POST")
+	if dsn := os.Getenv("RATE_LIMIT_REDIS_URL"); dsn != "" {
+		if rl, err := apilm.NewRedisLimiter(dsn, apilm.RatePolicy{Limit: 10, Window: time.Minute}); err == nil {
+			wrap := apilm.RateLimitMiddleware(rl, func(r *http.Request) string { return getClientIP(r) })
+			r.Handle("/v1/analyze", wrap(authMiddleware(http.HandlerFunc(analyzeHandler)))).Methods("POST")
+			r.Handle("/v1/analyze/batch", wrap(authMiddleware(http.HandlerFunc(batchAnalyzeHandler)))).Methods("POST")
+		} else {
+			r.Handle("/v1/analyze", rateLimitMiddleware(authMiddleware(http.HandlerFunc(analyzeHandler)))).Methods("POST")
+			r.Handle("/v1/analyze/batch", rateLimitMiddleware(authMiddleware(http.HandlerFunc(batchAnalyzeHandler)))).Methods("POST")
+		}
+	} else {
+		r.Handle("/v1/analyze", rateLimitMiddleware(authMiddleware(http.HandlerFunc(analyzeHandler)))).Methods("POST")
+		r.Handle("/v1/analyze/batch", rateLimitMiddleware(authMiddleware(http.HandlerFunc(batchAnalyzeHandler)))).Methods("POST")
+	}
 	r.HandleFunc("/v1/status", statusHandler).Methods("GET")
 	r.HandleFunc("/v1/stats", statsHandler).Methods("GET")
 	r.HandleFunc("/api/v1/vulnerabilities", vulnerabilitiesHandler).Methods("GET")

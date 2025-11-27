@@ -17,9 +17,11 @@ import (
 
 	apimetrics "github.com/Alivanroy/Typosentinel/internal/api/metrics"
 	apilm "github.com/Alivanroy/Typosentinel/internal/api/middleware"
+	appcfg "github.com/Alivanroy/Typosentinel/internal/config"
 	pkgmetrics "github.com/Alivanroy/Typosentinel/pkg/metrics"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	redis "github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
@@ -190,12 +192,65 @@ func readyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Demo-Mode", "true")
 
-	response := ReadyResponse{
-		Ready:     true,
-		Timestamp: time.Now(),
+	// Redis readiness: prefer internal config; fall back to env DSN
+	cfgMgr := appcfg.NewManager()
+	_ = cfgMgr.Load(".")
+	cfg := cfgMgr.Get()
+	var redisDSN string
+	var redisConfigured bool
+	if cfg != nil && cfg.Redis.Enabled {
+		if cfg.Redis.Password != "" {
+			redisDSN = fmt.Sprintf("redis://:%s@%s:%d/%d", cfg.Redis.Password, cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Database)
+		} else {
+			redisDSN = fmt.Sprintf("redis://%s:%d/%d", cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Database)
+		}
+		redisConfigured = true
+	} else {
+		redisDSN = os.Getenv("RATE_LIMIT_REDIS_URL")
+		redisConfigured = redisDSN != ""
+	}
+	redisOK := false
+	if redisConfigured {
+		if opt, err := redis.ParseURL(redisDSN); err == nil {
+			c := redis.NewClient(opt)
+			if c.Ping(r.Context()).Err() == nil {
+				redisOK = true
+			}
+		}
+		apimetrics.SetRedisConnected(redisOK)
 	}
 
-	json.NewEncoder(w).Encode(response)
+	// Webhook providers readiness via env secrets
+	providers := map[string]string{
+		"github":    os.Getenv("GITHUB_WEBHOOK_SECRET"),
+		"gitlab":    os.Getenv("GITLAB_WEBHOOK_TOKEN"),
+		"bitbucket": os.Getenv("BITBUCKET_WEBHOOK_SECRET"),
+		"azure":     os.Getenv("AZURE_WEBHOOK_SECRET"),
+	}
+	webhooks := make(map[string]map[string]bool)
+	for p, secret := range providers {
+		configured := secret != ""
+		apimetrics.SetWebhookProviderEnabled(p, configured)
+		apimetrics.SetWebhookProviderSignatureConfigured(p, configured)
+		webhooks[p] = map[string]bool{"configured": configured}
+	}
+
+	ready := true
+	if redisConfigured && !redisOK {
+		ready = false
+	}
+
+	resp := map[string]interface{}{
+		"ready":     ready,
+		"timestamp": time.Now(),
+		"redis": map[string]interface{}{
+			"configured": redisConfigured,
+			"connected":  redisOK,
+		},
+		"webhooks": webhooks,
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {

@@ -256,6 +256,11 @@ Measured locally (Windows 11, i7‑12700H, Go 1.23):
 
 To reproduce: `go test -bench=. -benchmem ./tests/benchmarks/...`
 
+Throughput benchmarks:
+
+- Small project (50 deps): ~6.75ms/run, ~1.13MB alloc, ~14.8k allocs/run
+- Medium project (200 deps): ~33.6ms/run, ~4.54MB alloc, ~59.1k allocs/run
+
 ## 🚀 CI/CD Integration
 
 ### GitHub Actions Supply Chain Firewall

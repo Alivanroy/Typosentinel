@@ -40,7 +40,7 @@ jobs:
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --source . --verbose
+          args: detect --source . --config-path .gitleaks.toml --redact --verbose --exit-code 1
       - name: Run Unit Tests
         run: go test ./... -v
       - name: Coverage

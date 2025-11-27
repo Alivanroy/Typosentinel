@@ -474,6 +474,16 @@ func main() {
 	r.HandleFunc("/api/v1/dashboard/metrics", dashboardMetricsHandler).Methods("GET")
 	r.HandleFunc("/api/v1/dashboard/performance", dashboardPerformanceHandler).Methods("GET")
 
+	// Planned scans listing
+	r.HandleFunc("/api/v1/scans", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotImplemented)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error":  "This endpoint is planned for v1.1",
+			"status": "not_implemented",
+		})
+	}).Methods("GET")
+
 	// Configure CORS
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:3000", "http://localhost:8080"},

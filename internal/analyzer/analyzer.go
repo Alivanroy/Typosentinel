@@ -1,13 +1,14 @@
 package analyzer
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"regexp"
+    "context"
+    "encoding/json"
+    "encoding/xml"
+    "fmt"
+    "io"
+    "os"
+    "path/filepath"
+    "regexp"
 	"sort"
 	"strings"
 	"time"
@@ -403,24 +404,25 @@ func (a *Analyzer) discoverDependencyFiles(path string, options *ScanOptions) ([
 	var depFiles []string
 
 	// Known dependency file patterns
-	patterns := []string{
-		"package.json",
-		"package-lock.json",
-		"yarn.lock",
-		"pnpm-lock.yaml",
-		"requirements.txt",
-		"requirements-dev.txt",
-		"Pipfile",
-		"Pipfile.lock",
-		"pyproject.toml",
-		"poetry.lock",
-		"go.mod",
-		"go.sum",
-		"Cargo.toml",
-		"Cargo.lock",
-		"Gemfile",
-		"Gemfile.lock",
-		"composer.json",
+    patterns := []string{
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "requirements.txt",
+        "requirements-dev.txt",
+        "Pipfile",
+        "Pipfile.lock",
+        "pyproject.toml",
+        "poetry.lock",
+        "go.mod",
+        "go.sum",
+        "pom.xml",
+        "Cargo.toml",
+        "Cargo.lock",
+        "Gemfile",
+        "Gemfile.lock",
+        "composer.json",
 		"composer.lock",
 	}
 
@@ -464,12 +466,16 @@ func (a *Analyzer) parseDependencyFile(filePath string, options *ScanOptions) ([
 	}
 
 	// Parse dependencies based on file type
-	switch fileType {
-	case "npm":
-		return a.parseNPMDependencies(filePath, options)
-	case "python":
-		return a.parsePythonDependencies(filePath, options)
-	default:
+switch fileType {
+case "npm":
+    return a.parseNPMDependencies(filePath, options)
+case "python":
+    return a.parsePythonDependencies(filePath, options)
+case "go":
+    return a.parseGoDependencies(filePath)
+case "maven":
+    return a.parseMavenDependencies(filePath)
+default:
 		// Check if we have a registry connector for this type
 		if connector, exists := a.registries[registryType]; exists {
 			// Use the registry connector to parse dependencies
@@ -497,6 +503,54 @@ func (a *Analyzer) parsePythonDependencies(filePath string, options *ScanOptions
     default:
         return []types.Dependency{}, nil
     }
+}
+
+func (a *Analyzer) parseGoDependencies(filePath string) ([]types.Dependency, error) {
+    data, err := os.ReadFile(filePath)
+    if err != nil { return nil, fmt.Errorf("failed to read go.mod: %w", err) }
+    lines := strings.Split(string(data), "\n")
+    var deps []types.Dependency
+    inBlock := false
+    for _, line := range lines {
+        l := strings.TrimSpace(line)
+        if l == "" || strings.HasPrefix(l, "//") { continue }
+        if strings.HasPrefix(l, "require (") { inBlock = true; continue }
+        if inBlock && strings.HasPrefix(l, ")") { inBlock = false; continue }
+        if strings.HasPrefix(l, "require ") {
+            parts := strings.Fields(l)
+            if len(parts) >= 3 {
+                deps = append(deps, types.Dependency{Name: parts[1], Version: parts[2], Registry: "go", Source: filePath, Direct: true})
+            }
+            continue
+        }
+        if inBlock {
+            parts := strings.Fields(l)
+            if len(parts) >= 2 {
+                deps = append(deps, types.Dependency{Name: parts[0], Version: parts[1], Registry: "go", Source: filePath, Direct: true})
+            }
+        }
+    }
+    return deps, nil
+}
+
+func (a *Analyzer) parseMavenDependencies(filePath string) ([]types.Dependency, error) {
+    data, err := os.ReadFile(filePath)
+    if err != nil { return nil, fmt.Errorf("failed to read pom.xml: %w", err) }
+    type dep struct{ GroupID, ArtifactID, Version string }
+    type pom struct{
+        Dependencies struct{ Dependency []struct{ GroupID string `xml:"groupId"`; ArtifactID string `xml:"artifactId"`; Version string `xml:"version"` } `xml:"dependency"` } `xml:"dependencies"`
+    }
+    var p pom
+    if err := xml.Unmarshal(data, &p); err != nil { return nil, fmt.Errorf("failed to parse pom.xml: %w", err) }
+    var deps []types.Dependency
+    for _, d := range p.Dependencies.Dependency {
+        name := d.GroupID + ":" + d.ArtifactID
+        ver := d.Version
+        if name != ":" {
+            deps = append(deps, types.Dependency{Name: name, Version: ver, Registry: "maven", Source: filePath, Direct: true})
+        }
+    }
+    return deps, nil
 }
 
 func (a *Analyzer) parsePythonRequirements(filePath string) ([]types.Dependency, error) {
@@ -1167,8 +1221,10 @@ func (a *Analyzer) detectFileType(filePath string) (fileType, registryType strin
 		return "npm", "npm"
 	case "requirements.txt", "requirements-dev.txt", "Pipfile", "Pipfile.lock", "pyproject.toml", "poetry.lock":
 		return "python", "pypi"
-	case "go.mod", "go.sum":
-		return "go", "go"
+    case "go.mod", "go.sum":
+        return "go", "go"
+    case "pom.xml":
+        return "maven", "maven"
 	case "Cargo.toml", "Cargo.lock":
 		return "rust", "cargo"
 	case "Gemfile", "Gemfile.lock":

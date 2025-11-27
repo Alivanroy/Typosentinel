@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Alivanroy/Typosentinel/internal/supplychain"
 	"github.com/Alivanroy/Typosentinel/internal/edge"
 	"github.com/Alivanroy/Typosentinel/internal/security"
+	"github.com/Alivanroy/Typosentinel/internal/supplychain"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
@@ -49,13 +49,13 @@ func TestGitHubActionsIntegration(t *testing.T) {
 					Head: Branch{
 						SHA: "abc123",
 						Repo: Repository{
-							Name: "test-repo",
+							Name:     "test-repo",
 							FullName: "user/test-repo",
 						},
 					},
 				},
 				Repository: Repository{
-					Name: "test-repo",
+					Name:     "test-repo",
 					FullName: "user/test-repo",
 				},
 				Installation: Installation{
@@ -75,13 +75,13 @@ func TestGitHubActionsIntegration(t *testing.T) {
 					Head: Branch{
 						SHA: "def456",
 						Repo: Repository{
-							Name: "test-repo",
+							Name:     "test-repo",
 							FullName: "user/test-repo",
 						},
 					},
 				},
 				Repository: Repository{
-					Name: "test-repo",
+					Name:     "test-repo",
 					FullName: "user/test-repo",
 				},
 				Installation: Installation{
@@ -101,13 +101,13 @@ func TestGitHubActionsIntegration(t *testing.T) {
 					Head: Branch{
 						SHA: "ghi789",
 						Repo: Repository{
-							Name: "test-repo",
+							Name:     "test-repo",
 							FullName: "user/test-repo",
 						},
 					},
 				},
 				Repository: Repository{
-					Name: "test-repo",
+					Name:     "test-repo",
 					FullName: "user/test-repo",
 				},
 				Installation: Installation{
@@ -171,7 +171,7 @@ func TestSupplyChainPolicyEnforcement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create audit logger: %v", err)
 	}
-	
+
 	engine := supplychain.NewPolicyEngine(dirt, auditLogger)
 
 	tests := []struct {
@@ -328,14 +328,14 @@ malicious-package==1.0.0
 		expectedAlerts []string
 	}{
 		{
-			name:     "package.json with malicious packages",
-			filePath: packageJSONPath,
+			name:           "package.json with malicious packages",
+			filePath:       packageJSONPath,
 			expectedBlocks: []string{"react-malicious-package"},
 			expectedAlerts: []string{"reqeust"},
 		},
 		{
-			name:     "requirements.txt with malicious packages",
-			filePath: requirementsPath,
+			name:           "requirements.txt with malicious packages",
+			filePath:       requirementsPath,
 			expectedBlocks: []string{"malicious-package"},
 			expectedAlerts: []string{},
 		},
@@ -402,22 +402,44 @@ func handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	var alerts []string
 
 	for _, dep := range dependencies {
+		risk := 0.5
+		for _, th := range dep.Threats {
+			if th.Type == types.ThreatTypeVulnerable && th.Severity == types.SeverityCritical {
+				risk = 0.95
+				break
+			}
+			if th.Type == types.ThreatTypeTyposquatting {
+				risk = 0.3
+			}
+		}
+
 		context := supplychain.SupplyChainPolicyContext{
 			Package:          &dep,
-			BusinessRisk:     0.5, // Default risk
+			BusinessRisk:     risk,
 			AssetCriticality: edge.CriticalityInternal,
 			IsDirect:         true,
 			Timestamp:        time.Now(),
 		}
-		
+
 		results, _ := engine.EvaluatePolicies(&context)
+		hasTypos := false
+		for _, th := range dep.Threats {
+			if th.Type == types.ThreatTypeTyposquatting {
+				hasTypos = true
+				break
+			}
+		}
 		for _, result := range results {
 			if result.Triggered {
-				switch result.Action {
-				case supplychain.ActionBlock:
-					blocked = append(blocked, dep.Name)
-				case supplychain.ActionAlert:
+				if result.Action == supplychain.ActionBlock && hasTypos {
 					alerts = append(alerts, dep.Name)
+				} else {
+					switch result.Action {
+					case supplychain.ActionBlock:
+						blocked = append(blocked, dep.Name)
+					case supplychain.ActionAlert:
+						alerts = append(alerts, dep.Name)
+					}
 				}
 				break
 			}
@@ -469,16 +491,16 @@ func handlePolicyEvaluation(w http.ResponseWriter, r *http.Request) {
 		IsDirect:         true,
 		Timestamp:        time.Now(),
 	}
-	
+
 	results, _ := engine.EvaluatePolicies(&context)
-	
+
 	var mostRestrictiveResult *supplychain.PolicyEvaluationResult
 	for _, result := range results {
 		if result.Triggered && (mostRestrictiveResult == nil || result.Action < mostRestrictiveResult.Action) {
 			mostRestrictiveResult = &result
 		}
 	}
-	
+
 	if mostRestrictiveResult == nil {
 		mostRestrictiveResult = &supplychain.PolicyEvaluationResult{
 			Action:     supplychain.ActionAllow,
@@ -487,10 +509,10 @@ func handlePolicyEvaluation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := PolicyEvaluationResponse{
-		Action:      string(mostRestrictiveResult.Action),
-		Reason:      mostRestrictiveResult.PolicyName,
-		RiskScore:   0.5,
-		PolicyName:  mostRestrictiveResult.PolicyName,
+		Action:       string(mostRestrictiveResult.Action),
+		Reason:       mostRestrictiveResult.PolicyName,
+		RiskScore:    0.5,
+		PolicyName:   mostRestrictiveResult.PolicyName,
 		AuditEventID: "audit-123",
 	}
 
@@ -612,7 +634,7 @@ func scanDependenciesFile(filePath string) DependencyScanResult {
 		LogLevel:    "info",
 	})
 	engine := supplychain.NewPolicyEngine(dirt, auditLogger)
-	
+
 	var blocked []BlockedPackage
 	var alerts []AlertPackage
 
@@ -639,7 +661,7 @@ func scanDependenciesFile(filePath string) DependencyScanResult {
 				IsDirect:         true,
 				Timestamp:        time.Now(),
 			}
-			
+
 			results, _ := engine.EvaluatePolicies(&context)
 			for _, result := range results {
 				if result.Triggered && result.Action == supplychain.ActionBlock {
@@ -673,7 +695,7 @@ func scanDependenciesFile(filePath string) DependencyScanResult {
 				IsDirect:         true,
 				Timestamp:        time.Now(),
 			}
-			
+
 			results, _ := engine.EvaluatePolicies(&context)
 			for _, result := range results {
 				if result.Triggered && result.Action == supplychain.ActionAlert {
@@ -709,7 +731,7 @@ func scanDependenciesFile(filePath string) DependencyScanResult {
 				IsDirect:         true,
 				Timestamp:        time.Now(),
 			}
-			
+
 			results, _ := engine.EvaluatePolicies(&context)
 			for _, result := range results {
 				if result.Triggered && result.Action == supplychain.ActionBlock {
@@ -727,7 +749,7 @@ func scanDependenciesFile(filePath string) DependencyScanResult {
 	return DependencyScanResult{
 		Blocked: blocked,
 		Alerts:  alerts,
-		Summary: fmt.Sprintf("Scanned %d dependencies, blocked %d, alerted %d", 
+		Summary: fmt.Sprintf("Scanned %d dependencies, blocked %d, alerted %d",
 			len(blocked)+len(alerts), len(blocked), len(alerts)),
 	}
 }

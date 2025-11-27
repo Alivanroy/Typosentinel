@@ -1,3 +1,4 @@
+// Package main implements the TypoSentinel demo API server and endpoints.
 package main
 
 import (
@@ -431,6 +432,14 @@ func validatePackageInput(name, registry string) error {
 		if !pypiValid(name) {
 			return fmt.Errorf("Invalid PyPI package name")
 		}
+	case "go":
+		if !goValid(name) {
+			return fmt.Errorf("Invalid Go package name")
+		}
+	case "maven":
+		if !mavenValid(name) {
+			return fmt.Errorf("Invalid Maven package name")
+		}
 	}
 	return nil
 }
@@ -445,6 +454,33 @@ func pypiValid(name string) bool {
 		return false
 	}
 	return isAlphaNum(name[0]) && isAlphaNum(name[len(name)-1])
+}
+
+func goValid(name string) bool {
+	if strings.ContainsAny(name, " \t\n") {
+		return false
+	}
+	if strings.HasPrefix(name, "/") || strings.HasSuffix(name, "/") {
+		return false
+	}
+	if !strings.Contains(name, "/") {
+		return false
+	}
+	return true
+}
+
+func mavenValid(name string) bool {
+	if strings.ContainsAny(name, " \t\n") {
+		return false
+	}
+	parts := strings.Split(name, ":")
+	if len(parts) != 2 {
+		return false
+	}
+	if parts[0] == "" || parts[1] == "" {
+		return false
+	}
+	return true
 }
 
 func isAlphaNum(b byte) bool {

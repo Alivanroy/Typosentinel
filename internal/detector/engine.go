@@ -1,3 +1,4 @@
+// Package detector provides typosquatting and threat detection algorithms.
 package detector
 
 import (
@@ -91,4 +92,3 @@ type EnhancedSupplyChainResult struct {
 func (d *EnhancedSupplyChainDetector) DetectThreats(ctx context.Context, pkgs []types.Package) ([]EnhancedSupplyChainResult, error) {
     return nil, nil
 }
-

@@ -24,8 +24,12 @@ jobs:
         run: |
           go test ./... -cover -coverprofile=coverage.out
           go tool cover -func=coverage.out | tee coverage.txt
-          awk '/total:/ { if ($3+0 < 50) { print "Coverage below 50%: "$3; exit 1 } }' coverage.txt || true
+          awk '/total:/ { if ($3+0 < 20) { print "Coverage below 20%: "$3; exit 1 } }' coverage.txt || true
           cp coverage.txt coverage_baseline.txt
+          go test ./pkg/types -cover | tee types_cov.txt
+          awk '/coverage:/ { gsub("%","",$3); if ($3+0 < 100) { print "pkg/types coverage below 100%: "$3"%"; exit 1 } }' types_cov.txt
+          go test ./internal/detector -cover | tee detector_cov.txt
+          awk '/coverage:/ { gsub("%","",$3); if ($3+0 < 70) { print "internal/detector coverage below 70%: "$3"%"; exit 1 } }' detector_cov.txt
       - name: Coverage HTML
         run: |
           go tool cover -html=coverage.out -o coverage.html

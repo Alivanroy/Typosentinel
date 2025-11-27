@@ -1,3 +1,4 @@
+// Package scanner handles project detection, dependency extraction, and threat analysis.
 package scanner
 
 import (

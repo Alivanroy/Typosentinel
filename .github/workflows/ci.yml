@@ -18,6 +18,24 @@ jobs:
           go vet ./...
           staticcheck ./... || true
           govulncheck ./... || true
+      - name: Unit Tests
+        run: go test ./... -v
+      - name: Coverage (func)
+        run: |
+          go test ./... -cover -coverprofile=coverage.out
+          go tool cover -func=coverage.out | tee coverage.txt
+          awk '/total:/ { if ($3+0 < 50) { print "Coverage below 50%: "$3; exit 1 } }' coverage.txt || true
+      - name: Coverage HTML
+        run: |
+          go tool cover -html=coverage.out -o coverage.html
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-artifacts
+          path: |
+            coverage.out
+            coverage.txt
+            coverage.html
 
   golangci-lint:
     runs-on: ubuntu-latest
@@ -41,18 +59,16 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         with:
           args: detect --source . --config-path .gitleaks.toml --redact --verbose --exit-code 1
-      - name: Run Unit Tests
-        run: go test ./... -v
-      - name: Coverage
-        run: |
-          go test ./... -cover -coverprofile=coverage.out
-          go tool cover -func=coverage.out | tee coverage.txt
-          awk '/total:/ { if ($3+0 < 50) { print "Coverage below 50%: "$3; exit 1 } }' coverage.txt || true
-      - name: Upload Coverage
-        uses: actions/upload-artifact@v4
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          name: coverage
-          path: coverage.*
+          go-version: '1.23'
+      - name: Run E2E Tests
+        run: go test -tags e2e ./tests/e2e -v
 
   supply-chain-firewall:
     uses: ./.github/workflows/supply-chain-firewall.yml

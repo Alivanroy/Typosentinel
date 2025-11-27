@@ -155,6 +155,34 @@ typosentinel server --port 8080 --host 0.0.0.0
 typosentinel server --dev --verbose
 ```
 
+### API Authentication
+
+Authentication is controlled via environment variables:
+
+- `API_AUTH_ENABLED`: set to `true` or `1` to require a bearer token
+- `API_KEYS`: comma‑separated list of allowed API keys (e.g., `key1,key2`)
+
+Example curl with bearer token:
+
+```bash
+curl -s -X POST http://localhost:8080/v1/analyze \
+  -H "Authorization: Bearer key1" \
+  -H "Content-Type: application/json" \
+  -d '{"package_name":"express","registry":"npm"}'
+```
+
+Docker run with auth enabled:
+
+```bash
+docker build -t typosentinel-api . && \
+docker run --rm -p 8080:8080 \
+  -e API_AUTH_ENABLED=true \
+  -e API_KEYS=key1,key2 \
+  typosentinel-api
+```
+
+Note: demo‑only endpoints (`/api/v1/vulnerabilities`, `/api/v1/dashboard/*`) return `501 Not Implemented`.
+
 ### Firewall Dashboard Features
 
 - **🛡️ Firewall Status**: Real-time supply chain firewall monitoring with live activity feed

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -155,10 +156,11 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 func validateAPIKey(token string) bool {
 	keys := os.Getenv("API_KEYS")
 	if keys == "" {
-		return true
+		return false
 	}
 	for _, k := range strings.Split(keys, ",") {
-		if strings.TrimSpace(k) == token {
+		key := strings.TrimSpace(k)
+		if subtle.ConstantTimeCompare([]byte(key), []byte(token)) == 1 {
 			return true
 		}
 	}

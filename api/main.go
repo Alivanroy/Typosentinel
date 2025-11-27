@@ -17,6 +17,7 @@ import (
 
 	apimetrics "github.com/Alivanroy/Typosentinel/internal/api/metrics"
 	apilm "github.com/Alivanroy/Typosentinel/internal/api/middleware"
+	whloader "github.com/Alivanroy/Typosentinel/internal/api/webhook"
 	appcfg "github.com/Alivanroy/Typosentinel/internal/config"
 	pkgmetrics "github.com/Alivanroy/Typosentinel/pkg/metrics"
 	"github.com/gorilla/mux"
@@ -220,16 +221,10 @@ func readyHandler(w http.ResponseWriter, r *http.Request) {
 		apimetrics.SetRedisConnected(redisOK)
 	}
 
-	// Webhook providers readiness via env secrets
-	providers := map[string]string{
-		"github":    os.Getenv("GITHUB_WEBHOOK_SECRET"),
-		"gitlab":    os.Getenv("GITLAB_WEBHOOK_TOKEN"),
-		"bitbucket": os.Getenv("BITBUCKET_WEBHOOK_SECRET"),
-		"azure":     os.Getenv("AZURE_WEBHOOK_SECRET"),
-	}
+	// Webhook providers readiness via config/env loader
+	providerStatus := whloader.LoadProviderConfigStatus()
 	webhooks := make(map[string]map[string]bool)
-	for p, secret := range providers {
-		configured := secret != ""
+	for p, configured := range providerStatus {
 		apimetrics.SetWebhookProviderEnabled(p, configured)
 		apimetrics.SetWebhookProviderSignatureConfigured(p, configured)
 		webhooks[p] = map[string]bool{"configured": configured}

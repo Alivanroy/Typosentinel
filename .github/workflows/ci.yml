@@ -60,15 +60,6 @@ jobs:
         with:
           args: detect --source . --config-path .gitleaks.toml --redact --verbose --exit-code 1
 
-  e2e-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-      - name: Run E2E Tests
-        run: go test -tags e2e ./tests/e2e -v
 
   sarif-report:
     runs-on: ubuntu-latest

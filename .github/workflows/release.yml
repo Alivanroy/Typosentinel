@@ -83,6 +83,14 @@ EOF
 </project>
 EOF
           go run . scan /tmp/typo-maven --output sarif > dist/typosentinel-maven.sarif.json
+      - name: Generate SARIF for temp PyPI project
+        run: |
+          mkdir -p /tmp/typo-pypi
+          cat > /tmp/typo-pypi/requirements.txt << 'EOF'
+requests==2.32.0
+numpy>=1.24.0
+EOF
+          go run . scan /tmp/typo-pypi --output sarif > dist/typosentinel-pypi.sarif.json
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

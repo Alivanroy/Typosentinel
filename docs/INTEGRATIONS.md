@@ -15,6 +15,7 @@ TypoSentinel supports integration with various security tools and platforms to a
 - [CLI Management](#cli-management)
 - [Troubleshooting](#troubleshooting)
 - [Best Practices](#best-practices)
+ - [GitHub Actions](#github-actions)
 
 ## Overview
 
@@ -589,3 +590,50 @@ This configuration provides:
 - **Email backup** for high-severity threats
 - **Environment-based** credential management
 - **Robust retry** policies for reliability
+## GitHub Actions
+
+### Quick Usage
+
+```yaml
+name: Supply Chain Firewall
+on: [push, pull_request]
+
+jobs:
+  firewall:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Build Typosentinel
+        run: |
+          go build -o typosentinel .
+          sudo mv typosentinel /usr/local/bin/
+      - name: Scan repository
+        run: |
+          typosentinel scan . --output json --supply-chain --advanced > scan-result.json || echo '{}' > scan-result.json
+          THREATS=$(jq '.Threats | length // 0' scan-result.json 2>/dev/null || echo 0)
+          TOTAL=$(jq '.TotalPackages // 0' scan-result.json 2>/dev/null || echo 0)
+          echo "Threats: $THREATS, Total Packages: $TOTAL"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-analysis
+          path: scan-result.json
+```
+
+### Reusable Workflow
+
+This repository provides a reusable workflow in `.github/workflows/supply-chain-firewall.yml`. It builds the CLI, scans the repository, computes a simple risk score from the JSON output, and exposes outputs (`risk-score`, `policy-action`, `violations-found`).
+
+Invoke via:
+
+```yaml
+jobs:
+  firewall:
+    uses: Alivanroy/Typosentinel/.github/workflows/supply-chain-firewall.yml@main
+    with:
+      asset-criticality: INTERNAL
+      policy-threshold: alert
+      fail-on-violation: true
+```

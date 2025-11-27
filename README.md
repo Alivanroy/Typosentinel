@@ -68,20 +68,32 @@ make build
 ### Docker Deployment
 
 ```bash
-# Quick production deployment
-./deploy.sh start
+# One-line build and run (API on :8080)
+docker build -t typosentinel-api . && docker run --rm -p 8080:8080 typosentinel-api
 
-# Development with hot reloading
-./deploy.sh dev
+# One-line CLI scan using Docker (mounts current directory)
+docker build -t typosentinel . && docker run --rm -v "$PWD:/scan" typosentinel ./typosentinel scan /scan --output json --supply-chain --advanced
 
-# Production with monitoring (Prometheus + Grafana)
-./deploy.sh start-monitoring
+# Compose: API + Postgres + optional monitoring
+docker compose up -d
 ```
 
 **Access Points:**
 - Web Interface: http://localhost:3000
 - API Server: http://localhost:8080
 - API Playground: http://localhost:8080/api
+
+### CLI Quick Start
+
+```bash
+# Build native CLI
+go build -o build/typosentinel .
+./build/typosentinel version
+./build/typosentinel scan . --output json --supply-chain --advanced
+
+# One-line Docker CLI (Windows PowerShell)
+docker build -t typosentinel . ; docker run --rm -v "${PWD}:/scan" typosentinel ./typosentinel scan /scan --output json --supply-chain --advanced
+```
 
 For detailed Docker deployment instructions, see [DOCKER.md](DOCKER.md).
 
@@ -155,31 +167,47 @@ typosentinel server --dev --verbose
 ### API Endpoints
 
 ```bash
-# Analyze a single package
-POST /api/v1/analyze
+# Health and status
+GET /health
+GET /v1/status
+GET /v1/stats
+
+# Analyze a single package (demo mode)
+POST /v1/analyze
 {
-  "ecosystem": "npm",
-  "name": "package-name",
-  "version": "1.0.0"
+  "package_name": "express",
+  "registry": "npm"
 }
 
-# Batch analysis
-POST /api/v1/batch-analyze
+# Batch analysis (demo mode)
+POST /v1/analyze/batch
 {
   "packages": [
-    {"ecosystem": "npm", "name": "express"},
-    {"ecosystem": "pypi", "name": "requests"}
+    {"package_name": "express", "registry": "npm"},
+    {"package_name": "test-package", "registry": "npm"}
   ]
 }
 
-# Organization scan
-POST /api/v1/scan/organization
-{
-  "platform": "github",
-  "organization": "company-name",
-  "token": "github_token"
-}
+# Vulnerabilities (mock data)
+GET /api/v1/vulnerabilities?severity=critical
+
+# Dashboard metrics (mock data)
+GET /api/v1/dashboard/metrics
+GET /api/v1/dashboard/performance
 ```
+
+### Current Status & Honest Metrics
+
+- API server endpoints validated end-to-end with automated tests
+- Legitimate packages (e.g., `express`) return `risk_level: 0` and `risk_score: 0.0`
+- Suspicious names (e.g., `test-package`, very short, numeric-included) produce appropriate threats/warnings
+- Webhook endpoints scaffolded; some provider routes operate in demo mode
+- Unit test coverage highlights:
+  - `pkg/types`: 100%
+  - `internal/supplychain`: ~54%
+  - Other modules vary; several integration tests are skipped in demo mode
+- API tests (tag `api`) pass; batch and rate limiting behavior validated
+- Demo mode is enabled for several endpoints with mock data responses
 
 ## 🔍 Detection Methods
 

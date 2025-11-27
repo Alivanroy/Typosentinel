@@ -8,7 +8,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+# Build API server binary
 RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags='-w -s' \
+    -a -installsuffix cgo \
+    -o typosentinel-api ./api/main.go && \
+    CGO_ENABLED=0 GOOS=linux go build \
     -ldflags='-w -s' \
     -a -installsuffix cgo \
     -o typosentinel ./main.go
@@ -30,7 +35,8 @@ RUN addgroup -g 1001 -S appgroup && \
 # Set working directory
 WORKDIR /app
 
-# Copy Go binary from builder
+# Copy API server binary from builder
+COPY --from=go-builder /app/typosentinel-api ./
 COPY --from=go-builder /app/typosentinel ./
 
 # Copy configuration files
@@ -51,5 +57,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Default command - start the server
-CMD ["./typosentinel", "server", "--port", "8080"]
+# Default command - start the API server
+CMD ["./typosentinel-api"]

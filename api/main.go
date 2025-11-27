@@ -139,7 +139,8 @@ func readyHandler(w http.ResponseWriter, r *http.Request) {
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	response := TestResponse{
-		Message: "test endpoint working",
+		Message:   "test endpoint working",
+		Timestamp: time.Now(),
 	}
 	json.NewEncoder(w).Encode(response)
 }

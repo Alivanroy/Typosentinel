@@ -965,15 +965,49 @@ impact propagation for comprehensive supply chain risk assessment.`,
 
 // createDefaultConfig creates a default configuration
 func createDefaultConfig() *config.Config {
-	return &config.Config{
-		TypoDetection: &config.TypoDetectionConfig{
-			Enabled:           true,
-			Threshold:         0.8,
-			MaxDistance:       3, // Must be >= 1 based on validation error
-			CheckSimilarNames: true,
-			CheckHomoglyphs:   true,
-		},
-	}
+    return &config.Config{
+        TypoDetection: &config.TypoDetectionConfig{
+            Enabled:           true,
+            Threshold:         0.8,
+            MaxDistance:       3,
+            CheckSimilarNames: true,
+            CheckHomoglyphs:   true,
+        },
+        SupplyChain: &config.SupplyChainConfig{
+            Enabled: true,
+            DependencyGraph: config.DependencyGraphConfig{
+                Enabled:                 true,
+                MaxDepth:                8,
+                TransitiveAnalysis:      true,
+                ConfusionDetection:      true,
+                SupplyChainRiskAnalysis: true,
+            },
+            BuildIntegrity: config.BuildIntegrityConfig{
+                Enabled:        true,
+                SignatureCheck: false,
+                Timeout:        time.Second * 30,
+            },
+            ZeroDayDetection: config.ZeroDayDetectionConfig{
+                Enabled:            false,
+                BehavioralAnalysis: false,
+                Timeout:            time.Second * 30,
+            },
+            HoneypotDetection: config.HoneypotDetectionConfig{
+                Enabled:             false,
+                ConfidenceThreshold: 0.6,
+                Timeout:             time.Second * 30,
+            },
+            RiskCalculation: config.RiskCalculationConfig{
+                Enabled: true,
+                Thresholds: config.RiskThresholds{
+                    Low:      0.2,
+                    Medium:   0.5,
+                    High:     0.7,
+                    Critical: 0.9,
+                },
+            },
+        },
+    }
 }
 
 // outputScanResult outputs the scan result in the specified format

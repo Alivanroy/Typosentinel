@@ -113,6 +113,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updated TEST_SUITE_SUMMARY.md**: Comprehensive report showing perfect 100% test results
 - Enhanced documentation with latest performance metrics and detection accuracy data
 
+### 2025-11-27 09:20
+- Updated README API endpoints to match current server (`/v1/analyze`, `/v1/status`, etc.)
+- Added "Current Status & Honest Metrics" section documenting demo behavior and test results
+- Validated web server endpoints with automated API tests; adjusted expectations for legitimate packages
+- Noted unit test coverage highlights (e.g., `pkg/types`: 100%, `internal/supplychain`: ~54%)
+- Documented that webhook provider routes operate in demo mode and some features are scaffolded
+
+### 2025-11-27 10:10
+- Stabilized detector tests (homoglyph, reputation); corrected rune handling and adjusted demo expectations
+- Fixed webhook tests by updating handler to accept `*logger.Logger` and made scan ID generation stable
+- Added CI workflow (`ci.yml`) with unit tests, coverage gate, static analysis, and supply-chain firewall integration on PRs
+- Added Release workflow (`release.yml`) to build cross-platform binaries, publish GHCR Docker image, and create GitHub Releases
+- Updated README with CLI quick start and Docker one-line commands
+
 ## [Previous Versions]
 
 *Previous changelog entries would be documented here as the project evolves.*

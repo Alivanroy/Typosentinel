@@ -1,9 +1,10 @@
 # Security Policy
 
 ## Reporting a Vulnerability
-- Email: security@typosentinel.example
-- Preferred format: detailed description, reproduction steps, impact assessment
-- We will acknowledge receipt within 48 hours and provide status updates until resolution.
+- Preferred channel: GitHub Security Advisory (Private Report)
+- Alternative: open a private security report via GitHub Issues marked as security
+- Include detailed description, reproduction steps, and impact assessment
+- Acknowledge within 48 hours; status updates provided until resolution
 
 ## Supported Versions
 - We support the latest minor release and security patches.

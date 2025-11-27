@@ -302,6 +302,13 @@ Memory profile (typical):
 - Per 100 packages: ~8MB additional
 - Peak during enhanced analysis: ~2× base
 
+Validated summary:
+
+| Project size | Time/run | Memory | Allocs/run |
+|--------------|----------|--------|------------|
+| Small (50)   | ~6.75ms  | ~1.13MB| ~14.8k     |
+| Medium (200) | ~33.6ms  | ~4.54MB| ~59.1k     |
+
 ## 🚀 CI/CD Integration
 
 ### GitHub Actions Supply Chain Firewall

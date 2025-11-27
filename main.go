@@ -91,6 +91,7 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 			workspaceAware, _ := cmd.Flags().GetBool("workspace-aware")
 			consolidateReport, _ := cmd.Flags().GetBool("consolidate-report")
 			packageManagers, _ := cmd.Flags().GetStringSlice("package-manager")
+			registryOverride, _ := cmd.Flags().GetString("registry")
 			// Enhanced supply chain analysis options
 			enableSupplyChain, _ := cmd.Flags().GetBool("supply-chain")
 			advancedAnalysis, _ := cmd.Flags().GetBool("advanced")
@@ -114,6 +115,11 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 				// Enhanced supply chain analysis options
 				EnableSupplyChain: enableSupplyChain,
 				AdvancedAnalysis:  advancedAnalysis,
+			}
+
+			// Map registry override to packageManagers if provided
+			if registryOverride != "" {
+				options.PackageManagers = []string{strings.ToLower(registryOverride)}
 			}
 
 			// Perform scan
@@ -180,6 +186,7 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 	scanCmd.Flags().Bool("workspace-aware", false, "Enable workspace-aware scanning for monorepos")
 	scanCmd.Flags().Bool("consolidate-report", false, "Generate consolidated report for multi-project scans")
 	scanCmd.Flags().StringSlice("package-manager", []string{}, "Specific package managers to scan (npm, pypi, maven, nuget, rubygems, go, cargo, composer). Auto-detects if not specified")
+	scanCmd.Flags().String("registry", "", "Force registry/package manager (npm, pypi, go, maven, cargo, rubygems, composer)")
 	// SBOM generation flags
 	scanCmd.Flags().String("sbom-format", "", "Generate SBOM in specified format (spdx, cyclonedx)")
 	scanCmd.Flags().String("sbom-output", "", "Output file path for SBOM (if not specified, prints to stdout)")

@@ -98,6 +98,13 @@ go build -o build/typosentinel .
 ./build/typosentinel version
 ./build/typosentinel scan . --output json --supply-chain --advanced
 
+Force registry for specific ecosystem:
+
+```bash
+./build/typosentinel scan ./my-go-project --registry go --output json
+./build/typosentinel scan ./my-java-project --registry maven --output json
+```
+
 # One-line Docker CLI (Windows PowerShell)
 docker build -t typosentinel . ; docker run --rm -v "${PWD}:/scan" typosentinel ./typosentinel scan /scan --output json --supply-chain --advanced
 ```

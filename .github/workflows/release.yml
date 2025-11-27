@@ -37,15 +37,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: typosentinel-binaries
           path: dist
+      - name: Generate SARIF from sample project
+        run: |
+          go run . scan ./tests/e2e/test-projects/npm-vulnerable --output sarif > dist/typosentinel.sarif.json
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: |
+            dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

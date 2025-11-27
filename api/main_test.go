@@ -1,6 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -40,5 +44,39 @@ func TestValidatePackageInput_GoAndMaven(t *testing.T) {
 	}
 	if err := validatePackageInput("org.apache.commons:commons lang3", "maven"); err == nil {
 		t.Fatalf("expected invalid maven name with spaces")
+	}
+}
+
+func TestMetricsEndpointJSON(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/metrics", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		m := metrics.GetInstance()
+		json.NewEncoder(w).Encode(m.GetMetrics())
+	})
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if ct := rr.Header().Get("Content-Type"); ct == "" {
+		t.Fatalf("missing content type")
+	}
+}
+func TestSSEStreamEndpoint(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/v1/stream", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.Write([]byte("data: {\"type\": \"ping\"}\n\n"))
+	})
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "data:") {
+		t.Fatalf("expected sse data")
 	}
 }

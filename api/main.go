@@ -491,8 +491,15 @@ func main() {
 	// Initialize rate limiter
 	rateLimiter = NewRateLimiter()
 
-	// Create router
-	r := mux.NewRouter()
+    // Create router
+    r := mux.NewRouter()
+
+	// Metrics endpoint (JSON based on pkg/metrics)
+	r.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		m := metrics.GetInstance()
+		json.NewEncoder(w).Encode(m.GetMetrics())
+	}).Methods("GET")
 
 	// Health check endpoints
 	r.HandleFunc("/health", healthHandler).Methods("GET")
@@ -611,3 +618,18 @@ func dashboardPerformanceHandler(w http.ResponseWriter, r *http.Request) {
 		"status": "not_implemented",
 	})
 }
+    // SSE stream for real-time monitoring (basic keepalive)
+    r.HandleFunc("/v1/stream", func(w http.ResponseWriter, r *http.Request){
+        w.Header().Set("Content-Type", "text/event-stream")
+        w.Header().Set("Cache-Control", "no-cache")
+        w.Header().Set("Connection", "keep-alive")
+        flusher, ok := w.(http.Flusher)
+        if !ok { http.Error(w, "Streaming unsupported", http.StatusInternalServerError); return }
+        ticker := time.NewTicker(5 * time.Second)
+        defer ticker.Stop()
+        for i:=0; i<3; i++{ // send few pings in tests
+            <-ticker.C
+            fmt.Fprintf(w, "data: {\"type\": \"ping\", \"count\": %d}\n\n", i+1)
+            flusher.Flush()
+        }
+    }).Methods("GET")

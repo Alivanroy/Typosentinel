@@ -1,6 +1,7 @@
 package detector
 
 import (
+	"math"
 	"testing"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -8,24 +9,24 @@ import (
 
 func TestNewHomoglyphDetector(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	if detector == nil {
 		t.Fatal("Expected non-nil detector")
 	}
-	
+
 	if detector.homoglyphMap == nil {
 		t.Fatal("Expected homoglyphMap to be initialized")
 	}
-	
+
 	// Check that some common homoglyphs are present
 	if _, exists := detector.homoglyphMap['a']; !exists {
 		t.Error("Expected 'a' to have homoglyphs")
 	}
-	
+
 	if _, exists := detector.homoglyphMap['e']; !exists {
 		t.Error("Expected 'e' to have homoglyphs")
 	}
-	
+
 	if _, exists := detector.homoglyphMap['o']; !exists {
 		t.Error("Expected 'o' to have homoglyphs")
 	}
@@ -33,7 +34,7 @@ func TestNewHomoglyphDetector(t *testing.T) {
 
 func TestHomoglyphDetector_Detect(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name            string
 		target          types.Dependency
@@ -96,32 +97,32 @@ func TestHomoglyphDetector_Detect(t *testing.T) {
 			expectedThreats: 0,
 			minConfidence:   0.7,
 		},
-        {
-            name: "detection with moderate confidence",
-            target: types.Dependency{
-                Name:     "еxprеss", // Mixed homoglyphs
-                Version:  "1.0.0",
-                Registry: "npm",
-            },
-            allPackages:     []string{"express", "lodash", "react"},
-            expectedThreats: 1,
-            minConfidence:   0.85,
-        },
+		{
+			name: "detection with moderate confidence",
+			target: types.Dependency{
+				Name:     "еxprеss", // Mixed homoglyphs
+				Version:  "1.0.0",
+				Registry: "npm",
+			},
+			allPackages:     []string{"express", "lodash", "react"},
+			expectedThreats: 1,
+			minConfidence:   0.85,
+		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			threats := detector.Detect(tt.target, tt.allPackages)
-			
+
 			if len(threats) != tt.expectedThreats {
 				t.Errorf("Expected %d threats, got %d", tt.expectedThreats, len(threats))
 			}
-			
+
 			for _, threat := range threats {
 				if threat.Type != types.ThreatTypeHomoglyph {
 					t.Errorf("Expected threat type %s, got %s", types.ThreatTypeHomoglyph, threat.Type)
 				}
-				
+
 				if threat.Confidence < tt.minConfidence {
 					t.Errorf("Expected confidence >= %f, got %f", tt.minConfidence, threat.Confidence)
 				}
@@ -132,7 +133,7 @@ func TestHomoglyphDetector_Detect(t *testing.T) {
 
 func TestHomoglyphDetector_generateHomoglyphVariants(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name             string
 		input            string
@@ -142,37 +143,37 @@ func TestHomoglyphDetector_generateHomoglyphVariants(t *testing.T) {
 		{
 			name:             "single character with homoglyphs",
 			input:            "a",
-			expectedVariants: 3, // a has Cyrillic, Greek, and other variants
+			expectedVariants: 3,                       // a has Cyrillic, Greek, and other variants
 			shouldContain:    []string{"а", "ɑ", "α"}, // Cyrillic 'а', Latin 'ɑ', Greek 'α'
 		},
-        {
-            name:             "multiple characters with homoglyphs",
-            input:            "ae",
-            expectedVariants: 5, // a has 3 variants, e has 2 variants
-            shouldContain:    []string{"аe", "ɑe", "αe", "aе", "aε"},
-        },
-        {
-            name:             "no homoglyphs",
-            input:            "bdg",
-            expectedVariants: 0,
-            shouldContain:    []string{},
-        },
-        {
-            name:             "mixed characters",
-            input:            "test",
-            expectedVariants: 6, // t(1) + e(2) + s(2) + t(1)
-            shouldContain:    []string{"tеst", "tεst", "teѕt", "teσt", "τest"},
-        },
+		{
+			name:             "multiple characters with homoglyphs",
+			input:            "ae",
+			expectedVariants: 5, // a has 3 variants, e has 2 variants
+			shouldContain:    []string{"аe", "ɑe", "αe", "aе", "aε"},
+		},
+		{
+			name:             "no homoglyphs",
+			input:            "bdg",
+			expectedVariants: 0,
+			shouldContain:    []string{},
+		},
+		{
+			name:             "mixed characters",
+			input:            "test",
+			expectedVariants: 6, // t(1) + e(2) + s(2) + t(1)
+			shouldContain:    []string{"tеst", "tεst", "teѕt", "teσt", "τest"},
+		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			variants := detector.generateHomoglyphVariants(tt.input)
-			
+
 			if len(variants) != tt.expectedVariants {
 				t.Errorf("Expected %d variants, got %d", tt.expectedVariants, len(variants))
 			}
-			
+
 			for _, expected := range tt.shouldContain {
 				found := false
 				for _, variant := range variants {
@@ -191,7 +192,7 @@ func TestHomoglyphDetector_generateHomoglyphVariants(t *testing.T) {
 
 func TestHomoglyphDetector_isHomoglyphVariant(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name     string
 		s1       string
@@ -235,7 +236,7 @@ func TestHomoglyphDetector_isHomoglyphVariant(t *testing.T) {
 			expected: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.isHomoglyphVariant(tt.s1, tt.s2)
@@ -248,7 +249,7 @@ func TestHomoglyphDetector_isHomoglyphVariant(t *testing.T) {
 
 func TestHomoglyphDetector_areHomoglyphs(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name     string
 		char1    rune
@@ -292,7 +293,7 @@ func TestHomoglyphDetector_areHomoglyphs(t *testing.T) {
 			expected: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.areHomoglyphs(tt.char1, tt.char2)
@@ -305,7 +306,7 @@ func TestHomoglyphDetector_areHomoglyphs(t *testing.T) {
 
 func TestHomoglyphDetector_calculateHomoglyphConfidence(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name     string
 		s1       string
@@ -316,7 +317,7 @@ func TestHomoglyphDetector_calculateHomoglyphConfidence(t *testing.T) {
 			name:     "perfect homoglyph variant",
 			s1:       "test",
 			s2:       "tеst", // One homoglyph
-			expected: 0.85, // 0.8 base + 0.05 for 1/4 characters
+			expected: 0.85,   // 0.8 base + 0.05 for 1/4 characters
 		},
 		{
 			name:     "multiple homoglyphs",
@@ -343,11 +344,11 @@ func TestHomoglyphDetector_calculateHomoglyphConfidence(t *testing.T) {
 			expected: 0.0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.calculateHomoglyphConfidence(tt.s1, tt.s2)
-			if result != tt.expected {
+			if math.Abs(result-tt.expected) > 1e-6 {
 				t.Errorf("Expected %f, got %f", tt.expected, result)
 			}
 		})
@@ -356,7 +357,7 @@ func TestHomoglyphDetector_calculateHomoglyphConfidence(t *testing.T) {
 
 func TestHomoglyphDetector_calculateHomoglyphSeverity(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name       string
 		confidence float64
@@ -383,7 +384,7 @@ func TestHomoglyphDetector_calculateHomoglyphSeverity(t *testing.T) {
 			expected:   types.SeverityLow,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.calculateHomoglyphSeverity(tt.confidence)
@@ -396,23 +397,23 @@ func TestHomoglyphDetector_calculateHomoglyphSeverity(t *testing.T) {
 
 func TestHomoglyphDetector_buildHomoglyphEvidence(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	evidence := detector.buildHomoglyphEvidence("express", "еxpress")
-	
+
 	if len(evidence) != 1 {
 		t.Errorf("Expected 1 evidence item, got %d", len(evidence))
 	}
-	
+
 	if len(evidence) > 0 {
 		ev := evidence[0]
 		if ev.Type != "homoglyph_substitution" {
 			t.Errorf("Expected evidence type 'homoglyph_substitution', got '%s'", ev.Type)
 		}
-		
+
 		if ev.Score != 0.9 {
 			t.Errorf("Expected evidence score 0.9, got %f", ev.Score)
 		}
-		
+
 		if ev.Value == nil {
 			t.Error("Expected evidence to have value")
 		}
@@ -421,7 +422,7 @@ func TestHomoglyphDetector_buildHomoglyphEvidence(t *testing.T) {
 
 func TestHomoglyphDetector_normalizeForComparison(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name     string
 		input    string
@@ -453,7 +454,7 @@ func TestHomoglyphDetector_normalizeForComparison(t *testing.T) {
 			expected: "express",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.normalizeForComparison(tt.input)
@@ -472,14 +473,14 @@ func TestGetUnicodeScript(t *testing.T) {
 	}{
 		{name: "Latin a", char: 'a', expected: "Latin"},
 		{name: "Cyrillic а", char: 'а', expected: "Cyrillic"}, // Cyrillic 'а'
-		{name: "Greek α", char: 'α', expected: "Greek"},    // Greek 'α'
+		{name: "Greek α", char: 'α', expected: "Greek"},       // Greek 'α'
 		{name: "Digit 1", char: '1', expected: "Digit"},
 		{name: "Symbol dash", char: '-', expected: "Symbol"},
 		{name: "Symbol at", char: '@', expected: "Symbol"},
 		{name: "Arabic character", char: '\u0600', expected: "Arabic"}, // Arabic character
 		{name: "Hebrew character", char: '\u05D0', expected: "Hebrew"}, // Hebrew character
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := getUnicodeScript(tt.char)
@@ -492,7 +493,7 @@ func TestGetUnicodeScript(t *testing.T) {
 
 func TestHomoglyphDetector_detectMixedScripts(t *testing.T) {
 	detector := NewHomoglyphDetector()
-	
+
 	tests := []struct {
 		name     string
 		input    string
@@ -524,7 +525,7 @@ func TestHomoglyphDetector_detectMixedScripts(t *testing.T) {
 			expected: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := detector.detectMixedScripts(tt.input)

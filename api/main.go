@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -115,8 +116,58 @@ var (
 	rateLimiter *RateLimiter
 )
 
+// API key authentication middleware
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/health" || r.URL.Path == "/ready" || r.URL.Path == "/test" {
+			next(w, r)
+			return
+		}
+
+		enabled := os.Getenv("API_AUTH_ENABLED")
+		if strings.EqualFold(enabled, "false") || enabled == "0" {
+			next(w, r)
+			return
+		}
+
+		auth := r.Header.Get("Authorization")
+		if auth == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Missing Authorization header"})
+			return
+		}
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid Authorization format"})
+			return
+		}
+		token := parts[1]
+		if !validateAPIKey(token) {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid API key"})
+			return
+		}
+		next(w, r)
+	}
+}
+
+func validateAPIKey(token string) bool {
+	keys := os.Getenv("API_KEYS")
+	if keys == "" {
+		return true
+	}
+	for _, k := range strings.Split(keys, ",") {
+		if strings.TrimSpace(k) == token {
+			return true
+		}
+	}
+	return false
+}
+
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Demo-Mode", "true")
 	response := HealthResponse{
 		Status:    "healthy",
 		Timestamp: time.Now(),
@@ -127,6 +178,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 func readyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Demo-Mode", "true")
 
 	response := ReadyResponse{
 		Ready:     true,
@@ -138,6 +190,7 @@ func readyHandler(w http.ResponseWriter, r *http.Request) {
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Demo-Mode", "true")
 	response := TestResponse{
 		Message:   "test endpoint working",
 		Timestamp: time.Now(),
@@ -194,6 +247,11 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 		req.Registry = "npm" // Default to npm
 	}
 
+	if err := validatePackageInput(req.PackageName, req.Registry); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// Perform simplified threat analysis for demo
 	threats, warnings := performThreatAnalysis(req.PackageName, req.Registry)
 
@@ -211,9 +269,9 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 		AnalyzedAt:  time.Now(),
 	}
 
-    if err := json.NewEncoder(w).Encode(result); err != nil {
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-    }
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
@@ -245,6 +303,11 @@ func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		// Set default registry if not provided
 		if pkg.Registry == "" {
 			pkg.Registry = "npm"
+		}
+
+		if err := validatePackageInput(pkg.PackageName, pkg.Registry); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		// Perform threat analysis
@@ -287,9 +350,9 @@ func batchAnalyzeHandler(w http.ResponseWriter, r *http.Request) {
 		AnalyzedAt: time.Now(),
 	}
 
-    if err := json.NewEncoder(w).Encode(batchResult); err != nil {
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-    }
+	if err := json.NewEncoder(w).Encode(batchResult); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // Helper functions for threat analysis
@@ -349,6 +412,43 @@ func calculateRiskLevel(threats []Threat) (int, float64) {
 	return 0, 0.0 // No threats
 }
 
+// Input validation helpers
+func validatePackageInput(name, registry string) error {
+	if len(name) > 214 {
+		return fmt.Errorf("Package name too long")
+	}
+	if strings.Contains(name, "..") || strings.ContainsAny(name, ";&|`") {
+		return fmt.Errorf("Invalid characters in package name")
+	}
+	switch registry {
+	case "npm":
+		if !npmValid(name) {
+			return fmt.Errorf("Invalid npm package name")
+		}
+	case "pypi":
+		if !pypiValid(name) {
+			return fmt.Errorf("Invalid PyPI package name")
+		}
+	}
+	return nil
+}
+
+func npmValid(name string) bool {
+	n := strings.ToLower(name)
+	return !strings.ContainsAny(n, " \t\n")
+}
+
+func pypiValid(name string) bool {
+	if len(name) == 0 {
+		return false
+	}
+	return isAlphaNum(name[0]) && isAlphaNum(name[len(name)-1])
+}
+
+func isAlphaNum(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9')
+}
+
 func main() {
 	// Initialize rate limiter
 	rateLimiter = NewRateLimiter()
@@ -361,13 +461,13 @@ func main() {
 	r.HandleFunc("/ready", readyHandler).Methods("GET")
 	r.HandleFunc("/test", testHandler).Methods("GET")
 
-	// API endpoints with rate limiting
-	r.Handle("/v1/analyze", rateLimitMiddleware(http.HandlerFunc(analyzeHandler))).Methods("POST")
-	r.Handle("/v1/analyze/batch", rateLimitMiddleware(http.HandlerFunc(batchAnalyzeHandler))).Methods("POST")
+	// API endpoints with auth and rate limiting
+	r.Handle("/v1/analyze", rateLimitMiddleware(authMiddleware(http.HandlerFunc(analyzeHandler)))).Methods("POST")
+	r.Handle("/v1/analyze/batch", rateLimitMiddleware(authMiddleware(http.HandlerFunc(batchAnalyzeHandler)))).Methods("POST")
 	r.HandleFunc("/v1/status", statusHandler).Methods("GET")
 	r.HandleFunc("/v1/stats", statsHandler).Methods("GET")
 	r.HandleFunc("/api/v1/vulnerabilities", vulnerabilitiesHandler).Methods("GET")
-	
+
 	// Dashboard endpoints
 	r.HandleFunc("/api/v1/dashboard/metrics", dashboardMetricsHandler).Methods("GET")
 	r.HandleFunc("/api/v1/dashboard/performance", dashboardPerformanceHandler).Methods("GET")
@@ -394,6 +494,7 @@ func main() {
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Demo-Mode", "true")
 	status := map[string]interface{}{
 		"service":   "TypoSentinel API",
 		"version":   "1.0.0",
@@ -413,13 +514,14 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 			"batch_size_limit":    10,
 		},
 	}
-    if err := json.NewEncoder(w).Encode(status); err != nil {
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-    }
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Demo-Mode", "true")
 	stats := map[string]interface{}{
 		"total_requests":     "N/A (demo mode)",
 		"packages_analyzed":  "N/A (demo mode)",
@@ -430,141 +532,34 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 		"demo_mode":          true,
 		"message":            "This is a demo API. Statistics are not tracked in demo mode.",
 	}
-    if err := json.NewEncoder(w).Encode(stats); err != nil {
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-    }
+	if err := json.NewEncoder(w).Encode(stats); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func vulnerabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	// Parse query parameters for filtering
-	severity := r.URL.Query().Get("severity")
-	status := r.URL.Query().Get("status")
-	packageName := r.URL.Query().Get("package")
-
-	// Mock vulnerability data
-	vulnerabilities := []map[string]interface{}{
-		{
-			"id":               "CVE-2023-1234",
-			"title":            "Cross-site Scripting (XSS) vulnerability",
-			"package":          "react",
-			"version":          "16.8.0",
-			"severity":         "high",
-			"score":            7.5,
-			"description":      "A cross-site scripting vulnerability exists in React versions prior to 16.8.6",
-			"publishedDate":    "2023-01-15T10:30:00Z",
-			"lastModified":     "2023-01-20T14:45:00Z",
-			"status":           "open",
-			"affectedVersions": "< 16.8.6",
-			"fixedVersion":     "16.8.6",
-			"cve":              "CVE-2023-1234",
-			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-1234"},
-		},
-		{
-			"id":               "CVE-2023-5678",
-			"title":            "SQL Injection vulnerability",
-			"package":          "lodash",
-			"version":          "4.17.15",
-			"severity":         "critical",
-			"score":            9.8,
-			"description":      "SQL injection vulnerability in lodash template function",
-			"publishedDate":    "2023-02-10T08:15:00Z",
-			"lastModified":     "2023-02-15T12:30:00Z",
-			"status":           "investigating",
-			"affectedVersions": "< 4.17.21",
-			"fixedVersion":     "4.17.21",
-			"cve":              "CVE-2023-5678",
-			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-5678"},
-		},
-		{
-			"id":               "CVE-2023-9012",
-			"title":            "Remote Code Execution vulnerability",
-			"package":          "express",
-			"version":          "4.16.0",
-			"severity":         "critical",
-			"score":            9.9,
-			"description":      "Remote code execution vulnerability in Express.js middleware",
-			"publishedDate":    "2023-03-05T16:20:00Z",
-			"lastModified":     "2023-03-10T09:45:00Z",
-			"status":           "fixed",
-			"affectedVersions": "< 4.18.2",
-			"fixedVersion":     "4.18.2",
-			"cve":              "CVE-2023-9012",
-			"references":       []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-9012"},
-		},
-	}
-
-	// Apply filters
-	filteredVulns := make([]map[string]interface{}, 0)
-	for _, vuln := range vulnerabilities {
-		if severity != "" && vuln["severity"] != severity {
-			continue
-		}
-		if status != "" && vuln["status"] != status {
-			continue
-		}
-		if packageName != "" && vuln["package"] != packageName {
-			continue
-		}
-		filteredVulns = append(filteredVulns, vuln)
-	}
-
-    if err := json.NewEncoder(w).Encode(filteredVulns); err != nil {
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-    }
+	w.WriteHeader(http.StatusNotImplemented)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error":  "This endpoint is planned for v1.1",
+		"status": "not_implemented",
+	})
 }
 
 func dashboardMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
-	// Mock dashboard metrics data
-	metrics := map[string]interface{}{
-		"totalScans":        1247,
-		"threatsDetected":   89,
-		"criticalThreats":   12,
-		"packagesScanned":   5421,
-		"scanSuccessRate":   98.5,
-		"averageScanTime":   2.3,
-		"timeRange":         "24h",
-		"lastUpdated":       time.Now().Format(time.RFC3339),
-	}
-	
-	if err := json.NewEncoder(w).Encode(metrics); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	w.WriteHeader(http.StatusNotImplemented)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error":  "This endpoint is planned for v1.1",
+		"status": "not_implemented",
+	})
 }
 
 func dashboardPerformanceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
-	// Mock performance metrics data
-	performance := map[string]interface{}{
-		"response_times": map[string]float64{
-			"api":       45.2,
-			"dashboard": 120.5,
-			"scanner":   2300.0,
-		},
-		"throughput": map[string]float64{
-			"api_requests_per_sec": 15.7,
-			"scans_per_hour":       52.3,
-		},
-		"error_rates": map[string]float64{
-			"api":     0.1,
-			"scanner": 1.5,
-		},
-		"resource_metrics": map[string]float64{
-			"cpu_usage":    35.2,
-			"memory_usage": 68.4,
-			"disk_usage":   45.1,
-			"network_io":   12.3,
-			"open_files":   234,
-			"goroutines":   89,
-		},
-		"performance_trends": []interface{}{},
-	}
-	
-	if err := json.NewEncoder(w).Encode(performance); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	w.WriteHeader(http.StatusNotImplemented)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error":  "This endpoint is planned for v1.1",
+		"status": "not_implemented",
+	})
 }

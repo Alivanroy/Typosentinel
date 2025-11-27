@@ -245,13 +245,16 @@ GET /api/v1/dashboard/performance
 - **Confidence Scoring**: Reliability assessment of detection results
 - **Automatic Recommendations**: Actionable security recommendations
 
-### 📊 Detection Performance
+### 📊 Honest Performance Metrics
 
-- **Accuracy**: >99.5% for known threats, >95% for novel threats
-- **False Positive Rate**: <0.1% with confidence scoring
-- **Processing Speed**: 1000+ packages per minute
-- **Real-time Analysis**: <60ms for safe packages, <2s for threats
-- **Multi-language Support**: 15+ package managers and ecosystems
+Measured locally (Windows 11, i7‑12700H, Go 1.23):
+
+- DetectEnhanced: ~246µs/op (mixed cases: expresss/lodahs/recat/axois)
+- DetectEnhanced (homoglyphs): ~157µs/op (Cyrillic/Greek/visual substitutions)
+- Allocations: 636 allocs/op (DetectEnhanced), 486 allocs/op (homoglyphs)
+- Memory: ~40KB/op (DetectEnhanced), ~31KB/op (homoglyphs)
+
+To reproduce: `go test -bench=. -benchmem ./tests/benchmarks/...`
 
 ## 🚀 CI/CD Integration
 

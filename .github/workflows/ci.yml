@@ -18,6 +18,29 @@ jobs:
           go vet ./...
           staticcheck ./... || true
           govulncheck ./... || true
+
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.60.1
+      - name: Run golangci-lint
+        run: |
+          $(go env GOPATH)/bin/golangci-lint run ./...
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --verbose
       - name: Run Unit Tests
         run: go test ./... -v
       - name: Coverage

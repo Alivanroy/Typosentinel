@@ -78,6 +78,13 @@ docker build -t typosentinel . && docker run --rm -v "$PWD:/scan" typosentinel .
 docker compose up -d
 ```
 
+Prebuilt image (GHCR):
+
+```bash
+docker pull ghcr.io/alivanroy/typosentinel-api:latest
+docker run --rm -p 8080:8080 ghcr.io/alivanroy/typosentinel-api:latest
+```
+
 **Access Points:**
 - Web Interface: http://localhost:3000
 - API Server: http://localhost:8080

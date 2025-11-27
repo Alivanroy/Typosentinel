@@ -12,7 +12,10 @@ import (
 	"sync"
 	"time"
 
+	apimetrics "github.com/Alivanroy/Typosentinel/internal/api/metrics"
+	pkgmetrics "github.com/Alivanroy/Typosentinel/pkg/metrics"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
@@ -206,6 +209,7 @@ func rateLimitMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ip := getClientIP(r)
 		if !rateLimiter.Allow(ip) {
+			apimetrics.RecordRateLimitHit(r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusTooManyRequests)
 			json.NewEncoder(w).Encode(map[string]interface{}{
@@ -491,13 +495,15 @@ func main() {
 	// Initialize rate limiter
 	rateLimiter = NewRateLimiter()
 
-    // Create router
-    r := mux.NewRouter()
+	// Create router
+	r := mux.NewRouter()
 
-	// Metrics endpoint (JSON based on pkg/metrics)
-	r.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+	// Prometheus and JSON metrics endpoints
+	r.Use(apimetrics.PrometheusMiddleware())
+	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	r.HandleFunc("/metrics.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		m := metrics.GetInstance()
+		m := pkgmetrics.GetInstance()
 		json.NewEncoder(w).Encode(m.GetMetrics())
 	}).Methods("GET")
 
@@ -533,6 +539,25 @@ func main() {
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"*"},
 	})
+
+	// SSE stream for real-time monitoring (basic keepalive)
+	r.HandleFunc("/v1/stream", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+			return
+		}
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for i := 0; i < 3; i++ {
+			<-ticker.C
+			fmt.Fprintf(w, "data: {\"type\": \"ping\", \"count\": %d}\n\n", i+1)
+			flusher.Flush()
+		}
+	}).Methods("GET")
 
 	// Wrap router with CORS
 	handler := c.Handler(r)
@@ -618,18 +643,3 @@ func dashboardPerformanceHandler(w http.ResponseWriter, r *http.Request) {
 		"status": "not_implemented",
 	})
 }
-    // SSE stream for real-time monitoring (basic keepalive)
-    r.HandleFunc("/v1/stream", func(w http.ResponseWriter, r *http.Request){
-        w.Header().Set("Content-Type", "text/event-stream")
-        w.Header().Set("Cache-Control", "no-cache")
-        w.Header().Set("Connection", "keep-alive")
-        flusher, ok := w.(http.Flusher)
-        if !ok { http.Error(w, "Streaming unsupported", http.StatusInternalServerError); return }
-        ticker := time.NewTicker(5 * time.Second)
-        defer ticker.Stop()
-        for i:=0; i<3; i++{ // send few pings in tests
-            <-ticker.C
-            fmt.Fprintf(w, "data: {\"type\": \"ping\", \"count\": %d}\n\n", i+1)
-            flusher.Flush()
-        }
-    }).Methods("GET")

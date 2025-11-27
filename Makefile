@@ -146,6 +146,8 @@ test-coverage:
 	$(GOTEST) -v -race -timeout=$(TEST_TIMEOUT) -coverprofile=$(COVERAGE_DIR)/coverage.out -covermode=atomic ./...
 	$(GOCMD) tool cover -html=$(COVERAGE_DIR)/coverage.out -o $(COVERAGE_DIR)/coverage.html
 	$(GOCMD) tool cover -func=$(COVERAGE_DIR)/coverage.out | grep total | awk '{print "Total coverage: " $$3}'
+	@cp $(COVERAGE_DIR)/coverage.out $(COVERAGE_DIR)/coverage_baseline.out
+	@$(GOCMD) tool cover -func=$(COVERAGE_DIR)/coverage.out | tee $(COVERAGE_DIR)/coverage_baseline.txt >/dev/null
 	@echo "Coverage report generated: $(COVERAGE_DIR)/coverage.html"
 
 .PHONY: test-coverage-ci

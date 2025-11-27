@@ -25,6 +25,7 @@ jobs:
           go test ./... -cover -coverprofile=coverage.out
           go tool cover -func=coverage.out | tee coverage.txt
           awk '/total:/ { if ($3+0 < 50) { print "Coverage below 50%: "$3; exit 1 } }' coverage.txt || true
+          cp coverage.txt coverage_baseline.txt
       - name: Coverage HTML
         run: |
           go tool cover -html=coverage.out -o coverage.html
@@ -35,6 +36,7 @@ jobs:
           path: |
             coverage.out
             coverage.txt
+            coverage_baseline.txt
             coverage.html
 
   golangci-lint:

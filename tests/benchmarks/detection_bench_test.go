@@ -79,3 +79,23 @@ func BenchmarkDetectEnhancedMediumProject(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkDetectEnhancedLargeProject(b *testing.B) {
+	etd := detector.NewEnhancedTyposquattingDetector()
+	popular := []string{"express", "lodash", "react", "axios", "request", "cross-env", "node-fetch", "react-router"}
+	deps := make([]types.Dependency, 500)
+	for i := 0; i < len(deps); i++ {
+		base := popular[i%len(popular)]
+		name := base
+		if i%10 == 0 {
+			name = base + "s"
+		}
+		deps[i] = types.Dependency{Name: name, Version: "1.0.0", Registry: "npm"}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, dep := range deps {
+			_ = etd.DetectEnhanced(dep, popular, 0.75)
+		}
+	}
+}

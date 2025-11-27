@@ -64,6 +64,9 @@ Returns `501 Not Implemented` in demo.
 ### GET `/api/v1/dashboard/performance`
 Returns `501 Not Implemented` in demo.
 
+### GET `/api/v1/scans`
+Returns `501 Not Implemented` (planned for v1.1). Intended to list recent scans.
+
 ## Errors
 - `401 Unauthorized`: missing/invalid auth when enabled
 - `429 Too Many Requests`: rate limiting

@@ -442,3 +442,20 @@ For security vulnerabilities, please see our [Security Policy](SECURITY.md).
 - `--advanced`: enable enhanced detection algorithms
 - `--threshold <0..1>`: similarity threshold for typosquatting
 - `--registry <npm|pypi|go|maven>`: force registry when auto-detection isn’t possible
+Examples:
+
+```bash
+# NPM
+./build/typosentinel scan ./examples/npm-clean --output json
+./build/typosentinel scan ./examples/npm-vulnerable --output json
+
+# PyPI
+./build/typosentinel scan ./examples/pypi-clean --output json
+./build/typosentinel scan ./examples/pypi-vulnerable --output json
+
+# Go
+./build/typosentinel scan ./examples/go-minimal --registry go --output json
+
+# Maven
+./build/typosentinel scan ./examples/maven-minimal --registry maven --output json
+```

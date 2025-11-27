@@ -48,6 +48,41 @@ jobs:
       - name: Generate SARIF from sample project
         run: |
           go run . scan ./tests/e2e/test-projects/npm-vulnerable --output sarif > dist/typosentinel.sarif.json
+      - name: Generate SARIF for temp Go project
+        run: |
+          mkdir -p /tmp/typo-go
+          cat > /tmp/typo-go/go.mod << 'EOF'
+module example.com/e2e-go-project
+
+go 1.21
+
+require (
+    github.com/sirupsen/logrus v1.9.0 // indirect
+)
+EOF
+          go run . scan /tmp/typo-go --output sarif > dist/typosentinel-go.sarif.json
+      - name: Generate SARIF for temp Maven project
+        run: |
+          mkdir -p /tmp/typo-maven
+          cat > /tmp/typo-maven/pom.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>e2e-maven-project</artifactId>
+  <version>1.0.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.12.0</version>
+    </dependency>
+  </dependencies>
+</project>
+EOF
+          go run . scan /tmp/typo-maven --output sarif > dist/typosentinel-maven.sarif.json
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

@@ -39,8 +39,5 @@ require (
     require.NoError(t, json.Unmarshal(out[start:], &res))
     tp, ok := res["total_packages"].(float64)
     require.True(t, ok)
-    if int(tp) == 0 {
-        t.Skip("Go ecosystem parsing not wired in analyzer JSON path yet")
-    }
     assert.GreaterOrEqual(t, int(tp), 1)
 }

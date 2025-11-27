@@ -305,8 +305,6 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 	scanOrgCmd.Flags().Bool("include-archived", false, "Include archived repositories")
 	scanOrgCmd.MarkFlagRequired("org")
 
-
-
 	// Version command
 	var versionCmd = &cobra.Command{
 		Use:   "version",
@@ -488,15 +486,15 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 	var edgeCmd = &cobra.Command{
 		Use:   "edge",
 		Short: "Supply chain security algorithms",
-		Long: `Edge algorithms analyze package dependencies and detect supply chain threats using proven techniques.`,
+		Long:  `Edge algorithms analyze package dependencies and detect supply chain threats using proven techniques.`,
 	}
 
 	// GTR Algorithm command
 	var gtrCmd = &cobra.Command{
 		Use:   "gtr [packages...]",
 		Short: "Graph Traversal Reconnaissance algorithm",
-		Long: `GTR (Graph Traversal Reconnaissance) analyzes package dependency relationships to identify supply chain risks.`,
-		Args: cobra.MinimumNArgs(1),
+		Long:  `GTR (Graph Traversal Reconnaissance) analyzes package dependency relationships to identify supply chain risks.`,
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get flags
 			threshold, _ := cmd.Flags().GetFloat64("threshold")
@@ -630,8 +628,8 @@ of package dependencies and network relationships for comprehensive threat detec
 	var aiccCmd = &cobra.Command{
 		Use:   "aicc [packages...]",
 		Short: "Asset Intelligence Correlation Clustering algorithm",
-		Long: `AICC (Asset Intelligence Correlation Clustering) analyzes package relationships for supply chain security assessment.`,
-		Args: cobra.MinimumNArgs(1),
+		Long:  `AICC (Asset Intelligence Correlation Clustering) analyzes package relationships for supply chain security assessment.`,
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get flags
 			clusters, _ := cmd.Flags().GetInt("clusters")
@@ -811,12 +809,7 @@ impact propagation for comprehensive supply chain risk assessment.`,
 	edgeBenchmarkCmd.Flags().Int("workers", 4, "Number of concurrent workers")
 	edgeBenchmarkCmd.Flags().Int("iterations", 3, "Number of benchmark iterations")
 
-
-
-
 	// Add flags to new edge algorithm commands
-
-
 
 	// Add subcommands to edge command
 	edgeCmd.AddCommand(gtrCmd)
@@ -965,49 +958,49 @@ impact propagation for comprehensive supply chain risk assessment.`,
 
 // createDefaultConfig creates a default configuration
 func createDefaultConfig() *config.Config {
-    return &config.Config{
-        TypoDetection: &config.TypoDetectionConfig{
-            Enabled:           true,
-            Threshold:         0.8,
-            MaxDistance:       3,
-            CheckSimilarNames: true,
-            CheckHomoglyphs:   true,
-        },
-        SupplyChain: &config.SupplyChainConfig{
-            Enabled: true,
-            DependencyGraph: config.DependencyGraphConfig{
-                Enabled:                 true,
-                MaxDepth:                8,
-                TransitiveAnalysis:      true,
-                ConfusionDetection:      true,
-                SupplyChainRiskAnalysis: true,
-            },
-            BuildIntegrity: config.BuildIntegrityConfig{
-                Enabled:        true,
-                SignatureCheck: false,
-                Timeout:        time.Second * 30,
-            },
-            ZeroDayDetection: config.ZeroDayDetectionConfig{
-                Enabled:            false,
-                BehavioralAnalysis: false,
-                Timeout:            time.Second * 30,
-            },
-            HoneypotDetection: config.HoneypotDetectionConfig{
-                Enabled:             false,
-                ConfidenceThreshold: 0.6,
-                Timeout:             time.Second * 30,
-            },
-            RiskCalculation: config.RiskCalculationConfig{
-                Enabled: true,
-                Thresholds: config.RiskThresholds{
-                    Low:      0.2,
-                    Medium:   0.5,
-                    High:     0.7,
-                    Critical: 0.9,
-                },
-            },
-        },
-    }
+	return &config.Config{
+		TypoDetection: &config.TypoDetectionConfig{
+			Enabled:           true,
+			Threshold:         0.8,
+			MaxDistance:       3,
+			CheckSimilarNames: true,
+			CheckHomoglyphs:   true,
+		},
+		SupplyChain: &config.SupplyChainConfig{
+			Enabled: true,
+			DependencyGraph: config.DependencyGraphConfig{
+				Enabled:                 true,
+				MaxDepth:                8,
+				TransitiveAnalysis:      true,
+				ConfusionDetection:      true,
+				SupplyChainRiskAnalysis: true,
+			},
+			BuildIntegrity: config.BuildIntegrityConfig{
+				Enabled:        true,
+				SignatureCheck: false,
+				Timeout:        time.Second * 30,
+			},
+			ZeroDayDetection: config.ZeroDayDetectionConfig{
+				Enabled:            false,
+				BehavioralAnalysis: false,
+				Timeout:            time.Second * 30,
+			},
+			HoneypotDetection: config.HoneypotDetectionConfig{
+				Enabled:             false,
+				ConfidenceThreshold: 0.6,
+				Timeout:             time.Second * 30,
+			},
+			RiskCalculation: config.RiskCalculationConfig{
+				Enabled: true,
+				Thresholds: config.RiskThresholds{
+					Low:      0.2,
+					Medium:   0.5,
+					High:     0.7,
+					Critical: 0.9,
+				},
+			},
+		},
+	}
 }
 
 // outputScanResult outputs the scan result in the specified format
@@ -1016,6 +1009,16 @@ func outputScanResult(result *analyzer.ScanResult, format string) {
 	case "json":
 		data, _ := json.MarshalIndent(result, "", "  ")
 		fmt.Println(string(data))
+	case "sarif":
+		f := output.NewSARIFFormatter("", "", "", "cli")
+		b, err := f.Format(result)
+		if err != nil {
+			// fallback to json
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return
+		}
+		fmt.Println(string(b))
 	case "table":
 		outputScanResultTable(result)
 	case "spdx":
@@ -1093,7 +1096,7 @@ func outputAnalysisResult(result *detector.CheckPackageResult, format string) {
 
 // outputAnalysisResultTable outputs analysis results in table format
 func outputAnalysisResultTable(result *detector.CheckPackageResult) {
-    fmt.Printf("Package Analysis\n")
+	fmt.Printf("Package Analysis\n")
 	fmt.Println()
 
 	if len(result.Threats) > 0 {
@@ -1118,7 +1121,7 @@ func outputAnalysisResultTable(result *detector.CheckPackageResult) {
 		fmt.Println()
 	}
 
-    // Similar packages output removed in cleanup
+	// Similar packages output removed in cleanup
 }
 
 // outputSBOM outputs scan results in SBOM format (SPDX or CycloneDX)
@@ -1439,7 +1442,6 @@ func min(a, b int) int {
 	}
 	return b
 }
-
 
 // extractPackageNameFromPath extracts package name from scan path
 func extractPackageNameFromPath(path string) string {
@@ -1801,10 +1803,10 @@ func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, 
 		return outputDependencyGraphDOT(result, verbose)
 	case "svg":
 		return outputDependencyGraphSVG(result, verbose)
-    case "interactive":
-        return fmt.Errorf("interactive output not available")
-    case "advanced-svg":
-        return fmt.Errorf("advanced-svg output not available")
+	case "interactive":
+		return fmt.Errorf("interactive output not available")
+	case "advanced-svg":
+		return fmt.Errorf("advanced-svg output not available")
 	case "depth-analysis":
 		return performDepthAnalysis(result, path, verbose)
 	default:

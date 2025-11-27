@@ -23,6 +23,13 @@ docker build -t typosentinel-api . && docker run --rm -p 8080:8080 typosentinel-
 ./typosentinel scan . --output json --supply-chain --advanced
 ```
 
+### CLI Flags
+- `--output {json|sarif|table}`: output format
+- `--supply-chain`: enable supply chain analysis
+- `--advanced`: enhanced detection algorithms
+- `--threshold <0..1>`: similarity threshold
+- `--registry <npm|pypi|go|maven>`: force registry when needed
+
 ## API Server
 ```bash
 ./typosentinel server --port 8080

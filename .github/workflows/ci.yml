@@ -80,6 +80,11 @@ jobs:
       - name: Generate SARIF from sample project
         run: |
           go run . scan ./tests/e2e/test-projects/npm-vulnerable --output sarif > typosentinel.sarif.json
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: typosentinel.sarif.json
+          category: typosentinel-cli
       - name: Upload SARIF artifact
         uses: actions/upload-artifact@v4
         with:

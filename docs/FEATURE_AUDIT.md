@@ -16,8 +16,8 @@ Legend:
 | SARIF output | Yes | ⚠️ Needs testing | Verify |
 | npm support | Yes | ✅ Works | None |
 | PyPI support | Yes | ✅ Works | None |
-| Go modules | Yes | ⚠️ Needs testing | Test |
-| Maven support | Yes | ⚠️ Needs testing | Test |
+| Go modules | Yes | ✅ Parser implemented | Add more tests |
+| Maven support | Yes | ✅ Parser implemented | Add more tests |
 | Levenshtein detection | Yes | ✅ Works | None |
 | Jaro-Winkler detection | Yes | ✅ Works | None |
 | Homoglyph detection | Yes | ✅ Stabilized | None |

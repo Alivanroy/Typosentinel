@@ -1,0 +1,37 @@
+name: Linux Test Suite
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_e2e:
+        description: "Run E2E tests"
+        type: boolean
+        default: true
+        required: true
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Unit Tests
+        run: |
+          go version
+          go mod download
+          go test ./... -v
+      - name: E2E Tests
+        if: ${{ inputs.include_e2e }}
+        run: |
+          go test ./tests/e2e -v
+      - name: Coverage Report
+        run: |
+          go test ./... -cover -coverprofile=coverage.out
+          go tool cover -func=coverage.out | tee coverage.txt
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-coverage
+          path: coverage.txt

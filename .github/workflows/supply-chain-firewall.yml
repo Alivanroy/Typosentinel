@@ -41,6 +41,11 @@ on:
 jobs:
   firewall-check:
     runs-on: ubuntu-latest
+    env:
+      GOFLAGS: -mod=mod
+      GOPRIVATE: github.com/Alivanroy/*
+      GONOSUMDB: github.com/Alivanroy/*
+      GOPROXY: direct
     outputs:
       risk-score: ${{ steps.analysis.outputs.risk-score }}
       policy-action: ${{ steps.analysis.outputs.policy-action }}
@@ -57,7 +62,8 @@ jobs:
           
       - name: Build Typosentinel
         run: |
-          go mod download
+          go env
+          go mod download || true
           go build -o typosentinel .
           sudo mv typosentinel /usr/local/bin/
           

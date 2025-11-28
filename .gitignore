@@ -96,6 +96,8 @@ dependency-graph.svg
 data/typosentinel.db
 
 # Generated reports
+realworld_tests/
+**/realworld_tests/
 *-report-*.json
 *_test_results_*/
 performance_test_*.txt

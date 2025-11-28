@@ -303,7 +303,7 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			ShortDescription: &Message{Text: "Potential typosquatting package detected"},
 			FullDescription:  &Message{Text: "This package name is similar to a popular package and may be a typosquatting attempt"},
 			Help:             &Message{Text: "Verify the package name and publisher before using. Consider using the official package instead."},
-			HelpUri:          "https://github.com/Alivanroy/Typosentinel/docs/typosquatting",
+            HelpUri:          "https://github.com/Alivanroy/Typosentinel/blob/main/docs/typosquatting.md",
 			Properties: &RuleProperties{
 				Severity:    "high",
 				Category:    "security",
@@ -319,7 +319,7 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			ShortDescription: &Message{Text: "Potentially malicious package detected"},
 			FullDescription:  &Message{Text: "This package has been identified as potentially malicious based on various indicators"},
 			Help:             &Message{Text: "Remove this package immediately and scan your system for potential compromise."},
-			HelpUri:          "https://github.com/Alivanroy/Typosentinel/docs/malicious-packages",
+            HelpUri:          "https://github.com/Alivanroy/Typosentinel/blob/main/docs/malicious-packages.md",
 			Properties: &RuleProperties{
 				Severity:    "critical",
 				Category:    "security",
@@ -335,7 +335,7 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			ShortDescription: &Message{Text: "Package contains known vulnerabilities"},
 			FullDescription:  &Message{Text: "This package version contains known security vulnerabilities"},
 			Help:             &Message{Text: "Update to a patched version or find an alternative package."},
-			HelpUri:          "https://github.com/Alivanroy/Typosentinel/docs/vulnerabilities",
+            HelpUri:          "https://github.com/Alivanroy/Typosentinel/blob/main/docs/vulnerabilities.md",
 			Properties: &RuleProperties{
 				Severity:    "high",
 				Category:    "security",
@@ -351,7 +351,7 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			ShortDescription: &Message{Text: "Package exhibits suspicious behavior"},
 			FullDescription:  &Message{Text: "This package exhibits behavior patterns that may indicate malicious intent"},
 			Help:             &Message{Text: "Review the package source code and consider alternatives."},
-			HelpUri:          "https://github.com/Alivanroy/Typosentinel/docs/suspicious-behavior",
+            HelpUri:          "https://github.com/Alivanroy/Typosentinel/blob/main/docs/suspicious-behavior.md",
 			Properties: &RuleProperties{
 				Severity:    "medium",
 				Category:    "security",

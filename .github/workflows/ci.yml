@@ -6,6 +6,13 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      GOFLAGS: -mod=mod
+      GOPRIVATE: github.com/Alivanroy/*
+      GONOSUMDB: github.com/Alivanroy/*
+      GOPROXY: direct
+      GO111MODULE: on
+      GOWORK: off
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -15,7 +22,7 @@ jobs:
         run: go mod download
       - name: Lint and Static Checks
         run: |
-          export GOFLAGS="-mod=mod"
+          go env
           go mod download || true
           go build ./...
           go vet ./...
@@ -52,6 +59,12 @@ jobs:
 
   golangci-lint:
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/Alivanroy/*
+      GONOSUMDB: github.com/Alivanroy/*
+      GOPROXY: direct
+      GO111MODULE: on
+      GOWORK: off
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -76,6 +89,12 @@ jobs:
 
   sarif-report:
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/Alivanroy/*
+      GONOSUMDB: github.com/Alivanroy/*
+      GOPROXY: direct
+      GO111MODULE: on
+      GOWORK: off
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

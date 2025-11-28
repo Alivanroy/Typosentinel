@@ -46,6 +46,8 @@ jobs:
       GOPRIVATE: github.com/Alivanroy/*
       GONOSUMDB: github.com/Alivanroy/*
       GOPROXY: direct
+      GO111MODULE: on
+      GOWORK: off
     outputs:
       risk-score: ${{ steps.analysis.outputs.risk-score }}
       policy-action: ${{ steps.analysis.outputs.policy-action }}

@@ -1,56 +1,18 @@
-# Pull Request
+## Summary
 
-## Description
+Describe the changes and their motivation.
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
+## Changes
+- [ ] Implementation
+- [ ] Tests
+- [ ] Docs
 
-Fixes # (issue)
+## Checklist
+- [ ] Tests pass (`go test ./... -v`)
+- [ ] Lint passes (`golangci-lint run`)
+- [ ] No secrets included (`gitleaks detect`)
+- [ ] Updated `CHANGELOG.md` if user-facing
 
-## Type of change
+## Related Issues
+Link issues or discussions.
 
-Please delete options that are not relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-## How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
-
-- [ ] Test A
-- [ ] Test B
-
-**Test Configuration**:
-* Firmware version:
-* Hardware:
-* Toolchain:
-* SDK:
-
-## Checklist:
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
-
-## Security Considerations
-
-- [ ] This change does not introduce any security vulnerabilities
-- [ ] I have reviewed the security implications of my changes
-- [ ] All secrets and sensitive data are properly handled
-
-## Performance Impact
-
-- [ ] This change does not negatively impact performance
-- [ ] I have tested the performance implications of my changes
-- [ ] Benchmarks show acceptable performance characteristics
-
-## Additional Notes
-
-Add any other context about the pull request here.

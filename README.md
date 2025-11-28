@@ -197,6 +197,15 @@ docker run --rm -p 8080:8080 \
 
 Note: demo‑only endpoints (`/api/v1/vulnerabilities`, `/api/v1/dashboard/*`) return `501 Not Implemented`.
 
+## 📜 Governance
+- Contributing: see `CONTRIBUTING.md`
+- Code of Conduct: see `CODE_OF_CONDUCT.md`
+- Security Policy: see `SECURITY.md`
+
+## 🔎 API Docs
+- OpenAPI JSON: `/openapi.json`
+- Interactive docs: `/docs`
+
 ### Firewall Dashboard Features
 
 - **🛡️ Firewall Status**: Real-time supply chain firewall monitoring with live activity feed

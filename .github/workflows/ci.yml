@@ -18,6 +18,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+      - name: Configure Go environment
+        run: |
+          go env -w GOFLAGS=-mod=mod
+          go env -w GO111MODULE=on
+          go env -w GOWORK=off
+          go env -w GOPRIVATE=github.com/Alivanroy/*
+          go env -w GONOSUMDB=github.com/Alivanroy/*
+          go env -w GONOPROXY=github.com/Alivanroy/*
+          go env -w GOPROXY=direct
       - name: Dependencies
         run: go mod download
       - name: Lint and Static Checks

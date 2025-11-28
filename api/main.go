@@ -15,6 +15,9 @@ import (
 	"bytes"
 	"net/smtp"
 
+	"io"
+	"os"
+
 	apimetrics "github.com/Alivanroy/Typosentinel/internal/api/metrics"
 	apilm "github.com/Alivanroy/Typosentinel/internal/api/middleware"
 	whloader "github.com/Alivanroy/Typosentinel/internal/api/webhook"
@@ -582,6 +585,28 @@ func main() {
 	r.HandleFunc("/health", healthHandler).Methods("GET")
 	r.HandleFunc("/ready", readyHandler).Methods("GET")
 	r.HandleFunc("/test", testHandler).Methods("GET")
+
+	// OpenAPI and docs endpoints
+	r.HandleFunc("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		f, err := os.Open("docs/openapi.json")
+		if err != nil {
+			http.Error(w, "OpenAPI spec not found", http.StatusNotFound)
+			return
+		}
+		defer f.Close()
+		io.Copy(w, f)
+	}).Methods("GET")
+	r.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		f, err := os.Open("docs/swagger.html")
+		if err != nil {
+			http.Error(w, "Docs page not found", http.StatusNotFound)
+			return
+		}
+		defer f.Close()
+		io.Copy(w, f)
+	}).Methods("GET")
 
 	// API endpoints with auth and rate limiting
 	if dsn := os.Getenv("RATE_LIMIT_REDIS_URL"); dsn != "" {

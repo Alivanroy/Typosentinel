@@ -94,3 +94,16 @@ jobs:
       asset-criticality: INTERNAL
       policy-threshold: alert
       fail-on-violation: true
+
+  e2e-realworld:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Run Realworld E2E Suite
+        env:
+          API_AUTH_ENABLED: "false"
+        run: |
+          go test -tags=realworld ./tests/e2e/testrealworld -v

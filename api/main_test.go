@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -78,5 +80,33 @@ func TestSSEStreamEndpoint(t *testing.T) {
 	}
 	if !strings.Contains(rr.Body.String(), "data:") {
 		t.Fatalf("expected sse data")
+	}
+}
+func TestOpenAPIJSONEndpoint(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/openapi.json", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		f, err := os.Open("docs/openapi.json")
+		if err != nil {
+			http.Error(w, "OpenAPI spec not found", http.StatusNotFound)
+			return
+		}
+		defer f.Close()
+		io.Copy(w, f)
+	})
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	var obj map[string]interface{}
+	if err := json.Unmarshal(rr.Body.Bytes(), &obj); err != nil {
+		t.Fatalf("invalid json: %v", err)
+	}
+	if _, ok := obj["openapi"]; !ok {
+		t.Fatalf("missing openapi field")
+	}
+	if _, ok := obj["paths"]; !ok {
+		t.Fatalf("missing paths field")
 	}
 }

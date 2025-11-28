@@ -428,8 +428,12 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 			outputGraph, _ := cmd.Flags().GetString("output-graph")
 			verbose, _ := cmd.Flags().GetBool("verbose")
 
+			// Styling options
+			styleOpt, _ := cmd.Flags().GetString("graph-style")
+			rankOpt, _ := cmd.Flags().GetString("rankdir")
+
 			// Perform dependency graph analysis
-			if err := performDependencyGraphAnalysis(path, graphDepth, includeDevDeps, outputGraph, verbose); err != nil {
+			if err := performDependencyGraphAnalysis(path, graphDepth, includeDevDeps, outputGraph, styleOpt, rankOpt, verbose); err != nil {
 				fmt.Printf("Error performing dependency graph analysis: %v\n", err)
 				os.Exit(1)
 			}
@@ -475,6 +479,8 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 	graphAnalyzeCmd.Flags().Int("graph-depth", 5, "Dependency graph depth")
 	graphAnalyzeCmd.Flags().Bool("include-dev", false, "Include development dependencies")
 	graphAnalyzeCmd.Flags().String("output-graph", "json", "Graph output format (json/dot/svg)")
+	graphAnalyzeCmd.Flags().String("graph-style", "modern", "Graph style (modern|classic)")
+	graphAnalyzeCmd.Flags().String("rankdir", "LR", "DOT layout direction (LR|TB)")
 
 	threatIntelCmd.Flags().StringSlice("threat-sources", []string{"typosentinel", "osv"}, "Threat intelligence sources")
 	threatIntelCmd.Flags().StringSlice("threat-types", []string{"malware", "typosquatting"}, "Threat types to query")
@@ -847,7 +853,9 @@ impact propagation for comprehensive supply chain risk assessment.`,
 			includeDev, _ := cmd.Flags().GetBool("include-dev")
 			outputFormat, _ := cmd.Flags().GetString("format")
 
-			return performDependencyGraphAnalysis(path, maxDepth, includeDev, outputFormat, verbose)
+			styleOpt, _ := cmd.Flags().GetString("graph-style")
+			rankOpt, _ := cmd.Flags().GetString("rankdir")
+			return performDependencyGraphAnalysis(path, maxDepth, includeDev, outputFormat, styleOpt, rankOpt, verbose)
 		},
 	}
 
@@ -896,6 +904,10 @@ impact propagation for comprehensive supply chain risk assessment.`,
 			}
 
 			// Export based on format
+			// Graph styling options
+			styleOpt, _ := cmd.Flags().GetString("graph-style")
+			rankOpt, _ := cmd.Flags().GetString("rankdir")
+
 			switch exportFormat {
 			case "json":
 				if outputFile != "" {
@@ -909,10 +921,10 @@ impact propagation for comprehensive supply chain risk assessment.`,
 			case "dot":
 				if outputFile != "" {
 					// Generate DOT content and save to file
-					dotContent := generateDOTContentFromResult(result)
+					dotContent := generateDOTContentFromResult(result, styleOpt, rankOpt)
 					return os.WriteFile(outputFile, []byte(dotContent), 0644)
 				}
-				return outputDependencyGraphDOT(result, verbose)
+				return outputDependencyGraphDOT(result, styleOpt, rankOpt, verbose)
 			case "svg":
 				if outputFile != "" {
 					// Generate SVG and save to file
@@ -930,9 +942,13 @@ impact propagation for comprehensive supply chain risk assessment.`,
 
 	graphGenerateCmd.Flags().Int("max-depth", 10, "Maximum dependency depth to analyze")
 	graphGenerateCmd.Flags().String("format", "table", "Output format (table, json, dot, svg)")
+	graphGenerateCmd.Flags().String("graph-style", "modern", "Graph style (modern|classic)")
+	graphGenerateCmd.Flags().String("rankdir", "LR", "DOT layout direction (LR|TB)")
 
 	graphExportCmd.Flags().String("format", "json", "Export format (json, dot, svg)")
 	graphExportCmd.Flags().String("output", "", "Output file path (if not specified, prints to stdout)")
+	graphExportCmd.Flags().String("graph-style", "modern", "Graph style (modern|classic)")
+	graphExportCmd.Flags().String("rankdir", "LR", "DOT layout direction (LR|TB)")
 
 	// Add subcommands to graph command
 	graphCmd.AddCommand(graphGenerateCmd)
@@ -1375,25 +1391,66 @@ func saveScanToDatabase(result *analyzer.ScanResult, scanPath string) error {
 }
 
 // generateDOTContentFromResult generates DOT format content from scan result
-func generateDOTContentFromResult(result *analyzer.ScanResult) string {
+func generateDOTContentFromResult(result *analyzer.ScanResult, style string, rank string) string {
 	var content strings.Builder
 	content.WriteString("digraph DependencyGraph {\n")
-	content.WriteString("  rankdir=TB;\n")
-	content.WriteString("  node [shape=box, style=filled];\n\n")
-
-	// Add root node
-	content.WriteString(fmt.Sprintf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n",
-		result.Path, result.Path, result.TotalPackages))
-
-	// Add threat nodes
-	for i, threat := range result.Threats {
-		color := "lightcoral"
-		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
-			color = "red"
+	if rank == "TB" {
+		content.WriteString("  rankdir=TB;\n")
+	} else {
+		content.WriteString("  rankdir=LR;\n")
+	}
+	if style == "classic" {
+		content.WriteString("  node [shape=box, style=filled];\n\n")
+		content.WriteString(fmt.Sprintf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n",
+			result.Path, result.Path, result.TotalPackages))
+		for i, threat := range result.Threats {
+			color := "lightcoral"
+			if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+				color = "red"
+			}
+			content.WriteString(fmt.Sprintf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n", i, color, threat.Package, threat.Type))
+			content.WriteString(fmt.Sprintf("  \"%s\" -> \"threat_%d\";\n", result.Path, i))
 		}
-		content.WriteString(fmt.Sprintf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n",
-			i, color, threat.Package, threat.Type))
-		content.WriteString(fmt.Sprintf("  \"%s\" -> \"threat_%d\";\n", result.Path, i))
+		content.WriteString("}\n")
+		return content.String()
+	}
+	content.WriteString("  graph [bgcolor=white, pad=0.5];\n")
+	content.WriteString("  node [shape=box, style=filled, color=gray30, fontname=Helvetica, fontsize=10];\n")
+	content.WriteString("  edge [color=gray50, arrowsize=0.6];\n\n")
+
+	// Root cluster
+	content.WriteString("  subgraph cluster_root {\n")
+	content.WriteString("    label=\"Project\"; style=rounded; color=lightblue;\n")
+	content.WriteString(fmt.Sprintf("    \"%s\" [fillcolor=lightblue, shape=oval, label=\"%s\\nPackages: %d\"];\n",
+		result.Path, result.Path, result.TotalPackages))
+	content.WriteString("  }\n\n")
+
+	// Threat nodes cluster
+	if len(result.Threats) > 0 {
+		content.WriteString("  subgraph cluster_threats {\n")
+		content.WriteString("    label=\"Threats\"; style=rounded; color=red;\n")
+		for i, threat := range result.Threats {
+			color := "#ffc9c9" // light red
+			if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+				color = "#ff6b6b" // red
+			}
+			lbl := fmt.Sprintf("%s\\n%s", threat.Package, threat.Severity.String())
+			content.WriteString(fmt.Sprintf("    \"threat_%d\" [fillcolor=\"%s\", label=\"%s\"];\n", i, color, lbl))
+			content.WriteString(fmt.Sprintf("    \"%s\" -> \"threat_%d\";\n", result.Path, i))
+		}
+		content.WriteString("  }\n\n")
+	}
+
+	// Warning nodes cluster
+	if len(result.Warnings) > 0 {
+		content.WriteString("  subgraph cluster_warnings {\n")
+		content.WriteString("    label=\"Warnings\"; style=rounded; color=gold;\n")
+		for i, w := range result.Warnings {
+			lbl := fmt.Sprintf("%s\\nwarning", w.Package)
+			content.WriteString(fmt.Sprintf("    \"warn_%d\" [fillcolor=\"#ffe08a\", label=\"%s\"];\n", i, lbl))
+			content.WriteString(fmt.Sprintf("    \"%s\" -> \"warn_%d\" [style=dashed];\n", result.Path, i))
+		}
+		content.WriteString("  }\n\n")
 	}
 
 	content.WriteString("}\n")
@@ -1762,7 +1819,7 @@ func saveDepthAnalysisToFile(result *scanner.DepthAnalysisResult, scanPath strin
 }
 
 // performDependencyGraphAnalysis performs comprehensive dependency graph analysis
-func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, outputFormat string, verbose bool) error {
+func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, outputFormat string, style string, rankdir string, verbose bool) error {
 	// Initialize configuration
 	cfg := createDefaultConfig()
 
@@ -1807,7 +1864,7 @@ func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, 
 	case "json":
 		return outputDependencyGraphJSON(result, verbose)
 	case "dot":
-		return outputDependencyGraphDOT(result, verbose)
+		return outputDependencyGraphDOT(result, style, rankdir, verbose)
 	case "svg":
 		return outputDependencyGraphSVG(result, verbose)
 	case "interactive":
@@ -1855,76 +1912,66 @@ func outputDependencyGraphJSON(result *analyzer.ScanResult, verbose bool) error 
 }
 
 // outputDependencyGraphDOT outputs dependency graph in DOT format for Graphviz
-func outputDependencyGraphDOT(result *analyzer.ScanResult, verbose bool) error {
-	fmt.Println("digraph DependencyGraph {")
-	fmt.Println("  rankdir=TB;")
-	fmt.Println("  node [shape=box, style=filled];")
-	fmt.Println()
-
-	// Add root node
-	fmt.Printf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n",
-		result.Path, result.Path, result.TotalPackages)
-
-	// Add threat nodes
-	for i, threat := range result.Threats {
-		color := "lightcoral"
-		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
-			color = "red"
-		}
-		fmt.Printf("  \"threat_%d\" [fillcolor=%s, label=\"%s\\n%s\"];\n",
-			i, color, threat.Package, threat.Type)
-		fmt.Printf("  \"%s\" -> \"threat_%d\";\n", result.Path, i)
-	}
-
-	fmt.Println("}")
+func outputDependencyGraphDOT(result *analyzer.ScanResult, style, rankdir string, verbose bool) error {
+	fmt.Print(generateDOTContentFromResult(result, style, rankdir))
 	return nil
 }
 
 // outputDependencyGraphSVG outputs dependency graph in SVG format
 func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
+	// Basic grid layout with separate sections for root, threats, and warnings
 	fmt.Println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-	fmt.Println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\">")
+	fmt.Println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1000\" height=\"700\">")
 	fmt.Println("  <title>Dependency Graph Analysis</title>")
+	fmt.Println("  <rect width=\"100%\" height=\"100%\" fill=\"#ffffff\"/>")
+	fmt.Printf("  <text x=\"500\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path)
+	// Root card
+	fmt.Println("  <rect x=\"450\" y=\"60\" width=\"100\" height=\"60\" rx=\"8\" fill=\"#e7f1ff\" stroke=\"#0056b3\"/>")
+	fmt.Printf("  <text x=\"500\" y=\"90\" text-anchor=\"middle\" font-size=\"12\">%d packages</text>\n", result.TotalPackages)
 
-	// Background
-	fmt.Println("  <rect width=\"100%\" height=\"100%\" fill=\"#f8f9fa\"/>")
-
-	// Title
-	fmt.Printf("  <text x=\"400\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path)
-
-	// Root node
-	fmt.Println("  <circle cx=\"400\" cy=\"100\" r=\"30\" fill=\"#007bff\" stroke=\"#0056b3\" stroke-width=\"2\"/>")
-	fmt.Printf("  <text x=\"400\" y=\"105\" text-anchor=\"middle\" fill=\"white\" font-size=\"12\">%d pkg</text>\n", result.TotalPackages)
-
-	// Threat nodes
-	y := 200
+	// Threat cards
+	ty := 160
+	tx := 80
 	for i, threat := range result.Threats {
-		x := 200 + (i%3)*200
-		if i > 0 && i%3 == 0 {
-			y += 100
+		if i%4 == 0 && i != 0 {
+			ty += 110
+			tx = 80
 		}
-
-		color := "#ffc107" // warning
+		color := "#fff3cd" // warning
 		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
-			color = "#dc3545" // danger
+			color = "#f8d7da"
 		}
-
-		fmt.Printf("  <circle cx=\"%d\" cy=\"%d\" r=\"25\" fill=\"%s\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y, color)
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\">%s</text>\n", x, y-5, threat.Package)
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"8\">%s</text>\n", x, y+8, threat.Severity)
-
-		// Connection line
-		fmt.Printf("  <line x1=\"400\" y1=\"130\" x2=\"%d\" y2=\"%d\" stroke=\"#666\" stroke-width=\"1\"/>\n", x, y-25)
+		fmt.Printf("  <rect x=\"%d\" y=\"%d\" width=\"200\" height=\"90\" rx=\"8\" fill=\"%s\" stroke=\"#666\"/>\n", tx, ty, color)
+		name := threat.Package
+		if len(name) > 22 {
+			name = name[:22] + "…"
+		}
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"12\" font-weight=\"bold\">%s</text>\n", tx+10, ty+20, name)
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"11\">Severity: %s</text>\n", tx+10, ty+40, threat.Severity)
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"11\">Type: %s</text>\n", tx+10, ty+58, threat.Type)
+		// Connector
+		fmt.Printf("  <line x1=\"500\" y1=\"120\" x2=\"%d\" y2=\"%d\" stroke=\"#999\" stroke-width=\"1\"/>\n", tx+100, ty)
+		tx += 220
 	}
 
-	// Legend
-	fmt.Println("  <text x=\"50\" y=\"550\" font-size=\"12\" font-weight=\"bold\">Legend:</text>")
-	fmt.Println("  <circle cx=\"70\" cy=\"570\" r=\"8\" fill=\"#007bff\"/>")
-	fmt.Println("  <text x=\"85\" y=\"575\" font-size=\"10\">Root Package</text>")
-	fmt.Println("  <circle cx=\"200\" cy=\"570\" r=\"8\" fill=\"#dc3545\"/>")
-	fmt.Println("  <text x=\"215\" y=\"575\" font-size=\"10\">High/Critical Threat</text>")
-	fmt.Println("  <circle cx=\"350\" cy=\"570\" r=\"8\" fill=\"#ffc107\"/>")
-	fmt.Println("  <text x=\"365\" y=\"575\" font-size=\"10\">Medium/Low Threat</text>")
+	// Warning cards
+	wy := ty + 130
+	wx := 80
+	for i, w := range result.Warnings {
+		if i%4 == 0 && i != 0 {
+			wy += 110
+			wx = 80
+		}
+		fmt.Printf("  <rect x=\"%d\" y=\"%d\" width=\"200\" height=\"70\" rx=\"8\" fill=\"#fff8e1\" stroke=\"#666\"/>\n", wx, wy)
+		name := w.Package
+		if len(name) > 22 {
+			name = name[:22] + "…"
+		}
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"12\" font-weight=\"bold\">%s</text>\n", wx+10, wy+20, name)
+		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"11\">warning</text>\n", wx+10, wy+40)
+		fmt.Printf("  <line x1=\"500\" y1=\"120\" x2=\"%d\" y2=\"%d\" stroke=\"#bbb\" stroke-width=\"1\" stroke-dasharray=\"4,2\"/>\n", wx+100, wy)
+		wx += 220
+	}
 
 	fmt.Println("</svg>")
 	return nil

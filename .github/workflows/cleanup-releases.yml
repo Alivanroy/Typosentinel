@@ -1,0 +1,93 @@
+name: Cleanup Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Simulate cleanup without deleting"
+        type: boolean
+        default: true
+        required: true
+      keep_latest:
+        description: "Number of latest stable releases to keep"
+        type: number
+        default: 3
+        required: true
+      delete_assets_only:
+        description: "Delete assets only (keep release and tag)"
+        type: boolean
+        default: false
+        required: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cleanup pre-releases and dev builds
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const dryRun = core.getInput('dry_run') === 'true'
+            const keepLatest = parseInt(core.getInput('keep_latest') || '3', 10)
+            const deleteAssetsOnly = core.getInput('delete_assets_only') === 'true'
+
+            // List releases
+            const releasesResp = await github.rest.repos.listReleases({ owner, repo, per_page: 100 })
+            const releases = releasesResp.data
+            if (!releases || releases.length === 0) {
+              core.info('No releases found')
+              return
+            }
+
+            // Determine stable releases (non-prerelease and semantic tag vX.Y.Z)
+            const semverTag = /^v\d+\.\d+\.\d+$/
+            const stable = releases.filter(r => !r.prerelease && semverTag.test(r.tag_name))
+              .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+            const keepSet = new Set(stable.slice(0, keepLatest).map(r => r.id))
+
+            // Candidates: prereleases, or tags containing rc/beta/alpha/dev/test, or very old stable beyond keepLatest
+            const devPattern = /-(rc|beta|alpha|dev|test)/i
+            const candidates = releases.filter(r => {
+              if (r.prerelease) return true
+              if (devPattern.test(r.tag_name)) return true
+              if (!keepSet.has(r.id) && semverTag.test(r.tag_name)) return true
+              return false
+            })
+
+            core.info(`Found ${releases.length} releases; candidates for cleanup: ${candidates.length}`)
+
+            for (const r of candidates) {
+              core.info(`Candidate: tag=${r.tag_name} id=${r.id} prerelease=${r.prerelease} created=${r.created_at}`)
+
+              if (deleteAssetsOnly) {
+                for (const asset of r.assets || []) {
+                  core.info(`Deleting asset id=${asset.id} name=${asset.name} from release ${r.tag_name}`)
+                  if (!dryRun) {
+                    await github.rest.repos.deleteReleaseAsset({ owner, repo, asset_id: asset.id })
+                  }
+                }
+                continue
+              }
+
+              // Delete release
+              core.info(`Deleting release ${r.tag_name} (id=${r.id})`)
+              if (!dryRun) {
+                await github.rest.repos.deleteRelease({ owner, repo, release_id: r.id })
+              }
+
+              // Delete tag ref if present
+              const ref = `tags/${r.tag_name}`
+              core.info(`Deleting tag ref ${ref}`)
+              if (!dryRun) {
+                try {
+                  await github.rest.git.deleteRef({ owner, repo, ref })
+                } catch (err) {
+                  core.warning(`Failed to delete tag ref ${ref}: ${err.message}`)
+                }
+              }
+            }
+
+            core.info('Cleanup complete')

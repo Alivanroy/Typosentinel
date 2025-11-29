@@ -86,7 +86,21 @@ func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*Chec
 }
 
 // cfgFromContext placeholder (not used)
-func cfgFromContext(ctx context.Context) *config.Config { return nil }
+type ctxKey int
+
+const detectorCfgKey ctxKey = iota
+
+func WithConfig(ctx context.Context, cfg *config.Config) context.Context {
+	return context.WithValue(ctx, detectorCfgKey, cfg)
+}
+func cfgFromContext(ctx context.Context) *config.Config {
+	if v := ctx.Value(detectorCfgKey); v != nil {
+		if c, ok := v.(*config.Config); ok {
+			return c
+		}
+	}
+	return nil
+}
 
 // getPopularByRegistry returns curated popular package names per registry
 func getPopularByRegistry(registry string) []string {

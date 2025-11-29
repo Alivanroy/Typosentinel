@@ -3,6 +3,7 @@
 [![Go Version](https://img.shields.io/badge/go-1.23-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![CI Status](https://github.com/Alivanroy/Typosentinel/workflows/CI/badge.svg)](https://github.com/Alivanroy/Typosentinel/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Alivanroy/Typosentinel)](https://goreportcard.com/report/github.com/Alivanroy/Typosentinel)
 
 **Typosentinel** is an intelligent supply chain firewall that actively blocks malicious packages, typosquatting attacks, and supply chain threats in real-time. It transforms from a security scanner into an active protection system with business-aware risk assessment and policy-based blocking.
 

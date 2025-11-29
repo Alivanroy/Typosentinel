@@ -10,6 +10,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	redis "github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 )
 
 type Options struct {
@@ -31,18 +32,37 @@ func New(cfg *config.Config) *Engine {
 			ttl = cfg.Cache.TTL
 		}
 	}
+	if d := viper.GetDuration("detector.popular_ttl"); d > 0 {
+		ttl = d
+	}
 	if ttl == 0 {
 		ttl = time.Hour
 	}
 	var cache *PopularCache
-	if cfg != nil && cfg.Redis.Enabled {
+	useRedis := viper.GetBool("redis.enabled") && ttl > 0
+	if useRedis {
 		addr := fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port)
 		rdb := redis.NewClient(&redis.Options{Addr: addr, Password: cfg.Redis.Password, DB: cfg.Redis.Database})
 		cache = NewPopularCacheWithRedis(ttl, rdb)
 	} else {
 		cache = NewPopularCache(ttl)
 	}
-	// Backoff config (optional config wiring can be added later)
+	// Backoff and NPM bias config
+	if ss := viper.GetStringSlice("detector.backoff_schedule"); len(ss) > 0 {
+		var durs []time.Duration
+		for _, s := range ss {
+			if dur, err := time.ParseDuration(s); err == nil {
+				durs = append(durs, dur)
+			}
+		}
+		if len(durs) > 0 {
+			cache.SetBackoffs(durs)
+		}
+	}
+	if att := viper.GetInt("detector.backoff_attempts"); att > 0 {
+		cache.SetAttempts(att)
+	}
+	cache.SetNPMWeights(viper.GetFloat64("detector.npm_quality_weight"), viper.GetFloat64("detector.npm_popularity_weight"), viper.GetFloat64("detector.npm_maintenance_weight"))
 	return &Engine{
 		enhancedDetector: NewEnhancedTyposquattingDetector(),
 		popularCache:     cache,
@@ -60,7 +80,12 @@ type CheckPackageResult struct {
 func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*CheckPackageResult, error) {
 	// Select popular packages based on registry for better coverage
 	if e.popularCache != nil {
-		popularPackages := e.popularCache.Get(registry, e.maxPopular)
+		// Allow per-request override via context
+		reqMax := e.maxPopular
+		if ov := maxPopularFromContext(ctx); ov > 0 {
+			reqMax = ov
+		}
+		popularPackages := e.popularCache.Get(registry, reqMax)
 		if len(popularPackages) == 0 {
 			popularPackages = getPopularByRegistry(registry)
 		}
@@ -111,6 +136,23 @@ func cfgFromContext(ctx context.Context) *config.Config {
 		}
 	}
 	return nil
+}
+
+// Optional per-request override for max popular candidates
+type ctxMaxKey int
+
+const maxPopularKey ctxMaxKey = iota
+
+func WithMaxPopular(ctx context.Context, n int) context.Context {
+	return context.WithValue(ctx, maxPopularKey, n)
+}
+func maxPopularFromContext(ctx context.Context) int {
+	if v := ctx.Value(maxPopularKey); v != nil {
+		if n, ok := v.(int); ok {
+			return n
+		}
+	}
+	return 0
 }
 
 // getPopularByRegistry returns curated popular package names per registry

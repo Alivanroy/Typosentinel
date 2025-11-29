@@ -18,6 +18,9 @@ type NPMClient struct {
     httpClient *http.Client
     cache      map[string]*CacheEntry
     cacheTTL   time.Duration
+    qualityWeight     float64
+    popularityWeight  float64
+    maintenanceWeight float64
 }
 
 // CacheEntry represents a cached registry response
@@ -68,14 +71,17 @@ type NPMDownloadStats struct {
 
 // NewNPMClient creates a new NPM registry client
 func NewNPMClient() *NPMClient {
-	return &NPMClient{
-		baseURL: "https://registry.npmjs.org",
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-		cache:    make(map[string]*CacheEntry),
-		cacheTTL: 5 * time.Minute,
-	}
+    return &NPMClient{
+        baseURL: "https://registry.npmjs.org",
+        httpClient: &http.Client{
+            Timeout: 30 * time.Second,
+        },
+        cache:    make(map[string]*CacheEntry),
+        cacheTTL: 5 * time.Minute,
+        qualityWeight: 0.0,
+        popularityWeight: 1.0,
+        maintenanceWeight: 0.0,
+    }
 }
 
 // GetPackageInfo fetches package information from NPM registry
@@ -244,10 +250,16 @@ func (c *NPMClient) SetCacheTTL(ttl time.Duration) {
     logrus.Debugf("NPM client cache TTL set to: %v", ttl)
 }
 
+func (c *NPMClient) SetBias(quality, popularity, maintenance float64) {
+    c.qualityWeight = quality
+    c.popularityWeight = popularity
+    c.maintenanceWeight = maintenance
+}
+
 // GetPopularPackageNames retrieves popular packages via NPM search API
 func (c *NPMClient) GetPopularPackageNames(ctx context.Context, limit int) ([]string, error) {
     if limit <= 0 { limit = 20 }
-    searchURL := fmt.Sprintf("%s/-/v1/search?text=&size=%d", c.baseURL, limit)
+    searchURL := fmt.Sprintf("%s/-/v1/search?text=&size=%d&quality=%g&popularity=%g&maintenance=%g", c.baseURL, limit, c.qualityWeight, c.popularityWeight, c.maintenanceWeight)
     req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
     if err != nil { return nil, fmt.Errorf("failed to create request: %w", err) }
     req.Header.Set("Accept", "application/json")

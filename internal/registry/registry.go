@@ -198,6 +198,11 @@ func (n *NPMConnector) Close() error {
 	return nil
 }
 
+// SetBias sets NPM client weights for popularity search
+func (n *NPMConnector) SetBias(quality, popularity, maintenance float64) {
+	n.client.SetBias(quality, popularity, maintenance)
+}
+
 // PyPIConnector implements Connector for PyPI registry
 type PyPIConnector struct {
 	registry *Registry

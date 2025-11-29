@@ -16,22 +16,36 @@ type popularEntry struct {
 }
 
 type PopularCache struct {
-	ttl      time.Duration
-	store    map[string]popularEntry
-	rdb      *redis.Client
-	backoffs []time.Duration
+	ttl            time.Duration
+	store          map[string]popularEntry
+	rdb            *redis.Client
+	backoffs       []time.Duration
+	attempts       int
+	npmQuality     float64
+	npmPopularity  float64
+	npmMaintenance float64
 }
 
 func NewPopularCache(ttl time.Duration) *PopularCache {
-	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), backoffs: []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}}
+	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), backoffs: []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}, attempts: 3}
 }
 func NewPopularCacheWithRedis(ttl time.Duration, client *redis.Client) *PopularCache {
-	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), rdb: client, backoffs: []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}}
+	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), rdb: client, backoffs: []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}, attempts: 3}
 }
 func (c *PopularCache) SetBackoffs(backoffs []time.Duration) {
 	if len(backoffs) > 0 {
 		c.backoffs = backoffs
 	}
+}
+func (c *PopularCache) SetAttempts(n int) {
+	if n > 0 {
+		c.attempts = n
+	}
+}
+func (c *PopularCache) SetNPMWeights(quality, popularity, maintenance float64) {
+	c.npmQuality = quality
+	c.npmPopularity = popularity
+	c.npmMaintenance = maintenance
 }
 
 func (c *PopularCache) Get(registry string, max int) []string {
@@ -81,12 +95,22 @@ func (c *PopularCache) fetchPopularDynamic(registry string, limit int) []string 
 
 	backoffs := c.backoffs
 	try := func(fetch func() ([]string, error)) []string {
-		for i := 0; i < len(backoffs); i++ {
+		attempts := c.attempts
+		if attempts <= 0 {
+			attempts = len(backoffs)
+		}
+		for i := 0; i < attempts; i++ {
 			names, err := fetch()
 			if err == nil && len(names) > 0 {
 				return names
 			}
-			time.Sleep(backoffs[i])
+			idx := i
+			if idx >= len(backoffs) {
+				idx = len(backoffs) - 1
+			}
+			if idx >= 0 && len(backoffs) > 0 {
+				time.Sleep(backoffs[idx])
+			}
 		}
 		return nil
 	}
@@ -109,8 +133,13 @@ func (c *PopularCache) fetchPopularDynamic(registry string, limit int) []string 
 			return try(func() ([]string, error) { return r.PopularPackageNames(limit) })
 		}
 	case "npm":
-		if _, ok := conn.(*reg.NPMConnector); ok {
-			names := getPopularByRegistry("npm")
+		if n, ok := conn.(*reg.NPMConnector); ok {
+			n.SetBias(c.npmQuality, c.npmPopularity, c.npmMaintenance)
+			names, err := n.PopularPackageNames(limit)
+			if err == nil && len(names) > 0 {
+				return names
+			}
+			names = getPopularByRegistry("npm")
 			return truncate(names, limit)
 		}
 	case "composer":

@@ -3,6 +3,7 @@ package detector
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -31,13 +32,8 @@ type CheckPackageResult struct {
 }
 
 func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*CheckPackageResult, error) {
-	// For single package checks, we need a list of popular packages to compare against
-	// This is a simplified implementation - in production, you'd fetch this from a database
-	popularPackages := []string{
-		"express", "lodash", "react", "angular", "vue", "webpack", "babel", "typescript",
-		"eslint", "jest", "mocha", "chai", "sinon", "cross-env", "nodemon", "pm2",
-		"axios", "next", "vite", "rollup", "rxjs", "jquery", "moment",
-	}
+	// Select popular packages based on registry for better coverage
+	popularPackages := getPopularByRegistry(registry)
 
 	// Create a dependency for analysis
 	dep := types.Dependency{
@@ -55,6 +51,24 @@ func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*Chec
 		Threats:  threats,
 		Warnings: warnings,
 	}, nil
+}
+
+// getPopularByRegistry returns curated popular package names per registry
+func getPopularByRegistry(registry string) []string {
+	switch strings.ToLower(registry) {
+	case "npm":
+		return []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment", "next", "vue", "angular", "rxjs", "vite", "rollup", "yarn", "pnpm", "mocha", "jest", "chai", "sinon", "cross-env", "nodemon", "pm2"}
+	case "pypi":
+		return []string{"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow", "beautifulsoup4", "selenium", "pytest", "black", "flake8", "click", "jinja2", "sqlalchemy", "fastapi", "pydantic", "boto3", "redis", "celery", "gunicorn", "uvicorn", "httpx", "aiohttp", "typing-extensions", "setuptools", "wheel", "pip", "certifi", "urllib3", "charset-normalizer"}
+	case "rubygems":
+		return []string{"rails", "bundler", "rake", "rspec", "puma", "nokogiri", "devise", "activerecord", "activesupport", "thor", "json", "minitest", "rack", "sinatra", "capistrano", "sidekiq", "redis", "pg", "mysql2", "sqlite3", "faraday", "httparty", "factory_bot", "rubocop", "pry"}
+	case "maven":
+		return []string{"org.springframework:spring-core", "org.springframework:spring-boot-starter", "junit:junit", "org.apache.commons:commons-lang3", "com.google.guava:guava", "org.slf4j:slf4j-api", "ch.qos.logback:logback-classic", "com.fasterxml.jackson.core:jackson-core", "org.apache.httpcomponents:httpclient", "org.hibernate:hibernate-core", "org.mockito:mockito-core", "org.apache.maven.plugins:maven-compiler-plugin", "org.springframework.boot:spring-boot-starter-web", "org.springframework.boot:spring-boot-starter-data-jpa", "mysql:mysql-connector-java", "org.postgresql:postgresql", "redis.clients:jedis", "org.apache.kafka:kafka-clients", "com.amazonaws:aws-java-sdk", "org.elasticsearch.client:elasticsearch-rest-high-level-client"}
+	case "nuget":
+		return []string{"Newtonsoft.Json", "Microsoft.Extensions.DependencyInjection", "Microsoft.Extensions.Logging", "Microsoft.EntityFrameworkCore", "AutoMapper", "Serilog", "FluentValidation", "Microsoft.AspNetCore.Mvc", "System.Text.Json", "Microsoft.Extensions.Configuration", "NUnit", "xunit", "Moq", "Microsoft.Extensions.Hosting", "Swashbuckle.AspNetCore", "Microsoft.EntityFrameworkCore.SqlServer", "Microsoft.AspNetCore.Authentication.JwtBearer", "StackExchange.Redis", "Polly", "MediatR"}
+	default:
+		return []string{"react", "lodash", "express", "axios", "requests", "numpy", "pandas", "django", "flask", "rails", "bundler", "rake", "junit:junit", "org.apache.commons:commons-lang3"}
+	}
 }
 
 func (e *Engine) AnalyzeDependency(dep types.Dependency, popularPackages []string, options *Options) ([]types.Threat, []types.Warning) {

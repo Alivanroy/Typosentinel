@@ -30,7 +30,7 @@ func TestSeverity_String(t *testing.T) {
 
 func TestRiskLevel_String(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		riskLevel RiskLevel
 		want      string
 	}{
@@ -55,7 +55,7 @@ func TestThreatType_String(t *testing.T) {
 	// ThreatType is a string type, so it doesn't have a String() method
 	// Let's test the constants instead
 	tests := []struct {
-		name      string
+		name       string
 		threatType ThreatType
 		want       string
 	}{
@@ -189,11 +189,11 @@ func TestDependency_Validate(t *testing.T) {
 
 func TestThreat_BasicValidation(t *testing.T) {
 	now := time.Now()
-	
+
 	tests := []struct {
-		name    string
-		threat  Threat
-		valid   bool
+		name   string
+		threat Threat
+		valid  bool
 	}{
 		{
 			name: "Valid threat",
@@ -328,14 +328,14 @@ func TestThreat_BasicValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Basic validation logic
-			valid := tt.threat.ID != "" && 
-					tt.threat.Package != "" && 
-					tt.threat.Registry != "" && 
-					tt.threat.Description != "" &&
-					tt.threat.Confidence >= 0.0 && 
-					tt.threat.Confidence <= 1.0 &&
-					!tt.threat.DetectedAt.IsZero()
-			
+			valid := tt.threat.ID != "" &&
+				tt.threat.Package != "" &&
+				tt.threat.Registry != "" &&
+				tt.threat.Description != "" &&
+				tt.threat.Confidence >= 0.0 &&
+				tt.threat.Confidence <= 1.0 &&
+				!tt.threat.DetectedAt.IsZero()
+
 			if valid != tt.valid {
 				t.Errorf("Threat validation = %v, want %v", valid, tt.valid)
 			}
@@ -345,9 +345,9 @@ func TestThreat_BasicValidation(t *testing.T) {
 
 func TestEvidence_BasicValidation(t *testing.T) {
 	tests := []struct {
-		name    string
+		name     string
 		evidence Evidence
-		valid   bool
+		valid    bool
 	}{
 		{
 			name: "Valid evidence",
@@ -404,11 +404,11 @@ func TestEvidence_BasicValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Basic validation logic
-			valid := tt.evidence.Type != "" && 
-					tt.evidence.Description != "" && 
-					tt.evidence.Score >= 0.0 && 
-					tt.evidence.Score <= 1.0
-			
+			valid := tt.evidence.Type != "" &&
+				tt.evidence.Description != "" &&
+				tt.evidence.Score >= 0.0 &&
+				tt.evidence.Score <= 1.0
+
 			if valid != tt.valid {
 				t.Errorf("Evidence validation = %v, want %v", valid, tt.valid)
 			}
@@ -479,12 +479,12 @@ func TestWarning_BasicValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Basic validation logic
-			valid := tt.warning.ID != "" && 
-					tt.warning.Package != "" && 
-					tt.warning.Registry != "" && 
-					tt.warning.Message != "" &&
-					!tt.warning.DetectedAt.IsZero()
-			
+			valid := tt.warning.ID != "" &&
+				tt.warning.Package != "" &&
+				tt.warning.Registry != "" &&
+				tt.warning.Message != "" &&
+				!tt.warning.DetectedAt.IsZero()
+
 			if valid != tt.valid {
 				t.Errorf("Warning validation = %v, want %v", valid, tt.valid)
 			}

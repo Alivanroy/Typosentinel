@@ -768,7 +768,7 @@ func (m *Manager) setDefaults() {
 	viper.SetDefault("security.jwt.expiration", "1h")
 	viper.SetDefault("security.jwt.refresh_expiration", "24h")
 	viper.SetDefault("security.api_keys.enabled", false)
-    viper.SetDefault("security.encryption.algorithm", "aes-256-gcm")
+	viper.SetDefault("security.encryption.algorithm", "aes-256-gcm")
 	viper.SetDefault("security.password_policy.min_length", 8)
 	viper.SetDefault("security.password_policy.require_upper", true)
 	viper.SetDefault("security.password_policy.require_lower", true)
@@ -1081,17 +1081,17 @@ func (m *Manager) registerCustomValidators() {
 // customValidation performs custom validation logic
 func (m *Manager) customValidation() error {
 	// Validate environment-specific requirements
-    if m.config.App.Environment == EnvProduction {
-        if m.config.App.Debug {
-            return errors.NewValidationError("debug mode should be disabled in production")
-        }
-        if m.config.Security.JWT.Enabled && len(m.config.Security.JWT.Secret) < 32 {
-            return errors.NewValidationError("JWT secret must be at least 32 characters in production")
-        }
-        if m.config.Security.Encryption.Key == "default-encryption-key-32-chars-long" {
-            return errors.NewValidationError("encryption key must not use default value in production")
-        }
-    }
+	if m.config.App.Environment == EnvProduction {
+		if m.config.App.Debug {
+			return errors.NewValidationError("debug mode should be disabled in production")
+		}
+		if m.config.Security.JWT.Enabled && len(m.config.Security.JWT.Secret) < 32 {
+			return errors.NewValidationError("JWT secret must be at least 32 characters in production")
+		}
+		if m.config.Security.Encryption.Key == "default-encryption-key-32-chars-long" {
+			return errors.NewValidationError("encryption key must not use default value in production")
+		}
+	}
 
 	// Validate TLS configuration
 	if m.config.Server.TLS.Enabled {

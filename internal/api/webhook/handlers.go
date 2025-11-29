@@ -18,7 +18,7 @@ import (
 
 // WebhookHandler handles incoming webhook requests for scan triggers
 type WebhookHandler struct {
-    logger      *logger.Logger
+	logger      *logger.Logger
 	scanTrigger ScanTrigger
 	config      *WebhookConfig
 }
@@ -825,5 +825,5 @@ func (h *WebhookHandler) extractGitLabChangedPaths(commits []struct {
 
 // generateScanID generates a unique scan ID
 func (h *WebhookHandler) generateScanID() string {
-    return fmt.Sprintf("webhook_%d", time.Now().UnixNano())
+	return fmt.Sprintf("webhook_%d", time.Now().UnixNano())
 }

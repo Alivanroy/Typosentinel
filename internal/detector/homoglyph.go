@@ -60,45 +60,45 @@ func (hd *HomoglyphDetector) Detect(target types.Dependency, allPackages []strin
 
 // generateHomoglyphVariants generates possible homoglyph variants of a string
 func (hd *HomoglyphDetector) generateHomoglyphVariants(s string) []string {
-    var variants []string
+	var variants []string
 
-    runes := []rune(s)
-    // For each rune, try replacing with homoglyphs
-    for i, char := range runes {
-        if homoglyphs, exists := hd.homoglyphMap[char]; exists {
-            for _, homoglyph := range homoglyphs {
-                replaced := make([]rune, len(runes))
-                copy(replaced, runes)
-                replaced[i] = homoglyph
-                variants = append(variants, string(replaced))
-            }
-        }
-    }
+	runes := []rune(s)
+	// For each rune, try replacing with homoglyphs
+	for i, char := range runes {
+		if homoglyphs, exists := hd.homoglyphMap[char]; exists {
+			for _, homoglyph := range homoglyphs {
+				replaced := make([]rune, len(runes))
+				copy(replaced, runes)
+				replaced[i] = homoglyph
+				variants = append(variants, string(replaced))
+			}
+		}
+	}
 
-    return variants
+	return variants
 }
 
 // isHomoglyphVariant checks if two strings are homoglyph variants
 func (hd *HomoglyphDetector) isHomoglyphVariant(s1, s2 string) bool {
-    r1 := []rune(s1)
-    r2 := []rune(s2)
-    if len(r1) != len(r2) {
-        return false
-    }
+	r1 := []rune(s1)
+	r2 := []rune(s2)
+	if len(r1) != len(r2) {
+		return false
+	}
 
-    differences := 0
-    for i := range r1 {
-        char1 := r1[i]
-        char2 := r2[i]
-        if char1 != char2 {
-            if !hd.areHomoglyphs(char1, char2) {
-                return false
-            }
-            differences++
-        }
-    }
+	differences := 0
+	for i := range r1 {
+		char1 := r1[i]
+		char2 := r2[i]
+		if char1 != char2 {
+			if !hd.areHomoglyphs(char1, char2) {
+				return false
+			}
+			differences++
+		}
+	}
 
-    return differences > 0 && differences <= 3
+	return differences > 0 && differences <= 3
 }
 
 // areHomoglyphs checks if two characters are homoglyphs
@@ -124,35 +124,35 @@ func (hd *HomoglyphDetector) areHomoglyphs(char1, char2 rune) bool {
 
 // calculateHomoglyphConfidence calculates confidence score for homoglyph detection
 func (hd *HomoglyphDetector) calculateHomoglyphConfidence(s1, s2 string) float64 {
-    r1 := []rune(s1)
-    r2 := []rune(s2)
-    if len(r1) != len(r2) {
-        return 0.0
-    }
+	r1 := []rune(s1)
+	r2 := []rune(s2)
+	if len(r1) != len(r2) {
+		return 0.0
+	}
 
-    totalChars := len(r1)
-    homoglyphChars := 0
+	totalChars := len(r1)
+	homoglyphChars := 0
 
-    for i := range r1 {
-        char1 := r1[i]
-        char2 := r2[i]
-        if char1 != char2 && hd.areHomoglyphs(char1, char2) {
-            homoglyphChars++
-        } else if char1 != char2 {
-            return 0.0
-        }
-    }
+	for i := range r1 {
+		char1 := r1[i]
+		char2 := r2[i]
+		if char1 != char2 && hd.areHomoglyphs(char1, char2) {
+			homoglyphChars++
+		} else if char1 != char2 {
+			return 0.0
+		}
+	}
 
-    if homoglyphChars == 0 {
-        return 0.0
-    }
+	if homoglyphChars == 0 {
+		return 0.0
+	}
 
-    confidence := 0.8 + 0.2*(float64(homoglyphChars)/float64(totalChars))
-    if confidence > 1.0 {
-        confidence = 1.0
-    }
+	confidence := 0.8 + 0.2*(float64(homoglyphChars)/float64(totalChars))
+	if confidence > 1.0 {
+		confidence = 1.0
+	}
 
-    return confidence
+	return confidence
 }
 
 // calculateHomoglyphSeverity determines severity based on confidence
@@ -169,35 +169,35 @@ func (hd *HomoglyphDetector) calculateHomoglyphSeverity(confidence float64) type
 
 // buildHomoglyphEvidence builds evidence for homoglyph detection
 func (hd *HomoglyphDetector) buildHomoglyphEvidence(s1, s2 string) []types.Evidence {
-    var evidence []types.Evidence
+	var evidence []types.Evidence
 
-    r1 := []rune(s1)
-    r2 := []rune(s2)
-    l := len(r1)
-    if l != len(r2) {
-        return evidence
-    }
+	r1 := []rune(s1)
+	r2 := []rune(s2)
+	l := len(r1)
+	if l != len(r2) {
+		return evidence
+	}
 
-    for i := 0; i < l; i++ {
-        char1 := r1[i]
-        char2 := r2[i]
-        if char1 != char2 && hd.areHomoglyphs(char1, char2) {
-            evidence = append(evidence, types.Evidence{
-                Type:        "homoglyph_substitution",
-                Description: fmt.Sprintf("Character '%c' (U+%04X) replaced with '%c' (U+%04X) at position %d", char1, char1, char2, char2, i),
-                Value: map[string]interface{}{
-                    "original":           string(char1),
-                    "substitute":         string(char2),
-                    "position":           i,
-                    "original_unicode":   fmt.Sprintf("U+%04X", char1),
-                    "substitute_unicode": fmt.Sprintf("U+%04X", char2),
-                },
-                Score: 0.9,
-            })
-        }
-    }
+	for i := 0; i < l; i++ {
+		char1 := r1[i]
+		char2 := r2[i]
+		if char1 != char2 && hd.areHomoglyphs(char1, char2) {
+			evidence = append(evidence, types.Evidence{
+				Type:        "homoglyph_substitution",
+				Description: fmt.Sprintf("Character '%c' (U+%04X) replaced with '%c' (U+%04X) at position %d", char1, char1, char2, char2, i),
+				Value: map[string]interface{}{
+					"original":           string(char1),
+					"substitute":         string(char2),
+					"position":           i,
+					"original_unicode":   fmt.Sprintf("U+%04X", char1),
+					"substitute_unicode": fmt.Sprintf("U+%04X", char2),
+				},
+				Score: 0.9,
+			})
+		}
+	}
 
-    return evidence
+	return evidence
 }
 
 // buildHomoglyphMap creates a mapping of characters to their homoglyphs

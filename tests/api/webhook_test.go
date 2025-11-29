@@ -286,23 +286,23 @@ func TestWebhookSignatureVerification(t *testing.T) {
 
 func TestWebhookHealthEndpoint(t *testing.T) {
 	client := &http.Client{Timeout: timeout}
-	
+
 	resp, err := client.Get(baseURL + "/api/v1/webhooks/health")
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	
+
 	// Webhook endpoints might return 404 if not implemented
 	if resp.StatusCode == http.StatusNotFound {
 		t.Skip("Webhook health endpoint not implemented")
 		return
 	}
-	
+
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	
+
 	var health WebhookHealthResponse
 	err = json.NewDecoder(resp.Body).Decode(&health)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, "healthy", health.Status)
 	assert.NotNil(t, health.Providers)
 }

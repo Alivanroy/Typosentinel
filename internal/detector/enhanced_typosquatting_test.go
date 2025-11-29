@@ -184,11 +184,11 @@ func TestEnhancedTyposquattingDetector_KeyboardProximitySimilarity(t *testing.T)
 		s2       string
 		expected float64
 	}{
-		{"express", "exprwss", 0.8}, // w is next to e
-		{"express", "exprqss", 0.8}, // q is next to w
-		{"express", "express", 1.0}, // identical
+		{"express", "exprwss", 0.8},              // w is next to e
+		{"express", "exprqss", 0.8},              // q is next to w
+		{"express", "express", 1.0},              // identical
 		{"express", "completely-different", 0.2}, // very different
-		{"", "", 0.0}, // empty strings
+		{"", "", 0.0},                            // empty strings
 	}
 
 	for _, tt := range tests {
@@ -212,9 +212,9 @@ func TestEnhancedTyposquattingDetector_VisualSimilarity(t *testing.T) {
 		s2       string
 		expected float64
 	}{
-		{"express", "expr3ss", 0.8}, // 3 looks like e
-		{"cross-env", "cr0ss-env", 0.8}, // 0 looks like o
-		{"express", "express", 1.0}, // identical
+		{"express", "expr3ss", 0.8},              // 3 looks like e
+		{"cross-env", "cr0ss-env", 0.8},          // 0 looks like o
+		{"express", "express", 1.0},              // identical
 		{"express", "completely-different", 0.2}, // very different
 	}
 
@@ -239,9 +239,9 @@ func TestEnhancedTyposquattingDetector_PhoneticSimilarity(t *testing.T) {
 		s2       string
 		expected float64
 	}{
-		{"express", "exprxss", 0.7}, // x sounds like s
-		{"cross-env", "kross-env", 0.7}, // k sounds like c
-		{"express", "express", 1.0}, // identical
+		{"express", "exprxss", 0.7},              // x sounds like s
+		{"cross-env", "kross-env", 0.7},          // k sounds like c
+		{"express", "express", 1.0},              // identical
 		{"express", "completely-different", 0.2}, // very different
 	}
 
@@ -293,10 +293,10 @@ func TestEnhancedTyposquattingDetector_ShouldSkipLengthCheck(t *testing.T) {
 		s2       string
 		expected bool
 	}{
-		{"express", "express", false}, // same length
-		{"express", "expresss", false}, // 1 character difference
-		{"express", "expr", false}, // 3 character difference
-		{"express", "e", true}, // too different (should skip)
+		{"express", "express", false},             // same length
+		{"express", "expresss", false},            // 1 character difference
+		{"express", "expr", false},                // 3 character difference
+		{"express", "e", true},                    // too different (should skip)
 		{"a", "abcdefghijklmnopqrstuvwxyz", true}, // too different (should skip)
 	}
 
@@ -314,9 +314,9 @@ func TestEnhancedTyposquattingDetector_DetectAdvancedPatterns(t *testing.T) {
 	detector := NewEnhancedTyposquattingDetector()
 
 	tests := []struct {
-		target   string
+		target    string
 		candidate string
-		expected []string
+		expected  []string
 	}{
 		{"express", "express-official", []string{"brand_impersonation"}},
 		{"@scope/express", "express", []string{"namespace_confusion"}},
@@ -328,7 +328,7 @@ func TestEnhancedTyposquattingDetector_DetectAdvancedPatterns(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.target+"_"+tt.candidate, func(t *testing.T) {
 			result := detector.detectAdvancedPatterns(tt.target, tt.candidate)
-			
+
 			// Check if expected patterns are found
 			for _, expectedPattern := range tt.expected {
 				found := false

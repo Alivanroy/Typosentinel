@@ -208,7 +208,7 @@ func TestAnalyzeEndpoint(t *testing.T) {
 			validateResult: func(t *testing.T, result AnalysisResult) {
 				assert.Equal(t, "express", result.PackageName)
 				assert.Equal(t, "npm", result.Registry)
-				assert.Equal(t, 0, result.RiskLevel) // Legitimate packages should have zero risk
+				assert.Equal(t, 0, result.RiskLevel)   // Legitimate packages should have zero risk
 				assert.Equal(t, 0.0, result.RiskScore) // Legitimate packages should have zero risk score
 				assert.WithinDuration(t, time.Now(), result.AnalyzedAt, 5*time.Second)
 			},
@@ -531,22 +531,22 @@ func TestDashboardPerformanceEndpoint(t *testing.T) {
 
 func TestRateLimiting(t *testing.T) {
 	client := &http.Client{Timeout: timeout}
-	
+
 	// Make multiple requests quickly to trigger rate limiting
 	for i := 0; i < 15; i++ {
 		resp, err := client.Get(baseURL + "/test")
 		require.NoError(t, err)
 		resp.Body.Close()
-		
+
 		if resp.StatusCode == http.StatusTooManyRequests {
 			// Rate limiting triggered - test passed
 			return
 		}
-		
+
 		// Small delay to avoid overwhelming the server
 		time.Sleep(100 * time.Millisecond)
 	}
-	
+
 	// Note: Rate limiting might not trigger in demo mode
 	// This test is more about ensuring the endpoint handles requests
 	t.Log("Rate limiting test completed - may not trigger in demo mode")

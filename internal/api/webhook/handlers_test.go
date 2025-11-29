@@ -1,18 +1,18 @@
 package webhook
 
 import (
-    "bytes"
-    "context"
-    "encoding/json"
-    "net/http"
-    "net/http/httptest"
-    "testing"
-    "time"
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 
-    "github.com/Alivanroy/Typosentinel/pkg/logger"
-    "github.com/gin-gonic/gin"
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/mock"
+	"github.com/Alivanroy/Typosentinel/pkg/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 // MockScanTrigger is a mock implementation of ScanTrigger
@@ -440,8 +440,8 @@ func TestGenerateScanID(t *testing.T) {
 	scanID1 := handler.generateScanID()
 	scanID2 := handler.generateScanID()
 
-    // Should start with webhook_
-    assert.True(t, len(scanID1) > 8)
-    assert.Contains(t, scanID1, "webhook_")
-    assert.Contains(t, scanID2, "webhook_")
+	// Should start with webhook_
+	assert.True(t, len(scanID1) > 8)
+	assert.Contains(t, scanID1, "webhook_")
+	assert.Contains(t, scanID2, "webhook_")
 }

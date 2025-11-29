@@ -240,9 +240,9 @@ func (re *ReputationEngine) fetchReputationData(dep types.Dependency) (*Reputati
 
 // fetchNPMData fetches NPM-specific reputation data
 func (re *ReputationEngine) fetchNPMData(data *ReputationData) error {
-    if data.Metadata == nil {
-        data.Metadata = make(map[string]interface{})
-    }
+	if data.Metadata == nil {
+		data.Metadata = make(map[string]interface{})
+	}
 	// Fetch NPM registry data with realistic estimation
 	data.Metadata["registry_api"] = "npm"
 
@@ -272,9 +272,9 @@ func (re *ReputationEngine) fetchNPMData(data *ReputationData) error {
 
 // fetchPyPIData fetches PyPI-specific reputation data
 func (re *ReputationEngine) fetchPyPIData(data *ReputationData) error {
-    if data.Metadata == nil {
-        data.Metadata = make(map[string]interface{})
-    }
+	if data.Metadata == nil {
+		data.Metadata = make(map[string]interface{})
+	}
 	// Fetch PyPI registry data with realistic estimation
 	data.Metadata["registry_api"] = "pypi"
 
@@ -302,9 +302,9 @@ func (re *ReputationEngine) fetchPyPIData(data *ReputationData) error {
 
 // fetchGoData fetches Go-specific reputation data
 func (re *ReputationEngine) fetchGoData(data *ReputationData) error {
-    if data.Metadata == nil {
-        data.Metadata = make(map[string]interface{})
-    }
+	if data.Metadata == nil {
+		data.Metadata = make(map[string]interface{})
+	}
 	// Fetch Go module data with realistic estimation
 	data.Metadata["registry_api"] = "go"
 
@@ -332,9 +332,9 @@ func (re *ReputationEngine) fetchGoData(data *ReputationData) error {
 
 // performGenericAnalysis performs generic reputation analysis
 func (re *ReputationEngine) performGenericAnalysis(data *ReputationData) {
-    if data.Metadata == nil {
-        data.Metadata = make(map[string]interface{})
-    }
+	if data.Metadata == nil {
+		data.Metadata = make(map[string]interface{})
+	}
 	data.Metadata["analysis_type"] = "generic"
 	data.ReputationScore = 0.5 // Neutral score for unknown packages
 	data.TrustLevel = "unknown"
@@ -942,29 +942,29 @@ func (re *ReputationEngine) detectEnterpriseSecurityViolations(dep types.Depende
 	}
 
 	// Check for packages with insufficient download history (enterprise stability requirement)
-    if data.DownloadCount > 0 && data.DownloadCount < 10000 {
-        threats = append(threats, types.Threat{
-            ID:              generateThreatID(),
-            Package:         dep.Name,
-            Version:         dep.Version,
-            Registry:        dep.Registry,
-            Type:            types.ThreatTypeEnterprisePolicy,
-            Severity:        types.SeverityLow,
-            Confidence:      0.6,
-            Description:     fmt.Sprintf("Package '%s' has insufficient adoption for enterprise use (%d downloads)", dep.Name, data.DownloadCount),
-            Recommendation:  "Consider more established alternatives for enterprise deployment",
-            DetectedAt:      time.Now(),
-            DetectionMethod: "enterprise_adoption_check",
-            Evidence: []types.Evidence{
-                {
-                    Type:        "adoption_threshold",
-                    Description: "Below enterprise adoption threshold",
-                    Value:       data.DownloadCount,
-                    Score:       0.6,
-                },
-            },
-        })
-    }
+	if data.DownloadCount > 0 && data.DownloadCount < 10000 {
+		threats = append(threats, types.Threat{
+			ID:              generateThreatID(),
+			Package:         dep.Name,
+			Version:         dep.Version,
+			Registry:        dep.Registry,
+			Type:            types.ThreatTypeEnterprisePolicy,
+			Severity:        types.SeverityLow,
+			Confidence:      0.6,
+			Description:     fmt.Sprintf("Package '%s' has insufficient adoption for enterprise use (%d downloads)", dep.Name, data.DownloadCount),
+			Recommendation:  "Consider more established alternatives for enterprise deployment",
+			DetectedAt:      time.Now(),
+			DetectionMethod: "enterprise_adoption_check",
+			Evidence: []types.Evidence{
+				{
+					Type:        "adoption_threshold",
+					Description: "Below enterprise adoption threshold",
+					Value:       data.DownloadCount,
+					Score:       0.6,
+				},
+			},
+		})
+	}
 
 	// Check for packages that are too new for enterprise use
 	if data.CreatedAt.After(time.Now().AddDate(0, -6, 0)) { // Less than 6 months old

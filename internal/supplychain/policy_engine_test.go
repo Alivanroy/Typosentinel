@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/Alivanroy/Typosentinel/internal/edge"
 	"github.com/Alivanroy/Typosentinel/internal/security"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSupplyChainPolicyEngine(t *testing.T) {
@@ -33,7 +33,7 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 
 	t.Run("DefaultPoliciesExist", func(t *testing.T) {
 		engine := NewPolicyEngine(dirt, auditLogger)
-		
+
 		policyNames := []string{
 			"Block Critical Risk Packages",
 			"Alert on Typosquatting Detection",
@@ -41,7 +41,7 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 			"Review Unmaintained Packages",
 			"Block Critical Vulnerabilities",
 		}
-		
+
 		for _, name := range policyNames {
 			found := false
 			for _, policy := range engine.policies {
@@ -56,7 +56,7 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 
 	t.Run("EvaluatePolicyContext", func(t *testing.T) {
 		engine := NewPolicyEngine(dirt, auditLogger)
-		
+
 		testCases := []struct {
 			name           string
 			context        SupplyChainPolicyContext
@@ -67,8 +67,8 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 				name: "Critical Risk Package",
 				context: SupplyChainPolicyContext{
 					Package: &types.Package{
-						Name:      "critical-risk-package",
-						Version:   "1.0.0",
+						Name:    "critical-risk-package",
+						Version: "1.0.0",
 						Threats: []types.Threat{
 							{
 								ID:       "CVE-2023-1234",
@@ -95,8 +95,8 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 				name: "Typosquatting Package",
 				context: SupplyChainPolicyContext{
 					Package: &types.Package{
-						Name:      "reqeust", // Typosquatting attempt
-						Version:   "2.88.2",
+						Name:    "reqeust", // Typosquatting attempt
+						Version: "2.88.2",
 						Threats: []types.Threat{
 							{
 								ID:       "TYPO-001",
@@ -119,14 +119,14 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 				expectedPolicy: "Alert on Typosquatting Detection",
 			},
 		}
-		
+
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				results, err := engine.EvaluatePolicies(&tc.context)
-				
+
 				assert.NoError(t, err)
 				assert.NotEmpty(t, results)
-				
+
 				// Find the most restrictive action
 				var mostRestrictiveAction PolicyAction = ActionAllow
 				var triggeringPolicy string
@@ -137,7 +137,7 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 						break
 					}
 				}
-				
+
 				assert.Equal(t, tc.expectedAction, mostRestrictiveAction)
 				assert.Equal(t, tc.expectedPolicy, triggeringPolicy)
 			})
@@ -146,29 +146,29 @@ func TestSupplyChainPolicyEngine(t *testing.T) {
 
 	t.Run("AllowCompliantPackage", func(t *testing.T) {
 		engine := NewPolicyEngine(dirt, auditLogger)
-		
+
 		context := SupplyChainPolicyContext{
 			Package: &types.Package{
-					Name:    "lodash",
-					Version: "4.17.21",
-					Threats: []types.Threat{},
-					Metadata: &types.PackageMetadata{
-						Downloads:   50000000,
-						LastUpdated: &[]time.Time{time.Now().AddDate(0, -1, 0)}[0],
-						Checksums:   map[string]string{"sha256": "abc123"}, // Add checksums
-					},
+				Name:    "lodash",
+				Version: "4.17.21",
+				Threats: []types.Threat{},
+				Metadata: &types.PackageMetadata{
+					Downloads:   50000000,
+					LastUpdated: &[]time.Time{time.Now().AddDate(0, -1, 0)}[0],
+					Checksums:   map[string]string{"sha256": "abc123"}, // Add checksums
 				},
+			},
 			BusinessRisk:     0.1,
 			AssetCriticality: edge.CriticalityPublic,
 			IsDirect:         true,
 			Timestamp:        time.Now(),
 		}
-		
+
 		results, err := engine.EvaluatePolicies(&context)
-		
+
 		assert.NoError(t, err)
 		assert.NotEmpty(t, results)
-		
+
 		// Should allow compliant packages
 		var hasBlockAction bool
 		for _, result := range results {

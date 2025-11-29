@@ -543,8 +543,6 @@ func (s *Scanner) max(a, b int) int {
 	return b
 }
 
-
-
 // calculateRiskLevel calculates the risk level based on threats
 func (s *Scanner) calculateRiskLevel(threats []*types.Threat) types.Severity {
 	if len(threats) == 0 {

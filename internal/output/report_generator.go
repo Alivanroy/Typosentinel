@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"time"
 
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -71,26 +70,26 @@ type TechnicalReportData struct {
 // ComplianceReportData contains data specific to compliance reports
 type ComplianceReportData struct {
 	ReportData
-	ExecutiveSummary      string                               `json:"executive_summary"`
-	AssessmentPeriod      string                               `json:"assessment_period"`
-	Assessor              string                               `json:"assessor"`
-	ComplianceFramework   string                               `json:"compliance_framework"`
-	AssessmentScope       string                               `json:"assessment_scope"`
-	OverallScore          float64                              `json:"overall_score"`
-	TotalRequirements     int                                  `json:"total_requirements"`
-	CompliantRequirements int                                  `json:"compliant_requirements"`
-	PartiallyCompliant    int                                  `json:"partially_compliant"`
-	NonCompliant          int                                  `json:"non_compliant"`
-	ComplianceStandards   []ComplianceStandard                 `json:"compliance_standards"`
-	DetailedAssessment    []interface{} `json:"detailed_assessment"` // Removed orchestrator dependency
-	SecurityControls      []SecurityControl                    `json:"security_controls"`
-	HighRiskFindings      int                                  `json:"high_risk_findings"`
-	MediumRiskFindings    int                                  `json:"medium_risk_findings"`
-	LowRiskFindings       int                                  `json:"low_risk_findings"`
-	OverallRiskScore      string                               `json:"overall_risk_score"`
-	RemediationRoadmap    []RemediationPhase                   `json:"remediation_roadmap"`
-	AuditTrail            []AuditEntry                         `json:"audit_trail"`
-	ReportVersion         string                               `json:"report_version"`
+	ExecutiveSummary      string               `json:"executive_summary"`
+	AssessmentPeriod      string               `json:"assessment_period"`
+	Assessor              string               `json:"assessor"`
+	ComplianceFramework   string               `json:"compliance_framework"`
+	AssessmentScope       string               `json:"assessment_scope"`
+	OverallScore          float64              `json:"overall_score"`
+	TotalRequirements     int                  `json:"total_requirements"`
+	CompliantRequirements int                  `json:"compliant_requirements"`
+	PartiallyCompliant    int                  `json:"partially_compliant"`
+	NonCompliant          int                  `json:"non_compliant"`
+	ComplianceStandards   []ComplianceStandard `json:"compliance_standards"`
+	DetailedAssessment    []interface{}        `json:"detailed_assessment"` // Removed orchestrator dependency
+	SecurityControls      []SecurityControl    `json:"security_controls"`
+	HighRiskFindings      int                  `json:"high_risk_findings"`
+	MediumRiskFindings    int                  `json:"medium_risk_findings"`
+	LowRiskFindings       int                  `json:"low_risk_findings"`
+	OverallRiskScore      string               `json:"overall_risk_score"`
+	RemediationRoadmap    []RemediationPhase   `json:"remediation_roadmap"`
+	AuditTrail            []AuditEntry         `json:"audit_trail"`
+	ReportVersion         string               `json:"report_version"`
 }
 
 // Supporting data structures

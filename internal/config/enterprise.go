@@ -3,22 +3,20 @@ package config
 import (
 	"fmt"
 	"time"
-
-
 )
 
 // EnterpriseConfig holds enterprise-specific configuration
 type EnterpriseConfig struct {
-	Enabled             bool                         `yaml:"enabled" json:"enabled"`
-	License             LicenseConfig                `yaml:"license" json:"license"`
-	Cache               *CacheConfig                 `yaml:"cache" json:"cache"`
-	Monitoring          interface{} `yaml:"monitoring" json:"monitoring"` // Removed monitoring dependency
-	EnterpriseSecurity  EnterpriseSecurityConfig     `yaml:"enterprise_security" json:"enterprise_security"`
-	Audit               AuditConfig                  `yaml:"audit" json:"audit"`
-	EnterpriseRateLimit EnterpriseRateLimitConfig    `yaml:"enterprise_rate_limit" json:"enterprise_rate_limit"`
-	SSO                 SSOConfig                    `yaml:"sso" json:"sso"`
-	Reporting           ReportingConfig              `yaml:"reporting" json:"reporting"`
-	Repository          RepositoryConfig             `yaml:"repository" json:"repository"`
+	Enabled             bool                      `yaml:"enabled" json:"enabled"`
+	License             LicenseConfig             `yaml:"license" json:"license"`
+	Cache               *CacheConfig              `yaml:"cache" json:"cache"`
+	Monitoring          interface{}               `yaml:"monitoring" json:"monitoring"` // Removed monitoring dependency
+	EnterpriseSecurity  EnterpriseSecurityConfig  `yaml:"enterprise_security" json:"enterprise_security"`
+	Audit               AuditConfig               `yaml:"audit" json:"audit"`
+	EnterpriseRateLimit EnterpriseRateLimitConfig `yaml:"enterprise_rate_limit" json:"enterprise_rate_limit"`
+	SSO                 SSOConfig                 `yaml:"sso" json:"sso"`
+	Reporting           ReportingConfig           `yaml:"reporting" json:"reporting"`
+	Repository          RepositoryConfig          `yaml:"repository" json:"repository"`
 }
 
 // LicenseConfig holds license configuration

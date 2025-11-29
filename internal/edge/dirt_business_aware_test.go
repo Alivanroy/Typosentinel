@@ -175,27 +175,27 @@ func TestBusinessRiskCalculation(t *testing.T) {
 	t.Run("CriticalMultiplier", func(t *testing.T) {
 		baseRisk := 0.5
 		criticality := CriticalityCritical
-		
+
 		businessRisk := baseRisk * dirt.getCriticalityMultiplier(criticality)
-		
+
 		assert.Equal(t, 1.0, businessRisk) // 0.5 * 2.0 = 1.0 (capped at 1.0)
 	})
 
 	t.Run("InternalMultiplier", func(t *testing.T) {
 		baseRisk := 0.5
 		criticality := CriticalityInternal
-		
+
 		businessRisk := baseRisk * dirt.getCriticalityMultiplier(criticality)
-		
+
 		assert.Equal(t, 0.5, businessRisk) // 0.5 * 1.0 = 0.5
 	})
 
 	t.Run("PublicMultiplier", func(t *testing.T) {
 		baseRisk := 0.5
 		criticality := CriticalityPublic
-		
+
 		businessRisk := baseRisk * dirt.getCriticalityMultiplier(criticality)
-		
+
 		assert.Equal(t, 0.25, businessRisk) // 0.5 * 0.5 = 0.25
 	})
 }
@@ -229,10 +229,10 @@ func TestDIRTAlgorithmEdgeCases(t *testing.T) {
 
 	t.Run("EmptyPackage", func(t *testing.T) {
 		pkg := &types.Package{}
-		
+
 		result, err := dirt.AnalyzeWithCriticality(context.Background(), pkg, CriticalityInternal)
 		require.NoError(t, err)
-		
+
 		assert.NotNil(t, result)
 		assert.Equal(t, "LOW", result.RiskLevel)
 		assert.Equal(t, "ALLOW", result.RecommendedAction)
@@ -244,10 +244,10 @@ func TestDIRTAlgorithmEdgeCases(t *testing.T) {
 			Version: "1.0.0",
 			Threats: []types.Threat{},
 		}
-		
+
 		result, err := dirt.AnalyzeWithCriticality(context.Background(), pkg, CriticalityInternal)
 		require.NoError(t, err)
-		
+
 		assert.NotNil(t, result)
 		assert.Equal(t, "LOW", result.RiskLevel)
 	})
@@ -262,21 +262,21 @@ func TestDIRTAlgorithmEdgeCases(t *testing.T) {
 				Type:     types.ThreatTypeVulnerable,
 			}
 		}
-		
+
 		pkg := &types.Package{
-			Name:     "many-threats-package",
-			Version:  "1.0.0",
-			Threats:  threats,
+			Name:    "many-threats-package",
+			Version: "1.0.0",
+			Threats: threats,
 			Metadata: &types.PackageMetadata{
 				Downloads:   1000,
 				LastUpdated: &[]time.Time{time.Now().AddDate(0, -1, 0)}[0],
 				Maintainers: []string{"maintainer1", "maintainer2"},
 			},
 		}
-		
+
 		result, err := dirt.AnalyzeWithCriticality(context.Background(), pkg, CriticalityCritical)
 		require.NoError(t, err)
-		
+
 		assert.Equal(t, "HIGH", result.RiskLevel)
 		assert.Greater(t, result.BusinessRisk, 0.8)
 		assert.Equal(t, "ALERT", result.RecommendedAction)
@@ -308,8 +308,8 @@ func TestDIRTAlgorithmIntegration(t *testing.T) {
 
 		// Test with different asset criticality levels
 		contexts := []struct {
-			criticality AssetCriticality
-			expectedRisk string
+			criticality    AssetCriticality
+			expectedRisk   string
 			expectedAction string
 		}{
 			{CriticalityPublic, "LOW", "ALLOW"},
@@ -320,7 +320,7 @@ func TestDIRTAlgorithmIntegration(t *testing.T) {
 		for _, ctx := range contexts {
 			result, err := dirt.AnalyzeWithCriticality(context.Background(), pkg, ctx.criticality)
 			require.NoError(t, err)
-			
+
 			assert.Equal(t, ctx.expectedRisk, result.RiskLevel)
 			assert.Equal(t, ctx.expectedAction, result.RecommendedAction)
 		}

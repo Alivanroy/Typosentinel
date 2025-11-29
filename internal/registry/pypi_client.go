@@ -1,16 +1,17 @@
 package registry
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"regexp"
-	"strings"
-	"time"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "regexp"
+    "strings"
+    "time"
 
-	"github.com/Alivanroy/Typosentinel/pkg/logger"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/Alivanroy/Typosentinel/pkg/logger"
+    "github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/spf13/viper"
 )
 
 // PyPIClient handles interactions with the PyPI registry
@@ -333,6 +334,54 @@ func (c *PyPIClient) getFallbackPopularPackages(limit int) []string {
 		return popular[:limit]
 	}
 	return popular
+}
+
+// GetPopularNames retrieves popular project names from a configured endpoint when provided
+func (c *PyPIClient) GetPopularNames(limit int) ([]string, error) {
+    base := viper.GetString("detector.endpoints.pypi_popular")
+    if base == "" {
+        return nil, fmt.Errorf("pypi popular endpoint not configured")
+    }
+    resp, err := c.client.Get(base)
+    if err != nil { return nil, fmt.Errorf("failed to fetch popular pypi: %w", err) }
+    defer resp.Body.Close()
+    if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("pypi popular status %d", resp.StatusCode) }
+    // Try multiple decode formats
+    // Format A: { projects: [ { name: "..." }, ... ] }
+    var fmta struct { Projects []struct { Name string `json:"name"` } `json:"projects"` }
+    dec := json.NewDecoder(resp.Body)
+    if err := dec.Decode(&fmta); err == nil && len(fmta.Projects) > 0 {
+        names := make([]string, 0, len(fmta.Projects))
+        for _, p := range fmta.Projects { if p.Name != "" { names = append(names, p.Name) } }
+        if limit > 0 && len(names) > limit { names = names[:limit] }
+        return names, nil
+    }
+    // Reset body is not trivial; refetch for next format
+    resp2, err2 := c.client.Get(base)
+    if err2 == nil && resp2.StatusCode == http.StatusOK {
+        defer resp2.Body.Close()
+        // Format B: [ { name: "..." }, ... ]
+        var fmtb []struct { Name string `json:"name"` }
+        if json.NewDecoder(resp2.Body).Decode(&fmtb) == nil && len(fmtb) > 0 {
+            names := make([]string, 0, len(fmtb))
+            for _, p := range fmtb { if p.Name != "" { names = append(names, p.Name) } }
+            if limit > 0 && len(names) > limit { names = names[:limit] }
+            return names, nil
+        }
+    }
+    // Refetch again for array of strings
+    resp3, err3 := c.client.Get(base)
+    if err3 == nil && resp3.StatusCode == http.StatusOK {
+        defer resp3.Body.Close()
+        var arr []string
+        if json.NewDecoder(resp3.Body).Decode(&arr) == nil && len(arr) > 0 {
+            names := make([]string, 0, len(arr))
+            for _, n := range arr { if n != "" { names = append(names, n) } }
+            if limit > 0 && len(names) > limit { names = names[:limit] }
+            return names, nil
+        }
+    }
+    return nil, fmt.Errorf("unsupported pypi popular response format")
 }
 
 // isValidPackageName checks if a package name is valid and not a common false positive

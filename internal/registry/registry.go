@@ -301,6 +301,10 @@ func (p *PyPIConnector) Close() error {
 
 // PopularPackageNames returns popular package names for PyPI
 func (p *PyPIConnector) PopularPackageNames(limit int) ([]string, error) {
+	names, err := p.client.GetPopularNames(limit)
+	if err == nil && len(names) > 0 {
+		return names, nil
+	}
 	return p.client.GetPopularPackages(limit)
 }
 

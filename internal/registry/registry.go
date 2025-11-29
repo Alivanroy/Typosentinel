@@ -400,6 +400,10 @@ func (n *NuGetConnector) Close() error {
 
 // PopularPackageNames returns popular NuGet package names
 func (n *NuGetConnector) PopularPackageNames(limit int) ([]string, error) {
+	names, err := n.client.GetPopularNames(context.Background(), limit)
+	if err == nil && len(names) > 0 {
+		return names, nil
+	}
 	return n.client.GetPopularPackages(limit)
 }
 

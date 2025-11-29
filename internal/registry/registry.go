@@ -355,6 +355,10 @@ func (m *MavenConnector) Close() error {
 
 // PopularPackageNames returns popular Maven coordinates
 func (m *MavenConnector) PopularPackageNames(limit int) ([]string, error) {
+	names, err := m.client.GetPopularNames(context.Background(), limit)
+	if err == nil && len(names) > 0 {
+		return names, nil
+	}
 	return m.client.GetPopularPackages(limit)
 }
 
@@ -472,6 +476,10 @@ func (n *NPMConnector) PopularPackageNames(limit int) ([]string, error) {
 
 // PopularPackageNames returns popular RubyGems package names
 func (r *RubyGemsConnector) PopularPackageNames(limit int) ([]string, error) {
+	names, err := r.client.GetPopularNames(context.Background(), limit)
+	if err == nil && len(names) > 0 {
+		return names, nil
+	}
 	return r.client.GetPopularPackages(limit)
 }
 

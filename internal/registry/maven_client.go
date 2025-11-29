@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/spf13/viper"
 )
 
 // MavenClient handles interactions with Maven Central repository
@@ -247,6 +248,46 @@ func (c *MavenClient) GetPopularPackages(limit int) ([]string, error) {
 		return popularPackages[:limit], nil
 	}
 	return popularPackages, nil
+}
+
+// GetPopularNames retrieves popular Maven coordinates using the search API sorted by popularity
+func (c *MavenClient) GetPopularNames(ctx context.Context, limit int) ([]string, error) {
+	rows := limit
+	if rows <= 0 {
+		rows = viper.GetInt("detector.popular_sizes.maven")
+	}
+	base := viper.GetString("detector.endpoints.maven_popular")
+	var urlStr string
+	if base != "" {
+		urlStr = fmt.Sprintf(base, rows)
+	} else {
+		urlStr = fmt.Sprintf("%s/solrsearch/select?q=*&rows=%d&wt=json&sort=popularity%%20desc", c.baseURL, rows)
+	}
+	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch popular maven: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("maven popular status %d", resp.StatusCode)
+	}
+	var searchResp MavenSearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil {
+		return nil, fmt.Errorf("decode popular: %w", err)
+	}
+	names := make([]string, 0, len(searchResp.Response.Docs))
+	for _, d := range searchResp.Response.Docs {
+		g := d.GroupID
+		a := d.ArtifactID
+		if g != "" && a != "" {
+			names = append(names, fmt.Sprintf("%s:%s", g, a))
+		}
+	}
+	return names, nil
 }
 
 // ClearCache clears the client cache

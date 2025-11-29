@@ -104,6 +104,10 @@ performance_test_*.txt
 security_test_*.txt
 performance-dashboard-*.html
 
+# Docker test artifacts
+docker-realworld-*/
+docker-e2e-*/
+
 # Development and test artifacts
 ci-results/
 dynamic-test-results/
@@ -440,6 +444,7 @@ ml/logs/
 
 # Database dumps
 *.sql
+!internal/database/migrations/*.sql
 *.dump
 
 # Profiling

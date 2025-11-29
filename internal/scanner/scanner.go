@@ -1057,13 +1057,13 @@ func (s *Scanner) detectVersionAnomalies(pkg *types.Package) []*types.Threat {
 func (s *Scanner) getPopularPackages(registry string) []string {
 	switch strings.ToLower(registry) {
 	case "npm":
-		return []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment"}
+		return []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment", "next", "vue", "angular", "rxjs", "vite", "rollup", "yarn", "pnpm", "mocha", "jest", "chai", "sinon", "cross-env", "nodemon", "pm2"}
 	case "pypi":
-		return []string{"numpy", "pandas", "requests", "flask", "django", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow"}
+		return []string{"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow", "beautifulsoup4", "selenium", "pytest", "black", "flake8", "click", "jinja2", "sqlalchemy", "fastapi", "pydantic", "boto3", "redis", "celery", "gunicorn", "uvicorn", "httpx", "aiohttp", "typing-extensions", "setuptools", "wheel", "pip", "certifi", "urllib3", "charset-normalizer"}
 	case "rubygems":
-		return []string{"rails", "bundler", "rake", "rspec", "nokogiri"}
+		return []string{"rails", "bundler", "rake", "rspec", "puma", "nokogiri", "devise", "activerecord", "activesupport", "thor", "json", "minitest", "rack", "sinatra", "capistrano", "sidekiq", "redis", "pg", "mysql2", "sqlite3", "faraday", "httparty", "factory_bot", "rubocop", "pry"}
 	case "maven":
-		return []string{"junit", "spring-boot", "jackson-core", "slf4j-api", "commons-lang3"}
+		return []string{"org.springframework:spring-core", "org.springframework:spring-boot-starter", "junit:junit", "org.apache.commons:commons-lang3", "com.google.guava:guava", "org.slf4j:slf4j-api", "ch.qos.logback:logback-classic", "com.fasterxml.jackson.core:jackson-core", "org.apache.httpcomponents:httpclient", "org.hibernate:hibernate-core", "org.mockito:mockito-core", "org.apache.maven.plugins:maven-compiler-plugin", "org.springframework.boot:spring-boot-starter-web", "org.springframework.boot:spring-boot-starter-data-jpa", "mysql:mysql-connector-java", "org.postgresql:postgresql", "redis.clients:jedis", "org.apache.kafka:kafka-clients", "com.amazonaws:aws-java-sdk", "org.elasticsearch.client:elasticsearch-rest-high-level-client"}
 	default:
 		return []string{}
 	}

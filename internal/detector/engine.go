@@ -3,6 +3,7 @@ package detector
 
 import (
 	"context"
+
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
@@ -35,6 +36,7 @@ func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*Chec
 	popularPackages := []string{
 		"express", "lodash", "react", "angular", "vue", "webpack", "babel", "typescript",
 		"eslint", "jest", "mocha", "chai", "sinon", "cross-env", "nodemon", "pm2",
+		"axios", "next", "vite", "rollup", "rxjs", "jquery", "moment",
 	}
 
 	// Create a dependency for analysis

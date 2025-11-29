@@ -4,6 +4,12 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![CI Status](https://github.com/Alivanroy/Typosentinel/workflows/CI/badge.svg)](https://github.com/Alivanroy/Typosentinel/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Alivanroy/Typosentinel)](https://goreportcard.com/report/github.com/Alivanroy/Typosentinel)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Alivanroy/Typosentinel.svg)](https://pkg.go.dev/github.com/Alivanroy/Typosentinel)
+[![Latest Release](https://img.shields.io/github/v/release/Alivanroy/Typosentinel?sort=semver)](https://github.com/Alivanroy/Typosentinel/releases)
+[![Downloads](https://img.shields.io/github/downloads/Alivanroy/Typosentinel/total.svg)](https://github.com/Alivanroy/Typosentinel/releases)
+[![Linux Tests](https://github.com/Alivanroy/Typosentinel/actions/workflows/linux-test.yml/badge.svg)](https://github.com/Alivanroy/Typosentinel/actions/workflows/linux-test.yml)
+[![Supply Chain Firewall](https://github.com/Alivanroy/Typosentinel/actions/workflows/supply-chain-firewall.yml/badge.svg)](https://github.com/Alivanroy/Typosentinel/actions/workflows/supply-chain-firewall.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/vanali/typosentinel?logo=docker)](https://hub.docker.com/r/vanali/typosentinel)
 
 **Typosentinel** is an intelligent supply chain firewall that actively blocks malicious packages, typosquatting attacks, and supply chain threats in real-time. It transforms from a security scanner into an active protection system with business-aware risk assessment and policy-based blocking.
 

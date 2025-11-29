@@ -16,16 +16,22 @@ type popularEntry struct {
 }
 
 type PopularCache struct {
-	ttl   time.Duration
-	store map[string]popularEntry
-	rdb   *redis.Client
+	ttl      time.Duration
+	store    map[string]popularEntry
+	rdb      *redis.Client
+	backoffs []time.Duration
 }
 
 func NewPopularCache(ttl time.Duration) *PopularCache {
-	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry)}
+	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), backoffs: []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}}
 }
 func NewPopularCacheWithRedis(ttl time.Duration, client *redis.Client) *PopularCache {
-	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), rdb: client}
+	return &PopularCache{ttl: ttl, store: make(map[string]popularEntry), rdb: client, backoffs: []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}}
+}
+func (c *PopularCache) SetBackoffs(backoffs []time.Duration) {
+	if len(backoffs) > 0 {
+		c.backoffs = backoffs
+	}
 }
 
 func (c *PopularCache) Get(registry string, max int) []string {
@@ -46,7 +52,7 @@ func (c *PopularCache) Get(registry string, max int) []string {
 		}
 	}
 
-	names := fetchPopularDynamic(key, max)
+	names := c.fetchPopularDynamic(key, max)
 	if len(names) == 0 {
 		names = truncate(getPopularByRegistry(key), max)
 	}
@@ -66,14 +72,14 @@ func truncate(list []string, max int) []string {
 	return list
 }
 
-func fetchPopularDynamic(registry string, limit int) []string {
+func (c *PopularCache) fetchPopularDynamic(registry string, limit int) []string {
 	f := reg.NewFactory()
 	conn, err := f.CreateConnectorFromType(registry)
 	if err != nil {
 		return nil
 	}
 
-	backoffs := []time.Duration{100 * time.Millisecond, 250 * time.Millisecond, 500 * time.Millisecond}
+	backoffs := c.backoffs
 	try := func(fetch func() ([]string, error)) []string {
 		for i := 0; i < len(backoffs); i++ {
 			names, err := fetch()

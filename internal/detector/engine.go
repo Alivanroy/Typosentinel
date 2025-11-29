@@ -3,11 +3,13 @@ package detector
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	redis "github.com/redis/go-redis/v9"
 )
 
 type Options struct {
@@ -32,9 +34,18 @@ func New(cfg *config.Config) *Engine {
 	if ttl == 0 {
 		ttl = time.Hour
 	}
+	var cache *PopularCache
+	if cfg != nil && cfg.Redis.Enabled {
+		addr := fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port)
+		rdb := redis.NewClient(&redis.Options{Addr: addr, Password: cfg.Redis.Password, DB: cfg.Redis.Database})
+		cache = NewPopularCacheWithRedis(ttl, rdb)
+	} else {
+		cache = NewPopularCache(ttl)
+	}
+	// Backoff config (optional config wiring can be added later)
 	return &Engine{
 		enhancedDetector: NewEnhancedTyposquattingDetector(),
-		popularCache:     NewPopularCache(ttl),
+		popularCache:     cache,
 		maxPopular:       max,
 	}
 }

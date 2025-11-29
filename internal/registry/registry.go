@@ -440,15 +440,7 @@ func (r *RubyGemsConnector) Close() error {
 
 // Composer dynamic popular names
 func (c *ComposerConnector) PopularPackageNames(limit int) ([]string, error) {
-	pkgs, err := c.client.GetPopularPackages(context.Background(), limit)
-	if err != nil {
-		return nil, err
-	}
-	names := make([]string, 0, len(pkgs))
-	for _, p := range pkgs {
-		names = append(names, p.Name)
-	}
-	return names, nil
+	return c.client.GetPopularNames(context.Background(), limit)
 }
 
 // Cargo dynamic popular names
@@ -464,13 +456,9 @@ func (c *CargoConnector) PopularPackageNames(limit int) ([]string, error) {
 	return names, nil
 }
 
-// NPM dynamic popular names (curated)
+// NPM dynamic popular names (search API)
 func (n *NPMConnector) PopularPackageNames(limit int) ([]string, error) {
-	names := []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment", "next", "vue", "angular", "rxjs", "vite", "rollup", "yarn", "pnpm", "mocha", "jest", "chai", "sinon", "cross-env", "nodemon", "pm2"}
-	if limit > 0 && limit < len(names) {
-		names = names[:limit]
-	}
-	return names, nil
+	return n.client.GetPopularPackageNames(context.Background(), limit)
 }
 
 // PopularPackageNames returns popular RubyGems package names

@@ -14,10 +14,10 @@ import (
 
 // NPMClient handles interactions with the NPM registry API
 type NPMClient struct {
-	baseURL    string
-	httpClient *http.Client
-	cache      map[string]*CacheEntry
-	cacheTTL   time.Duration
+    baseURL    string
+    httpClient *http.Client
+    cache      map[string]*CacheEntry
+    cacheTTL   time.Duration
 }
 
 // CacheEntry represents a cached registry response
@@ -240,6 +240,27 @@ func (c *NPMClient) ClearCache() {
 
 // SetCacheTTL sets the cache time-to-live duration
 func (c *NPMClient) SetCacheTTL(ttl time.Duration) {
-	c.cacheTTL = ttl
-	logrus.Debugf("NPM client cache TTL set to: %v", ttl)
+    c.cacheTTL = ttl
+    logrus.Debugf("NPM client cache TTL set to: %v", ttl)
+}
+
+// GetPopularPackageNames retrieves popular packages via NPM search API
+func (c *NPMClient) GetPopularPackageNames(ctx context.Context, limit int) ([]string, error) {
+    if limit <= 0 { limit = 20 }
+    searchURL := fmt.Sprintf("%s/-/v1/search?text=&size=%d", c.baseURL, limit)
+    req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+    if err != nil { return nil, fmt.Errorf("failed to create request: %w", err) }
+    req.Header.Set("Accept", "application/json")
+    req.Header.Set("User-Agent", "TypoSentinel/1.0")
+    resp, err := c.httpClient.Do(req)
+    if err != nil { return nil, fmt.Errorf("failed to search NPM: %w", err) }
+    defer resp.Body.Close()
+    if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("NPM search status %d", resp.StatusCode) }
+    var sr struct {
+        Objects []struct { Package struct { Name string `json:"name"` } `json:"package"` } `json:"objects"`
+    }
+    if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil { return nil, fmt.Errorf("decode search: %w", err) }
+    names := make([]string, 0, len(sr.Objects))
+    for _, obj := range sr.Objects { if obj.Package.Name != "" { names = append(names, obj.Package.Name) } }
+    return names, nil
 }

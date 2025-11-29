@@ -78,6 +78,30 @@ docker build -t typosentinel . && docker run --rm -v "$PWD:/scan" typosentinel .
 docker compose up -d
 ```
 
+### Docker Hub
+
+Build locally and push to Docker Hub:
+
+```bash
+# Build
+docker build -t yourname/typosentinel:latest .
+
+# Login and push
+docker login -u yourname
+docker push yourname/typosentinel:latest
+
+# Run CLI
+docker run --rm yourname/typosentinel:latest scan /workspace --output json
+
+# Run API
+docker run --rm -p 8080:8080 yourname/typosentinel:latest server
+```
+
+CI publish to Docker Hub:
+- Add repository secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+- Trigger “Docker Hub Publish” workflow (Actions) with `image_name` (e.g., `yourname/typosentinel`) and `tag` (e.g., `v1.0.3`)
+- On tag pushes (`v*.*.*`), images are built and pushed as `latest` and `<tag>`.
+
 Prebuilt image (GHCR):
 
 ```bash

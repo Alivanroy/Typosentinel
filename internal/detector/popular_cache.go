@@ -8,6 +8,7 @@ import (
 
 	reg "github.com/Alivanroy/Typosentinel/internal/registry"
 	redis "github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 )
 
 type popularEntry struct {
@@ -118,41 +119,68 @@ func (c *PopularCache) fetchPopularDynamic(registry string, limit int) []string 
 	switch strings.ToLower(registry) {
 	case "pypi":
 		if p, ok := conn.(*reg.PyPIConnector); ok {
-			return try(func() ([]string, error) { return p.PopularPackageNames(limit) })
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.pypi")
+			}
+			return try(func() ([]string, error) { return p.PopularPackageNames(eff) })
 		}
 	case "maven":
 		if m, ok := conn.(*reg.MavenConnector); ok {
-			return try(func() ([]string, error) { return m.PopularPackageNames(limit) })
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.maven")
+			}
+			return try(func() ([]string, error) { return m.PopularPackageNames(eff) })
 		}
 	case "nuget":
 		if n, ok := conn.(*reg.NuGetConnector); ok {
-			return try(func() ([]string, error) { return n.PopularPackageNames(limit) })
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.nuget")
+			}
+			return try(func() ([]string, error) { return n.PopularPackageNames(eff) })
 		}
 	case "rubygems":
 		if r, ok := conn.(*reg.RubyGemsConnector); ok {
-			return try(func() ([]string, error) { return r.PopularPackageNames(limit) })
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.rubygems")
+			}
+			return try(func() ([]string, error) { return r.PopularPackageNames(eff) })
 		}
 	case "npm":
 		if n, ok := conn.(*reg.NPMConnector); ok {
 			n.SetBias(c.npmQuality, c.npmPopularity, c.npmMaintenance)
-			names, err := n.PopularPackageNames(limit)
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.npm")
+			}
+			names, err := n.PopularPackageNames(eff)
 			if err == nil && len(names) > 0 {
 				return names
 			}
 			names = getPopularByRegistry("npm")
-			return truncate(names, limit)
+			return truncate(names, eff)
 		}
 	case "composer":
 		if c, ok := conn.(*reg.ComposerConnector); ok {
-			// Fetch names from Packagist list
-			pkgs, err := c.PopularPackageNames(limit)
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.composer")
+			}
+			pkgs, err := c.PopularPackageNames(eff)
 			if err == nil {
 				return pkgs
 			}
 		}
 	case "cargo":
 		if cg, ok := conn.(*reg.CargoConnector); ok {
-			pkgs, err := cg.PopularPackageNames(limit)
+			eff := limit
+			if eff <= 0 {
+				eff = viper.GetInt("detector.popular_sizes.cargo")
+			}
+			pkgs, err := cg.PopularPackageNames(eff)
 			if err == nil {
 				return pkgs
 			}

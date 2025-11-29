@@ -1,15 +1,16 @@
 package registry
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
+    "context"
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "net/url"
+    "strings"
+    "time"
 
-	"github.com/sirupsen/logrus"
+    "github.com/sirupsen/logrus"
+    "github.com/spf13/viper"
 )
 
 // NPMClient handles interactions with the NPM registry API
@@ -259,7 +260,9 @@ func (c *NPMClient) SetBias(quality, popularity, maintenance float64) {
 // GetPopularPackageNames retrieves popular packages via NPM search API
 func (c *NPMClient) GetPopularPackageNames(ctx context.Context, limit int) ([]string, error) {
     if limit <= 0 { limit = 20 }
-    searchURL := fmt.Sprintf("%s/-/v1/search?text=&size=%d&quality=%g&popularity=%g&maintenance=%g", c.baseURL, limit, c.qualityWeight, c.popularityWeight, c.maintenanceWeight)
+    base := viper.GetString("detector.endpoints.npm_search")
+    if base == "" { base = fmt.Sprintf("%s/-/v1/search", c.baseURL) }
+    searchURL := fmt.Sprintf("%s?text=&size=%d&quality=%g&popularity=%g&maintenance=%g", base, limit, c.qualityWeight, c.popularityWeight, c.maintenanceWeight)
     req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
     if err != nil { return nil, fmt.Errorf("failed to create request: %w", err) }
     req.Header.Set("Accept", "application/json")

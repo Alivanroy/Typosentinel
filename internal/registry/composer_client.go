@@ -1,14 +1,15 @@
 package registry
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-	"time"
+    "context"
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "net/url"
+    "time"
 
-	"github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/Alivanroy/Typosentinel/pkg/types"
+    "github.com/spf13/viper"
 )
 
 // ComposerClient handles interactions with Packagist (Composer registry)
@@ -259,7 +260,8 @@ func (c *ComposerClient) GetPopularPackages(ctx context.Context, limit int) ([]*
 // GetPopularNames tries Packagist popular endpoint, falls back to list
 func (c *ComposerClient) GetPopularNames(ctx context.Context, limit int) ([]string, error) {
     // Attempt popular endpoint
-    popURL := "https://packagist.org/explore/popular.json"
+    popURL := viper.GetString("detector.endpoints.packagist_popular")
+    if popURL == "" { popURL = "https://packagist.org/explore/popular.json" }
     req, err := http.NewRequestWithContext(ctx, "GET", popURL, nil)
     if err == nil {
         resp, err2 := c.httpClient.Do(req)

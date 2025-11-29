@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // Connector interface for connecting to package registries
@@ -293,6 +294,11 @@ func (p *PyPIConnector) Close() error {
 	return nil
 }
 
+// PopularPackageNames returns popular package names for PyPI
+func (p *PyPIConnector) PopularPackageNames(limit int) ([]string, error) {
+	return p.client.GetPopularPackages(limit)
+}
+
 // MavenConnector implements Connector for Maven Central registry
 type MavenConnector struct {
 	registry *Registry
@@ -342,6 +348,11 @@ func (m *MavenConnector) Close() error {
 	return nil
 }
 
+// PopularPackageNames returns popular Maven coordinates
+func (m *MavenConnector) PopularPackageNames(limit int) ([]string, error) {
+	return m.client.GetPopularPackages(limit)
+}
+
 // NuGetConnector implements Connector for NuGet registry
 type NuGetConnector struct {
 	registry *Registry
@@ -382,6 +393,11 @@ func (n *NuGetConnector) Close() error {
 	return nil
 }
 
+// PopularPackageNames returns popular NuGet package names
+func (n *NuGetConnector) PopularPackageNames(limit int) ([]string, error) {
+	return n.client.GetPopularPackages(limit)
+}
+
 // RubyGemsConnector implements Connector for RubyGems registry
 type RubyGemsConnector struct {
 	registry *Registry
@@ -420,6 +436,11 @@ func (r *RubyGemsConnector) GetRegistryType() string {
 // Close closes the RubyGems connector
 func (r *RubyGemsConnector) Close() error {
 	return nil
+}
+
+// PopularPackageNames returns popular RubyGems package names
+func (r *RubyGemsConnector) PopularPackageNames(limit int) ([]string, error) {
+	return r.client.GetPopularPackages(limit)
 }
 
 // ComposerConnector implements Connector for Composer registry

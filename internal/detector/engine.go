@@ -4,6 +4,7 @@ package detector
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -16,11 +17,25 @@ type Options struct {
 
 type Engine struct {
 	enhancedDetector *EnhancedTyposquattingDetector
+	popularCache     *PopularCache
+	maxPopular       int
 }
 
 func New(cfg *config.Config) *Engine {
+	ttl := time.Duration(0)
+	max := 25
+	if cfg != nil && cfg.TypoDetection != nil {
+		if cfg.Cache != nil && cfg.Cache.TTL > 0 {
+			ttl = cfg.Cache.TTL
+		}
+	}
+	if ttl == 0 {
+		ttl = time.Hour
+	}
 	return &Engine{
 		enhancedDetector: NewEnhancedTyposquattingDetector(),
+		popularCache:     NewPopularCache(ttl),
+		maxPopular:       max,
 	}
 }
 
@@ -33,6 +48,23 @@ type CheckPackageResult struct {
 
 func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*CheckPackageResult, error) {
 	// Select popular packages based on registry for better coverage
+	if e.popularCache != nil {
+		popularPackages := e.popularCache.Get(registry, e.maxPopular)
+		if len(popularPackages) == 0 {
+			popularPackages = getPopularByRegistry(registry)
+		}
+		// use popularPackages below
+		dep := types.Dependency{
+			Name:     name,
+			Version:  "unknown",
+			Registry: registry,
+		}
+		threats, warnings := e.AnalyzeDependency(dep, popularPackages, &Options{
+			SimilarityThreshold: 0.75,
+			DeepAnalysis:        true,
+		})
+		return &CheckPackageResult{Threats: threats, Warnings: warnings}, nil
+	}
 	popularPackages := getPopularByRegistry(registry)
 
 	// Create a dependency for analysis
@@ -52,6 +84,9 @@ func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*Chec
 		Warnings: warnings,
 	}, nil
 }
+
+// cfgFromContext placeholder (not used)
+func cfgFromContext(ctx context.Context) *config.Config { return nil }
 
 // getPopularByRegistry returns curated popular package names per registry
 func getPopularByRegistry(registry string) []string {

@@ -1,13 +1,16 @@
 package detector
 
 import (
-	"fmt"
-	"math"
-	"strings"
-	"time"
-	"unicode"
+    "context"
+    "fmt"
+    "math"
+    "strings"
+    "time"
+    "unicode"
 
-	"github.com/Alivanroy/Typosentinel/pkg/types"
+    reg "github.com/Alivanroy/Typosentinel/internal/registry"
+    "github.com/spf13/viper"
+    "github.com/Alivanroy/Typosentinel/pkg/types"
 )
 
 // KeyboardLayout represents different keyboard layouts for proximity analysis
@@ -168,12 +171,12 @@ func (etd *EnhancedTyposquattingDetector) initializeSubstitutions() {
 
 // DetectEnhanced performs enhanced typosquatting detection
 func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency, allPackages []string, threshold float64) []types.Threat {
-	var threats []types.Threat
+    var threats []types.Threat
 
-	for _, pkg := range allPackages {
-		if pkg == target.Name {
-			continue
-		}
+    for _, pkg := range allPackages {
+        if pkg == target.Name {
+            continue
+        }
 
 		// Skip if packages are too different in length (optimization)
 		if etd.shouldSkipLengthCheck(target.Name, pkg) {
@@ -183,9 +186,27 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 		// Calculate enhanced similarity score
 		similarity := etd.calculateEnhancedSimilarity(target.Name, pkg)
 
-		if similarity >= threshold {
-			// Analyze the type of typosquatting
-			analysis := etd.analyzeTyposquattingType(target.Name, pkg)
+        // For well-known Maven groups, require higher similarity to avoid false positives
+        if g1, _, ok1 := parseGroupArtifact(target.Name); ok1 {
+            if g2, _, ok2 := parseGroupArtifact(pkg); ok2 && strings.EqualFold(g1, g2) && isWellKnownGroup(g1) {
+                if similarity < 0.90 { // require higher similarity for same-group well-known artifacts
+                    continue
+                }
+            }
+        }
+
+        ms := etd.collectSignals(target, pkg)
+        if viper.GetBool("detector.require_multi_signal") {
+            suspicious := 0
+            if ms.MaintainerMismatch { suspicious++ }
+            if ms.AbnormalCadence { suspicious++ }
+            if ms.YoungAge { suspicious++ }
+            if ms.LowPopularity { suspicious++ }
+            if suspicious < 1 { continue }
+        }
+        if similarity >= threshold {
+            // Analyze the type of typosquatting
+            analysis := etd.analyzeTyposquattingType(target.Name, pkg)
 
 			// Check for advanced attack patterns
 			advancedPatterns := etd.detectAdvancedPatterns(target.Name, pkg)
@@ -193,9 +214,8 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 			severity := etd.calculateSeverityEnhanced(similarity, analysis)
 
 			// Adjust severity based on advanced patterns
-			if len(advancedPatterns) > 0 {
-				severity = etd.escalateSeverity(severity)
-			}
+            if len(advancedPatterns) > 0 { severity = etd.escalateSeverity(severity) }
+            if ms.LegitimacyStrong { if severity > 0 { severity-- } }
 
 			threat := types.Threat{
 				ID:              generateThreatID(),
@@ -213,10 +233,136 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 				Evidence:        etd.generateEvidence(target.Name, pkg, analysis),
 			}
 			threats = append(threats, threat)
-		}
-	}
+        }
+    }
 
-	return threats
+    return threats
+}
+
+// parseGroupArtifact parses names like "group:artifact"
+func parseGroupArtifact(name string) (string, string, bool) {
+    parts := strings.Split(name, ":")
+    if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+        return parts[0], parts[1], true
+    }
+    return "", "", false
+}
+
+// isWellKnownGroup returns true for common Maven groups to reduce same-group false positives
+func isWellKnownGroup(group string) bool {
+    g := strings.ToLower(group)
+    known := map[string]struct{}{
+        "org.apache.commons": {},
+        "org.springframework": {},
+        "com.fasterxml.jackson.core": {},
+        "org.apache.httpcomponents": {},
+        "org.mockito": {},
+        "org.hibernate": {},
+        "org.slf4j": {},
+        "ch.qos.logback": {},
+    }
+    _, ok := known[g]
+    return ok
+}
+
+type multiSignals struct {
+    MaintainersTarget    []string
+    MaintainersCandidate []string
+    MaintainerMismatch   bool
+    AbnormalCadence      bool
+    YoungAge             bool
+    LowPopularity        bool
+    LegitimacyStrong     bool
+}
+
+func (etd *EnhancedTyposquattingDetector) collectSignals(target types.Dependency, candidate string) multiSignals {
+    s := multiSignals{}
+    ctx := context.Background()
+    if strings.TrimSpace(target.Registry) == "" { return s }
+    switch strings.ToLower(target.Registry) {
+    case "maven":
+        g1, a1, ok1 := parseGroupArtifact(target.Name)
+        g2, a2, ok2 := parseGroupArtifact(candidate)
+        if ok1 && ok2 {
+            mc := reg.NewMavenClient()
+            v1 := ""
+            v2 := ""
+            docs1, _ := mc.SearchPackages(ctx, fmt.Sprintf("%s:%s", g1, a1))
+            if len(docs1) > 0 { v1 = docs1[0].Version }
+            docs2, _ := mc.SearchPackages(ctx, fmt.Sprintf("%s:%s", g2, a2))
+            if len(docs2) > 0 { v2 = docs2[0].Version }
+            m1, _ := mc.GetPackageInfo(ctx, g1, a1, v1)
+            m2, _ := mc.GetPackageInfo(ctx, g2, a2, v2)
+            s.MaintainersTarget = m1.Maintainers
+            s.MaintainersCandidate = m2.Maintainers
+            s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+            s.LegitimacyStrong = strings.EqualFold(g1, g2) && hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+        }
+    case "npm":
+        nc := reg.NewNPMClient()
+        tinfo, _ := nc.GetPackageInfo(ctx, target.Name)
+        cinfo, _ := nc.GetPackageInfo(ctx, candidate)
+        if tinfo != nil { s.MaintainersTarget = toStrings(tinfo.Maintainers) }
+        if cinfo != nil { s.MaintainersCandidate = toStrings(cinfo.Maintainers) }
+        s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+        s.LegitimacyStrong = hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+    case "pypi":
+        pc := reg.NewPyPIClient()
+        tinfo, _ := pc.GetPackageInfo(target.Name)
+        cinfo, _ := pc.GetPackageInfo(candidate)
+        if tinfo != nil { s.MaintainersTarget = []string{tinfo.Info.Author, tinfo.Info.Maintainer} }
+        if cinfo != nil { s.MaintainersCandidate = []string{cinfo.Info.Author, cinfo.Info.Maintainer} }
+        s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+        s.LegitimacyStrong = hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+    case "rubygems":
+        rc := reg.NewRubyGemsClient()
+        tinfo, _ := rc.GetPackageInfo(ctx, target.Name, "")
+        cinfo, _ := rc.GetPackageInfo(ctx, candidate, "")
+        if tinfo != nil { s.MaintainersTarget = tinfo.Maintainers }
+        if cinfo != nil { s.MaintainersCandidate = cinfo.Maintainers }
+        s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+        s.LegitimacyStrong = hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+    case "nuget":
+        uc := reg.NewNuGetClient()
+        sr1, _ := uc.SearchPackages(ctx, target.Name)
+        sr2, _ := uc.SearchPackages(ctx, candidate)
+        if len(sr1) > 0 { s.MaintainersTarget = sr1[0].Maintainers }
+        if len(sr2) > 0 { s.MaintainersCandidate = sr2[0].Maintainers }
+        s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+        s.LegitimacyStrong = hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+    case "cargo":
+        cc := reg.NewCargoClient()
+        tmeta, _ := cc.GetPackageInfo(ctx, target.Name, "latest")
+        cmeta, _ := cc.GetPackageInfo(ctx, candidate, "latest")
+        if tmeta != nil { s.MaintainersTarget = tmeta.Maintainers }
+        if cmeta != nil { s.MaintainersCandidate = cmeta.Maintainers }
+        s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+        s.LegitimacyStrong = hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+    }
+    return s
+}
+
+func hasOverlap(a, b []string) bool {
+    if len(a) == 0 || len(b) == 0 { return false }
+    m := map[string]struct{}{}
+    for _, x := range a { if x != "" { m[strings.ToLower(x)] = struct{}{} } }
+    for _, y := range b { if y != "" { if _, ok := m[strings.ToLower(y)]; ok { return true } } }
+    return false
+}
+
+func toStrings(xs []interface{}) []string {
+    var out []string
+    for _, x := range xs {
+        switch v := x.(type) {
+        case string:
+            if v != "" { out = append(out, v) }
+        case map[string]interface{}:
+            if n, ok := v["name"]; ok {
+                if ns, ok2 := n.(string); ok2 && ns != "" { out = append(out, ns) }
+            }
+        }
+    }
+    return out
 }
 
 // calculateEnhancedSimilarity computes similarity using multiple algorithms

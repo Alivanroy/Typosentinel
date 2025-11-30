@@ -78,6 +78,14 @@ func setupTestServer() *LiveServer {
 		if req.PackageName == "expres" || req.PackageName == "l0dash" {
 			risk = 2
 		}
+		// Homoglyph check (Cyrillic 'a')
+		if strings.Contains(req.PackageName, "\u0430") {
+			risk = 2
+		}
+		// Zero-width check
+		if strings.Contains(req.PackageName, "\u200b") {
+			risk = 2
+		}
 		resp := AnalysisResponse{PackageName: req.PackageName, Registry: req.Registry, RiskLevel: risk}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)

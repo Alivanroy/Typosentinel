@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -1394,12 +1395,16 @@ func saveScanToDatabase(result *analyzer.ScanResult, scanPath string) error {
 func generateDOTContentFromResult(result *analyzer.ScanResult, style string, rank string) string {
 	var content strings.Builder
 	content.WriteString("digraph DependencyGraph {\n")
+
+	// Set orientation
 	if rank == "TB" {
 		content.WriteString("  rankdir=TB;\n")
 	} else {
 		content.WriteString("  rankdir=LR;\n")
 	}
+
 	if style == "classic" {
+		// Classic style - simple boxes
 		content.WriteString("  node [shape=box, style=filled];\n\n")
 		content.WriteString(fmt.Sprintf("  \"%s\" [fillcolor=lightblue, label=\"%s\\nPackages: %d\"];\n",
 			result.Path, result.Path, result.TotalPackages))
@@ -1414,7 +1419,9 @@ func generateDOTContentFromResult(result *analyzer.ScanResult, style string, ran
 		content.WriteString("}\n")
 		return content.String()
 	}
-	content.WriteString("  graph [bgcolor=white, pad=0.5];\n")
+
+	// Enhanced modern style
+	content.WriteString("  graph [bgcolor=white, pad=0.5, fontname=Helvetica];\n")
 	content.WriteString("  node [shape=box, style=filled, color=gray30, fontname=Helvetica, fontsize=10];\n")
 	content.WriteString("  edge [color=gray50, arrowsize=0.6];\n\n")
 
@@ -1425,18 +1432,32 @@ func generateDOTContentFromResult(result *analyzer.ScanResult, style string, ran
 		result.Path, result.Path, result.TotalPackages))
 	content.WriteString("  }\n\n")
 
-	// Threat nodes cluster
+	// Threat nodes cluster with severity-based colors
 	if len(result.Threats) > 0 {
 		content.WriteString("  subgraph cluster_threats {\n")
 		content.WriteString("    label=\"Threats\"; style=rounded; color=red;\n")
 		for i, threat := range result.Threats {
-			color := "#ffc9c9" // light red
-			if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
+			// Severity-based colors and shapes
+			color := "#ffc9c9" // light red - low
+			shape := "box"
+			switch threat.Severity {
+			case types.SeverityCritical:
+				color = "#d32f2f" // dark red
+				shape = "hexagon"
+			case types.SeverityHigh:
 				color = "#ff6b6b" // red
+				shape = "box"
+			case types.SeverityMedium:
+				color = "#ffb74d" // orange
+				shape = "ellipse"
+			case types.SeverityLow:
+				color = "#fff176" // yellow
+				shape = "ellipse"
 			}
-			lbl := fmt.Sprintf("%s\\n%s", threat.Package, threat.Severity.String())
-			content.WriteString(fmt.Sprintf("    \"threat_%d\" [fillcolor=\"%s\", label=\"%s\"];\n", i, color, lbl))
-			content.WriteString(fmt.Sprintf("    \"%s\" -> \"threat_%d\";\n", result.Path, i))
+
+			lbl := fmt.Sprintf("%s\\n%s\\n%s", threat.Package, threat.Severity.String(), threat.Type)
+			content.WriteString(fmt.Sprintf("    \"threat_%d\" [fillcolor=\"%s\", shape=%s, label=\"%s\"];\n", i, color, shape, lbl))
+			content.WriteString(fmt.Sprintf("    \"%s\" -> \"threat_%d\" [color=red, penwidth=2];\n", result.Path, i))
 		}
 		content.WriteString("  }\n\n")
 	}
@@ -1448,10 +1469,35 @@ func generateDOTContentFromResult(result *analyzer.ScanResult, style string, ran
 		for i, w := range result.Warnings {
 			lbl := fmt.Sprintf("%s\\nwarning", w.Package)
 			content.WriteString(fmt.Sprintf("    \"warn_%d\" [fillcolor=\"#ffe08a\", label=\"%s\"];\n", i, lbl))
-			content.WriteString(fmt.Sprintf("    \"%s\" -> \"warn_%d\" [style=dashed];\n", result.Path, i))
+			content.WriteString(fmt.Sprintf("    \"%s\" -> \"warn_%d\" [style=dashed, color=orange];\n", result.Path, i))
 		}
 		content.WriteString("  }\n\n")
 	}
+
+	// Metadata cluster
+	content.WriteString("  subgraph cluster_metadata {\n")
+	content.WriteString("    label=\"Scan Metadata\"; style=rounded; color=gray;\n")
+	content.WriteString("    node [shape=plaintext, fillcolor=white];\n")
+	metaLabel := fmt.Sprintf("Scan Time: %s\\nDuration: %v\\nThreats: %d\\nWarnings: %d",
+		result.Timestamp.Format("2006-01-02 15:04:05"),
+		result.Duration,
+		len(result.Threats),
+		len(result.Warnings))
+	content.WriteString(fmt.Sprintf("    metadata [label=\"%s\"];\n", metaLabel))
+	content.WriteString("  }\n\n")
+
+	// Legend cluster
+	content.WriteString("  subgraph cluster_legend {\n")
+	content.WriteString("    label=\"Legend\"; style=rounded; color=gray;\n")
+	content.WriteString("    node [shape=box];\n")
+	content.WriteString("    legend_critical [fillcolor=\"#d32f2f\", shape=hexagon, label=\"Critical\"];\n")
+	content.WriteString("    legend_high [fillcolor=\"#ff6b6b\", label=\"High\"];\n")
+	content.WriteString("    legend_medium [fillcolor=\"#ffb74d\", shape=ellipse, label=\"Medium\"];\n")
+	content.WriteString("    legend_low [fillcolor=\"#fff176\", shape=ellipse, label=\"Low\"];\n")
+	content.WriteString("    legend_warning [fillcolor=\"#ffe08a\", label=\"Warning\"];\n")
+	content.WriteString("    // Invisible edges for layout\n")
+	content.WriteString("    legend_critical -> legend_high -> legend_medium -> legend_low -> legend_warning [style=invis];\n")
+	content.WriteString("  }\n\n")
 
 	content.WriteString("}\n")
 	return content.String()
@@ -1917,61 +1963,147 @@ func outputDependencyGraphDOT(result *analyzer.ScanResult, style, rankdir string
 	return nil
 }
 
-// outputDependencyGraphSVG outputs dependency graph in SVG format
+// outputDependencyGraphSVG outputs dependency graph in SVG format with proper edges
 func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
-	// Basic grid layout with separate sections for root, threats, and warnings
 	fmt.Println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-	fmt.Println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1000\" height=\"700\">")
+	fmt.Println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1200\" height=\"800\" viewBox=\"0 0 1200 800\">")
 	fmt.Println("  <title>Dependency Graph Analysis</title>")
-	fmt.Println("  <rect width=\"100%\" height=\"100%\" fill=\"#ffffff\"/>")
-	fmt.Printf("  <text x=\"500\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\">Dependency Graph: %s</text>\n", result.Path)
-	// Root card
-	fmt.Println("  <rect x=\"450\" y=\"60\" width=\"100\" height=\"60\" rx=\"8\" fill=\"#e7f1ff\" stroke=\"#0056b3\"/>")
-	fmt.Printf("  <text x=\"500\" y=\"90\" text-anchor=\"middle\" font-size=\"12\">%d packages</text>\n", result.TotalPackages)
+	fmt.Println("  <defs>")
+	fmt.Println("    <filter id=\"shadow\">")
+	fmt.Println("      <feDropShadow dx=\"2\" dy=\"2\" stdDeviation=\"2\" flood-opacity=\"0.3\"/>")
+	fmt.Println("    </filter>")
+	fmt.Println("  </defs>")
+	fmt.Println("  <rect width=\"100%\" height=\"100%\" fill=\"#fafafa\"/>")
 
-	// Threat cards
-	ty := 160
-	tx := 80
-	for i, threat := range result.Threats {
-		if i%4 == 0 && i != 0 {
-			ty += 110
-			tx = 80
+	// Title
+	fmt.Printf("  <text x=\"600\" y=\"30\" text-anchor=\"middle\" font-size=\"20\" font-weight=\"bold\" font-family=\"Arial\">Dependency Graph: %s</text>\n", result.Path)
+	fmt.Printf("  <text x=\"600\" y=\"50\" text-anchor=\"middle\" font-size=\"12\" fill=\"gray\" font-family=\"Arial\">Scan: %s | Duration: %v</text>\n",
+		result.Timestamp.Format("2006-01-02 15:04:05"), result.Duration)
+
+	// Root node (center)
+	rootX, rootY := 600, 120
+	fmt.Printf("  <rect x=\"%d\" y=\"%d\" width=\"140\" height=\"80\" rx=\"10\" fill=\"#e3f2fd\" stroke=\"#1976d2\" stroke-width=\"2\" filter=\"url(#shadow)\"/>\n",
+		rootX-70, rootY-40)
+	fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" font-family=\"Arial\">Project</text>\n", rootX, rootY-15)
+	fmt.Printf("  <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"11\" font-family=\"Arial\">%d packages</text>\n", rootX, rootY+5)
+	fmt.Printf("  <title>%s\n%d total packages</title>\n", result.Path, result.TotalPackages)
+
+	// Threat nodes in a circle around root
+	threatCount := len(result.Threats)
+	if threatCount > 0 {
+		fmt.Println("  <g id=\"threats\">")
+		radius := 280.0
+		angleStep := 360.0 / float64(threatCount)
+
+		for i, threat := range result.Threats {
+			angle := (float64(i)*angleStep - 90) * (3.14159 / 180.0) // Convert to radians, start at top
+			tx := int(float64(rootX) + radius*math.Cos(angle))
+			ty := int(float64(rootY) + radius*math.Sin(angle))
+
+			// Severity-based colors
+			color := "#fff176" // yellow
+			strokeColor := "#fbc02d"
+			switch threat.Severity {
+			case types.SeverityCritical:
+				color = "#d32f2f"
+				strokeColor = "#b71c1c"
+			case types.SeverityHigh:
+				color = "#ff6b6b"
+				strokeColor = "#d32f2f"
+			case types.SeverityMedium:
+				color = "#ffb74d"
+				strokeColor = "#f57c00"
+			case types.SeverityLow:
+				color = "#fff176"
+				strokeColor = "#fbc02d"
+			}
+
+			// Edge from root to threat
+			fmt.Printf("    <line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"%s\" stroke-width=\"2\" opacity=\"0.6\"/>\n",
+				rootX, rootY, tx, ty, strokeColor)
+
+			// Threat node
+			fmt.Printf("    <rect x=\"%d\" y=\"%d\" width=\"120\" height=\"70\" rx=\"8\" fill=\"%s\" stroke=\"%s\" stroke-width=\"2\" filter=\"url(#shadow)\"/>\n",
+				tx-60, ty-35, color, strokeColor)
+
+			name := threat.Package
+			if len(name) > 15 {
+				name = name[:15] + "…"
+			}
+			textColor := "#000"
+			if threat.Severity == types.SeverityCritical {
+				textColor = "#fff"
+			}
+			fmt.Printf("    <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"11\" font-weight=\"bold\" font-family=\"Arial\" fill=\"%s\">%s</text>\n",
+				tx, ty-12, textColor, name)
+			fmt.Printf("    <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\" font-family=\"Arial\" fill=\"%s\">%s</text>\n",
+				tx, ty+5, textColor, threat.Severity)
+			fmt.Printf("    <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"9\" font-family=\"Arial\" fill=\"%s\">%s</text>\n",
+				tx, ty+20, textColor, threat.Type)
+
+			// Tooltip
+			fmt.Printf("    <title>%s\nSeverity: %s\nType: %s\n%s</title>\n",
+				threat.Package, threat.Severity, threat.Type, threat.Description)
 		}
-		color := "#fff3cd" // warning
-		if threat.Severity == types.SeverityHigh || threat.Severity == types.SeverityCritical {
-			color = "#f8d7da"
-		}
-		fmt.Printf("  <rect x=\"%d\" y=\"%d\" width=\"200\" height=\"90\" rx=\"8\" fill=\"%s\" stroke=\"#666\"/>\n", tx, ty, color)
-		name := threat.Package
-		if len(name) > 22 {
-			name = name[:22] + "…"
-		}
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"12\" font-weight=\"bold\">%s</text>\n", tx+10, ty+20, name)
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"11\">Severity: %s</text>\n", tx+10, ty+40, threat.Severity)
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"11\">Type: %s</text>\n", tx+10, ty+58, threat.Type)
-		// Connector
-		fmt.Printf("  <line x1=\"500\" y1=\"120\" x2=\"%d\" y2=\"%d\" stroke=\"#999\" stroke-width=\"1\"/>\n", tx+100, ty)
-		tx += 220
+		fmt.Println("  </g>")
 	}
 
-	// Warning cards
-	wy := ty + 130
-	wx := 80
-	for i, w := range result.Warnings {
-		if i%4 == 0 && i != 0 {
-			wy += 110
-			wx = 80
+	// Warning nodes (below threats)
+	if len(result.Warnings) > 0 {
+		fmt.Println("  <g id=\"warnings\">")
+		wy := rootY + 400
+		wx := 100
+		spacing := 150
+
+		for i, w := range result.Warnings {
+			if i > 0 && i%6 == 0 {
+				wy += 100
+				wx = 100
+			}
+
+			// Edge from root to warning (dashed)
+			fmt.Printf("    <line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"#f57c00\" stroke-width=\"1\" stroke-dasharray=\"5,5\" opacity=\"0.4\"/>\n",
+				rootX, rootY, wx+50, wy)
+
+			// Warning node
+			fmt.Printf("    <rect x=\"%d\" y=\"%d\" width=\"100\" height=\"60\" rx=\"6\" fill=\"#fff9c4\" stroke=\"#f57c00\" stroke-width=\"1\" filter=\"url(#shadow)\"/>\n",
+				wx, wy-30)
+
+			name := w.Package
+			if len(name) > 12 {
+				name = name[:12] + "…"
+			}
+			fmt.Printf("    <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"10\" font-weight=\"bold\" font-family=\"Arial\">%s</text>\n",
+				wx+50, wy-8)
+			fmt.Printf("    <text x=\"%d\" y=\"%d\" text-anchor=\"middle\" font-size=\"9\" font-family=\"Arial\" fill=\"gray\">warning</text>\n",
+				wx+50, wy+10)
+
+			fmt.Printf("    <title>%s\nWarning</title>\n", w.Package)
+
+			wx += spacing
 		}
-		fmt.Printf("  <rect x=\"%d\" y=\"%d\" width=\"200\" height=\"70\" rx=\"8\" fill=\"#fff8e1\" stroke=\"#666\"/>\n", wx, wy)
-		name := w.Package
-		if len(name) > 22 {
-			name = name[:22] + "…"
-		}
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"12\" font-weight=\"bold\">%s</text>\n", wx+10, wy+20, name)
-		fmt.Printf("  <text x=\"%d\" y=\"%d\" font-size=\"11\">warning</text>\n", wx+10, wy+40)
-		fmt.Printf("  <line x1=\"500\" y1=\"120\" x2=\"%d\" y2=\"%d\" stroke=\"#bbb\" stroke-width=\"1\" stroke-dasharray=\"4,2\"/>\n", wx+100, wy)
-		wx += 220
+		fmt.Println("  </g>")
 	}
+
+	// Legend
+	legendX, legendY := 50, 100
+	fmt.Println("  <g id=\"legend\">")
+	fmt.Println("    <text x=\"50\" y=\"80\" font-size=\"12\" font-weight=\"bold\" font-family=\"Arial\">Legend:</text>")
+	severities := []struct{ name, color, stroke string }{
+		{"Critical", "#d32f2f", "#b71c1c"},
+		{"High", "#ff6b6b", "#d32f2f"},
+		{"Medium", "#ffb74d", "#f57c00"},
+		{"Low", "#fff176", "#fbc02d"},
+		{"Warning", "#fff9c4", "#f57c00"},
+	}
+	for i, s := range severities {
+		y := legendY + i*25
+		fmt.Printf("    <rect x=\"%d\" y=\"%d\" width=\"20\" height=\"15\" rx=\"3\" fill=\"%s\" stroke=\"%s\"/>\n",
+			legendX, y, s.color, s.stroke)
+		fmt.Printf("    <text x=\"%d\" y=\"%d\" font-size=\"10\" font-family=\"Arial\">%s</text>\n",
+			legendX+25, y+12, s.name)
+	}
+	fmt.Println("  </g>")
 
 	fmt.Println("</svg>")
 	return nil

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -371,15 +372,66 @@ func (d *DIRTAlgorithm) countTransitiveDependents(pkg *types.Package) int {
 func (d *DIRTAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
 	// Default to INTERNAL criticality if not specified
 	// For full functionality, use AnalyzeWithCriticality directly
-	return &AlgorithmResult{
+
+	results := &AlgorithmResult{
 		Algorithm: d.Name(),
 		Timestamp: time.Now(),
 		Packages:  packages,
 		Findings:  make([]Finding, 0),
-		Metadata: map[string]interface{}{
-			"note": "Use AnalyzeWithCriticality for business-aware risk assessment",
-		},
-	}, nil
+		Metadata:  make(map[string]interface{}),
+	}
+
+	for _, pkgName := range packages {
+		// Create a basic package structure
+		pkg := &types.Package{
+			Name:     pkgName,
+			Version:  "latest",
+			Registry: "npm", // Default
+		}
+
+		// Use INTERNAL criticality as default for CLI
+		assessment, err := d.AnalyzeWithCriticality(ctx, pkg, CriticalityInternal)
+		if err != nil {
+			return nil, err
+		}
+
+		// Map assessment to findings
+		if assessment.RiskLevel == "HIGH" || assessment.RiskLevel == "CRITICAL" {
+			finding := Finding{
+				ID:              fmt.Sprintf("dirt_risk_%s", pkgName),
+				Package:         pkgName,
+				Type:            "SUPPLY_CHAIN_RISK",
+				Severity:        strings.ToLower(assessment.RiskLevel),
+				Message:         fmt.Sprintf("High supply chain risk detected: %s (Score: %.2f)", assessment.Justification, assessment.BusinessRisk),
+				Confidence:      1.0,
+				DetectedAt:      time.Now(),
+				DetectionMethod: "DIRT",
+				Evidence: []Evidence{
+					{
+						Type:        "business_risk",
+						Description: "Business risk assessment score",
+						Value:       assessment.BusinessRisk,
+						Score:       assessment.BusinessRisk,
+					},
+					{
+						Type:        "technical_risk",
+						Description: "Technical risk score",
+						Value:       assessment.TechnicalRisk,
+						Score:       assessment.TechnicalRisk,
+					},
+					{
+						Type:        "recommendation",
+						Description: "Recommended action",
+					},
+				},
+			}
+			results.Findings = append(results.Findings, finding)
+		}
+
+		results.Metadata[pkgName] = assessment
+	}
+
+	return results, nil
 }
 
 // Configure implements the Algorithm interface

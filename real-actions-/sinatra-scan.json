@@ -1,0 +1,52 @@
+{
+  "scan_id": "scan_1764457979",
+  "timestamp": "2025-11-29T23:12:59.709726124Z",
+  "duration": 978468057,
+  "path": "/workspace",
+  "total_packages": 0,
+  "threats": null,
+  "warnings": null,
+  "resolution": {
+    "resolved": [],
+    "conflicts": [],
+    "warnings": []
+  },
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 0,
+    "medium_threats": 0,
+    "low_threats": 0,
+    "total_warnings": 0,
+    "clean_packages": 0,
+    "conflict_count": 0
+  },
+  "metadata": {
+    "dependency_files": [
+      "/workspace/Gemfile",
+      "/workspace/rack-protection/Gemfile",
+      "/workspace/sinatra-contrib/Gemfile"
+    ],
+    "detector_version": "1.0.0",
+    "scan_options": {
+      "OutputFormat": "json",
+      "SpecificFile": "",
+      "DeepAnalysis": false,
+      "IncludeDevDependencies": false,
+      "SimilarityThreshold": 0.8,
+      "ExcludePackages": [],
+      "AllowEmptyProjects": true,
+      "CheckVulnerabilities": false,
+      "VulnerabilityDBs": [
+        "osv",
+        "nvd"
+      ],
+      "VulnConfigPath": "config/vulnerability_databases.yaml",
+      "Recursive": false,
+      "WorkspaceAware": false,
+      "ConsolidateReport": false,
+      "PackageManagers": [],
+      "EnableSupplyChain": false,
+      "AdvancedAnalysis": false
+    }
+  }
+}

@@ -20,9 +20,7 @@ type GTRAlgorithm struct {
 	metrics      *GTRMetrics
 	mu           sync.Mutex
 	npmConnector *registry.NPMConnector
-	depCache     map[string][]string
-	depCacheTS   map[string]time.Time
-	depMu        sync.RWMutex
+	cache        CacheBackend // Pluggable cache backend (Redis or in-memory)
 }
 
 // GTRConfig holds configuration for the GTR algorithm
@@ -37,6 +35,10 @@ type GTRConfig struct {
 	TrustWeight          float64 `yaml:"trust_weight"`
 	EnableCycleDetection bool    `yaml:"enable_cycle_detection"`
 	MaxCycleLength       int     `yaml:"max_cycle_length"`
+
+	// Cache configuration
+	CacheTTL    time.Duration     `yaml:"cache_ttl"`    // Cache TTL (default: 10 minutes)
+	RedisConfig *RedisCacheConfig `yaml:"redis_config"` // Optional Redis config (falls back to in-memory if nil)
 }
 
 // GTRMetrics tracks GTR algorithm performance
@@ -74,7 +76,22 @@ func NewGTRAlgorithm(config *GTRConfig) *GTRAlgorithm {
 			TrustWeight:          0.2,
 			EnableCycleDetection: true,
 			MaxCycleLength:       8,
+			CacheTTL:             10 * time.Minute,
 		}
+	}
+
+	// Initialize cache (try Redis first, fallback to in-memory)
+	var cache CacheBackend
+	if config.RedisConfig != nil {
+		redisCache, err := NewRedisCache(config.RedisConfig)
+		if err != nil {
+			// Fallback to in-memory on Redis connection failure
+			cache = NewInMemoryCache(config.CacheTTL)
+		} else {
+			cache = redisCache
+		}
+	} else {
+		cache = NewInMemoryCache(config.CacheTTL)
 	}
 
 	g := &GTRAlgorithm{
@@ -82,8 +99,7 @@ func NewGTRAlgorithm(config *GTRConfig) *GTRAlgorithm {
 		metrics: &GTRMetrics{
 			LastUpdated: time.Now(),
 		},
-		depCache:   make(map[string][]string),
-		depCacheTS: make(map[string]time.Time),
+		cache: cache,
 	}
 	g.npmConnector = registry.NewNPMConnector(&registry.Registry{Name: "npm", URL: "https://registry.npmjs.org", Type: "npm", Enabled: true})
 	return g
@@ -661,22 +677,27 @@ func (g *GTRAlgorithm) getDependencies(ctx context.Context, name string) []strin
 	if g.npmConnector == nil || name == "" {
 		return nil
 	}
-	g.depMu.RLock()
-	deps, ok := g.depCache[name]
-	ts := g.depCacheTS[name]
-	g.depMu.RUnlock()
-	if ok && time.Since(ts) < 10*time.Minute {
-		return deps
+
+	// Try cache first
+	if g.cache != nil {
+		if deps, found, err := g.cache.Get(ctx, name); err == nil && found {
+			return deps
+		}
 	}
+
+	// Cache miss - fetch from registry
 	c, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
+
 	info, err := g.npmConnector.GetPackageInfo(c, name, "latest")
 	if err != nil || info == nil {
 		return nil
 	}
-	g.depMu.Lock()
-	g.depCache[name] = info.Dependencies
-	g.depCacheTS[name] = time.Now()
-	g.depMu.Unlock()
+
+	// Store in cache
+	if g.cache != nil {
+		_ = g.cache.Set(ctx, name, info.Dependencies, 0) // Use default TTL
+	}
+
 	return info.Dependencies
 }

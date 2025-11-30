@@ -6,7 +6,6 @@ package edge
 import (
 	"context"
 	"fmt"
-	"github.com/Alivanroy/Typosentinel/internal/registry"
 	"math"
 	"sort"
 	"strings"
@@ -14,6 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode"
+
+	"github.com/Alivanroy/Typosentinel/internal/registry"
 )
 
 // RUNTAlgorithm implements the RUNT algorithm for typosquatting detection
@@ -69,6 +70,9 @@ type RUNTConfig struct {
 	KeyboardAttackThreshold   float64 `json:"keyboard_attack_threshold"`
 	VisualAttackThreshold     float64 `json:"visual_attack_threshold"`
 	PhoneticAttackThreshold   float64 `json:"phonetic_attack_threshold"`
+
+	// Performance optimization
+	MaxConcurrency int `json:"max_concurrency"` // Number of workers for parallel processing (0 = num CPU)
 }
 
 // PhoneticEncoder handles phonetic encoding for sound-alike detection
@@ -200,17 +204,80 @@ func (r *RUNTAlgorithm) Analyze(ctx context.Context, packages []string) (*Algori
 		Metadata:  make(map[string]interface{}),
 	}
 
-	// Analyze each package
-	analyzedGlobal := make(map[string]bool)
-	simCache := make(map[string][]SuspiciousPackage)
+	// Determine worker count
+	workers := r.config.MaxConcurrency
+	if workers <= 0 {
+		workers = 4 // Default to 4 workers for balanced performance
+	}
+
+	// For small batches, use sequential processing (overhead not worth it)
+	if len(packages) < 10 {
+		workers = 1
+	}
+
+	// Analyze packages with parallel processing
+	type packageResult struct {
+		packageName        string
+		suspiciousPackages []SuspiciousPackage
+		deps               []string
+		recursiveFindings  []Finding
+	}
+
+	resultsChan := make(chan packageResult, len(packages))
+	semaphore := make(chan struct{}, workers)
+	var wg sync.WaitGroup
+
 	for _, packageName := range packages {
 		// Validate package name length
 		if len(packageName) < r.config.MinPackageLength || len(packageName) > r.config.MaxPackageLength {
 			continue
 		}
 
-		// Find similar packages and compute threat score
-		suspiciousPackages := r.findSuspiciousPackages(packageName)
+		wg.Add(1)
+		go func(pkgName string) {
+			defer wg.Done()
+
+			// Acquire semaphore (limit concurrent workers)
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			// Find similar packages and compute threat score
+			suspicious := r.findSuspiciousPackages(pkgName)
+
+			// Get dependencies if needed
+			var deps []string
+			if len(suspicious) > 0 {
+				deps = r.getDependencies(ctx, pkgName)
+			}
+
+			// Recursive dependency analysis
+			var recursiveFindings []Finding
+			if r.config.EnableDependencyAnalysis {
+				// Convert sync.Map to regular map for this invocation
+				analyzed := make(map[string]bool)
+				cache := make(map[string][]SuspiciousPackage)
+				recursiveFindings = r.recursiveAnalyzeDependencies(ctx, pkgName, 0, r.config.MaxDependencyDepth, make(map[string]bool), analyzed, cache)
+			}
+
+			resultsChan <- packageResult{
+				packageName:        pkgName,
+				suspiciousPackages: suspicious,
+				deps:               deps,
+				recursiveFindings:  recursiveFindings,
+			}
+		}(packageName)
+	}
+
+	// Close results channel when all workers finish
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results from channel
+	for pkgResult := range resultsChan {
+		packageName := pkgResult.packageName
+		suspiciousPackages := pkgResult.suspiciousPackages
 
 		if len(suspiciousPackages) > 0 {
 			// Add findings for each suspicious package
@@ -315,23 +382,21 @@ func (r *RUNTAlgorithm) Analyze(ctx context.Context, packages []string) (*Algori
 			// Add metadata
 			result.Metadata[fmt.Sprintf("%s_suspicious_packages_count", packageName)] = len(suspiciousPackages)
 			result.Metadata[fmt.Sprintf("%s_max_similarity_score", packageName)] = suspiciousPackages[0].SimilarityScore
+
 			// Registry-derived features
-			deps := r.getDependencies(ctx, packageName)
-			if len(deps) > 0 {
-				sample := deps
+			if len(pkgResult.deps) > 0 {
+				sample := pkgResult.deps
 				if len(sample) > 10 {
 					sample = sample[:10]
 				}
-				result.Metadata[fmt.Sprintf("%s_deps_count", packageName)] = len(deps)
+				result.Metadata[fmt.Sprintf("%s_deps_count", packageName)] = len(pkgResult.deps)
 				result.Metadata[fmt.Sprintf("%s_deps_sample", packageName)] = sample
 			}
 		}
 
-		if r.config.EnableDependencyAnalysis {
-			rf := r.recursiveAnalyzeDependencies(ctx, packageName, 0, r.config.MaxDependencyDepth, make(map[string]bool), analyzedGlobal, simCache)
-			if len(rf) > 0 {
-				result.Findings = append(result.Findings, rf...)
-			}
+		// Append recursive findings
+		if len(pkgResult.recursiveFindings) > 0 {
+			result.Findings = append(result.Findings, pkgResult.recursiveFindings...)
 		}
 	}
 	if len(result.Findings) > 0 {

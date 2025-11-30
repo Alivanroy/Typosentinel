@@ -1,0 +1,204 @@
+{
+  "scan_id": "scan_1764458952",
+  "timestamp": "2025-11-29T23:29:12.469498392Z",
+  "duration": 4590915716,
+  "path": "/workspace",
+  "total_packages": 7,
+  "threats": [
+    {
+      "id": "545f4b95aa61cdd343140b47055b162e",
+      "package": "org.apache.commons:commons-text",
+      "version": "unknown",
+      "registry": "maven",
+      "type": "typosquatting",
+      "severity": 1,
+      "confidence": 0.8516826923076922,
+      "description": "Package name 'org.apache.commons:commons-text' is very similar to 'org.apache.commons:commons-lang3' (84.4% similarity). Detected 1 potential keyboard errors, suggesting possible typosquatting attack.",
+      "similar_to": "org.apache.commons:commons-lang3",
+      "recommendation": "Verify that 'org.apache.commons:commons-text' is the intended package. Consider using 'org.apache.commons:commons-lang3' instead if that was the intention.",
+      "evidence": [
+        {
+          "type": "edit_distance",
+          "description": "Levenshtein edit distance",
+          "value": 5,
+          "score": 0.84375
+        },
+        {
+          "type": "visual_similarity",
+          "description": "Visual character similarity score",
+          "value": 0.84375,
+          "score": 0.84375
+        },
+        {
+          "type": "phonetic_similarity",
+          "description": "Phonetic similarity score",
+          "value": 0.84375,
+          "score": 0.84375
+        },
+        {
+          "type": "keyboard_errors",
+          "description": "Number of potential keyboard proximity errors",
+          "value": 1,
+          "score": 0.03225806451612903
+        }
+      ],
+      "detected_at": "2025-11-29T23:29:17.028389556Z",
+      "detection_method": "enhanced_typosquatting"
+    }
+  ],
+  "warnings": null,
+  "resolution": {
+    "resolved": [
+      {
+        "name": "com.google.code.findbugs:jsr305",
+        "version": "3.0.2",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      },
+      {
+        "name": "org.apache.commons:commons-text",
+        "version": "${commons.text.version}",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      },
+      {
+        "name": "org.easymock:easymock",
+        "version": "5.6.0",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      },
+      {
+        "name": "org.junit-pioneer:junit-pioneer",
+        "version": "",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      },
+      {
+        "name": "org.junit.jupiter:junit-jupiter",
+        "version": "",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      },
+      {
+        "name": "org.openjdk.jmh:jmh-core",
+        "version": "${commons.jmh.version}",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      },
+      {
+        "name": "org.openjdk.jmh:jmh-generator-annprocess",
+        "version": "${commons.jmh.version}",
+        "registry": "maven",
+        "source": "/workspace/pom.xml",
+        "direct": true,
+        "development": false,
+        "metadata": {
+          "name": "",
+          "version": "",
+          "registry": "",
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "has_install_script": false
+        }
+      }
+    ],
+    "conflicts": [],
+    "warnings": []
+  },
+  "summary": {
+    "critical_threats": 0,
+    "high_threats": 0,
+    "medium_threats": 1,
+    "low_threats": 0,
+    "total_warnings": 0,
+    "clean_packages": 6,
+    "conflict_count": 0
+  },
+  "metadata": {
+    "dependency_files": [
+      "/workspace/pom.xml"
+    ],
+    "detector_version": "1.0.0",
+    "scan_options": {
+      "OutputFormat": "json",
+      "SpecificFile": "",
+      "DeepAnalysis": false,
+      "IncludeDevDependencies": false,
+      "SimilarityThreshold": 0.8,
+      "ExcludePackages": [],
+      "AllowEmptyProjects": true,
+      "CheckVulnerabilities": false,
+      "VulnerabilityDBs": [
+        "osv",
+        "nvd"
+      ],
+      "VulnConfigPath": "config/vulnerability_databases.yaml",
+      "Recursive": false,
+      "WorkspaceAware": false,
+      "ConsolidateReport": false,
+      "PackageManagers": [],
+      "EnableSupplyChain": false,
+      "AdvancedAnalysis": false
+    }
+  }
+}

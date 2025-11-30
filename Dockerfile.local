@@ -18,4 +18,3 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 COPY --from=builder /out/typosentinel /usr/local/bin/typosentinel
 ENTRYPOINT ["/usr/local/bin/typosentinel"]
 CMD ["version"]
-

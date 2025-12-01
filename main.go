@@ -139,6 +139,7 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 			}
 
 			// Save scan results to database if database is configured
+			fmt.Println("DEBUG: Saving to database...")
 			if logFile, err := os.OpenFile("/tmp/typosentinel-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
 				logFile.WriteString("=== DATABASE SAVE OPERATION START ===\n")
 				logFile.Close()
@@ -168,6 +169,7 @@ and multi-project directories. Specify --package-manager to limit scanning to sp
 			}
 
 			// Output results
+			fmt.Println("DEBUG: Outputting results...")
 			outputScanResult(result, outputFormat)
 			return nil
 		},
@@ -1049,6 +1051,13 @@ func outputScanResult(result *analyzer.ScanResult, format string) {
 		outputSBOM(result, "spdx")
 	case "cyclonedx":
 		outputSBOM(result, "cyclonedx")
+	case "dot":
+		// Use default style/rankdir for scan command output
+		outputDependencyGraphDOT(result, "modern", "LR", false)
+	case "svg":
+		outputDependencyGraphSVG(result, false)
+	case "mermaid":
+		outputDependencyGraphMermaid(result, false)
 	case "futuristic":
 		formatter := output.NewFuturisticFormatter(true, false)
 		formatter.PrintBanner()
@@ -1913,6 +1922,8 @@ func performDependencyGraphAnalysis(path string, maxDepth int, includeDev bool, 
 		return outputDependencyGraphDOT(result, style, rankdir, verbose)
 	case "svg":
 		return outputDependencyGraphSVG(result, verbose)
+	case "mermaid":
+		return outputDependencyGraphMermaid(result, verbose)
 	case "interactive":
 		return fmt.Errorf("interactive output not available")
 	case "advanced-svg":
@@ -1996,7 +2007,7 @@ func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
 		angleStep := 360.0 / float64(threatCount)
 
 		for i, threat := range result.Threats {
-			angle := (float64(i)*angleStep - 90) * (3.14159 / 180.0) // Convert to radians, start at top
+			angle := (float64(i)*angleStep - 90) * (3.14159 / 180.0)
 			tx := int(float64(rootX) + radius*math.Cos(angle))
 			ty := int(float64(rootY) + radius*math.Sin(angle))
 
@@ -2107,6 +2118,71 @@ func outputDependencyGraphSVG(result *analyzer.ScanResult, verbose bool) error {
 
 	fmt.Println("</svg>")
 	return nil
+}
+
+// outputDependencyGraphMermaid outputs dependency graph in Mermaid format
+func outputDependencyGraphMermaid(result *analyzer.ScanResult, verbose bool) error {
+	fmt.Print(generateMermaidContentFromResult(result))
+	return nil
+}
+
+func generateMermaidContentFromResult(result *analyzer.ScanResult) string {
+	var content strings.Builder
+	content.WriteString("graph LR\n")
+
+	// Styling
+	content.WriteString("  %% Styles\n")
+	content.WriteString("  classDef critical fill:#d32f2f,stroke:#b71c1c,color:white,stroke-width:2px;\n")
+	content.WriteString("  classDef high fill:#ff6b6b,stroke:#d32f2f,color:black,stroke-width:2px;\n")
+	content.WriteString("  classDef medium fill:#ffb74d,stroke:#f57c00,color:black,stroke-width:1px;\n")
+	content.WriteString("  classDef low fill:#fff176,stroke:#fbc02d,color:black,stroke-width:1px;\n")
+	content.WriteString("  classDef warning fill:#fff9c4,stroke:#f57c00,color:black,stroke-dasharray: 5 5;\n")
+	content.WriteString("  classDef root fill:#e3f2fd,stroke:#1976d2,color:black,stroke-width:2px;\n\n")
+
+	// Root node
+	content.WriteString(fmt.Sprintf("  root(\"%s<br/>%d packages\"):::root\n", result.Path, result.TotalPackages))
+
+	// Threats
+	if len(result.Threats) > 0 {
+		content.WriteString("  subgraph Threats\n")
+		content.WriteString("    direction TB\n")
+		for i, threat := range result.Threats {
+			styleClass := "low"
+			switch threat.Severity {
+			case types.SeverityCritical:
+				styleClass = "critical"
+			case types.SeverityHigh:
+				styleClass = "high"
+			case types.SeverityMedium:
+				styleClass = "medium"
+			}
+
+			nodeID := fmt.Sprintf("threat_%d", i)
+			label := fmt.Sprintf("%s<br/>%s<br/>%s", threat.Package, threat.Severity, threat.Type)
+			content.WriteString(fmt.Sprintf("    %s[\"%s\"]:::%s\n", nodeID, label, styleClass))
+			content.WriteString(fmt.Sprintf("    root --> %s\n", nodeID))
+		}
+		content.WriteString("  end\n")
+	}
+
+	// Warnings
+	if len(result.Warnings) > 0 {
+		content.WriteString("  subgraph Warnings\n")
+		content.WriteString("    direction TB\n")
+		for i, w := range result.Warnings {
+			nodeID := fmt.Sprintf("warn_%d", i)
+			label := fmt.Sprintf("%s<br/>Warning", w.Package)
+			content.WriteString(fmt.Sprintf("    %s[\"%s\"]:::warning\n", nodeID, label))
+			content.WriteString(fmt.Sprintf("    root -.-> %s\n", nodeID))
+		}
+		content.WriteString("  end\n")
+	}
+
+	// Metadata
+	content.WriteString(fmt.Sprintf("\n  %% Scan: %s | Duration: %v\n",
+		result.Timestamp.Format("2006-01-02 15:04:05"), result.Duration))
+
+	return content.String()
 }
 
 // outputDependencyGraphTable outputs dependency graph analysis in table format

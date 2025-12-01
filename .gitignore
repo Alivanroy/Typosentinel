@@ -107,6 +107,25 @@ performance-dashboard-*.html
 # Docker test artifacts
 docker-realworld-*/
 docker-e2e-*/
+docker-test-*/
+
+# Test output files
+output.txt
+test_output.txt
+*_output.txt
+
+# Error and debug logs
+error.log
+error_*.log
+debug_*.log
+
+# Backup files
+*.bak
+main.go.bak
+
+# Large test workspaces (should be git ignored)
+custom_test_workspace/
+real-actions-/
 
 # Development and test artifacts
 ci-results/

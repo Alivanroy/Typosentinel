@@ -12,6 +12,7 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/registry"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // GTRAlgorithm implements graph traversal reconnaissance
@@ -86,8 +87,10 @@ func NewGTRAlgorithm(config *GTRConfig) *GTRAlgorithm {
 		redisCache, err := NewRedisCache(config.RedisConfig)
 		if err != nil {
 			// Fallback to in-memory on Redis connection failure
+			logrus.Warnf("GTR: Failed to connect to Redis cache, falling back to in-memory: %v", err)
 			cache = NewInMemoryCache(config.CacheTTL)
 		} else {
+			logrus.Infof("GTR: Successfully connected to Redis cache")
 			cache = redisCache
 		}
 	} else {
@@ -102,6 +105,7 @@ func NewGTRAlgorithm(config *GTRConfig) *GTRAlgorithm {
 		cache: cache,
 	}
 	g.npmConnector = registry.NewNPMConnector(&registry.Registry{Name: "npm", URL: "https://registry.npmjs.org", Type: "npm", Enabled: true})
+	logrus.Infof("GTR algorithm initialized with max depth: %d, risk threshold: %.2f", config.MaxTraversalDepth, config.MinRiskThreshold)
 	return g
 }
 
@@ -153,6 +157,7 @@ func (g *GTRAlgorithm) GetMetrics() *AlgorithmMetrics {
 // Analyze performs graph traversal reconnaissance on a package
 func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
 	startTime := time.Now()
+	logrus.Infof("GTR: Starting graph analysis of %d packages", len(packages))
 	defer func() {
 		g.mu.Lock()
 		g.metrics.ProcessingTime += time.Since(startTime)
@@ -197,6 +202,9 @@ func (g *GTRAlgorithm) Analyze(ctx context.Context, packages []string) (*Algorit
 	g.metrics.GraphsAnalyzed++
 	g.metrics.NodesTraversed += int64(len(pkg.Dependencies))
 	g.mu.Unlock()
+
+	logrus.Infof("GTR: Analysis completed in %v - found %d findings, analyzed %d nodes",
+		time.Since(startTime), len(result.Findings), len(pkg.Dependencies))
 
 	return result, nil
 }
@@ -253,6 +261,7 @@ func (g *GTRAlgorithm) analyzeDependencyGraph(pkg *types.Package, result *Algori
 
 		// Check for high-risk dependencies
 		if riskScore > g.config.MinRiskThreshold {
+			logrus.Warnf("GTR: High-risk dependency detected - %s (score: %.2f)", dep.Name, riskScore)
 			result.Findings = append(result.Findings, Finding{
 				ID:              fmt.Sprintf("gtr_high_risk_%s", dep.Name),
 				Package:         dep.Name,
@@ -514,6 +523,7 @@ func (g *GTRAlgorithm) detectTyposquatVectorsAcrossPackages(packages []string, r
 			}
 			sim := levenshteinSimilarity(a, b)
 			if sim >= 0.85 {
+				logrus.Warnf("GTR: Typosquat vector detected - '%s' highly similar to '%s' (%.2f)", a, b, sim)
 				result.Findings = append(result.Findings, Finding{
 					ID:              fmt.Sprintf("gtr_typosquat_%s_%s", a, b),
 					Package:         a,
@@ -643,6 +653,7 @@ func (g *GTRAlgorithm) resolveDependencyGraph(ctx context.Context, root string, 
 	if g.npmConnector == nil || root == "" {
 		return nodes, edges, depthMap, riskMap
 	}
+	logrus.Debugf("GTR: Resolving dependency graph for %s (max depth: %d)", root, maxDepth)
 	visited := make(map[string]bool)
 	queue := []string{root}
 	depthMap[root] = 0
@@ -681,6 +692,7 @@ func (g *GTRAlgorithm) getDependencies(ctx context.Context, name string) []strin
 	// Try cache first
 	if g.cache != nil {
 		if deps, found, err := g.cache.Get(ctx, name); err == nil && found {
+			logrus.Debugf("GTR: Dependency cache hit for package %s", name)
 			return deps
 		}
 	}
@@ -691,6 +703,7 @@ func (g *GTRAlgorithm) getDependencies(ctx context.Context, name string) []strin
 
 	info, err := g.npmConnector.GetPackageInfo(c, name, "latest")
 	if err != nil || info == nil {
+		logrus.Debugf("GTR: Failed to fetch dependencies for package %s: %v", name, err)
 		return nil
 	}
 
@@ -699,5 +712,6 @@ func (g *GTRAlgorithm) getDependencies(ctx context.Context, name string) []strin
 		_ = g.cache.Set(ctx, name, info.Dependencies, 0) // Use default TTL
 	}
 
+	logrus.Debugf("GTR: Fetched and cached %d dependencies for package %s", len(info.Dependencies), name)
 	return info.Dependencies
 }

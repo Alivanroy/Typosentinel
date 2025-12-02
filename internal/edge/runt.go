@@ -15,6 +15,7 @@ import (
 	"unicode"
 
 	"github.com/Alivanroy/Typosentinel/internal/registry"
+	"github.com/sirupsen/logrus"
 )
 
 // RUNTAlgorithm implements the RUNT algorithm for typosquatting detection
@@ -151,7 +152,9 @@ func NewRUNTAlgorithm(config *RUNTConfig) *RUNTAlgorithm {
 		depCacheTS:    make(map[string]time.Time),
 	}
 
+	logrus.Debugf("Initializing RUNT algorithm with overall threshold: %.2f", config.OverallThreshold)
 	runt.initializeComponents()
+	logrus.Infof("RUNT algorithm initialized with %d known packages", len(runt.knownPackages))
 	return runt
 }
 
@@ -195,6 +198,7 @@ func (r *RUNTAlgorithm) GetMetrics() *AlgorithmMetrics {
 
 func (r *RUNTAlgorithm) Analyze(ctx context.Context, packages []string) (*AlgorithmResult, error) {
 	startTime := time.Now()
+	logrus.Infof("RUNT: Starting analysis of %d packages", len(packages))
 
 	result := &AlgorithmResult{
 		Algorithm: r.Name(),
@@ -242,6 +246,7 @@ func (r *RUNTAlgorithm) Analyze(ctx context.Context, packages []string) (*Algori
 			defer func() { <-semaphore }()
 
 			// Find similar packages and compute threat score
+			logrus.Debugf("RUNT: Analyzing package %s for typosquatting", pkgName)
 			suspicious := r.findSuspiciousPackages(pkgName)
 
 			// Get dependencies if needed
@@ -280,9 +285,11 @@ func (r *RUNTAlgorithm) Analyze(ctx context.Context, packages []string) (*Algori
 		suspiciousPackages := pkgResult.suspiciousPackages
 
 		if len(suspiciousPackages) > 0 {
+			logrus.Debugf("RUNT: Found %d suspicious packages similar to %s", len(suspiciousPackages), packageName)
 			// Add findings for each suspicious package
 			for _, suspicious := range suspiciousPackages {
 				if suspicious.SimilarityScore > r.config.OverallThreshold {
+					logrus.Warnf("RUNT: Potential typosquatting detected - '%s' similar to '%s' (score: %.2f, type: %s)", packageName, suspicious.Name, suspicious.SimilarityScore, suspicious.AttackType)
 					evidences := []Evidence{
 						{
 							Type:        "target_package",
@@ -465,6 +472,9 @@ func (r *RUNTAlgorithm) Analyze(ctx context.Context, packages []string) (*Algori
 	r.metrics.ThreatsDetected += len(result.Findings)
 	r.metrics.ProcessingTime = time.Since(startTime)
 	r.metrics.LastUpdated = time.Now()
+	logrus.Infof("RUNT: Analysis completed in %v - found %d threats across %d packages (cache: %d hits, %d misses)",
+		time.Since(startTime), len(result.Findings), len(packages),
+		atomic.LoadInt64(&r.depCacheHits), atomic.LoadInt64(&r.depCacheMisses))
 	return result, nil
 }
 
@@ -1169,6 +1179,7 @@ func (r *RUNTAlgorithm) getDependencies(ctx context.Context, name string) []stri
 	}
 	if ok && time.Since(ts) < ttl {
 		atomic.AddInt64(&r.depCacheHits, 1)
+		logrus.Debugf("RUNT: Dependency cache hit for package %s", name)
 		return deps
 	}
 
@@ -1177,6 +1188,7 @@ func (r *RUNTAlgorithm) getDependencies(ctx context.Context, name string) []stri
 	info, err := r.npmConnector.GetPackageInfo(c, name, "latest")
 	if err != nil || info == nil {
 		atomic.AddInt64(&r.depCacheMisses, 1)
+		logrus.Debugf("RUNT: Failed to fetch dependencies for package %s: %v", name, err)
 		return nil
 	}
 	// Update cache
@@ -1185,6 +1197,7 @@ func (r *RUNTAlgorithm) getDependencies(ctx context.Context, name string) []stri
 	r.depCacheTS[name] = time.Now()
 	r.depMu.Unlock()
 	atomic.AddInt64(&r.depCacheMisses, 1)
+	logrus.Debugf("RUNT: Fetched and cached %d dependencies for package %s", len(info.Dependencies), name)
 	return info.Dependencies
 }
 

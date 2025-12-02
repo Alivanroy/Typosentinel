@@ -186,17 +186,22 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 		// Calculate enhanced similarity score
 		similarity := etd.calculateEnhancedSimilarity(target.Name, pkg)
 
-        // For well-known Maven groups, require higher similarity to avoid false positives
+        // Same-group threshold per registry (default for Maven 0.90)
         if g1, _, ok1 := parseGroupArtifact(target.Name); ok1 {
             if g2, _, ok2 := parseGroupArtifact(pkg); ok2 && strings.EqualFold(g1, g2) && isWellKnownGroup(g1) {
-                if similarity < 0.90 { // require higher similarity for same-group well-known artifacts
+                reglc := strings.ToLower(target.Registry)
+                thr := viper.GetFloat64("detector.registry." + reglc + ".same_group_similarity")
+                if thr <= 0 { thr = 0.90 }
+                if similarity < thr {
                     continue
                 }
             }
         }
 
         ms := etd.collectSignals(target, pkg)
-        if viper.GetBool("detector.require_multi_signal") {
+        reglc := strings.ToLower(target.Registry)
+        requireMS := viper.GetBool("detector.registry.require_multi_signal." + reglc) || viper.GetBool("detector.require_multi_signal")
+        if requireMS {
             suspicious := 0
             if ms.MaintainerMismatch { suspicious++ }
             if ms.AbnormalCadence { suspicious++ }

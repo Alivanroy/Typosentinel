@@ -603,3 +603,19 @@ Examples:
 # Maven
 ./build/typosentinel scan ./examples/maven-minimal --registry maven --output json
 ```
+#### Content Scanning Configuration
+- `TYPOSENTINEL_SCANNER_CONTENT_MAX_FILE_SIZE=1048576`
+- `TYPOSENTINEL_SCANNER_CONTENT_ENTROPY_THRESHOLD=6.8`
+- `TYPOSENTINEL_SCANNER_CONTENT_ENTROPY_WINDOW=512`
+- `TYPOSENTINEL_SCANNER_CONTENT_INCLUDE_GLOBS=**/*.js,**/*.py`
+- `TYPOSENTINEL_SCANNER_CONTENT_EXCLUDE_GLOBS=**/node_modules/**,**/vendor/**`
+- `TYPOSENTINEL_SCANNER_CONTENT_WHITELIST_EXTENSIONS=.js,.py,.ts,.rb,.sh,.json`
+- `TYPOSENTINEL_SCANNER_CONTENT_MAX_FILES=500`
+
+#### Policy Authoring
+- Place `.rego` policies under `policies/` or set `TYPOSENTINEL_POLICIES_PATH`.
+- Enable hot-reload with `TYPOSENTINEL_POLICIES_HOT_RELOAD=true`.
+- Example policies:
+  - `default.rego`: Secrets and install scripts
+  - `suspicious.rego`: Obfuscation/suspicious patterns
+  - `binary.rego`: Binary placement downgrades

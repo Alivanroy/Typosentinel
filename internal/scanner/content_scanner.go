@@ -22,6 +22,8 @@ type ContentScanner struct {
 	windowSize        int
 	includeGlobs      []string
 	excludeGlobs      []string
+	whitelistExt      []string
+	maxFiles          int
 	suspiciousIPs     []string
 	suspiciousDomains []string
 }
@@ -43,6 +45,8 @@ func NewContentScanner() *ContentScanner {
 	}
 	inc := viper.GetStringSlice("scanner.content.include_globs")
 	exc := viper.GetStringSlice("scanner.content.exclude_globs")
+	wl := viper.GetStringSlice("scanner.content.whitelist_extensions")
+	mf := viper.GetInt("scanner.content.max_files")
 
 	return &ContentScanner{
 		maxFileSize:      maxSize,
@@ -50,6 +54,8 @@ func NewContentScanner() *ContentScanner {
 		windowSize:       win,
 		includeGlobs:     inc,
 		excludeGlobs:     exc,
+		whitelistExt:     wl,
+		maxFiles:         mf,
 		suspiciousIPs: []string{
 			// Known malicious IPs (examples - in production, use threat intel feeds)
 			"0.0.0.0",
@@ -97,6 +103,23 @@ func (cs *ContentScanner) ScanDirectory(path string) ([]types.Threat, error) {
 			}
 		}
 
+		rel, _ = filepath.Rel(path, filePath)
+		if cs.maxFiles > 0 && scannedFiles >= cs.maxFiles {
+			return nil
+		}
+		if len(cs.whitelistExt) > 0 {
+			ok := false
+			ext := strings.ToLower(filepath.Ext(filePath))
+			for _, e := range cs.whitelistExt {
+				if strings.EqualFold(e, ext) {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				return nil
+			}
+		}
 		// Skip very large files
 		if info.Size() > cs.maxFileSize {
 			return nil

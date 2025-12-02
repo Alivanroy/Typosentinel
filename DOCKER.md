@@ -77,3 +77,41 @@ docker compose up -d
 - `CGO_ENABLED=1` is set in the Dockerfile for maximum compatibility.
 - Use persistent volumes for data (e.g., `-v typosentinel-data:/data`).
 
+## Content Scanning Configuration
+
+- `TYPOSENTINEL_SCANNER_CONTENT_MAX_FILE_SIZE=1048576`
+- `TYPOSENTINEL_SCANNER_CONTENT_ENTROPY_THRESHOLD=6.8`
+- `TYPOSENTINEL_SCANNER_CONTENT_ENTROPY_WINDOW=512`
+- `TYPOSENTINEL_SCANNER_CONTENT_INCLUDE_GLOBS=**/*.js,**/*.py`
+- `TYPOSENTINEL_SCANNER_CONTENT_EXCLUDE_GLOBS=**/node_modules/**,**/vendor/**`
+- `TYPOSENTINEL_SCANNER_CONTENT_WHITELIST_EXTENSIONS=.js,.py,.ts,.rb,.sh,.json`
+- `TYPOSENTINEL_SCANNER_CONTENT_MAX_FILES=500`
+
+Example:
+
+```bash
+docker run --rm -v "$PWD:/workspace" \
+  -e TYPOSENTINEL_SCANNER_CONTENT_ENTROPY_THRESHOLD=6.8 \
+  -e TYPOSENTINEL_SCANNER_CONTENT_INCLUDE_GLOBS=**/*.js,**/*.py \
+  vanali/typosentinel:latest scan /workspace --output json
+```
+
+## Policy Authoring
+
+- Place `.rego` policies in the directory specified by `TYPOSENTINEL_POLICIES_PATH` (default `policies/`).
+- Enable hot-reload with `TYPOSENTINEL_POLICIES_HOT_RELOAD=true`.
+- Example policies:
+  - `default.rego`: flags embedded secrets and install scripts
+  - `suspicious.rego`: flags suspicious patterns
+  - `binary.rego`: suggests severity downgrade for binaries in legitimate paths
+
+Example:
+
+```bash
+docker run --rm -v "$PWD:/workspace" \
+  -v "$PWD/policies:/policies" \
+  -e TYPOSENTINEL_POLICIES_PATH=/policies \
+  -e TYPOSENTINEL_POLICIES_HOT_RELOAD=true \
+  vanali/typosentinel:latest scan /workspace --output json
+```
+

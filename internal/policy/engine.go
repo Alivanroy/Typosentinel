@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/fsnotify/fsnotify"
 	"github.com/open-policy-agent/opa/rego"
@@ -79,9 +81,22 @@ func (e *Engine) Evaluate(ctx context.Context, pkg *types.Package) ([]*types.Thr
 		if !ok {
 			continue
 		}
+		sev := types.SeverityHigh
+		if s, ok := m["severity"].(string); ok {
+			switch strings.ToLower(s) {
+			case "info":
+				sev = types.SeverityLow
+			case "low":
+				sev = types.SeverityLow
+			case "medium":
+				sev = types.SeverityMedium
+			case "high":
+				sev = types.SeverityHigh
+			}
+		}
 		t := &types.Threat{
 			Type:            types.ThreatTypeEnterprisePolicy,
-			Severity:        types.SeverityHigh,
+			Severity:        sev,
 			Confidence:      0.9,
 			Description:     fmt.Sprintf("policy violation: %v", m["message"]),
 			DetectionMethod: "opa_policy",

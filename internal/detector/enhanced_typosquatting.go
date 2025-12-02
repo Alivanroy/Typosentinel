@@ -230,8 +230,8 @@ func (etd *EnhancedTyposquattingDetector) DetectEnhanced(target types.Dependency
 				Recommendation:  etd.generateRecommendation(target.Name, pkg, advancedPatterns),
 				DetectedAt:      time.Now(),
 				DetectionMethod: "enhanced_typosquatting",
-				Evidence:        etd.generateEvidence(target.Name, pkg, analysis),
-			}
+                Evidence:        etd.generateEvidenceWithSignals(target.Name, pkg, analysis, ms),
+            }
 			threats = append(threats, threat)
         }
     }
@@ -273,6 +273,7 @@ type multiSignals struct {
     YoungAge             bool
     LowPopularity        bool
     LegitimacyStrong     bool
+    SameGroup            bool
 }
 
 func (etd *EnhancedTyposquattingDetector) collectSignals(target types.Dependency, candidate string) multiSignals {
@@ -296,7 +297,8 @@ func (etd *EnhancedTyposquattingDetector) collectSignals(target types.Dependency
             s.MaintainersTarget = m1.Maintainers
             s.MaintainersCandidate = m2.Maintainers
             s.MaintainerMismatch = !hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
-            s.LegitimacyStrong = strings.EqualFold(g1, g2) && hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
+            s.SameGroup = strings.EqualFold(g1, g2)
+            s.LegitimacyStrong = s.SameGroup && hasOverlap(s.MaintainersTarget, s.MaintainersCandidate)
         }
     case "npm":
         nc := reg.NewNPMClient()
@@ -1164,4 +1166,16 @@ func (etd *EnhancedTyposquattingDetector) generateEvidence(target, similar strin
 	}
 
 	return evidence
+}
+
+func (etd *EnhancedTyposquattingDetector) generateEvidenceWithSignals(target, similar string, analysis TyposquattingAnalysis, ms multiSignals) []types.Evidence {
+    ev := etd.generateEvidence(target, similar, analysis)
+    // Attach signals for policy evaluation
+    if ms.SameGroup {
+        ev = append(ev, types.Evidence{ Type: "signal", Description: "same_group", Value: true })
+    }
+    if hasOverlap(ms.MaintainersTarget, ms.MaintainersCandidate) {
+        ev = append(ev, types.Evidence{ Type: "signal", Description: "maintainer_overlap", Value: true })
+    }
+    return ev
 }

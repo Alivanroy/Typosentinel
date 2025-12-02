@@ -12,19 +12,44 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // ContentScanner scans package contents for malicious patterns
 type ContentScanner struct {
 	maxFileSize       int64
+	entropyThreshold  float64
+	windowSize        int
+	includeGlobs      []string
+	excludeGlobs      []string
 	suspiciousIPs     []string
 	suspiciousDomains []string
 }
 
 // NewContentScanner creates a new content scanner
 func NewContentScanner() *ContentScanner {
+	// Configurable thresholds
+	maxSize := viper.GetInt64("scanner.content.max_file_size")
+	if maxSize <= 0 {
+		maxSize = 1 * 1024 * 1024
+	}
+	entropy := viper.GetFloat64("scanner.content.entropy_threshold")
+	if entropy <= 0 {
+		entropy = 7.0
+	}
+	win := viper.GetInt("scanner.content.entropy_window")
+	if win <= 0 {
+		win = 256
+	}
+	inc := viper.GetStringSlice("scanner.content.include_globs")
+	exc := viper.GetStringSlice("scanner.content.exclude_globs")
+
 	return &ContentScanner{
-		maxFileSize: 1024 * 1024, // 1MB max file size for scanning
+		maxFileSize:      maxSize,
+		entropyThreshold: entropy,
+		windowSize:       win,
+		includeGlobs:     inc,
+		excludeGlobs:     exc,
 		suspiciousIPs: []string{
 			// Known malicious IPs (examples - in production, use threat intel feeds)
 			"0.0.0.0",
@@ -50,6 +75,26 @@ func (cs *ContentScanner) ScanDirectory(path string) ([]types.Threat, error) {
 		// Skip directories
 		if info.IsDir() {
 			return nil
+		}
+
+		// Include/exclude filters
+		rel, _ := filepath.Rel(path, filePath)
+		if len(cs.includeGlobs) > 0 {
+			matched := false
+			for _, g := range cs.includeGlobs {
+				if ok, _ := filepath.Match(g, rel); ok {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				return nil
+			}
+		}
+		for _, g := range cs.excludeGlobs {
+			if ok, _ := filepath.Match(g, rel); ok {
+				return nil
+			}
 		}
 
 		// Skip very large files
@@ -92,9 +137,12 @@ func (cs *ContentScanner) scanFile(filePath string) []types.Threat {
 	contentStr := string(content)
 	var threats []types.Threat
 
-	// Check for high entropy (obfuscated/encrypted content)
-	if entropy := cs.calculateEntropy(contentStr); entropy > 7.0 {
+	// Check for high entropy (obfuscated/encrypted content) global and windowed
+	if entropy := cs.calculateEntropy(contentStr); entropy > cs.entropyThreshold {
 		threats = append(threats, cs.createEntropyThreat(filePath, entropy))
+	}
+	if spans := cs.detectHighEntropySpans(contentStr, cs.windowSize, cs.entropyThreshold); len(spans) > 0 {
+		threats = append(threats, cs.createEntropySpanThreat(filePath, spans[0]))
 	}
 
 	// Check for suspicious patterns
@@ -138,6 +186,35 @@ func (cs *ContentScanner) calculateEntropy(data string) float64 {
 	}
 
 	return entropy
+}
+
+type entropySpan struct {
+	start int
+	end   int
+	score float64
+}
+
+func (cs *ContentScanner) detectHighEntropySpans(data string, window int, threshold float64) []entropySpan {
+	var spans []entropySpan
+	if window <= 0 || len(data) == 0 {
+		return spans
+	}
+	w := window
+	if w > len(data) {
+		w = len(data)
+	}
+	step := w / 2
+	if step <= 0 {
+		step = w
+	}
+	for i := 0; i <= len(data)-w; i += step {
+		seg := data[i : i+w]
+		s := cs.calculateEntropy(seg)
+		if s >= threshold {
+			spans = append(spans, entropySpan{start: i, end: i + w, score: s})
+		}
+	}
+	return spans
 }
 
 // detectSuspiciousPatterns detects obfuscation and suspicious code patterns
@@ -279,6 +356,25 @@ func (cs *ContentScanner) createEntropyThreat(filePath string, entropy float64) 
 				Description: "Suspicious file",
 				Value:       relPath,
 			},
+		},
+		DetectedAt: time.Now(),
+	}
+}
+
+func (cs *ContentScanner) createEntropySpanThreat(filePath string, span entropySpan) types.Threat {
+	relPath := filepath.Base(filePath)
+	return types.Threat{
+		Type:            types.ThreatTypeObfuscatedCode,
+		Severity:        types.SeverityHigh,
+		Confidence:      0.8,
+		Description:     fmt.Sprintf("File '%s' has high-entropy span (%.2f)", relPath, span.score),
+		DetectionMethod: "entropy_window_analysis",
+		Recommendation:  "Review high-entropy segments for obfuscated payloads.",
+		Evidence: []types.Evidence{
+			{Type: "entropy_span", Description: "start", Value: span.start},
+			{Type: "entropy_span", Description: "end", Value: span.end},
+			{Type: "entropy", Description: "score", Value: fmt.Sprintf("%.2f", span.score)},
+			{Type: "file", Description: "Suspicious file", Value: relPath},
 		},
 		DetectedAt: time.Now(),
 	}

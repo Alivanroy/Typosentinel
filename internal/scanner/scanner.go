@@ -33,6 +33,8 @@ type Scanner struct {
 	eventBus         *events.EventBus
 	integrationHub   *hub.IntegrationHub
 	metadataEnricher *MetadataEnricher
+	lastProjectPath  string
+	policyEngine     *policy.Engine
 }
 
 // ProjectDetector interface for detecting different project types
@@ -136,6 +138,11 @@ func New(cfg *config.Config) (*Scanner, error) {
 	// Initialize plugin system
 	s.initializePlugins()
 
+	pe, _ := policy.NewEngine("")
+	if pe != nil { /* store policy engine */
+		s.policyEngine = pe
+	}
+
 	return s, nil
 }
 
@@ -164,6 +171,9 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to detect project: %w", err)
 	}
+
+	// Persist project path for content scanning
+	s.lastProjectPath = projectInfo.Path
 
 	// Extract packages
 	packages, err := s.extractPackages(projectInfo)
@@ -336,12 +346,13 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 	threats = append(threats, s.detectVersionAnomalies(pkg)...)
 
 	// Content scanning integration (project files)
-	if pkg != nil && pkg.Metadata != nil {
-		// Attempt to scan the project directory inferred from package metadata repository or source file directory
-		// Fallback to scanning current working directory
+	if pkg != nil {
 		cs := NewContentScanner()
-		cwd, _ := os.Getwd()
-		contentThreats, _ := cs.ScanDirectory(cwd)
+		root := s.lastProjectPath
+		if root == "" {
+			root, _ = os.Getwd()
+		}
+		contentThreats, _ := cs.ScanDirectory(root)
 		for i := range contentThreats {
 			ct := contentThreats[i]
 			threats = append(threats, &ct)
@@ -349,10 +360,9 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 	}
 
 	// Policy engine evaluation
-	pe, _ := policy.NewEngine("")
-	if pe != nil {
+	if s.policyEngine != nil {
 		ctx := context.Background()
-		pts, _ := pe.Evaluate(ctx, pkg)
+		pts, _ := s.policyEngine.Evaluate(ctx, pkg)
 		if len(pts) > 0 {
 			threats = append(threats, pts...)
 		}

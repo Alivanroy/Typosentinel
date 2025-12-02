@@ -31,8 +31,74 @@ func (e *MetadataEnricher) EnrichPackages(ctx context.Context, packages []*types
 			// Log error but continue with other packages
 			continue
 		}
+
+		// Analyze package age after enrichment
+		if pkg.Metadata != nil && !pkg.Metadata.CreatedAt.IsZero() {
+			ageThreats := e.analyzePackageAge(pkg)
+			pkg.Threats = append(pkg.Threats, ageThreats...)
+		}
 	}
 	return nil
+}
+
+// analyzePackageAge analyzes package age and creates threats if suspicious
+func (e *MetadataEnricher) analyzePackageAge(pkg *types.Package) []types.Threat {
+	var threats []types.Threat
+
+	packageAge := time.Since(pkg.Metadata.CreatedAt)
+	ageDays := int(packageAge.Hours() / 24)
+
+	// Thresholds for suspicious packages
+	const (
+		criticalAgeDays = 7  // Less than 1 week
+		highAgeDays     = 30 // Less than 1 month
+		mediumAgeDays   = 90 // Less than 3 months
+	)
+
+	var severity types.Severity
+	var description string
+
+	if ageDays < criticalAgeDays {
+		severity = types.SeverityCritical
+		description = fmt.Sprintf("Package is extremely new (%d days old). New packages are high-risk for typosquatting and malware.", ageDays)
+	} else if ageDays < highAgeDays {
+		severity = types.SeverityHigh
+		description = fmt.Sprintf("Package is very new (%d days old). Exercise caution with recently published packages.", ageDays)
+	} else if ageDays < mediumAgeDays {
+		severity = types.SeverityMedium
+		description = fmt.Sprintf("Package is relatively new (%d days old). Verify legitimacy before use.", ageDays)
+	} else {
+		// Package is old enough, no threat
+		return threats
+	}
+
+	threat := types.Threat{
+		Package:         pkg.Name,
+		Version:         pkg.Version,
+		Registry:        pkg.Registry,
+		Type:            types.ThreatTypeNewPackage,
+		Severity:        severity,
+		Confidence:      0.85,
+		Description:     description,
+		DetectionMethod: "package_age_analysis",
+		Recommendation:  "Verify package legitimacy, check maintainer reputation, and review package code before installation. New packages are statistically higher risk for supply chain attacks.",
+		Evidence: []types.Evidence{
+			{
+				Type:        "package_age",
+				Description: "Package creation date",
+				Value:       pkg.Metadata.CreatedAt.Format("2006-01-02"),
+			},
+			{
+				Type:        "age_days",
+				Description: "Days since creation",
+				Value:       fmt.Sprintf("%d", ageDays),
+			},
+		},
+		DetectedAt: time.Now(),
+	}
+
+	threats = append(threats, threat)
+	return threats
 }
 
 // enrichPackage enriches a single package's metadata

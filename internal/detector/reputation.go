@@ -8,6 +8,7 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // ReputationEngine analyzes package reputation using multiple data sources
@@ -222,14 +223,14 @@ func (re *ReputationEngine) fetchReputationData(dep types.Dependency) (*Reputati
 	err := re.fetchVulnerabilityData(reputationData)
 	if err != nil {
 		// Log error but don't fail the entire operation
-		fmt.Printf("Warning: failed to fetch vulnerability data: %v\n", err)
+		logrus.Warnf("Failed to fetch vulnerability data: %v", err)
 	}
 
 	// Fetch malware data
 	err = re.fetchMalwareData(reputationData)
 	if err != nil {
 		// Log error but don't fail the entire operation
-		fmt.Printf("Warning: failed to fetch malware data: %v\n", err)
+		logrus.Warnf("Failed to fetch malware data: %v", err)
 	}
 
 	// Calculate final reputation score

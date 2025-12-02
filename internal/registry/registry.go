@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // Connector interface for connecting to package registries
@@ -61,7 +62,7 @@ func (n *NPMConnector) GetPackageInfo(ctx context.Context, name, version string)
 	downloadStats, err := n.client.GetDownloadStats(ctx, name, "last-week")
 	if err != nil {
 		// Log warning but don't fail the request
-		fmt.Printf("Warning: failed to get download stats for %s: %v\n", name, err)
+		logrus.Warnf("Failed to get download stats for %s: %v", name, err)
 	}
 
 	// Convert license to string if it's an object

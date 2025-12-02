@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Alivanroy/Typosentinel/internal/scanner"
+	"github.com/sirupsen/logrus"
 )
 
 // AutoDetector automatically detects project types and creates appropriate registry connectors
@@ -40,7 +41,7 @@ func (ad *AutoDetector) DetectProjectType(projectPath string) (*scanner.ProjectI
 			return projectInfo, nil
 		} else {
 			// Log the error for debugging but continue trying other detectors
-			fmt.Printf("Debug: %s detector failed for %s: %v\n", projectType, projectPath, err)
+			logrus.Debugf("%s detector failed for %s: %v", projectType, projectPath, err)
 		}
 	}
 

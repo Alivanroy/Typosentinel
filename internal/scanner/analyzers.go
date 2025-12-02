@@ -66,6 +66,30 @@ func (a *NodeJSAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*types.Pac
 		packages = a.mergePackages(packages, pnpmPackages)
 	}
 
+	// Scan for binaries in the project directory
+	binaryDetector := NewBinaryDetector()
+	if binaryThreats, err := binaryDetector.DetectBinariesInDirectory(projectInfo.Path); err == nil && len(binaryThreats) > 0 {
+		// Add binary threats to a synthetic package representing the project
+		pkgName := "unknown"
+		pkgVersion := "unknown"
+
+		if name, ok := projectInfo.Metadata["name"]; ok && name != "" {
+			pkgName = name
+		}
+		if version, ok := projectInfo.Metadata["version"]; ok && version != "" {
+			pkgVersion = version
+		}
+
+		projectPackage := &types.Package{
+			Name:     pkgName,
+			Version:  pkgVersion,
+			Registry: "npm",
+			Type:     "project",
+			Threats:  binaryThreats,
+		}
+		packages = append(packages, projectPackage)
+	}
+
 	return packages, nil
 }
 
@@ -161,7 +185,96 @@ func (a *NodeJSAnalyzer) parsePackageJSON(filePath string) ([]*types.Package, er
 		}
 	}
 
+	// Check for install scripts on the root package itself
+	rootPackageName, _ := packageJSON["name"].(string)
+	rootPackageVersion, _ := packageJSON["version"].(string)
+	if rootPackageName != "" {
+		rootPkg := &types.Package{
+			Name:     rootPackageName,
+			Version:  rootPackageVersion,
+			Registry: "npm",
+			Type:     "root",
+			Metadata: createPackageMetadata(rootPackageName, rootPackageVersion),
+		}
+
+		if threats := a.checkInstallScripts(packageJSON, rootPkg); len(threats) > 0 {
+			rootPkg.Threats = append(rootPkg.Threats, threats...)
+			packages = append(packages, rootPkg)
+		}
+	}
+
 	return packages, nil
+}
+
+// checkInstallScripts detects potentially dangerous install scripts in package.json
+func (a *NodeJSAnalyzer) checkInstallScripts(packageJSON map[string]interface{}, pkg *types.Package) []types.Threat {
+	var threats []types.Threat
+
+	// Check if scripts section exists
+	scripts, ok := packageJSON["scripts"].(map[string]interface{})
+	if !ok {
+		return threats
+	}
+
+	// Dangerous script hooks that execute during install
+	dangerousHooks := []string{"install", "preinstall", "postinstall"}
+
+	for _, hook := range dangerousHooks {
+		if scriptContent, exists := scripts[hook]; exists {
+			scriptStr, ok := scriptContent.(string)
+			if !ok {
+				continue
+			}
+
+			// Calculate severity based on script content
+			severity := types.SeverityMedium
+			var suspiciousPatterns []string
+
+			// Check for high-risk patterns
+			highRiskPatterns := []string{
+				"curl", "wget", "chmod", "rm -rf", "eval",
+				"bash -c", "sh -c", "powershell", "cmd.exe",
+				"/bin/sh", "/bin/bash", "sudo", "su ",
+			}
+
+			for _, pattern := range highRiskPatterns {
+				if strings.Contains(strings.ToLower(scriptStr), strings.ToLower(pattern)) {
+					severity = types.SeverityHigh
+					suspiciousPatterns = append(suspiciousPatterns, pattern)
+				}
+			}
+
+			description := fmt.Sprintf("Package contains '%s' script", hook)
+			if len(suspiciousPatterns) > 0 {
+				description = fmt.Sprintf("Package contains '%s' script with suspicious commands: %s",
+					hook, strings.Join(suspiciousPatterns, ", "))
+			}
+
+			threat := types.Threat{
+				Package:         pkg.Name,
+				Version:         pkg.Version,
+				Registry:        "npm",
+				Type:            types.ThreatTypeInstallScript,
+				Severity:        severity,
+				Confidence:      0.9,
+				Description:     description,
+				DetectionMethod: "install_script_analysis",
+				Recommendation:  fmt.Sprintf("Review the %s script before installing. Install scripts can execute arbitrary code on your system.", hook),
+				Evidence: []types.Evidence{
+					{
+						Type:        "install_script",
+						Description: fmt.Sprintf("%s script content", hook),
+						Value:       scriptStr,
+					},
+				},
+				DetectedAt: time.Now(),
+			}
+
+			threats = append(threats, threat)
+		}
+	}
+
+	return threats
 }
 
 // parsePackageLockJSON parses package-lock.json for exact dependency versions

@@ -14,6 +14,7 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // RubyPackageAnalyzer analyzes Ruby projects with enhanced Bundler integration
@@ -178,7 +179,7 @@ func (a *RubyPackageAnalyzer) ExtractPackages(projectInfo *ProjectInfo) ([]*type
 		for _, pkg := range packages {
 			if err := a.enhancePackageWithAPIInfo(pkg); err != nil {
 				// Log error but don't fail the entire analysis
-				fmt.Printf("Warning: failed to enhance package %s with API info: %v\n", pkg.Name, err)
+				logrus.Warnf("Failed to enhance package %s with API info: %v", pkg.Name, err)
 			}
 		}
 	}

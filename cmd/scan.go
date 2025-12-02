@@ -7,6 +7,7 @@ import (
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
 	"github.com/Alivanroy/Typosentinel/internal/config"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -115,6 +116,15 @@ func runScan(cmd *cobra.Command, args []string) error {
 	// Map registry override to packageManagers if provided
 	if registryOverride != "" {
 		options.PackageManagers = []string{strings.ToLower(registryOverride)}
+	}
+
+	// Suppress logrus output for graph formats to prevent pollution
+	graphFormats := []string{"dot", "svg", "mermaid"}
+	for _, format := range graphFormats {
+		if outputFormat == format {
+			logrus.SetLevel(logrus.FatalLevel)
+			break
+		}
 	}
 
 	// Perform scan

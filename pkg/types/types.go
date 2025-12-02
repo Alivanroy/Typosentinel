@@ -80,6 +80,13 @@ const (
 	ThreatTypeZeroDay             ThreatType = "zero_day"
 	ThreatTypeSupplyChain         ThreatType = "supply_chain"
 	ThreatTypeEnterprisePolicy    ThreatType = "enterprise_policy"
+	ThreatTypeInstallScript       ThreatType = "install_script"
+	ThreatTypeBinaryDetection     ThreatType = "binary_detection"
+	ThreatTypeNewPackage          ThreatType = "new_package"
+	ThreatTypeLowDownloads        ThreatType = "low_downloads"
+	ThreatTypeObfuscatedCode      ThreatType = "obfuscated_code"
+	ThreatTypeEmbeddedSecret      ThreatType = "embedded_secret"
+	ThreatTypeSuspiciousPattern   ThreatType = "suspicious_pattern"
 )
 
 // Dependency represents a package dependency

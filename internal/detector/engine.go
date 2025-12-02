@@ -3,7 +3,9 @@ package detector
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -86,8 +88,19 @@ func (e *Engine) CheckPackage(ctx context.Context, name, registry string) (*Chec
 			reqMax = ov
 		}
 		popularPackages := e.popularCache.Get(registry, reqMax)
+		curated := getPopularByRegistry(registry)
+		// Union curated with dynamic to ensure coverage of well-known names
+		m := map[string]struct{}{}
+		for _, p := range popularPackages {
+			m[p] = struct{}{}
+		}
+		for _, c := range curated {
+			if _, ok := m[c]; !ok {
+				popularPackages = append(popularPackages, c)
+			}
+		}
 		if len(popularPackages) == 0 {
-			popularPackages = getPopularByRegistry(registry)
+			popularPackages = curated
 		}
 		// use popularPackages below
 		dep := types.Dependency{
@@ -155,22 +168,64 @@ func maxPopularFromContext(ctx context.Context) int {
 	return 0
 }
 
+// popularPackagesData holds the loaded popular packages
+var popularPackagesData map[string][]string
+var popularPackagesLoaded bool
+
+// loadPopularPackages loads popular packages from the JSON file
+func loadPopularPackages() {
+	if popularPackagesLoaded {
+		return
+	}
+
+	// Default hardcoded data as fallback
+	popularPackagesData = map[string][]string{
+		"npm":      {"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment", "next", "vue", "angular", "rxjs", "vite", "rollup", "yarn", "pnpm", "mocha", "jest", "chai", "sinon", "cross-env", "nodemon", "pm2"},
+		"pypi":     {"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow", "beautifulsoup4", "selenium", "pytest", "black", "flake8", "click", "jinja2", "sqlalchemy", "fastapi", "pydantic", "boto3", "redis", "celery", "gunicorn", "uvicorn", "httpx", "aiohttp", "typing-extensions", "setuptools", "wheel", "pip", "certifi", "urllib3", "charset-normalizer"},
+		"rubygems": {"rails", "bundler", "rake", "rspec", "puma", "nokogiri", "devise", "activerecord", "activesupport", "thor", "json", "minitest", "rack", "sinatra", "capistrano", "sidekiq", "redis", "pg", "mysql2", "sqlite3", "faraday", "httparty", "factory_bot", "rubocop", "pry"},
+		"maven":    {"org.springframework:spring-core", "org.springframework:spring-boot-starter", "junit:junit", "org.apache.commons:commons-lang3", "com.google.guava:guava", "org.slf4j:slf4j-api", "ch.qos.logback:logback-classic", "com.fasterxml.jackson.core:jackson-core", "org.apache.httpcomponents:httpclient", "org.hibernate:hibernate-core", "org.mockito:mockito-core", "org.apache.maven.plugins:maven-compiler-plugin", "org.springframework.boot:spring-boot-starter-web", "org.springframework.boot:spring-boot-starter-data-jpa", "mysql:mysql-connector-java", "org.postgresql:postgresql", "redis.clients:jedis", "org.apache.kafka:kafka-clients", "com.amazonaws:aws-java-sdk", "org.elasticsearch.client:elasticsearch-rest-high-level-client"},
+		"nuget":    {"Newtonsoft.Json", "Microsoft.Extensions.DependencyInjection", "Microsoft.Extensions.Logging", "Microsoft.EntityFrameworkCore", "AutoMapper", "Serilog", "FluentValidation", "Microsoft.AspNetCore.Mvc", "System.Text.Json", "Microsoft.Extensions.Configuration", "NUnit", "xunit", "Moq", "Microsoft.Extensions.Hosting", "Swashbuckle.AspNetCore", "Microsoft.EntityFrameworkCore.SqlServer", "Microsoft.AspNetCore.Authentication.JwtBearer", "StackExchange.Redis", "Polly", "MediatR"},
+		"default":  {"react", "lodash", "express", "axios", "requests", "numpy", "pandas", "django", "flask", "rails", "bundler", "rake", "junit:junit", "org.apache.commons:commons-lang3"},
+	}
+
+	// Try to load from file
+	// Check multiple possible locations for the data file
+	paths := []string{
+		"data/popular_packages.json",
+		"../../data/popular_packages.json",
+		"/etc/typosentinel/popular_packages.json",
+	}
+
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			data, err := os.ReadFile(path)
+			if err == nil {
+				var loadedData map[string][]string
+				if err := json.Unmarshal(data, &loadedData); err == nil {
+					// Merge loaded data with defaults (override)
+					for k, v := range loadedData {
+						popularPackagesData[k] = v
+					}
+					// fmt.Printf("Loaded popular packages from %s\n", path) // Debug logging
+					break
+				}
+			}
+		}
+	}
+
+	popularPackagesLoaded = true
+}
+
 // getPopularByRegistry returns curated popular package names per registry
 func getPopularByRegistry(registry string) []string {
-	switch strings.ToLower(registry) {
-	case "npm":
-		return []string{"react", "lodash", "express", "axios", "webpack", "babel", "eslint", "typescript", "jquery", "moment", "next", "vue", "angular", "rxjs", "vite", "rollup", "yarn", "pnpm", "mocha", "jest", "chai", "sinon", "cross-env", "nodemon", "pm2"}
-	case "pypi":
-		return []string{"requests", "numpy", "pandas", "django", "flask", "tensorflow", "pytorch", "scikit-learn", "matplotlib", "pillow", "beautifulsoup4", "selenium", "pytest", "black", "flake8", "click", "jinja2", "sqlalchemy", "fastapi", "pydantic", "boto3", "redis", "celery", "gunicorn", "uvicorn", "httpx", "aiohttp", "typing-extensions", "setuptools", "wheel", "pip", "certifi", "urllib3", "charset-normalizer"}
-	case "rubygems":
-		return []string{"rails", "bundler", "rake", "rspec", "puma", "nokogiri", "devise", "activerecord", "activesupport", "thor", "json", "minitest", "rack", "sinatra", "capistrano", "sidekiq", "redis", "pg", "mysql2", "sqlite3", "faraday", "httparty", "factory_bot", "rubocop", "pry"}
-	case "maven":
-		return []string{"org.springframework:spring-core", "org.springframework:spring-boot-starter", "junit:junit", "org.apache.commons:commons-lang3", "com.google.guava:guava", "org.slf4j:slf4j-api", "ch.qos.logback:logback-classic", "com.fasterxml.jackson.core:jackson-core", "org.apache.httpcomponents:httpclient", "org.hibernate:hibernate-core", "org.mockito:mockito-core", "org.apache.maven.plugins:maven-compiler-plugin", "org.springframework.boot:spring-boot-starter-web", "org.springframework.boot:spring-boot-starter-data-jpa", "mysql:mysql-connector-java", "org.postgresql:postgresql", "redis.clients:jedis", "org.apache.kafka:kafka-clients", "com.amazonaws:aws-java-sdk", "org.elasticsearch.client:elasticsearch-rest-high-level-client"}
-	case "nuget":
-		return []string{"Newtonsoft.Json", "Microsoft.Extensions.DependencyInjection", "Microsoft.Extensions.Logging", "Microsoft.EntityFrameworkCore", "AutoMapper", "Serilog", "FluentValidation", "Microsoft.AspNetCore.Mvc", "System.Text.Json", "Microsoft.Extensions.Configuration", "NUnit", "xunit", "Moq", "Microsoft.Extensions.Hosting", "Swashbuckle.AspNetCore", "Microsoft.EntityFrameworkCore.SqlServer", "Microsoft.AspNetCore.Authentication.JwtBearer", "StackExchange.Redis", "Polly", "MediatR"}
-	default:
-		return []string{"react", "lodash", "express", "axios", "requests", "numpy", "pandas", "django", "flask", "rails", "bundler", "rake", "junit:junit", "org.apache.commons:commons-lang3"}
+	loadPopularPackages()
+
+	reg := strings.ToLower(registry)
+	if list, ok := popularPackagesData[reg]; ok {
+		return list
 	}
+
+	return popularPackagesData["default"]
 }
 
 func (e *Engine) AnalyzeDependency(dep types.Dependency, popularPackages []string, options *Options) ([]types.Threat, []types.Warning) {

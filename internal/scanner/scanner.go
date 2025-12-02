@@ -13,10 +13,13 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/events"
 	"github.com/Alivanroy/Typosentinel/internal/integrations/hub"
+	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/internal/policy"
 	pkgevents "github.com/Alivanroy/Typosentinel/pkg/events"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/fsnotify/fsnotify"
+	"github.com/sirupsen/logrus"
 )
 
 // Scanner handles project scanning and dependency analysis
@@ -26,7 +29,7 @@ type Scanner struct {
 	analyzers        map[string]DependencyAnalyzer
 	cache            *cache.CacheIntegration
 	analyzerRegistry *AnalyzerRegistry
-	// mlDetector removed to break circular dependency
+	mlScorer         *ml.SimpleMLScorer
 	eventBus         *events.EventBus
 	integrationHub   *hub.IntegrationHub
 	metadataEnricher *MetadataEnricher
@@ -123,8 +126,8 @@ func New(cfg *config.Config) (*Scanner, error) {
 		s.cache = cacheIntegration
 	}
 
-	// ML detector initialization commented out to break circular dependency
-	// TODO: Implement ML integration through a different approach
+	// Initialize ML scorer
+	s.mlScorer = ml.NewSimpleMLScorer()
 
 	// Register project detectors
 	s.registerDetectors()
@@ -175,12 +178,12 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 		if pkg.Metadata == nil {
 			pkg.Metadata = &types.PackageMetadata{}
 		}
-		fmt.Printf("Enriching package %s (registry: %s, description: %s)\n", pkg.Name, pkg.Registry, pkg.Metadata.Description)
+		logrus.Debugf("Enriching package %s (registry: %s, description: %s)", pkg.Name, pkg.Registry, pkg.Metadata.Description)
 		if err := s.metadataEnricher.enrichPackage(ctx, pkg); err != nil {
 			// Log error but continue with other packages
-			fmt.Printf("Failed to enrich package %s: %v\n", pkg.Name, err)
+			logrus.Warnf("Failed to enrich package %s: %v", pkg.Name, err)
 		} else {
-			fmt.Printf("Enriched package %s - new description: %s\n", pkg.Name, pkg.Metadata.Description)
+			logrus.Debugf("Enriched package %s - new description: %s", pkg.Name, pkg.Metadata.Description)
 		}
 	}
 
@@ -332,26 +335,70 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 	threats = append(threats, s.detectMaliciousIndicators(pkg)...)
 	threats = append(threats, s.detectVersionAnomalies(pkg)...)
 
+	// Content scanning integration (project files)
+	if pkg != nil && pkg.Metadata != nil {
+		// Attempt to scan the project directory inferred from package metadata repository or source file directory
+		// Fallback to scanning current working directory
+		cs := NewContentScanner()
+		cwd, _ := os.Getwd()
+		contentThreats, _ := cs.ScanDirectory(cwd)
+		for i := range contentThreats {
+			ct := contentThreats[i]
+			threats = append(threats, &ct)
+		}
+	}
+
+	// Policy engine evaluation
+	pe, _ := policy.NewEngine("")
+	if pe != nil {
+		ctx := context.Background()
+		pts, _ := pe.Evaluate(ctx, pkg)
+		if len(pts) > 0 {
+			threats = append(threats, pts...)
+		}
+	}
+
 	return threats, nil
 }
 
 // convertToMLFeatures converts a package to enhanced ML features
-// Commented out to break circular dependency with ml package
-/*
 func (s *Scanner) convertToMLFeatures(pkg *types.Package) *ml.EnhancedPackageFeatures {
-	// Implementation commented out due to circular dependency
-	return nil
+	features := &ml.EnhancedPackageFeatures{
+		PackageName:  pkg.Name,
+		Registry:     pkg.Registry,
+		Dependencies: s.convertDependencies(pkg.Dependencies),
+		Downloads:    0, // Default, populated if metadata available
+	}
+
+	if pkg.Metadata != nil {
+		features.Maintainers = pkg.Metadata.Maintainers
+		features.Downloads = pkg.Metadata.Downloads
+		features.HasLicense = pkg.Metadata.License != ""
+		// Other fields would be populated from metadata if available
+	}
+
+	return features
 }
-*/
 
 // convertMLResultsToThreats converts ML detection results to threat objects
-// Commented out to break circular dependency with ml package
-/*
 func (s *Scanner) convertMLResultsToThreats(pkg *types.Package, result *ml.MLDetectionResult) []*types.Threat {
-	// Implementation commented out due to circular dependency
-	return nil
+	if result == nil || result.Score < 0.5 {
+		return nil
+	}
+
+	threat := &types.Threat{
+		Type:            types.ThreatType("ml_detected_anomaly"),
+		Severity:        s.convertRiskLevelToSeverity(result.RiskLevel),
+		Description:     result.Explanation,
+		Confidence:      result.Confidence,
+		DetectionMethod: "ml_engine",
+		Metadata: map[string]interface{}{
+			"ml_score": result.Score,
+		},
+	}
+
+	return []*types.Threat{threat}
 }
-*/
 
 // Helper methods for ML feature conversion
 
@@ -378,13 +425,16 @@ func (s *Scanner) convertMaintainers(maintainers []string) []string {
 }
 
 // convertDependencies converts package dependencies to ML format
-// Commented out to break circular dependency with ml package
-/*
 func (s *Scanner) convertDependencies(deps []types.Dependency) []ml.Dependency {
-	// Implementation commented out due to circular dependency
-	return nil
+	var mlDeps []ml.Dependency
+	for _, dep := range deps {
+		mlDeps = append(mlDeps, ml.Dependency{
+			Name:    dep.Name,
+			Version: dep.Version,
+		})
+	}
+	return mlDeps
 }
-*/
 
 // countFilesByExtension counts files with specific extension
 func (s *Scanner) countFilesByExtension(files []string, ext string) int {
@@ -628,17 +678,17 @@ func (s *Scanner) watchWithInterval(projectPath string, interval time.Duration) 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	fmt.Printf("Starting interval-based watching (every %v)\n", interval)
+	logrus.Infof("Starting interval-based watching (every %v)", interval)
 
 	for {
 		select {
 		case <-ticker.C:
 			result, err := s.ScanProject(projectPath)
 			if err != nil {
-				fmt.Printf("Scan error: %v\n", err)
+				logrus.Errorf("Scan error: %v", err)
 				continue
 			}
-			fmt.Printf("Scan completed: %d packages, %d threats\n",
+			logrus.Infof("Scan completed: %d packages, %d threats",
 				result.Summary.TotalPackages, result.Summary.ThreatsFound)
 		}
 	}
@@ -658,7 +708,7 @@ func (s *Scanner) watchWithFileEvents(projectPath string) error {
 		return err
 	}
 
-	fmt.Println("Starting file system event watching")
+	logrus.Info("Starting file system event watching")
 
 	for {
 		select {
@@ -669,13 +719,13 @@ func (s *Scanner) watchWithFileEvents(projectPath string) error {
 
 			// Check if it's a manifest file change
 			if s.isManifestFile(event.Name) {
-				fmt.Printf("Manifest file changed: %s\n", event.Name)
+				logrus.Infof("Manifest file changed: %s", event.Name)
 				result, err := s.ScanProject(projectPath)
 				if err != nil {
-					fmt.Printf("Scan error: %v\n", err)
+					logrus.Errorf("Scan error: %v", err)
 					continue
 				}
-				fmt.Printf("Scan completed: %d packages, %d threats\n",
+				logrus.Infof("Scan completed: %d packages, %d threats",
 					result.Summary.TotalPackages, result.Summary.ThreatsFound)
 			}
 
@@ -683,7 +733,7 @@ func (s *Scanner) watchWithFileEvents(projectPath string) error {
 			if !ok {
 				return nil
 			}
-			fmt.Printf("Watcher error: %v\n", err)
+			logrus.Errorf("Watcher error: %v", err)
 		}
 	}
 }

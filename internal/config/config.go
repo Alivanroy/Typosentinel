@@ -330,14 +330,17 @@ type ProcessingStep struct {
 
 // ScannerConfig contains scanner configuration
 type ScannerConfig struct {
-	MaxConcurrency int              `mapstructure:"max_concurrency" validate:"min=1,max=50"`
-	Timeout        time.Duration    `mapstructure:"timeout" validate:"min=1s"`
-	RetryAttempts  int              `mapstructure:"retry_attempts" validate:"min=0,max=10"`
-	RetryDelay     time.Duration    `mapstructure:"retry_delay" validate:"min=1s"`
-	UserAgent      string           `mapstructure:"user_agent" validate:"required,min=1"`
-	IncludeDevDeps bool             `mapstructure:"include_dev_deps"`
-	EnrichMetadata bool             `mapstructure:"enrich_metadata"`
-	Registries     RegistriesConfig `mapstructure:"registries"`
+	MaxConcurrency   int              `mapstructure:"max_concurrency" validate:"min=1,max=50"`
+	Timeout          time.Duration    `mapstructure:"timeout" validate:"min=1s"`
+	RetryAttempts    int              `mapstructure:"retry_attempts" validate:"min=0,max=10"`
+	RetryDelay       time.Duration    `mapstructure:"retry_delay" validate:"min=1s"`
+	UserAgent        string           `mapstructure:"user_agent" validate:"required,min=1"`
+	IncludeDevDeps   bool             `mapstructure:"include_dev_deps"`
+	EnrichMetadata   bool             `mapstructure:"enrich_metadata"`
+	RespectGitignore bool             `mapstructure:"respect_gitignore"`
+	MaxDepth         int              `mapstructure:"max_depth" validate:"min=1,max=100"`
+	SkipPatterns     []string         `mapstructure:"skip_patterns"`
+	Registries       RegistriesConfig `mapstructure:"registries"`
 }
 
 // RegistriesConfig contains package registry configuration
@@ -795,6 +798,9 @@ func (m *Manager) setDefaults() {
 	viper.SetDefault("scanner.retry_attempts", 3)
 	viper.SetDefault("scanner.retry_delay", "1s")
 	viper.SetDefault("scanner.user_agent", "Typosentinel/1.0")
+	viper.SetDefault("scanner.respect_gitignore", true)
+	viper.SetDefault("scanner.max_depth", 10)
+	viper.SetDefault("scanner.skip_patterns", []string{"node_modules", ".git", "vendor", ".venv", "__pycache__", "real-actions-", "custom_test_workspace", "docker-test-"})
 	viper.SetDefault("scanner.registries.npm.enabled", true)
 	viper.SetDefault("scanner.registries.npm.url", "https://registry.npmjs.org")
 	viper.SetDefault("scanner.registries.npm.timeout", "10s")

@@ -279,6 +279,18 @@ func (s *Scanner) detectProject(projectPath string) (*ProjectInfo, error) {
 		return nil, fmt.Errorf("failed to read directory: %w", err)
 	}
 
+	// Filter out gitignored entries if RespectGitignore is enabled
+	if s.config.Scanner != nil && s.config.Scanner.RespectGitignore {
+		var filteredEntries []os.DirEntry
+		for _, entry := range entries {
+			entryPath := filepath.Join(absPath, entry.Name())
+			if !s.shouldSkipPath(entryPath) {
+				filteredEntries = append(filteredEntries, entry)
+			}
+		}
+		entries = filteredEntries
+	}
+
 	// If directory is empty, return a generic project info
 	if len(entries) == 0 {
 		return &ProjectInfo{

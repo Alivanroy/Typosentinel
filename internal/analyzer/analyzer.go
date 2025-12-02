@@ -434,7 +434,23 @@ func (a *Analyzer) discoverDependencyFiles(path string, options *ScanOptions) ([
 		if info.IsDir() {
 			// Skip common directories that shouldn't contain dependency files
 			dirName := info.Name()
-			if dirName == "node_modules" || dirName == ".git" || dirName == "vendor" {
+			skipDirs := []string{
+				"node_modules", ".git", "vendor", ".venv", "__pycache__",
+				".tox", ".pytest_cache", "target", "dist", "build",
+				".terraform", ".gradle",
+			}
+			for _, skip := range skipDirs {
+				if dirName == skip {
+					return filepath.SkipDir
+				}
+			}
+
+			// Skip Windows problematic directories
+			if strings.HasPrefix(dirName, "real-actions-") ||
+				strings.HasPrefix(dirName, "docker-test-") ||
+				strings.HasPrefix(dirName, "docker-realworld-") ||
+				strings.HasPrefix(dirName, "docker-e2e-") ||
+				dirName == "custom_test_workspace" {
 				return filepath.SkipDir
 			}
 			return nil
@@ -1371,6 +1387,12 @@ func (a *Analyzer) detectThreats(ctx context.Context, deps []types.Dependency, o
 		}
 
 		// Use CheckPackage which compares against popular packages
+		// Check if detector is initialized
+		if a.detector == nil {
+			logrus.Warnf("Detector not initialized, skipping threat detection for %s", dep.Name)
+			continue
+		}
+
 		result, err := a.detector.CheckPackage(ctx, dep.Name, dep.Registry)
 		if err != nil {
 			logrus.Warnf("Failed to check package %s: %v", dep.Name, err)

@@ -12,34 +12,76 @@
 
 **Typosentinel** is an intelligent supply chain firewall that actively blocks malicious packages, typosquatting attacks, and supply chain threats in real-time. It transforms from a security scanner into an active protection system with business-aware risk assessment and policy-based blocking.
 
+## 📊 Project Status & Maturity
+
+**Current Status**: Active Development (Beta)
+
+### Production Ready ✅
+- ✅ **Core Scanning**: Typosquatting detection for npm, PyPI, Go, Maven, Cargo, Ruby, PHP
+- ✅ **CLI Tool**: Scan command with multiple output formats (JSON, YAML, table, SARIF)
+- ✅ **Basic Detection**: Edit distance, homoglyph, and similarity-based threat detection
+- ✅ **SBOM Generation**: SPDX and CycloneDX format support
+- ✅ **Multi-platform**: Works on Linux, macOS, and Windows (with limitations)
+
+### Experimental / Beta 🚧
+- 🚧 **Supply Chain Firewall**: Policy enforcement and active blocking (beta)
+- 🚧 **DIRT/RUNT/GTR Algorithms**: Advanced edge algorithms (tested but needs validation)
+- 🚧 **ML Detection**: Machine learning-based threat detection (disabled by default)
+- 🚧 **API Server**: REST API and dashboard (functional but needs hardening)
+- 🚧 **Redis Cache**: Performance optimization for GTR algorithm (requires Redis)
+
+### Platform Support
+- ✅ **Linux**: Fully tested and supported
+- ✅ **macOS**: Tested and supported
+- ⚠️ **Windows**: Mostly working (scan specific files works, directory scan intermittent)
+
+## 🎯 Production Readiness Matrix
+
+| Component | Status | Recommended For | Notes |
+|-----------|--------|-----------------|-------|
+| **CLI Scanner** | ✅ Production Ready | All users | Core functionality stable |
+| **Typosquatting Detection** | ✅ Production Ready | All users | Tested with real-world packages |
+| **SBOM Generation** | ✅ Production Ready | CI/CD pipelines | SPDX & CycloneDX compliant |
+| **Multi-language Support** | ✅ Production Ready | npm, PyPI, Go, Maven | Other registries in beta |
+| **Supply Chain Firewall** | 🚧 Beta | Testing/staging | Needs security review for prod |
+| **REST API** | 🚧 Beta | Internal tools | Authentication needs hardening |
+| **DIRT/RUNT/GTR Algorithms** | 🚧 Beta | Research/validation | Performance tested, awaiting validation |
+| **ML Detection** | 🔬 Experimental | Not recommended | Requires model training |
+| **Docker Deployment** | ✅ Production Ready | Server deployments | Compose setup included |
+
+**Legend**:
+- ✅ Production Ready: Tested, stable, ready for critical use
+- 🚧 Beta: Functional, needs more testing/hardening
+- 🔬 Experimental: Proof of concept, not for production
+
 ## 🚀 Features
 
-### Supply Chain Firewall Features
-- **Active Blocking**: Real-time package interception and policy-based blocking
-- **Business-Aware Risk Assessment**: Asset criticality scoring (CRITICAL/INTERNAL/PUBLIC) with intelligent multipliers
-- **Policy Engine**: 5 default security policies with customizable rules and thresholds
-- **CI/CD Integration**: GitHub Actions integration for build-time package blocking
-- **Multi-Language Support**: npm, PyPI, Go modules, Maven, NuGet, and more package managers
+### Supply Chain Firewall Features 🚧
+- **Active Blocking** 🚧: Real-time package interception and policy-based blocking
+- **Business-Aware Risk Assessment** ✅: Asset criticality scoring (CRITICAL/INTERNAL/PUBLIC) with intelligent multipliers
+- **Policy Engine** 🚧: 5 default security policies with customizable rules and thresholds
+- **CI/CD Integration** ✅: GitHub Actions integration for build-time package blocking
+- **Multi-Language Support** ✅: npm, PyPI, Go modules, Maven, NuGet, and more package managers
 
 ### Advanced Detection & Analysis
-- **DIRT Algorithm**: Business-aware Dependency Impact Risk Traversal with asset criticality scoring
-- **Campaign Intelligence**: Group related malicious packages into coordinated campaigns
-- **Behavioral Analysis**: Dynamic sandbox analysis with filesystem and network monitoring
-- **Threat Intelligence**: Real-time integration with multiple threat intelligence feeds
-- **Enhanced Detection**: Advanced algorithms for sophisticated typosquatting and supply chain attacks
+- **DIRT Algorithm** 🚧: Business-aware Dependency Impact Risk Traversal with asset criticality scoring
+- **Campaign Intelligence** 🔬: Group related malicious packages into coordinated campaigns
+- **Behavioral Analysis** 🔬: Dynamic sandbox analysis with filesystem and network monitoring
+- **Threat Intelligence** 🚧: Real-time integration with multiple threat intelligence feeds
+- **Enhanced Detection** ✅: Advanced algorithms for sophisticated typosquatting and supply chain attacks
 
 ### Integration & Deployment
-- **Firewall Dashboard**: Real-time supply chain firewall monitoring with live activity feed
-- **REST API**: Comprehensive API for CI/CD pipeline integration and policy enforcement
-- **Organization Scanning**: Multi-platform repository scanning (GitHub, GitLab, Bitbucket)
-- **SBOM Generation**: SPDX and CycloneDX software bill of materials support
-- **Docker Deployment**: Complete containerized deployment with monitoring and alerting
+- **Firewall Dashboard** 🚧: Real-time supply chain firewall monitoring with live activity feed
+- **REST API** 🚧: Comprehensive API for CI/CD pipeline integration and policy enforcement
+- **Organization Scanning** ✅: Multi-platform repository scanning (GitHub, GitLab, Bitbucket)
+- **SBOM Generation** ✅: SPDX and CycloneDX software bill of materials support
+- **Docker Deployment** ✅: Complete containerized deployment with monitoring and alerting
 
 ### Performance & Reliability
-- **Real-time Processing**: Sub-second response times for policy enforcement
-- **Enterprise Ready**: Authentication, RBAC, audit logging, and compliance features
-- **Policy Reporting**: Detailed policy violation reports with business impact analysis
-- **Multi-format Output**: JSON, YAML, SARIF, table, and terminal output with firewall metrics
+- **Real-time Processing** ✅: Sub-second response times for policy enforcement
+- **Enterprise Ready** 🚧: Authentication, RBAC, audit logging, and compliance features
+- **Policy Reporting** ✅: Detailed policy violation reports with business impact analysis
+- **Multi-format Output** ✅: JSON, YAML, SARIF, table, and terminal output with firewall metrics
 
 ## 📦 Installation
 
@@ -61,6 +103,24 @@ sudo mv typosentinel-darwin-amd64 /usr/local/bin/typosentinel
 # Windows
 # Download typosentinel-windows-amd64.exe and add to PATH
 ```
+
+### Windows Notes
+
+**Recommended Usage on Windows**:
+```bash
+# ✅ Scan specific files (reliable)
+.\typosentinel.exe scan package.json --output json
+
+# ✅ Scan specific directories (reliable)
+.\typosentinel.exe scan .\src --output table
+
+# ⚠️ Scan current directory (may be intermittent)
+.\typosentinel.exe scan . --output json
+```
+
+**Known Windows Issues**:
+- Directory scanning may be intermittent in large projects
+- Workaround: Always specify the exact directory or manifest file to scan
 
 ### From Source
 
@@ -143,11 +203,33 @@ For detailed Docker deployment instructions, see [DOCKER.md](DOCKER.md).
 
 ## 🔧 Quick Start
 
-### Basic Usage
+### Recommended First Steps
 
+1. **Scan a known typosquatting example**:
 ```bash
-# Scan a project directory
-typosentinel scan /path/to/project
+# Create test project
+mkdir test-scan && cd test-scan
+echo '{"dependencies": {"expres": "1.0.0"}}' > package.json
+
+# Scan (should detect "expres" as typosquat of "express")
+typosentinel scan . --output table
+```
+
+**Expected Output**: Should identify "expres" as a typosquatting threat
+
+2. **Scan your real project** (recommended approach):
+```bash
+# Scan specific manifest file
+typosentinel scan path/to/package.json --output json
+
+# Or scan project directory
+typosentinel scan path/to/project --output table
+```
+
+3. **Generate SBOM**:
+```bash
+typosentinel scan . --sbom-format spdx --sbom-output sbom.json
+```
 
 # Scan with enhanced detection
 typosentinel scan --enhanced /path/to/project
@@ -423,6 +505,28 @@ supply_chain_firewall:
 ### Development & Deployment
 - [Contributing Guide](CONTRIBUTING.md) - How to contribute to the project
 - [Security Policy](SECURITY.md) - Security vulnerability reporting
+
+## ⚠️ Known Issues
+
+### General
+- **Windows Directory Scanning**: `scan .` (current directory) may be intermittent. Use `scan <specific-dir>` or `scan package.json` for reliable results.
+- **Detector Initialization**: In rare cases, threat detector may not initialize properly. Logs will show warnings about skipped threat detection.
+- **Large Projects**: Projects with 1000+ dependencies may experience slower scan times (optimization in progress)
+
+### Experimental Features
+- **Supply Chain Firewall**: Policy enforcement is functional but needs security hardening before trust in critical environments
+- **API Authentication**: Currently supports basic auth and API keys. OAuth/JWT planned for future releases
+- **Redis Cache**: Requires manual Redis setup. In-memory fallback available but less performant
+
+### Windows-Specific
+- Directory scanning of `.` may crash in edge cases (workaround: scan specific directories)
+- Some E2E tests may fail on Windows (under investigation)
+
+**Reporting Issues**: Please report bugs via [GitHub Issues](https://github.com/Alivanroy/Typosentinel/issues) with:
+- OS and version
+- Command run
+- Full error output
+- Project structure (if applicable)
 
 ## 🛠️ Development
 

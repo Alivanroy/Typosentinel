@@ -95,6 +95,10 @@ const (
 	ThreatTypeCICDInjection    ThreatType = "cicd_injection"
 	ThreatTypeSelfHostedRunner ThreatType = "self_hosted_runner"
 	ThreatTypeC2Channel        ThreatType = "c2_channel"
+	// Phase 3: Runtime Behavior Analysis (Lightweight)
+	ThreatTypeRuntimeExfiltration ThreatType = "runtime_exfiltration"
+	ThreatTypeEnvironmentAware    ThreatType = "environment_aware"
+	ThreatTypeBeaconActivity      ThreatType = "beacon_activity"
 )
 
 // Dependency represents a package dependency

@@ -82,6 +82,13 @@
 - **Injection Detection** ✅: Identifies 6 code injection patterns (`${{ github.event.discussion.body }}`, etc.) used in Shai-Hulud attacks
 - **Threat Types**: `cicd_injection`, `self_hosted_runner`, `c2_channel`
 
+### 🆕 Phase 3: Runtime Behavior Analysis ✅
+- **Static Network Analyzer** ✅: Detects runtime exfiltration patterns without Docker/sandboxing (< 3s per package)
+- **Exfiltration Detection** ✅: GitHub/GitLab API calls, POST requests with environment data, unknown external domains
+- **Environment-Aware Malware** ✅: Detects CI-aware behavior (multiple `process.env.CI` checks indicating targeted attacks)
+- **Beacon Activity** ✅: Identifies periodic C2 communication patterns (setInterval + network calls)
+- **Threat Types**: `runtime_exfiltration`, `environment_aware`, `beacon_activity`
+
 ### Integration & Deployment
 - **Firewall Dashboard** 🚧: Real-time supply chain firewall monitoring with live activity feed
 - **REST API** 🚧: Comprehensive API for CI/CD pipeline integration and policy enforcement

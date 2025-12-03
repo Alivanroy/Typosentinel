@@ -87,6 +87,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created `benchmark/scenarios/shai-hulud`: Replicates actual Shai-Hulud 2.0 attack pattern
 - Demonstrates self-hosted runner backdoor, discussion-based C2, and code injection
 
+**Phase 3: Runtime Behavior Analysis (Lightweight)** ✅
+- **Static Network Analyzer**: Detects runtime threats without Docker sandbox
+  - Analyzes JavaScript/Python files for network patterns
+  - No performance impact (< 3s per package vs 30-60s with Docker)
+  - New threat types: `runtime_exfiltration`, `environment_aware`, `beacon_activity`
+- **Exfiltration Detection**: Network data theft patterns
+  - GitHub/GitLab API calls from install scripts
+  - POST requests with `process.env` data
+  - Connections to unknown external domains
+- **Environment-Aware Malware**: CI-targeted threats
+  - Detects multiple CI environment checks (`process.env.CI`, `GITHUB_ACTIONS`, etc.)
+  - Flags malware that only activates in CI/prod environments (2+ checks required)
+- **Beacon Activity**: C2 communication patterns
+  - Detects `setInterval` + network call combinations
+  - Identifies periodic communication to external servers
+
 ### Added - Previous Features
 - Comprehensive benchmark suite for performance testing
 - Performance testing documentation in user guide and API docs

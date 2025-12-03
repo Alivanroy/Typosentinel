@@ -3,6 +3,7 @@ package output
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/internal/analyzer"
@@ -361,6 +362,36 @@ func (f *SARIFFormatter) generateRules() []Rule {
 			},
 			DefaultConfiguration: &Configuration{Level: "note"},
 		},
+		{
+			ID:                   "OBFUSCATED_CODE",
+			Name:                 "Obfuscated or High-Entropy Code",
+			ShortDescription:     &Message{Text: "Obfuscated or high-entropy code detected"},
+			FullDescription:      &Message{Text: "Detected high-entropy or obfuscated code which may indicate malicious payloads"},
+			Help:                 &Message{Text: "Inspect obfuscated segments; encoded payloads often hide malicious behavior."},
+			HelpUri:              "https://github.com/Alivanroy/Typosentinel/blob/main/docs/obfuscated-code.md",
+			Properties:           &RuleProperties{Severity: "error", Category: "security", Tags: []string{"security", "obfuscation"}, Precision: "medium", ProblemKind: "problem"},
+			DefaultConfiguration: &Configuration{Level: "error"},
+		},
+		{
+			ID:                   "EMBEDDED_SECRET",
+			Name:                 "Embedded Secrets",
+			ShortDescription:     &Message{Text: "Embedded secrets or credentials detected"},
+			FullDescription:      &Message{Text: "Secrets or credentials found embedded within package contents"},
+			Help:                 &Message{Text: "Remove secrets and rotate credentials immediately."},
+			HelpUri:              "https://github.com/Alivanroy/Typosentinel/blob/main/docs/embedded-secrets.md",
+			Properties:           &RuleProperties{Severity: "error", Category: "security", Tags: []string{"security", "secrets"}, Precision: "high", ProblemKind: "problem"},
+			DefaultConfiguration: &Configuration{Level: "error"},
+		},
+		{
+			ID:                   "SUSPICIOUS_PATTERN",
+			Name:                 "Suspicious Code Pattern",
+			ShortDescription:     &Message{Text: "Suspicious code pattern detected"},
+			FullDescription:      &Message{Text: "Detected suspicious code patterns such as eval chains or encoded payloads"},
+			Help:                 &Message{Text: "Review patterns and ensure they are not used for malicious intent."},
+			HelpUri:              "https://github.com/Alivanroy/Typosentinel/blob/main/docs/suspicious-behavior.md",
+			Properties:           &RuleProperties{Severity: "warning", Category: "security", Tags: []string{"security", "pattern"}, Precision: "medium", ProblemKind: "problem"},
+			DefaultConfiguration: &Configuration{Level: "warning"},
+		},
 	}
 }
 
@@ -372,6 +403,9 @@ func (f *SARIFFormatter) convertResults(scanResult *analyzer.ScanResult) []Resul
 		"MALICIOUS_PACKAGE":   1,
 		"VULNERABILITY":       2,
 		"SUSPICIOUS_BEHAVIOR": 3,
+		"OBFUSCATED_CODE":     4,
+		"EMBEDDED_SECRET":     5,
+		"SUSPICIOUS_PATTERN":  6,
 	}
 
 	// Convert threats to SARIF results
@@ -379,24 +413,15 @@ func (f *SARIFFormatter) convertResults(scanResult *analyzer.ScanResult) []Resul
 		ruleID := f.determineRuleIDFromThreat(threat)
 		level := f.determineSeverityLevel(threat.Severity.String())
 
+		fileURI, region := f.extractFilePathAndRegion(threat)
 		result := Result{
 			RuleID:    ruleID,
 			RuleIndex: ruleMap[ruleID],
 			Message: Message{
 				Text: fmt.Sprintf("Package '%s' version '%s': %s", threat.Package, threat.Version, threat.Description),
 			},
-			Level: level,
-			Locations: []Location{
-				{
-					LogicalLocations: []LogicalLocation{
-						{
-							Name:               threat.Package,
-							FullyQualifiedName: fmt.Sprintf("%s@%s", threat.Package, threat.Version),
-							Kind:               "package",
-						},
-					},
-				},
-			},
+			Level:     level,
+			Locations: f.buildLocations(threat, fileURI, region),
 			PartialFingerprints: &PartialFingerprints{
 				PrimaryLocationLineHash: fmt.Sprintf("%s:%s:%s", threat.Package, threat.Version, threat.ID),
 			},
@@ -423,6 +448,92 @@ func (f *SARIFFormatter) convertResults(scanResult *analyzer.ScanResult) []Resul
 	}
 
 	return results
+}
+
+func (f *SARIFFormatter) buildLocations(threat types.Threat, fileURI string, region *Region) []Location {
+	// Always include logical package location
+	loc := Location{
+		LogicalLocations: []LogicalLocation{
+			{
+				Name:               threat.Package,
+				FullyQualifiedName: fmt.Sprintf("%s@%s", threat.Package, threat.Version),
+				Kind:               "package",
+			},
+		},
+	}
+	if fileURI != "" {
+		loc.PhysicalLocation = &PhysicalLocation{
+			ArtifactLocation: &ArtifactLocation{URI: fileURI},
+			Region:           region,
+		}
+	}
+	return []Location{loc}
+}
+
+func (f *SARIFFormatter) extractFilePathAndRegion(threat types.Threat) (string, *Region) {
+	var fileURI string
+	// Prefer relative path from metadata
+	if threat.Metadata != nil {
+		if v, ok := threat.Metadata["relative_path"]; ok {
+			if s, ok2 := v.(string); ok2 {
+				fileURI = s
+			}
+		} else if v, ok := threat.Metadata["file_path"]; ok {
+			if s, ok2 := v.(string); ok2 {
+				fileURI = s
+			}
+		}
+	}
+	if fileURI == "" {
+		// Try to pull from evidence "file" value
+		for _, e := range threat.Evidence {
+			if e.Type == "file" {
+				switch val := e.Value.(type) {
+				case map[string]interface{}:
+					if rv, ok := val["relative"]; ok {
+						if s, ok2 := rv.(string); ok2 {
+							fileURI = s
+						}
+					} else if pv, ok := val["path"]; ok {
+						if s, ok2 := pv.(string); ok2 {
+							fileURI = s
+						}
+					}
+				case string:
+					fileURI = val
+				}
+				break
+			}
+		}
+	}
+	// Extract first entropy span for region if available
+	var region *Region
+	for _, e := range threat.Evidence {
+		if e.Type == "entropy_span" && strings.EqualFold(e.Description, "range") {
+			if m, ok := e.Value.(map[string]interface{}); ok {
+				var start, end int
+				if sv, ok := m["start"]; ok {
+					switch x := sv.(type) {
+					case int:
+						start = x
+					case float64:
+						start = int(x)
+					}
+				}
+				if ev, ok := m["end"]; ok {
+					switch x := ev.(type) {
+					case int:
+						end = x
+					case float64:
+						end = int(x)
+					}
+				}
+				region = &Region{StartLine: 1, StartColumn: start + 1, EndLine: 1, EndColumn: end}
+				break
+			}
+		}
+	}
+	return fileURI, region
 }
 
 // generateArtifacts creates SARIF artifacts from scan results
@@ -453,6 +564,12 @@ func (f *SARIFFormatter) determineRuleIDFromThreat(threat types.Threat) string {
 		return "TYPO_SQUATTING"
 	case types.ThreatTypeVulnerable:
 		return "VULNERABILITY"
+	case types.ThreatTypeObfuscatedCode:
+		return "OBFUSCATED_CODE"
+	case types.ThreatTypeEmbeddedSecret:
+		return "EMBEDDED_SECRET"
+	case types.ThreatTypeSuspiciousPattern:
+		return "SUSPICIOUS_PATTERN"
 	default:
 		return "SUSPICIOUS_BEHAVIOR"
 	}

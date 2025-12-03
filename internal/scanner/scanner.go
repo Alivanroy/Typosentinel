@@ -20,6 +20,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/pkg/types"
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // Scanner handles project scanning and dependency analysis
@@ -348,6 +349,14 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 	// Content scanning integration (project files)
 	if pkg != nil {
 		cs := NewContentScanner()
+		// Merge CIDR presets based on registry
+		reg := strings.ToLower(pkg.Registry)
+		if reg != "" {
+			allowKey := "scanner.content.presets." + reg + ".allow_cidrs"
+			denyKey := "scanner.content.presets." + reg + ".deny_cidrs"
+			cs.allowCIDRs = append(cs.allowCIDRs, viper.GetStringSlice(allowKey)...)
+			cs.denyCIDRs = append(cs.denyCIDRs, viper.GetStringSlice(denyKey)...)
+		}
 		root := s.lastProjectPath
 		if root == "" {
 			root, _ = os.Getwd()

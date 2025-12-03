@@ -4,10 +4,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Alivanroy/Typosentinel/pkg/types"
@@ -24,6 +26,11 @@ type ContentScanner struct {
 	excludeGlobs      []string
 	whitelistExt      []string
 	maxFiles          int
+	maxWorkers        int
+	allowCIDRs        []string
+	denyCIDRs         []string
+	asnSources        []string
+	asnMergeMode      string
 	suspiciousIPs     []string
 	suspiciousDomains []string
 }
@@ -47,6 +54,11 @@ func NewContentScanner() *ContentScanner {
 	exc := viper.GetStringSlice("scanner.content.exclude_globs")
 	wl := viper.GetStringSlice("scanner.content.whitelist_extensions")
 	mf := viper.GetInt("scanner.content.max_files")
+	mw := viper.GetInt("scanner.content.max_workers")
+	allow := viper.GetStringSlice("scanner.content.allowlist_cidrs")
+	deny := viper.GetStringSlice("scanner.content.denylist_cidrs")
+	asnSrc := viper.GetStringSlice("scanner.content.asn_sources")
+	asnMode := viper.GetString("scanner.content.asn_merge_mode")
 
 	return &ContentScanner{
 		maxFileSize:      maxSize,
@@ -56,6 +68,11 @@ func NewContentScanner() *ContentScanner {
 		excludeGlobs:     exc,
 		whitelistExt:     wl,
 		maxFiles:         mf,
+		maxWorkers:       mw,
+		allowCIDRs:       allow,
+		denyCIDRs:        deny,
+		asnSources:       asnSrc,
+		asnMergeMode:     strings.ToLower(asnMode),
 		suspiciousIPs: []string{
 			// Known malicious IPs (examples - in production, use threat intel feeds)
 			"0.0.0.0",
@@ -73,17 +90,17 @@ func (cs *ContentScanner) ScanDirectory(path string) ([]types.Threat, error) {
 	var scannedFiles int
 	var suspiciousFiles []string
 
+	// Merge ASN sources into CIDR lists
+	cs.loadASNFromSources()
+
+	var files []string
 	err := filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil // Skip files with errors
+			return nil
 		}
-
-		// Skip directories
 		if info.IsDir() {
 			return nil
 		}
-
-		// Include/exclude filters
 		rel, _ := filepath.Rel(path, filePath)
 		if len(cs.includeGlobs) > 0 {
 			matched := false
@@ -102,8 +119,6 @@ func (cs *ContentScanner) ScanDirectory(path string) ([]types.Threat, error) {
 				return nil
 			}
 		}
-
-		rel, _ = filepath.Rel(path, filePath)
 		if cs.maxFiles > 0 && scannedFiles >= cs.maxFiles {
 			return nil
 		}
@@ -120,24 +135,13 @@ func (cs *ContentScanner) ScanDirectory(path string) ([]types.Threat, error) {
 				return nil
 			}
 		}
-		// Skip very large files
 		if info.Size() > cs.maxFileSize {
 			return nil
 		}
-
-		// Skip binary files (already handled by BinaryDetector)
 		if cs.isBinaryFile(filePath) {
 			return nil
 		}
-
-		// Scan text files for suspicious patterns
-		fileThreats := cs.scanFile(filePath)
-		if len(fileThreats) > 0 {
-			threats = append(threats, fileThreats...)
-			relPath, _ := filepath.Rel(path, filePath)
-			suspiciousFiles = append(suspiciousFiles, relPath)
-		}
-
+		files = append(files, filePath)
 		scannedFiles++
 		return nil
 	})
@@ -146,17 +150,50 @@ func (cs *ContentScanner) ScanDirectory(path string) ([]types.Threat, error) {
 		return threats, err
 	}
 
+	workers := cs.maxWorkers
+	if workers <= 0 {
+		workers = 4
+	}
+	ch := make(chan string)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for file := range ch {
+				ts := cs.scanFile(file)
+				if len(ts) > 0 {
+					mu.Lock()
+					threats = append(threats, ts...)
+					relPath, _ := filepath.Rel(path, file)
+					suspiciousFiles = append(suspiciousFiles, relPath)
+					mu.Unlock()
+				}
+			}
+		}()
+	}
+	for _, f := range files {
+		ch <- f
+	}
+	close(ch)
+	wg.Wait()
+
 	logrus.Debugf("Content scanner: scanned %d files, found %d threats", scannedFiles, len(threats))
 	return threats, nil
 }
 
 // scanFile scans a single file for malicious content
 func (cs *ContentScanner) scanFile(filePath string) []types.Threat {
+	// For memory efficiency, stream large files in chunks
+	info, _ := os.Stat(filePath)
+	if info != nil && info.Size() > int64(256*1024) {
+		return cs.scanFileStream(filePath)
+	}
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil
 	}
-
 	contentStr := string(content)
 	var threats []types.Threat
 
@@ -184,6 +221,124 @@ func (cs *ContentScanner) scanFile(filePath string) []types.Threat {
 	}
 
 	return threats
+}
+
+// scanFileStream performs chunk-based scanning to reduce memory usage
+func (cs *ContentScanner) scanFileStream(filePath string) []types.Threat {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+	buf := make([]byte, 64*1024)
+	carry := ""
+	var threats []types.Threat
+	var spansAll []entropySpan
+	pattSet := map[string]struct{}{}
+	secSet := map[string]struct{}{}
+	netSet := map[string]struct{}{}
+	previewSet := map[string]struct{}{}
+	for {
+		n, er := f.Read(buf)
+		if n > 0 {
+			segment := carry + string(buf[:n])
+			if spans := cs.detectHighEntropySpans(segment, cs.windowSize, cs.entropyThreshold); len(spans) > 0 {
+				spansAll = append(spansAll, spans...)
+			}
+			if pats := cs.detectSuspiciousPatterns(segment); len(pats) > 0 {
+				for _, p := range pats {
+					pattSet[p] = struct{}{}
+				}
+			}
+			if secs := cs.detectEmbeddedSecrets(segment); len(secs) > 0 {
+				for _, s := range secs {
+					secSet[s] = struct{}{}
+				}
+			}
+			if nets := cs.detectNetworkIndicators(segment); len(nets) > 0 {
+				for _, v := range nets {
+					netSet[v] = struct{}{}
+				}
+			}
+			if prev := cs.detectBase64Previews(segment); len(prev) > 0 {
+				for _, pv := range prev {
+					previewSet[pv] = struct{}{}
+				}
+			}
+			if len(segment) > cs.windowSize {
+				carry = segment[len(segment)-cs.windowSize:]
+			} else {
+				carry = segment
+			}
+		}
+		if er != nil {
+			break
+		}
+	}
+	if len(spansAll) > 0 {
+		threats = append(threats, cs.createAggregatedEntropyThreat(filePath, spansAll))
+	}
+	if len(pattSet) > 0 {
+		var patterns []string
+		for p := range pattSet {
+			patterns = append(patterns, p)
+		}
+		var previews []string
+		for pv := range previewSet {
+			previews = append(previews, pv)
+		}
+		if len(previews) > 0 {
+			threats = append(threats, cs.createPatternThreatWithPreviews(filePath, patterns, previews))
+		} else {
+			threats = append(threats, cs.createPatternThreat(filePath, patterns))
+		}
+	}
+	if len(secSet) > 0 {
+		var secrets []string
+		for s := range secSet {
+			secrets = append(secrets, s)
+		}
+		threats = append(threats, cs.createSecretThreat(filePath, secrets))
+	}
+	if len(netSet) > 0 {
+		var nets []string
+		for v := range netSet {
+			nets = append(nets, v)
+		}
+		threats = append(threats, cs.createNetworkThreat(filePath, nets))
+	}
+	return threats
+}
+
+// loadASNFromSources merges ASN source CIDRs into allow/deny lists
+func (cs *ContentScanner) loadASNFromSources() {
+	if len(cs.asnSources) == 0 {
+		return
+	}
+	for _, src := range cs.asnSources {
+		// Only support local files for safety; format: "ASNNUM,CIDR" per line
+		if _, err := os.Stat(src); err != nil {
+			continue
+		}
+		data, err := os.ReadFile(src)
+		if err != nil {
+			continue
+		}
+		lines := strings.Split(string(data), "\n")
+		for _, ln := range lines {
+			parts := strings.Split(strings.TrimSpace(ln), ",")
+			if len(parts) < 2 {
+				continue
+			}
+			cidr := strings.TrimSpace(parts[1])
+			// Merge according to mode; default deny
+			if cs.asnMergeMode == "allow" {
+				cs.allowCIDRs = append(cs.allowCIDRs, cidr)
+			} else {
+				cs.denyCIDRs = append(cs.denyCIDRs, cidr)
+			}
+		}
+	}
 }
 
 // calculateEntropy calculates Shannon entropy of a string
@@ -336,7 +491,9 @@ func (cs *ContentScanner) detectNetworkIndicators(content string) []string {
 			}
 		}
 		if !isSafe {
-			indicators = append(indicators, fmt.Sprintf("External IP: %s", ip))
+			if cs.inCIDRs(ip, cs.denyCIDRs) && !cs.inCIDRs(ip, cs.allowCIDRs) {
+				indicators = append(indicators, fmt.Sprintf("External IP: %s", ip))
+			}
 		}
 	}
 
@@ -355,6 +512,79 @@ func (cs *ContentScanner) detectNetworkIndicators(content string) []string {
 	}
 
 	return indicators
+}
+
+func (cs *ContentScanner) inCIDRs(ipStr string, cidrs []string) bool {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+	for _, c := range cidrs {
+		_, n, err := net.ParseCIDR(strings.TrimSpace(c))
+		if err == nil && n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func (cs *ContentScanner) detectBase64Previews(content string) []string {
+	var previews []string
+	re := regexp.MustCompile(`[A-Za-z0-9+/]{50,}={0,2}`)
+	matches := re.FindAllString(content, -1)
+	max := min(3, len(matches))
+	for i := 0; i < max; i++ {
+		m := matches[i]
+		if dec, err := base64.StdEncoding.DecodeString(m); err == nil {
+			if len(dec) > 16 {
+				previews = append(previews, string(dec[:16]))
+			}
+		}
+	}
+	return previews
+}
+
+func (cs *ContentScanner) createAggregatedEntropyThreat(filePath string, spans []entropySpan) types.Threat {
+	relPath := filepath.Base(filePath)
+	var ev []types.Evidence
+	for i := 0; i < min(5, len(spans)); i++ {
+		sp := spans[i]
+		ev = append(ev, types.Evidence{Type: "entropy_span", Description: "range", Value: map[string]interface{}{"start": sp.start, "end": sp.end, "score": sp.score}})
+	}
+	ev = append(ev, types.Evidence{Type: "file", Description: "Suspicious file", Value: map[string]interface{}{"relative": relPath, "path": filePath}})
+	return types.Threat{
+		Type:            types.ThreatTypeObfuscatedCode,
+		Severity:        types.SeverityHigh,
+		Confidence:      0.8,
+		Description:     fmt.Sprintf("File '%s' has multiple high-entropy spans", relPath),
+		DetectionMethod: "entropy_window_analysis",
+		Recommendation:  "Review high-entropy segments for obfuscated payloads.",
+		Evidence:        ev,
+		Metadata:        map[string]interface{}{"file_path": filePath, "relative_path": relPath},
+		DetectedAt:      time.Now(),
+	}
+}
+
+func (cs *ContentScanner) createPatternThreatWithPreviews(filePath string, patterns []string, previews []string) types.Threat {
+	relPath := filepath.Base(filePath)
+	ev := []types.Evidence{
+		{Type: "patterns", Description: "Detected patterns", Value: strings.Join(patterns, "; ")},
+		{Type: "file", Description: "Suspicious file", Value: map[string]interface{}{"relative": relPath, "path": filePath}},
+	}
+	if len(previews) > 0 {
+		ev = append(ev, types.Evidence{Type: "preview", Description: "decoded_base64", Value: map[string]interface{}{"contentType": "base64", "previews": previews}})
+	}
+	return types.Threat{
+		Type:            types.ThreatTypeSuspiciousPattern,
+		Severity:        types.SeverityHigh,
+		Confidence:      0.85,
+		Description:     fmt.Sprintf("File '%s' contains suspicious code patterns", relPath),
+		DetectionMethod: "pattern_analysis",
+		Recommendation:  "Review detected patterns and decoded previews.",
+		Evidence:        ev,
+		Metadata:        map[string]interface{}{"file_path": filePath, "relative_path": relPath},
+		DetectedAt:      time.Now(),
+	}
 }
 
 // Threat creation helpers
@@ -377,9 +607,10 @@ func (cs *ContentScanner) createEntropyThreat(filePath string, entropy float64) 
 			{
 				Type:        "file",
 				Description: "Suspicious file",
-				Value:       relPath,
+				Value:       map[string]interface{}{"relative": relPath, "path": filePath},
 			},
 		},
+		Metadata:   map[string]interface{}{"file_path": filePath, "relative_path": relPath},
 		DetectedAt: time.Now(),
 	}
 }
@@ -394,11 +625,10 @@ func (cs *ContentScanner) createEntropySpanThreat(filePath string, span entropyS
 		DetectionMethod: "entropy_window_analysis",
 		Recommendation:  "Review high-entropy segments for obfuscated payloads.",
 		Evidence: []types.Evidence{
-			{Type: "entropy_span", Description: "start", Value: span.start},
-			{Type: "entropy_span", Description: "end", Value: span.end},
-			{Type: "entropy", Description: "score", Value: fmt.Sprintf("%.2f", span.score)},
-			{Type: "file", Description: "Suspicious file", Value: relPath},
+			{Type: "entropy_span", Description: "range", Value: map[string]interface{}{"start": span.start, "end": span.end, "score": span.score}},
+			{Type: "file", Description: "Suspicious file", Value: map[string]interface{}{"relative": relPath, "path": filePath}},
 		},
+		Metadata:   map[string]interface{}{"file_path": filePath, "relative_path": relPath},
 		DetectedAt: time.Now(),
 	}
 }
@@ -421,9 +651,10 @@ func (cs *ContentScanner) createPatternThreat(filePath string, patterns []string
 			{
 				Type:        "file",
 				Description: "Suspicious file",
-				Value:       relPath,
+				Value:       map[string]interface{}{"relative": relPath, "path": filePath},
 			},
 		},
+		Metadata:   map[string]interface{}{"file_path": filePath, "relative_path": relPath},
 		DetectedAt: time.Now(),
 	}
 }
@@ -446,9 +677,10 @@ func (cs *ContentScanner) createSecretThreat(filePath string, secrets []string) 
 			{
 				Type:        "file",
 				Description: "File containing secrets",
-				Value:       relPath,
+				Value:       map[string]interface{}{"relative": relPath, "path": filePath},
 			},
 		},
+		Metadata:   map[string]interface{}{"file_path": filePath, "relative_path": relPath},
 		DetectedAt: time.Now(),
 	}
 }
@@ -471,9 +703,10 @@ func (cs *ContentScanner) createNetworkThreat(filePath string, indicators []stri
 			{
 				Type:        "file",
 				Description: "File with network code",
-				Value:       relPath,
+				Value:       map[string]interface{}{"relative": relPath, "path": filePath},
 			},
 		},
+		Metadata:   map[string]interface{}{"file_path": filePath, "relative_path": relPath},
 		DetectedAt: time.Now(),
 	}
 }

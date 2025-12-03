@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
-	"strings"
+    "fmt"
+    "log"
+    "strings"
 
-	"github.com/Alivanroy/Typosentinel/internal/analyzer"
-	"github.com/Alivanroy/Typosentinel/internal/config"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
+    "github.com/Alivanroy/Typosentinel/internal/analyzer"
+    "github.com/Alivanroy/Typosentinel/internal/config"
+    "github.com/sirupsen/logrus"
+    "github.com/spf13/cobra"
+    "github.com/spf13/viper"
 )
 
 func init() {
@@ -48,7 +49,15 @@ func init() {
 	scanCmd.Flags().String("sbom-output", "", "Output file path for SBOM (if not specified, prints to stdout)")
 	// Enhanced supply chain analysis flags
 	scanCmd.Flags().Bool("supply-chain", false, "Enable enhanced supply chain analysis")
-	scanCmd.Flags().Bool("advanced", false, "Enable advanced analysis features")
+    scanCmd.Flags().Bool("advanced", false, "Enable advanced analysis features")
+    // Content scanning flags
+    scanCmd.Flags().Float64("content-entropy-threshold", 0, "Content scanning entropy threshold (override)")
+    scanCmd.Flags().Int("content-entropy-window", 0, "Content scanning entropy window size")
+    scanCmd.Flags().StringSlice("content-include", []string{}, "Content scanning include globs")
+    scanCmd.Flags().StringSlice("content-exclude", []string{}, "Content scanning exclude globs")
+    scanCmd.Flags().StringSlice("content-whitelist", []string{}, "Content scanning whitelist extensions")
+    scanCmd.Flags().Int("content-max-files", 0, "Content scanning max files to process")
+    scanCmd.Flags().Int("content-max-workers", 0, "Content scanning max workers")
 }
 
 func runScan(cmd *cobra.Command, args []string) error {
@@ -92,7 +101,15 @@ func runScan(cmd *cobra.Command, args []string) error {
 	registryOverride, _ := cmd.Flags().GetString("registry")
 	// Enhanced supply chain analysis options
 	enableSupplyChain, _ := cmd.Flags().GetBool("supply-chain")
-	advancedAnalysis, _ := cmd.Flags().GetBool("advanced")
+    advancedAnalysis, _ := cmd.Flags().GetBool("advanced")
+    // Content flags mapping to config
+    if v, _ := cmd.Flags().GetFloat64("content-entropy-threshold"); v > 0 { viper.Set("scanner.content.entropy_threshold", v) }
+    if v, _ := cmd.Flags().GetInt("content-entropy-window"); v > 0 { viper.Set("scanner.content.entropy_window", v) }
+    if v, _ := cmd.Flags().GetStringSlice("content-include"); len(v) > 0 { viper.Set("scanner.content.include_globs", v) }
+    if v, _ := cmd.Flags().GetStringSlice("content-exclude"); len(v) > 0 { viper.Set("scanner.content.exclude_globs", v) }
+    if v, _ := cmd.Flags().GetStringSlice("content-whitelist"); len(v) > 0 { viper.Set("scanner.content.whitelist_extensions", v) }
+    if v, _ := cmd.Flags().GetInt("content-max-files"); v > 0 { viper.Set("scanner.content.max_files", v) }
+    if v, _ := cmd.Flags().GetInt("content-max-workers"); v > 0 { viper.Set("scanner.content.max_workers", v) }
 
 	options := &analyzer.ScanOptions{
 		OutputFormat:           outputFormat,

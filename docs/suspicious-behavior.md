@@ -45,3 +45,18 @@ If you believe a package is malicious:
 - Registry advisories (GitHub Advisories, OSV)
 - Organization policies for third‑party software risk
 
+## NPM Install Scripts: Dos and Don'ts
+- Do: keep `preinstall`/`install` scripts minimal, deterministic, and documented.
+- Do: restrict to local build steps (compile native modules, copy assets).
+- Do: validate registry tarball integrity and lock dependencies.
+- Don't: fetch remote code, run network calls to unknown domains, or curl | sh.
+- Don't: modify user environment, write outside project, or escalate privileges.
+- Remediation: remove risky install hooks, replace with postbuild tasks, and require maintainer sign‑off.
+
+## RubyGems Eval‑Chain Remediation
+- Indicator: repeated `eval`, `send`, `class_eval`, or `instance_eval` with decoded payloads.
+- Risk: dynamic execution enables arbitrary code injection at install/runtime.
+- Remediation:
+- replace dynamic constructs with explicit methods and vetted libraries.
+- decode and inspect payload sources; store static data, not executable strings.
+- add RuboCop rules to ban eval and dangerous metaprogramming in gems.

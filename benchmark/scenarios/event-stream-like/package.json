@@ -1,0 +1,7 @@
+{
+    "name": "flatmap-stream-malicious",
+    "version": "0.1.1",
+    "description": "A stream that flatmaps",
+    "main": "index.js",
+    "dependencies": {}
+}

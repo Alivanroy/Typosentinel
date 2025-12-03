@@ -87,6 +87,14 @@ const (
 	ThreatTypeObfuscatedCode      ThreatType = "obfuscated_code"
 	ThreatTypeEmbeddedSecret      ThreatType = "embedded_secret"
 	ThreatTypeSuspiciousPattern   ThreatType = "suspicious_pattern"
+	// Phase 1: Build Integrity Monitoring
+	ThreatTypeUnexpectedBinary   ThreatType = "unexpected_binary"
+	ThreatTypeUntrustedSignature ThreatType = "untrusted_signature"
+	ThreatTypeDormantCode        ThreatType = "dormant_code"
+	// Phase 2: CI/CD Infrastructure Monitoring
+	ThreatTypeCICDInjection    ThreatType = "cicd_injection"
+	ThreatTypeSelfHostedRunner ThreatType = "self_hosted_runner"
+	ThreatTypeC2Channel        ThreatType = "c2_channel"
 )
 
 // Dependency represents a package dependency

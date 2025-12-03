@@ -1,0 +1,8 @@
+policies:
+  path: "benchmark/large-enterprise-demo/policies/payments"
+  hot_reload: false
+
+scanner:
+  content:
+    entropy_threshold: 6.0 # Stricter entropy
+    max_file_size: 524288

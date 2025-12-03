@@ -1,0 +1,19 @@
+stages:
+  - security
+
+typosentinel_scan:
+  stage: security
+  image: alivanroy/typosentinel:latest
+  script:
+    - typosentinel scan . --format json --output report.json --fail-on-severity high
+  artifacts:
+    reports:
+      # Integrate with GitLab Security Dashboard
+      dependency_scanning: report.json
+    paths:
+      - report.json
+    when: always
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  allow_failure: false # Block pipeline on threat detection

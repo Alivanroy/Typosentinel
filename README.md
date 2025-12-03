@@ -70,6 +70,18 @@
 - **Threat Intelligence** 🚧: Real-time integration with multiple threat intelligence feeds
 - **Enhanced Detection** ✅: Advanced algorithms for sophisticated typosquatting and supply chain attacks
 
+### 🆕 Phase 1: Build Integrity Monitoring ✅
+- **Dormancy Detection** ✅: Detects time-delayed malware (SUNBURST-style) with setTimeout/setInterval > 7 days and date-based activation
+- **Build Artifact Scanner** ✅: Scans build directories for unexpected binaries using magic byte detection (PE, ELF, Mach-O) and SHA-256 hashing
+- **Signature Verification** ✅: Validates digital signatures on Windows (Authenticode) and macOS (codesign), flags unsigned/self-signed/recently issued certificates
+- **Threat Types**: `unexpected_binary`, `untrusted_signature`, `dormant_code`
+
+### 🆕 Phase 2: CI/CD Infrastructure Monitoring ✅
+- **GitHub Actions Security** ✅: Detects malicious workflow patterns including self-hosted runner backdoors, code injection vulnerabilities, and C2 channels via Discussions/Issues
+- **GitLab CI Security** ✅: Flags unknown Docker registries and hardcoded secrets in pipeline variables
+- **Injection Detection** ✅: Identifies 6 code injection patterns (`${{ github.event.discussion.body }}`, etc.) used in Shai-Hulud attacks
+- **Threat Types**: `cicd_injection`, `self_hosted_runner`, `c2_channel`
+
 ### Integration & Deployment
 - **Firewall Dashboard** 🚧: Real-time supply chain firewall monitoring with live activity feed
 - **REST API** 🚧: Comprehensive API for CI/CD pipeline integration and policy enforcement

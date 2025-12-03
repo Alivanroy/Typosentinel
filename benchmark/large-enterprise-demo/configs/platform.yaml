@@ -1,0 +1,7 @@
+policies:
+  path: "benchmark/large-enterprise-demo/policies/platform"
+  hot_reload: false
+
+scanner:
+  content:
+    entropy_threshold: 7.5 # Looser entropy for internal tools

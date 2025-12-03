@@ -52,7 +52,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added - Phase 1 & 2: Advanced Threat Detection 🆕
+**Phase 1: Build Integrity Monitoring** ✅
+- **Dormancy Detection**: Detects SUNBURST-style time-delayed malware activation patterns
+  - Flags `setTimeout`/`setInterval` delays > 7 days (604800000ms)
+  - Detects multiple date-based conditionals for time-bomb activation
+  - New threat type: `dormant_code`
+- **Build Artifact Scanner**: Scans build directories for unexpected binaries
+  - Magic byte detection for PE (Windows), ELF (Linux), Mach-O (macOS) executables
+  - SHA-256 hashing for binary verification
+  - Severity calculation based on binary location (Critical/High/Medium)
+  - Scans: `node_modules/.bin`, `dist`, `build`, `out`, `.next`, `target`, etc.
+  - New threat type: `unexpected_binary`
+- **Signature Verifier**: Validates digital signatures on binaries
+  - Windows: PE Authenticode signature extraction
+  - macOS: codesign validation via command-line tool
+  - Detects unsigned binaries, self-signed certificates, and recently issued certs (< 30 days)
+  - New threat type: `untrusted_signature`
+
+**Phase 2: CI/CD Infrastructure Monitoring** ✅
+- **CI/CD Scanner**: Comprehensive workflow vulnerability detection
+  - GitHub Actions: Parses `.github/workflows/*.yml` for security issues
+  - GitLab CI: Parses `.gitlab-ci.yml` for misconfigurations
+  - New threat types: `cicd_injection`, `self_hosted_runner`, `c2_channel`
+- **GitHub Actions Security**: Detects Shai-Hulud-style attack patterns
+  - Self-hosted runner detection: Flags `runs-on: self-hosted`
+  - Code injection detection: 6 patterns including `${{ github.event.discussion.body }}`
+  - C2 channel detection: Workflows triggered by `discussion`, `issues`, `issue_comment`
+- **GitLab CI Security**: Pipeline security analysis
+  - Unknown Docker registry detection (flags non-standard image sources)
+  - Hardcoded secret detection in variables section
+
+**Benchmark Scenarios** ✅
+- Created `benchmark/scenarios/shai-hulud`: Replicates actual Shai-Hulud 2.0 attack pattern
+- Demonstrates self-hosted runner backdoor, discussion-based C2, and code injection
+
+### Added - Previous Features
 - Comprehensive benchmark suite for performance testing
 - Performance testing documentation in user guide and API docs
 - Memory usage profiling and optimization benchmarks

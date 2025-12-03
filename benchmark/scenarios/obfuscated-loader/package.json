@@ -1,0 +1,7 @@
+{
+    "name": "fast-buffer-loader",
+    "version": "2.1.0",
+    "description": "Fast buffer loading utility",
+    "main": "index.js",
+    "dependencies": {}
+}

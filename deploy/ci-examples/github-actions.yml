@@ -1,0 +1,55 @@
+name: Typosentinel Security Scan
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 0 * * *' # Daily midnight scan
+
+jobs:
+  security-scan:
+    name: Supply Chain Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run Typosentinel
+        uses: alivanroy/typosentinel-action@v1
+        with:
+          config: .typosentinel.yaml
+          fail-on-severity: high
+          output-format: json
+        env:
+          TYPOSENTINEL_API_KEY: ${{ secrets.TYPOSENTINEL_API_KEY }}
+
+      - name: Upload Scan Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: scan-results.json
+
+      - name: PR Comment (On Failure)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('scan-results.json', 'utf8'));
+            const threats = results.threats.filter(t => t.severity === 'critical' || t.severity === 'high');
+            
+            let body = `### 🚨 Typosentinel Security Alert\n\nFound **${threats.length}** high-severity threats:\n\n`;
+            threats.forEach(t => {
+              body += `- **${t.type}** in \`${t.package}\`: ${t.description}\n`;
+            });
+            body += `\n[View Full Report](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

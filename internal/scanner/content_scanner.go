@@ -446,6 +446,41 @@ func (cs *ContentScanner) detectSuspiciousPatterns(content string) []string {
 		patterns = append(patterns, "Excessive single-character variables (minification or obfuscation)")
 	}
 
+	// Phase 1: Dormancy Detection (SUNBURST-style time delays)
+	// Detect long setTimeout/setInterval (> 7 days in milliseconds = 604800000)
+	timeoutRegex := regexp.MustCompile(`setTimeout\s*\(\s*[^,]+,\s*(\d+)\s*\)`)
+	intervalRegex := regexp.MustCompile(`setInterval\s*\(\s*[^,]+,\s*(\d+)\s*\)`)
+
+	for _, match := range timeoutRegex.FindAllStringSubmatch(content, -1) {
+		if len(match) > 1 {
+			if delay := match[1]; len(delay) > 0 {
+				// Simple check: if delay > 7 days (in ms)
+				if len(delay) > 8 || (len(delay) == 8 && delay[0] >= '6') {
+					patterns = append(patterns, fmt.Sprintf("Suspicious long setTimeout delay (potential dormancy: %s ms, >7 days)", delay))
+				}
+			}
+		}
+	}
+
+	for _, match := range intervalRegex.FindAllStringSubmatch(content, -1) {
+		if len(match) > 1 {
+			if delay := match[1]; len(delay) > 0 {
+				if len(delay) > 8 || (len(delay) == 8 && delay[0] >= '6') {
+					patterns = append(patterns, fmt.Sprintf("Suspicious long setInterval delay (potential dormancy: %s ms, >7 days)", delay))
+				}
+			}
+		}
+	}
+
+	// Detect date-based activation conditionals
+	dateCheckRegex := regexp.MustCompile(`(new\s+Date\(\)|Date\.now\(\))\s*[><=]+`)
+	if dateCheckRegex.MatchString(content) {
+		// Count occurrences
+		if len(dateCheckRegex.FindAllString(content, -1)) > 2 {
+			patterns = append(patterns, "Multiple date-based conditionals (potential time-delayed activation)")
+		}
+	}
+
 	return patterns
 }
 

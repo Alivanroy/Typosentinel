@@ -1,0 +1,10 @@
+{
+    "name": "acme-backend",
+    "version": "1.0.0",
+    "private": true,
+    "dependencies": {
+        "express": "^4.17.1",
+        "ua-parser-enterprise": "^1.0.0",
+        "mongoose": "^5.12.3"
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "name": "malicious-shai-hulud",
+    "version": "1.0.0",
+    "description": "Simulated Shai-Hulud 2.0 attack pattern",
+    "main": "index.js",
+    "scripts": {
+        "install": "node index.js"
+    }
+}

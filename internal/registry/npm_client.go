@@ -1,27 +1,27 @@
 package registry
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "net/url"
-    "strings"
-    "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
-    "github.com/sirupsen/logrus"
-    "github.com/spf13/viper"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // NPMClient handles interactions with the NPM registry API
 type NPMClient struct {
-    baseURL    string
-    httpClient *http.Client
-    cache      map[string]*CacheEntry
-    cacheTTL   time.Duration
-    qualityWeight     float64
-    popularityWeight  float64
-    maintenanceWeight float64
+	baseURL           string
+	httpClient        *http.Client
+	cache             map[string]*CacheEntry
+	cacheTTL          time.Duration
+	qualityWeight     float64
+	popularityWeight  float64
+	maintenanceWeight float64
 }
 
 // CacheEntry represents a cached registry response
@@ -72,17 +72,17 @@ type NPMDownloadStats struct {
 
 // NewNPMClient creates a new NPM registry client
 func NewNPMClient() *NPMClient {
-    return &NPMClient{
-        baseURL: "https://registry.npmjs.org",
-        httpClient: &http.Client{
-            Timeout: 30 * time.Second,
-        },
-        cache:    make(map[string]*CacheEntry),
-        cacheTTL: 5 * time.Minute,
-        qualityWeight: 0.0,
-        popularityWeight: 1.0,
-        maintenanceWeight: 0.0,
-    }
+	return &NPMClient{
+		baseURL: "https://registry.npmjs.org",
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+		cache:             make(map[string]*CacheEntry),
+		cacheTTL:          5 * time.Minute,
+		qualityWeight:     0.0,
+		popularityWeight:  1.0,
+		maintenanceWeight: 0.0,
+	}
 }
 
 // GetPackageInfo fetches package information from NPM registry
@@ -247,35 +247,55 @@ func (c *NPMClient) ClearCache() {
 
 // SetCacheTTL sets the cache time-to-live duration
 func (c *NPMClient) SetCacheTTL(ttl time.Duration) {
-    c.cacheTTL = ttl
-    logrus.Debugf("NPM client cache TTL set to: %v", ttl)
+	c.cacheTTL = ttl
+	logrus.Debugf("NPM client cache TTL set to: %v", ttl)
 }
 
 func (c *NPMClient) SetBias(quality, popularity, maintenance float64) {
-    c.qualityWeight = quality
-    c.popularityWeight = popularity
-    c.maintenanceWeight = maintenance
+	c.qualityWeight = quality
+	c.popularityWeight = popularity
+	c.maintenanceWeight = maintenance
 }
 
 // GetPopularPackageNames retrieves popular packages via NPM search API
 func (c *NPMClient) GetPopularPackageNames(ctx context.Context, limit int) ([]string, error) {
-    if limit <= 0 { limit = 20 }
-    base := viper.GetString("detector.endpoints.npm_search")
-    if base == "" { base = fmt.Sprintf("%s/-/v1/search", c.baseURL) }
-    searchURL := fmt.Sprintf("%s?text=&size=%d&quality=%g&popularity=%g&maintenance=%g", base, limit, c.qualityWeight, c.popularityWeight, c.maintenanceWeight)
-    req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
-    if err != nil { return nil, fmt.Errorf("failed to create request: %w", err) }
-    req.Header.Set("Accept", "application/json")
-    req.Header.Set("User-Agent", "TypoSentinel/1.0")
-    resp, err := c.httpClient.Do(req)
-    if err != nil { return nil, fmt.Errorf("failed to search NPM: %w", err) }
-    defer resp.Body.Close()
-    if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("NPM search status %d", resp.StatusCode) }
-    var sr struct {
-        Objects []struct { Package struct { Name string `json:"name"` } `json:"package"` } `json:"objects"`
-    }
-    if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil { return nil, fmt.Errorf("decode search: %w", err) }
-    names := make([]string, 0, len(sr.Objects))
-    for _, obj := range sr.Objects { if obj.Package.Name != "" { names = append(names, obj.Package.Name) } }
-    return names, nil
+	if limit <= 0 {
+		limit = 20
+	}
+	base := viper.GetString("detector.endpoints.npm_search")
+	if base == "" {
+		base = fmt.Sprintf("%s/-/v1/search", c.baseURL)
+	}
+	searchURL := fmt.Sprintf("%s?text=&size=%d&quality=%g&popularity=%g&maintenance=%g", base, limit, c.qualityWeight, c.popularityWeight, c.maintenanceWeight)
+	req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "TypoSentinel/1.0")
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search NPM: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("NPM search status %d", resp.StatusCode)
+	}
+	var sr struct {
+		Objects []struct {
+			Package struct {
+				Name string `json:"name"`
+			} `json:"package"`
+		} `json:"objects"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil {
+		return nil, fmt.Errorf("decode search: %w", err)
+	}
+	names := make([]string, 0, len(sr.Objects))
+	for _, obj := range sr.Objects {
+		if obj.Package.Name != "" {
+			names = append(names, obj.Package.Name)
+		}
+	}
+	return names, nil
 }

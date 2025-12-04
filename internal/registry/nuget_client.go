@@ -1,16 +1,16 @@
 package registry
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "net/url"
-    "strings"
-    "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
-    "github.com/Alivanroy/Typosentinel/pkg/types"
-    "github.com/spf13/viper"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/spf13/viper"
 )
 
 // NuGetClient handles interactions with NuGet.org API
@@ -243,8 +243,8 @@ func (c *NuGetClient) SearchPackages(ctx context.Context, query string) ([]*type
 
 // GetPopularPackages returns a list of popular NuGet packages
 func (c *NuGetClient) GetPopularPackages(limit int) ([]string, error) {
-    // Return a curated list of popular NuGet packages
-    popularPackages := []string{
+	// Return a curated list of popular NuGet packages
+	popularPackages := []string{
 		"Newtonsoft.Json",
 		"Microsoft.Extensions.DependencyInjection",
 		"Microsoft.Extensions.Logging",
@@ -275,22 +275,38 @@ func (c *NuGetClient) GetPopularPackages(limit int) ([]string, error) {
 
 // GetPopularNames retrieves popular package names using NuGet search API (totalDownloads)
 func (c *NuGetClient) GetPopularNames(ctx context.Context, limit int) ([]string, error) {
-    base := viper.GetString("detector.endpoints.nuget_popular")
-    if base == "" { base = "https://azuresearch-usnc.nuget.org/query?q=&sortBy=totalDownloads" }
-    take := limit
-    if take <= 0 { take = viper.GetInt("detector.popular_sizes.nuget") }
-    url := fmt.Sprintf("%s&take=%d", base, take)
-    req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-    if err != nil { return nil, fmt.Errorf("failed to create request: %w", err) }
-    resp, err := c.httpClient.Do(req)
-    if err != nil { return nil, fmt.Errorf("failed to fetch popular nuget: %w", err) }
-    defer resp.Body.Close()
-    if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("nuget popular status %d", resp.StatusCode) }
-    var searchResp NuGetSearchResponse
-    if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil { return nil, fmt.Errorf("decode popular: %w", err) }
-    names := make([]string, 0, len(searchResp.Data))
-    for _, d := range searchResp.Data { if d.ID != "" { names = append(names, d.ID) } }
-    return names, nil
+	base := viper.GetString("detector.endpoints.nuget_popular")
+	if base == "" {
+		base = "https://azuresearch-usnc.nuget.org/query?q=&sortBy=totalDownloads"
+	}
+	take := limit
+	if take <= 0 {
+		take = viper.GetInt("detector.popular_sizes.nuget")
+	}
+	url := fmt.Sprintf("%s&take=%d", base, take)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch popular nuget: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("nuget popular status %d", resp.StatusCode)
+	}
+	var searchResp NuGetSearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil {
+		return nil, fmt.Errorf("decode popular: %w", err)
+	}
+	names := make([]string, 0, len(searchResp.Data))
+	for _, d := range searchResp.Data {
+		if d.ID != "" {
+			names = append(names, d.ID)
+		}
+	}
+	return names, nil
 }
 
 // ClearCache clears the client cache

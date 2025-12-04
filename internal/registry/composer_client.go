@@ -1,15 +1,15 @@
 package registry
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "net/url"
-    "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
 
-    "github.com/Alivanroy/Typosentinel/pkg/types"
-    "github.com/spf13/viper"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/spf13/viper"
 )
 
 // ComposerClient handles interactions with Packagist (Composer registry)
@@ -259,29 +259,47 @@ func (c *ComposerClient) GetPopularPackages(ctx context.Context, limit int) ([]*
 
 // GetPopularNames tries Packagist popular endpoint, falls back to list
 func (c *ComposerClient) GetPopularNames(ctx context.Context, limit int) ([]string, error) {
-    // Attempt popular endpoint
-    popURL := viper.GetString("detector.endpoints.packagist_popular")
-    if popURL == "" { popURL = "https://packagist.org/explore/popular.json" }
-    req, err := http.NewRequestWithContext(ctx, "GET", popURL, nil)
-    if err == nil {
-        resp, err2 := c.httpClient.Do(req)
-        if err2 == nil && resp.StatusCode == http.StatusOK {
-            defer resp.Body.Close()
-            var data struct{ Packages []struct{ Name string `json:"name"` } `json:"packages"` }
-            if json.NewDecoder(resp.Body).Decode(&data) == nil {
-                names := make([]string, 0, len(data.Packages))
-                for _, p := range data.Packages { if p.Name != "" { names = append(names, p.Name) } }
-                if limit > 0 && len(names) > limit { names = names[:limit] }
-                if len(names) > 0 { return names, nil }
-            }
-        }
-    }
-    // Fallback to list
-    pkgs, err := c.GetPopularPackages(ctx, limit)
-    if err != nil { return nil, err }
-    names := make([]string, 0, len(pkgs))
-    for _, p := range pkgs { names = append(names, p.Name) }
-    return names, nil
+	// Attempt popular endpoint
+	popURL := viper.GetString("detector.endpoints.packagist_popular")
+	if popURL == "" {
+		popURL = "https://packagist.org/explore/popular.json"
+	}
+	req, err := http.NewRequestWithContext(ctx, "GET", popURL, nil)
+	if err == nil {
+		resp, err2 := c.httpClient.Do(req)
+		if err2 == nil && resp.StatusCode == http.StatusOK {
+			defer resp.Body.Close()
+			var data struct {
+				Packages []struct {
+					Name string `json:"name"`
+				} `json:"packages"`
+			}
+			if json.NewDecoder(resp.Body).Decode(&data) == nil {
+				names := make([]string, 0, len(data.Packages))
+				for _, p := range data.Packages {
+					if p.Name != "" {
+						names = append(names, p.Name)
+					}
+				}
+				if limit > 0 && len(names) > limit {
+					names = names[:limit]
+				}
+				if len(names) > 0 {
+					return names, nil
+				}
+			}
+		}
+	}
+	// Fallback to list
+	pkgs, err := c.GetPopularPackages(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, 0, len(pkgs))
+	for _, p := range pkgs {
+		names = append(names, p.Name)
+	}
+	return names, nil
 }
 
 // ClearCache clears the package cache

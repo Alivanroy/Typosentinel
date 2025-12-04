@@ -1,0 +1,10 @@
+{
+  "name": "test-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.18.0",
+    "expresss": "^1.0.0",
+    "cross-env": "^7.0.0",
+    "crossenv": "^1.0.0"
+  }
+}

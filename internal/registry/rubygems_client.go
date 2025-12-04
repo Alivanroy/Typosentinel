@@ -1,16 +1,16 @@
 package registry
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "net/url"
-    "strings"
-    "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
-    "github.com/Alivanroy/Typosentinel/pkg/types"
-    "github.com/spf13/viper"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/spf13/viper"
 )
 
 // RubyGemsClient handles interactions with RubyGems.org API
@@ -328,20 +328,36 @@ func (c *RubyGemsClient) GetPopularPackages(limit int) ([]string, error) {
 
 // GetPopularNames retrieves popular gems using a configurable endpoint (expects RubyGemsSearchResponse format)
 func (c *RubyGemsClient) GetPopularNames(ctx context.Context, limit int) ([]string, error) {
-    base := viper.GetString("detector.endpoints.rubygems_popular")
-    if base == "" { base = fmt.Sprintf("%s/search.json?query=&sort=downloads", c.baseURL) }
-    req, err := http.NewRequestWithContext(ctx, "GET", base, nil)
-    if err != nil { return nil, fmt.Errorf("failed to create request: %w", err) }
-    resp, err := c.httpClient.Do(req)
-    if err != nil { return nil, fmt.Errorf("failed to fetch popular gems: %w", err) }
-    defer resp.Body.Close()
-    if resp.StatusCode != http.StatusOK { return nil, fmt.Errorf("rubygems popular status %d", resp.StatusCode) }
-    var arr RubyGemsSearchResponse
-    if err := json.NewDecoder(resp.Body).Decode(&arr); err != nil { return nil, fmt.Errorf("decode popular: %w", err) }
-    names := make([]string, 0, len(arr))
-    for _, g := range arr { if g.Name != "" { names = append(names, g.Name) } }
-    if limit > 0 && len(names) > limit { names = names[:limit] }
-    return names, nil
+	base := viper.GetString("detector.endpoints.rubygems_popular")
+	if base == "" {
+		base = fmt.Sprintf("%s/search.json?query=&sort=downloads", c.baseURL)
+	}
+	req, err := http.NewRequestWithContext(ctx, "GET", base, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch popular gems: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("rubygems popular status %d", resp.StatusCode)
+	}
+	var arr RubyGemsSearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&arr); err != nil {
+		return nil, fmt.Errorf("decode popular: %w", err)
+	}
+	names := make([]string, 0, len(arr))
+	for _, g := range arr {
+		if g.Name != "" {
+			names = append(names, g.Name)
+		}
+	}
+	if limit > 0 && len(names) > limit {
+		names = names[:limit]
+	}
+	return names, nil
 }
 
 // ClearCache clears the client cache

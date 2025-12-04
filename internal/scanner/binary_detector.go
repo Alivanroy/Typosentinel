@@ -142,24 +142,24 @@ func (bd *BinaryDetector) isExecutableFile(path string) (ExecutableFormat, bool)
 // calculateSeverity determines threat severity based on context
 func (bd *BinaryDetector) calculateSeverity(packagePath string, binaries []string) types.Severity {
 	// Check if binaries are in expected locations for legitimate use cases
-    legitimatePaths := []string{
-        "node_modules",
-        "build/Release",
-        "build/",
-        "bin/",
-        "vendor/",
-    }
+	legitimatePaths := []string{
+		"node_modules",
+		"build/Release",
+		"build/",
+		"bin/",
+		"vendor/",
+	}
 
 	allInLegitPath := true
-    for _, binary := range binaries {
-        norm := strings.ReplaceAll(binary, "\\", "/")
-        inLegitPath := false
-        for _, legitPath := range legitimatePaths {
-            if strings.Contains(norm, legitPath) {
-                inLegitPath = true
-                break
-            }
-        }
+	for _, binary := range binaries {
+		norm := strings.ReplaceAll(binary, "\\", "/")
+		inLegitPath := false
+		for _, legitPath := range legitimatePaths {
+			if strings.Contains(norm, legitPath) {
+				inLegitPath = true
+				break
+			}
+		}
 		if !inLegitPath {
 			allInLegitPath = false
 			break

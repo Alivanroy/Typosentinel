@@ -1,15 +1,15 @@
 package registry
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "net/url"
-    "time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
 
-    "github.com/Alivanroy/Typosentinel/pkg/types"
-    "github.com/spf13/viper"
+	"github.com/Alivanroy/Typosentinel/pkg/types"
+	"github.com/spf13/viper"
 )
 
 // CargoClient handles interactions with crates.io (Cargo registry)
@@ -253,11 +253,15 @@ func (c *CargoClient) SearchPackages(ctx context.Context, query string) ([]*type
 
 // GetPopularPackages retrieves popular packages from crates.io
 func (c *CargoClient) GetPopularPackages(ctx context.Context, limit int) ([]*types.PackageMetadata, error) {
-    base := viper.GetString("detector.endpoints.cargo_popular")
-    if base == "" { base = fmt.Sprintf("%s/crates?sort=downloads", c.baseURL) }
-    per := limit
-    if per <= 0 { per = viper.GetInt("detector.popular_sizes.cargo") }
-    url := fmt.Sprintf("%s&per_page=%d", base, per)
+	base := viper.GetString("detector.endpoints.cargo_popular")
+	if base == "" {
+		base = fmt.Sprintf("%s/crates?sort=downloads", c.baseURL)
+	}
+	per := limit
+	if per <= 0 {
+		per = viper.GetInt("detector.popular_sizes.cargo")
+	}
+	url := fmt.Sprintf("%s&per_page=%d", base, per)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {

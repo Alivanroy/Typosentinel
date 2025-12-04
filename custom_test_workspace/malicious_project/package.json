@@ -1,9 +1,0 @@
-{
-  "name": "vulnerable-project",
-  "version": "1.0.0",
-  "dependencies": {
-    "react": "^18.0.0",
-    "l0dash": "^4.17.21",
-    "expresss": "^4.18.0"
-  }
-}

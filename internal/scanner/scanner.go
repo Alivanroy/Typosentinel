@@ -176,8 +176,32 @@ func (s *Scanner) ScanProject(projectPath string) (*types.ScanResult, error) {
 	// Persist project path for content scanning
 	s.lastProjectPath = projectInfo.Path
 
+	// Phase 2: CI/CD Infrastructure Monitoring
+	// Scan for malicious workflows and pipeline configurations
+	var infraPkg *types.Package
+	cicdScanner := NewCICDScanner(projectInfo.Path)
+	cicdThreats, err := cicdScanner.ScanProject()
+	if err == nil && len(cicdThreats) > 0 {
+		// Create a synthetic "infrastructure" package to hold CI/CD threats
+		infraPkg = &types.Package{
+			Name:     "ci-cd-infrastructure",
+			Version:  "latest",
+			Registry: "internal",
+			Type:     "infrastructure",
+			Threats:  cicdThreats,
+		}
+	}
+
 	// Extract packages
 	packages, err := s.extractPackages(projectInfo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract packages: %w", err)
+	}
+
+	// Append infrastructure package if it exists
+	if infraPkg != nil {
+		packages = append(packages, infraPkg)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract packages: %w", err)
 	}
@@ -366,6 +390,17 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 			ct := contentThreats[i]
 			threats = append(threats, &ct)
 		}
+
+		// Phase 3: Static Network Analysis (Runtime Behavior)
+		// Scan package files for runtime exfiltration and beacon patterns
+		sna := NewStaticNetworkAnalyzer(root)
+		networkThreats, err := sna.ScanDirectory(root)
+		if err == nil && len(networkThreats) > 0 {
+			for i := range networkThreats {
+				nt := networkThreats[i]
+				threats = append(threats, &nt)
+			}
+		}
 	}
 
 	// Policy engine evaluation
@@ -380,80 +415,9 @@ func (s *Scanner) analyzePackageThreats(pkg *types.Package) ([]*types.Threat, er
 	return threats, nil
 }
 
-// convertToMLFeatures converts a package to enhanced ML features
-func (s *Scanner) convertToMLFeatures(pkg *types.Package) *ml.EnhancedPackageFeatures {
-	features := &ml.EnhancedPackageFeatures{
-		PackageName:  pkg.Name,
-		Registry:     pkg.Registry,
-		Dependencies: s.convertDependencies(pkg.Dependencies),
-		Downloads:    0, // Default, populated if metadata available
-	}
-
-	if pkg.Metadata != nil {
-		features.Maintainers = pkg.Metadata.Maintainers
-		features.Downloads = pkg.Metadata.Downloads
-		features.HasLicense = pkg.Metadata.License != ""
-		// Other fields would be populated from metadata if available
-	}
-
-	return features
-}
-
-// convertMLResultsToThreats converts ML detection results to threat objects
-func (s *Scanner) convertMLResultsToThreats(pkg *types.Package, result *ml.MLDetectionResult) []*types.Threat {
-	if result == nil || result.Score < 0.5 {
-		return nil
-	}
-
-	threat := &types.Threat{
-		Type:            types.ThreatType("ml_detected_anomaly"),
-		Severity:        s.convertRiskLevelToSeverity(result.RiskLevel),
-		Description:     result.Explanation,
-		Confidence:      result.Confidence,
-		DetectionMethod: "ml_engine",
-		Metadata: map[string]interface{}{
-			"ml_score": result.Score,
-		},
-	}
-
-	return []*types.Threat{threat}
-}
-
 // Helper methods for ML feature conversion
 
-// convertRiskLevelToSeverity converts ML risk level to threat severity
-func (s *Scanner) convertRiskLevelToSeverity(riskLevel string) types.Severity {
-	switch riskLevel {
-	case "critical":
-		return types.SeverityCritical
-	case "high":
-		return types.SeverityHigh
-	case "medium":
-		return types.SeverityMedium
-	case "low":
-		return types.SeverityLow
-	default:
-		return types.SeverityLow
-	}
-}
-
-// convertMaintainers converts package maintainers to ML format
-func (s *Scanner) convertMaintainers(maintainers []string) []string {
-	// ML package expects []string for maintainers, so return as-is
-	return maintainers
-}
-
-// convertDependencies converts package dependencies to ML format
-func (s *Scanner) convertDependencies(deps []types.Dependency) []ml.Dependency {
-	var mlDeps []ml.Dependency
-	for _, dep := range deps {
-		mlDeps = append(mlDeps, ml.Dependency{
-			Name:    dep.Name,
-			Version: dep.Version,
-		})
-	}
-	return mlDeps
-}
+// countFilesByExtension counts files with specific extension
 
 // countFilesByExtension counts files with specific extension
 func (s *Scanner) countFilesByExtension(files []string, ext string) int {

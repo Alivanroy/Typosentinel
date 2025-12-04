@@ -51,7 +51,7 @@ func TestBuildArtifactScanner(t *testing.T) {
 	}
 }
 
-func TestBinaryDetection(t *testing.T) {
+func TestBuildArtifactBinaryDetection(t *testing.T) {
 	scanner := NewBuildArtifactScanner()
 
 	tests := []struct {

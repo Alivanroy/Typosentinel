@@ -14,7 +14,7 @@ go build -o typosentinel .
 
 ### Docker
 ```bash
-docker build -t typosentinel-api . && docker run --rm -p 8080:8080 typosentinel-api
+docker build -t typosentinel . && docker run --rm -v $(pwd):/scan typosentinel scan /scan
 ```
 
 ## CLI Usage
@@ -29,16 +29,6 @@ docker build -t typosentinel-api . && docker run --rm -p 8080:8080 typosentinel-
 - `--advanced`: enhanced detection algorithms
 - `--threshold <0..1>`: similarity threshold
 - `--registry <npm|pypi|go|maven>`: force registry when needed
-
-## API Server
-```bash
-./typosentinel server --port 8080
-```
-
-### Authentication
-- `API_AUTH_ENABLED=true`
-- `API_KEYS=key1,key2`
-- Send `Authorization: Bearer key1`
 
 ## Configuration
 - Environment variables for API auth

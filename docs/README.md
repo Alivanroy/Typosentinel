@@ -13,7 +13,6 @@ A comprehensive typosquatting detection tool that helps identify malicious packa
 - **Multi-Language Support**: Detects typosquatting across npm, PyPI, Go modules, Maven, NuGet, and more
 - **Advanced Detection**: Uses machine learning and heuristic analysis for accurate threat detection
 - **Real-time Scanning**: Continuous monitoring of package dependencies
-- **REST API**: Easy integration with existing CI/CD pipelines
 - **Plugin Architecture**: Extensible system for custom analyzers
 - **Performance Optimized**: Efficient scanning with caching and parallel processing
 - **Comprehensive Reporting**: Detailed analysis reports with risk scoring
@@ -466,11 +465,11 @@ make perf-test
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   CLI Client    │    │   REST API      │    │   Web UI        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
+┌─────────────────┐
+│   CLI Client    │
+└─────────────────┘
+         │
+         └───────────────────────┐
                                  │
                         ┌─────────────────┐
                         │  Core Engine    │

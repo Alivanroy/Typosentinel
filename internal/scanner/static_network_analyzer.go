@@ -24,6 +24,24 @@ func NewStaticNetworkAnalyzer(projectPath string) *StaticNetworkAnalyzer {
 	}
 }
 
+// ScanDirectory scans a directory for network threats
+func (sna *StaticNetworkAnalyzer) ScanDirectory(root string) ([]types.Threat, error) {
+	var files []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !info.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return sna.AnalyzeProject(files)
+}
+
 // AnalyzeProject scans project files for network exfiltration patterns
 func (sna *StaticNetworkAnalyzer) AnalyzeProject(files []string) ([]types.Threat, error) {
 	var threats []types.Threat

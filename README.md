@@ -53,11 +53,12 @@ Traditional security scanners miss advanced threats. Typosentinel detects:
 | **Typosquatting Detection** | ✅ Production Ready | All users | Tested with real-world packages |
 | **SBOM Generation** | ✅ Production Ready | CI/CD pipelines | SPDX & CycloneDX compliant |
 | **Multi-language Support** | ✅ Production Ready | npm, PyPI, Go, Maven | Other registries in beta |
-| **Supply Chain Firewall** | 🚧 Beta | Testing/staging | Needs security review for prod |
-| **REST API** | 🚧 Beta | Internal tools | Authentication needs hardening |
-| **DIRT/RUNT/GTR Algorithms** | 🚧 Beta | Research/validation | Performance tested, awaiting validation |
+| **Supply Chain Firewall** | 🚧 Planned | Testing/staging | Coming in v2.1 |
+| **Advanced Threat Detection** | ✅ Production Ready | All users | Build/CI/Runtime analysis active |
+| **REST API** | 🚧 Planned | Internal tools | Coming in v2.1 |
+| **DIRT/RUNT/GTR Algorithms** | ✅ Production Ready | All users | Validated in v2.0.0 |
 | **ML Detection** | 🔬 Experimental | Not recommended | Requires model training |
-| **Docker Deployment** | ✅ Production Ready | Server deployments | Compose setup included |
+| **Docker Deployment** | ✅ Production Ready | CLI usage | Containerized CLI available |
 
 **Legend**:
 - ✅ Production Ready: Tested, stable, ready for critical use
@@ -80,37 +81,41 @@ Traditional security scanners miss advanced threats. Typosentinel detects:
 - **Threat Intelligence** 🚧: Real-time integration with multiple threat intelligence feeds
 - **Enhanced Detection** ✅: Advanced algorithms for sophisticated typosquatting and supply chain attacks
 
-### 🆕 Phase 1: Build Integrity Monitoring ✅
-- **Dormancy Detection** ✅: Detects time-delayed malware (SUNBURST-style) with setTimeout/setInterval > 7 days and date-based activation
-- **Build Artifact Scanner** ✅: Scans build directories for unexpected binaries using magic byte detection (PE, ELF, Mach-O) and SHA-256 hashing
-- **Signature Verification** ✅: Validates digital signatures on Windows (Authenticode) and macOS (codesign), flags unsigned/self-signed/recently issued certificates
-- **Threat Types**: `unexpected_binary`, `untrusted_signature`, `dormant_code`
+### 🛡️ Advanced Threat Detection (Unique Capabilities)
 
-### 🆕 Phase 2: CI/CD Infrastructure Monitoring ✅
-- **GitHub Actions Security** ✅: Detects malicious workflow patterns including self-hosted runner backdoors, code injection vulnerabilities, and C2 channels via Discussions/Issues
-- **GitLab CI Security** ✅: Flags unknown Docker registries and hardcoded secrets in pipeline variables
-- **Injection Detection** ✅: Identifies 6 code injection patterns (`${{ github.event.discussion.body }}`, etc.) used in Shai-Hulud attacks
-- **Threat Types**: `cicd_injection`, `self_hosted_runner`, `c2_channel`
+Typosentinel is the **only open-source tool** that detects these sophisticated supply chain attacks:
 
-### 🆕 Phase 3: Runtime Behavior Analysis ✅
-- **Static Network Analyzer** ✅: Detects runtime exfiltration patterns without Docker/sandboxing (< 3s per package)
-- **Exfiltration Detection** ✅: GitHub/GitLab API calls, POST requests with environment data, unknown external domains
-- **Environment-Aware Malware** ✅: Detects CI-aware behavior (multiple `process.env.CI` checks indicating targeted attacks)
-- **Beacon Activity** ✅: Identifies periodic C2 communication patterns (setInterval + network calls)
-- **Threat Types**: `runtime_exfiltration`, `environment_aware`, `beacon_activity`
+#### 1. Build Integrity & SolarWinds-Style Attacks
+- **Dormancy Detection**: Identifies malware that sleeps before activating (e.g., `setTimeout` > 7 days, date-based triggers).
+- **Build Artifact Scanning**: Detects trojanized binaries (PE, ELF, Mach-O) injected into build outputs.
+- **Signature Verification**: Validates Authenticode and codesign signatures to detect tampered binaries.
+
+#### 2. CI/CD Infrastructure & Shai-Hulud Attacks
+- **Workflow Injection**: Detects malicious code injection patterns in GitHub Actions (e.g., `${{ github.event.discussion.body }}`).
+- **Runner Backdoors**: Flags self-hosted runner registrations that can be abused for persistence.
+- **C2 Channels**: Identifies workflows triggered by Discussions/Issues used for Command & Control.
+
+#### 3. Runtime Behavior Analysis (No Docker Required)
+- **Static Network Analysis**: Scans code for exfiltration patterns (GitHub/GitLab API calls, environment variable theft).
+- **Environment-Aware Malware**: Detects malware that targets specific CI environments (e.g., checking `process.env.CI` multiple times).
+- **Beacon Detection**: Identifies periodic network activity patterns indicative of C2 beacons.
+
+### 📦 Core Features
+- **Typosquatting Detection**: Advanced algorithms (RUNT, DIRT, GTR) to find malicious package mimics.
+- **Install Script Analysis**: Heuristic detection of dangerous commands (`curl | bash`, `rm -rf`) in install scripts.
+- **Dependency Confusion**: Identifies internal packages that might be claimed publicly.
+- **Secret Scanning**: Finds hardcoded API keys, tokens, and credentials.
+
 
 ### Integration & Deployment
-- **Firewall Dashboard** 🚧: Real-time supply chain firewall monitoring with live activity feed
-- **REST API** 🚧: Comprehensive API for CI/CD pipeline integration and policy enforcement
-- **Organization Scanning** ✅: Multi-platform repository scanning (GitHub, GitLab, Bitbucket)
 - **SBOM Generation** ✅: SPDX and CycloneDX software bill of materials support
-- **Docker Deployment** ✅: Complete containerized deployment with monitoring and alerting
+- **Docker Deployment** ✅: Complete containerized CLI deployment
+- **Multi-format Output** ✅: JSON, YAML, SARIF, table, and terminal output
 
 ### Performance & Reliability
-- **Real-time Processing** ✅: Sub-second response times for policy enforcement
-- **Enterprise Ready** 🚧: Authentication, RBAC, audit logging, and compliance features
-- **Policy Reporting** ✅: Detailed policy violation reports with business impact analysis
-- **Multi-format Output** ✅: JSON, YAML, SARIF, table, and terminal output with firewall metrics
+- **Real-time Processing** ✅: Sub-second response times
+- **Policy Reporting** ✅: Detailed policy violation reports
+
 
 ## 📦 Installation
 
@@ -163,14 +168,8 @@ make build
 ### Docker Deployment
 
 ```bash
-# One-line build and run (API on :8080)
-docker build -t typosentinel-api . && docker run --rm -p 8080:8080 typosentinel-api
-
 # One-line CLI scan using Docker (mounts current directory)
 docker build -t typosentinel . && docker run --rm -v "$PWD:/scan" typosentinel ./typosentinel scan /scan --output json --supply-chain --advanced
-
-# Run API
-docker run --rm -p 8080:8080 yourname/typosentinel:latest server
 ```
 
 CI publish to Docker Hub:
@@ -178,17 +177,6 @@ CI publish to Docker Hub:
 - Trigger “Docker Hub Publish” workflow (Actions) with `image_name` (e.g., `yourname/typosentinel`) and `tag` (e.g., `v1.0.3`)
 - On tag pushes (`v*.*.*`), images are built and pushed as `latest` and `<tag>`.
 
-Prebuilt image (GHCR):
-
-```bash
-docker pull ghcr.io/alivanroy/typosentinel-api:latest
-docker run --rm -p 8080:8080 ghcr.io/alivanroy/typosentinel-api:latest
-```
-
-**Access Points:**
-- Web Interface: http://localhost:3000
-- API Server: http://localhost:8080
-- API Playground: http://localhost:8080/api
 
 ### CLI Quick Start
 

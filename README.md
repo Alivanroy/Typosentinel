@@ -45,7 +45,220 @@ Traditional security scanners miss advanced threats. Typosentinel detects:
 **Performance**: < 10 seconds per package | **Detection Rate**: 80%+ | **Docker**: Not Required
 
 
-## 🎯 Production Readiness Matrix
+## �️ Architecture
+
+### System Overview
+
+```mermaid
+flowchart TB
+    subgraph Users["👥 Users & Integrations"]
+        CLI["🖥️ CLI"]
+        API["🌐 REST API"]
+        CICD["⚙️ CI/CD Pipelines"]
+        Webhooks["🔗 Webhooks"]
+    end
+
+    subgraph Core["🔷 TypoSentinel Core"]
+        Scanner["📦 Scanner Engine"]
+        Detector["🔍 Threat Detector"]
+        ML["🧠 ML Engine"]
+        Policy["📋 Policy Engine"]
+    end
+
+    subgraph Registries["📚 Package Registries"]
+        NPM["npm"]
+        PyPI["PyPI"]
+        Go["Go Modules"]
+        Maven["Maven"]
+        NuGet["NuGet"]
+        More["..."]
+    end
+
+    subgraph Storage["💾 Storage & Cache"]
+        Redis["Redis Cache"]
+        DB["Vulnerability DB"]
+        Config["Configuration"]
+    end
+
+    subgraph Output["📊 Output & Reporting"]
+        JSON["JSON"]
+        SARIF["SARIF"]
+        SBOM["SBOM"]
+        Dashboard["Dashboard"]
+    end
+
+    CLI --> Scanner
+    API --> Scanner
+    CICD --> API
+    Webhooks --> API
+
+    Scanner --> Detector
+    Scanner --> ML
+    Scanner --> Policy
+    
+    Detector --> Registries
+    ML --> Registries
+    
+    Scanner --> Storage
+    Detector --> Storage
+    
+    Scanner --> Output
+    Policy --> Output
+
+    style Core fill:#e1f5fe
+    style Users fill:#f3e5f5
+    style Registries fill:#e8f5e9
+    style Storage fill:#fff3e0
+    style Output fill:#fce4ec
+```
+
+### Core Components
+
+```mermaid
+flowchart LR
+    subgraph CMD["cmd/"]
+        Main["main.go"]
+        ScanCmd["scan"]
+        AnalyzeCmd["analyze"]
+        VersionCmd["version"]
+    end
+
+    subgraph Internal["internal/"]
+        subgraph ScannerPkg["scanner/"]
+            Scanner["Scanner"]
+            Analyzers["Analyzers"]
+            Plugins["Plugin System"]
+        end
+        
+        subgraph DetectorPkg["detector/"]
+            StringSim["String Similarity"]
+            Homoglyph["Homoglyph"]
+            Reputation["Reputation"]
+        end
+        
+        subgraph MLPkg["ml/"]
+            MLScorer["ML Scorer"]
+            Features["Feature Extractor"]
+            Models["Models"]
+        end
+        
+        subgraph PolicyPkg["policy/"]
+            PolicyEngine["Policy Engine"]
+            OPA["OPA Integration"]
+            Rules["Custom Rules"]
+        end
+        
+        subgraph APIPkg["api/"]
+            REST["REST Server"]
+            Handlers["Handlers"]
+            Middleware["Middleware"]
+        end
+        
+        subgraph CachePkg["cache/"]
+            Memory["In-Memory"]
+            RedisCache["Redis"]
+        end
+        
+        subgraph ConfigPkg["config/"]
+            ConfigLoader["Config Loader"]
+            Viper["Viper"]
+        end
+    end
+
+    subgraph Pkg["pkg/"]
+        Types["types/"]
+        Logger["logger/"]
+        Events["events/"]
+    end
+
+    Main --> ScanCmd
+    Main --> AnalyzeCmd
+    Main --> VersionCmd
+    
+    ScanCmd --> Scanner
+    AnalyzeCmd --> Scanner
+    
+    Scanner --> Analyzers
+    Scanner --> Plugins
+    Scanner --> DetectorPkg
+    Scanner --> MLPkg
+    Scanner --> CachePkg
+    
+    REST --> Handlers
+    Handlers --> Scanner
+    Handlers --> PolicyEngine
+    
+    Scanner --> Types
+    DetectorPkg --> Types
+    MLPkg --> Types
+
+    style CMD fill:#bbdefb
+    style Internal fill:#c8e6c9
+    style Pkg fill:#ffe0b2
+```
+
+### Detection Pipeline
+
+```mermaid
+flowchart TD
+    Start([📁 Project Path]) --> Detect{Detect Project Type}
+    
+    Detect -->|package.json| NPM["NPM Analyzer"]
+    Detect -->|requirements.txt| PyPI["PyPI Analyzer"]
+    Detect -->|go.mod| Go["Go Analyzer"]
+    Detect -->|pom.xml| Maven["Maven Analyzer"]
+    Detect -->|*.csproj| NuGet["NuGet Analyzer"]
+    Detect -->|Gemfile| Ruby["Ruby Analyzer"]
+    
+    NPM --> Extract["📋 Extract Dependencies"]
+    PyPI --> Extract
+    Go --> Extract
+    Maven --> Extract
+    NuGet --> Extract
+    Ruby --> Extract
+    
+    Extract --> Enrich["🔄 Enrich Metadata"]
+    
+    Enrich --> Cache{Check Cache?}
+    Cache -->|Hit| CacheResult["Return Cached"]
+    Cache -->|Miss| Fetch["Fetch from Registry"]
+    
+    Fetch --> Analyze["🔍 Threat Analysis"]
+    CacheResult --> Analyze
+    
+    subgraph ThreatAnalysis["Threat Analysis Pipeline"]
+        Analyze --> StringSim["String Similarity\n(Levenshtein, Jaro-Winkler)"]
+        Analyze --> HomoglyphCheck["Homoglyph Detection\n(Unicode Analysis)"]
+        Analyze --> MLAnalysis["ML Scoring\n(Behavioral Patterns)"]
+        Analyze --> ReputationCheck["Reputation Analysis\n(Downloads, Age)"]
+        Analyze --> VulnCheck["Vulnerability Check\n(CVE Database)"]
+    end
+    
+    StringSim --> Aggregate["📊 Aggregate Results"]
+    HomoglyphCheck --> Aggregate
+    MLAnalysis --> Aggregate
+    ReputationCheck --> Aggregate
+    VulnCheck --> Aggregate
+    
+    Aggregate --> PolicyEval["📋 Policy Evaluation"]
+    
+    PolicyEval --> Score["🎯 Risk Score"]
+    
+    Score --> Output["📤 Generate Report"]
+    
+    Output --> JSON_Out["JSON"]
+    Output --> SARIF_Out["SARIF"]
+    Output --> Table_Out["Table"]
+    Output --> SBOM_Out["SBOM"]
+
+    style ThreatAnalysis fill:#fff9c4
+    style Start fill:#c8e6c9
+    style Output fill:#f8bbd9
+```
+
+For detailed architecture documentation, see [ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## �🎯 Production Readiness Matrix
 
 | Component | Status | Recommended For | Notes |
 |-----------|--------|-----------------|-------|
@@ -177,27 +390,6 @@ CI publish to Docker Hub:
 - Trigger “Docker Hub Publish” workflow (Actions) with `image_name` (e.g., `yourname/typosentinel`) and `tag` (e.g., `v1.0.3`)
 - On tag pushes (`v*.*.*`), images are built and pushed as `latest` and `<tag>`.
 
-
-### CLI Quick Start
-
-```bash
-# Build native CLI
-go build -o build/typosentinel .
-./build/typosentinel version
-./build/typosentinel scan . --output json --supply-chain --advanced
-
-Force registry for specific ecosystem:
-
-```bash
-./build/typosentinel scan ./my-go-project --registry go --output json
-./build/typosentinel scan ./my-java-project --registry maven --output json
-```
-
-# One-line Docker CLI (Windows PowerShell)
-docker build -t typosentinel . ; docker run --rm -v "${PWD}:/scan" typosentinel ./typosentinel scan /scan --output json --supply-chain --advanced
-```
-
-For detailed Docker deployment instructions, see [DOCKER.md](DOCKER.md).
 
 ## 🔧 Quick Start
 

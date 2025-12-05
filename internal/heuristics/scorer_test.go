@@ -1,4 +1,4 @@
-package ml
+package heuristics
 
 import (
 	"testing"

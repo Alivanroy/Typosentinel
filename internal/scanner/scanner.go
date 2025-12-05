@@ -1,4 +1,3 @@
-// Package scanner handles project detection, dependency extraction, and threat analysis.
 package scanner
 
 import (
@@ -13,7 +12,7 @@ import (
 	"github.com/Alivanroy/Typosentinel/internal/config"
 	"github.com/Alivanroy/Typosentinel/internal/events"
 	"github.com/Alivanroy/Typosentinel/internal/integrations/hub"
-	"github.com/Alivanroy/Typosentinel/internal/ml"
+	"github.com/Alivanroy/Typosentinel/internal/heuristics"
 	"github.com/Alivanroy/Typosentinel/internal/policy"
 	pkgevents "github.com/Alivanroy/Typosentinel/pkg/events"
 	"github.com/Alivanroy/Typosentinel/pkg/logger"
@@ -30,14 +29,13 @@ type Scanner struct {
 	analyzers        map[string]DependencyAnalyzer
 	cache            *cache.CacheIntegration
 	analyzerRegistry *AnalyzerRegistry
-	mlScorer         *ml.SimpleMLScorer
+	mlScorer         *heuristics.SimpleMLScorer
 	eventBus         *events.EventBus
 	integrationHub   *hub.IntegrationHub
 	metadataEnricher *MetadataEnricher
 	lastProjectPath  string
 	policyEngine     *policy.Engine
 }
-
 // ProjectDetector interface for detecting different project types
 type ProjectDetector interface {
 	Detect(projectPath string) (*ProjectInfo, error)
@@ -130,7 +128,7 @@ func New(cfg *config.Config) (*Scanner, error) {
 	}
 
 	// Initialize ML scorer
-	s.mlScorer = ml.NewSimpleMLScorer()
+	s.mlScorer = heuristics.NewSimpleMLScorer()
 
 	// Register project detectors
 	s.registerDetectors()

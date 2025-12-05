@@ -3,4 +3,6 @@ description = "Allowlisted patterns"
 paths = [
   '''testdata/''',
   '''.*_test\.go''',
+  '''docs/''',
+  '''README\.md''',
 ]

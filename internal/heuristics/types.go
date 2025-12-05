@@ -1,4 +1,4 @@
-package ml
+package heuristics
 
 // EnhancedPackageFeatures represents features for ML analysis
 type EnhancedPackageFeatures struct {

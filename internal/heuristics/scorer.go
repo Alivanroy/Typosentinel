@@ -1,4 +1,4 @@
-package ml
+package heuristics
 
 type SimpleMLScorer struct {
 	weights map[string]float64

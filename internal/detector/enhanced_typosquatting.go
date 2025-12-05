@@ -631,13 +631,65 @@ func (etd *EnhancedTyposquattingDetector) weightedAverage(scores []float64, weig
 }
 
 func (etd *EnhancedTyposquattingDetector) hasNamespaceConfusion(target, candidate string) bool {
+	// Check for scoped package confusion (e.g. @angular/core vs angular-core)
+	if strings.HasPrefix(target, "@") && !strings.HasPrefix(candidate, "@") {
+		clean := strings.ReplaceAll(strings.TrimPrefix(target, "@"), "/", "-")
+		if clean == candidate || strings.ReplaceAll(clean, "-", "") == candidate {
+			return true
+		}
+		// Also check strict suffix match: @scope/pkg vs pkg
+		parts := strings.Split(target, "/")
+		if len(parts) == 2 && parts[1] == candidate {
+			return true
+		}
+	}
+	// Inverse case
+	if strings.HasPrefix(candidate, "@") && !strings.HasPrefix(target, "@") {
+		clean := strings.ReplaceAll(strings.TrimPrefix(candidate, "@"), "/", "-")
+		if clean == target || strings.ReplaceAll(clean, "-", "") == target {
+			return true
+		}
+		parts := strings.Split(candidate, "/")
+		if len(parts) == 2 && parts[1] == target {
+			return true
+		}
+	}
 	return false
 }
+
 func (etd *EnhancedTyposquattingDetector) hasBrandImpersonation(target, candidate string) bool {
+	// Check if candidate contains target plus suspicious keywords
+	if strings.Contains(candidate, target) && len(candidate) > len(target) {
+		keywords := []string{"official", "internal", "security", "admin", "org", "com"}
+		lowerCand := strings.ToLower(candidate)
+		for _, kw := range keywords {
+			if strings.Contains(lowerCand, kw) {
+				return true
+			}
+		}
+	}
 	return false
 }
+
 func (etd *EnhancedTyposquattingDetector) hasInsertionDeletionPattern(target, candidate string) bool {
-	return false
+	// Check for single character insertion or deletion
+	if math.Abs(float64(len(target)-len(candidate))) != 1 {
+		return false
+	}
+	// Use Levenshtein distance to confirm it's exactly 1 edit
+	// We can use the existing editDistanceSimilarity but we need the raw distance
+	// Since we don't have a public raw distance method, we can check similarity threshold
+	// A single edit on a string of len L gives similarity 1 - 1/max(L, L+1)
+	// e.g. express (7) vs expresss (8). Sim = 1 - 1/8 = 0.875
+
+	sim := etd.editDistanceSimilarity(target, candidate)
+	maxLen := math.Max(float64(len(target)), float64(len(candidate)))
+
+	// Expected similarity for exactly 1 edit
+	expectedSim := 1.0 - (1.0 / maxLen)
+
+	// Float comparison with small epsilon
+	return math.Abs(sim-expectedSim) < 0.001
 }
 func (etd *EnhancedTyposquattingDetector) escalateSeverity(s types.Severity) types.Severity {
 	if s < types.SeverityCritical {

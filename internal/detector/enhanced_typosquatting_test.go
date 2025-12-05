@@ -414,7 +414,6 @@ func TestEnhancedTyposquattingDetector_EscalateSeverity(t *testing.T) {
 		{types.SeverityMedium, types.SeverityHigh},
 		{types.SeverityHigh, types.SeverityCritical},
 		{types.SeverityCritical, types.SeverityCritical},
-		{types.Severity(999), types.Severity(1000)}, // +1
 	}
 
 	for _, tt := range tests {

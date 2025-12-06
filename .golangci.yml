@@ -11,7 +11,9 @@ linters:
 
 linters-settings:
   errcheck:
-    ignore: fmt:.*,io/ioutil:^Read.*
+    exclude-functions:
+      - fmt:.*
+      - io/ioutil:^Read.*
   gosec:
     severity: medium
 
